@@ -1,0 +1,11 @@
+- UI: Shadcn + neobrutalism
+- Framewok: Svelte-kit with [node.js adapter](https://kit.svelte.dev/docs/adapter-node)
+- API: Using svelte-kit built-in [server routing](https://kit.svelte.dev/docs/routing#server) 
+- Nostr: [NDK](https://github.com/nostr-dev-kit/ndk/)
+- Lightning: [js-lightning-tools](https://github.com/getAlby/js-lightning-tools)
+- ORM: [Drizzle](https://orm.drizzle.team/)
+- CI/CD: [Coolify](https://github.com/coollabsio/coolify)
+- DB: better-sqlite3 [W/ Drizzle](https://orm.drizzle.team/docs/get-started-sqlite#better-sqlite3)
+- Package manager: pnpm & [workspaces](https://pnpm.io/workspaces)
+- Angular commit [coding style](https://github.com/angular/angular/blob/main/CONTRIBUTING.md#-coding-rules)
+- SSR for everything by default
