@@ -1,0 +1,33 @@
+{
+  "name": "database",
+  "version": "0.0.0",
+  "private": true,
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsc --watch",
+    "build": "tsc",
+    "db:check": "drizzle-kit check:sqlite",
+    "db:generate": "drizzle-kit generate:sqlite",
+    "db:migrate": "ts-node ./migrate.ts",
+    "db:seed": "ts-node ./seed.ts"
+  },
+  "exports": {
+    ".": "./dist/index.js",
+    "./db": "./dist/db.js"
+  },
+  "devDependencies": {
+    "@faker-js/faker": "^8.4.1",
+    "@types/better-sqlite3": "^7.6.9",
+    "drizzle-kit": "^0.19.13",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "better-sqlite3": "^9.5.0",
+    "dotenv": "^16.3.1",
+    "drizzle-orm": "^0.28.5"
+  }
+}
+
+git config --local user.name "zeSchlausKwab"
+git config --local user.email "schlauskwab@proton.me"
