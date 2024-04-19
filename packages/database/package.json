@@ -4,7 +4,6 @@
   "private": true,
   "main": "dist/index.js",
   "scripts": {
-    "prepare": "pnpm db:seed",
     "db:check": "drizzle-kit check:sqlite",
     "db:generate": "drizzle-kit generate:sqlite",
     "db:migrate": "tsx ./migrate.ts",
