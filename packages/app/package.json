@@ -37,6 +37,7 @@
 	"type": "module",
 	"dependencies": {
 		"@internationalized/date": "^3.5.2",
+		"database": "workspace:0.0.0",
 		"bits-ui": "^0.21.4",
 		"clsx": "^2.1.0",
 		"cmdk-sv": "^0.0.17",
