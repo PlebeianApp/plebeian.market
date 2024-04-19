@@ -1,5 +1,4 @@
 {
-  "extends": "../app/.svelte-kit/tsconfig.json",
   "$schema": "https://json.schemastore.org/tsconfig",
   "display": "Default",
   "compilerOptions": {

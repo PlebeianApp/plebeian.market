@@ -32,8 +32,8 @@ importers:
         specifier: ^1.0.0
         version: 1.0.0(svelte@4.2.15)(sveltekit-superforms@2.12.5)
       lucide-svelte:
-        specifier: ^0.371.0
-        version: 0.371.0(svelte@4.2.15)
+        specifier: ^0.372.0
+        version: 0.372.0(svelte@4.2.15)
       mode-watcher:
         specifier: ^0.3.0
         version: 0.3.0(svelte@4.2.15)
@@ -2767,8 +2767,8 @@ packages:
       es5-ext: 0.10.64
     dev: true
 
-  /lucide-svelte@0.371.0(svelte@4.2.15):
-    resolution: {integrity: sha512-LCSGPK9tDMi8VvflE7uoo2IYJEoYTBCUokUV6moMj0X+/sXiPMW8/kbEfvTKy0wpmdoA4gioG9YbBaj54nFK1Q==}
+  /lucide-svelte@0.372.0(svelte@4.2.15):
+    resolution: {integrity: sha512-LNcsAyrcqB1ZAhwCFOu880KlQgd6YVSW4tVwLaiZ6KSX7ZOBU74I8IkA/zVlI/2V74flCN6kK6rOmdda2NXn5A==}
     peerDependencies:
       svelte: ^3 || ^4 || ^5.0.0-next.42
     dependencies:
