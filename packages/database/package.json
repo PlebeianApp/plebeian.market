@@ -28,6 +28,3 @@
     "drizzle-orm": "^0.28.5"
   }
 }
-
-git config --local user.name "zeSchlausKwab"
-git config --local user.email "schlauskwab@proton.me"
