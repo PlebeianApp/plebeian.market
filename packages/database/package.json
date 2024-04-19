@@ -1,25 +1,23 @@
 {
-  "name": "database",
+  "name": "@plebeian/database",
   "version": "0.0.0",
   "private": true,
   "main": "dist/index.js",
   "scripts": {
-    "dev": "tsc --watch",
-    "build": "tsc",
+    "prepare": "pnpm db:seed",
     "db:check": "drizzle-kit check:sqlite",
     "db:generate": "drizzle-kit generate:sqlite",
-    "db:migrate": "ts-node ./migrate.ts",
-    "db:seed": "ts-node ./seed.ts"
+    "db:migrate": "tsx ./migrate.ts",
+    "db:seed": "tsx ./seed.ts"
   },
   "exports": {
-    ".": "./dist/index.js",
-    "./db": "./dist/db.js"
+    ".": "./index.ts"
   },
   "devDependencies": {
     "@faker-js/faker": "^8.4.1",
     "@types/better-sqlite3": "^7.6.9",
     "drizzle-kit": "^0.19.13",
-    "ts-node": "^10.9.1",
+    "tsx": "^4.7.2",
     "typescript": "^5.2.2"
   },
   "dependencies": {

@@ -1,4 +1,4 @@
-import { db, type Stall } from 'database'
+import { db, type Stall } from '@plebeian/database'
 
 export interface UsersWithStalls {
 	id: string
