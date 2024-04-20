@@ -50,6 +50,10 @@ const main = async () => {
       }) as Stall,
   );
 
+  console.log("Reset start");
+  await Promise.all([db.delete(stalls), db.delete(users)]);
+  console.log("Reset done");
+
   console.log("Seed start");
   await Promise.all([
     db.insert(users).values(fullUsers).execute(),
