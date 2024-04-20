@@ -2,7 +2,8 @@
   "name": "@plebeian/database",
   "version": "0.0.0",
   "private": true,
-  "main": "dist/index.js",
+  "main": "./index.ts",
+  "type": "module",
   "scripts": {
     "db:check": "drizzle-kit check:sqlite",
     "db:generate": "drizzle-kit generate:sqlite",

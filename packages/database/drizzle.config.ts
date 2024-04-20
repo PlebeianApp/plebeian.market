@@ -3,8 +3,7 @@ import { fileURLToPath } from "node:url";
 import type { Config } from "drizzle-kit";
 
 const dbPath = path.resolve(
-  fileURLToPath(import.meta.url),
-  "..",
+  process.cwd(),
   "..",
   "..",
   "sqlite.db",
