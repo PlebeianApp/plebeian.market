@@ -1,5 +1,3 @@
-import { fontFamily } from "tailwindcss/defaultTheme";
-
 /** @type {import('tailwindcss').Config} */
 const config = {
 	darkMode: ["class"],
@@ -54,8 +52,11 @@ const config = {
 				md: "calc(var(--radius) - 2px)",
 				sm: "calc(var(--radius) - 4px)"
 			},
+			boxShadow: {
+			  base: '4px 4px 0px 0px rgba(0,0,0,1)',
+			},
 			fontFamily: {
-				sans: [...fontFamily.sans]
+				sans: ['"DM Sans"', 'sans-serif']
 			}
 		}
 	},
