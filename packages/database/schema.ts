@@ -74,7 +74,7 @@ export const shipping = sqliteTable("shipping", {
   isDefault: integer("default").notNull(),
 }, (table) => {
   return {
-    pk: primaryKey({ columns: [table.bookId, table.authorId] }),// This is not working
+    pk: primaryKey({ name: 'pk', columns: [table.shippingId, table.stallId] }),// This is not working
   };
 });
 // Shipping zones
