@@ -16,14 +16,14 @@
   },
   "devDependencies": {
     "@faker-js/faker": "^8.4.1",
-    "@types/better-sqlite3": "^7.6.9",
+    "@types/better-sqlite3": "^7.6.10",
     "drizzle-kit": "^0.19.13",
     "tsx": "^4.7.2",
-    "typescript": "^5.2.2"
+    "typescript": "^5.4.5"
   },
   "dependencies": {
     "better-sqlite3": "^9.5.0",
-    "dotenv": "^16.3.1",
-    "drizzle-orm": "^0.28.5"
+    "dotenv": "^16.4.5",
+    "drizzle-orm": "^0.30.9"
   }
 }
