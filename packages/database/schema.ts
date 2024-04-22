@@ -1,12 +1,16 @@
 import { integer, numeric, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core";
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 
 const standardColumns = {
   id: text("id")
     .primaryKey()
     .notNull(),
-  createdAt: integer("created_at", { mode: "timestamp" }),
-  updatedAt: integer("updated_at", { mode: "timestamp" }),
+  createdAt: integer("created_at", { mode: "timestamp" })
+    .notNull()
+    .default(sql`(unixepoch())`),
+  updatedAt: integer("updated_at", { mode: "timestamp" })
+    .notNull()
+    .default(sql`(unixepoch())`),
 };
 
 // Events
@@ -42,7 +46,7 @@ export const stalls = sqliteTable("stalls", {
   ...standardColumns,
   name: text("name").notNull(),
   description: text("description").notNull(),
-  currency: text("currency").notNull(),
+  currency: text("currency").notNull(),// use ISO3166
   userId: text("user_id")
     .notNull()
     .references(() => users.id),
@@ -50,7 +54,8 @@ export const stalls = sqliteTable("stalls", {
 
 // Payment details
 export const paymentDetails = sqliteTable("payment_details", {
-  paymentId: integer("payment_id").primaryKey(),
+  paymentId: integer("payment_id", { mode: 'number' })
+    .primaryKey({ autoIncrement: true }),
   userId: text("user_id")
     .notNull()
     .references(() => users.id),
@@ -66,7 +71,7 @@ export const shipping = sqliteTable("shipping", {
   stallId: text("stall_id")
     .notNull()
     .references(() => stalls.id),
-  shippingId: text("shipping_id"),//This sould be a composed primary key (shipping_id, stall_id)
+  shippingId: text("shipping_id"),
   name: text("name").notNull(),
   shippingMethod: text("shipping_method").notNull(),
   shippingDetails: text("shipping_details").notNull(),
@@ -74,9 +79,10 @@ export const shipping = sqliteTable("shipping", {
   isDefault: integer("default").notNull(),
 }, (table) => {
   return {
-    pk: primaryKey({ name: 'pk', columns: [table.shippingId, table.stallId] }),// This is not working
+    pk: primaryKey({ columns: [table.shippingId, table.stallId] }),
   };
 });
+
 // Shipping zones
 export const shippingZones = sqliteTable("shipping_zones", {
   shippingId: text("shipping_id")
@@ -106,15 +112,16 @@ export const products = sqliteTable("products", {
   specs: text("specs"),
   shippingCost: integer("shipping_cost"),
   isFeatured: integer("featured", {mode: "boolean"}).notNull(),
-  parentId: text("parent_id").notNull()// We have to self reference this to a `id` of another product in the table
+  parentId: text("parent_id").notNull()
 });
 
 // Categories
 export const categories = sqliteTable("categories", {
-  catId: integer("cat_id").primaryKey(),
+  catId: integer("cat_id", { mode: 'number' })
+    .primaryKey({ autoIncrement: true }),
   catName: text("cat_name").notNull(),
   description: text("description").notNull(),
-  parentId: integer("parent_id").notNull()// We have to self reference this to a `id` of another category in the table
+  parentId: integer("parent_id").notNull()
 });
 
 // Product categories
@@ -177,7 +184,7 @@ export const orders = sqliteTable("orders", {
   address: text("address").notNull(),
   zip: text("zip").notNull(),
   city: text("city").notNull(),
-  region: text("region").notNull(),
+  region: text("region").notNull(),// use ISO3166
   contactName: text("contact_name").notNull(),
   contactPhone: text("contact_phone").notNull(),
   contactEmail: text("contact_email").notNull(),
@@ -189,33 +196,50 @@ export const orderItems = sqliteTable("order_items", {
   orderId: integer("order_id")
     .notNull()
     .references(() => orders.id),
-  productId: integer("product_id").primaryKey(),//Primary key (order_id, product_id). Foreign Key, References the product_id in the Products table
+  productId: integer("product_id")
+    .notNull()
+    .references(() => products.id),
   qty: integer("qty").notNull(),
+}, (table) => {
+  return {
+    pk: primaryKey({ columns: [table.orderId, table.productId] }),
+  };
 });
 
 // Invoices
 export const invoices = sqliteTable("invoices", {
-  invoiceId: integer("invoice_id").primaryKey(),
+  invoiceId: integer("invoice_id", { mode: 'number' })
+    .primaryKey({ autoIncrement: true }),
   orderId: integer("order_id")
     .notNull()
     .references(() => orders.id),
-  invoiceDate: integer("invoice_date", { mode: "timestamp" }).notNull(),
+  createdAt: integer("invoice_date", { mode: "timestamp" }).notNull(),
+  updatedAt: integer("invoice_date", { mode: "timestamp" }).notNull(),
   totalAmount: integer("total_amount").notNull(),
   invoiceStatus: text("invoice_status", { enum:["pending" , "paid" , "canceled" , "refunded"]}).notNull(),
   paymentMethod: text("payment_method", { enum: ["ln" , "on-chain" , "cashu" , "other"] }).notNull(),
   paymentDetails: text("payment_details").notNull(),
 });
 
-// TODO: Continue doing relations
+// Relations
 export const userRelations = relations(users, ({ many }) => ({
   stalls: many(stalls),
+  products: many(products),
+  auctions: many(auctions),
+  paymentDetails: many(paymentDetails),
+  bids: many(bids),
+  orders: many(orders)
 }));
 
-export const stallRelations = relations(stalls, ({ one }) => ({
+export const stallRelations = relations(stalls, ({ one, many }) => ({
   user: one(users, {
     fields: [stalls.userId],
     references: [users.id],
   }),
+  paymentDetails: many(paymentDetails),
+  shipping: many(shipping),
+  products: many(products),
+  auctions: many(auctions)
 }));
 
 export const productRelations = relations(products, ({ one, many }) => ({
@@ -227,11 +251,23 @@ export const productRelations = relations(products, ({ one, many }) => ({
     fields: [products.stallId],
     references: [stalls.id],
   }),
-  categories: many(categories),
+  parentProduct: one(products, {
+    fields: [products.id],
+    references: [products.id]
+  }),
+  categories: many(productCategories),
+  orderItems: many(orderItems)
 }));
 
-export const categoryRelations = relations(categories, ({ many }) => ({
-  products: many(products),
+export const categoryRelations = relations(categories, ({ one }) => ({
+  parentCategory: one(categories, {
+    fields: [categories.catId],
+    references: [categories.catId]
+  })
+}));
+
+export const productCategoriesRelations = relations(productCategories, ({ many }) => ({
+  productCategories: many(products)
 }));
 
 export const auctionRelations = relations(auctions, ({ one, many }) => ({
