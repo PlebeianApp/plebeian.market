@@ -17,7 +17,7 @@
   "devDependencies": {
     "@faker-js/faker": "^8.4.1",
     "@types/better-sqlite3": "^7.6.10",
-    "drizzle-kit": "^0.19.13",
+    "drizzle-kit": "^0.20.17",
     "tsx": "^4.7.2",
     "typescript": "^5.4.5"
   },
