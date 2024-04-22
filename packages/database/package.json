@@ -8,7 +8,8 @@
     "db:check": "drizzle-kit check:sqlite",
     "db:generate": "drizzle-kit generate:sqlite",
     "db:migrate": "tsx ./migrate.ts",
-    "db:seed": "tsx ./seed.ts"
+    "db:seed": "tsx ./seed.ts",
+    "db:setup": "pnpm run db:generate && pnpm db:migrate && pnpm db:seed"
   },
   "exports": {
     ".": "./index.ts"
