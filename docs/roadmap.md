@@ -6,14 +6,14 @@
 		- Auth system will be based on [nip-98](https://github.com/nostr-protocol/nips/blob/master/98.md) 
 		- Media uploads will use [nip-96](https://github.com/nostr-protocol/nips/blob/master/96.md)
 	- **Steps:** 
-		- [ ] Project skeleton
-			- [ ] Creation of the monorepo using workspaces
+		- [x] Project skeleton
+			- [x] Creation of the monorepo using workspaces
 			- [ ] Install dependencies
-				- [ ] Drizzle
+				- [x] Drizzle
 				- [ ] NDK
 				- [ ] js-lightning-tools
-		- [ ] Create db and tables
-			- [ ] Design hybrid mode to fetch data from db with fallback to nostr & insert
+		- [x] Create db and tables
+		- [ ] Design hybrid mode to fetch data from db with fallback to nostr & insert
 		- [ ] Nostr functionalities
 			- [ ] Use NDK svelte
 			- [ ] NDK cache (index-db)
@@ -52,7 +52,7 @@
 			- [ ] Home ("/")
 			- [ ] Market browser ("/market") 
 			- [ ] Product pages ("/product/<product_id>")
-			- [ ] User page ("/<user_id | other identifier">)
+			- [ ] User page ("/<user_id | other identifier>)
 			- [ ] Stall page ("/stall/<stall_id>")
 
 1.  **Integrate phoenixd**
