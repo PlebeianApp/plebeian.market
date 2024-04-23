@@ -1,4 +1,4 @@
-import { integer, numeric, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { AnySQLiteColumn, foreignKey, integer, numeric, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { relations, sql } from "drizzle-orm";
 
 const standardColumns = {
@@ -71,7 +71,7 @@ export const shipping = sqliteTable("shipping", {
   stallId: text("stall_id")
     .notNull()
     .references(() => stalls.id),
-  shippingId: text("shipping_id"),
+  shippingId: text("shipping_id").notNull(),
   name: text("name").notNull(),
   shippingMethod: text("shipping_method").notNull(),
   shippingDetails: text("shipping_details").notNull(),
@@ -86,14 +86,16 @@ export const shipping = sqliteTable("shipping", {
 // Shipping zones
 export const shippingZones = sqliteTable("shipping_zones", {
   shippingId: text("shipping_id")
-    .notNull()
-    .references(() => shipping.shippingId),
+    .notNull(),
+  stallId: text("stall_id")
+    .notNull(),
   shippingZoneId: text("shipping_zone_id").primaryKey(),
   regionCode: text("region_code").notNull(),
   countryCode: text("country_code").notNull(),
-});
-
-// Products
+}, (table) => ({
+  f: foreignKey({ foreignColumns: [shipping.shippingId, shipping.stallId], columns: [table.shippingId, table.stallId], name: 'custom_fk' }),
+}));
+// Products TODO: add digital products
 export const products = sqliteTable("products", {
   ...standardColumns,
   stallId: text("stall_id")
@@ -112,16 +114,17 @@ export const products = sqliteTable("products", {
   specs: text("specs"),
   shippingCost: integer("shipping_cost"),
   isFeatured: integer("featured", {mode: "boolean"}).notNull(),
-  parentId: text("parent_id").notNull()
+  parentId: text("parent_id").references((): AnySQLiteColumn => products.id)
 });
 
 // Categories
 export const categories = sqliteTable("categories", {
-  catId: integer("cat_id", { mode: 'number' })
-    .primaryKey({ autoIncrement: true }),
+  catId: text("cat_id")
+    .notNull()
+    .primaryKey(),
   catName: text("cat_name").notNull(),
   description: text("description").notNull(),
-  parentId: integer("parent_id").notNull()
+  parentId: text("parent_id").references((): AnySQLiteColumn => categories.catId)
 });
 
 // Product categories
@@ -129,7 +132,7 @@ export const productCategories = sqliteTable("product_categories", {
   productId: text("product_id")
     .notNull()
     .references(() => products.id),
-  catId: integer("cat_id")
+  catId: text("cat_id")
     .notNull()
     .references(() => categories.catId),
 });
@@ -151,8 +154,8 @@ export const auctions = sqliteTable("auctions", {
   images: text("images"),
   currency: text("currency").notNull(),
   specs: text("specs"),
-  shippingCost: integer("shipping_cost"),
-  status: text("status").notNull(),
+  shippingCost: integer("shipping_cost").notNull(),
+  status: text("status", { enum: ["active", "ended", "canceled"]}).notNull(),
   isFeatured: integer("featured", { mode: "boolean" }).notNull(),
 });
 
@@ -172,31 +175,35 @@ export const bids = sqliteTable("bids", {
 //Orders
 export const orders = sqliteTable("orders", {
   ...standardColumns,
-  sellerUserId: integer("seller_user_id")
+  sellerUserId: text("seller_user_id")
     .notNull()
     .references(() => users.id),
-  buyerUserId: integer("buyer_user_id")
+  buyerUserId: text("buyer_user_id")
     .notNull()
     .references(() => users.id),
   status: text("status", { enum: ["confirmed", "pending", "shipped", "completed", "canceled"] }).notNull(),
   shippingId: text("shipping_id")
-    .references(() => shipping.shippingId),
+    .notNull(),
+  stallId: text("stall_id")
+    .notNull(),
   address: text("address").notNull(),
   zip: text("zip").notNull(),
   city: text("city").notNull(),
   region: text("region").notNull(),// use ISO3166
   contactName: text("contact_name").notNull(),
-  contactPhone: text("contact_phone").notNull(),
-  contactEmail: text("contact_email").notNull(),
+  contactPhone: text("contact_phone"),
+  contactEmail: text("contact_email"),
   observations: text("observations"),
-});
+}, (table) => ({
+  f: foreignKey({ foreignColumns: [shipping.shippingId, shipping.stallId], columns: [table.shippingId, table.stallId], name: 'custom_fk' }),
+}));
 
 // Order items
 export const orderItems = sqliteTable("order_items", {
-  orderId: integer("order_id")
+  orderId: text("order_id")
     .notNull()
     .references(() => orders.id),
-  productId: integer("product_id")
+  productId: text("product_id")
     .notNull()
     .references(() => products.id),
   qty: integer("qty").notNull(),
@@ -208,9 +215,10 @@ export const orderItems = sqliteTable("order_items", {
 
 // Invoices
 export const invoices = sqliteTable("invoices", {
-  invoiceId: integer("invoice_id", { mode: 'number' })
-    .primaryKey({ autoIncrement: true }),
-  orderId: integer("order_id")
+  invoiceId: text("invoice_id")
+    .notNull()
+    .primaryKey(),
+  orderId: text("order_id")
     .notNull()
     .references(() => orders.id),
   createdAt: integer("invoice_date", { mode: "timestamp" }).notNull(),
@@ -251,19 +259,8 @@ export const productRelations = relations(products, ({ one, many }) => ({
     fields: [products.stallId],
     references: [stalls.id],
   }),
-  parentProduct: one(products, {
-    fields: [products.id],
-    references: [products.id]
-  }),
   categories: many(productCategories),
   orderItems: many(orderItems)
-}));
-
-export const categoryRelations = relations(categories, ({ one }) => ({
-  parentCategory: one(categories, {
-    fields: [categories.catId],
-    references: [categories.catId]
-  })
 }));
 
 export const productCategoriesRelations = relations(productCategories, ({ many }) => ({

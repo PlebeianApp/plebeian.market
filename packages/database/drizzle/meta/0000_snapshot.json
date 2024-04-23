@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "sqlite",
-  "id": "96a52573-6387-4969-a3fc-06b6fe7103e8",
+  "id": "6e731fcf-7e7b-4bbe-b8a9-9ab8ba992867",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "auctions": {
@@ -104,7 +104,7 @@
           "name": "shipping_cost",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false
         },
         "status": {
@@ -246,10 +246,10 @@
       "columns": {
         "cat_id": {
           "name": "cat_id",
-          "type": "integer",
+          "type": "text",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": true
+          "autoincrement": false
         },
         "cat_name": {
           "name": "cat_name",
@@ -267,14 +267,28 @@
         },
         "parent_id": {
           "name": "parent_id",
-          "type": "integer",
+          "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         }
       },
       "indexes": {},
-      "foreignKeys": {},
+      "foreignKeys": {
+        "categories_parent_id_categories_cat_id_fk": {
+          "name": "categories_parent_id_categories_cat_id_fk",
+          "tableFrom": "categories",
+          "tableTo": "categories",
+          "columnsFrom": [
+            "parent_id"
+          ],
+          "columnsTo": [
+            "cat_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
@@ -350,14 +364,14 @@
       "columns": {
         "invoice_id": {
           "name": "invoice_id",
-          "type": "integer",
+          "type": "text",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": true
+          "autoincrement": false
         },
         "order_id": {
           "name": "order_id",
-          "type": "integer",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -422,14 +436,14 @@
       "columns": {
         "order_id": {
           "name": "order_id",
-          "type": "integer",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
         "product_id": {
           "name": "product_id",
-          "type": "integer",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -510,14 +524,14 @@
         },
         "seller_user_id": {
           "name": "seller_user_id",
-          "type": "integer",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
         "buyer_user_id": {
           "name": "buyer_user_id",
-          "type": "integer",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -533,7 +547,14 @@
           "name": "shipping_id",
           "type": "text",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "stall_id": {
+          "name": "stall_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
           "autoincrement": false
         },
         "address": {
@@ -575,14 +596,14 @@
           "name": "contact_phone",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "contact_email": {
           "name": "contact_email",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "observations": {
@@ -621,15 +642,17 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "orders_shipping_id_shipping_shipping_id_fk": {
-          "name": "orders_shipping_id_shipping_shipping_id_fk",
+        "custom_fk": {
+          "name": "custom_fk",
           "tableFrom": "orders",
           "tableTo": "shipping",
           "columnsFrom": [
-            "shipping_id"
+            "shipping_id",
+            "stall_id"
           ],
           "columnsTo": [
-            "shipping_id"
+            "shipping_id",
+            "stall_id"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
@@ -873,7 +896,7 @@
           "name": "parent_id",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         }
       },
@@ -904,6 +927,19 @@
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
+        },
+        "products_parent_id_products_id_fk": {
+          "name": "products_parent_id_products_id_fk",
+          "tableFrom": "products",
+          "tableTo": "products",
+          "columnsFrom": [
+            "parent_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -923,7 +959,7 @@
           "name": "shipping_id",
           "type": "text",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false
         },
         "name": {
@@ -999,6 +1035,13 @@
           "notNull": true,
           "autoincrement": false
         },
+        "stall_id": {
+          "name": "stall_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
         "shipping_zone_id": {
           "name": "shipping_zone_id",
           "type": "text",
@@ -1023,15 +1066,17 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "shipping_zones_shipping_id_shipping_shipping_id_fk": {
-          "name": "shipping_zones_shipping_id_shipping_shipping_id_fk",
+        "custom_fk": {
+          "name": "custom_fk",
           "tableFrom": "shipping_zones",
           "tableTo": "shipping",
           "columnsFrom": [
-            "shipping_id"
+            "shipping_id",
+            "stall_id"
           ],
           "columnsTo": [
-            "shipping_id"
+            "shipping_id",
+            "stall_id"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"

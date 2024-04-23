@@ -12,7 +12,7 @@ CREATE TABLE `auctions` (
 	`images` text,
 	`currency` text NOT NULL,
 	`specs` text,
-	`shipping_cost` integer,
+	`shipping_cost` integer NOT NULL,
 	`status` text NOT NULL,
 	`featured` integer NOT NULL,
 	FOREIGN KEY (`stall_id`) REFERENCES `stalls`(`id`) ON UPDATE no action ON DELETE no action,
@@ -32,10 +32,11 @@ CREATE TABLE `bids` (
 );
 --> statement-breakpoint
 CREATE TABLE `categories` (
-	`cat_id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`cat_id` text PRIMARY KEY NOT NULL,
 	`cat_name` text NOT NULL,
 	`description` text NOT NULL,
-	`parent_id` integer NOT NULL
+	`parent_id` text,
+	FOREIGN KEY (`parent_id`) REFERENCES `categories`(`cat_id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
 CREATE TABLE `events` (
@@ -49,8 +50,8 @@ CREATE TABLE `events` (
 );
 --> statement-breakpoint
 CREATE TABLE `invoices` (
-	`invoice_id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
-	`order_id` integer NOT NULL,
+	`invoice_id` text PRIMARY KEY NOT NULL,
+	`order_id` text NOT NULL,
 	`invoice_date` integer NOT NULL,
 	`total_amount` integer NOT NULL,
 	`invoice_status` text NOT NULL,
@@ -60,8 +61,8 @@ CREATE TABLE `invoices` (
 );
 --> statement-breakpoint
 CREATE TABLE `order_items` (
-	`order_id` integer NOT NULL,
-	`product_id` integer NOT NULL,
+	`order_id` text NOT NULL,
+	`product_id` text NOT NULL,
 	`qty` integer NOT NULL,
 	PRIMARY KEY(`order_id`, `product_id`),
 	FOREIGN KEY (`order_id`) REFERENCES `orders`(`id`) ON UPDATE no action ON DELETE no action,
@@ -72,21 +73,22 @@ CREATE TABLE `orders` (
 	`id` text PRIMARY KEY NOT NULL,
 	`created_at` integer DEFAULT (unixepoch()) NOT NULL,
 	`updated_at` integer DEFAULT (unixepoch()) NOT NULL,
-	`seller_user_id` integer NOT NULL,
-	`buyer_user_id` integer NOT NULL,
+	`seller_user_id` text NOT NULL,
+	`buyer_user_id` text NOT NULL,
 	`status` text NOT NULL,
-	`shipping_id` text,
+	`shipping_id` text NOT NULL,
+	`stall_id` text NOT NULL,
 	`address` text NOT NULL,
 	`zip` text NOT NULL,
 	`city` text NOT NULL,
 	`region` text NOT NULL,
 	`contact_name` text NOT NULL,
-	`contact_phone` text NOT NULL,
-	`contact_email` text NOT NULL,
+	`contact_phone` text,
+	`contact_email` text,
 	`observations` text,
 	FOREIGN KEY (`seller_user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`buyer_user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action,
-	FOREIGN KEY (`shipping_id`) REFERENCES `shipping`(`shipping_id`) ON UPDATE no action ON DELETE no action
+	FOREIGN KEY (`shipping_id`,`stall_id`) REFERENCES `shipping`(`shipping_id`,`stall_id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
 CREATE TABLE `payment_details` (
@@ -122,14 +124,15 @@ CREATE TABLE `products` (
 	`specs` text,
 	`shipping_cost` integer,
 	`featured` integer NOT NULL,
-	`parent_id` text NOT NULL,
+	`parent_id` text,
 	FOREIGN KEY (`stall_id`) REFERENCES `stalls`(`id`) ON UPDATE no action ON DELETE no action,
-	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action
+	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`parent_id`) REFERENCES `products`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
 CREATE TABLE `shipping` (
 	`stall_id` text NOT NULL,
-	`shipping_id` text,
+	`shipping_id` text NOT NULL,
 	`name` text NOT NULL,
 	`shipping_method` text NOT NULL,
 	`shipping_details` text NOT NULL,
@@ -141,10 +144,11 @@ CREATE TABLE `shipping` (
 --> statement-breakpoint
 CREATE TABLE `shipping_zones` (
 	`shipping_id` text NOT NULL,
+	`stall_id` text NOT NULL,
 	`shipping_zone_id` text PRIMARY KEY NOT NULL,
 	`region_code` text NOT NULL,
 	`country_code` text NOT NULL,
-	FOREIGN KEY (`shipping_id`) REFERENCES `shipping`(`shipping_id`) ON UPDATE no action ON DELETE no action
+	FOREIGN KEY (`shipping_id`,`stall_id`) REFERENCES `shipping`(`shipping_id`,`stall_id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
 CREATE TABLE `stalls` (
