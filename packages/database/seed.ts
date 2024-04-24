@@ -12,9 +12,12 @@ import {
   Stall, 
   Shipping,
   ShippingZone,
-  User } from "./types";
+  User, 
+  ProductImage,
+  DigitalProduct} from "./types";
 import { faker } from "@faker-js/faker";
 import { db } from "./database";
+import { allowedMimeTypes } from "./constants";
 
 const main = async () => {
   const userIds = [
@@ -56,12 +59,30 @@ const main = async () => {
         userId: user.id,
         createdAt: faker.date.recent(),
         updatedAt: faker.date.recent(),
-        id: faker.string.uuid(),
+        id: faker.string.hexadecimal({ length: 32 }),
         name: faker.commerce.productMaterial(),
         description: faker.commerce.productDescription(),
         currency: faker.finance.currencyCode(),
       }) as Stall,
   );
+
+  const productData = userStalls.map(
+    (stall) =>
+    ({
+      id: faker.string.hexadecimal({ length: 32 }),
+      createdAt: faker.date.recent(),
+      updatedAt: faker.date.recent(),
+      stallId: stall.id,
+      userId: stall.userId,
+      productName: faker.commerce.productName(),
+      description: faker.commerce.productDescription(),
+      price: faker.number.int(),
+      productType: faker.helpers.arrayElement(["simple", "variable", "variation"]),
+      currency: faker.finance.currencyCode(),
+      isDigital: faker.datatype.boolean({probability: 0.8}),
+      parentId: null,
+      stockQty: faker.number.int({min:0,max:100}),
+    }) as Product);
 
   const paymentDetailsData = userStalls.map(
     (stall) => ({
@@ -94,22 +115,23 @@ const main = async () => {
   );
 
   const auctionsData = userStalls.map((stall) => ({
-    id: faker.string.uuid(),
+    id: faker.string.hexadecimal({ length: 32 }),
     createdAt: faker.date.recent(),
     updatedAt: faker.date.recent(),
     stallId: stall.id,
     userId: stall.userId,
-    description: faker.commerce.productDescription(),
-    currency: faker.finance.currencyCode(),
     auctionName: faker.commerce.productName(),
-    images: faker.image.url() || null,
+    description: faker.commerce.productDescription(),
+    startingBidAmount: faker.number.int(),
+    endDate: faker.date.future(),
+    currency: faker.finance.currencyCode(),
     specs: faker.commerce.productMaterial() || null,
     shippingCost: faker.number.int(),
     status: faker.helpers.arrayElement(["active", "ended", "canceled"]),
   }) as Auction);
 
   const bidsData = auctionsData.map((auction) => ({
-    id: faker.string.uuid(),
+    id: faker.string.hexadecimal({ length: 32 }),
     createdAt: faker.date.recent(),
     updatedAt: faker.date.recent(),
     auctionId: auction.id,
@@ -118,15 +140,15 @@ const main = async () => {
     bidStatus: faker.helpers.arrayElement(["accepted", "rejected", "pending", "winner"]),
   }) as Bid);
 
-  const ordersData = userStalls.map((stall) => ({
+  const ordersData = shippingData.map((shipping) => ({
     id: faker.string.uuid(),
     createdAt: faker.date.recent(),
     updatedAt: faker.date.recent(),
-    sellerUserId: faker.string.uuid(),
-    buyerUserId: faker.string.uuid(),
+    sellerUserId: faker.helpers.arrayElement(userIds).id,
+    buyerUserId: faker.helpers.arrayElement(userIds).id,
     status: faker.helpers.arrayElement(["confirmed", "pending", "shipped", "completed", "canceled"]),
-    shippingId: faker.helpers.arrayElement(shippingData).shippingId,
-    stallId: stall.id,
+    shippingId: shipping.shippingId,
+    stallId: shipping.stallId,
     address: faker.location.streetAddress(),
     zip: faker.location.zipCode(),
     city: faker.location.city(),
@@ -139,7 +161,7 @@ const main = async () => {
 
   const orderItemsData = ordersData.map((order) => ({
     orderId: order.id,
-    productId: faker.string.uuid(),
+    productId: faker.helpers.arrayElement(productData).id,
     qty: faker.number.int({ min: 1, max: 10 }),
   }) as OrderItem);
   
@@ -163,29 +185,34 @@ const main = async () => {
     },
   ] as Category[];
 
-  const productData = [
-    {
-      id: faker.string.uuid(),
-      createdAt: faker.date.recent(),
-      updatedAt: faker.date.recent(),
-      stallId: faker.helpers.arrayElement(userStalls).id,
-      userId: faker.helpers.arrayElement(userIds).id,
-      productName: faker.commerce.productName(),
-      description: faker.commerce.productDescription(),
-      price: faker.number.int(),
-      productType: faker.helpers.arrayElement(["simple", "variable", "variation"]),
-      currency: faker.finance.currencyCode(),
-      parentId: null,
-    },
-  ] as Product[];
-
   const productCategoryData = productData.map((product) => ({
     productId: product.id,
     catId: faker.helpers.arrayElement(categoryData).catId,
   }) as ProductCategory);
 
+  const digitalProductsData = productData
+  .filter((product) => product.isDigital)
+  .map((product) => ({
+    productId: product.id,
+    licenseKey: faker.string.hexadecimal({ length: 32 }),
+    downloadLink: faker.internet.url(),
+    mimeType: faker.helpers.arrayElement(allowedMimeTypes),
+    sha256Hash: faker.string.hexadecimal({ length: 32 }),
+    createdAt: faker.date.recent(),
+    updatedAt: faker.date.future()
+  }) as DigitalProduct);
+
+  const productImagesData = productData.map((product) => ({
+    productId: product.id,
+    imageUrl: faker.image.url(),
+    imageType: faker.helpers.arrayElement(["main", "thumbnail", "gallery"]),
+    imageOrder: faker.number.int({min:0, max:5}),
+    createdAt: faker.date.recent(),
+    updatedAt: faker.date.recent()
+  }) as ProductImage);
+
   const eventData = userIds.map((user) => ({
-    id: faker.string.uuid(),
+    id: faker.string.hexadecimal({ length: 32 }),
     createdAt: faker.date.recent(),
     updatedAt: faker.date.recent(),
     eventAuthor: user.id,
@@ -197,29 +224,44 @@ const main = async () => {
   console.log("Reset start");
   const dbSchema = db._.fullSchema
   await Promise.all([
+    db.delete(dbSchema.categories),
+    db.delete(dbSchema.stalls),
+    db.delete(dbSchema.products),
+    db.delete(dbSchema.productCategories),
+    db.delete(dbSchema.productImages),
+    db.delete(dbSchema.digitalProducts),
     db.delete(dbSchema.auctions),
     db.delete(dbSchema.bids),
-    db.delete(dbSchema.categories),
-    db.delete(dbSchema.events),
-    db.delete(dbSchema.invoices),
-    db.delete(dbSchema.orderItems),
     db.delete(dbSchema.orders),
-    db.delete(dbSchema.paymentDetails),
-    db.delete(dbSchema.productCategories),
-    db.delete(dbSchema.products),
-    db.delete(dbSchema.stalls),
+    db.delete(dbSchema.orderItems),
+    db.delete(dbSchema.invoices),
     db.delete(dbSchema.shipping),
     db.delete(dbSchema.shippingZones),
-    db.delete(dbSchema.users),
+    db.delete(dbSchema.paymentDetails),
+    db.delete(dbSchema.events),
+    db.delete(dbSchema.users), // BUG: SqliteError: FOREIGN KEY constraint failed when seed script its running th second time
   ]);
   console.log("Reset done");
 
   console.log("Seed start");
-  await Promise.all([
-    db.insert(dbSchema.users).values(fullUsers).execute(),
-    db.insert(dbSchema.stalls).values(userStalls).execute(),
-    db.insert(dbSchema.paymentDetails).values(paymentDetailsData)
-  ]);
+   db.transaction((tx) => {
+     tx.insert(dbSchema.users).values(fullUsers).execute();
+     tx.insert(dbSchema.stalls).values(userStalls).execute();
+     tx.insert(dbSchema.auctions).values(auctionsData).execute();
+     tx.insert(dbSchema.bids).values(bidsData).execute();
+     tx.insert(dbSchema.categories).values(categoryData).execute();
+     tx.insert(dbSchema.products).values(productData).execute();
+     tx.insert(dbSchema.digitalProducts).values(digitalProductsData).execute();
+     tx.insert(dbSchema.productImages).values(productImagesData).execute();
+     tx.insert(dbSchema.productCategories).values(productCategoryData).execute();
+     tx.insert(dbSchema.paymentDetails).values(paymentDetailsData).execute();
+     tx.insert(dbSchema.shipping).values(shippingData).execute();
+     tx.insert(dbSchema.shippingZones).values(shippingZonesData).execute();
+     tx.insert(dbSchema.orders).values(ordersData).execute();
+     tx.insert(dbSchema.invoices).values(invoicesData).execute();
+     tx.insert(dbSchema.orderItems).values(orderItemsData).execute();
+     tx.insert(dbSchema.events).values(eventData).execute();
+  });
   console.log("Seed done");
 };
 

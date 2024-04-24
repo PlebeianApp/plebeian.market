@@ -1,5 +1,6 @@
 import { AnySQLiteColumn, foreignKey, integer, numeric, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core";
-import { relations, sql } from "drizzle-orm";
+import { sql } from "drizzle-orm";
+import { allowedMimeTypes } from "./constants";
 
 const standardColumns = {
   id: text("id")
@@ -38,7 +39,9 @@ export const users = sqliteTable("users", {
   lud16: text("lud16"),
   website: text("website"),
   zapService: text("zap_Service"),
-  lastLogin: integer("last_login", { mode: "timestamp" }),
+  lastLogin: integer("last_login", { mode: "timestamp" })
+    .notNull()
+    .default(sql`(unixepoch())`),
 });
 
 // Stalls table
@@ -46,7 +49,7 @@ export const stalls = sqliteTable("stalls", {
   ...standardColumns,
   name: text("name").notNull(),
   description: text("description").notNull(),
-  currency: text("currency").notNull(),// use ISO3166
+  currency: text("currency").notNull(),
   userId: text("user_id")
     .notNull()
     .references(() => users.id),
@@ -95,7 +98,8 @@ export const shippingZones = sqliteTable("shipping_zones", {
 }, (table) => ({
   f: foreignKey({ foreignColumns: [shipping.shippingId, shipping.stallId], columns: [table.shippingId, table.stallId], name: 'custom_fk' }),
 }));
-// Products TODO: add digital products
+
+// Products
 export const products = sqliteTable("products", {
   ...standardColumns,
   stallId: text("stall_id")
@@ -104,18 +108,65 @@ export const products = sqliteTable("products", {
   userId: text("user_id")
     .notNull()
     .references(() => users.id),
-  productName: text("product_name").notNull(),
-  description: text("description").notNull(),
-  price: integer("price").notNull(),
-  productType: text("product_type", { enum: ["simple", "variable", "variation"] }).notNull(),
-  images: text("images"),
-  currency: text("currency").notNull(),
-  stockQty: integer("stock_qty").notNull(),
+  productName: text("product_name")
+    .notNull(),
+  description: text("description")
+    .notNull(),
+  price: integer("price")
+    .notNull(),
+  productType: text("product_type", { enum: ["simple", "variable", "variation"] })
+    .notNull(),
+  currency: text("currency")
+    .notNull(),
+  stockQty: integer("stock_qty")
+    .notNull(),
   specs: text("specs"),
   shippingCost: integer("shipping_cost"),
-  isFeatured: integer("featured", {mode: "boolean"}).notNull(),
+  isFeatured: integer("featured", { mode: "boolean" })
+    .notNull()
+    .default(false),
+  isDigital: integer("is_digital", { mode: "boolean" })
+    .notNull()
+    .default(false),
   parentId: text("parent_id").references((): AnySQLiteColumn => products.id)
 });
+
+export const digitalProducts = sqliteTable("digital_products", {
+  productId: text("product_id")
+    .notNull()
+    .primaryKey()
+    .references(() => products.id),
+  licenseKey: text("license_key"),
+  downloadLink: text("download_link"),
+  mimeType: text("mime_type", { enum: ["other", ...allowedMimeTypes] }),
+  sha256Hash: text("sha256_hash"),
+  createdAt: integer("created_at", { mode: "timestamp" })
+    .notNull()
+    .default(sql`(unixepoch())`),
+  updatedAt: integer("updated_at", { mode: "timestamp" })
+    .notNull()
+    .default(sql`(unixepoch())`),
+})
+
+export const productImages = sqliteTable("product_images", {
+  productId: text("product_id")
+    .notNull()
+    .primaryKey()
+    .references(() => products.id),
+  imageUrl: text("image_url")
+    .notNull(),
+  imageType: text("image_type", { enum: ["main", "thumbnail", "gallery"]})
+    .notNull(),
+  imageOrder: integer("image_order")
+    .notNull()
+    .default(0),
+  createdAt: integer("created_at", { mode: "timestamp" })
+    .notNull()
+    .default(sql`(unixepoch())`),
+  updatedAt: integer("updated_at", { mode: "timestamp" })
+    .notNull()
+    .default(sql`(unixepoch())`),
+})
 
 // Categories
 export const categories = sqliteTable("categories", {
@@ -146,17 +197,27 @@ export const auctions = sqliteTable("auctions", {
   userId: text("user_id")
     .notNull()
     .references(() => users.id),
-  auctionName: text("auction_name").notNull(),
-  description: text("description").notNull(),
-  startingBidAmount: integer("starting_bid_amount").notNull(),
-  startDate: integer("start_date", { mode: "timestamp" }).notNull(),
-  endDate: integer("end_date", { mode: "timestamp" }).notNull(),
-  images: text("images"),
-  currency: text("currency").notNull(),
+  auctionName: text("auction_name")
+    .notNull(),
+  description: text("description")
+    .notNull(),
+  startingBidAmount: integer("starting_bid_amount")
+    .notNull(),
+  startDate: integer("start_date", { mode: "timestamp" })
+    .notNull()
+    .default(sql`(unixepoch())`),
+  endDate: integer("end_date", { mode: "timestamp" })
+    .notNull(),
+  currency: text("currency")
+    .notNull(),
   specs: text("specs"),
-  shippingCost: integer("shipping_cost").notNull(),
-  status: text("status", { enum: ["active", "ended", "canceled"]}).notNull(),
-  isFeatured: integer("featured", { mode: "boolean" }).notNull(),
+  shippingCost: integer("shipping_cost")
+    .notNull(),
+  status: text("status", { enum: ["active", "ended", "canceled"]})
+    .notNull(),
+  isFeatured: integer("featured", { mode: "boolean" })
+    .notNull()
+    .default(false),
 });
 
 //Bids
@@ -194,9 +255,11 @@ export const orders = sqliteTable("orders", {
   contactPhone: text("contact_phone"),
   contactEmail: text("contact_email"),
   observations: text("observations"),
-}, (table) => ({
-  f: foreignKey({ foreignColumns: [shipping.shippingId, shipping.stallId], columns: [table.shippingId, table.stallId], name: 'custom_fk' }),
-}));
+}
+, (table) => ({
+  f: foreignKey({ foreignColumns: [shipping.shippingId, shipping.stallId], columns: [table.shippingId, table.stallId]}),
+})
+);
 
 // Order items
 export const orderItems = sqliteTable("order_items", {
@@ -228,98 +291,3 @@ export const invoices = sqliteTable("invoices", {
   paymentMethod: text("payment_method", { enum: ["ln" , "on-chain" , "cashu" , "other"] }).notNull(),
   paymentDetails: text("payment_details").notNull(),
 });
-
-// Relations
-export const userRelations = relations(users, ({ many }) => ({
-  stalls: many(stalls),
-  products: many(products),
-  auctions: many(auctions),
-  paymentDetails: many(paymentDetails),
-  bids: many(bids),
-  orders: many(orders)
-}));
-
-export const stallRelations = relations(stalls, ({ one, many }) => ({
-  user: one(users, {
-    fields: [stalls.userId],
-    references: [users.id],
-  }),
-  paymentDetails: many(paymentDetails),
-  shipping: many(shipping),
-  products: many(products),
-  auctions: many(auctions)
-}));
-
-export const productRelations = relations(products, ({ one, many }) => ({
-  user: one(users, {
-    fields: [products.userId],
-    references: [users.id],
-  }),
-  stall: one(stalls, {
-    fields: [products.stallId],
-    references: [stalls.id],
-  }),
-  categories: many(productCategories),
-  orderItems: many(orderItems)
-}));
-
-export const productCategoriesRelations = relations(productCategories, ({ many }) => ({
-  productCategories: many(products)
-}));
-
-export const auctionRelations = relations(auctions, ({ one, many }) => ({
-  user: one(users, {
-    fields: [auctions.userId],
-    references: [users.id],
-  }),
-  stall: one(stalls, {
-    fields: [auctions.stallId],
-    references: [stalls.id],
-  }),
-  bids: many(bids),
-}));
-
-export const bidRelations = relations(bids, ({ one }) => ({
-  user: one(users, {
-    fields: [bids.userId],
-    references: [users.id],
-  }),
-  auction: one(auctions, {
-    fields: [bids.auctionId],
-    references: [auctions.id],
-  }),
-}));
-
-export const orderRelations = relations(orders, ({ one, many }) => ({
-  sellerUser: one(users, {
-    fields: [orders.sellerUserId],
-    references: [users.id],
-  }),
-  buyerUser: one(users, {
-    fields: [orders.buyerUserId],
-    references: [users.id],
-  }),
-  shipping: one(shipping, {
-    fields: [orders.shippingId],
-    references: [shipping.shippingId],
-  }),
-  items: many(orderItems),
-}));
-
-export const orderItemRelations = relations(orderItems, ({ one }) => ({
-  order: one(orders, {
-    fields: [orderItems.orderId],
-    references: [orders.id],
-  }),
-  product: one(products, {
-    fields: [orderItems.productId],
-    references: [products.id],
-  }),
-}));
-
-export const invoiceRelations = relations(invoices, ({ one }) => ({
-  order: one(orders, {
-    fields: [invoices.orderId],
-    references: [orders.id],
-  }),
-}));
