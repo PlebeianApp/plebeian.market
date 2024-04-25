@@ -18,6 +18,7 @@ import {
 import { faker } from "@faker-js/faker";
 import { db } from "./database";
 import { allowedMimeTypes } from "./constants";
+import { sql } from "drizzle-orm";
 
 const main = async () => {
   const userIds = [
@@ -221,6 +222,8 @@ const main = async () => {
   }) as Event
 );
 
+  db.run(sql`PRAGMA foreign_keys = OFF;`);
+
   console.log("Reset start");
   const dbSchema = db._.fullSchema
   await Promise.all([
@@ -244,25 +247,32 @@ const main = async () => {
   console.log("Reset done");
 
   console.log("Seed start");
-   db.transaction((tx) => {
-     tx.insert(dbSchema.users).values(fullUsers).execute();
-     tx.insert(dbSchema.stalls).values(userStalls).execute();
-     tx.insert(dbSchema.auctions).values(auctionsData).execute();
-     tx.insert(dbSchema.bids).values(bidsData).execute();
-     tx.insert(dbSchema.categories).values(categoryData).execute();
-     tx.insert(dbSchema.products).values(productData).execute();
-     tx.insert(dbSchema.digitalProducts).values(digitalProductsData).execute();
-     tx.insert(dbSchema.productImages).values(productImagesData).execute();
-     tx.insert(dbSchema.productCategories).values(productCategoryData).execute();
-     tx.insert(dbSchema.paymentDetails).values(paymentDetailsData).execute();
-     tx.insert(dbSchema.shipping).values(shippingData).execute();
-     tx.insert(dbSchema.shippingZones).values(shippingZonesData).execute();
-     tx.insert(dbSchema.orders).values(ordersData).execute();
-     tx.insert(dbSchema.invoices).values(invoicesData).execute();
-     tx.insert(dbSchema.orderItems).values(orderItemsData).execute();
-     tx.insert(dbSchema.events).values(eventData).execute();
+  await db.transaction(async (tx) => {
+    for (const { table, data } of [
+      { table: dbSchema.users, data: fullUsers },
+      { table: dbSchema.stalls, data: userStalls },
+      { table: dbSchema.auctions, data: auctionsData },
+      { table: dbSchema.bids, data: bidsData },
+      { table: dbSchema.categories, data: categoryData },
+      { table: dbSchema.products, data: productData },
+      { table: dbSchema.digitalProducts, data: digitalProductsData },
+      { table: dbSchema.productImages, data: productImagesData },
+      { table: dbSchema.productCategories, data: productCategoryData },
+      { table: dbSchema.paymentDetails, data: paymentDetailsData },
+      { table: dbSchema.shipping, data: shippingData },
+      { table: dbSchema.shippingZones, data: shippingZonesData },
+      { table: dbSchema.orders, data: ordersData },
+      { table: dbSchema.invoices, data: invoicesData },
+      { table: dbSchema.orderItems, data: orderItemsData },
+      { table: dbSchema.events, data: eventData },
+    ]) {
+      await tx.insert(table).values(data).execute()
+    }
   });
+
+  db.run(sql`PRAGMA foreign_keys = ON;`);
+
   console.log("Seed done");
 };
 
-main();
+await main();
