@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "db:check": "drizzle-kit check:sqlite",
+    "db:push": "drizzle-kit push:sqlite",
     "db:generate": "drizzle-kit generate:sqlite",
     "db:migrate": "tsx ./migrate.ts",
     "db:seed": "tsx ./seed.ts",
