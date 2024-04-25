@@ -37,7 +37,7 @@ const main = async () => {
       ({
         ...user,
         createdAt: faker.date.recent(),
-        updatedAt: faker.date.recent(),
+        updatedAt: faker.date.future(),
         name: faker.person.firstName(),
         role: "pleb",
         displayName: faker.person.middleName(),
@@ -49,7 +49,7 @@ const main = async () => {
         lud16: faker.string.hexadecimal({ length: 64 }),
         website: faker.internet.url(),
         zapService: faker.internet.url(),
-        lastLogin: faker.date.recent(),
+        lastLogin: faker.date.future(),
       }) as User,
   );
 
@@ -58,7 +58,7 @@ const main = async () => {
       ({
         userId: user.id,
         createdAt: faker.date.recent(),
-        updatedAt: faker.date.recent(),
+        updatedAt: faker.date.future(),
         id: faker.string.hexadecimal({ length: 32 }),
         name: faker.commerce.productMaterial(),
         description: faker.commerce.productDescription(),
@@ -71,7 +71,7 @@ const main = async () => {
     ({
       id: faker.string.hexadecimal({ length: 32 }),
       createdAt: faker.date.recent(),
-      updatedAt: faker.date.recent(),
+      updatedAt: faker.date.future(),
       stallId: stall.id,
       userId: stall.userId,
       productName: faker.commerce.productName(),
@@ -117,7 +117,7 @@ const main = async () => {
   const auctionsData = userStalls.map((stall) => ({
     id: faker.string.hexadecimal({ length: 32 }),
     createdAt: faker.date.recent(),
-    updatedAt: faker.date.recent(),
+    updatedAt: faker.date.future(),
     stallId: stall.id,
     userId: stall.userId,
     auctionName: faker.commerce.productName(),
@@ -133,7 +133,7 @@ const main = async () => {
   const bidsData = auctionsData.map((auction) => ({
     id: faker.string.hexadecimal({ length: 32 }),
     createdAt: faker.date.recent(),
-    updatedAt: faker.date.recent(),
+    updatedAt: faker.date.future(),
     auctionId: auction.id,
     userId: faker.helpers.arrayElement(userIds).id,
     bidAmount: faker.number.int(),
@@ -143,7 +143,7 @@ const main = async () => {
   const ordersData = shippingData.map((shipping) => ({
     id: faker.string.uuid(),
     createdAt: faker.date.recent(),
-    updatedAt: faker.date.recent(),
+    updatedAt: faker.date.future(),
     sellerUserId: faker.helpers.arrayElement(userIds).id,
     buyerUserId: faker.helpers.arrayElement(userIds).id,
     status: faker.helpers.arrayElement(["confirmed", "pending", "shipped", "completed", "canceled"]),
@@ -169,7 +169,7 @@ const main = async () => {
     invoiceId: faker.string.uuid(),
     orderId: order.id,
     createdAt: faker.date.recent(),
-    updatedAt: faker.date.recent(),
+    updatedAt: faker.date.future(),
     totalAmount: faker.number.int(),
     invoiceStatus: faker.helpers.arrayElement(["pending", "paid", "canceled", "refunded"]),
     paymentMethod: faker.helpers.arrayElement(["ln", "on-chain", "cashu", "other"]),
@@ -208,13 +208,13 @@ const main = async () => {
     imageType: faker.helpers.arrayElement(["main", "thumbnail", "gallery"]),
     imageOrder: faker.number.int({min:0, max:5}),
     createdAt: faker.date.recent(),
-    updatedAt: faker.date.recent()
+    updatedAt: faker.date.future()
   }) as ProductImage);
 
   const eventData = userIds.map((user) => ({
     id: faker.string.hexadecimal({ length: 32 }),
     createdAt: faker.date.recent(),
-    updatedAt: faker.date.recent(),
+    updatedAt: faker.date.future(),
     eventAuthor: user.id,
     eventKind: faker.number.int(),
     event: faker.string.uuid()
