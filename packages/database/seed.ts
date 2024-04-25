@@ -242,7 +242,7 @@ const main = async () => {
     db.delete(dbSchema.shippingZones),
     db.delete(dbSchema.paymentDetails),
     db.delete(dbSchema.events),
-    db.delete(dbSchema.users), // BUG: SqliteError: FOREIGN KEY constraint failed when seed script its running th second time
+    db.delete(dbSchema.users),
   ]);
   console.log("Reset done");
 
