@@ -82,6 +82,18 @@ Regions jslib: https://github.com/wp-blocks/isotolanguage
 | parent_id | VARCHAR | Foreign Key, References the product_id in the Products table |
 | created_at | TIMESTAMP | TS of when the product was created |
 
+**Digital_Products Table**
+
+| Column Name | Data Type | Description |
+| --- | --- | --- |
+| product_id | VARCHAR | Foreign Key, References the product_id in the Products table |
+| license_key | VARCHAR | License key for the digital product |
+| download_link | VARCHAR | URL of the digital product download link |
+| mime_type | VARCHAR | MIME type of the digital product file |
+| sha256_hash | VARCHAR | SHA-256 hash of the digital product file |
+| created_at | TIMESTAMP | TS of when the digital product was created |
+| updated_at | TIMESTAMP | TS of when the digital product was last updated |
+
 **categories Table**
 
 | Column Name | Data Type | Description |

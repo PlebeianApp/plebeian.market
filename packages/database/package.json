@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "db:check": "drizzle-kit check:sqlite",
+    "db:push": "drizzle-kit push:sqlite",
     "db:generate": "drizzle-kit generate:sqlite",
     "db:migrate": "tsx ./migrate.ts",
     "db:seed": "tsx ./seed.ts",
@@ -16,14 +17,14 @@
   },
   "devDependencies": {
     "@faker-js/faker": "^8.4.1",
-    "@types/better-sqlite3": "^7.6.9",
-    "drizzle-kit": "^0.19.13",
+    "@types/better-sqlite3": "^7.6.10",
+    "drizzle-kit": "^0.20.17",
     "tsx": "^4.7.2",
-    "typescript": "^5.2.2"
+    "typescript": "^5.4.5"
   },
   "dependencies": {
     "better-sqlite3": "^9.5.0",
-    "dotenv": "^16.3.1",
-    "drizzle-orm": "^0.28.5"
+    "dotenv": "^16.4.5",
+    "drizzle-orm": "^0.30.9"
   }
 }
