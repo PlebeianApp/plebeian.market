@@ -77,7 +77,7 @@ const main = async () => {
       userId: stall.userId,
       productName: faker.commerce.productName(),
       description: faker.commerce.productDescription(),
-      price: faker.number.int(),
+      price: faker.finance.amount(),
       productType: faker.helpers.arrayElement(["simple", "variable", "variation"]),
       currency: faker.finance.currencyCode(),
       isDigital: faker.datatype.boolean({probability: 0.8}),
@@ -87,6 +87,7 @@ const main = async () => {
 
   const paymentDetailsData = userStalls.map(
     (stall) => ({
+      paymentId: faker.string.uuid(),
       userId: stall.userId,
       stallId: stall.id,
       paymentMethod: faker.helpers.arrayElement(["ln", "on-chain", "cashu", "other"]),
@@ -96,18 +97,19 @@ const main = async () => {
 
   const shippingData = userStalls.map(
     (stall) => ({
+      id: faker.string.uuid(),
       stallId: stall.id,
-      shippingId: faker.string.uuid(),
+      userId: stall.userId,
       name: faker.commerce.productName(),
       shippingMethod: faker.helpers.arrayElement(["standard", "express", "overnight"]),
       shippingDetails: faker.commerce.productDescription(),
       baseCost: faker.finance.amount(),
-      isDefault: faker.number.int({min: 0, max: 1}),
+      isDefault: faker.datatype.boolean(),
     }) as Shipping
   );
 
   const shippingZonesData = shippingData.map((shipping) => ({
-      shippingId: shipping.shippingId,
+      shippingId: shipping.id,
       stallId: shipping.stallId,
       shippingZoneId: faker.string.uuid(),
       regionCode: faker.location.countryCode(),
@@ -121,14 +123,14 @@ const main = async () => {
     updatedAt: faker.date.future(),
     stallId: stall.id,
     userId: stall.userId,
-    auctionName: faker.commerce.productName(),
+    productName: faker.commerce.productName(),
     description: faker.commerce.productDescription(),
-    startingBidAmount: faker.number.int(),
+    startingBidAmount: faker.finance.amount(),
     endDate: faker.date.future(),
     currency: faker.finance.currencyCode(),
     specs: faker.commerce.productMaterial() || null,
-    shippingCost: faker.number.int(),
     status: faker.helpers.arrayElement(["active", "ended", "canceled"]),
+    stockQty: faker.number.int()
   }) as Auction);
 
   const bidsData = auctionsData.map((auction) => ({
@@ -137,7 +139,7 @@ const main = async () => {
     updatedAt: faker.date.future(),
     auctionId: auction.id,
     userId: faker.helpers.arrayElement(userIds).id,
-    bidAmount: faker.number.int(),
+    bidAmount: faker.finance.amount(),
     bidStatus: faker.helpers.arrayElement(["accepted", "rejected", "pending", "winner"]),
   }) as Bid);
 
@@ -148,7 +150,7 @@ const main = async () => {
     sellerUserId: faker.helpers.arrayElement(userIds).id,
     buyerUserId: faker.helpers.arrayElement(userIds).id,
     status: faker.helpers.arrayElement(["confirmed", "pending", "shipped", "completed", "canceled"]),
-    shippingId: shipping.shippingId,
+    shippingId: shipping.id,
     stallId: shipping.stallId,
     address: faker.location.streetAddress(),
     zip: faker.location.zipCode(),
@@ -167,11 +169,11 @@ const main = async () => {
   }) as OrderItem);
   
   const invoicesData = ordersData.map((order) => ({
-    invoiceId: faker.string.uuid(),
+    id: faker.string.uuid(),
     orderId: order.id,
     createdAt: faker.date.recent(),
     updatedAt: faker.date.future(),
-    totalAmount: faker.number.int(),
+    totalAmount: faker.finance.amount(),
     invoiceStatus: faker.helpers.arrayElement(["pending", "paid", "canceled", "refunded"]),
     paymentMethod: faker.helpers.arrayElement(["ln", "on-chain", "cashu", "other"]),
     paymentDetails: faker.finance.creditCardNumber(),
@@ -199,8 +201,6 @@ const main = async () => {
     downloadLink: faker.internet.url(),
     mimeType: faker.helpers.arrayElement(allowedMimeTypes),
     sha256Hash: faker.string.hexadecimal({ length: 32 }),
-    createdAt: faker.date.recent(),
-    updatedAt: faker.date.future()
   }) as DigitalProduct);
 
   const productImagesData = productData.map((product) => ({

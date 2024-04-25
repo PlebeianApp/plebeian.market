@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "sqlite",
-  "id": "f16fb527-4659-4b1d-a8a6-b55518938eef",
+  "id": "311f8a8d-d434-4366-9004-fe5933a7a8f7",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "auctions": {
@@ -44,8 +44,8 @@
           "notNull": true,
           "autoincrement": false
         },
-        "auction_name": {
-          "name": "auction_name",
+        "product_name": {
+          "name": "product_name",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -58,9 +58,69 @@
           "notNull": true,
           "autoincrement": false
         },
+        "product_type": {
+          "name": "product_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'simple'"
+        },
+        "currency": {
+          "name": "currency",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "stock_qty": {
+          "name": "stock_qty",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "specs": {
+          "name": "specs",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "shipping_cost": {
+          "name": "shipping_cost",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'0.0'"
+        },
+        "featured": {
+          "name": "featured",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "is_digital": {
+          "name": "is_digital",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "parent_id": {
+          "name": "parent_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
         "starting_bid_amount": {
           "name": "starting_bid_amount",
-          "type": "integer",
+          "type": "numeric",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -80,41 +140,12 @@
           "notNull": true,
           "autoincrement": false
         },
-        "currency": {
-          "name": "currency",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "specs": {
-          "name": "specs",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "shipping_cost": {
-          "name": "shipping_cost",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
         "status": {
           "name": "status",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
-        },
-        "featured": {
-          "name": "featured",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": false
         }
       },
       "indexes": {},
@@ -138,6 +169,19 @@
           "tableTo": "users",
           "columnsFrom": [
             "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "auctions_parent_id_products_id_fk": {
+          "name": "auctions_parent_id_products_id_fk",
+          "tableFrom": "auctions",
+          "tableTo": "products",
+          "columnsFrom": [
+            "parent_id"
           ],
           "columnsTo": [
             "id"
@@ -191,7 +235,7 @@
         },
         "bid_amount": {
           "name": "bid_amount",
-          "type": "integer",
+          "type": "numeric",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -201,7 +245,8 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false
+          "autoincrement": false,
+          "default": "'pending'"
         }
       },
       "indexes": {},
@@ -325,21 +370,12 @@
           "notNull": false,
           "autoincrement": false
         },
-        "created_at": {
-          "name": "created_at",
-          "type": "integer",
+        "comments": {
+          "name": "comments",
+          "type": "text",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "(unixepoch())"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "(unixepoch())"
+          "notNull": false,
+          "autoincrement": false
         }
       },
       "indexes": {},
@@ -431,12 +467,28 @@
     "invoices": {
       "name": "invoices",
       "columns": {
-        "invoice_id": {
-          "name": "invoice_id",
+        "id": {
+          "name": "id",
           "type": "text",
           "primaryKey": true,
           "notNull": true,
           "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(unixepoch())"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(unixepoch())"
         },
         "order_id": {
           "name": "order_id",
@@ -445,16 +497,9 @@
           "notNull": true,
           "autoincrement": false
         },
-        "invoice_date": {
-          "name": "invoice_date",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
         "total_amount": {
           "name": "total_amount",
-          "type": "integer",
+          "type": "numeric",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -464,7 +509,8 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false
+          "autoincrement": false,
+          "default": "'pending'"
         },
         "payment_method": {
           "name": "payment_method",
@@ -610,7 +656,8 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false
+          "autoincrement": false,
+          "default": "'pending'"
         },
         "shipping_id": {
           "name": "shipping_id",
@@ -711,17 +758,28 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "orders_shipping_id_stall_id_shipping_shipping_id_stall_id_fk": {
-          "name": "orders_shipping_id_stall_id_shipping_shipping_id_stall_id_fk",
+        "orders_shipping_id_shipping_id_fk": {
+          "name": "orders_shipping_id_shipping_id_fk",
           "tableFrom": "orders",
           "tableTo": "shipping",
           "columnsFrom": [
-            "shipping_id",
+            "shipping_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "orders_stall_id_stalls_id_fk": {
+          "name": "orders_stall_id_stalls_id_fk",
+          "tableFrom": "orders",
+          "tableTo": "stalls",
+          "columnsFrom": [
             "stall_id"
           ],
           "columnsTo": [
-            "shipping_id",
-            "stall_id"
+            "id"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
@@ -735,10 +793,10 @@
       "columns": {
         "payment_id": {
           "name": "payment_id",
-          "type": "integer",
+          "type": "text",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": true
+          "autoincrement": false
         },
         "user_id": {
           "name": "user_id",
@@ -751,7 +809,7 @@
           "name": "stall_id",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "payment_method": {
@@ -808,14 +866,14 @@
           "name": "product_id",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "cat_id": {
           "name": "cat_id",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         }
       },
@@ -848,7 +906,15 @@
           "onUpdate": "no action"
         }
       },
-      "compositePrimaryKeys": {},
+      "compositePrimaryKeys": {
+        "product_categories_product_id_cat_id_pk": {
+          "columns": [
+            "cat_id",
+            "product_id"
+          ],
+          "name": "product_categories_product_id_cat_id_pk"
+        }
+      },
       "uniqueConstraints": {}
     },
     "product_images": {
@@ -857,15 +923,15 @@
         "product_id": {
           "name": "product_id",
           "type": "text",
-          "primaryKey": true,
-          "notNull": true,
+          "primaryKey": false,
+          "notNull": false,
           "autoincrement": false
         },
         "image_url": {
           "name": "image_url",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "image_type": {
@@ -873,7 +939,8 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false
+          "autoincrement": false,
+          "default": "'gallery'"
         },
         "image_order": {
           "name": "image_order",
@@ -885,14 +952,6 @@
         },
         "created_at": {
           "name": "created_at",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "(unixepoch())"
-        },
-        "updated_at": {
-          "name": "updated_at",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
@@ -916,7 +975,15 @@
           "onUpdate": "no action"
         }
       },
-      "compositePrimaryKeys": {},
+      "compositePrimaryKeys": {
+        "product_images_product_id_image_url_pk": {
+          "columns": [
+            "image_url",
+            "product_id"
+          ],
+          "name": "product_images_product_id_image_url_pk"
+        }
+      },
       "uniqueConstraints": {}
     },
     "products": {
@@ -973,19 +1040,13 @@
           "notNull": true,
           "autoincrement": false
         },
-        "price": {
-          "name": "price",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
         "product_type": {
           "name": "product_type",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false
+          "autoincrement": false,
+          "default": "'simple'"
         },
         "currency": {
           "name": "currency",
@@ -1010,10 +1071,11 @@
         },
         "shipping_cost": {
           "name": "shipping_cost",
-          "type": "integer",
+          "type": "numeric",
           "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'0.0'"
         },
         "featured": {
           "name": "featured",
@@ -1036,6 +1098,13 @@
           "type": "text",
           "primaryKey": false,
           "notNull": false,
+          "autoincrement": false
+        },
+        "price": {
+          "name": "price",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true,
           "autoincrement": false
         }
       },
@@ -1087,15 +1156,38 @@
     "shipping": {
       "name": "shipping",
       "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(unixepoch())"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(unixepoch())"
+        },
         "stall_id": {
           "name": "stall_id",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
-        "shipping_id": {
-          "name": "shipping_id",
+        "user_id": {
+          "name": "user_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -1134,7 +1226,8 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false
+          "autoincrement": false,
+          "default": false
         }
       },
       "indexes": {},
@@ -1151,22 +1244,34 @@
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {
-        "shipping_shipping_id_stall_id_pk": {
-          "columns": [
-            "shipping_id",
-            "stall_id"
+        },
+        "shipping_user_id_users_id_fk": {
+          "name": "shipping_user_id_users_id_fk",
+          "tableFrom": "shipping",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
           ],
-          "name": "shipping_shipping_id_stall_id_pk"
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
+      "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
     "shipping_zones": {
       "name": "shipping_zones",
       "columns": {
+        "shipping_zone_id": {
+          "name": "shipping_zone_id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
         "shipping_id": {
           "name": "shipping_id",
           "type": "text",
@@ -1178,14 +1283,7 @@
           "name": "stall_id",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "shipping_zone_id": {
-          "name": "shipping_zone_id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "region_code": {
@@ -1205,17 +1303,28 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "custom_fk": {
-          "name": "custom_fk",
+        "shipping_zones_shipping_id_shipping_id_fk": {
+          "name": "shipping_zones_shipping_id_shipping_id_fk",
           "tableFrom": "shipping_zones",
           "tableTo": "shipping",
           "columnsFrom": [
-            "shipping_id",
+            "shipping_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "shipping_zones_stall_id_stalls_id_fk": {
+          "name": "shipping_zones_stall_id_stalls_id_fk",
+          "tableFrom": "shipping_zones",
+          "tableTo": "stalls",
+          "columnsFrom": [
             "stall_id"
           ],
           "columnsTo": [
-            "shipping_id",
-            "stall_id"
+            "id"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
@@ -1328,7 +1437,7 @@
           "name": "name",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "role": {
@@ -1336,20 +1445,21 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false
+          "autoincrement": false,
+          "default": "'pleb'"
         },
         "display_name": {
           "name": "display_name",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "about": {
           "name": "about",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "image": {
