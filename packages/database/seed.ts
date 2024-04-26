@@ -50,9 +50,9 @@ const main = async () => {
         about: faker.person.bio(),
         image: faker.image.avatar(),
         banner: faker.image.urlLoremFlickr({ width: 800, height: 400 }),
-        nip05: faker.internet.url(),
-        lud06: faker.string.hexadecimal({ length: 32 }),
-        lud16: faker.string.hexadecimal({ length: 64 }),
+        nip05: faker.internet.email(),
+        lud06: faker.string.hexadecimal({ length: 64, prefix: '', casing: 'lower' }),
+        lud16: faker.string.hexadecimal({ length: 64, prefix: '', casing: 'lower' }),
         website: faker.internet.url(),
         zapService: faker.internet.url(),
         lastLogin: faker.date.future(),
@@ -65,7 +65,7 @@ const main = async () => {
         userId: user.id,
         createdAt: faker.date.recent(),
         updatedAt: faker.date.future(),
-        id: faker.string.hexadecimal({ length: 32 }),
+        id: faker.string.hexadecimal({ length: 64, prefix: '', casing: 'lower' }),
         name: faker.commerce.productMaterial(),
         description: faker.commerce.productDescription(),
         currency: faker.finance.currencyCode(),
@@ -77,7 +77,7 @@ const main = async () => {
     return stallsByUser.map((stall) => {
       return randomLengthArrayFromTo(3, 12).map((i) => {
         return {
-          id: faker.string.hexadecimal({ length: 32 }),
+          id: faker.string.hexadecimal({ length: 64, prefix: '', casing: 'lower' }),
           createdAt: faker.date.recent(),
           updatedAt: faker.date.future(),
           stallId: stall.id,
@@ -150,7 +150,7 @@ const main = async () => {
   const auctionsData = userStalls.map((stallByUser) => {
     return stallByUser.map((stall) => {
       return {
-        id: faker.string.hexadecimal({ length: 32 }),
+        id: faker.string.hexadecimal({ length: 64, prefix: '', casing: 'lower' }),
         createdAt: faker.date.recent(),
         updatedAt: faker.date.future(),
         stallId: stall.id,
@@ -170,7 +170,7 @@ const main = async () => {
   const bidsData = auctionsData.map((auctionByStall) => {
     return auctionByStall.map((auction) => {
       return {
-        id: faker.string.hexadecimal({ length: 32 }),
+        id: faker.string.hexadecimal({ length: 64, prefix: '', casing: 'lower' }),
         createdAt: faker.date.recent(),
         updatedAt: faker.date.future(),
         auctionId: auction.id,
@@ -276,10 +276,10 @@ const main = async () => {
       (product) =>
         ({
           productId: product.id,
-          licenseKey: faker.string.hexadecimal({ length: 32 }),
+          licenseKey: faker.string.hexadecimal({ length: 64, prefix: '', casing: 'lower' }),
           downloadLink: faker.internet.url(),
           mimeType: faker.helpers.arrayElement(allowedMimeTypes),
-          sha256Hash: faker.string.hexadecimal({ length: 32 }),
+          sha256Hash: faker.string.hexadecimal({ length: 64, prefix: '', casing: 'lower' }),
         }) as DigitalProduct,
     );
 
@@ -298,7 +298,7 @@ const main = async () => {
   const eventData = userIds.map(
     (user) =>
       ({
-        id: faker.string.hexadecimal({ length: 32 }),
+        id: faker.string.hexadecimal({ length: 64, prefix: '', casing: 'lower' }),
         createdAt: faker.date.recent(),
         updatedAt: faker.date.future(),
         eventAuthor: user.id,

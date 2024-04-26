@@ -9,7 +9,8 @@ type RichStalls = {
 	description: string
 	currency: string
 	createDate: string
-	userName: string
+	userId: string
+	userName: string | null
 	productCount: number
 	orderCount: number
 }
@@ -19,7 +20,7 @@ export const getAllStalls = (): RichStalls[] => {
 
 	const richStalls: RichStalls[] = stallsResult.map((stall) => {
 		const ownerRes = db
-			.select({ userName: users.name })
+			.select({ userId: users.id, userName: users.name })
 			.from(users)
 			.where(eq(users.id, stall.userId))
 			.all()
@@ -42,9 +43,9 @@ export const getAllStalls = (): RichStalls[] => {
 			.all()
 			.map((order) => order.count)
 
-		const { userName } = takeUniqueOrThrow(ownerRes)
+		const { userId, userName } = takeUniqueOrThrow(ownerRes)
 
-		if (!userName) {
+		if (!userId) {
 			error(404, 'Not found')
 		}
 
@@ -54,6 +55,7 @@ export const getAllStalls = (): RichStalls[] => {
 			description: stall.description,
 			currency: stall.currency,
 			createDate: format(stall.createdAt, 'dd-MM-yyyy'),
+			userId,
 			userName,
 			productCount: takeUniqueOrThrow(productCount),
 			orderCount: takeUniqueOrThrow(orderCount)
@@ -73,7 +75,7 @@ type StallInfo = {
 	description: string
 	currency: string
 	createDate: string
-	userName: string
+	userId: string
 	products: {
 		id: string
 		name: string
@@ -88,12 +90,15 @@ export const getStallById = (id: string): StallInfo => {
 	const uniqueStall = takeUniqueOrThrow(stall)
 
 	const ownerRes = db
-		.select({ userName: users.name })
+		.select({ 
+			userId: users.id,
+		})
 		.from(users)
 		.where(eq(users.id, uniqueStall.userId))
 		.all()
-	const { userName } = takeUniqueOrThrow(ownerRes)
-	if (!userName) {
+		
+	const { userId } = takeUniqueOrThrow(ownerRes)
+	if (!userId) {
 		error(404, 'Not found')
 	}
 	const stallProducts = db.select().from(products).where(eq(products.stallId, id)).all()
@@ -104,7 +109,7 @@ export const getStallById = (id: string): StallInfo => {
 		description: uniqueStall.description,
 		currency: uniqueStall.currency,
 		createDate: format(uniqueStall.createdAt, 'dd-MM-yyyy'),
-		userName: userName,
+		userId: userId,
 		products: stallProducts.map((product) => ({
 			id: product.id,
 			name: product.productName,

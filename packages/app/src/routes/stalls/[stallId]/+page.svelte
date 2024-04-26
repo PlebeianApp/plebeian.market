@@ -1,17 +1,24 @@
 <script>
-	import * as Card from '$lib/components/ui/card/index.ts'
-	import { Button } from '$lib/components/ui/button/index.ts'
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.ts'
 	import ProductItem from '$lib/components/product/item.svelte'
+	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar'
 	/** @type {import('./$types').PageData} */
 	export let data
-	const { stall } = data
+	const { stall, user } = data
 </script>
 
 <div class="flex min-h-screen w-full flex-col bg-muted/40">
 	<div class="flex flex-col">
 		<main class="text-black">
-			<div class="w-full bg-black py-20 text-center text-white">
+			<div class="flex flex-col items-center w-full bg-black py-20 text-center text-white">
+				<section class=" w-fit">
+					<a href="##">
+						<span>{user.name}</span>
+						<Avatar>
+							<AvatarImage src={user.image} alt="@shadcn" />
+							<AvatarFallback>{user.name?.substring(0,2)}</AvatarFallback>
+						</Avatar>
+					</a>
+				</section>
 				<h1 class="mb-8 text-5xl font-bold">{stall.name}</h1>
 				<p class="text-2xl">{stall.description}</p>
 			</div>

@@ -1,8 +1,5 @@
 <script>
-	import * as Card from '$lib/components/ui/card/index.ts'
-	import { Button } from '$lib/components/ui/button/index.ts'
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.ts'
-	import ProductItem from '$lib/components/product/item.svelte'
+	import * as Card from '$lib/components/ui/card/index'
 	/** @type {import('./$types').PageData} */
 	export let data
 	const { stalls } = data
@@ -18,7 +15,7 @@
 						{#each stalls as item}
 							<a href={`/stalls/${item.id}`}>
 								<Card.Root
-									class="cursor-pointer border-4 border-black bg-transparent text-black text-black"
+									class="cursor-pointer border-4 border-black bg-transparent text-black"
 								>
 									<Card.Header class="flex flex-row justify-between p-4">
 										<span class="truncate font-bold">{item.name}</span>
