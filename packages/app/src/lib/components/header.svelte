@@ -7,7 +7,7 @@
 	<div class="container flex h-full w-full items-center justify-between">
 		<a href="/">logo</a>
 		<div class="flex gap-8">
-			<a class="hover:underline" href="/">Stall Browser</a>
+			<a class="hover:underline" href="/stalls/">Stall Browser</a>
 			<a class="hover:underline" href="/">Market Square</a>
 			<a class="hover:underline" href="/">Plebeian Planet</a>
 		</div>
