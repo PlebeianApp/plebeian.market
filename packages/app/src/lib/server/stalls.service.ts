@@ -3,7 +3,7 @@ import { error } from '@sveltejs/kit'
 import { takeUniqueOrThrow } from '$lib/utils'
 import { format } from 'date-fns'
 
-type RichStalls = {
+export type RichStall = {
 	id: string
 	name: string
 	description: string
@@ -15,10 +15,10 @@ type RichStalls = {
 	orderCount: number
 }
 
-export const getAllStalls = (): RichStalls[] => {
+export const getAllStalls = (): RichStall[] => {
 	const stallsResult = db.select().from(stalls).all()
 
-	const richStalls: RichStalls[] = stallsResult.map((stall) => {
+	const richStalls: RichStall[] = stallsResult.map((stall) => {
 		const ownerRes = db
 			.select({ userId: users.id, userName: users.name })
 			.from(users)

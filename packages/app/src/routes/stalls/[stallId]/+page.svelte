@@ -10,21 +10,21 @@
 	<div class="flex flex-col">
 		<main class="text-black">
 			<div class="flex flex-col items-center w-full bg-black py-20 text-center text-white">
-				<section class=" w-fit">
-					<a href="##">
-						<span>{user.name}</span>
+				<section class="w-fit">
+					<a href="##" class="flex flex-col items-center">
 						<Avatar>
 							<AvatarImage src={user.image} alt="@shadcn" />
 							<AvatarFallback>{user.name?.substring(0,2)}</AvatarFallback>
 						</Avatar>
+						<span>{user.name}</span>
 					</a>
 				</section>
 				<h1 class="mb-8 text-5xl font-bold">{stall.name}</h1>
 				<p class="text-2xl">{stall.description}</p>
 			</div>
-			<div class=" bg-primary px-4 py-20 lg:px-12">
+			<div class="px-4 py-20 lg:px-12">
 				<div class="container">
-					<h2 class="mb-4 text-2xl font-bold">{stall.name}</h2>
+					<h2 class="mb-4 text-2xl font-bold">Products</h2>
 					<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
 						{#each stall.products as item}
 							<ProductItem productName={item.name} />

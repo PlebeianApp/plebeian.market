@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button/index.js'
 	import ProductItem from '$lib/components/product/item.svelte'
+	import Pattern from '$lib/components/pattern.svg?url'
 </script>
 
 <div class="flex min-h-screen w-full flex-col bg-muted/40">
@@ -9,6 +10,7 @@
 			<div class="w-full bg-black py-20 text-center text-white">
 				<h1 class="mb-8 text-5xl font-bold">Sell stuff for sats</h1>
 				<Button class="p-6 text-xl font-bold">List my stuff</Button>
+				<div class="absolute top-0 h-full w-full" style={`background: url(${Pattern});`}></div>
 			</div>
 			<div class=" bg-primary px-4 py-20 lg:px-12">
 				<div class="container">

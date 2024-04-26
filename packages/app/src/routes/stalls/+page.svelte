@@ -1,0 +1,28 @@
+<script lang="ts">
+	import StallItem from '$lib/components/stalls/item.svelte'
+
+	/** @type {import('./$types').PageData} */
+	export let data
+	const { stalls } = data
+</script>
+
+<div class="flex min-h-screen w-full flex-col bg-muted/40">
+	<div class="flex flex-col">
+		<main class="text-black">
+			<div class="px-4 py-20 lg:px-12">
+				<div class="container">
+					<h2 class="mb-4 text-2xl font-bold">Stalls</h2>
+					<div
+						class="grid auto-cols-max gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4"
+					>
+						{#each stalls as item}
+							<a href={`/stalls/${item.id}`}>
+								<StallItem item={item}/>
+							</a>
+						{/each}
+					</div>
+				</div>
+			</div>
+		</main>
+	</div>
+</div>
