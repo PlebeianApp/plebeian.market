@@ -1,9 +1,5 @@
 lockfileVersion: '6.0'
 
-settings:
-  autoInstallPeers: true
-  excludeLinksFromLockfile: false
-
 importers:
 
   .: {}
@@ -25,6 +21,9 @@ importers:
       cmdk-sv:
         specifier: ^0.0.17
         version: 0.0.17(svelte@4.2.15)
+      date-fns:
+        specifier: ^3.6.0
+        version: 3.6.0
       embla-carousel-svelte:
         specifier: ^8.0.2
         version: 8.0.2(svelte@4.2.15)
@@ -1795,6 +1794,10 @@ packages:
       es5-ext: 0.10.64
       type: 2.7.2
     dev: true
+
+  /date-fns@3.6.0:
+    resolution: {integrity: sha512-fRHTG8g/Gif+kSh50gaGEdToemgfj74aRX3swtiouboip5JDLAyDE9F11nHMIcvOaXeOC6D7SpNhi7uFyB7Uww==}
+    dev: false
 
   /dayjs@1.11.10:
     resolution: {integrity: sha512-vjAczensTgRcqDERK0SR2XMwsF/tSvnvlv6VcF2GIhg6Sx4yOIt/irsr1RDJsKiIyBzJDpCoXiWWq28MqH2cnQ==}
@@ -4151,3 +4154,7 @@ packages:
 
   /zod@3.22.4:
     resolution: {integrity: sha512-iC+8Io04lddc+mVqQ9AZ7OQ2MrUKGN+oIQyq1vemgt46jwCwLfhq7/pwnBnNXXXZb8VTVLKwp9EDkx+ryxIWmg==}
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
