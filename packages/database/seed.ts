@@ -18,7 +18,14 @@ import {
 } from "./types";
 import { faker } from "@faker-js/faker";
 import { db } from "./database";
-import { allowedMimeTypes } from "./constants";
+import {
+  allowedMimeTypes,
+  devUser1,
+  devUser2,
+  devUser3,
+  devUser4,
+  devUser5,
+} from "./constants";
 import { sql } from "drizzle-orm";
 
 const randomLengthArrayFromTo = (min: number, max: number) => {
@@ -26,17 +33,9 @@ const randomLengthArrayFromTo = (min: number, max: number) => {
 };
 
 const main = async () => {
-  const userIds = [
-    {
-      id: "11a1827635450ebb3c5a7d12c1f8e7b2b514439ac10a67eef3d9fd9c5c68e245",
-    },
-    {
-      id: "21b1827635450ebb3c5a7d12c1f8e7b2b514439ac10a67eef3d9fd9c5c68e245",
-    },
-    {
-      id: "31c1827635450ebb3c5a7d12c1f8e7b2b514439ac10a67eef3d9fd9c5c68e245",
-    },
-  ];
+  const userIds = [devUser1, devUser2, devUser3, devUser4, devUser5].map(
+    (user) => ({ id: user.pk }),
+  );
 
   const fullUsers = userIds.map(
     (user) =>
@@ -51,8 +50,16 @@ const main = async () => {
         image: faker.image.avatar(),
         banner: faker.image.urlLoremFlickr({ width: 800, height: 400 }),
         nip05: faker.internet.email(),
-        lud06: faker.string.hexadecimal({ length: 64, prefix: '', casing: 'lower' }),
-        lud16: faker.string.hexadecimal({ length: 64, prefix: '', casing: 'lower' }),
+        lud06: faker.string.hexadecimal({
+          length: 64,
+          prefix: "",
+          casing: "lower",
+        }),
+        lud16: faker.string.hexadecimal({
+          length: 64,
+          prefix: "",
+          casing: "lower",
+        }),
         website: faker.internet.url(),
         zapService: faker.internet.url(),
         lastLogin: faker.date.future(),
@@ -65,7 +72,11 @@ const main = async () => {
         userId: user.id,
         createdAt: faker.date.recent(),
         updatedAt: faker.date.future(),
-        id: faker.string.hexadecimal({ length: 64, prefix: '', casing: 'lower' }),
+        id: faker.string.hexadecimal({
+          length: 64,
+          prefix: "",
+          casing: "lower",
+        }),
         name: faker.commerce.productMaterial(),
         description: faker.commerce.productDescription(),
         currency: faker.finance.currencyCode(),
@@ -77,7 +88,11 @@ const main = async () => {
     return stallsByUser.map((stall) => {
       return randomLengthArrayFromTo(3, 12).map((i) => {
         return {
-          id: faker.string.hexadecimal({ length: 64, prefix: '', casing: 'lower' }),
+          id: faker.string.hexadecimal({
+            length: 64,
+            prefix: "",
+            casing: "lower",
+          }),
           createdAt: faker.date.recent(),
           updatedAt: faker.date.future(),
           stallId: stall.id,
@@ -150,7 +165,11 @@ const main = async () => {
   const auctionsData = userStalls.map((stallByUser) => {
     return stallByUser.map((stall) => {
       return {
-        id: faker.string.hexadecimal({ length: 64, prefix: '', casing: 'lower' }),
+        id: faker.string.hexadecimal({
+          length: 64,
+          prefix: "",
+          casing: "lower",
+        }),
         createdAt: faker.date.recent(),
         updatedAt: faker.date.future(),
         stallId: stall.id,
@@ -170,7 +189,11 @@ const main = async () => {
   const bidsData = auctionsData.map((auctionByStall) => {
     return auctionByStall.map((auction) => {
       return {
-        id: faker.string.hexadecimal({ length: 64, prefix: '', casing: 'lower' }),
+        id: faker.string.hexadecimal({
+          length: 64,
+          prefix: "",
+          casing: "lower",
+        }),
         createdAt: faker.date.recent(),
         updatedAt: faker.date.future(),
         auctionId: auction.id,
@@ -276,10 +299,18 @@ const main = async () => {
       (product) =>
         ({
           productId: product.id,
-          licenseKey: faker.string.hexadecimal({ length: 64, prefix: '', casing: 'lower' }),
+          licenseKey: faker.string.hexadecimal({
+            length: 64,
+            prefix: "",
+            casing: "lower",
+          }),
           downloadLink: faker.internet.url(),
           mimeType: faker.helpers.arrayElement(allowedMimeTypes),
-          sha256Hash: faker.string.hexadecimal({ length: 64, prefix: '', casing: 'lower' }),
+          sha256Hash: faker.string.hexadecimal({
+            length: 64,
+            prefix: "",
+            casing: "lower",
+          }),
         }) as DigitalProduct,
     );
 
@@ -298,7 +329,11 @@ const main = async () => {
   const eventData = userIds.map(
     (user) =>
       ({
-        id: faker.string.hexadecimal({ length: 64, prefix: '', casing: 'lower' }),
+        id: faker.string.hexadecimal({
+          length: 64,
+          prefix: "",
+          casing: "lower",
+        }),
         createdAt: faker.date.recent(),
         updatedAt: faker.date.future(),
         eventAuthor: user.id,
