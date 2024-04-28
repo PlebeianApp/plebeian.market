@@ -6,7 +6,8 @@
   "main": "index.js",
   "scripts": {
     "dev": "pnpm --parallel --stream -r run dev",
-    "db:setup": "pnpm --filter './packages/database' run db:setup"
+    "db:setup": "pnpm --filter './packages/database' run db:setup",
+    "test": "pnpm --parallel --stream -r run test"
   },
   "keywords": [],
   "author": "",
