@@ -1,4 +1,4 @@
-import { db, stalls, users, products, orders, eq, sql } from '@plebeian/database'
+import { db, eq, orders, products, sql, stalls, users } from '@plebeian/database'
 import { error } from '@sveltejs/kit'
 import { takeUniqueOrThrow } from '$lib/utils'
 import { format } from 'date-fns'
@@ -90,13 +90,13 @@ export const getStallById = (id: string): StallInfo => {
 	const uniqueStall = takeUniqueOrThrow(stall)
 
 	const ownerRes = db
-		.select({ 
-			userId: users.id,
+		.select({
+			userId: users.id
 		})
 		.from(users)
 		.where(eq(users.id, uniqueStall.userId))
 		.all()
-		
+
 	const { userId } = takeUniqueOrThrow(ownerRes)
 	if (!userId) {
 		error(404, 'Not found')
@@ -121,6 +121,35 @@ export const getStallById = (id: string): StallInfo => {
 
 	if (stallInfo) {
 		return stallInfo
+	}
+
+	error(404, 'Not found')
+}
+
+export type DisplayStall = {
+	id: string
+	name: string
+	description: string
+	currency: string
+	createDate: string
+	userId: string
+}
+
+export const getStallsByUserId = (userId: string): DisplayStall[] => {
+	const userStalls = db.select().from(stalls).where(eq(stalls.userId, userId)).all()
+	const stallsInfo = userStalls.map((stall) => {
+		return {
+			id: stall.id,
+			name: stall.name,
+			description: stall.description,
+			currency: stall.currency,
+			createDate: format(stall.createdAt, 'dd-MM-yyyy'),
+			userId: stall.userId
+		}
+	})
+
+	if (stallsInfo) {
+		return stallsInfo
 	}
 
 	error(404, 'Not found')
