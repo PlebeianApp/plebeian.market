@@ -135,21 +135,55 @@ export type DisplayStall = {
 	userId: string
 }
 
-export const getStallsByUserId = (userId: string): DisplayStall[] => {
-	const userStalls = db.select().from(stalls).where(eq(stalls.userId, userId)).all()
-	const stallsInfo = userStalls.map((stall) => {
+export const getStallsByUserId = (userId: string): RichStall[] => {
+	const stallsResult = db.select().from(stalls).where(eq(stalls.userId, userId)).all()
+
+	const richStalls: RichStall[] = stallsResult.map((stall) => {
+		const ownerRes = db
+			.select({ userId: users.id, userName: users.name })
+			.from(users)
+			.where(eq(users.id, stall.userId))
+			.all()
+
+		const productCount = db
+			.select({
+				count: sql<number>`cast(count(${stalls.id}) as int)`
+			})
+			.from(products)
+			.where(eq(products.stallId, stall.id))
+			.all()
+			.map((product) => product.count)
+
+		const orderCount = db
+			.select({
+				count: sql<number>`cast(count(${orders.id}) as int)`
+			})
+			.from(orders)
+			.where(eq(orders.stallId, stall.id))
+			.all()
+			.map((order) => order.count)
+
+		const { userId, userName } = takeUniqueOrThrow(ownerRes)
+
+		if (!userId) {
+			error(404, 'Not found')
+		}
+
 		return {
 			id: stall.id,
 			name: stall.name,
 			description: stall.description,
 			currency: stall.currency,
 			createDate: format(stall.createdAt, 'dd-MM-yyyy'),
-			userId: stall.userId
+			userId,
+			userName,
+			productCount: takeUniqueOrThrow(productCount),
+			orderCount: takeUniqueOrThrow(orderCount)
 		}
 	})
 
-	if (stallsInfo) {
-		return stallsInfo
+	if (richStalls) {
+		return richStalls
 	}
 
 	error(404, 'Not found')
