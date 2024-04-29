@@ -5,13 +5,14 @@
 
 <header class="sticky top-0 z-30 bg-black px-4 py-4 text-white lg:px-12">
 	<div class="container flex h-full w-full items-center justify-between">
-		<a href="/">logo</a>
+		<section class=" inline-flex items-center">
+		<a href="/"><img src="logo.svg" alt="logo" class="w-16 px-2"></a>
 		<div class="flex gap-8">
-			<a class="hover:underline" href="/stalls/">Stall Browser</a>
-			<a class="hover:underline" href="/">Market Square</a>
-			<a class="hover:underline" href="/">Plebeian Planet</a>
+			<a class="hover:underline font-semibold" href="/stalls/">Stall Browser</a>
+			<a class="hover:underline font-semibold" href="/">Market Square</a>
+			<a class="hover:underline font-semibold" href="/">Plebeian Planet</a>
 		</div>
-
+		</section>
 		<div class="flex items-center gap-8">
 			<a href="/">Private Messages</a>
 			<a href="/">Cart</a>
