@@ -7,7 +7,7 @@
 <div class="flex min-h-screen w-full flex-col bg-muted/40">
 	<div class="flex flex-col">
 		<main class="text-black">
-			<div class="w-full bg-black py-20 text-center text-white">
+			<div class="relative w-full bg-black py-20 text-center text-white">
 				<h1 class="mb-8 text-5xl font-bold">Sell stuff for sats</h1>
 				<Button class="p-6 text-xl font-bold">List my stuff</Button>
 				<div class="absolute top-0 h-full w-full" style={`background: url(${Pattern});`}></div>
