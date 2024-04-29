@@ -31,9 +31,9 @@
 			/>
 		</div>
 		<div class="flex flex-col">
-			<h1 class="mb-8 text-3xl font-bold">Premium Aluminum SeedSigner (Orange)</h1>
-			<h2 class="text-2xl font-bold">224,255 sats</h2>
-			<h3 class="">$150 USD</h3>
+			<h1>Premium Aluminum SeedSigner (Orange)</h1>
+			<h2>224,255 sats</h2>
+			<h3 >$150 USD</h3>
 
 			<h3 class="my-8 font-bold">Stock: 5</h3>
 			<div class="flex w-1/2 flex-row gap-4">
@@ -59,15 +59,17 @@
 </div>
 
 <div class="container py-20">
-	<h2 class="mb-4 text-2xl font-bold">More from BTC Hardware Solutions</h2>
+	<h2>More from BTC Hardware Solutions</h2>
 	<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
 		{#each [1, 2, 3, 4] as item}
-			<ProductItem />
+			<a href={`/products/${item}`}>
+				<ProductItem />
+			</a>
 		{/each}
 	</div>
 </div>
 <div class="w-full bg-primary py-20 text-center text-white">
 	<span class="mb-8 text-3xl text-black">Join in on the fun!</span>
-	<h1 class="my-8 text-5xl font-bold text-black">Sell stuff for sats</h1>
+	<h1 class="text-black">Sell stuff for sats</h1>
 	<Button class="p-6 text-xl font-bold">List my stuff</Button>
 </div>
