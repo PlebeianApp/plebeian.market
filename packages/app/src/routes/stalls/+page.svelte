@@ -13,11 +13,11 @@
 				<div class="container">
 					<h2 class="mb-4 text-2xl font-bold">Stalls</h2>
 					<div
-						class="grid auto-cols-max gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4"
+						class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4"
 					>
 						{#each stalls as item}
 							<a href={`/stalls/${item.id}`}>
-								<StallItem item={item}/>
+								<StallItem {item} />
 							</a>
 						{/each}
 					</div>
