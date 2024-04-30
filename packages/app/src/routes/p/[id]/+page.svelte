@@ -1,23 +1,25 @@
 <script lang="ts">
+	import Pattern from '$lib/components/Pattern.svelte'
 	import StallItem from '$lib/components/stalls/item.svelte'
 	import ProductItem from '$lib/components/product/item.svelte'
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar'
 	import Button from '$lib/components/ui/button/button.svelte'
+	import type { PageData } from './$types'
 
-	/** @type {import('./$types').PageData} */
-	export let data
+	export let data: PageData
 	const { npub, name, image, products, stalls } = data
 </script>
 
 <div class="flex min-h-screen w-full flex-col bg-muted/40">
 	<div class="flex flex-col">
 		<main class="text-black">
-			<div class="flex w-full flex-col items-center bg-black py-20 text-center text-white">
+			<div class="relative flex w-full flex-col items-center bg-black py-20 text-center text-white">
+				<Pattern />
 				<section class="w-fit">
 					<a href="##" class="flex flex-col items-center">
 						<Avatar class="h-20 w-20">
 							<AvatarImage src={image} alt="@shadcn" />
-							<AvatarFallback>{'Mohammad'}</AvatarFallback>
+							<AvatarFallback>{name}</AvatarFallback>
 						</Avatar>
 					</a>
 					<h2>{name}</h2>
@@ -29,19 +31,24 @@
 					</div>
 				</section>
 			</div>
-			<div class="px-4 py-20 lg:px-12">
-				<div class="container">
-					<h2>Stalls</h2>
-					<div
-						class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4"
-					>
-						{#each stalls as item}
-							<a href={`/stalls/${item.id}`}>
-								<StallItem {item} />
-							</a>
-						{/each}
+			{#if stalls.length}
+				<div class="px-4 py-20 lg:px-12">
+					<div class="container">
+						<h2>Stalls</h2>
+						<div
+							class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4"
+						>
+							{#each stalls as item}
+								<a href={`/stalls/${item.id}`}>
+									<StallItem {item} />
+								</a>
+							{/each}
+						</div>
 					</div>
 				</div>
+			{/if}
+
+			{#if products.length}
 				<div class="px-4 py-20 lg:px-12">
 					<div class="container">
 						<h2>Products</h2>
@@ -59,7 +66,7 @@
 						</div>
 					</div>
 				</div>
-			</div>
+			{/if}
 		</main>
 	</div>
 </div>

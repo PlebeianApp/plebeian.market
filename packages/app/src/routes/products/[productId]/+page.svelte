@@ -5,7 +5,7 @@
 
 	/** @type {import('./$types').PageData} */
 	export let data
-	const { product, seller, sellersProducts } = data
+	const { product, seller, products } = data
 </script>
 
 <div class="container py-16">
@@ -53,7 +53,7 @@
 <div class="container py-20">
 	<h2>More from BTC Hardware Solutions</h2>
 	<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-		{#each sellersProducts as item}
+		{#each products as item}
 			<a href={`/products/${item.id}`}>
 				<ProductItem
 					imageUrl={item.mainImage}

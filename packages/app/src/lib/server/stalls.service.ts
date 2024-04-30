@@ -80,8 +80,8 @@ type StallInfo = {
 	products: DisplayProduct[]
 }
 
-export const getStallById = (id: string): StallInfo => {
-	const stall = db.select().from(stalls).where(eq(stalls.id, id)).all()
+export const getStallById = async (id: string): Promise<StallInfo> => {
+	const stall = await db.select().from(stalls).where(eq(stalls.id, id)).execute()
 	const uniqueStall = takeUniqueOrThrow(stall)
 
 	const ownerRes = db
@@ -96,7 +96,7 @@ export const getStallById = (id: string): StallInfo => {
 	if (!userId) {
 		error(404, 'Not found')
 	}
-	const stallProducts = getProductsByStallId(uniqueStall.id)
+	const stallProducts = await getProductsByStallId(uniqueStall.id)
 
 	const stallInfo = {
 		id: uniqueStall.id,
@@ -124,8 +124,8 @@ export type DisplayStall = {
 	userId: string
 }
 
-export const getStallsByUserId = (userId: string): RichStall[] => {
-	const stallsResult = db.select().from(stalls).where(eq(stalls.userId, userId)).all()
+export const getStallsByUserId = async (userId: string): Promise<RichStall[]> => {
+	const stallsResult = await db.select().from(stalls).where(eq(stalls.userId, userId)).execute()
 
 	const richStalls: RichStall[] = stallsResult.map((stall) => {
 		const ownerRes = db

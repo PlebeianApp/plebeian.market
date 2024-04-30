@@ -2,6 +2,7 @@ import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import { cubicOut } from 'svelte/easing'
 import type { TransitionConfig } from 'svelte/transition'
+import { error } from '@sveltejs/kit'
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs))
@@ -55,7 +56,13 @@ export const flyAndScale = (
 	}
 }
 
+// TODO: This is not ideal, we should not face duplicate ids at any case
+// And for 404, we should just throw error 404 as we do in other places
+// so let's remove this
 export const takeUniqueOrThrow = <T extends any[]>(values: T): T[number] => {
+	if (!values.length) {
+		error(404, 'Not found')
+	}
 	if (values.length !== 1) throw new Error('Found non unique or inexistent value')
 	return values[0]!
 }

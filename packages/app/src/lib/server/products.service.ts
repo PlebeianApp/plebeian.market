@@ -1,21 +1,17 @@
-import { db, eq, type Product, products } from '@plebeian/database'
+import { db, eq, type Product, products, events } from '@plebeian/database'
 import { error } from '@sveltejs/kit'
 import { getImagesByProductId } from '$lib/server/productImages.service'
 import { takeUniqueOrThrow } from '$lib/utils'
 
-export type DisplayProduct = {
-	id: string
-	name: string
-	description: string
+export type DisplayProduct = Pick<Product, 'id' | 'description' | 'currency' | 'stockQty'> & {
+	name: Product['productName']
 	price: number
-	currency: string
-	stockQty: number
 	mainImage: string
 	galleryImages: string[]
 }
 
-const dbProductToDisplayProduct = (product: Product): DisplayProduct => {
-	const images = getImagesByProductId(product.id)
+const toDisplayProduct = async (product: Product): Promise<DisplayProduct> => {
+	const images = await getImagesByProductId(product.id)
 	return {
 		id: product.id,
 		name: product.productName,
@@ -28,22 +24,14 @@ const dbProductToDisplayProduct = (product: Product): DisplayProduct => {
 	}
 }
 
-export const getProductsByUserId = (userId: string): DisplayProduct[] => {
-	const productsResult = db.select().from(products).where(eq(products.userId, userId)).all()
+export const getProductsByUserId = async (userId: string): Promise<DisplayProduct[]> => {
+	const productsResult = await db
+		.select()
+		.from(products)
+		.where(eq(products.userId, userId))
+		.execute()
 
-	const displayProducts: DisplayProduct[] = productsResult.map(dbProductToDisplayProduct)
-
-	if (displayProducts) {
-		return displayProducts
-	}
-
-	error(404, 'Not found')
-}
-
-export const getProductsByStallId = (stallId: string): DisplayProduct[] => {
-	const productsResult = db.select().from(products).where(eq(products.stallId, stallId)).all()
-
-	const displayProducts: DisplayProduct[] = productsResult.map(dbProductToDisplayProduct)
+	const displayProducts: DisplayProduct[] = await Promise.all(productsResult.map(toDisplayProduct))
 
 	if (displayProducts) {
 		return displayProducts
@@ -52,10 +40,14 @@ export const getProductsByStallId = (stallId: string): DisplayProduct[] => {
 	error(404, 'Not found')
 }
 
-export const getAllProducts = (): DisplayProduct[] => {
-	const productsResult = db.select().from(products).all()
+export const getProductsByStallId = async (stallId: string): Promise<DisplayProduct[]> => {
+	const productsResult = await db
+		.select()
+		.from(products)
+		.where(eq(products.stallId, stallId))
+		.execute()
 
-	const displayProducts: DisplayProduct[] = productsResult.map(dbProductToDisplayProduct)
+	const displayProducts: DisplayProduct[] = await Promise.all(productsResult.map(toDisplayProduct))
 
 	if (displayProducts) {
 		return displayProducts
@@ -64,15 +56,41 @@ export const getAllProducts = (): DisplayProduct[] => {
 	error(404, 'Not found')
 }
 
-export const getProductById = (productId: string): DisplayProduct => {
-	const product = db.select().from(products).where(eq(products.id, productId)).all()
+export const getAllProducts = async (): Promise<DisplayProduct[]> => {
+	const productsResult = await db.select().from(products).execute()
+
+	const displayProducts: DisplayProduct[] = await Promise.all(productsResult.map(toDisplayProduct))
+
+	if (displayProducts) {
+		return displayProducts
+	}
+
+	error(404, 'Not found')
+}
+
+export const getHomeProducts = async () => {
+	const productsQuery = db.select().from(products)
+
+	const coolProductsResult = await productsQuery.limit(6).execute()
+	const featuredProductsResult = await productsQuery.where(eq(products.isFeatured, true)).limit(4).execute()
+	const eventsResult = await db.select().from(events).limit(4).execute()
+
+	return {
+		featured: await Promise.all(featuredProductsResult.map(toDisplayProduct)),
+		cool: await Promise.all(coolProductsResult.map(toDisplayProduct)),
+		events: eventsResult
+	}
+}
+
+export const getProductById = async (productId: string): Promise<DisplayProduct> => {
+	const product = await db.select().from(products).where(eq(products.id, productId)).execute()
 	const productResult = takeUniqueOrThrow(product)
 
 	if (!productResult) {
 		error(404, 'Not found')
 	}
 
-	const images = getImagesByProductId(productId)
+	const images = await getImagesByProductId(productId)
 
 	return {
 		id: productResult.id,

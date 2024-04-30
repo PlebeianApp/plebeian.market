@@ -12,8 +12,8 @@ export const getAllUsers = (): User[] => {
 	error(404, 'Not found')
 }
 
-export const getUserById = (id: string): User => {
-	const user = db.select().from(users).where(eq(users.id, id)).all()
+export const getUserById = async (id: string): Promise<User> => {
+	const user = await db.select().from(users).where(eq(users.id, id)).execute()
 	const uniqueUser = takeUniqueOrThrow(user)
 
 	if (uniqueUser) {
@@ -23,10 +23,10 @@ export const getUserById = (id: string): User => {
 	error(404, 'Not found')
 }
 
-export const getUserUserForProduct = (productId: string): User => {
-	const product = db.select().from(products).where(eq(products.id, productId)).all()
+export const getUserUserForProduct = async (productId: string): Promise<User> => {
+	const product = await db.select().from(products).where(eq(products.id, productId)).execute()
 	const uniqueProduct = takeUniqueOrThrow(product)
-	const user = db.select().from(users).where(eq(users.id, uniqueProduct.userId)).all()
+	const user = await db.select().from(users).where(eq(users.id, uniqueProduct.userId)).execute()
 	const uniqueUser = takeUniqueOrThrow(user)
 
 	if (uniqueUser) {

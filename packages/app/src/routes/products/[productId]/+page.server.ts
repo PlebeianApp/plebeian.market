@@ -1,14 +1,14 @@
 import { getUserUserForProduct } from '$lib/server/users.service.js'
 import { getProductById, getProductsByUserId } from '$lib/server/products.service'
+import type {PageServerLoad} from './$types'
 
-/** @type {import('./$types').PageServerLoad} */
-export function load({ params }) {
-	const product = getProductById(params.productId)
-	const seller = getUserUserForProduct(product.id)
-	const sellersProducts = getProductsByUserId(seller.id).slice(0, 4)
+export const load: PageServerLoad = async ({ params }) => {
+	const product = await getProductById(params.productId)
+	const seller = await getUserUserForProduct(product.id)
+	const products = (await getProductsByUserId(seller.id)).slice(0, 4)
 	return {
 		product,
 		seller,
-		sellersProducts
+		products
 	}
 }

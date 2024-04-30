@@ -86,7 +86,7 @@ const main = async () => {
 
   const productData = userStalls.map((stallsByUser) => {
     return stallsByUser.map((stall) => {
-      return randomLengthArrayFromTo(3, 12).map((i) => {
+      return randomLengthArrayFromTo(3, 12).map((_, i) => {
         return {
           id: faker.string.hexadecimal({
             length: 64,
@@ -106,6 +106,7 @@ const main = async () => {
             "variation",
           ]),
           currency: faker.finance.currencyCode(),
+          isFeatured: (i % 2) === 0,
           isDigital: faker.datatype.boolean({ probability: 0.8 }),
           parentId: null,
           stockQty: faker.number.int({ min: 0, max: 100 }),

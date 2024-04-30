@@ -6,12 +6,12 @@ export type ImagesForProduct = {
 	galleryImages: string[]
 }
 
-export const getImagesByProductId = (productId: string): ImagesForProduct => {
-	const productImagesResult = db
+export const getImagesByProductId = async (productId: string): Promise<ImagesForProduct> => {
+	const productImagesResult = await db
 		.select()
 		.from(productImages)
 		.where(eq(productImages.productId, productId))
-		.all()
+		.execute()
 
 	let images: ImagesForProduct = {
 		mainImage: '',
