@@ -8,9 +8,9 @@
 	<div class="flex flex-col">
 		<main class="text-black">
 			<div class="relative w-full bg-black py-20 text-center text-white">
-				<h1>Sell stuff for sats</h1>
-				<Button class="p-6 text-xl font-bold">List my stuff</Button>
-				<div class="absolute top-0 h-full w-full" style={`background: url(${Pattern});`}></div>
+				<div class="absolute top-0 h-full w-full z-0" style={`background: url(${Pattern});`}></div>
+				<h1 class="relative z-10">Sell stuff for sats</h1>
+				<Button class="p-6 text-xl font-bold relative z-10">List my stuff</Button>
 			</div>
 			<div class=" bg-primary px-4 py-20 lg:px-12">
 				<div class="container">
