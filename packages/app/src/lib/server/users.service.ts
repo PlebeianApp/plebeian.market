@@ -23,7 +23,7 @@ export const getUserById = async (id: string): Promise<User> => {
 	error(404, 'Not found')
 }
 
-export const getUserUserForProduct = async (productId: string): Promise<User> => {
+export const getUserForProduct = async (productId: string): Promise<User> => {
 	const product = await db.select().from(products).where(eq(products.id, productId)).execute()
 	const uniqueProduct = takeUniqueOrThrow(product)
 	const user = await db.select().from(users).where(eq(users.id, uniqueProduct.userId)).execute()

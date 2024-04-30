@@ -1,4 +1,4 @@
-import { db, eq, type Product, products, events } from '@plebeian/database'
+import { db, eq, type Product, products } from '@plebeian/database'
 import { error } from '@sveltejs/kit'
 import { getImagesByProductId } from '$lib/server/productImages.service'
 import { takeUniqueOrThrow } from '$lib/utils'
@@ -10,7 +10,7 @@ export type DisplayProduct = Pick<Product, 'id' | 'description' | 'currency' | '
 	galleryImages: string[]
 }
 
-const toDisplayProduct = async (product: Product): Promise<DisplayProduct> => {
+export const toDisplayProduct = async (product: Product): Promise<DisplayProduct> => {
 	const images = await getImagesByProductId(product.id)
 	return {
 		id: product.id,
@@ -66,20 +66,6 @@ export const getAllProducts = async (): Promise<DisplayProduct[]> => {
 	}
 
 	error(404, 'Not found')
-}
-
-export const getHomeProducts = async () => {
-	const productsQuery = db.select().from(products)
-
-	const coolProductsResult = await productsQuery.limit(6).execute()
-	const featuredProductsResult = await productsQuery.where(eq(products.isFeatured, true)).limit(4).execute()
-	const eventsResult = await db.select().from(events).limit(4).execute()
-
-	return {
-		featured: await Promise.all(featuredProductsResult.map(toDisplayProduct)),
-		cool: await Promise.all(coolProductsResult.map(toDisplayProduct)),
-		events: eventsResult
-	}
 }
 
 export const getProductById = async (productId: string): Promise<DisplayProduct> => {
