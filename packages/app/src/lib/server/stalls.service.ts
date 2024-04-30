@@ -2,6 +2,7 @@ import { db, eq, orders, products, sql, stalls, users } from '@plebeian/database
 import { error } from '@sveltejs/kit'
 import { takeUniqueOrThrow } from '$lib/utils'
 import { format } from 'date-fns'
+import { type DisplayProduct, getProductsByStallId } from '$lib/server/products.service'
 
 export type RichStall = {
 	id: string
@@ -76,13 +77,7 @@ type StallInfo = {
 	currency: string
 	createDate: string
 	userId: string
-	products: {
-		id: string
-		name: string
-		description: string
-		currency: string
-		stockQty: number
-	}[]
+	products: DisplayProduct[]
 }
 
 export const getStallById = (id: string): StallInfo => {
@@ -101,7 +96,7 @@ export const getStallById = (id: string): StallInfo => {
 	if (!userId) {
 		error(404, 'Not found')
 	}
-	const stallProducts = db.select().from(products).where(eq(products.stallId, id)).all()
+	const stallProducts = getProductsByStallId(uniqueStall.id)
 
 	const stallInfo = {
 		id: uniqueStall.id,
@@ -110,13 +105,7 @@ export const getStallById = (id: string): StallInfo => {
 		currency: uniqueStall.currency,
 		createDate: format(uniqueStall.createdAt, 'dd-MM-yyyy'),
 		userId: userId,
-		products: stallProducts.map((product) => ({
-			id: product.id,
-			name: product.productName,
-			description: product.description,
-			currency: product.currency,
-			stockQty: product.stockQty
-		}))
+		products: stallProducts
 	}
 
 	if (stallInfo) {
