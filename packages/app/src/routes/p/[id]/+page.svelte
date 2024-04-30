@@ -47,8 +47,13 @@
 						<h2>Products</h2>
 						<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
 							{#each products as item}
-								<a href={`/products/${item}`}>
-									<ProductItem />
+								<a href={`/products/${item.id}`}>
+									<ProductItem
+										imageUrl={item.mainImage}
+										productName={item.name}
+										price={item.price}
+										currency={item.currency}
+									/>
 								</a>
 							{/each}
 						</div>
