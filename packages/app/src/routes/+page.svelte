@@ -2,6 +2,10 @@
 	import { Button } from '$lib/components/ui/button/index.js'
 	import ProductItem from '$lib/components/product/item.svelte'
 	import Pattern from '$lib/components/pattern.svg?url'
+
+	/** @type {import('./$types').PageData} */
+	export let data
+	const { featuresProducts, coolProducts, coolEvents } = data
 </script>
 
 <div class="flex min-h-screen w-full flex-col bg-muted/40">
@@ -16,9 +20,9 @@
 				<div class="container">
 					<h2>Featured Collections</h2>
 					<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-						{#each [1, 2, 3, 4] as item}
-							<a href={`/products/${item}`}>
-								<ProductItem />
+						{#each featuresProducts as item}
+							<a href={`/products/${item.id}`}>
+								<ProductItem imageUrl={item.mainImage} productName={item.name} price={item.price} />
 							</a>
 						{/each}
 					</div>
@@ -28,9 +32,9 @@
 				<div class="container">
 					<h2>Cool Products</h2>
 					<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-						{#each [1, 2, 3, 4, 5, 6] as item}
-							<a href={`/products/${item}`}>
-								<ProductItem />
+						{#each coolProducts as item}
+							<a href={`/products/${item.id}`}>
+								<ProductItem imageUrl={item.mainImage} productName={item.name} price={item.price} />
 							</a>
 						{/each}
 					</div>
@@ -41,9 +45,9 @@
 				<div class="container">
 					<h2>Events</h2>
 					<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-						{#each [1, 2, 3, 4] as item}
-							<a href={`/products/${item}`}>
-								<ProductItem />
+						{#each coolEvents as item}
+							<a href={`/products/${item.id}`}>
+								<ProductItem imageUrl={item.mainImage} productName={item.name} price={item.price} />
 							</a>
 						{/each}
 					</div>
