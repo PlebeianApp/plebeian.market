@@ -1,11 +1,14 @@
-<script>
+<script lang="ts">
 	import Button from '$lib/components/ui/button/button.svelte'
 	import Input from '$lib/components/ui/input/input.svelte'
 	import ProductItem from '$lib/components/product/item.svelte'
-
-	/** @type {import('./$types').PageData} */
-	export let data
-	const { product, seller, products } = data
+	import { currencyToBtc } from '$lib/utils'
+	import ImgPlaceHolder from '$lib/components/product/imgPlaceHolder.svelte'
+	import Spinner from '$lib/components/assets/spinner.svelte'
+	import type { PageData } from './$types'
+	
+	export let data: PageData
+	$: ({ product, seller, products } = data)
 </script>
 
 <div class="container py-16">
@@ -13,22 +16,39 @@
 		<div class="grid grid-cols-3 gap-6">
 			<ul class="grid gap-4 md:col-span-1">
 				<li>
-					<img class="border-2 border-primary p-1" src={product.mainImage} alt="" />
+					{#if product.mainImage}
+						<img class="border-2 border-primary p-1" src={product.mainImage} alt="" />
+					{:else}
+						<ImgPlaceHolder imageType={"gallery"}/>
+					{/if}
 				</li>
-				{#each product.galleryImages as item}
-					<li>
-						<img src={item} alt="" />
-					</li>
-				{/each}
+				{#if product.galleryImages.length}
+					{#each product.galleryImages as item}
+						<li>
+							<img src={item} alt="" />
+						</li>
+					{/each}
+				{/if}
 			</ul>
-			<img class="col-span-2 border-2 border-black p-1" src={product.mainImage} alt="" />
+			{#if product.mainImage}
+				<img class="col-span-2 border-2 border-black p-1" src={product.mainImage} alt="" />
+			{:else}
+				<ImgPlaceHolder imageType={"main"}/>
+			{/if}
 		</div>
 		<div class="flex flex-col">
 			<h1>{product.name}</h1>
-			<h2>224,255 sats</h2>
+			<h2 class=" inline-flex items-center">
+				{#await currencyToBtc(product.currency, product.price, true) }
+					<Spinner/>
+				{:then result} 
+					{result}
+				{/await}
+				sats
+			</h2>
 			<h3>${product.price} {product.currency}</h3>
 
-			<h3 class="my-8 font-bold">Stock: 5</h3>
+			<h3 class="my-8 font-bold">Stock: {product.stockQty}</h3>
 			<div class="flex w-1/2 flex-row gap-4">
 				<Input class="border-2 border-black" type="number" value="1" min="1" max="5" />
 				<Button>Add to cart</Button>
@@ -51,7 +71,7 @@
 </div>
 
 <div class="container py-20">
-	<h2>More from BTC Hardware Solutions</h2>
+	<h2>More from {seller.name}</h2>
 	<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
 		{#each products as item}
 			<a href={`/products/${item.id}`}>

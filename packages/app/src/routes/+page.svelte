@@ -28,6 +28,7 @@
 										imageUrl={item.mainImage}
 										productName={item.name}
 										price={item.price}
+										currency={item.currency}
 									/>
 								</a>
 							{/each}
@@ -47,6 +48,7 @@
 										imageUrl={item.mainImage}
 										productName={item.name}
 										price={item.price}
+										currency={item.currency}
 									/>
 								</a>
 							{/each}
@@ -67,6 +69,7 @@
 										imageUrl={item.mainImage}
 										productName={item.name}
 										price={item.price}
+										currency={item.currency}
 									/>
 								</a>
 							{/each}

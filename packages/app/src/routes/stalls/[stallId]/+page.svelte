@@ -1,9 +1,10 @@
-<script>
+<script lang="ts">
 	import ProductItem from '$lib/components/product/item.svelte'
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar'
-	/** @type {import('./$types').PageData} */
-	export let data
-	const { stall, user } = data
+	import type { PageData } from './$types'
+
+	export let data: PageData;
+	$: ({ stall, user } = data)
 </script>
 
 <div class="flex min-h-screen w-full flex-col bg-muted/40">

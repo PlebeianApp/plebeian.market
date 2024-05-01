@@ -7,7 +7,8 @@
 	import type { PageData } from './$types'
 
 	export let data: PageData
-	const { npub, name, image, products, stalls } = data
+	$: ({ npub, name, image, products, stalls } = data)
+
 </script>
 
 <div class="flex min-h-screen w-full flex-col bg-muted/40">
