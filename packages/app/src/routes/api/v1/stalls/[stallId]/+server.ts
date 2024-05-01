@@ -1,7 +1,7 @@
 import { json } from '@sveltejs/kit'
 import { getStallById } from '$lib/server/stalls.service'
+import type { RequestHandler } from './$types'
 
-/** @type {import('./$types').RequestHandler} */
-export function GET({ params }) {
-	return json(getStallById(params.stallId))
+export const GET: RequestHandler = async ({ params }) => {
+	return json(await getStallById(params.stallId))
 }

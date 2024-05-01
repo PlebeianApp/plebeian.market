@@ -2,6 +2,7 @@ import { db, eq, orders, products, sql, stalls, users } from '@plebeian/database
 import { error } from '@sveltejs/kit'
 import { takeUniqueOrThrow } from '$lib/utils'
 import { format } from 'date-fns'
+import { type DisplayProduct, getProductsByStallId } from '$lib/server/products.service'
 
 export type RichStall = {
 	id: string
@@ -15,32 +16,32 @@ export type RichStall = {
 	orderCount: number
 }
 
-export const getAllStalls = (): RichStall[] => {
-	const stallsResult = db.select().from(stalls).all()
+export const getAllStalls = async (): Promise<RichStall[]> => {
+	const stallsResult = await db.select().from(stalls).execute()
 
-	const richStalls: RichStall[] = stallsResult.map((stall) => {
-		const ownerRes = db
+	const richStalls: RichStall[] = await Promise.all(stallsResult.map(async (stall) => {
+		const ownerRes = await db
 			.select({ userId: users.id, userName: users.name })
 			.from(users)
 			.where(eq(users.id, stall.userId))
-			.all()
+			.execute()
 
-		const productCount = db
+		const productCount = (await db
 			.select({
 				count: sql<number>`cast(count(${stalls.id}) as int)`
 			})
 			.from(products)
 			.where(eq(products.stallId, stall.id))
-			.all()
+			.execute())
 			.map((product) => product.count)
 
-		const orderCount = db
+		const orderCount = (await db
 			.select({
 				count: sql<number>`cast(count(${orders.id}) as int)`
 			})
 			.from(orders)
 			.where(eq(orders.stallId, stall.id))
-			.all()
+			.execute())
 			.map((order) => order.count)
 
 		const { userId, userName } = takeUniqueOrThrow(ownerRes)
@@ -60,7 +61,7 @@ export const getAllStalls = (): RichStall[] => {
 			productCount: takeUniqueOrThrow(productCount),
 			orderCount: takeUniqueOrThrow(orderCount)
 		}
-	})
+	}))
 
 	if (richStalls) {
 		return richStalls
@@ -76,32 +77,26 @@ type StallInfo = {
 	currency: string
 	createDate: string
 	userId: string
-	products: {
-		id: string
-		name: string
-		description: string
-		currency: string
-		stockQty: number
-	}[]
+	products: DisplayProduct[]
 }
 
-export const getStallById = (id: string): StallInfo => {
-	const stall = db.select().from(stalls).where(eq(stalls.id, id)).all()
+export const getStallById = async (id: string): Promise<StallInfo> => {
+	const stall = await db.select().from(stalls).where(eq(stalls.id, id)).execute()
 	const uniqueStall = takeUniqueOrThrow(stall)
 
-	const ownerRes = db
+	const ownerRes = await db
 		.select({
 			userId: users.id
 		})
 		.from(users)
 		.where(eq(users.id, uniqueStall.userId))
-		.all()
+		.execute()
 
 	const { userId } = takeUniqueOrThrow(ownerRes)
 	if (!userId) {
 		error(404, 'Not found')
 	}
-	const stallProducts = db.select().from(products).where(eq(products.stallId, id)).all()
+	const stallProducts = await getProductsByStallId(uniqueStall.id)
 
 	const stallInfo = {
 		id: uniqueStall.id,
@@ -110,13 +105,7 @@ export const getStallById = (id: string): StallInfo => {
 		currency: uniqueStall.currency,
 		createDate: format(uniqueStall.createdAt, 'dd-MM-yyyy'),
 		userId: userId,
-		products: stallProducts.map((product) => ({
-			id: product.id,
-			name: product.productName,
-			description: product.description,
-			currency: product.currency,
-			stockQty: product.stockQty
-		}))
+		products: stallProducts
 	}
 
 	if (stallInfo) {
@@ -135,32 +124,32 @@ export type DisplayStall = {
 	userId: string
 }
 
-export const getStallsByUserId = (userId: string): RichStall[] => {
-	const stallsResult = db.select().from(stalls).where(eq(stalls.userId, userId)).all()
+export const getStallsByUserId = async (userId: string): Promise<RichStall[]> => {
+	const stallsResult = await db.select().from(stalls).where(eq(stalls.userId, userId)).execute()
 
-	const richStalls: RichStall[] = stallsResult.map((stall) => {
-		const ownerRes = db
+	const richStalls: RichStall[] = await Promise.all(stallsResult.map(async (stall) => {
+		const ownerRes = await db
 			.select({ userId: users.id, userName: users.name })
 			.from(users)
 			.where(eq(users.id, stall.userId))
-			.all()
+			.execute()
 
-		const productCount = db
+		const productCount = (await db
 			.select({
 				count: sql<number>`cast(count(${stalls.id}) as int)`
 			})
 			.from(products)
 			.where(eq(products.stallId, stall.id))
-			.all()
+			.execute())
 			.map((product) => product.count)
 
-		const orderCount = db
+		const orderCount = (await db
 			.select({
 				count: sql<number>`cast(count(${orders.id}) as int)`
 			})
 			.from(orders)
 			.where(eq(orders.stallId, stall.id))
-			.all()
+			.execute())
 			.map((order) => order.count)
 
 		const { userId, userName } = takeUniqueOrThrow(ownerRes)
@@ -180,7 +169,7 @@ export const getStallsByUserId = (userId: string): RichStall[] => {
 			productCount: takeUniqueOrThrow(productCount),
 			orderCount: takeUniqueOrThrow(orderCount)
 		}
-	})
+	}))
 
 	if (richStalls) {
 		return richStalls

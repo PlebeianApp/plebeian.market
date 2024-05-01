@@ -86,7 +86,7 @@ const main = async () => {
 
   const productData = userStalls.map((stallsByUser) => {
     return stallsByUser.map((stall) => {
-      return randomLengthArrayFromTo(3, 12).map((i) => {
+      return randomLengthArrayFromTo(3, 12).map((_, i) => {
         return {
           id: faker.string.hexadecimal({
             length: 64,
@@ -106,6 +106,7 @@ const main = async () => {
             "variation",
           ]),
           currency: faker.finance.currencyCode(),
+          isFeatured: (i % 2) === 0,
           isDigital: faker.datatype.boolean({ probability: 0.8 }),
           parentId: null,
           stockQty: faker.number.int({ min: 0, max: 100 }),
@@ -314,17 +315,32 @@ const main = async () => {
         }) as DigitalProduct,
     );
 
-  const productImagesData = productData.flat(2).map(
-    (product) =>
-      ({
+  const productImagesData = productData.flat(2).map((product) => {
+    // TODO: disregard thumbnails for now
+    const mainImage = {
+      productId: product.id,
+      imageUrl: faker.image.urlLoremFlickr({
+        category: "product",
+      }),
+      imageType: "main",
+      imageOrder: 0,
+      createdAt: faker.date.recent(),
+      updatedAt: faker.date.future(),
+    } as ProductImage;
+    const galleryImages = randomLengthArrayFromTo(0, 4).map((i) => {
+      return {
         productId: product.id,
-        imageUrl: faker.image.url(),
-        imageType: faker.helpers.arrayElement(["main", "thumbnail", "gallery"]),
-        imageOrder: faker.number.int({ min: 0, max: 5 }),
+        imageUrl: faker.image.urlLoremFlickr({
+          category: "product",
+        }),
+        imageType: "gallery",
+        imageOrder: i,
         createdAt: faker.date.recent(),
         updatedAt: faker.date.future(),
-      }) as ProductImage,
-  );
+      } as ProductImage;
+    });
+    return [mainImage, ...galleryImages];
+  });
 
   const eventData = userIds.map(
     (user) =>
@@ -376,7 +392,7 @@ const main = async () => {
       { table: dbSchema.categories, data: categoryData },
       { table: dbSchema.products, data: productData.flat(2) },
       { table: dbSchema.digitalProducts, data: digitalProductsData },
-      { table: dbSchema.productImages, data: productImagesData },
+      { table: dbSchema.productImages, data: productImagesData.flat(1) },
       { table: dbSchema.productCategories, data: productCategoryData },
       { table: dbSchema.paymentDetails, data: paymentDetailsData.flat(1) },
       { table: dbSchema.shipping, data: shippingData.flat(1) },

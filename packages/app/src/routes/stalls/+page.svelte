@@ -1,8 +1,8 @@
 <script lang="ts">
 	import StallItem from '$lib/components/stalls/item.svelte'
+	import type { PageData } from './$types'
 
-	/** @type {import('./$types').PageData} */
-	export let data
+	export let data: PageData;
 	const { stalls } = data
 </script>
 

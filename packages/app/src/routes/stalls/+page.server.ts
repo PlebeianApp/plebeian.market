@@ -1,8 +1,7 @@
 import { getAllStalls } from '$lib/server/stalls.service'
 
-/** @type {import('./$types').PageServerLoad} */
-export function load({ params }) {
+export async function load() {
 	return {
-		stalls: getAllStalls()
+		stalls: await getAllStalls()
 	}
 }
