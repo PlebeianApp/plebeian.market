@@ -16,7 +16,7 @@
 		<main class="text-black">
 			<div class="relative flex w-full flex-col items-center bg-black py-20 text-center text-white">
 				<Pattern />
-				<section class="w-fit">
+				<section class="w-fit z-10">
 					<a href="##" class="flex flex-col items-center">
 						<Avatar class="h-20 w-20">
 							<AvatarImage src={image} alt="@shadcn" />

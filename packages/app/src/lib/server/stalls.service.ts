@@ -16,32 +16,32 @@ export type RichStall = {
 	orderCount: number
 }
 
-export const getAllStalls = (): RichStall[] => {
-	const stallsResult = db.select().from(stalls).all()
+export const getAllStalls = async (): Promise<RichStall[]> => {
+	const stallsResult = await db.select().from(stalls).execute()
 
-	const richStalls: RichStall[] = stallsResult.map((stall) => {
-		const ownerRes = db
+	const richStalls: RichStall[] = await Promise.all(stallsResult.map(async (stall) => {
+		const ownerRes = await db
 			.select({ userId: users.id, userName: users.name })
 			.from(users)
 			.where(eq(users.id, stall.userId))
-			.all()
+			.execute()
 
-		const productCount = db
+		const productCount = (await db
 			.select({
 				count: sql<number>`cast(count(${stalls.id}) as int)`
 			})
 			.from(products)
 			.where(eq(products.stallId, stall.id))
-			.all()
+			.execute())
 			.map((product) => product.count)
 
-		const orderCount = db
+		const orderCount = (await db
 			.select({
 				count: sql<number>`cast(count(${orders.id}) as int)`
 			})
 			.from(orders)
 			.where(eq(orders.stallId, stall.id))
-			.all()
+			.execute())
 			.map((order) => order.count)
 
 		const { userId, userName } = takeUniqueOrThrow(ownerRes)
@@ -61,7 +61,7 @@ export const getAllStalls = (): RichStall[] => {
 			productCount: takeUniqueOrThrow(productCount),
 			orderCount: takeUniqueOrThrow(orderCount)
 		}
-	})
+	}))
 
 	if (richStalls) {
 		return richStalls
@@ -84,13 +84,13 @@ export const getStallById = async (id: string): Promise<StallInfo> => {
 	const stall = await db.select().from(stalls).where(eq(stalls.id, id)).execute()
 	const uniqueStall = takeUniqueOrThrow(stall)
 
-	const ownerRes = db
+	const ownerRes = await db
 		.select({
 			userId: users.id
 		})
 		.from(users)
 		.where(eq(users.id, uniqueStall.userId))
-		.all()
+		.execute()
 
 	const { userId } = takeUniqueOrThrow(ownerRes)
 	if (!userId) {
@@ -127,29 +127,29 @@ export type DisplayStall = {
 export const getStallsByUserId = async (userId: string): Promise<RichStall[]> => {
 	const stallsResult = await db.select().from(stalls).where(eq(stalls.userId, userId)).execute()
 
-	const richStalls: RichStall[] = stallsResult.map((stall) => {
-		const ownerRes = db
+	const richStalls: RichStall[] = await Promise.all(stallsResult.map(async (stall) => {
+		const ownerRes = await db
 			.select({ userId: users.id, userName: users.name })
 			.from(users)
 			.where(eq(users.id, stall.userId))
-			.all()
+			.execute()
 
-		const productCount = db
+		const productCount = (await db
 			.select({
 				count: sql<number>`cast(count(${stalls.id}) as int)`
 			})
 			.from(products)
 			.where(eq(products.stallId, stall.id))
-			.all()
+			.execute())
 			.map((product) => product.count)
 
-		const orderCount = db
+		const orderCount = (await db
 			.select({
 				count: sql<number>`cast(count(${orders.id}) as int)`
 			})
 			.from(orders)
 			.where(eq(orders.stallId, stall.id))
-			.all()
+			.execute())
 			.map((order) => order.count)
 
 		const { userId, userName } = takeUniqueOrThrow(ownerRes)
@@ -169,7 +169,7 @@ export const getStallsByUserId = async (userId: string): Promise<RichStall[]> =>
 			productCount: takeUniqueOrThrow(productCount),
 			orderCount: takeUniqueOrThrow(orderCount)
 		}
-	})
+	}))
 
 	if (richStalls) {
 		return richStalls
