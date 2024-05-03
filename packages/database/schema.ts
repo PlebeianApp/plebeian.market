@@ -1,7 +1,22 @@
-import { AnySQLiteColumn, integer, numeric, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core";
-import { sql } from "drizzle-orm";
-import { allowedMetaNames, auctionStatus, bidStatus, createId, invoiceStatus, metaDataTypes, metaScopes, orderStatus, paymentDetailsMethod, productImagesType, productTypes, userRoles, userTrustLevel } from "./constants";
+import type { AnySQLiteColumn } from 'drizzle-orm/sqlite-core'
+import { sql } from 'drizzle-orm'
+import { integer, numeric, primaryKey, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 
+import {
+	allowedMetaNames,
+	auctionStatus,
+	bidStatus,
+	createId,
+	invoiceStatus,
+	metaDataTypes,
+	metaScopes,
+	orderStatus,
+	paymentDetailsMethod,
+	productImagesType,
+	productTypes,
+	userRoles,
+	userTrustLevel,
+} from './constants'
 
 const standardColumns = {
 	id: text('id').primaryKey(),
@@ -14,37 +29,29 @@ const standardColumns = {
 }
 
 const standardProductColumns = {
-  stallId: text("stall_id")
-    .notNull()
-    .references(() => stalls.id, {onDelete: "cascade", onUpdate: "cascade"}),
-  userId: text("user_id")
-    .notNull()
-    .references(() => users.id, {onDelete: "cascade", onUpdate: "cascade"}),
-  productName: text("product_name")
-    .notNull(),
-  description: text("description")
-    .notNull(),
-  productType: text("product_type", { enum: [productTypes[0], ...productTypes.slice(1)]})
-    .notNull()
-    .default("simple"),
-  currency: text("currency")
-    .notNull(),
-  stockQty: integer("stock_qty")
-    .notNull(),
-  parentId: text("parent_id")
-    .references((): AnySQLiteColumn => products.id, {onDelete: "cascade", onUpdate: "cascade"})
+	stallId: text('stall_id')
+		.notNull()
+		.references(() => stalls.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
+	userId: text('user_id')
+		.notNull()
+		.references(() => users.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
+	productName: text('product_name').notNull(),
+	description: text('description').notNull(),
+	productType: text('product_type', { enum: [productTypes[0], ...productTypes.slice(1)] })
+		.notNull()
+		.default('simple'),
+	currency: text('currency').notNull(),
+	stockQty: integer('stock_qty').notNull(),
+	parentId: text('parent_id').references((): AnySQLiteColumn => products.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
 }
 
 /// Meta tables
 // Meta types
-export const metaTypes = sqliteTable("meta_types", {
-  name: text("name", {enum: [allowedMetaNames[0], ...allowedMetaNames.slice(1)]})
-    .primaryKey(),
-  description: text("description"),
-  scope: text("scope", {enum: [metaScopes[0], ...metaScopes.slice(1)]})
-    .notNull(),
-  dataType: text("data_type", {enum: [metaDataTypes[0], ...metaDataTypes.slice(1)]})
-    .notNull(),
+export const metaTypes = sqliteTable('meta_types', {
+	name: text('name', { enum: [allowedMetaNames[0], ...allowedMetaNames.slice(1)] }).primaryKey(),
+	description: text('description'),
+	scope: text('scope', { enum: [metaScopes[0], ...metaScopes.slice(1)] }).notNull(),
+	dataType: text('data_type', { enum: [metaDataTypes[0], ...metaDataTypes.slice(1)] }).notNull(),
 })
 
 // Product meta
@@ -81,27 +88,26 @@ export const events = sqliteTable('events', {
 })
 
 // Users table
-export const users = sqliteTable("users", {
-  ...standardColumns,
-  name: text("name"),
-  role: text("role", { enum: [userRoles[0], ...userRoles.slice(1)] })
-    .notNull()
-    .default("pleb"),
-  trustLevel: text("trust_lvl", { enum: [userTrustLevel[0], ...userTrustLevel.slice(1)]}),
-  displayName: text("display_name"),
-  about: text("about"),
-  image: text("image"),
-  banner: text("banner"),
-  nip05: text("nip05"),
-  lud06: text("lud06"),
-  lud16: text("lud16"),
-  website: text("website"),
-  zapService: text("zap_Service"),
-  lastLogin: integer("last_login", { mode: "timestamp" })
-    .notNull()
-    .default(sql`(unixepoch())`),
-});
-
+export const users = sqliteTable('users', {
+	...standardColumns,
+	name: text('name'),
+	role: text('role', { enum: [userRoles[0], ...userRoles.slice(1)] })
+		.notNull()
+		.default('pleb'),
+	trustLevel: text('trust_lvl', { enum: [userTrustLevel[0], ...userTrustLevel.slice(1)] }),
+	displayName: text('display_name'),
+	about: text('about'),
+	image: text('image'),
+	banner: text('banner'),
+	nip05: text('nip05'),
+	lud06: text('lud06'),
+	lud16: text('lud16'),
+	website: text('website'),
+	zapService: text('zap_Service'),
+	lastLogin: integer('last_login', { mode: 'timestamp' })
+		.notNull()
+		.default(sql`(unixepoch())`),
+})
 
 // Stalls table
 export const stalls = sqliteTable('stalls', {
@@ -115,23 +121,18 @@ export const stalls = sqliteTable('stalls', {
 })
 
 // Payment details
-export const paymentDetails = sqliteTable("payment_details", {
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => createId()),
-  userId: text("user_id")
-    .notNull()
-    .references(() => users.id, {onDelete: "cascade", onUpdate: "cascade"}),
-  stallId: text("stall_id")
-    .references(() => stalls.id, {onUpdate: "cascade"}),
-  paymentMethod: text("payment_method", { enum: [paymentDetailsMethod[0], ...paymentDetailsMethod.slice(1)] })
-    .notNull(),
-  paymentDetails: text("payment_details")
-    .notNull(),
-  isDefault: integer("default", { mode: "boolean" })
-    .notNull()
-    .default(false),
-});
+export const paymentDetails = sqliteTable('payment_details', {
+	id: text('id')
+		.primaryKey()
+		.$defaultFn(() => createId()),
+	userId: text('user_id')
+		.notNull()
+		.references(() => users.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
+	stallId: text('stall_id').references(() => stalls.id, { onUpdate: 'cascade' }),
+	paymentMethod: text('payment_method', { enum: [paymentDetailsMethod[0], ...paymentDetailsMethod.slice(1)] }).notNull(),
+	paymentDetails: text('payment_details').notNull(),
+	isDefault: integer('default', { mode: 'boolean' }).notNull().default(false),
+})
 
 // Shipping
 export const shipping = sqliteTable('shipping', {
@@ -167,24 +168,25 @@ export const products = sqliteTable('products', {
 	price: numeric('price').notNull(),
 })
 
-export const productImages = sqliteTable("product_images", {
-  productId: text("product_id")
-    .references(() => products.id, {onDelete: "cascade", onUpdate: "cascade"}),
-  imageUrl: text("image_url"),
-  imageType: text("image_type", { enum: [productImagesType[0], ...productImagesType.slice(1)]})
-    .notNull()
-    .default("gallery"),
-  imageOrder: integer("image_order")
-    .notNull()
-    .default(0),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .notNull()
-    .default(sql`(unixepoch())`),
-}, (table) => {
-  return {
-    pk: primaryKey({ columns: [table.productId, table.imageUrl] }),
-  }
-});
+export const productImages = sqliteTable(
+	'product_images',
+	{
+		productId: text('product_id').references(() => products.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
+		imageUrl: text('image_url'),
+		imageType: text('image_type', { enum: [productImagesType[0], ...productImagesType.slice(1)] })
+			.notNull()
+			.default('gallery'),
+		imageOrder: integer('image_order').notNull().default(0),
+		createdAt: integer('created_at', { mode: 'timestamp' })
+			.notNull()
+			.default(sql`(unixepoch())`),
+	},
+	(table) => {
+		return {
+			pk: primaryKey({ columns: [table.productId, table.imageUrl] }),
+		}
+	},
+)
 
 // Categories
 export const categories = sqliteTable('categories', {
@@ -211,72 +213,67 @@ export const productCategories = sqliteTable(
 )
 
 // Auctions
-export const auctions = sqliteTable("auctions", {
-  ...standardColumns,
-  ...standardProductColumns,
-  startingBidAmount: numeric("starting_bid_amount")
-    .notNull(),
-  startDate: integer("start_date", { mode: "timestamp" })
-    .notNull()
-    .default(sql`(unixepoch())`),
-  endDate: integer("end_date", { mode: "timestamp" })
-    .notNull(),
-  status: text("status", { enum: [auctionStatus[0], ...auctionStatus.slice(1)]})
-    .notNull(),
-});
+export const auctions = sqliteTable('auctions', {
+	...standardColumns,
+	...standardProductColumns,
+	startingBidAmount: numeric('starting_bid_amount').notNull(),
+	startDate: integer('start_date', { mode: 'timestamp' })
+		.notNull()
+		.default(sql`(unixepoch())`),
+	endDate: integer('end_date', { mode: 'timestamp' }).notNull(),
+	status: text('status', { enum: [auctionStatus[0], ...auctionStatus.slice(1)] }).notNull(),
+})
 
 //Bids
-export const bids = sqliteTable("bids", {
-  ...standardColumns,
-  auctionId: text("auction_id")
-    .notNull()
-    .references(() => auctions.id, {onDelete: "cascade", onUpdate: "cascade"}),
-  userId: text("user_id")
-    .notNull()
-    .references(() => users.id),
-  bidAmount: numeric("bid_amount")
-    .notNull(),
-  bidStatus: text("bid_status", { enum: [bidStatus[0], ...bidStatus.slice(1)] })
-    .notNull()
-    .default("pending"),
-});
+export const bids = sqliteTable('bids', {
+	...standardColumns,
+	auctionId: text('auction_id')
+		.notNull()
+		.references(() => auctions.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
+	userId: text('user_id')
+		.notNull()
+		.references(() => users.id),
+	bidAmount: numeric('bid_amount').notNull(),
+	bidStatus: text('bid_status', { enum: [bidStatus[0], ...bidStatus.slice(1)] })
+		.notNull()
+		.default('pending'),
+})
 
 //Orders
-export const orders = sqliteTable("orders", {
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => createId()),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .notNull()
-    .default(sql`(unixepoch())`),
-  updatedAt: integer("updated_at", { mode: "timestamp" })
-    .notNull()
-    .default(sql`(unixepoch())`),
-  sellerUserId: text("seller_user_id")
-    .notNull()
-    .references(() => users.id, {onDelete: "cascade", onUpdate: "cascade"}),
-  buyerUserId: text("buyer_user_id")
-    .notNull()
-    .references(() => users.id),
-  status: text("status", { enum: [orderStatus[0], ...orderStatus.slice(1)] })
-    .notNull()
-    .default("pending"),
-  shippingId: text("shipping_id")
-    .notNull()
-    .references(() => shipping.id),
-  stallId: text("stall_id")
-    .notNull()
-    .references(() => stalls.id, {onDelete: "cascade", onUpdate: "cascade"}),
-  address: text("address").notNull(),// Can be encrypted
-  zip: text("zip").notNull(),// Can be encrypted
-  city: text("city").notNull(),// Can be encrypted
-  region: text("region").notNull(),// Can be encrypted
-  contactName: text("contact_name").notNull(),// Can be encrypted
-  contactPhone: text("contact_phone"),// Can be encrypted
-  contactEmail: text("contact_email"),// Can be encrypted
-  observations: text("observations"),// Can be encrypted
-});
-
+export const orders = sqliteTable('orders', {
+	id: text('id')
+		.primaryKey()
+		.$defaultFn(() => createId()),
+	createdAt: integer('created_at', { mode: 'timestamp' })
+		.notNull()
+		.default(sql`(unixepoch())`),
+	updatedAt: integer('updated_at', { mode: 'timestamp' })
+		.notNull()
+		.default(sql`(unixepoch())`),
+	sellerUserId: text('seller_user_id')
+		.notNull()
+		.references(() => users.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
+	buyerUserId: text('buyer_user_id')
+		.notNull()
+		.references(() => users.id),
+	status: text('status', { enum: [orderStatus[0], ...orderStatus.slice(1)] })
+		.notNull()
+		.default('pending'),
+	shippingId: text('shipping_id')
+		.notNull()
+		.references(() => shipping.id),
+	stallId: text('stall_id')
+		.notNull()
+		.references(() => stalls.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
+	address: text('address').notNull(), // Can be encrypted
+	zip: text('zip').notNull(), // Can be encrypted
+	city: text('city').notNull(), // Can be encrypted
+	region: text('region').notNull(), // Can be encrypted
+	contactName: text('contact_name').notNull(), // Can be encrypted
+	contactPhone: text('contact_phone'), // Can be encrypted
+	contactEmail: text('contact_email'), // Can be encrypted
+	observations: text('observations'), // Can be encrypted
+})
 
 // Order items
 export const orderItems = sqliteTable(
@@ -298,25 +295,24 @@ export const orderItems = sqliteTable(
 )
 
 // Invoices
-export const invoices = sqliteTable("invoices", {
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => createId()),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .notNull()
-    .default(sql`(unixepoch())`),
-  updatedAt: integer("updated_at", { mode: "timestamp" })
-    .notNull()
-    .default(sql`(unixepoch())`),
-  orderId: text("order_id")
-    .notNull()
-    .references(() => orders.id, {onDelete: "cascade", onUpdate: "cascade"}),
-  totalAmount: numeric("total_amount")
-    .notNull(),
-  invoiceStatus: text("invoice_status", { enum:[invoiceStatus[0], ...invoiceStatus.slice(1)]})
-    .notNull()
-    .default("pending"),
-  paymentDetails: text("payment_details_id")
-    .notNull()
-    .references(() => paymentDetails.id),
-});
+export const invoices = sqliteTable('invoices', {
+	id: text('id')
+		.primaryKey()
+		.$defaultFn(() => createId()),
+	createdAt: integer('created_at', { mode: 'timestamp' })
+		.notNull()
+		.default(sql`(unixepoch())`),
+	updatedAt: integer('updated_at', { mode: 'timestamp' })
+		.notNull()
+		.default(sql`(unixepoch())`),
+	orderId: text('order_id')
+		.notNull()
+		.references(() => orders.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
+	totalAmount: numeric('total_amount').notNull(),
+	invoiceStatus: text('invoice_status', { enum: [invoiceStatus[0], ...invoiceStatus.slice(1)] })
+		.notNull()
+		.default('pending'),
+	paymentDetails: text('payment_details_id')
+		.notNull()
+		.references(() => paymentDetails.id),
+})

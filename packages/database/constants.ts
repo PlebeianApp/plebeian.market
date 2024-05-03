@@ -1,4 +1,4 @@
-import { init } from "@paralleldrive/cuid2";
+import { init } from '@paralleldrive/cuid2'
 
 export const allowedMimeTypes = [
 	'application/pdf',
@@ -63,47 +63,45 @@ export const devUser5 = {
 }
 
 export const productMetaTypes = [
-  { name: "is_user_featured", dataType: "boolean" },
-  { name: "is_stall_featured", dataType: "boolean" },
-  { name: "is_global_featured", dataType: "boolean" },
-  { name: "is_digital", dataType: "boolean" },
-  { name: "shipping_cost", dataType: "numeric" },
-  { name: "spec", dataType: "text" },
+	{ name: 'is_user_featured', dataType: 'boolean' },
+	{ name: 'is_stall_featured', dataType: 'boolean' },
+	{ name: 'is_global_featured', dataType: 'boolean' },
+	{ name: 'is_digital', dataType: 'boolean' },
+	{ name: 'shipping_cost', dataType: 'numeric' },
+	{ name: 'spec', dataType: 'text' },
 ]
 
 export const digitalProductMetaTypes = [
-  { name: "license_key", dataType: "text" },
-  { name: "download_link", dataType: "text" },
-  { name: "mime_type", dataType: "text" },
-  { name: "sha256_hash", dataType: "text" },
+	{ name: 'license_key', dataType: 'text' },
+	{ name: 'download_link', dataType: 'text' },
+	{ name: 'mime_type', dataType: 'text' },
+	{ name: 'sha256_hash', dataType: 'text' },
 ]
 
-export const generalMetaTypes = [
-  { name: "comments", dataType: "text" }
-]
+export const generalMetaTypes = [{ name: 'comments', dataType: 'text' }]
 
 export const allowedMetaNames = [
-  ...productMetaTypes.map(meta => meta.name),
-  ...digitalProductMetaTypes.map(meta => meta.name),
-  ...generalMetaTypes.map(meta => meta.name),
+	...productMetaTypes.map((meta) => meta.name),
+	...digitalProductMetaTypes.map((meta) => meta.name),
+	...generalMetaTypes.map((meta) => meta.name),
 ]
 
-export const metaScopes = ["products", "users", "orders"]
-export const metaDataTypes = ["text", "boolean", "integer" ,"numeric"]
+export const metaScopes = ['products', 'users', 'orders']
+export const metaDataTypes = ['text', 'boolean', 'integer', 'numeric']
 
-export const userRoles = ["admin", "editor", "pleb"]
-export const userTrustLevel = ["trust", "reasonable", "paranoid"]
-export const paymentDetailsMethod = ["ln" , "on-chain" , "cashu" , "other"]
+export const userRoles = ['admin', 'editor', 'pleb']
+export const userTrustLevel = ['trust', 'reasonable', 'paranoid']
+export const paymentDetailsMethod = ['ln', 'on-chain', 'cashu', 'other']
 
-export const productImagesType = ["main", "thumbnail", "gallery"]
-export const productTypes = ["simple", "variable", "variation"]
+export const productImagesType = ['main', 'thumbnail', 'gallery']
+export const productTypes = ['simple', 'variable', 'variation']
 
-export const auctionStatus = ["active", "inactive" ,"ended", "canceled"]
-export const bidStatus = ["accepted" , "rejected" , "pending" , "winner"]
+export const auctionStatus = ['active', 'inactive', 'ended', 'canceled']
+export const bidStatus = ['accepted', 'rejected', 'pending', 'winner']
 
-export const orderStatus = ["confirmed", "pending", "shipped", "completed", "canceled"]
-export const invoiceStatus = ["pending" , "paid" , "canceled" , "refunded"]
+export const orderStatus = ['confirmed', 'pending', 'shipped', 'completed', 'canceled']
+export const invoiceStatus = ['pending', 'paid', 'canceled', 'refunded']
 
 export const createId = init({
-  length: 10,
-});
+	length: 10,
+})
