@@ -5,6 +5,9 @@
   "main": "./index.ts",
   "type": "module",
   "scripts": {
+    "lint": "eslint .",
+    "lint:prettier": "prettier --check . && eslint .",
+    "format": "prettier --write .",
     "db:check": "drizzle-kit check:sqlite",
     "db:push": "drizzle-kit push:sqlite",
     "db:generate": "drizzle-kit generate:sqlite",
@@ -23,6 +26,8 @@
     "typescript": "^5.4.5"
   },
   "dependencies": {
+    "@plebeian/prettier": "workspace:*",
+    "@plebeian/eslint": "workspace:*",
     "@paralleldrive/cuid2": "^2.2.2",
     "better-sqlite3": "^9.5.0",
     "dotenv": "^16.4.5",

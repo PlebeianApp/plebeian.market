@@ -1,0 +1,24 @@
+{
+  "name": "@plebeian/prettier",
+  "version": "0.0.1",
+  "type": "module",
+  "exports": {
+    ".": "./index.js"
+  },
+  "scripts": {
+    "clean": "rm -rf node_modules",
+    "format": "prettier --check . --ignore-path ../../.gitignore",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@ianvs/prettier-plugin-sort-imports": "^4.2.1",
+    "prettier": "^3.2.5",
+    "prettier-plugin-tailwindcss": "^0.5.13",
+    "prettier-plugin-svelte": "^3.2.3"
+  },
+  "devDependencies": {
+    "@plebeian/tsconfig": "workspace:*",
+    "typescript": "^5.4.5"
+  },
+  "prettier": "@plebeian/prettier"
+}

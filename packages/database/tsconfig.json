@@ -1,5 +1,5 @@
 {
-  "extends": "../tsconfig/base.json",
+  "extends": "../../tooling/tsconfig/base.json",
   "compilerOptions": {
     "module": "esnext",
     "target": "ES2021",

@@ -6,10 +6,16 @@
   "main": "index.js",
   "scripts": {
     "dev": "pnpm --parallel --stream -r run dev",
+    "lint": "pnpm --filter \"./packages/**\" --parallel --stream -r run lint",
+    "lint:prettier": "pnpm --filter \"./packages/**\" --parallel --stream -r run lint:prettier",
+    "format": "pnpm --filter \"./packages/**\" --parallel --stream -r run format",
     "db:setup": "pnpm --filter './packages/database' run db:setup",
     "test": "pnpm --parallel --stream -r run test"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "simple-git-hooks": "^2.11.1"
+  }
 }
