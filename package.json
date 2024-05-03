@@ -5,6 +5,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "preinstall": "npx simple-git-hooks",
     "dev": "pnpm --parallel --stream -r run dev",
     "lint:prettier": "pnpm --filter \"./packages/**\" --parallel --stream -r run lint:prettier",
     "format": "pnpm --filter \"./packages/**\" --parallel --stream -r run format",
