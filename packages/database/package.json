@@ -5,7 +5,7 @@
 	"main": "./index.ts",
 	"type": "module",
 	"scripts": {
-		"lint:prettier": "prettier --check . && eslint . --fix",
+		"lint:prettier": "prettier --check . --ignore-path ../../.prettierignore && eslint . --fix",
 		"format": "prettier --write .",
 		"db:check": "drizzle-kit check:sqlite",
 		"db:push": "drizzle-kit push:sqlite",
