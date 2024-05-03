@@ -1,3 +1,5 @@
+import { init } from "@paralleldrive/cuid2";
+
 export const allowedMimeTypes = [
   "application/pdf",
   "application/msword",
@@ -101,3 +103,7 @@ export const bidStatus = ["accepted" , "rejected" , "pending" , "winner"]
 
 export const orderStatus = ["confirmed", "pending", "shipped", "completed", "canceled"]
 export const invoiceStatus = ["pending" , "paid" , "canceled" , "refunded"]
+
+export const createId = init({
+  length: 10,
+});

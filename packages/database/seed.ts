@@ -23,6 +23,7 @@ import {
   allowedMetaNames,
   auctionStatus,
   bidStatus,
+  createId,
   devUser1,
   devUser2,
   devUser3,
@@ -37,11 +38,20 @@ import {
   productTypes,
 } from "./constants";
 import { sql } from "drizzle-orm";
-import { createId } from '@paralleldrive/cuid2';
 
 const randomLengthArrayFromTo = (min: number, max: number) => {
   return Array.from({ length: faker.number.int({ min, max }) });
 };
+
+const randomHexValue = () => {
+  return faker.string.hexadecimal({
+    length: 64,
+    prefix: "",
+    casing: "lower",
+  })
+}
+
+
 
 const main = async () => {
   const userIds = [devUser1, devUser2, devUser3, devUser4, devUser5].map(
@@ -61,16 +71,8 @@ const main = async () => {
         image: faker.image.avatar(),
         banner: faker.image.urlLoremFlickr({ width: 800, height: 400 }),
         nip05: faker.internet.email(),
-        lud06: faker.string.hexadecimal({
-          length: 64,
-          prefix: "",
-          casing: "lower",
-        }),
-        lud16: faker.string.hexadecimal({
-          length: 64,
-          prefix: "",
-          casing: "lower",
-        }),
+        lud06: randomHexValue(),
+        lud16: randomHexValue(),
         website: faker.internet.url(),
         zapService: faker.internet.url(),
         lastLogin: faker.date.future(),
@@ -83,11 +85,7 @@ const main = async () => {
         userId: user.id,
         createdAt: faker.date.recent(),
         updatedAt: faker.date.future(),
-        id: faker.string.hexadecimal({
-          length: 64,
-          prefix: "",
-          casing: "lower",
-        }),
+        id: randomHexValue(),
         name: faker.commerce.productMaterial(),
         description: faker.commerce.productDescription(),
         currency: faker.finance.currencyCode(),
@@ -99,11 +97,7 @@ const main = async () => {
     return stallsByUser.map((stall) => {
       return randomLengthArrayFromTo(3, 12).map((_, i) => {
         return {
-          id: faker.string.hexadecimal({
-            length: 64,
-            prefix: "",
-            casing: "lower",
-          }),
+          id: randomHexValue(),
           createdAt: faker.date.recent(),
           updatedAt: faker.date.future(),
           stallId: stall.id,
@@ -149,6 +143,8 @@ const main = async () => {
         shippingDetails: faker.commerce.productDescription(),
         baseCost: faker.finance.amount(),
         isDefault: faker.datatype.boolean(),
+        createdAt: faker.date.recent(),
+        updatedAt: faker.date.future()
       } as Shipping;
     });
   });
@@ -168,11 +164,7 @@ const main = async () => {
   const auctionsData = userStalls.map((stallByUser) => {
     return stallByUser.map((stall) => {
       return {
-        id: faker.string.hexadecimal({
-          length: 64,
-          prefix: "",
-          casing: "lower",
-        }),
+        id: randomHexValue(),
         createdAt: faker.date.recent(),
         updatedAt: faker.date.future(),
         stallId: stall.id,
@@ -195,11 +187,7 @@ const main = async () => {
   const bidsData = auctionsData.map((auctionByStall) => {
     return auctionByStall.map((auction) => {
       return {
-        id: faker.string.hexadecimal({
-          length: 64,
-          prefix: "",
-          casing: "lower",
-        }),
+        id: randomHexValue(),
         createdAt: faker.date.recent(),
         updatedAt: faker.date.future(),
         auctionId: auction.id,
@@ -361,11 +349,7 @@ const main = async () => {
   const eventData = userIds.map(
     (user) =>
       ({
-        id: faker.string.hexadecimal({
-          length: 64,
-          prefix: "",
-          casing: "lower",
-        }),
+        id: randomHexValue(),
         createdAt: faker.date.recent(),
         updatedAt: faker.date.future(),
         author: user.id,

@@ -1,7 +1,6 @@
 import { AnySQLiteColumn, integer, numeric, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { sql } from "drizzle-orm";
-import { allowedMetaNames, auctionStatus, bidStatus, invoiceStatus, metaDataTypes, metaScopes, orderStatus, paymentDetailsMethod, productImagesType, productTypes, userRoles, userTrustLevel } from "./constants";
-import { createId } from '@paralleldrive/cuid2';
+import { allowedMetaNames, auctionStatus, bidStatus, createId, invoiceStatus, metaDataTypes, metaScopes, orderStatus, paymentDetailsMethod, productImagesType, productTypes, userRoles, userTrustLevel } from "./constants";
 
 const standardColumns = {
   id: text("id")
