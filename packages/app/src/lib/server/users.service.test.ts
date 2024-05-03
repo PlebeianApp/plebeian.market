@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest'
 import { getAllUsers } from '$lib/server/users.service'
+import { describe, expect, it } from 'vitest'
+
 import { devUser1 } from '@plebeian/database'
 
 describe('users service', () => {

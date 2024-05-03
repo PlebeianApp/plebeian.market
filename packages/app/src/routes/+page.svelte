@@ -1,8 +1,8 @@
 <script lang="ts">
 	import Pattern from '$lib/components/Pattern.svelte'
-	import { Button } from '$lib/components/ui/button/index.js'
 	import ProductItem from '$lib/components/product/item.svelte'
-	
+	import { Button } from '$lib/components/ui/button/index.js'
+
 	import type { PageData } from './$types'
 
 	export let data: PageData
@@ -24,12 +24,7 @@
 						<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
 							{#each featured as item}
 								<a href={`/products/${item.id}`}>
-									<ProductItem
-										imageUrl={item.mainImage}
-										productName={item.name}
-										price={item.price}
-										currency={item.currency}
-									/>
+									<ProductItem imageUrl={item.mainImage} productName={item.name} price={item.price} currency={item.currency} />
 								</a>
 							{/each}
 						</div>
@@ -44,12 +39,7 @@
 						<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
 							{#each cool as item}
 								<a href={`/products/${item.id}`}>
-									<ProductItem
-										imageUrl={item.mainImage}
-										productName={item.name}
-										price={item.price}
-										currency={item.currency}
-									/>
+									<ProductItem imageUrl={item.mainImage} productName={item.name} price={item.price} currency={item.currency} />
 								</a>
 							{/each}
 						</div>
@@ -65,12 +55,7 @@
 							{@html '<!-- events are not fully done yet. Not enough data -->'}
 							{#each cool as item}
 								<a href={`/products/${item.id}`}>
-									<ProductItem
-										imageUrl={item.mainImage}
-										productName={item.name}
-										price={item.price}
-										currency={item.currency}
-									/>
+									<ProductItem imageUrl={item.mainImage} productName={item.name} price={item.price} currency={item.currency} />
 								</a>
 							{/each}
 						</div>

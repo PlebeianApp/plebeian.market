@@ -1,0 +1,7 @@
+**/meta/*.json
+*.eslintrc.cjs
+*.config.js
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+seed.ts

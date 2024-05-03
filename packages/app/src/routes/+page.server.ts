@@ -1,5 +1,7 @@
 import { toDisplayProduct } from '$lib/server/products.service'
+
 import { db, eq, events, products } from '@plebeian/database'
+
 import type { PageServerLoad } from './$types'
 
 const getHomeProducts = async () => {
@@ -12,10 +14,9 @@ const getHomeProducts = async () => {
 	return {
 		featured: await Promise.all(featuredProductsResult.map(toDisplayProduct)),
 		cool: await Promise.all(coolProductsResult.map(toDisplayProduct)),
-		events: eventsResult
+		events: eventsResult,
 	}
 }
-
 
 export const load: PageServerLoad = () => {
 	return getHomeProducts()

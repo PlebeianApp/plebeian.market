@@ -7,10 +7,7 @@
 			<a class="underline" href="/">Contact</a>
 		</div>
 		<div class="text-right">
-			<a
-				href="https://snort.social/p/npub1market6g3zl4mxwx5ugw56hfg0f7dy7jnnw8t380788mvdyrnwuqgep7hd"
-				>Nostrich</a
-			>
+			<a href="https://snort.social/p/npub1market6g3zl4mxwx5ugw56hfg0f7dy7jnnw8t380788mvdyrnwuqgep7hd">Nostrich</a>
 			<a href="https://twitter.com/PlebeianMarket">X</a>
 			<a href="https://plebeianmarket.substack.com/">Substack</a>
 			<a href="https://t.me/PlebeianMarket">Telegram</a>

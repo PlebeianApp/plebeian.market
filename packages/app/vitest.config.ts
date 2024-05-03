@@ -1,6 +1,6 @@
 /// <reference types="vitest" />
-import { defineConfig } from 'vitest/config'
 import tsconfigPaths from 'vite-tsconfig-paths'
+import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
 	test: {
@@ -8,8 +8,8 @@ export default defineConfig({
 		hookTimeout: 25_000,
 		globalSetup: './tests/globalSetup.ts',
 		alias: {
-			$lib: new URL('./src/lib', import.meta.url).pathname
-		}
+			$lib: new URL('./src/lib', import.meta.url).pathname,
+		},
 	},
-	plugins: [tsconfigPaths()]
+	plugins: [tsconfigPaths()],
 })

@@ -1,13 +1,11 @@
 <script lang="ts">
-	import * as Card from '$lib/components/ui/card/index'
 	import type { RichStall } from '$lib/server/stalls.service'
+	import * as Card from '$lib/components/ui/card/index'
 
 	export let item: RichStall
 </script>
 
-<Card.Root
-	class="flex h-[34vh] cursor-pointer flex-col gap-4 border-4 border-black bg-transparent text-black"
->
+<Card.Root class="flex h-[34vh] cursor-pointer flex-col gap-4 border-4 border-black bg-transparent text-black">
 	<Card.Header class="flex flex-col justify-between">
 		<span class="truncate text-2xl font-bold">{item.name}</span>
 		<span class="font-red font-bold">Since: {item.createDate}</span>
