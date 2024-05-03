@@ -1,3 +1,5 @@
+import { init } from "@paralleldrive/cuid2";
+
 export const allowedMimeTypes = [
 	'application/pdf',
 	'application/msword',
@@ -60,8 +62,48 @@ export const devUser5 = {
 	sk: 'ee40a2dc441238f241d1728af9507147e9b5ed18c1c61d84876d4f2502c044b3',
 }
 
-export const productMetaNames = ['is_user_featured', 'is_stall_featured', 'is_global_featured', 'is_digital', 'shipping_cost', 'spec']
+export const productMetaTypes = [
+  { name: "is_user_featured", dataType: "boolean" },
+  { name: "is_stall_featured", dataType: "boolean" },
+  { name: "is_global_featured", dataType: "boolean" },
+  { name: "is_digital", dataType: "boolean" },
+  { name: "shipping_cost", dataType: "numeric" },
+  { name: "spec", dataType: "text" },
+]
 
-export const digitalProductMetaNames = ['license_key', 'download_link', 'mime_type', 'sha256_hash']
+export const digitalProductMetaTypes = [
+  { name: "license_key", dataType: "text" },
+  { name: "download_link", dataType: "text" },
+  { name: "mime_type", dataType: "text" },
+  { name: "sha256_hash", dataType: "text" },
+]
 
-export const allowedMetaNames = [...productMetaNames, ...digitalProductMetaNames, 'comments']
+export const generalMetaTypes = [
+  { name: "comments", dataType: "text" }
+]
+
+export const allowedMetaNames = [
+  ...productMetaTypes.map(meta => meta.name),
+  ...digitalProductMetaTypes.map(meta => meta.name),
+  ...generalMetaTypes.map(meta => meta.name),
+]
+
+export const metaScopes = ["products", "users", "orders"]
+export const metaDataTypes = ["text", "boolean", "integer" ,"numeric"]
+
+export const userRoles = ["admin", "editor", "pleb"]
+export const userTrustLevel = ["trust", "reasonable", "paranoid"]
+export const paymentDetailsMethod = ["ln" , "on-chain" , "cashu" , "other"]
+
+export const productImagesType = ["main", "thumbnail", "gallery"]
+export const productTypes = ["simple", "variable", "variation"]
+
+export const auctionStatus = ["active", "inactive" ,"ended", "canceled"]
+export const bidStatus = ["accepted" , "rejected" , "pending" , "winner"]
+
+export const orderStatus = ["confirmed", "pending", "shipped", "completed", "canceled"]
+export const invoiceStatus = ["pending" , "paid" , "canceled" , "refunded"]
+
+export const createId = init({
+  length: 10,
+});
