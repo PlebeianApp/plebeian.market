@@ -8,8 +8,7 @@
     "preview": "vite preview",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-    "lint": "eslint .",
-    "lint:prettier": "prettier --check . && eslint .",
+    "lint:prettier": "prettier --check . && eslint . --fix",
     "format": "prettier --write .",
     "test": "vite build && vitest",
     "test:ui": "vite build && vitest --ui"
