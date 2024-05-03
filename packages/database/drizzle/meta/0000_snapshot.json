@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "sqlite",
-  "id": "311f8a8d-d434-4366-9004-fe5933a7a8f7",
+  "id": "d85a914d-b202-4e70-913b-cf05c4500c7f",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "auctions": {
@@ -80,37 +80,6 @@
           "notNull": true,
           "autoincrement": false
         },
-        "specs": {
-          "name": "specs",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "shipping_cost": {
-          "name": "shipping_cost",
-          "type": "numeric",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "'0.0'"
-        },
-        "featured": {
-          "name": "featured",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": false
-        },
-        "is_digital": {
-          "name": "is_digital",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": false
-        },
         "parent_id": {
           "name": "parent_id",
           "type": "text",
@@ -160,8 +129,8 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
         },
         "auctions_user_id_users_id_fk": {
           "name": "auctions_user_id_users_id_fk",
@@ -173,8 +142,8 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
         },
         "auctions_parent_id_products_id_fk": {
           "name": "auctions_parent_id_products_id_fk",
@@ -186,8 +155,8 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
         }
       },
       "compositePrimaryKeys": {},
@@ -261,8 +230,8 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
         },
         "bids_user_id_users_id_fk": {
           "name": "bids_user_id_users_id_fk",
@@ -284,15 +253,15 @@
     "categories": {
       "name": "categories",
       "columns": {
-        "cat_id": {
-          "name": "cat_id",
+        "id": {
+          "name": "id",
           "type": "text",
           "primaryKey": true,
           "notNull": true,
           "autoincrement": false
         },
-        "cat_name": {
-          "name": "cat_name",
+        "name": {
+          "name": "name",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -315,83 +284,18 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "categories_parent_id_categories_cat_id_fk": {
-          "name": "categories_parent_id_categories_cat_id_fk",
+        "categories_parent_id_categories_id_fk": {
+          "name": "categories_parent_id_categories_id_fk",
           "tableFrom": "categories",
           "tableTo": "categories",
           "columnsFrom": [
             "parent_id"
           ],
           "columnsTo": [
-            "cat_id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
-    },
-    "digital_products": {
-      "name": "digital_products",
-      "columns": {
-        "product_id": {
-          "name": "product_id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "license_key": {
-          "name": "license_key",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "download_link": {
-          "name": "download_link",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "mime_type": {
-          "name": "mime_type",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "sha256_hash": {
-          "name": "sha256_hash",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "comments": {
-          "name": "comments",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "digital_products_product_id_products_id_fk": {
-          "name": "digital_products_product_id_products_id_fk",
-          "tableFrom": "digital_products",
-          "tableTo": "products",
-          "columnsFrom": [
-            "product_id"
-          ],
-          "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
         }
       },
       "compositePrimaryKeys": {},
@@ -423,15 +327,15 @@
           "autoincrement": false,
           "default": "(unixepoch())"
         },
-        "event_author": {
-          "name": "event_author",
+        "author": {
+          "name": "author",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "event_kind": {
-          "name": "event_kind",
+        "kind": {
+          "name": "kind",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
@@ -447,18 +351,18 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "events_event_author_users_id_fk": {
-          "name": "events_event_author_users_id_fk",
+        "events_author_users_id_fk": {
+          "name": "events_author_users_id_fk",
           "tableFrom": "events",
           "tableTo": "users",
           "columnsFrom": [
-            "event_author"
+            "author"
           ],
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
         }
       },
       "compositePrimaryKeys": {},
@@ -512,15 +416,8 @@
           "autoincrement": false,
           "default": "'pending'"
         },
-        "payment_method": {
-          "name": "payment_method",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "payment_details": {
-          "name": "payment_details",
+        "payment_details_id": {
+          "name": "payment_details_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -539,10 +436,60 @@
           "columnsTo": [
             "id"
           ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        },
+        "invoices_payment_details_id_payment_details_id_fk": {
+          "name": "invoices_payment_details_id_payment_details_id_fk",
+          "tableFrom": "invoices",
+          "tableTo": "payment_details",
+          "columnsFrom": [
+            "payment_details_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "meta_types": {
+      "name": "meta_types",
+      "columns": {
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "scope": {
+          "name": "scope",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "data_type": {
+          "name": "data_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
@@ -583,8 +530,8 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
         },
         "order_items_product_id_products_id_fk": {
           "name": "order_items_product_id_products_id_fk",
@@ -742,8 +689,8 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
         },
         "orders_buyer_user_id_users_id_fk": {
           "name": "orders_buyer_user_id_users_id_fk",
@@ -781,8 +728,8 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
         }
       },
       "compositePrimaryKeys": {},
@@ -791,8 +738,8 @@
     "payment_details": {
       "name": "payment_details",
       "columns": {
-        "payment_id": {
-          "name": "payment_id",
+        "id": {
+          "name": "id",
           "type": "text",
           "primaryKey": true,
           "notNull": true,
@@ -825,6 +772,14 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
+        },
+        "default": {
+          "name": "default",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
         }
       },
       "indexes": {},
@@ -839,8 +794,8 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
         },
         "payment_details_stall_id_stalls_id_fk": {
           "name": "payment_details_stall_id_stalls_id_fk",
@@ -853,7 +808,7 @@
             "id"
           ],
           "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "cascade"
         }
       },
       "compositePrimaryKeys": {},
@@ -889,21 +844,21 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
         },
-        "product_categories_cat_id_categories_cat_id_fk": {
-          "name": "product_categories_cat_id_categories_cat_id_fk",
+        "product_categories_cat_id_categories_id_fk": {
+          "name": "product_categories_cat_id_categories_id_fk",
           "tableFrom": "product_categories",
           "tableTo": "categories",
           "columnsFrom": [
             "cat_id"
           ],
           "columnsTo": [
-            "cat_id"
+            "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
         }
       },
       "compositePrimaryKeys": {
@@ -971,8 +926,8 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
         }
       },
       "compositePrimaryKeys": {
@@ -984,6 +939,100 @@
           "name": "product_images_product_id_image_url_pk"
         }
       },
+      "uniqueConstraints": {}
+    },
+    "product_meta": {
+      "name": "product_meta",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "product_id": {
+          "name": "product_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "meta_name": {
+          "name": "meta_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "value_text": {
+          "name": "value_text",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "value_boolean": {
+          "name": "value_boolean",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "value_integer": {
+          "name": "value_integer",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(unixepoch())"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(unixepoch())"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "product_meta_product_id_products_id_fk": {
+          "name": "product_meta_product_id_products_id_fk",
+          "tableFrom": "product_meta",
+          "tableTo": "products",
+          "columnsFrom": [
+            "product_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        },
+        "product_meta_meta_name_meta_types_name_fk": {
+          "name": "product_meta_meta_name_meta_types_name_fk",
+          "tableFrom": "product_meta",
+          "tableTo": "meta_types",
+          "columnsFrom": [
+            "meta_name"
+          ],
+          "columnsTo": [
+            "name"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
     "products": {
@@ -1062,37 +1111,6 @@
           "notNull": true,
           "autoincrement": false
         },
-        "specs": {
-          "name": "specs",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "shipping_cost": {
-          "name": "shipping_cost",
-          "type": "numeric",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "'0.0'"
-        },
-        "featured": {
-          "name": "featured",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": false
-        },
-        "is_digital": {
-          "name": "is_digital",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": false
-        },
         "parent_id": {
           "name": "parent_id",
           "type": "text",
@@ -1120,8 +1138,8 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
         },
         "products_user_id_users_id_fk": {
           "name": "products_user_id_users_id_fk",
@@ -1133,8 +1151,8 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
         },
         "products_parent_id_products_id_fk": {
           "name": "products_parent_id_products_id_fk",
@@ -1146,8 +1164,8 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
         }
       },
       "compositePrimaryKeys": {},
@@ -1243,7 +1261,7 @@
             "id"
           ],
           "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "cascade"
         },
         "shipping_user_id_users_id_fk": {
           "name": "shipping_user_id_users_id_fk",
@@ -1255,8 +1273,8 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
         }
       },
       "compositePrimaryKeys": {},
@@ -1265,8 +1283,8 @@
     "shipping_zones": {
       "name": "shipping_zones",
       "columns": {
-        "shipping_zone_id": {
-          "name": "shipping_zone_id",
+        "id": {
+          "name": "id",
           "type": "text",
           "primaryKey": true,
           "notNull": true,
@@ -1313,8 +1331,8 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
         },
         "shipping_zones_stall_id_stalls_id_fk": {
           "name": "shipping_zones_stall_id_stalls_id_fk",
@@ -1327,7 +1345,7 @@
             "id"
           ],
           "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "cascade"
         }
       },
       "compositePrimaryKeys": {},
@@ -1400,8 +1418,8 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
         }
       },
       "compositePrimaryKeys": {},
@@ -1447,6 +1465,13 @@
           "notNull": true,
           "autoincrement": false,
           "default": "'pleb'"
+        },
+        "trust_lvl": {
+          "name": "trust_lvl",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
         },
         "display_name": {
           "name": "display_name",
