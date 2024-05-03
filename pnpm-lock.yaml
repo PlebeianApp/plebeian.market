@@ -3,10 +3,6 @@ lockfileVersion: '6.0'
 importers:
 
   .:
-    dependencies:
-      simple-git-hooks:
-        specifier: ^2.11.1
-        version: 2.11.1
     devDependencies:
       '@commitlint/cli':
         specifier: ^19.3.0
@@ -20,6 +16,9 @@ importers:
       '@plebeian/prettier':
         specifier: workspace:*
         version: link:tooling/prettier
+      simple-git-hooks:
+        specifier: ^2.11.1
+        version: 2.11.1
 
   packages/app:
     dependencies:
@@ -159,9 +158,6 @@ importers:
       '@plebeian/prettier':
         specifier: workspace:*
         version: link:../../tooling/prettier
-      '@plebeian/tsconfig':
-        specifier: workspace:*
-        version: link:../../tooling/tsconfig
       better-sqlite3:
         specifier: ^9.5.0
         version: 9.5.0
@@ -209,9 +205,6 @@ importers:
       '@plebeian/prettier':
         specifier: workspace:*
         version: link:../prettier
-      '@plebeian/tsconfig':
-        specifier: workspace:*
-        version: link:../tsconfig
       '@types/eslint':
         specifier: ^8.56.10
         version: 8.56.10
@@ -243,14 +236,9 @@ importers:
         specifier: ^0.5.13
         version: 0.5.13(@ianvs/prettier-plugin-sort-imports@4.2.1)(prettier-plugin-svelte@3.2.3)(prettier@3.2.5)
     devDependencies:
-      '@plebeian/tsconfig':
-        specifier: workspace:*
-        version: link:../tsconfig
       typescript:
         specifier: ^5.4.5
         version: 5.4.5
-
-  tooling/tsconfig: {}
 
 packages:
 
@@ -5316,7 +5304,7 @@ packages:
     resolution: {integrity: sha512-tgqwPUMDcNDhuf1Xf6KTUsyeqGdgKMhzaH4PAZZuzguOgTl5uuyeYe/8mWgAr6IBxB5V06uqEf6Dy37gIWDtDg==}
     hasBin: true
     requiresBuild: true
-    dev: false
+    dev: true
 
   /sirv@2.0.4:
     resolution: {integrity: sha512-94Bdh3cC2PKrbgSOUqTiGPWVZeSiXfKOVZNJniWoqrWrRkB1CJzBU3NEbiTsPcYy1lDsANA/THzS+9WBiy5nfQ==}

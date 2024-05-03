@@ -28,7 +28,6 @@
 	"dependencies": {
 		"@plebeian/prettier": "workspace:*",
 		"@plebeian/eslint": "workspace:*",
-		"@plebeian/tsconfig": "workspace:*",
 		"better-sqlite3": "^9.5.0",
 		"dotenv": "^16.4.5",
 		"drizzle-orm": "^0.30.9"
