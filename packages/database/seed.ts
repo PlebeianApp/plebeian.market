@@ -1,4 +1,4 @@
-import {
+import type {
   Auction,
   Bid,
   Category,
@@ -67,7 +67,7 @@ const main = async () => {
   );
 
   const userStalls = userIds.map((user) => {
-    return randomLengthArrayFromTo(4, 8).map((i) => {
+    return randomLengthArrayFromTo(4, 8).map((_) => {
       return {
         userId: user.id,
         createdAt: faker.date.recent(),
@@ -212,7 +212,7 @@ const main = async () => {
 
   const ordersData = shippingData.map((shippingByStall) => {
     return shippingByStall.map((shipping) => {
-      return randomLengthArrayFromTo(3, 12).map((i) => {
+      return randomLengthArrayFromTo(3, 12).map((_) => {
         return {
           id: faker.string.uuid(),
           createdAt: faker.date.recent(),

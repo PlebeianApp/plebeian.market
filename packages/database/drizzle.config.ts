@@ -1,5 +1,4 @@
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import type { Config } from "drizzle-kit";
 
 const dbPath = path.resolve(

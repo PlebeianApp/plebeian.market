@@ -1,4 +1,4 @@
-import { InferSelectModel, InferInsertModel } from "drizzle-orm";
+import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
 import { db } from "./database";
 
 const dbSchema = db._.fullSchema
