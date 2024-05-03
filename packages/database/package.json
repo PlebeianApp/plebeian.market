@@ -6,7 +6,7 @@
 	"type": "module",
 	"scripts": {
 		"lint:prettier": "prettier --check . --ignore-path ../../.prettierignore && eslint . --fix",
-		"format": "prettier --write .",
+		"format": "prettier --write . --ignore-path ../../.prettierignore",
 		"db:check": "drizzle-kit check:sqlite",
 		"db:push": "drizzle-kit push:sqlite",
 		"db:generate": "drizzle-kit generate:sqlite",
