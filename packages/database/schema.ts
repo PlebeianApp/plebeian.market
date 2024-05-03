@@ -2,16 +2,16 @@ import { AnySQLiteColumn, integer, numeric, primaryKey, sqliteTable, text } from
 import { sql } from "drizzle-orm";
 import { allowedMetaNames, auctionStatus, bidStatus, createId, invoiceStatus, metaDataTypes, metaScopes, orderStatus, paymentDetailsMethod, productImagesType, productTypes, userRoles, userTrustLevel } from "./constants";
 
+
 const standardColumns = {
-  id: text("id")
-    .primaryKey(),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .notNull()
-    .default(sql`(unixepoch())`),
-  updatedAt: integer("updated_at", { mode: "timestamp" })
-    .notNull()
-    .default(sql`(unixepoch())`),
-};
+	id: text('id').primaryKey(),
+	createdAt: integer('created_at', { mode: 'timestamp' })
+		.notNull()
+		.default(sql`(unixepoch())`),
+	updatedAt: integer('updated_at', { mode: 'timestamp' })
+		.notNull()
+		.default(sql`(unixepoch())`),
+}
 
 const standardProductColumns = {
   stallId: text("stall_id")
@@ -48,37 +48,36 @@ export const metaTypes = sqliteTable("meta_types", {
 })
 
 // Product meta
-export const productMeta = sqliteTable("product_meta", {
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => createId()),
-  productId: text("product_id")
-    .notNull()
-    .references(() => products.id, {onDelete: "cascade", onUpdate: "cascade"}),
-  metaName: text("meta_name")
-    .notNull()
-    .references(() => metaTypes.name, {onDelete: "cascade", onUpdate: "cascade"}),
-  valueText: text("value_text"),
-  valueBoolean: integer("value_boolean", { mode: "boolean" }),
-  valueInteger: integer("value_boolean"),
-  valueNumeric: numeric("value_integer"),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .notNull()
-    .default(sql`(unixepoch())`),
-  updatedAt: integer("updated_at", { mode: "timestamp" })
-    .notNull()
-    .default(sql`(unixepoch())`),
+export const productMeta = sqliteTable('product_meta', {
+	id: text('id')
+		.primaryKey()
+		.$defaultFn(() => createId()),
+	productId: text('product_id')
+		.notNull()
+		.references(() => products.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
+	metaName: text('meta_name')
+		.notNull()
+		.references(() => metaTypes.name, { onDelete: 'cascade', onUpdate: 'cascade' }),
+	valueText: text('value_text'),
+	valueBoolean: integer('value_boolean', { mode: 'boolean' }),
+	valueInteger: integer('value_boolean'),
+	valueNumeric: numeric('value_integer'),
+	createdAt: integer('created_at', { mode: 'timestamp' })
+		.notNull()
+		.default(sql`(unixepoch())`),
+	updatedAt: integer('updated_at', { mode: 'timestamp' })
+		.notNull()
+		.default(sql`(unixepoch())`),
 })
 
 // Events
-export const events = sqliteTable("events", {
-  ...standardColumns,
-  author: text("author")
-    .notNull()
-    .references(() => users.id, {onDelete: "cascade", onUpdate: "cascade"}),
-  kind: integer("kind")
-    .notNull(),
-  event: text("event").notNull()
+export const events = sqliteTable('events', {
+	...standardColumns,
+	author: text('author')
+		.notNull()
+		.references(() => users.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
+	kind: integer('kind').notNull(),
+	event: text('event').notNull(),
 })
 
 // Users table
@@ -103,19 +102,17 @@ export const users = sqliteTable("users", {
     .default(sql`(unixepoch())`),
 });
 
+
 // Stalls table
-export const stalls = sqliteTable("stalls", {
-  ...standardColumns,
-  name: text("name")
-    .notNull(),
-  description: text("description")
-    .notNull(),
-  currency: text("currency")
-    .notNull(),
-  userId: text("user_id")
-    .notNull()
-    .references(() => users.id, {onDelete: "cascade", onUpdate: "cascade"}),
-});
+export const stalls = sqliteTable('stalls', {
+	...standardColumns,
+	name: text('name').notNull(),
+	description: text('description').notNull(),
+	currency: text('currency').notNull(),
+	userId: text('user_id')
+		.notNull()
+		.references(() => users.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
+})
 
 // Payment details
 export const paymentDetails = sqliteTable("payment_details", {
@@ -136,48 +133,39 @@ export const paymentDetails = sqliteTable("payment_details", {
     .default(false),
 });
 
-// Shipping 
-export const shipping = sqliteTable("shipping", {
-  ...standardColumns,
-  stallId: text("stall_id")
-    .references(() => stalls.id, {onUpdate: "cascade"}),
-  userId: text("user_id")
-    .notNull()
-    .references(() => users.id, {onDelete: "cascade", onUpdate: "cascade"}),
-  name: text("name")
-    .notNull(),
-  shippingMethod: text("shipping_method")
-    .notNull(),
-  shippingDetails: text("shipping_details")
-    .notNull(),
-  baseCost: numeric("base_cost")
-    .notNull(),
-  isDefault: integer("default", { mode: "boolean" })
-    .notNull()
-    .default(false),
-});
+// Shipping
+export const shipping = sqliteTable('shipping', {
+	...standardColumns,
+	stallId: text('stall_id').references(() => stalls.id, { onUpdate: 'cascade' }),
+	userId: text('user_id')
+		.notNull()
+		.references(() => users.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
+	name: text('name').notNull(),
+	shippingMethod: text('shipping_method').notNull(),
+	shippingDetails: text('shipping_details').notNull(),
+	baseCost: numeric('base_cost').notNull(),
+	isDefault: integer('default', { mode: 'boolean' }).notNull().default(false),
+})
 
 // Shipping zones
-export const shippingZones = sqliteTable("shipping_zones", {
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => createId()),
-  shippingId: text("shipping_id")
-    .notNull()
-    .references(() => shipping.id, {onDelete: "cascade", onUpdate: "cascade"}),
-  stallId: text("stall_id")
-    .references(() => stalls.id, {onUpdate: "cascade"}),
-  regionCode: text("region_code").notNull(),
-  countryCode: text("country_code").notNull(),
-});
+export const shippingZones = sqliteTable('shipping_zones', {
+	id: text('id')
+		.primaryKey()
+		.$defaultFn(() => createId()),
+	shippingId: text('shipping_id')
+		.notNull()
+		.references(() => shipping.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
+	stallId: text('stall_id').references(() => stalls.id, { onUpdate: 'cascade' }),
+	regionCode: text('region_code').notNull(),
+	countryCode: text('country_code').notNull(),
+})
 
 // Products
-export const products = sqliteTable("products", {
-  ...standardColumns,
-  ...standardProductColumns,
-  price: numeric("price")
-    .notNull(),
-});
+export const products = sqliteTable('products', {
+	...standardColumns,
+	...standardProductColumns,
+	price: numeric('price').notNull(),
+})
 
 export const productImages = sqliteTable("product_images", {
   productId: text("product_id")
@@ -199,29 +187,28 @@ export const productImages = sqliteTable("product_images", {
 });
 
 // Categories
-export const categories = sqliteTable("categories", {
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => createId()),
-  name: text("name")
-    .notNull(),
-  description: text("description")
-    .notNull(),
-  parentId: text("parent_id")
-    .references((): AnySQLiteColumn => categories.id, {onDelete: "cascade", onUpdate: "cascade"})
-});
+export const categories = sqliteTable('categories', {
+	id: text('id')
+		.primaryKey()
+		.$defaultFn(() => createId()),
+	name: text('name').notNull(),
+	description: text('description').notNull(),
+	parentId: text('parent_id').references((): AnySQLiteColumn => categories.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
+})
 
 // Product categories
-export const productCategories = sqliteTable("product_categories", {
-  productId: text("product_id")
-    .references(() => products.id, {onDelete: "cascade", onUpdate: "cascade"}),
-  catId: text("cat_id")
-    .references(() => categories.id, {onDelete: "cascade", onUpdate: "cascade"}),
-}, (table) => {
-  return {
-    pk: primaryKey({ columns: [table.productId, table.catId] }),
-  }
-});
+export const productCategories = sqliteTable(
+	'product_categories',
+	{
+		productId: text('product_id').references(() => products.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
+		catId: text('cat_id').references(() => categories.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
+	},
+	(table) => {
+		return {
+			pk: primaryKey({ columns: [table.productId, table.catId] }),
+		}
+	},
+)
 
 // Auctions
 export const auctions = sqliteTable("auctions", {
@@ -290,20 +277,25 @@ export const orders = sqliteTable("orders", {
   observations: text("observations"),// Can be encrypted
 });
 
+
 // Order items
-export const orderItems = sqliteTable("order_items", {
-  orderId: text("order_id")
-    .notNull()
-    .references(() => orders.id, {onDelete: "cascade", onUpdate: "cascade"}),
-  productId: text("product_id")
-    .notNull()
-    .references(() => products.id),
-  qty: integer("qty").notNull(),
-}, (table) => {
-  return {
-    pk: primaryKey({ columns: [table.orderId, table.productId] }),
-  };
-});
+export const orderItems = sqliteTable(
+	'order_items',
+	{
+		orderId: text('order_id')
+			.notNull()
+			.references(() => orders.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
+		productId: text('product_id')
+			.notNull()
+			.references(() => products.id),
+		qty: integer('qty').notNull(),
+	},
+	(table) => {
+		return {
+			pk: primaryKey({ columns: [table.orderId, table.productId] }),
+		}
+	},
+)
 
 // Invoices
 export const invoices = sqliteTable("invoices", {

@@ -40,8 +40,8 @@ import {
 import { sql } from "drizzle-orm";
 
 const randomLengthArrayFromTo = (min: number, max: number) => {
-  return Array.from({ length: faker.number.int({ min, max }) });
-};
+	return Array.from({ length: faker.number.int({ min, max }) })
+}
 
 const randomHexValue = () => {
   return faker.string.hexadecimal({
@@ -54,9 +54,7 @@ const randomHexValue = () => {
 
 
 const main = async () => {
-  const userIds = [devUser1, devUser2, devUser3, devUser4, devUser5].map(
-    (user) => ({ id: user.pk }),
-  );
+	const userIds = [devUser1, devUser2, devUser3, devUser4, devUser5].map((user) => ({ id: user.pk }))
 
   const fullUsers = userIds.map(
     (user) =>
@@ -223,17 +221,17 @@ const main = async () => {
     });
   });
 
-  const orderItemsData = ordersData.map((orders) => {
-    return orders.flat(1).map((order) => {
-      return {
-        orderId: order.id,
-        productId: faker.helpers.arrayElement(productData.flat(2)).id,
-        qty: faker.number.int({ min: 1, max: 10 }),
-      } as OrderItem;
-    });
-  });
+	const orderItemsData = ordersData.map((orders) => {
+		return orders.flat(1).map((order) => {
+			return {
+				orderId: order.id,
+				productId: faker.helpers.arrayElement(productData.flat(2)).id,
+				qty: faker.number.int({ min: 1, max: 10 }),
+			} as OrderItem
+		})
+	})
 
-  const invoicesData = ordersData.map((orders) => {
+ const invoicesData = ordersData.map((orders) => {
     return orders.flat(1).map((order) => {
       return {
         id: createId(),
@@ -319,34 +317,34 @@ const main = async () => {
     return productMeta
   })
 
-  const productImagesData = productData.flat(2).map((product) => {
-    // TODO: disregard thumbnails for now
-    const mainImage = {
-      productId: product.id,
-      imageUrl: faker.image.urlLoremFlickr({
-        category: "product",
-      }),
-      imageType: "main",
-      imageOrder: 0,
-      createdAt: faker.date.recent(),
-      updatedAt: faker.date.future(),
-    } as ProductImage;
-    const galleryImages = randomLengthArrayFromTo(0, 4).map((i) => {
-      return {
-        productId: product.id,
-        imageUrl: faker.image.urlLoremFlickr({
-          category: "product",
-        }),
-        imageType: "gallery",
-        imageOrder: i,
-        createdAt: faker.date.recent(),
-        updatedAt: faker.date.future(),
-      } as ProductImage;
-    });
-    return [mainImage, ...galleryImages];
-  });
+	const productImagesData = productData.flat(2).map((product) => {
+		// TODO: disregard thumbnails for now
+		const mainImage = {
+			productId: product.id,
+			imageUrl: faker.image.urlLoremFlickr({
+				category: 'product',
+			}),
+			imageType: 'main',
+			imageOrder: 0,
+			createdAt: faker.date.recent(),
+			updatedAt: faker.date.future(),
+		} as ProductImage
+		const galleryImages = randomLengthArrayFromTo(0, 4).map((i) => {
+			return {
+				productId: product.id,
+				imageUrl: faker.image.urlLoremFlickr({
+					category: 'product',
+				}),
+				imageType: 'gallery',
+				imageOrder: i,
+				createdAt: faker.date.recent(),
+				updatedAt: faker.date.future(),
+			} as ProductImage
+		})
+		return [mainImage, ...galleryImages]
+	})
 
-  const eventData = userIds.map(
+ const eventData = userIds.map(
     (user) =>
       ({
         id: randomHexValue(),
@@ -358,7 +356,8 @@ const main = async () => {
       }) as Event,
   );
 
-  db.run(sql`PRAGMA foreign_keys = OFF;`);
+
+	db.run(sql`PRAGMA foreign_keys = OFF;`)
 
   console.log("Reset start");
   const dbSchema = db._.fullSchema;
@@ -408,9 +407,9 @@ const main = async () => {
     }
   });
 
-  db.run(sql`PRAGMA foreign_keys = ON;`);
+	db.run(sql`PRAGMA foreign_keys = ON;`)
 
-  console.log("Seed done");
-};
+	console.log('Seed done')
+}
 
-await main();
+await main()

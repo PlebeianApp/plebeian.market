@@ -1,1 +1,1 @@
-export const numSatsInBtc = 100_000_000;
+export const numSatsInBtc = 100_000_000

@@ -1,9 +1,10 @@
 <script lang="ts">
 	import ProductItem from '$lib/components/product/item.svelte'
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar'
+
 	import type { PageData } from './$types'
 
-	export let data: PageData;
+	export let data: PageData
 	$: ({ stall, user } = data)
 </script>
 
@@ -29,12 +30,7 @@
 					<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
 						{#each stall.products as item}
 							<a href={`/products/${item.id}`}>
-								<ProductItem
-									imageUrl={item.mainImage}
-									productName={item.name}
-									price={item.price}
-									currency={item.currency}
-								/>
+								<ProductItem imageUrl={item.mainImage} productName={item.name} price={item.price} currency={item.currency} />
 							</a>
 						{/each}
 					</div>

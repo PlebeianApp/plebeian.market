@@ -1,20 +1,17 @@
 <script lang="ts">
-	import { Command as CommandPrimitive } from "cmdk-sv";
-	import { cn } from "$lib/utils.js";
+	import { cn } from '$lib/utils.js'
+	import { Command as CommandPrimitive } from 'cmdk-sv'
 
-	type $$Props = CommandPrimitive.CommandProps;
+	type $$Props = CommandPrimitive.CommandProps
 
-	export let value: $$Props["value"] = undefined;
+	export let value: $$Props['value'] = undefined
 
-	let className: string | undefined | null = undefined;
-	export { className as class };
+	let className: string | undefined | null = undefined
+	export { className as class }
 </script>
 
 <CommandPrimitive.Root
-	class={cn(
-		"flex h-full w-full flex-col overflow-hidden rounded-md bg-popover text-popover-foreground",
-		className
-	)}
+	class={cn('flex h-full w-full flex-col overflow-hidden rounded-md bg-popover text-popover-foreground', className)}
 	bind:value
 	{...$$restProps}
 >

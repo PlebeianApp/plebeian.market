@@ -1,31 +1,37 @@
 {
-  "name": "@plebeian/database",
-  "version": "0.0.0",
-  "private": true,
-  "main": "./index.ts",
-  "type": "module",
-  "scripts": {
-    "db:check": "drizzle-kit check:sqlite",
-    "db:push": "drizzle-kit push:sqlite",
-    "db:generate": "drizzle-kit generate:sqlite",
-    "db:migrate": "tsx ./migrate.ts",
-    "db:seed": "tsx ./seed.ts",
-    "db:setup": "pnpm run db:generate && pnpm db:migrate && pnpm db:seed"
-  },
-  "exports": {
-    ".": "./index.ts"
-  },
-  "devDependencies": {
-    "@faker-js/faker": "^8.4.1",
-    "@types/better-sqlite3": "^7.6.10",
-    "drizzle-kit": "^0.20.17",
-    "tsx": "^4.7.2",
-    "typescript": "^5.4.5"
-  },
-  "dependencies": {
-    "@paralleldrive/cuid2": "^2.2.2",
-    "better-sqlite3": "^9.5.0",
-    "dotenv": "^16.4.5",
-    "drizzle-orm": "^0.30.9"
-  }
+	"name": "@plebeian/database",
+	"version": "0.0.0",
+	"private": true,
+	"main": "./index.ts",
+	"type": "module",
+	"scripts": {
+		"lint:prettier": "prettier --check . --ignore-path ../../.prettierignore && eslint . --fix",
+		"format": "prettier --write . --ignore-path ../../.prettierignore",
+		"db:check": "drizzle-kit check:sqlite",
+		"db:push": "drizzle-kit push:sqlite",
+		"db:generate": "drizzle-kit generate:sqlite",
+		"db:migrate": "tsx ./migrate.ts",
+		"db:seed": "tsx ./seed.ts",
+		"db:setup": "pnpm run db:generate && pnpm db:migrate && pnpm db:seed"
+	},
+	"exports": {
+		".": "./index.ts"
+	},
+	"devDependencies": {
+		"@faker-js/faker": "^8.4.1",
+		"@types/better-sqlite3": "^7.6.10",
+		"drizzle-kit": "^0.20.17",
+		"tsx": "^4.7.2",
+		"typescript": "^5.4.5",
+		"prettier": "^3.2.5"
+	},
+	"dependencies": {
+		"@paralleldrive/cuid2": "^2.2.2",
+		"@plebeian/prettier": "workspace:*",
+		"@plebeian/eslint": "workspace:*",
+		"better-sqlite3": "^9.5.0",
+		"dotenv": "^16.4.5",
+		"drizzle-orm": "^0.30.9"
+	},
+	"prettier": "@plebeian/prettier"
 }

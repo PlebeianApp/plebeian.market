@@ -1,21 +1,21 @@
 <script lang="ts">
-	import { ContextMenu as ContextMenuPrimitive } from "bits-ui";
-	import Check from "lucide-svelte/icons/check";
-	import { cn } from "$lib/utils.js";
+	import { cn } from '$lib/utils.js'
+	import { ContextMenu as ContextMenuPrimitive } from 'bits-ui'
+	import Check from 'lucide-svelte/icons/check'
 
-	type $$Props = ContextMenuPrimitive.CheckboxItemProps;
-	type $$Events = ContextMenuPrimitive.CheckboxItemEvents;
+	type $$Props = ContextMenuPrimitive.CheckboxItemProps
+	type $$Events = ContextMenuPrimitive.CheckboxItemEvents
 
-	let className: $$Props["class"] = undefined;
-	export let checked: $$Props["checked"] = undefined;
-	export { className as class };
+	let className: $$Props['class'] = undefined
+	export let checked: $$Props['checked'] = undefined
+	export { className as class }
 </script>
 
 <ContextMenuPrimitive.CheckboxItem
 	bind:checked
 	class={cn(
-		"relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none data-[disabled]:pointer-events-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground data-[disabled]:opacity-50",
-		className
+		'relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none data-[disabled]:pointer-events-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground data-[disabled]:opacity-50',
+		className,
 	)}
 	{...$$restProps}
 	on:click

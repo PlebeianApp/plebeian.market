@@ -1,7 +1,7 @@
-import { afterAll, beforeAll, describe, test } from 'vitest'
 import type { Browser, Page } from 'playwright'
-import { chromium } from 'playwright'
 import { expect } from '@playwright/test'
+import { chromium } from 'playwright'
+import { afterAll, beforeAll, describe, test } from 'vitest'
 
 describe('home', async () => {
 	let browser: Browser

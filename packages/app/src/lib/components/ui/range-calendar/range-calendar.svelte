@@ -1,18 +1,19 @@
 <script lang="ts">
-	import { RangeCalendar as RangeCalendarPrimitive } from "bits-ui";
-	import * as RangeCalendar from "./index.js";
-	import { cn } from "$lib/utils.js";
+	import { cn } from '$lib/utils.js'
+	import { RangeCalendar as RangeCalendarPrimitive } from 'bits-ui'
 
-	type $$Props = RangeCalendarPrimitive.Props;
-	type $$Events = RangeCalendarPrimitive.Events;
+	import * as RangeCalendar from './index.js'
 
-	export let value: $$Props["value"] = undefined;
-	export let placeholder: $$Props["placeholder"] = undefined;
-	export let weekdayFormat: $$Props["weekdayFormat"] = "short";
-	export let startValue: $$Props["startValue"] = undefined;
+	type $$Props = RangeCalendarPrimitive.Props
+	type $$Events = RangeCalendarPrimitive.Events
 
-	let className: $$Props["class"] = undefined;
-	export { className as class };
+	export let value: $$Props['value'] = undefined
+	export let placeholder: $$Props['placeholder'] = undefined
+	export let weekdayFormat: $$Props['weekdayFormat'] = 'short'
+	export let startValue: $$Props['startValue'] = undefined
+
+	let className: $$Props['class'] = undefined
+	export { className as class }
 </script>
 
 <RangeCalendarPrimitive.Root
@@ -21,7 +22,7 @@
 	bind:placeholder
 	bind:startValue
 	{weekdayFormat}
-	class={cn("p-3", className)}
+	class={cn('p-3', className)}
 	{...$$restProps}
 	let:months
 	let:weekdays

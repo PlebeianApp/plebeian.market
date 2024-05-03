@@ -1,8 +1,10 @@
-import { type ClassValue, clsx } from 'clsx'
-import { twMerge } from 'tailwind-merge'
-import { cubicOut } from 'svelte/easing'
+import type { ClassValue } from 'clsx'
 import type { TransitionConfig } from 'svelte/transition'
 import { error } from '@sveltejs/kit'
+import { clsx } from 'clsx'
+import { cubicOut } from 'svelte/easing'
+import { twMerge } from 'tailwind-merge'
+
 import { numSatsInBtc } from './constants'
 
 export function cn(...inputs: ClassValue[]) {
@@ -16,10 +18,7 @@ type FlyAndScaleParams = {
 	duration?: number
 }
 
-export const flyAndScale = (
-	node: Element,
-	params: FlyAndScaleParams = { y: -8, x: 0, start: 0.95, duration: 150 }
-): TransitionConfig => {
+export const flyAndScale = (node: Element, params: FlyAndScaleParams = { y: -8, x: 0, start: 0.95, duration: 150 }): TransitionConfig => {
 	const style = getComputedStyle(node)
 	const transform = style.transform === 'none' ? '' : style.transform
 
@@ -50,16 +49,17 @@ export const flyAndScale = (
 
 			return styleToString({
 				transform: `${transform} translate3d(${x}px, ${y}px, 0) scale(${scale})`,
-				opacity: t
+				opacity: t,
 			})
 		},
-		easing: cubicOut
+		easing: cubicOut,
 	}
 }
 
 // TODO: This is not ideal, we should not face duplicate ids at any case
 // And for 404, we should just throw error 404 as we do in other places
 // so let's remove this
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const takeUniqueOrThrow = <T extends any[]>(values: T): T[number] => {
 	if (!values.length) {
 		error(404, 'Not found')
@@ -69,18 +69,18 @@ export const takeUniqueOrThrow = <T extends any[]>(values: T): T[number] => {
 }
 
 export async function currencyToBtc(currency: string, amount: number, inSats?: boolean): Promise<number | null> {
-	const apiUrl = `https://api.yadio.io/convert/${amount}/${currency}/btc`;
+	const apiUrl = `https://api.yadio.io/convert/${amount}/${currency}/btc`
 	try {
-	  const response = await fetch(apiUrl);
-	  const data = await response.json();
-	  return inSats ?  bitcoinToSatoshis(data.result) : data.result;
+		const response = await fetch(apiUrl)
+		const data = await response.json()
+		return inSats ? bitcoinToSatoshis(data.result) : data.result
 	} catch (error) {
-	  console.error(`Error converting ${amount} ${currency} to BTC: ${error}`);
-	  return null;
+		console.error(`Error converting ${amount} ${currency} to BTC: ${error}`)
+		return null
 	}
-  }
+}
 
 export const bitcoinToSatoshis = (amountInBtc: string) => {
-  const btc = parseFloat(amountInBtc);
-  return Math.floor(btc * numSatsInBtc);
-};
+	const btc = parseFloat(amountInBtc)
+	return Math.floor(btc * numSatsInBtc)
+}
