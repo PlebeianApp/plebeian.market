@@ -6,7 +6,7 @@
 	import type { PageData } from './$types'
 
 	export let data: PageData
-	const { featured, cool, events } = data
+	const { featured, cool } = data
 </script>
 
 <div class="flex min-h-screen w-full flex-col bg-muted/40">
@@ -37,22 +37,6 @@
 					<div class="container">
 						<h2>Cool Products</h2>
 						<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-							{#each cool as item}
-								<a href={`/products/${item.id}`}>
-									<ProductItem imageUrl={item.mainImage} productName={item.name} price={item.price} currency={item.currency} />
-								</a>
-							{/each}
-						</div>
-					</div>
-				</div>
-			{/if}
-
-			{#if cool.length}
-				<div class=" bg-[#FFD53E] px-4 py-20 lg:px-12">
-					<div class="container">
-						<h2>Events</h2>
-						<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-							{@html '<!-- events are not fully done yet. Not enough data -->'}
 							{#each cool as item}
 								<a href={`/products/${item.id}`}>
 									<ProductItem imageUrl={item.mainImage} productName={item.name} price={item.price} currency={item.currency} />
