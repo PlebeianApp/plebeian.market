@@ -9,7 +9,6 @@ const config = {
 	useTabs: true,
 	singleQuote: true,
 	semi: false,
-	trailingComma: 'none',
 	printWidth: 140,
 	plugins: ['@ianvs/prettier-plugin-sort-imports', 'prettier-plugin-tailwindcss', 'prettier-plugin-svelte'],
 	tailwindConfig: fileURLToPath(new URL('../../packages/app/tailwind.config.js', import.meta.url)),
@@ -24,18 +23,18 @@ const config = {
 		'<TYPES>^[.|..|~]',
 		'^~/',
 		'^[../]',
-		'^[./]'
+		'^[./]',
 	],
-	importOrderParserPlugins: ['typescript', 'jsx', 'decorators-legacy'],
+	importOrderParserPlugins: ['typescript', 'decorators-legacy'],
 	importOrderTypeScriptVersion: '4.4.0',
 	overrides: [
 		{
 			files: '*.svelte',
 			options: {
-				parser: 'svelte'
-			}
-		}
-	]
+				parser: 'svelte',
+			},
+		},
+	],
 }
 
 export default config
