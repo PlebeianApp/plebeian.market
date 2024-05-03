@@ -6,7 +6,7 @@ export default defineConfig({
 	envDir: '../../',
 	resolve: {
 		alias: {
-			$lib: './src/lib'
-		}
-	}
+			$lib: './src/lib',
+		},
+	},
 })

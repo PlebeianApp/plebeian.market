@@ -1,5 +1,6 @@
-import { db, eq, productImages } from '@plebeian/database'
 import { error } from '@sveltejs/kit'
+
+import { db, eq, productImages } from '@plebeian/database'
 
 export type ImagesForProduct = {
 	mainImage: string
@@ -7,15 +8,11 @@ export type ImagesForProduct = {
 }
 
 export const getImagesByProductId = async (productId: string): Promise<ImagesForProduct> => {
-	const productImagesResult = await db
-		.select()
-		.from(productImages)
-		.where(eq(productImages.productId, productId))
-		.execute()
+	const productImagesResult = await db.select().from(productImages).where(eq(productImages.productId, productId)).execute()
 
-	let images: ImagesForProduct = {
+	const images: ImagesForProduct = {
 		mainImage: '',
-		galleryImages: []
+		galleryImages: [],
 	}
 
 	productImagesResult.forEach((image) => {

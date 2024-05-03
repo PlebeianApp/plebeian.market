@@ -1,8 +1,10 @@
-import { db, eq, orders, products, sql, stalls, users } from '@plebeian/database'
+import type { DisplayProduct } from '$lib/server/products.service'
 import { error } from '@sveltejs/kit'
+import { getProductsByStallId } from '$lib/server/products.service'
 import { takeUniqueOrThrow } from '$lib/utils'
 import { format } from 'date-fns'
-import { type DisplayProduct, getProductsByStallId } from '$lib/server/products.service'
+
+import { db, eq, orders, products, sql, stalls, users } from '@plebeian/database'
 
 export type RichStall = {
 	id: string
@@ -19,49 +21,49 @@ export type RichStall = {
 export const getAllStalls = async (): Promise<RichStall[]> => {
 	const stallsResult = await db.select().from(stalls).execute()
 
-	const richStalls: RichStall[] = await Promise.all(stallsResult.map(async (stall) => {
-		const ownerRes = await db
-			.select({ userId: users.id, userName: users.name })
-			.from(users)
-			.where(eq(users.id, stall.userId))
-			.execute()
+	const richStalls: RichStall[] = await Promise.all(
+		stallsResult.map(async (stall) => {
+			const ownerRes = await db.select({ userId: users.id, userName: users.name }).from(users).where(eq(users.id, stall.userId)).execute()
 
-		const productCount = (await db
-			.select({
-				count: sql<number>`cast(count(${stalls.id}) as int)`
-			})
-			.from(products)
-			.where(eq(products.stallId, stall.id))
-			.execute())
-			.map((product) => product.count)
+			const productCount = (
+				await db
+					.select({
+						count: sql<number>`cast(count(${stalls.id}) as int)`,
+					})
+					.from(products)
+					.where(eq(products.stallId, stall.id))
+					.execute()
+			).map((product) => product.count)
 
-		const orderCount = (await db
-			.select({
-				count: sql<number>`cast(count(${orders.id}) as int)`
-			})
-			.from(orders)
-			.where(eq(orders.stallId, stall.id))
-			.execute())
-			.map((order) => order.count)
+			const orderCount = (
+				await db
+					.select({
+						count: sql<number>`cast(count(${orders.id}) as int)`,
+					})
+					.from(orders)
+					.where(eq(orders.stallId, stall.id))
+					.execute()
+			).map((order) => order.count)
 
-		const { userId, userName } = takeUniqueOrThrow(ownerRes)
+			const { userId, userName } = takeUniqueOrThrow(ownerRes)
 
-		if (!userId) {
-			error(404, 'Not found')
-		}
+			if (!userId) {
+				error(404, 'Not found')
+			}
 
-		return {
-			id: stall.id,
-			name: stall.name,
-			description: stall.description,
-			currency: stall.currency,
-			createDate: format(stall.createdAt, 'dd-MM-yyyy'),
-			userId,
-			userName,
-			productCount: takeUniqueOrThrow(productCount),
-			orderCount: takeUniqueOrThrow(orderCount)
-		}
-	}))
+			return {
+				id: stall.id,
+				name: stall.name,
+				description: stall.description,
+				currency: stall.currency,
+				createDate: format(stall.createdAt, 'dd-MM-yyyy'),
+				userId,
+				userName,
+				productCount: takeUniqueOrThrow(productCount),
+				orderCount: takeUniqueOrThrow(orderCount),
+			}
+		}),
+	)
 
 	if (richStalls) {
 		return richStalls
@@ -86,7 +88,7 @@ export const getStallById = async (id: string): Promise<StallInfo> => {
 
 	const ownerRes = await db
 		.select({
-			userId: users.id
+			userId: users.id,
 		})
 		.from(users)
 		.where(eq(users.id, uniqueStall.userId))
@@ -105,7 +107,7 @@ export const getStallById = async (id: string): Promise<StallInfo> => {
 		currency: uniqueStall.currency,
 		createDate: format(uniqueStall.createdAt, 'dd-MM-yyyy'),
 		userId: userId,
-		products: stallProducts
+		products: stallProducts,
 	}
 
 	if (stallInfo) {
@@ -127,49 +129,49 @@ export type DisplayStall = {
 export const getStallsByUserId = async (userId: string): Promise<RichStall[]> => {
 	const stallsResult = await db.select().from(stalls).where(eq(stalls.userId, userId)).execute()
 
-	const richStalls: RichStall[] = await Promise.all(stallsResult.map(async (stall) => {
-		const ownerRes = await db
-			.select({ userId: users.id, userName: users.name })
-			.from(users)
-			.where(eq(users.id, stall.userId))
-			.execute()
+	const richStalls: RichStall[] = await Promise.all(
+		stallsResult.map(async (stall) => {
+			const ownerRes = await db.select({ userId: users.id, userName: users.name }).from(users).where(eq(users.id, stall.userId)).execute()
 
-		const productCount = (await db
-			.select({
-				count: sql<number>`cast(count(${stalls.id}) as int)`
-			})
-			.from(products)
-			.where(eq(products.stallId, stall.id))
-			.execute())
-			.map((product) => product.count)
+			const productCount = (
+				await db
+					.select({
+						count: sql<number>`cast(count(${stalls.id}) as int)`,
+					})
+					.from(products)
+					.where(eq(products.stallId, stall.id))
+					.execute()
+			).map((product) => product.count)
 
-		const orderCount = (await db
-			.select({
-				count: sql<number>`cast(count(${orders.id}) as int)`
-			})
-			.from(orders)
-			.where(eq(orders.stallId, stall.id))
-			.execute())
-			.map((order) => order.count)
+			const orderCount = (
+				await db
+					.select({
+						count: sql<number>`cast(count(${orders.id}) as int)`,
+					})
+					.from(orders)
+					.where(eq(orders.stallId, stall.id))
+					.execute()
+			).map((order) => order.count)
 
-		const { userId, userName } = takeUniqueOrThrow(ownerRes)
+			const { userId, userName } = takeUniqueOrThrow(ownerRes)
 
-		if (!userId) {
-			error(404, 'Not found')
-		}
+			if (!userId) {
+				error(404, 'Not found')
+			}
 
-		return {
-			id: stall.id,
-			name: stall.name,
-			description: stall.description,
-			currency: stall.currency,
-			createDate: format(stall.createdAt, 'dd-MM-yyyy'),
-			userId,
-			userName,
-			productCount: takeUniqueOrThrow(productCount),
-			orderCount: takeUniqueOrThrow(orderCount)
-		}
-	}))
+			return {
+				id: stall.id,
+				name: stall.name,
+				description: stall.description,
+				currency: stall.currency,
+				createDate: format(stall.createdAt, 'dd-MM-yyyy'),
+				userId,
+				userName,
+				productCount: takeUniqueOrThrow(productCount),
+				orderCount: takeUniqueOrThrow(orderCount),
+			}
+		}),
+	)
 
 	if (richStalls) {
 		return richStalls

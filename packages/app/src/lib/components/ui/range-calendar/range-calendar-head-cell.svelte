@@ -1,16 +1,13 @@
 <script lang="ts">
-	import { RangeCalendar as RangeCalendarPrimitive } from "bits-ui";
-	import { cn } from "$lib/utils.js";
+	import { cn } from '$lib/utils.js'
+	import { RangeCalendar as RangeCalendarPrimitive } from 'bits-ui'
 
-	type $$Props = RangeCalendarPrimitive.HeadCellProps;
+	type $$Props = RangeCalendarPrimitive.HeadCellProps
 
-	let className: $$Props["class"] = undefined;
-	export { className as class };
+	let className: $$Props['class'] = undefined
+	export { className as class }
 </script>
 
-<RangeCalendarPrimitive.HeadCell
-	class={cn("w-9 rounded-md text-[0.8rem] font-normal text-muted-foreground", className)}
-	{...$$restProps}
->
+<RangeCalendarPrimitive.HeadCell class={cn('w-9 rounded-md text-[0.8rem] font-normal text-muted-foreground', className)} {...$$restProps}>
 	<slot />
 </RangeCalendarPrimitive.HeadCell>

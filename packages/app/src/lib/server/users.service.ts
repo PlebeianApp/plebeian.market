@@ -1,6 +1,8 @@
-import { db, eq, products, type User, users } from '@plebeian/database'
 import { error } from '@sveltejs/kit'
 import { takeUniqueOrThrow } from '$lib/utils'
+
+import type { User } from '@plebeian/database'
+import { db, eq, products, users } from '@plebeian/database'
 
 export const getAllUsers = (): User[] => {
 	const usersResult = db.select().from(users).all()

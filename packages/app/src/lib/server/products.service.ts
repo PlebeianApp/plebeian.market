@@ -1,7 +1,9 @@
-import { db, eq, type Product, products } from '@plebeian/database'
 import { error } from '@sveltejs/kit'
 import { getImagesByProductId } from '$lib/server/productImages.service'
 import { takeUniqueOrThrow } from '$lib/utils'
+
+import type { Product } from '@plebeian/database'
+import { db, eq, products } from '@plebeian/database'
 
 export type DisplayProduct = Pick<Product, 'id' | 'description' | 'currency' | 'stockQty'> & {
 	name: Product['productName']
@@ -20,16 +22,12 @@ export const toDisplayProduct = async (product: Product): Promise<DisplayProduct
 		currency: product.currency,
 		stockQty: product.stockQty,
 		mainImage: images.mainImage,
-		galleryImages: images.galleryImages
+		galleryImages: images.galleryImages,
 	}
 }
 
 export const getProductsByUserId = async (userId: string): Promise<DisplayProduct[]> => {
-	const productsResult = await db
-		.select()
-		.from(products)
-		.where(eq(products.userId, userId))
-		.execute()
+	const productsResult = await db.select().from(products).where(eq(products.userId, userId)).execute()
 
 	const displayProducts: DisplayProduct[] = await Promise.all(productsResult.map(toDisplayProduct))
 
@@ -41,11 +39,7 @@ export const getProductsByUserId = async (userId: string): Promise<DisplayProduc
 }
 
 export const getProductsByStallId = async (stallId: string): Promise<DisplayProduct[]> => {
-	const productsResult = await db
-		.select()
-		.from(products)
-		.where(eq(products.stallId, stallId))
-		.execute()
+	const productsResult = await db.select().from(products).where(eq(products.stallId, stallId)).execute()
 
 	const displayProducts: DisplayProduct[] = await Promise.all(productsResult.map(toDisplayProduct))
 
@@ -86,6 +80,6 @@ export const getProductById = async (productId: string): Promise<DisplayProduct>
 		currency: productResult.currency,
 		stockQty: productResult.stockQty,
 		mainImage: images.mainImage,
-		galleryImages: images.galleryImages
+		galleryImages: images.galleryImages,
 	}
 }

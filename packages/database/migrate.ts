@@ -1,4 +1,5 @@
-import { migrate } from "drizzle-orm/better-sqlite3/migrator";
-import { db } from "./index";
+import { migrate } from 'drizzle-orm/better-sqlite3/migrator'
 
-migrate(db, { migrationsFolder: "drizzle" });
+import { db } from './index'
+
+migrate(db, { migrationsFolder: 'drizzle' })
