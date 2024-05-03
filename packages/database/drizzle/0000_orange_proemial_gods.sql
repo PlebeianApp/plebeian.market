@@ -9,18 +9,14 @@ CREATE TABLE `auctions` (
 	`product_type` text DEFAULT 'simple' NOT NULL,
 	`currency` text NOT NULL,
 	`stock_qty` integer NOT NULL,
-	`specs` text,
-	`shipping_cost` numeric DEFAULT '0.0' NOT NULL,
-	`featured` integer DEFAULT false NOT NULL,
-	`is_digital` integer DEFAULT false NOT NULL,
 	`parent_id` text,
 	`starting_bid_amount` numeric NOT NULL,
 	`start_date` integer DEFAULT (unixepoch()) NOT NULL,
 	`end_date` integer NOT NULL,
 	`status` text NOT NULL,
-	FOREIGN KEY (`stall_id`) REFERENCES `stalls`(`id`) ON UPDATE no action ON DELETE no action,
-	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action,
-	FOREIGN KEY (`parent_id`) REFERENCES `products`(`id`) ON UPDATE no action ON DELETE no action
+	FOREIGN KEY (`stall_id`) REFERENCES `stalls`(`id`) ON UPDATE cascade ON DELETE cascade,
+	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE cascade ON DELETE cascade,
+	FOREIGN KEY (`parent_id`) REFERENCES `products`(`id`) ON UPDATE cascade ON DELETE cascade
 );
 --> statement-breakpoint
 CREATE TABLE `bids` (
@@ -31,36 +27,26 @@ CREATE TABLE `bids` (
 	`user_id` text NOT NULL,
 	`bid_amount` numeric NOT NULL,
 	`bid_status` text DEFAULT 'pending' NOT NULL,
-	FOREIGN KEY (`auction_id`) REFERENCES `auctions`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`auction_id`) REFERENCES `auctions`(`id`) ON UPDATE cascade ON DELETE cascade,
 	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
 CREATE TABLE `categories` (
-	`cat_id` text PRIMARY KEY NOT NULL,
-	`cat_name` text NOT NULL,
+	`id` text PRIMARY KEY NOT NULL,
+	`name` text NOT NULL,
 	`description` text NOT NULL,
 	`parent_id` text,
-	FOREIGN KEY (`parent_id`) REFERENCES `categories`(`cat_id`) ON UPDATE no action ON DELETE no action
-);
---> statement-breakpoint
-CREATE TABLE `digital_products` (
-	`product_id` text PRIMARY KEY NOT NULL,
-	`license_key` text,
-	`download_link` text,
-	`mime_type` text,
-	`sha256_hash` text,
-	`comments` text,
-	FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON UPDATE no action ON DELETE no action
+	FOREIGN KEY (`parent_id`) REFERENCES `categories`(`id`) ON UPDATE cascade ON DELETE cascade
 );
 --> statement-breakpoint
 CREATE TABLE `events` (
 	`id` text PRIMARY KEY NOT NULL,
 	`created_at` integer DEFAULT (unixepoch()) NOT NULL,
 	`updated_at` integer DEFAULT (unixepoch()) NOT NULL,
-	`event_author` text NOT NULL,
-	`event_kind` integer NOT NULL,
+	`author` text NOT NULL,
+	`kind` integer NOT NULL,
 	`event` text NOT NULL,
-	FOREIGN KEY (`event_author`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action
+	FOREIGN KEY (`author`) REFERENCES `users`(`id`) ON UPDATE cascade ON DELETE cascade
 );
 --> statement-breakpoint
 CREATE TABLE `invoices` (
@@ -70,9 +56,16 @@ CREATE TABLE `invoices` (
 	`order_id` text NOT NULL,
 	`total_amount` numeric NOT NULL,
 	`invoice_status` text DEFAULT 'pending' NOT NULL,
-	`payment_method` text NOT NULL,
-	`payment_details` text NOT NULL,
-	FOREIGN KEY (`order_id`) REFERENCES `orders`(`id`) ON UPDATE no action ON DELETE no action
+	`payment_details_id` text NOT NULL,
+	FOREIGN KEY (`order_id`) REFERENCES `orders`(`id`) ON UPDATE cascade ON DELETE cascade,
+	FOREIGN KEY (`payment_details_id`) REFERENCES `payment_details`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+CREATE TABLE `meta_types` (
+	`name` text PRIMARY KEY NOT NULL,
+	`description` text,
+	`scope` text NOT NULL,
+	`data_type` text NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE `order_items` (
@@ -80,7 +73,7 @@ CREATE TABLE `order_items` (
 	`product_id` text NOT NULL,
 	`qty` integer NOT NULL,
 	PRIMARY KEY(`order_id`, `product_id`),
-	FOREIGN KEY (`order_id`) REFERENCES `orders`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`order_id`) REFERENCES `orders`(`id`) ON UPDATE cascade ON DELETE cascade,
 	FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
@@ -101,28 +94,29 @@ CREATE TABLE `orders` (
 	`contact_phone` text,
 	`contact_email` text,
 	`observations` text,
-	FOREIGN KEY (`seller_user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`seller_user_id`) REFERENCES `users`(`id`) ON UPDATE cascade ON DELETE cascade,
 	FOREIGN KEY (`buyer_user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`shipping_id`) REFERENCES `shipping`(`id`) ON UPDATE no action ON DELETE no action,
-	FOREIGN KEY (`stall_id`) REFERENCES `stalls`(`id`) ON UPDATE no action ON DELETE no action
+	FOREIGN KEY (`stall_id`) REFERENCES `stalls`(`id`) ON UPDATE cascade ON DELETE cascade
 );
 --> statement-breakpoint
 CREATE TABLE `payment_details` (
-	`payment_id` text PRIMARY KEY NOT NULL,
+	`id` text PRIMARY KEY NOT NULL,
 	`user_id` text NOT NULL,
 	`stall_id` text,
 	`payment_method` text NOT NULL,
 	`payment_details` text NOT NULL,
-	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action,
-	FOREIGN KEY (`stall_id`) REFERENCES `stalls`(`id`) ON UPDATE no action ON DELETE no action
+	`default` integer DEFAULT false NOT NULL,
+	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE cascade ON DELETE cascade,
+	FOREIGN KEY (`stall_id`) REFERENCES `stalls`(`id`) ON UPDATE cascade ON DELETE no action
 );
 --> statement-breakpoint
 CREATE TABLE `product_categories` (
 	`product_id` text,
 	`cat_id` text,
 	PRIMARY KEY(`cat_id`, `product_id`),
-	FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON UPDATE no action ON DELETE no action,
-	FOREIGN KEY (`cat_id`) REFERENCES `categories`(`cat_id`) ON UPDATE no action ON DELETE no action
+	FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON UPDATE cascade ON DELETE cascade,
+	FOREIGN KEY (`cat_id`) REFERENCES `categories`(`id`) ON UPDATE cascade ON DELETE cascade
 );
 --> statement-breakpoint
 CREATE TABLE `product_images` (
@@ -132,7 +126,20 @@ CREATE TABLE `product_images` (
 	`image_order` integer DEFAULT 0 NOT NULL,
 	`created_at` integer DEFAULT (unixepoch()) NOT NULL,
 	PRIMARY KEY(`image_url`, `product_id`),
-	FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON UPDATE no action ON DELETE no action
+	FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON UPDATE cascade ON DELETE cascade
+);
+--> statement-breakpoint
+CREATE TABLE `product_meta` (
+	`id` text PRIMARY KEY NOT NULL,
+	`product_id` text NOT NULL,
+	`meta_name` text NOT NULL,
+	`value_text` text,
+	`value_boolean` integer,
+	`value_integer` numeric,
+	`created_at` integer DEFAULT (unixepoch()) NOT NULL,
+	`updated_at` integer DEFAULT (unixepoch()) NOT NULL,
+	FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON UPDATE cascade ON DELETE cascade,
+	FOREIGN KEY (`meta_name`) REFERENCES `meta_types`(`name`) ON UPDATE cascade ON DELETE cascade
 );
 --> statement-breakpoint
 CREATE TABLE `products` (
@@ -146,15 +153,11 @@ CREATE TABLE `products` (
 	`product_type` text DEFAULT 'simple' NOT NULL,
 	`currency` text NOT NULL,
 	`stock_qty` integer NOT NULL,
-	`specs` text,
-	`shipping_cost` numeric DEFAULT '0.0' NOT NULL,
-	`featured` integer DEFAULT false NOT NULL,
-	`is_digital` integer DEFAULT false NOT NULL,
 	`parent_id` text,
 	`price` numeric NOT NULL,
-	FOREIGN KEY (`stall_id`) REFERENCES `stalls`(`id`) ON UPDATE no action ON DELETE no action,
-	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action,
-	FOREIGN KEY (`parent_id`) REFERENCES `products`(`id`) ON UPDATE no action ON DELETE no action
+	FOREIGN KEY (`stall_id`) REFERENCES `stalls`(`id`) ON UPDATE cascade ON DELETE cascade,
+	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE cascade ON DELETE cascade,
+	FOREIGN KEY (`parent_id`) REFERENCES `products`(`id`) ON UPDATE cascade ON DELETE cascade
 );
 --> statement-breakpoint
 CREATE TABLE `shipping` (
@@ -168,18 +171,18 @@ CREATE TABLE `shipping` (
 	`shipping_details` text NOT NULL,
 	`base_cost` numeric NOT NULL,
 	`default` integer DEFAULT false NOT NULL,
-	FOREIGN KEY (`stall_id`) REFERENCES `stalls`(`id`) ON UPDATE no action ON DELETE no action,
-	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action
+	FOREIGN KEY (`stall_id`) REFERENCES `stalls`(`id`) ON UPDATE cascade ON DELETE no action,
+	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE cascade ON DELETE cascade
 );
 --> statement-breakpoint
 CREATE TABLE `shipping_zones` (
-	`shipping_zone_id` text PRIMARY KEY NOT NULL,
+	`id` text PRIMARY KEY NOT NULL,
 	`shipping_id` text NOT NULL,
 	`stall_id` text,
 	`region_code` text NOT NULL,
 	`country_code` text NOT NULL,
-	FOREIGN KEY (`shipping_id`) REFERENCES `shipping`(`id`) ON UPDATE no action ON DELETE no action,
-	FOREIGN KEY (`stall_id`) REFERENCES `stalls`(`id`) ON UPDATE no action ON DELETE no action
+	FOREIGN KEY (`shipping_id`) REFERENCES `shipping`(`id`) ON UPDATE cascade ON DELETE cascade,
+	FOREIGN KEY (`stall_id`) REFERENCES `stalls`(`id`) ON UPDATE cascade ON DELETE no action
 );
 --> statement-breakpoint
 CREATE TABLE `stalls` (
@@ -190,7 +193,7 @@ CREATE TABLE `stalls` (
 	`description` text NOT NULL,
 	`currency` text NOT NULL,
 	`user_id` text NOT NULL,
-	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action
+	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE cascade ON DELETE cascade
 );
 --> statement-breakpoint
 CREATE TABLE `users` (
@@ -199,6 +202,7 @@ CREATE TABLE `users` (
 	`updated_at` integer DEFAULT (unixepoch()) NOT NULL,
 	`name` text,
 	`role` text DEFAULT 'pleb' NOT NULL,
+	`trust_lvl` text,
 	`display_name` text,
 	`about` text,
 	`image` text,

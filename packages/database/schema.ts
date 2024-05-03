@@ -1,6 +1,7 @@
 import { AnySQLiteColumn, integer, numeric, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { sql } from "drizzle-orm";
-import { allowedMimeTypes } from "./constants";
+import { allowedMetaNames } from "./constants";
+import { createId } from '@paralleldrive/cuid2';
 
 const standardColumns = {
   id: text("id")
@@ -16,10 +17,10 @@ const standardColumns = {
 const standardProductColumns = {
   stallId: text("stall_id")
     .notNull()
-    .references(() => stalls.id),
+    .references(() => stalls.id, {onDelete: "cascade", onUpdate: "cascade"}),
   userId: text("user_id")
     .notNull()
-    .references(() => users.id),
+    .references(() => users.id, {onDelete: "cascade", onUpdate: "cascade"}),
   productName: text("product_name")
     .notNull(),
   description: text("description")
@@ -31,27 +32,52 @@ const standardProductColumns = {
     .notNull(),
   stockQty: integer("stock_qty")
     .notNull(),
-  specs: text("specs"),
-  shippingCost: numeric("shipping_cost")
-    .notNull()
-    .default("0.0"),
-  isFeatured: integer("featured", { mode: "boolean" })
-    .notNull()
-    .default(false),
-  isDigital: integer("is_digital", { mode: "boolean" })
-    .notNull()
-    .default(false),
   parentId: text("parent_id")
-    .references((): AnySQLiteColumn => products.id)
+    .references((): AnySQLiteColumn => products.id, {onDelete: "cascade", onUpdate: "cascade"})
 }
+
+/// Meta tables
+// Meta types
+export const metaTypes = sqliteTable("meta_types", {
+  name: text("name", {enum: [allowedMetaNames[0], ...allowedMetaNames.slice(1)]})
+    .primaryKey(),
+  description: text("description"),
+  scope: text("scope", {enum: ["products", "users", "orders"]})
+    .notNull(),
+  dataType: text("data_type", {enum: ["text", "boolean", "integer" ,"numeric"]})
+    .notNull(),
+})
+
+// Product meta
+export const productMeta = sqliteTable("product_meta", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => createId()),
+  productId: text("product_id")
+    .notNull()
+    .references(() => products.id, {onDelete: "cascade", onUpdate: "cascade"}),
+  metaName: text("meta_name")
+    .notNull()
+    .references(() => metaTypes.name, {onDelete: "cascade", onUpdate: "cascade"}),
+  valueText: text("value_text"),
+  valueBoolean: integer("value_boolean", { mode: "boolean" }),
+  valueInteger: integer("value_boolean"),
+  valueNumeric: numeric("value_integer"),
+  createdAt: integer("created_at", { mode: "timestamp" })
+    .notNull()
+    .default(sql`(unixepoch())`),
+  updatedAt: integer("updated_at", { mode: "timestamp" })
+    .notNull()
+    .default(sql`(unixepoch())`),
+})
 
 // Events
 export const events = sqliteTable("events", {
   ...standardColumns,
-  eventAuthor: text("event_author")
+  author: text("author")
     .notNull()
-    .references(() => users.id),
-  eventKind: integer("event_kind")
+    .references(() => users.id, {onDelete: "cascade", onUpdate: "cascade"}),
+  kind: integer("kind")
     .notNull(),
   event: text("event").notNull()
 })
@@ -63,6 +89,7 @@ export const users = sqliteTable("users", {
   role: text("role", { enum: ["admin", "editor", "pleb"] })
     .notNull()
     .default("pleb"),
+  trustLevel: text("trust_lvl", { enum: ["trust", "reasonable", "paranoid"]}),
   displayName: text("display_name"),
   about: text("about"),
   image: text("image"),
@@ -88,32 +115,36 @@ export const stalls = sqliteTable("stalls", {
     .notNull(),
   userId: text("user_id")
     .notNull()
-    .references(() => users.id),
+    .references(() => users.id, {onDelete: "cascade", onUpdate: "cascade"}),
 });
 
 // Payment details
 export const paymentDetails = sqliteTable("payment_details", {
-  paymentId: text("payment_id")
-    .primaryKey(),
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => createId()),
   userId: text("user_id")
     .notNull()
-    .references(() => users.id),
+    .references(() => users.id, {onDelete: "cascade", onUpdate: "cascade"}),
   stallId: text("stall_id")
-    .references(() => stalls.id),
+    .references(() => stalls.id, {onUpdate: "cascade"}),
   paymentMethod: text("payment_method", { enum: ["ln" , "on-chain" , "cashu" , "other"] })
     .notNull(),
   paymentDetails: text("payment_details")
     .notNull(),
+  isDefault: integer("default", { mode: "boolean" })
+    .notNull()
+    .default(false),
 });
 
 // Shipping 
 export const shipping = sqliteTable("shipping", {
   ...standardColumns,
   stallId: text("stall_id")
-    .references(() => stalls.id),
+    .references(() => stalls.id, {onUpdate: "cascade"}),
   userId: text("user_id")
     .notNull()
-    .references(() => users.id),
+    .references(() => users.id, {onDelete: "cascade", onUpdate: "cascade"}),
   name: text("name")
     .notNull(),
   shippingMethod: text("shipping_method")
@@ -129,13 +160,14 @@ export const shipping = sqliteTable("shipping", {
 
 // Shipping zones
 export const shippingZones = sqliteTable("shipping_zones", {
-  shippingZoneId: text("shipping_zone_id")
-    .primaryKey(),
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => createId()),
   shippingId: text("shipping_id")
     .notNull()
-    .references(() => shipping.id),
+    .references(() => shipping.id, {onDelete: "cascade", onUpdate: "cascade"}),
   stallId: text("stall_id")
-    .references(() => stalls.id),
+    .references(() => stalls.id, {onUpdate: "cascade"}),
   regionCode: text("region_code").notNull(),
   countryCode: text("country_code").notNull(),
 });
@@ -148,20 +180,9 @@ export const products = sqliteTable("products", {
     .notNull(),
 });
 
-export const digitalProducts = sqliteTable("digital_products", {
-  productId: text("product_id")
-    .primaryKey()
-    .references(() => products.id),
-  licenseKey: text("license_key"),
-  downloadLink: text("download_link"),
-  mimeType: text("mime_type", { enum: ["other", ...allowedMimeTypes] }),
-  sha256Hash: text("sha256_hash"),
-  comments: text("comments"),
-})
-
 export const productImages = sqliteTable("product_images", {
   productId: text("product_id")
-    .references(() => products.id),
+    .references(() => products.id, {onDelete: "cascade", onUpdate: "cascade"}),
   imageUrl: text("image_url"),
   imageType: text("image_type", { enum: ["main", "thumbnail", "gallery"]})
     .notNull()
@@ -180,22 +201,23 @@ export const productImages = sqliteTable("product_images", {
 
 // Categories
 export const categories = sqliteTable("categories", {
-  catId: text("cat_id")
-    .primaryKey(),
-  catName: text("cat_name")
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => createId()),
+  name: text("name")
     .notNull(),
   description: text("description")
     .notNull(),
   parentId: text("parent_id")
-    .references((): AnySQLiteColumn => categories.catId)
+    .references((): AnySQLiteColumn => categories.id, {onDelete: "cascade", onUpdate: "cascade"})
 });
 
 // Product categories
 export const productCategories = sqliteTable("product_categories", {
   productId: text("product_id")
-    .references(() => products.id),
+    .references(() => products.id, {onDelete: "cascade", onUpdate: "cascade"}),
   catId: text("cat_id")
-    .references(() => categories.catId),
+    .references(() => categories.id, {onDelete: "cascade", onUpdate: "cascade"}),
 }, (table) => {
   return {
     pk: primaryKey({ columns: [table.productId, table.catId] }),
@@ -222,7 +244,7 @@ export const bids = sqliteTable("bids", {
   ...standardColumns,
   auctionId: text("auction_id")
     .notNull()
-    .references(() => auctions.id),
+    .references(() => auctions.id, {onDelete: "cascade", onUpdate: "cascade"}),
   userId: text("user_id")
     .notNull()
     .references(() => users.id),
@@ -235,10 +257,18 @@ export const bids = sqliteTable("bids", {
 
 //Orders
 export const orders = sqliteTable("orders", {
-  ...standardColumns,
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => createId()),
+  createdAt: integer("created_at", { mode: "timestamp" })
+    .notNull()
+    .default(sql`(unixepoch())`),
+  updatedAt: integer("updated_at", { mode: "timestamp" })
+    .notNull()
+    .default(sql`(unixepoch())`),
   sellerUserId: text("seller_user_id")
     .notNull()
-    .references(() => users.id),
+    .references(() => users.id, {onDelete: "cascade", onUpdate: "cascade"}),
   buyerUserId: text("buyer_user_id")
     .notNull()
     .references(() => users.id),
@@ -250,22 +280,22 @@ export const orders = sqliteTable("orders", {
     .references(() => shipping.id),
   stallId: text("stall_id")
     .notNull()
-    .references(() => stalls.id),
-  address: text("address").notNull(),
-  zip: text("zip").notNull(),
-  city: text("city").notNull(),
-  region: text("region").notNull(),
-  contactName: text("contact_name").notNull(),
-  contactPhone: text("contact_phone"),
-  contactEmail: text("contact_email"),
-  observations: text("observations"),
+    .references(() => stalls.id, {onDelete: "cascade", onUpdate: "cascade"}),
+  address: text("address").notNull(),// Can be encrypted
+  zip: text("zip").notNull(),// Can be encrypted
+  city: text("city").notNull(),// Can be encrypted
+  region: text("region").notNull(),// Can be encrypted
+  contactName: text("contact_name").notNull(),// Can be encrypted
+  contactPhone: text("contact_phone"),// Can be encrypted
+  contactEmail: text("contact_email"),// Can be encrypted
+  observations: text("observations"),// Can be encrypted
 });
 
 // Order items
 export const orderItems = sqliteTable("order_items", {
   orderId: text("order_id")
     .notNull()
-    .references(() => orders.id),
+    .references(() => orders.id, {onDelete: "cascade", onUpdate: "cascade"}),
   productId: text("product_id")
     .notNull()
     .references(() => products.id),
@@ -278,17 +308,24 @@ export const orderItems = sqliteTable("order_items", {
 
 // Invoices
 export const invoices = sqliteTable("invoices", {
-  ...standardColumns,
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => createId()),
+  createdAt: integer("created_at", { mode: "timestamp" })
+    .notNull()
+    .default(sql`(unixepoch())`),
+  updatedAt: integer("updated_at", { mode: "timestamp" })
+    .notNull()
+    .default(sql`(unixepoch())`),
   orderId: text("order_id")
     .notNull()
-    .references(() => orders.id),
+    .references(() => orders.id, {onDelete: "cascade", onUpdate: "cascade"}),
   totalAmount: numeric("total_amount")
     .notNull(),
   invoiceStatus: text("invoice_status", { enum:["pending" , "paid" , "canceled" , "refunded"]})
     .notNull()
     .default("pending"),
-  paymentMethod: text("payment_method", { enum: ["ln" , "on-chain" , "cashu" , "other"] })
-    .notNull(),
-  paymentDetails: text("payment_details")
-    .notNull(),
+  paymentDetails: text("payment_details_id")
+    .notNull()
+    .references(() => paymentDetails.id),
 });
