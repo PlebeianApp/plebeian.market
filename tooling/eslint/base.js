@@ -36,6 +36,7 @@ export default tseslint.config(
 	},
 	{
 		files: ['**/*.js', '**/*.ts', '**/*.tsx'],
+		ignores: ['seed.ts'],
 		plugins: {
 			import: importPlugin,
 		},

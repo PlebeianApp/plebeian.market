@@ -59,3 +59,9 @@ export const devUser5 = {
 	pk: '96c727f4d1ea18a80d03621520ebfe3c9be1387033009a4f5b65959d09222eec',
 	sk: 'ee40a2dc441238f241d1728af9507147e9b5ed18c1c61d84876d4f2502c044b3',
 }
+
+export const productMetaNames = ['is_user_featured', 'is_stall_featured', 'is_global_featured', 'is_digital', 'shipping_cost', 'spec']
+
+export const digitalProductMetaNames = ['license_key', 'download_link', 'mime_type', 'sha256_hash']
+
+export const allowedMetaNames = [...productMetaNames, ...digitalProductMetaNames, 'comments']

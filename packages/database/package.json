@@ -26,6 +26,7 @@
 		"prettier": "^3.2.5"
 	},
 	"dependencies": {
+		"@paralleldrive/cuid2": "^2.2.2",
 		"@plebeian/prettier": "workspace:*",
 		"@plebeian/eslint": "workspace:*",
 		"better-sqlite3": "^9.5.0",
