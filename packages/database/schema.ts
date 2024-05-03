@@ -1,6 +1,6 @@
 import { AnySQLiteColumn, integer, numeric, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { sql } from "drizzle-orm";
-import { allowedMetaNames } from "./constants";
+import { allowedMetaNames, auctionStatus, bidStatus, invoiceStatus, metaDataTypes, metaScopes, orderStatus, paymentDetailsMethod, productImagesType, productTypes, userRoles, userTrustLevel } from "./constants";
 import { createId } from '@paralleldrive/cuid2';
 
 const standardColumns = {
@@ -25,7 +25,7 @@ const standardProductColumns = {
     .notNull(),
   description: text("description")
     .notNull(),
-  productType: text("product_type", { enum: ["simple", "variable", "variation"] })
+  productType: text("product_type", { enum: [productTypes[0], ...productTypes.slice(1)]})
     .notNull()
     .default("simple"),
   currency: text("currency")
@@ -42,9 +42,9 @@ export const metaTypes = sqliteTable("meta_types", {
   name: text("name", {enum: [allowedMetaNames[0], ...allowedMetaNames.slice(1)]})
     .primaryKey(),
   description: text("description"),
-  scope: text("scope", {enum: ["products", "users", "orders"]})
+  scope: text("scope", {enum: [metaScopes[0], ...metaScopes.slice(1)]})
     .notNull(),
-  dataType: text("data_type", {enum: ["text", "boolean", "integer" ,"numeric"]})
+  dataType: text("data_type", {enum: [metaDataTypes[0], ...metaDataTypes.slice(1)]})
     .notNull(),
 })
 
@@ -86,10 +86,10 @@ export const events = sqliteTable("events", {
 export const users = sqliteTable("users", {
   ...standardColumns,
   name: text("name"),
-  role: text("role", { enum: ["admin", "editor", "pleb"] })
+  role: text("role", { enum: [userRoles[0], ...userRoles.slice(1)] })
     .notNull()
     .default("pleb"),
-  trustLevel: text("trust_lvl", { enum: ["trust", "reasonable", "paranoid"]}),
+  trustLevel: text("trust_lvl", { enum: [userTrustLevel[0], ...userTrustLevel.slice(1)]}),
   displayName: text("display_name"),
   about: text("about"),
   image: text("image"),
@@ -128,7 +128,7 @@ export const paymentDetails = sqliteTable("payment_details", {
     .references(() => users.id, {onDelete: "cascade", onUpdate: "cascade"}),
   stallId: text("stall_id")
     .references(() => stalls.id, {onUpdate: "cascade"}),
-  paymentMethod: text("payment_method", { enum: ["ln" , "on-chain" , "cashu" , "other"] })
+  paymentMethod: text("payment_method", { enum: [paymentDetailsMethod[0], ...paymentDetailsMethod.slice(1)] })
     .notNull(),
   paymentDetails: text("payment_details")
     .notNull(),
@@ -184,7 +184,7 @@ export const productImages = sqliteTable("product_images", {
   productId: text("product_id")
     .references(() => products.id, {onDelete: "cascade", onUpdate: "cascade"}),
   imageUrl: text("image_url"),
-  imageType: text("image_type", { enum: ["main", "thumbnail", "gallery"]})
+  imageType: text("image_type", { enum: [productImagesType[0], ...productImagesType.slice(1)]})
     .notNull()
     .default("gallery"),
   imageOrder: integer("image_order")
@@ -235,7 +235,7 @@ export const auctions = sqliteTable("auctions", {
     .default(sql`(unixepoch())`),
   endDate: integer("end_date", { mode: "timestamp" })
     .notNull(),
-  status: text("status", { enum: ["active", "ended", "canceled"]})
+  status: text("status", { enum: [auctionStatus[0], ...auctionStatus.slice(1)]})
     .notNull(),
 });
 
@@ -250,7 +250,7 @@ export const bids = sqliteTable("bids", {
     .references(() => users.id),
   bidAmount: numeric("bid_amount")
     .notNull(),
-  bidStatus: text("bid_status", { enum: ["accepted" , "rejected" , "pending" , "winner"] })
+  bidStatus: text("bid_status", { enum: [bidStatus[0], ...bidStatus.slice(1)] })
     .notNull()
     .default("pending"),
 });
@@ -272,7 +272,7 @@ export const orders = sqliteTable("orders", {
   buyerUserId: text("buyer_user_id")
     .notNull()
     .references(() => users.id),
-  status: text("status", { enum: ["confirmed", "pending", "shipped", "completed", "canceled"] })
+  status: text("status", { enum: [orderStatus[0], ...orderStatus.slice(1)] })
     .notNull()
     .default("pending"),
   shippingId: text("shipping_id")
@@ -322,7 +322,7 @@ export const invoices = sqliteTable("invoices", {
     .references(() => orders.id, {onDelete: "cascade", onUpdate: "cascade"}),
   totalAmount: numeric("total_amount")
     .notNull(),
-  invoiceStatus: text("invoice_status", { enum:["pending" , "paid" , "canceled" , "refunded"]})
+  invoiceStatus: text("invoice_status", { enum:[invoiceStatus[0], ...invoiceStatus.slice(1)]})
     .notNull()
     .default("pending"),
   paymentDetails: text("payment_details_id")

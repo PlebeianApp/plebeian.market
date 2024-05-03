@@ -33,9 +33,6 @@ export type NewProductCategory = InferInsertModel<typeof dbSchema.productCategor
 export type Product = InferSelectModel<typeof dbSchema.products>;
 export type NewProduct = InferInsertModel<typeof dbSchema.products>;
 
-export type DigitalProduct = InferSelectModel<typeof dbSchema.digitalProducts>;
-export type NewDigitalProduct = InferInsertModel<typeof dbSchema.digitalProducts>;
-
 export type ProductImage = InferSelectModel<typeof dbSchema.productImages>;
 export type NewProductImage = InferInsertModel<typeof dbSchema.productImages>;
 
@@ -50,3 +47,9 @@ export type NewShippingZone = InferInsertModel<typeof dbSchema.shippingZones>;
 
 export type User = InferSelectModel<typeof dbSchema.users>;
 export type NewUser = InferInsertModel<typeof dbSchema.users>;
+
+export type MetaType = InferSelectModel<typeof dbSchema.metaTypes>;
+export type NewMetaType = InferInsertModel<typeof dbSchema.metaTypes>;
+
+export type ProductMeta = InferSelectModel<typeof dbSchema.productMeta>;
+export type NewProductMeta = InferInsertModel<typeof dbSchema.productMeta>;
