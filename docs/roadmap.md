@@ -10,50 +10,82 @@
 			- [x] Creation of the monorepo using workspaces
 			- [ ] Install dependencies
 				- [x] Drizzle
-				- [ ] NDK
+				- [x] NDK
 				- [ ] js-lightning-tools
-		- [x] Create db and tables
-		- [ ] Design hybrid mode to fetch data from db with fallback to nostr & insert
+		- [x] Create database and tables
+		- [ ] Design hybrid mode to fetch data from database with fallback to Nostr and insert
+			- [ ] Verify event before inserting into database
+			- [ ] Users browsing triggers fetch Nostr data and update database if more recent
 		- [ ] Nostr functionalities
-			- [ ] Use NDK svelte
-			- [ ] NDK cache (index-db)
-			- [ ] Logging with nip07
-			- [ ] Logging with nip46
-			- [ ] Logging with private key (nip-49)
+			- [ ] Use NDK with Svelte
+			- [ ] NDK cache (IndexDB)
+			- [ ] Logging with NIP07
+			- [ ] Logging with NIP46
+			- [ ] Logging with private key (NIP-49)
+				- [ ] Use IndexDB to store the private key in NIP-49 format
+				- [ ] Use [tweetNaCl.js](https://www.npmjs.com/package/tweetnacl) and a `secretbox` to securely handle key during session
 			- [ ] Create stall
 			- [ ] Add product
-			- [ ] User sing-up, On boarding
+			- [ ] User sign-up and onboarding
+		- [ ] E-commerce functionalities
+			- [x] Product page
+				- [ ] Implement variable products
+				- [ ] Image carrousel
+			- [ ] Auction page (same as product but with bids, time to end, etc.)
+			- [ ] Add to cart
+			- [ ] Checkout page
+			- [ ] Payment flow
 		- [ ] User profile page ("/p/<user_id | other identifier>")
-			- [ ] User info
-			- [ ] User stalls
-			- [ ] User products
+			- [x] User information
+			- [x] User stalls
+			- [x] User products
 			- [ ] Edit profile
 		- [ ] Notifications
-			- [ ] In page
+			- [ ] In-page
 			- [ ] Nostr DM
 			- [ ] Email
 		- [ ] User settings ("/settings")
+			- [ ] Edit profile
 			- [ ] Add payment details
+				- [ ] On-chain (xpub)
+				- [ ] On-chain (list of addresses)
+				- [ ] On-chain (Boltz or other swap service)
+				- [ ] LN (LUD06)
+				- [ ] LN (LUD16)
+				- [ ] Cashu
+				- [ ] Other (specify details and instructions) (interactive)
+				- [ ] None (interactive)
 			- [ ] Configure notifications
 				- [ ] Email
 				- [ ] DMs
 			- [ ] Delete account
-		- [ ] Design API
-			- [ ] Base route ("/api/<_version_>/" )
-			- [ ] API versioning ("v1")
-			- [ ] GET
-				- [ ] Users API ("/.../user/<user_id | other identifier>")
-					- [ ] Returns user info like profile and stalls
-				- [ ] Stalls API ("/.../stall/<stall_id>")
-					- [ ] Return stall info like name, description, ...etc, and products of the stall
-				- [ ] Product API ("/.../product/<product_id>")
-					- [ ] Return product info
+		- [ ] App setup ("/setup")
+			- [ ] Add app settings '.env' config file
+				- [ ] Super admins: List of pubkeys that are super admins
+				- [ ] Configure external endpoints: fetch price API, currencies allowed
+				- [ ] Contact details: support/contact email, etc.
+			- [ ] Add super admins
+			- [ ] Add admins
+			- [ ] Remove admins
+			- [ ] Add roles
+			- [ ] Configure app settings (just for super admins: users with role 'admin' that are also in the list of the '.env' file)
+
+		- [x] Design API
+			- [x] Base route ("/api/<_version_>/" )
+			- [x] API versioning ("v1")
+			- [x] GET
+				- [x] Users API ("/.../user/<user_id | other identifier>")
+					- [x] Returns user information like profile and stalls
+				- [x] Stalls API ("/.../stall/<stall_id>")
+					- [x] Return stall information like name, description, ...etc, and products of the stall
+				- [x] Product API ("/.../product/<product_id>")
+					- [x] Return product information
 		- [ ] Creation of different sections of the app
-			- [ ] Home ("/")
+			- [x] Home ("/")
 			- [ ] Market browser ("/market") 
-			- [ ] Product pages ("/product/<product_id>")
-			- [ ] User page ("/<user_id | other identifier>)
-			- [ ] Stall page ("/stall/<stall_id>")
+			- [x] Product pages ("/product/<product_id>")
+			- [x] User page ("/p/<user_id | other identifier>")
+			- [x] Stall page ("/stall/<stall_id>")
 
 1.  **Integrate phoenixd**
 	-  **Objective:** Integrating phoenixd into the project as a lightning solution
