@@ -19,7 +19,7 @@ describe('stalls', async () => {
 	test('stall page should be visible after navigation', async () => {
 		await page.goto(`http://${process.env.APP_HOST}:${process.env.APP_PORT}`)
 		await page.click('text=Stall browser')
-		await page.waitForURL('**/stalls')
+		await page.waitForURL('**/stalls/')
 		const pageTitle = await page.textContent('h2')
 		expect(pageTitle).toBe('Stalls')
 	})
