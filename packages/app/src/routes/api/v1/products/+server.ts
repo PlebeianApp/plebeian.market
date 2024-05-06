@@ -1,7 +1,7 @@
+import { NSchema as n } from '@nostrify/nostrify'
 import { error, json } from '@sveltejs/kit'
-import { createProduct, getAllProducts } from '$lib/server/products.service'
-
-import { insertProductSchema } from '@plebeian/database'
+import { createProduct, getAllProducts } from '$lib/server/products.service.js'
+import { verifyEvent } from 'nostr-tools'
 
 export async function GET({ url: { searchParams } }) {
 	const page = searchParams.get('page')
@@ -20,11 +20,11 @@ export async function GET({ url: { searchParams } }) {
 
 export async function POST({ request }) {
 	const body = await request.json()
-	const parsedInsertProduct = insertProductSchema.safeParse(body)
+	const verifiedEvent = n.event().refine(verifyEvent).safeParse(body)
 
-	if (!parsedInsertProduct.success) {
-		return error(400, `Invalid request: ${JSON.stringify(parsedInsertProduct.error)}`)
+	if (!verifiedEvent.success) {
+		return error(400, `Invalid request: ${JSON.stringify(verifiedEvent.error)}`)
 	} else {
-		return json(await createProduct(parsedInsertProduct.data))
+		return json(await createProduct(verifiedEvent.data))
 	}
 }

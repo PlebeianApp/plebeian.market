@@ -1,10 +1,14 @@
+import type { NDKEvent } from '@nostr-dev-kit/ndk'
+import type { Event } from 'nostr-tools'
 import { error } from '@sveltejs/kit'
 import { getImagesByProductId } from '$lib/server/productImages.service'
 import { standardDisplayDateFormat, takeUniqueOrThrow } from '$lib/utils'
 import { format } from 'date-fns'
 
 import type { NewProduct, Product } from '@plebeian/database'
-import { createId, db, eq, products } from '@plebeian/database'
+import { db, devUser1, eq, products } from '@plebeian/database'
+
+import { productEventSchema } from '../../schema/nostr-events'
 
 export type DisplayProduct = Pick<Product, 'id' | 'description' | 'currency' | 'stockQty'> & {
 	name: Product['productName']
@@ -111,14 +115,25 @@ export const getProductById = async (productId: string): Promise<DisplayProduct>
 	}
 }
 
-export const createProduct = async (product: NewProduct): Promise<DisplayProduct> => {
-	const productResult = await db
-		.insert(products)
-		.values({
-			id: createId(),
-			...product,
-		})
-		.returning()
+export const createProduct = async (productEvent: Event | NDKEvent): Promise<DisplayProduct> => {
+	const productEventContent = JSON.parse(productEvent.content)
+	const parsedProduct = productEventSchema.parse(productEventContent)
+	const insertProduct = {
+		id: parsedProduct.id,
+		description: parsedProduct.description as string,
+		currency: parsedProduct.currency,
+		price: parsedProduct.price.toString(),
+		quantity: parsedProduct.quantity,
+		specs: parsedProduct.specs,
+		shipping: parsedProduct.shipping,
+		images: parsedProduct.images,
+		userId: devUser1.pk,
+		stallId: parsedProduct.stall_id,
+		productName: parsedProduct.name,
+		stockQty: parsedProduct.quantity ?? 0,
+	}
+
+	const productResult = await db.insert(products).values(insertProduct).returning()
 
 	if (productResult[0]) {
 		return toDisplayProduct(productResult[0])

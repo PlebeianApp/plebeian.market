@@ -1,8 +1,9 @@
+import NDK, { NDKEvent, NDKKind, NDKPrivateKeySigner } from '@nostr-dev-kit/ndk'
 import { getStallsByUserId } from '$lib/server/stalls.service'
 import { describe, expect, it } from 'vitest'
 
 import type { NewProduct, Product } from '@plebeian/database'
-import { devUser1, productTypes } from '@plebeian/database'
+import { devUser1 } from '@plebeian/database'
 
 import {
 	createProduct,
@@ -82,29 +83,44 @@ describe('products service', () => {
 
 	it('creates a product', async () => {
 		const stall = await getStallsByUserId(devUser1.pk).then((stalls) => stalls[0])
-		const stallProducts = await getProductsByStallId(stall.id)
-		const newProduct: NewProduct = {
-			userId: devUser1.pk,
-			parentId: stallProducts[0].id,
-			productType: productTypes[0],
+		const skSigner = new NDKPrivateKeySigner(devUser1.sk)
+		const ev = {
+			id: Math.random().toString(36).substring(2, 15),
+			stall_id: stall.id,
+			name: 'Hello Product',
+			description: 'Hello Description',
+			images: ['http://example.com/image1.jpg', 'http://example.com/image2.jpg'],
 			currency: 'USD',
-			stockQty: 6,
-			description: 'testDescription',
-			price: '133',
-			stallId: stall.id,
-			productName: 'testProductName',
+			price: 133,
+			quantity: 6,
+			specs: [
+				['color', 'red'],
+				['size', 'medium'],
+			],
+			shipping: [
+				{
+					id: Math.random().toString(36).substring(2, 15),
+					cost: Math.random() * 10,
+				},
+			],
 		}
-
-		const product = await createProduct(newProduct)
-
+		const newEvent = new NDKEvent(new NDK({ signer: skSigner }), {
+			kind: 30018 as NDKKind,
+			pubkey: devUser1.pk,
+			content: JSON.stringify(ev),
+			created_at: Math.floor(Date.now() / 1000),
+			tags: [],
+		})
+		await newEvent.sign(skSigner)
+		const product = await createProduct(newEvent)
 		expect(product).toStrictEqual({
 			id: expect.any(String),
 			createdAt: expect.any(String),
 			currency: 'USD',
-			description: 'testDescription',
+			description: 'Hello Description',
 			galleryImages: [],
 			mainImage: '',
-			name: 'testProductName',
+			name: 'Hello Product',
 			price: 133,
 			stockQty: 6,
 		})

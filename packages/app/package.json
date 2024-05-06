@@ -25,6 +25,7 @@
 		"playwright": "^1.43.1",
 		"postcss": "^8.4.32",
 		"postcss-load-config": "^5.0.2",
+		"prettier": "^3.2.5",
 		"prettier-plugin-svelte": "^3.1.2",
 		"prettier-plugin-tailwindcss": "^0.5.9",
 		"svelte": "^4.2.7",
@@ -34,16 +35,16 @@
 		"typescript": "^5.0.0",
 		"vite": "^5.0.3",
 		"vite-tsconfig-paths": "^4.3.2",
-		"vitest": "^1.5.2",
-		"prettier": "^3.2.5"
+		"vitest": "^1.5.2"
 	},
 	"type": "module",
 	"dependencies": {
 		"@internationalized/date": "^3.5.2",
 		"@nostr-dev-kit/ndk": "^2.8.1",
+		"@nostrify/nostrify": "npm:@jsr/nostrify__nostrify@^0.18.0",
 		"@plebeian/database": "workspace:*",
-		"@plebeian/prettier": "workspace:*",
 		"@plebeian/eslint": "workspace:*",
+		"@plebeian/prettier": "workspace:*",
 		"bits-ui": "^0.21.4",
 		"clsx": "^2.1.0",
 		"cmdk-sv": "^0.0.17",
