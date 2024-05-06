@@ -170,6 +170,9 @@ importers:
       drizzle-orm:
         specifier: ^0.30.9
         version: 0.30.9(@types/better-sqlite3@7.6.10)(better-sqlite3@9.5.0)
+      drizzle-zod:
+        specifier: ^0.5.1
+        version: 0.5.1(drizzle-orm@0.30.9)(zod@3.22.4)
     devDependencies:
       '@faker-js/faker':
         specifier: ^8.4.1
@@ -2926,6 +2929,16 @@ packages:
     dependencies:
       '@types/better-sqlite3': 7.6.10
       better-sqlite3: 9.5.0
+    dev: false
+
+  /drizzle-zod@0.5.1(drizzle-orm@0.30.9)(zod@3.22.4):
+    resolution: {integrity: sha512-C/8bvzUH/zSnVfwdSibOgFjLhtDtbKYmkbPbUCq46QZyZCH6kODIMSOgZ8R7rVjoI+tCj3k06MRJMDqsIeoS4A==}
+    peerDependencies:
+      drizzle-orm: '>=0.23.13'
+      zod: '*'
+    dependencies:
+      drizzle-orm: 0.30.9(@types/better-sqlite3@7.6.10)(better-sqlite3@9.5.0)
+      zod: 3.22.4
     dev: false
 
   /eastasianwidth@0.2.0:

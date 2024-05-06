@@ -1,4 +1,5 @@
 import type { InferInsertModel, InferSelectModel } from 'drizzle-orm'
+import { createInsertSchema } from 'drizzle-zod'
 
 import { db } from './database'
 
@@ -32,7 +33,8 @@ export type ProductCategory = InferSelectModel<typeof dbSchema.productCategories
 export type NewProductCategory = InferInsertModel<typeof dbSchema.productCategories>
 
 export type Product = InferSelectModel<typeof dbSchema.products>
-export type NewProduct = InferInsertModel<typeof dbSchema.products>
+export type NewProduct = Omit<InferInsertModel<typeof dbSchema.products>, 'id' | 'createdAt' | 'updatedAt'>
+export const insertProductScheam = createInsertSchema(dbSchema.products).omit({ id: true, createdAt: true, updatedAt: true })
 
 export type ProductImage = InferSelectModel<typeof dbSchema.productImages>
 export type NewProductImage = InferInsertModel<typeof dbSchema.productImages>

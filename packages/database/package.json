@@ -23,17 +23,18 @@
 		"@faker-js/faker": "^8.4.1",
 		"@types/better-sqlite3": "^7.6.10",
 		"drizzle-kit": "^0.20.17",
+		"prettier": "^3.2.5",
 		"tsx": "^4.7.2",
-		"typescript": "^5.4.5",
-		"prettier": "^3.2.5"
+		"typescript": "^5.4.5"
 	},
 	"dependencies": {
 		"@paralleldrive/cuid2": "^2.2.2",
-		"@plebeian/prettier": "workspace:*",
 		"@plebeian/eslint": "workspace:*",
+		"@plebeian/prettier": "workspace:*",
 		"better-sqlite3": "^9.5.0",
 		"dotenv": "^16.4.5",
-		"drizzle-orm": "^0.30.9"
+		"drizzle-orm": "^0.30.9",
+		"drizzle-zod": "^0.5.1"
 	},
 	"prettier": "@plebeian/prettier"
 }
