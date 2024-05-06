@@ -84,3 +84,5 @@ export const bitcoinToSatoshis = (amountInBtc: string) => {
 	const btc = parseFloat(amountInBtc)
 	return Math.floor(btc * numSatsInBtc)
 }
+
+export const standardDisplayDateFormat = 'dd-MM-yyyy'

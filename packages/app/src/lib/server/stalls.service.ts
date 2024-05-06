@@ -1,7 +1,7 @@
 import type { DisplayProduct } from '$lib/server/products.service'
 import { error } from '@sveltejs/kit'
 import { getProductsByStallId } from '$lib/server/products.service'
-import { takeUniqueOrThrow } from '$lib/utils'
+import { standardDisplayDateFormat, takeUniqueOrThrow } from '$lib/utils'
 import { format } from 'date-fns'
 
 import { db, eq, orders, products, sql, stalls, users } from '@plebeian/database'
@@ -56,7 +56,7 @@ export const getAllStalls = async (): Promise<RichStall[]> => {
 				name: stall.name,
 				description: stall.description,
 				currency: stall.currency,
-				createDate: format(stall.createdAt, 'dd-MM-yyyy'),
+				createDate: format(stall.createdAt, standardDisplayDateFormat),
 				userId,
 				userName,
 				productCount: takeUniqueOrThrow(productCount),
@@ -105,7 +105,7 @@ export const getStallById = async (id: string): Promise<StallInfo> => {
 		name: uniqueStall.name,
 		description: uniqueStall.description,
 		currency: uniqueStall.currency,
-		createDate: format(uniqueStall.createdAt, 'dd-MM-yyyy'),
+		createDate: format(uniqueStall.createdAt, standardDisplayDateFormat),
 		userId: userId,
 		products: stallProducts,
 	}
@@ -164,7 +164,7 @@ export const getStallsByUserId = async (userId: string): Promise<RichStall[]> =>
 				name: stall.name,
 				description: stall.description,
 				currency: stall.currency,
-				createDate: format(stall.createdAt, 'dd-MM-yyyy'),
+				createDate: format(stall.createdAt, standardDisplayDateFormat),
 				userId,
 				userName,
 				productCount: takeUniqueOrThrow(productCount),
