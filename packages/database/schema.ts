@@ -6,7 +6,6 @@ import {
 	allowedMetaNames,
 	auctionStatus,
 	bidStatus,
-	createId,
 	invoiceStatus,
 	metaDataTypes,
 	metaScopes,
@@ -17,6 +16,7 @@ import {
 	userRoles,
 	userTrustLevel,
 } from './constants'
+import { createId } from './utils'
 
 const standardColumns = {
 	id: text('id').primaryKey(),
