@@ -7,13 +7,13 @@
   "scripts": {
     "preinstall": "npx simple-git-hooks",
     "dev": "pnpm --parallel --stream -r run dev",
-    "lint:prettier": "pnpm --filter \"./packages/**\" --parallel --stream -r run lint:prettier",
+    "lint": "pnpm --filter \"./packages/**\" --parallel --stream -r run lint",
     "format": "pnpm --filter \"./packages/**\" --parallel --stream -r run format",
     "db:setup": "pnpm --filter './packages/database' run db:setup",
     "test": "pnpm --parallel --stream -r run test"
   },
   "simple-git-hooks": {
-    "pre-commit": "pnpm lint:prettier",
+    "pre-commit": "pnpm lint && pnpm format",
     "commit-msg": "pnpm exec commitlint --config commitlint.config.js --edit ${1}"
   },
   "keywords": [],
