@@ -117,7 +117,7 @@ export const getProductById = async (productId: string): Promise<DisplayProduct>
 
 export const createProduct = async (productEvent: Event | NDKEvent): Promise<DisplayProduct> => {
 	const productEventContent = JSON.parse(productEvent.content)
-	const parsedProduct = productEventSchema.parse(productEventContent)
+	const parsedProduct = productEventSchema.parse({ id: productEvent.id, ...productEventContent })
 	const insertProduct = {
 		id: parsedProduct.id,
 		description: parsedProduct.description as string,

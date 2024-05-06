@@ -31,7 +31,6 @@ describe('/products', () => {
 
 		const skSigner = new NDKPrivateKeySigner(devUser1.sk)
 		const ev = {
-			id: Math.random().toString(36).substring(2, 15),
 			stall_id: stallId,
 			name: 'Hello Product',
 			description: 'Hello Description',
