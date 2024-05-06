@@ -5,8 +5,10 @@
 	"main": "./index.ts",
 	"type": "module",
 	"scripts": {
-		"lint:prettier": "prettier --check . --ignore-path ../../.prettierignore && eslint . --fix",
-		"format": "prettier --write . --ignore-path ../../.prettierignore",
+		"lint": "eslint .",
+		"lint:fix": "eslint . --fix",
+		"format": "prettier --check . --ignore-path ../../.prettierignore",
+		"format:fix": "prettier --write . --ignore-path ../../.prettierignore",
 		"db:check": "drizzle-kit check:sqlite",
 		"db:push": "drizzle-kit push:sqlite",
 		"db:generate": "drizzle-kit generate:sqlite",
