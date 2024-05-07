@@ -2,7 +2,7 @@ import NDK, { NDKEvent, NDKKind, NDKPrivateKeySigner } from '@nostr-dev-kit/ndk'
 import { getAllStalls } from '$lib/server/stalls.service'
 import { describe, expect, it } from 'vitest'
 
-import { devUser1 } from '@plebeian/database'
+import { createId, devUser1 } from '@plebeian/database'
 
 describe('/products', () => {
 	it('GET', async () => {
@@ -30,7 +30,8 @@ describe('/products', () => {
 		const stallId = await getAllStalls().then((stalls) => stalls[0].id)
 
 		const skSigner = new NDKPrivateKeySigner(devUser1.sk)
-		const ev = {
+		const evContent = {
+			id: createId(),
 			stall_id: stallId,
 			name: 'Hello Product',
 			description: 'Hello Description',
@@ -52,7 +53,7 @@ describe('/products', () => {
 		const newEvent = new NDKEvent(new NDK({ signer: skSigner }), {
 			kind: 30018 as NDKKind,
 			pubkey: devUser1.pk,
-			content: JSON.stringify(ev),
+			content: JSON.stringify(evContent),
 			created_at: Math.floor(Date.now() / 1000),
 			tags: [],
 		})
@@ -72,7 +73,7 @@ describe('/products', () => {
 			createdAt: expect.any(String),
 			currency: 'USD',
 			description: 'Hello Description',
-			galleryImages: [],
+			galleryImages: ['http://example.com/image1.jpg', 'http://example.com/image2.jpg'],
 			mainImage: '',
 			name: 'Hello Product',
 			price: 133,
