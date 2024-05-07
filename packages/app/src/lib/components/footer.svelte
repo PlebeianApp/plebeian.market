@@ -1,29 +1,31 @@
-<script lang="ts">
-	import { Button } from '$lib/components/ui/button/index.js'
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js'
-</script>
-
-<header class="sticky top-0 z-30 bg-black px-4 py-4 text-white lg:px-12">
-	<div class="container flex h-full w-full items-center justify-between">
-		<section class=" inline-flex items-center">
-			<a href="/"><img src="/logo.svg" alt="logo" class="w-16 px-2" /></a>
-			<div class="hidden lg:flex mx-8 gap-8">
-				<a class="hover:underline font-semibold" href="/stalls/">Stall Browser</a>
-				<a class="hover:underline font-semibold" href="/">Market Square</a>
-				<a class="hover:underline font-semibold" href="/">Plebeian Planet</a>
+<footer class="bg-black p-4 font-bold text-white lg:px-12">
+	<div class="container flex justify-between items-center flex-col gap-4 md:gap-0 md:flex-row">
+		<div class="flex gap-4 flex-col md:flex-row items-center">
+			<span>Plug into the bitcoin economy. Powered by Nostr.</span>
+			<div class="flex gap-4">
+				<a class="underline" href="/">About</a>
+				<a class="underline" href="/">FAQ</a>
+				<a class="underline" href="/">Contact</a>
 			</div>
-		</section>
-		<div class="flex items-center gap-4">
-			<Button class="hidden sm:flex p-2 bg-[#FFD53E]" href="/"><span class="i-tdesign-mail text-black w-6 h-6"></span></Button>
-			<Button class="p-2 hidden sm:flex" href="/"><span class="i-tdesign-cart text-black w-6 h-6"></span></Button>
-			<DropdownMenu.Root>
-				<DropdownMenu.Trigger asChild let:builder>
-					<Button class="p-2 bg-white" builders={[builder]}><span class="i-tdesign-view-list text-black w-6 h-6"></span></Button>
-				</DropdownMenu.Trigger>
-				<DropdownMenu.Content class="w-56">
-					<DropdownMenu.Label>My Account</DropdownMenu.Label>
-				</DropdownMenu.Content>
-			</DropdownMenu.Root>
+		</div>
+		<div class="text-right flex justify-between items-center gap-6">
+			<a
+				class="border-2 border-white p-1 inline-flex justify-center items-center"
+				href="https://snort.social/p/npub1market6g3zl4mxwx5ugw56hfg0f7dy7jnnw8t380788mvdyrnwuqgep7hd"
+				><span class="i-game-icons-ostrich text-white w-6 h-6"></span></a
+			>
+			<a href="https://twitter.com/PlebeianMarket" class="border-2 border-white p-1 inline-flex justify-center items-center"
+				><span class="i-ion-logo-x text-white w-6 h-6"></span></a
+			>
+			<a class="border-2 border-white p-1 inline-flex justify-center items-center" href="https://plebeianmarket.substack.com/"
+				><span class="i-simple-icons-substack text-white w-6 h-6"></span></a
+			>
+			<a class="border-2 border-white p-1 inline-flex justify-center items-center" href="https://t.me/PlebeianMarket"
+				><span class="i-mingcute-telegram-line text-white w-6 h-6"></span></a
+			>
+			<a class="border-2 border-white p-1 inline-flex justify-center items-center" href="https://github.com/PlebeianTech/plebeian-market"
+				><span class="i-tdesign-logo-github text-white w-6 h-6"></span></a
+			>
 		</div>
 	</div>
-</header>
+</footer>
