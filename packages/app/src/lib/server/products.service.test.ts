@@ -2,7 +2,7 @@ import NDK, { NDKEvent, NDKKind, NDKPrivateKeySigner } from '@nostr-dev-kit/ndk'
 import { getStallsByUserId } from '$lib/server/stalls.service'
 import { describe, expect, it } from 'vitest'
 
-import type { NewProduct, Product } from '@plebeian/database'
+import type { Product } from '@plebeian/database'
 import { devUser1 } from '@plebeian/database'
 
 import {
@@ -126,13 +126,22 @@ describe('products service', () => {
 	})
 
 	it('updates a product', async () => {
-		const targetProduct = await getAllProducts().then((products) => products[0])
-
-		const newProduct: Partial<NewProduct> = {
-			productName: 'testProductNameChanged',
+		const stall = await getStallsByUserId(devUser1.pk).then((stalls) => stalls[0])
+		const targetProduct = await getProductsByStallId(stall.id).then((products) => products[0])
+		const skSigner = new NDKPrivateKeySigner(devUser1.sk)
+		const ev = {
+			stall_id: stall.id,
+			name: 'Hello Product changed',
 		}
+		const newEvent = new NDKEvent(new NDK({ signer: skSigner }), {
+			kind: 30018 as NDKKind,
+			pubkey: devUser1.pk,
+			content: JSON.stringify(ev),
+			created_at: Math.floor(Date.now() / 1000),
+			tags: [],
+		})
 
-		const product = await updateProduct(targetProduct.id, newProduct)
+		const product = await updateProduct(targetProduct.id, newEvent)
 
 		expect(product).toStrictEqual({
 			id: targetProduct.id,
@@ -141,7 +150,7 @@ describe('products service', () => {
 			description: targetProduct.description,
 			galleryImages: expect.any(Array),
 			mainImage: expect.any(String),
-			name: 'testProductNameChanged',
+			name: 'Hello Product changed',
 			price: targetProduct.price,
 			stockQty: targetProduct.stockQty,
 		})

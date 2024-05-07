@@ -5,7 +5,7 @@ import { getImagesByProductId } from '$lib/server/productImages.service'
 import { standardDisplayDateFormat, takeUniqueOrThrow } from '$lib/utils'
 import { format } from 'date-fns'
 
-import type { NewProduct, Product } from '@plebeian/database'
+import type { Product } from '@plebeian/database'
 import { db, devUser1, eq, products } from '@plebeian/database'
 
 import { productEventSchema } from '../../schema/nostr-events'
@@ -142,12 +142,29 @@ export const createProduct = async (productEvent: Event | NDKEvent): Promise<Dis
 	error(500, 'Failed to create product')
 }
 
-export const updateProduct = async (productId: string, product: Partial<NewProduct>): Promise<DisplayProduct> => {
+export const updateProduct = async (productId: string, productEvent: Event | NDKEvent): Promise<DisplayProduct> => {
+	const productEventContent = JSON.parse(productEvent.content)
+	const parsedProduct = productEventSchema.partial().parse({ id: productId, ...productEventContent })
+	const insertProduct = {
+		id: parsedProduct.id,
+		description: parsedProduct?.description as string,
+		currency: parsedProduct?.currency,
+		price: parsedProduct?.price?.toString(),
+		quantity: parsedProduct?.quantity,
+		specs: parsedProduct?.specs,
+		shipping: parsedProduct?.shipping,
+		images: parsedProduct?.images,
+		userId: devUser1.pk,
+		stallId: parsedProduct?.stall_id,
+		productName: parsedProduct?.name,
+		stockQty: parsedProduct?.quantity !== null ? parsedProduct?.quantity : undefined,
+	}
+
 	const productResult = await db
 		.update(products)
 		.set({
 			updatedAt: new Date(),
-			...product,
+			...insertProduct,
 		})
 		.where(eq(products.id, productId))
 		.returning()
