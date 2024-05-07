@@ -13,9 +13,9 @@
 				<a class="hover:underline font-semibold" href="/">Plebeian Planet</a>
 			</div>
 		</section>
-		<div class="flex items-center gap-8">
-			<a href="/">Private Messages</a>
-			<a href="/">Cart</a>
+		<div class="flex items-center gap-4">
+			<Button class="hidden sm:flex p-2 bg-[var(--neo-yellow)]" href="/"><span class="i-tdesign-mail text-black w-6 h-6"></span></Button>
+			<Button class="p-2 hidden sm:flex" href="/"><span class="i-tdesign-cart text-black w-6 h-6"></span></Button>
 			<DropdownMenu.Root>
 				<DropdownMenu.Trigger asChild let:builder>
 					<Button builders={[builder]}>Menu</Button>
