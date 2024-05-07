@@ -1,10 +1,13 @@
+import type { NDKEvent, NDKTag } from '@nostr-dev-kit/ndk'
 import type { ClassValue } from 'clsx'
+import type { Event } from 'nostr-tools'
 import type { TransitionConfig } from 'svelte/transition'
 import { error } from '@sveltejs/kit'
 import { clsx } from 'clsx'
 import { cubicOut } from 'svelte/easing'
 import { twMerge } from 'tailwind-merge'
 
+import type { EventCoordinates } from './interfaces'
 import { numSatsInBtc } from './constants'
 
 export function cn(...inputs: ClassValue[]) {
@@ -85,4 +88,46 @@ export const bitcoinToSatoshis = (amountInBtc: string) => {
 	return Math.floor(btc * numSatsInBtc)
 }
 
-export const standardDisplayDateFormat = 'dd-MM-yyyy'
+export function getEventCoordinates(event: Event | NDKEvent): EventCoordinates {
+	const { kind, pubkey, tags } = event
+
+	const [_, tagD] = tags.find(([key]) => key === 'd') ?? []
+
+	if (!event || !kind || kind < 30000 || kind >= 40000 || !pubkey || !tagD) {
+		throw new Error(
+			!kind
+				? 'no kind?'
+				: kind < 30000 || kind >= 40000
+					? 'Invalid event kind, must be between 30000 and 40000'
+					: !pubkey
+						? 'Event object missing pubkey'
+						: !tagD
+							? 'Event object missing "d" tag'
+							: 'Unknown error',
+		)
+	}
+
+	return {
+		coordinates: `${kind}:${pubkey}:${tagD}`,
+		kind: kind,
+		pubkey: pubkey,
+		tagD: tagD,
+	}
+}
+
+export function customTagValue(eventTags: NDKTag[], key: string, thirdValue?: string): string[] {
+	const values = eventTags
+		.filter(([k, v, t]) => k === key && (thirdValue === undefined || t === thirdValue))
+		.map(([_, v, t]) => (thirdValue === undefined ? v : t))
+
+	return values
+}
+
+export const slugify = (str: string) => {
+	return decodeURIComponent(str)
+		.toLowerCase()
+		.replace(/\s+/g, '-')
+		.replace(/[^\w-]/g, '')
+		.replace(/-+/g, '-')
+		.replace(/^-*|-*$/g, '')
+}

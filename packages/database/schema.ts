@@ -42,6 +42,7 @@ const standardProductColumns = {
 		.default('simple'),
 	currency: text('currency').notNull(),
 	stockQty: integer('stock_qty').notNull(),
+	extraCost: numeric('extra_cost').notNull().default('0'),
 	parentId: text('parent_id').references((): AnySQLiteColumn => products.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
 }
 
@@ -65,6 +66,7 @@ export const productMeta = sqliteTable('product_meta', {
 	metaName: text('meta_name')
 		.notNull()
 		.references(() => metaTypes.name, { onDelete: 'cascade', onUpdate: 'cascade' }),
+	key: text('key'),
 	valueText: text('value_text'),
 	valueBoolean: integer('value_boolean', { mode: 'boolean' }),
 	valueInteger: integer('value_boolean'),

@@ -67,7 +67,7 @@ export const productMetaTypes = [
 	{ name: 'is_digital', dataType: 'boolean' },
 	{ name: 'shipping_cost', dataType: 'numeric' },
 	{ name: 'spec', dataType: 'text' },
-]
+] as const
 
 export const digitalProductMetaTypes = [
 	{ name: 'license_key', dataType: 'text' },
@@ -91,7 +91,7 @@ export const userRoles = ['admin', 'editor', 'pleb']
 export const userTrustLevel = ['trust', 'reasonable', 'paranoid']
 export const paymentDetailsMethod = ['ln', 'on-chain', 'cashu', 'other']
 
-export const productImagesType = ['main', 'thumbnail', 'gallery']
+export const productImagesType = ['main', 'thumbnail', 'gallery'] as const
 export const productTypes = ['simple', 'variable', 'variation']
 
 export const auctionStatus = ['active', 'inactive', 'ended', 'canceled']

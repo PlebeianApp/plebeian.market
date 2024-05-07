@@ -1,7 +1,8 @@
 import type { DisplayProduct } from '$lib/server/products.service'
 import { error } from '@sveltejs/kit'
+import { standardDisplayDateFormat } from '$lib/constants'
 import { getProductsByStallId } from '$lib/server/products.service'
-import { standardDisplayDateFormat, takeUniqueOrThrow } from '$lib/utils'
+import { takeUniqueOrThrow } from '$lib/utils'
 import { format } from 'date-fns'
 
 import { db, eq, orders, products, sql, stalls, users } from '@plebeian/database'

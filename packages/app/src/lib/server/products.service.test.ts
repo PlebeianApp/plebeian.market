@@ -1,9 +1,10 @@
 import NDK, { NDKEvent, NDKKind, NDKPrivateKeySigner } from '@nostr-dev-kit/ndk'
 import { getStallsByUserId } from '$lib/server/stalls.service'
+import { slugify } from '$lib/utils'
 import { describe, expect, it } from 'vitest'
 
 import type { Product } from '@plebeian/database'
-import { devUser1 } from '@plebeian/database'
+import { createId, devUser1 } from '@plebeian/database'
 
 import {
 	createProduct,
@@ -28,6 +29,7 @@ describe('products service', () => {
 			price: 'testPrice',
 			currency: 'testCurrency',
 			stockQty: 1,
+			extraCost: '0',
 			productType: 'testProductType',
 			parentId: 'testParentId',
 		}
@@ -84,9 +86,11 @@ describe('products service', () => {
 	it('creates a product', async () => {
 		const stall = await getStallsByUserId(devUser1.pk).then((stalls) => stalls[0])
 		const skSigner = new NDKPrivateKeySigner(devUser1.sk)
-		const ev = {
+		const evContent = {
 			stall_id: stall.id,
 			name: 'Hello Product',
+			id: createId(),
+			type: 'simple',
 			description: 'Hello Description',
 			images: ['http://example.com/image1.jpg', 'http://example.com/image2.jpg'],
 			currency: 'USD',
@@ -106,9 +110,9 @@ describe('products service', () => {
 		const newEvent = new NDKEvent(new NDK({ signer: skSigner }), {
 			kind: 30018 as NDKKind,
 			pubkey: devUser1.pk,
-			content: JSON.stringify(ev),
+			content: JSON.stringify(evContent),
 			created_at: Math.floor(Date.now() / 1000),
-			tags: [],
+			tags: [['d', `${slugify(evContent.name)}${createId()}`]],
 		})
 		await newEvent.sign(skSigner)
 		const product = await createProduct(newEvent)
@@ -117,7 +121,7 @@ describe('products service', () => {
 			createdAt: expect.any(String),
 			currency: 'USD',
 			description: 'Hello Description',
-			galleryImages: [],
+			galleryImages: ['http://example.com/image1.jpg', 'http://example.com/image2.jpg'],
 			mainImage: '',
 			name: 'Hello Product',
 			price: 133,
@@ -129,16 +133,16 @@ describe('products service', () => {
 		const stall = await getStallsByUserId(devUser1.pk).then((stalls) => stalls[0])
 		const targetProduct = await getProductsByStallId(stall.id).then((products) => products[0])
 		const skSigner = new NDKPrivateKeySigner(devUser1.sk)
-		const ev = {
+		const evContent = {
 			stall_id: stall.id,
 			name: 'Hello Product changed',
 		}
 		const newEvent = new NDKEvent(new NDK({ signer: skSigner }), {
 			kind: 30018 as NDKKind,
 			pubkey: devUser1.pk,
-			content: JSON.stringify(ev),
+			content: JSON.stringify(evContent),
 			created_at: Math.floor(Date.now() / 1000),
-			tags: [],
+			tags: [['d', `${slugify(evContent.name)}${createId()}`]],
 		})
 
 		const product = await updateProduct(targetProduct.id, newEvent)

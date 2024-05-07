@@ -1,12 +1,13 @@
 import type { NDKEvent } from '@nostr-dev-kit/ndk'
 import type { Event } from 'nostr-tools'
 import { error } from '@sveltejs/kit'
+import { standardDisplayDateFormat } from '$lib/constants'
 import { getImagesByProductId } from '$lib/server/productImages.service'
-import { standardDisplayDateFormat, takeUniqueOrThrow } from '$lib/utils'
+import { customTagValue, getEventCoordinates, takeUniqueOrThrow } from '$lib/utils'
 import { format } from 'date-fns'
 
-import type { Product } from '@plebeian/database'
-import { db, devUser1, eq, products } from '@plebeian/database'
+import type { Product, ProductImage, ProductMeta } from '@plebeian/database'
+import { createId, db, devUser1, eq, productImages, productImagesType, productMeta, productMetaTypes, products } from '@plebeian/database'
 
 import { productEventSchema } from '../../schema/nostr-events'
 
@@ -115,25 +116,60 @@ export const getProductById = async (productId: string): Promise<DisplayProduct>
 	}
 }
 
-export const createProduct = async (productEvent: Event | NDKEvent): Promise<DisplayProduct> => {
+export const createProduct = async (productEvent: Event | NDKEvent) => {
+	const eventCoordinates = getEventCoordinates(productEvent)
 	const productEventContent = JSON.parse(productEvent.content)
-	const parsedProduct = productEventSchema.parse({ id: productEvent.id, ...productEventContent })
-	const insertProduct = {
-		id: parsedProduct.id,
+	const parsedProduct = productEventSchema.parse({ id: productEventContent.id, ...productEventContent })
+	if (!parsedProduct) throw Error('Bad product schema')
+
+	const parentId = customTagValue(productEvent.tags, 'a')[0] || null
+	const extraCost = (parsedProduct.shipping && parsedProduct.shipping[0].cost) || 0
+
+	if (!parsedProduct.type) {
+		parsedProduct.type = 'simple'
+	}
+
+	const insertProduct: Product = {
+		id: eventCoordinates.coordinates,
+		createdAt: new Date(productEvent.created_at!),
+		updatedAt: new Date(),
+		productName: parsedProduct.name,
 		description: parsedProduct.description as string,
 		currency: parsedProduct.currency,
 		price: parsedProduct.price.toString(),
-		quantity: parsedProduct.quantity,
-		specs: parsedProduct.specs,
-		shipping: parsedProduct.shipping,
-		images: parsedProduct.images,
-		userId: devUser1.pk,
+		extraCost: extraCost.toString(),
+		productType: parsedProduct.type,
+		parentId: parentId,
+		userId: productEvent.pubkey,
 		stallId: parsedProduct.stall_id,
-		productName: parsedProduct.name,
 		stockQty: parsedProduct.quantity ?? 0,
 	}
+	const insertSpecs: ProductMeta[] | undefined = parsedProduct.specs?.map((spec) => ({
+		id: createId(),
+		createdAt: new Date(productEvent.created_at!),
+		updatedAt: new Date(),
+		productId: eventCoordinates.coordinates,
+		metaName: productMetaTypes[5].name,
+		key: spec[0],
+		valueText: spec[1],
+		valueBoolean: null,
+		valueInteger: null,
+		valueNumeric: null,
+	}))
+
+	const insertProductImages: ProductImage[] | undefined = parsedProduct.images?.map((imageUrl, index) => ({
+		createdAt: new Date(),
+		productId: eventCoordinates.coordinates,
+		imageUrl,
+		imageType: productImagesType[2],
+		imageOrder: index + 1,
+	}))
 
 	const productResult = await db.insert(products).values(insertProduct).returning()
+
+	const specsResult = insertSpecs?.length && (await db.insert(productMeta).values(insertSpecs).returning())
+
+	const imageResult = insertProductImages?.length && (await db.insert(productImages).values(insertProductImages).returning())
 
 	if (productResult[0]) {
 		return toDisplayProduct(productResult[0])

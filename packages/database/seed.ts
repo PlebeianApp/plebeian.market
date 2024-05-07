@@ -107,6 +107,7 @@ const main = async () => {
 					isFeatured: i % 2 === 0,
 					isDigital: faker.datatype.boolean({ probability: 0.8 }),
 					parentId: null,
+					extraCost: faker.finance.amount(),
 					stockQty: faker.number.int({ min: 0, max: 100 }),
 				} as Product
 			})
@@ -173,6 +174,7 @@ const main = async () => {
 				endDate: faker.date.future(),
 				specs: faker.commerce.productMaterial() || null,
 				status: faker.helpers.arrayElement(auctionStatus),
+				extraCost: faker.finance.amount()
 			} as Auction
 		})
 	})
