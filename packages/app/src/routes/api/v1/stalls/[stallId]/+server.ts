@@ -1,5 +1,6 @@
 import { NSchema as n } from '@nostrify/nostrify'
 import { error, json } from '@sveltejs/kit'
+import { KindStalls } from '$lib/constants'
 import { deleteProduct } from '$lib/server/products.service'
 import { getStallById, updateStall } from '$lib/server/stalls.service'
 import { verifyEvent } from 'nostr-tools'
@@ -15,7 +16,7 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 	const verifiedEvent = n
 		.event()
 		.refine(verifyEvent)
-		.refine((val) => val.kind === 30017)
+		.refine((val) => val.kind === KindStalls)
 		.safeParse(body)
 
 	if (!verifiedEvent.success) {

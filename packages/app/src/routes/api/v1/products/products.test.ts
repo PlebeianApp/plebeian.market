@@ -1,5 +1,7 @@
 import NDK, { NDKEvent, NDKKind, NDKPrivateKeySigner } from '@nostr-dev-kit/ndk'
+import { KindProducts } from '$lib/constants'
 import { getAllStalls } from '$lib/server/stalls.service'
+import { slugify } from '$lib/utils'
 import { describe, expect, it } from 'vitest'
 
 import { createId, devUser1 } from '@plebeian/database'
@@ -30,8 +32,9 @@ describe('/products', () => {
 		const stallId = await getAllStalls().then((stalls) => stalls[0].id)
 
 		const skSigner = new NDKPrivateKeySigner(devUser1.sk)
+		const identifier = createId()
 		const evContent = {
-			id: createId(),
+			id: `${KindProducts}:${stallId}:${identifier}`,
 			stall_id: stallId,
 			name: 'Hello Product',
 			description: 'Hello Description',
@@ -55,7 +58,7 @@ describe('/products', () => {
 			pubkey: devUser1.pk,
 			content: JSON.stringify(evContent),
 			created_at: Math.floor(Date.now() / 1000),
-			tags: [],
+			tags: [['d', `${slugify(evContent.name)}${createId()}`]],
 		})
 
 		await newEvent.sign(skSigner)

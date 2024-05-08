@@ -1,5 +1,5 @@
-import type { NDKKind } from '@nostr-dev-kit/ndk'
 import NDK, { NDKEvent, NDKPrivateKeySigner } from '@nostr-dev-kit/ndk'
+import { KindProducts, KindStalls } from '$lib/constants'
 import { createStall, getAllStalls, getStallById, getStallsByUserId, updateStall } from '$lib/server/stalls.service'
 import { slugify } from '$lib/utils'
 import { describe, expect, it } from 'vitest'
@@ -43,8 +43,9 @@ describe('stalls service', () => {
 
 	it('creates a stalls', async () => {
 		const skSigner = new NDKPrivateKeySigner(devUser1.sk)
+		const identifier = createId()
 		const evContent = {
-			id: createId(),
+			id: `${KindProducts}:${devUser1.pk}:${identifier}`,
 			name: 'Hello Stall',
 			description: 'Hello Stall Description',
 			currency: 'USD',
@@ -59,11 +60,11 @@ describe('stalls service', () => {
 			],
 		}
 		const newEvent = new NDKEvent(new NDK({ signer: skSigner }), {
-			kind: 30018 as NDKKind,
+			kind: KindStalls,
 			pubkey: devUser1.pk,
 			content: JSON.stringify(evContent),
 			created_at: Math.floor(Date.now() / 1000),
-			tags: [['d', `${slugify(evContent.name)}${createId()}`]],
+			tags: [['d', `${slugify(evContent.name)}${identifier}`]],
 		})
 		await newEvent.sign(skSigner)
 		const product = await createStall(newEvent)
@@ -85,11 +86,11 @@ describe('stalls service', () => {
 			name: 'Hello Stall changed',
 		}
 		const newEvent = new NDKEvent(new NDK({ signer: skSigner }), {
-			kind: 30018 as NDKKind,
+			kind: KindStalls,
 			pubkey: devUser1.pk,
 			content: JSON.stringify(evContent),
 			created_at: Math.floor(Date.now() / 1000),
-			tags: [['d', `${slugify(evContent.name)}${createId()}`]],
+			tags: [['d', targetStall.identifier]],
 		})
 
 		const product = await updateStall(targetStall.id, newEvent)

@@ -1,5 +1,6 @@
 import { NSchema as n } from '@nostrify/nostrify'
 import { error, json } from '@sveltejs/kit'
+import { KindProducts } from '$lib/constants'
 import { productsFilterSchema } from '$lib/schema'
 import { createProduct, getAllProducts } from '$lib/server/products.service.js'
 import { verifyEvent } from 'nostr-tools'
@@ -21,7 +22,7 @@ export async function POST({ request }) {
 	const verifiedEvent = n
 		.event()
 		.refine(verifyEvent)
-		.refine((val) => val.kind === 30018)
+		.refine((val) => val.kind === KindProducts)
 		.safeParse(body)
 
 	if (!verifiedEvent.success) {

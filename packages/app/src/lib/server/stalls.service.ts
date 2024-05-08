@@ -24,6 +24,7 @@ export type RichStall = {
 	userName: string | null
 	productCount: number
 	orderCount: number
+	identifier: string
 }
 
 const resolveStalls = async (stall: Stall): Promise<RichStall> => {
@@ -72,6 +73,7 @@ const resolveStalls = async (stall: Stall): Promise<RichStall> => {
 		userName,
 		productCount: takeUniqueOrThrow(productCount),
 		orderCount: takeUniqueOrThrow(orderCount),
+		identifier: stall.id.split(':')[2],
 	}
 }
 
