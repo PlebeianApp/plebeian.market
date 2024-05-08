@@ -117,6 +117,7 @@ export const stalls = sqliteTable('stalls', {
 	...standardColumns,
 	name: text('name').notNull(),
 	description: text('description').notNull(),
+	identifier: text('identifier').notNull(),
 	currency: text('currency').notNull(),
 	userId: text('user_id')
 		.notNull()

@@ -1,7 +1,9 @@
 import type { NDKEvent } from '@nostr-dev-kit/ndk'
+import type { ProductsFilter } from '$lib/schema'
 import type { Event } from 'nostr-tools'
 import { error } from '@sveltejs/kit'
 import { standardDisplayDateFormat } from '$lib/constants'
+import { productsFilterSchema } from '$lib/schema'
 import { getImagesByProductId } from '$lib/server/productImages.service'
 import { customTagValue, getEventCoordinates, takeUniqueOrThrow } from '$lib/utils'
 import { format } from 'date-fns'
@@ -16,13 +18,6 @@ export type DisplayProduct = Pick<Product, 'id' | 'description' | 'currency' | '
 	createdAt: string
 	price: number
 	galleryImages: string[]
-}
-
-export type ProductsFilter = {
-	pageSize: number
-	page: number
-	orderBy: 'createdAt' | 'price'
-	order: 'asc' | 'desc'
 }
 
 export const toDisplayProduct = async (product: Product): Promise<DisplayProduct> => {
@@ -63,14 +58,7 @@ export const getProductsByStallId = async (stallId: string): Promise<DisplayProd
 	error(404, 'Not found')
 }
 
-export const getAllProducts = async (
-	filter: ProductsFilter = {
-		pageSize: 10,
-		page: 1,
-		orderBy: 'createdAt',
-		order: 'asc',
-	},
-): Promise<DisplayProduct[]> => {
+export const getAllProducts = async (filter: ProductsFilter = productsFilterSchema.parse({})): Promise<DisplayProduct[]> => {
 	const orderBy = {
 		createdAt: products.createdAt,
 		price: products.price,
@@ -178,15 +166,12 @@ export const createProduct = async (productEvent: Event | NDKEvent) => {
 export const updateProduct = async (productId: string, productEvent: Event | NDKEvent): Promise<DisplayProduct> => {
 	const productEventContent = JSON.parse(productEvent.content)
 	const parsedProduct = productEventSchema.partial().parse({ id: productId, ...productEventContent })
-	const insertProduct = {
+	const insertProduct: Partial<Product> = {
 		id: parsedProduct.id,
 		description: parsedProduct?.description as string,
 		currency: parsedProduct?.currency,
 		price: parsedProduct?.price?.toString(),
-		quantity: parsedProduct?.quantity,
-		specs: parsedProduct?.specs,
-		shipping: parsedProduct?.shipping,
-		images: parsedProduct?.images,
+		extraCost: parsedProduct?.shipping && parsedProduct?.shipping[0].cost.toString(),
 		userId: devUser1.pk,
 		stallId: parsedProduct?.stall_id,
 		productName: parsedProduct?.name,

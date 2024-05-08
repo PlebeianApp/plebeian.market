@@ -110,7 +110,7 @@ describe('products service', () => {
 			],
 		}
 		const newEvent = new NDKEvent(new NDK({ signer: skSigner }), {
-			kind: 30018 as NDKKind,
+			kind: KindProducts,
 			pubkey: devUser1.pk,
 			content: JSON.stringify(evContent),
 			created_at: Math.floor(Date.now() / 1000),
@@ -139,11 +139,11 @@ describe('products service', () => {
 			name: 'Hello Product changed',
 		}
 		const newEvent = new NDKEvent(new NDK({ signer: skSigner }), {
-			kind: 30018 as NDKKind,
+			kind: KindProducts,
 			pubkey: devUser1.pk,
 			content: JSON.stringify(evContent),
 			created_at: Math.floor(Date.now() / 1000),
-			tags: [['d', `${slugify(evContent.name)}${createId()}`]],
+			tags: [['d', targetProduct.id.split(':')[2]]],
 		})
 
 		const product = await updateProduct(targetProduct.id, newEvent)

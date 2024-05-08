@@ -79,13 +79,15 @@ const main = async () => {
 
 	const userStalls = userIds.map((user) => {
 		return randomLengthArrayFromTo(4, 8).map(() => {
+			const identifier = createId()
 			return {
-				id: `${KindStalls}:${user.id}:${createId()}`,
+				id: `${KindStalls}:${user.id}:${identifier}`,
 				userId: user.id,
 				createdAt: faker.date.recent(),
 				updatedAt: faker.date.future(),
 				name: faker.commerce.productMaterial(),
 				description: faker.commerce.productDescription(),
+				identifier: identifier,
 				currency: faker.finance.currencyCode(),
 			} as Stall
 		})
