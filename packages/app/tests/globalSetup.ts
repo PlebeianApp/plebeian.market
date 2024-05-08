@@ -22,6 +22,6 @@ export async function setup({ provide }: GlobalSetupContext) {
 	return async () => {
 		if (teardownHappened) throw new Error('teardown called twice')
 		teardownHappened = true
-		await server?.close()
+		server.httpServer.close()
 	}
 }
