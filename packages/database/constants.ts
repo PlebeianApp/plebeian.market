@@ -35,6 +35,36 @@ export const allowedMimeTypes = [
 	'application/x-mobipocket-ebook',
 ]
 
+export const popularCurrencies = [
+	'USD', // United States Dollar
+	'EUR', // Euro
+	'JPY', // Japanese Yen
+	'GBP', // Pound Sterling
+	'CHF', // Swiss Franc
+	'CNY', // Chinese Renminbi (RMB)
+	'AUD', // Australian Dollar
+	'CAD', // Canadian Dollar
+	'HKD', // Hong Kong Dollar
+	'SGD', // Singapore Dollar
+	'INR', // Indian Rupee
+	'MXN', // Mexican Peso
+	'RUB', // Russian Ruble
+	'BRL', // Brazilian Real
+	'TRY', // Turkish Lira
+	'KRW', // South Korean Won
+	'ZAR', // South African Rand
+	'ARS', // Argentine Peso
+	'CLP', // Chilean Peso
+	'COP', // Colombian Peso
+	'PEN', // Peruvian Sol
+	'UYU', // Uruguayan Peso
+	'VEF', // Venezuelan Bolivar (note: highly volatile and subject to frequent changes)
+	'PHP', // Philippine Peso
+	'THB', // Thai Baht
+	'IDR', // Indonesian Rupiah
+	'MYR', // Malaysian Ringgit
+]
+
 export const devUser1 = {
 	pk: '86a82cab18b293f53cbaaae8cdcbee3f7ec427fdf9f9c933db77800bb5ef38a0',
 	sk: '5c81bffa8303bbd7726d6a5a1170f3ee46de2addabefd6a735845166af01f5c0',
@@ -65,7 +95,6 @@ export const productMetaTypes = [
 	{ name: 'is_stall_featured', dataType: 'boolean' },
 	{ name: 'is_global_featured', dataType: 'boolean' },
 	{ name: 'is_digital', dataType: 'boolean' },
-	{ name: 'shipping_cost', dataType: 'numeric' },
 	{ name: 'spec', dataType: 'text' },
 ] as const
 
