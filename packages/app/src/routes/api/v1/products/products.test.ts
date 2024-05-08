@@ -11,7 +11,7 @@ describe('/products', () => {
 		expect(result).toHaveLength(10)
 	})
 
-	it('GET', async () => {
+	it('GET with filter', async () => {
 		const routeParams = {
 			page: '1',
 			pageSize: '15',

@@ -11,7 +11,11 @@ export const GET: RequestHandler = async ({ params }) => {
 
 export const PUT: RequestHandler = async ({ params, request }) => {
 	const body = await request.json()
-	const verifiedEvent = n.event().refine(verifyEvent).safeParse(body)
+	const verifiedEvent = n
+		.event()
+		.refine(verifyEvent)
+		.refine((val) => val.kind === 30018)
+		.safeParse(body)
 
 	if (!verifiedEvent.success) {
 		return error(400, 'Invalid event')

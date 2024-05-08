@@ -1,26 +1,28 @@
 import { NSchema as n } from '@nostrify/nostrify'
 import { error, json } from '@sveltejs/kit'
+import { productsFilterSchema } from '$lib/schema'
 import { createProduct, getAllProducts } from '$lib/server/products.service.js'
 import { verifyEvent } from 'nostr-tools'
 
 export async function GET({ url: { searchParams } }) {
-	const page = searchParams.get('page')
-	const pageSize = searchParams.get('pageSize')
-	const orderBy = searchParams.get('orderBy')
-	const order = searchParams.get('order')
+	const spObj = Object.fromEntries(searchParams)
+	const filter = productsFilterSchema.safeParse(spObj)
 
-	const filter = {
-		pageSize: pageSize ? parseInt(pageSize) : 10,
-		page: page ? parseInt(page) : 1,
-		orderBy: (orderBy ? orderBy : 'createdAt') as 'createdAt' | 'price',
-		order: (order ? order : 'asc') as 'asc' | 'desc',
+	if (!filter.success) {
+		return error(400, `Invalid request: ${JSON.stringify(filter.error)}`)
+	} else {
+		console.log('filter.data:', filter.data)
+		return json(await getAllProducts(filter.data))
 	}
-	return json(await getAllProducts(filter))
 }
 
 export async function POST({ request }) {
 	const body = await request.json()
-	const verifiedEvent = n.event().refine(verifyEvent).safeParse(body)
+	const verifiedEvent = n
+		.event()
+		.refine(verifyEvent)
+		.refine((val) => val.kind === 30018)
+		.safeParse(body)
 
 	if (!verifiedEvent.success) {
 		return error(400, `Invalid request: ${JSON.stringify(verifiedEvent.error)}`)
