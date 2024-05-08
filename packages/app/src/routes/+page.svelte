@@ -2,20 +2,8 @@
 	import Pattern from '$lib/components/Pattern.svelte'
 	import ProductItem from '$lib/components/product/item.svelte'
 	import { Button } from '$lib/components/ui/button/index.js'
-	import { ndk } from '$lib/stores/ndk'
-	import { onMount } from 'svelte'
 
 	import type { PageData } from './$types'
-
-	onMount(async () => {
-		await ndk.connect()
-
-		const events = await ndk.fetchEvents({
-			limit: 10,
-			authors: ['9e77eabc6b7c575a619ab7ce235b3d99443ff33b8b9d805eacc5ec3a38a48976'],
-		})
-		console.log(events)
-	})
 
 	export let data: PageData
 	const { featured, cool } = data
