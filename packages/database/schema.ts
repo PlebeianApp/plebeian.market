@@ -35,6 +35,7 @@ const standardProductColumns = {
 	userId: text('user_id')
 		.notNull()
 		.references(() => users.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
+	identifier: text('identifier').notNull(),
 	productName: text('product_name').notNull(),
 	description: text('description').notNull(),
 	productType: text('product_type', { enum: [productTypes[0], ...productTypes.slice(1)] })

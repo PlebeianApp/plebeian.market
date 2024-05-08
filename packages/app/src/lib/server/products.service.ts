@@ -133,6 +133,7 @@ export const createProduct = async (productEvent: Event | NDKEvent) => {
 		id: eventCoordinates.coordinates,
 		createdAt: new Date(productEvent.created_at!),
 		updatedAt: new Date(),
+		identifier: eventCoordinates.tagD,
 		productName: parsedProduct.name,
 		description: parsedProduct.description as string,
 		currency: parsedProduct.currency,
@@ -161,15 +162,14 @@ export const createProduct = async (productEvent: Event | NDKEvent) => {
 		createdAt: new Date(),
 		productId: eventCoordinates.coordinates,
 		imageUrl,
-		imageType: productImagesType[2],
+		imageType: productImagesType[0],
 		imageOrder: index + 1,
 	}))
 
 	const productResult = await db.insert(products).values(insertProduct).returning()
 
-	const specsResult = insertSpecs?.length && (await db.insert(productMeta).values(insertSpecs).returning())
-
-	const imageResult = insertProductImages?.length && (await db.insert(productImages).values(insertProductImages).returning())
+	insertSpecs?.length && (await db.insert(productMeta).values(insertSpecs).returning())
+	insertProductImages?.length && (await db.insert(productImages).values(insertProductImages).returning())
 
 	if (productResult[0]) {
 		return toDisplayProduct(productResult[0])

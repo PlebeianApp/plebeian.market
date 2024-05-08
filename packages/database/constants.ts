@@ -91,7 +91,7 @@ export const userRoles = ['admin', 'editor', 'pleb']
 export const userTrustLevel = ['trust', 'reasonable', 'paranoid']
 export const paymentDetailsMethod = ['ln', 'on-chain', 'cashu', 'other']
 
-export const productImagesType = ['main', 'thumbnail', 'gallery'] as const
+export const productImagesType = ['gallery', 'thumbnail'] as const
 export const productTypes = ['simple', 'variable', 'variation']
 
 export const auctionStatus = ['active', 'inactive', 'ended', 'canceled']

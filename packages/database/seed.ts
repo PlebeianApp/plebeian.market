@@ -38,6 +38,7 @@ import {
 	Stall,
 	User,
 } from './types'
+import { KindAuctionProduct, KindBids, KindProducts, KindStalls } from '../app/src/lib/constants'
 import { createId } from './utils'
 
 const randomLengthArrayFromTo = (min: number, max: number) => {
@@ -79,10 +80,10 @@ const main = async () => {
 	const userStalls = userIds.map((user) => {
 		return randomLengthArrayFromTo(4, 8).map(() => {
 			return {
+				id: `${KindStalls}:${user.id}:${createId()}`,
 				userId: user.id,
 				createdAt: faker.date.recent(),
 				updatedAt: faker.date.future(),
-				id: randomHexValue(),
 				name: faker.commerce.productMaterial(),
 				description: faker.commerce.productDescription(),
 				currency: faker.finance.currencyCode(),
@@ -93,10 +94,12 @@ const main = async () => {
 	const productData = userStalls.map((stallsByUser) => {
 		return stallsByUser.map((stall) => {
 			return randomLengthArrayFromTo(3, 12).map((_, i) => {
+				const identifier = createId()
 				return {
-					id: randomHexValue(),
+					id: `${KindProducts}:${stall.userId}:${identifier}`,
 					createdAt: faker.date.recent(),
 					updatedAt: faker.date.future(),
+					identifier: identifier,
 					stallId: stall.id,
 					userId: stall.userId,
 					productName: faker.commerce.productName(),
@@ -157,10 +160,12 @@ const main = async () => {
 
 	const auctionsData = userStalls.map((stallByUser) => {
 		return stallByUser.map((stall) => {
+			const identifier = createId()
 			return {
-				id: randomHexValue(),
+				id: `${KindAuctionProduct}:${stall.userId}:${identifier}`,
 				createdAt: faker.date.recent(),
 				updatedAt: faker.date.future(),
+				identifier: identifier,
 				stallId: stall.id,
 				userId: stall.userId,
 				productName: faker.commerce.productName(),
@@ -315,17 +320,6 @@ const main = async () => {
 	})
 
 	const productImagesData = productData.flat(2).map((product) => {
-		// TODO: disregard thumbnails for now
-		const mainImage = {
-			productId: product.id,
-			imageUrl: faker.image.urlLoremFlickr({
-				category: 'product',
-			}),
-			imageType: 'main',
-			imageOrder: 0,
-			createdAt: faker.date.recent(),
-			updatedAt: faker.date.future(),
-		} as ProductImage
 		const galleryImages = randomLengthArrayFromTo(0, 4).map((i) => {
 			return {
 				productId: product.id,
@@ -338,20 +332,66 @@ const main = async () => {
 				updatedAt: faker.date.future(),
 			} as ProductImage
 		})
-		return [mainImage, ...galleryImages]
+		return galleryImages
 	})
 
-	const eventData = userIds.map(
-		(user) =>
+	const userStallsEvents = userStalls.flatMap((stallList) =>
+		stallList.map(
+		  (stall) =>
 			({
-				id: randomHexValue(),
-				createdAt: faker.date.recent(),
-				updatedAt: faker.date.future(),
-				author: user.id,
-				kind: faker.number.int(),
+			  id: stall.id,
+			  createdAt: stall.createdAt,
+			  updatedAt: stall.updatedAt,
+			  author: stall.userId,
+			  kind: KindStalls,
+			  event: faker.string.uuid(),
+			} as Event)
+		)
+	  );
+
+	  const userProductsEvents = productData.flatMap((productsByStall) =>
+		productsByStall.flatMap((stallProducts) =>
+		  stallProducts.map(
+			(product) =>
+			  ({
+				id: product.id,
+				createdAt: product.createdAt,
+				updatedAt: product.updatedAt,
+				author: product.userId,
+				kind: KindProducts,
 				event: faker.string.uuid(),
-			}) as Event,
-	)
+			  } as Event)
+		  )
+		)
+	  );
+	  
+	  const userAuctionProductsEvents = auctionsData.map((stallByUser) =>
+		stallByUser.flatMap((auction) =>
+		  ({
+			id: auction.id,
+			createdAt: auction.createdAt,
+			updatedAt: auction.updatedAt,
+			author: auction.userId,
+			kind: KindAuctionProduct,
+			event: faker.string.uuid(),
+		  } as Event)
+		)
+	  );
+	  
+	  const userBidsEvents = bidsData.flatMap((auctionByStall) =>
+		auctionByStall.flatMap((bid) =>
+		  ({
+			id: bid.id,
+			createdAt: bid.createdAt,
+			updatedAt: bid.updatedAt,
+			author: bid.userId,
+			kind: KindBids,
+			event: faker.string.uuid(),
+		  } as Event)
+		)
+	  );
+	  
+	const eventData = [...userStallsEvents, ...userProductsEvents, ...userAuctionProductsEvents, ...userBidsEvents] as Event[];
 
 	db.run(sql`PRAGMA foreign_keys = OFF;`)
 
@@ -397,7 +437,7 @@ const main = async () => {
 			{ table: dbSchema.orders, data: ordersData.flat(2) },
 			{ table: dbSchema.invoices, data: invoicesData.flat(1) },
 			{ table: dbSchema.orderItems, data: orderItemsData.flat(1) },
-			{ table: dbSchema.events, data: eventData },
+			{ table: dbSchema.events, data: eventData.flat(1) },
 		]) {
 			await tx.insert(table).values(data).execute()
 		}
