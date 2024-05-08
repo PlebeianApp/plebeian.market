@@ -1,5 +1,5 @@
 name: E2E Test
-on: [push, pull_request]
+on: [push]
 
 jobs:
   ci:
@@ -12,7 +12,6 @@ jobs:
           node-version: 20
           cache: "pnpm"
       - run: pnpm install
-      - run: pnpm build
       - run: pnpm test
         env:
           APP_HOST: localhost
