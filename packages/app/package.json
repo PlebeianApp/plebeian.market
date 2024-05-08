@@ -47,7 +47,10 @@
 	"type": "module",
 	"dependencies": {
 		"@internationalized/date": "^3.5.2",
+		"@noble/hashes": "^1.4.0",
 		"@nostr-dev-kit/ndk": "^2.8.1",
+		"@nostr-dev-kit/ndk-cache-dexie": "^2.4.1",
+		"@nostr-dev-kit/ndk-svelte": "^2.2.14",
 		"@nostrify/nostrify": "npm:@jsr/nostrify__nostrify@^0.18.0",
 		"@plebeian/database": "workspace:*",
 		"@plebeian/eslint": "workspace:*",

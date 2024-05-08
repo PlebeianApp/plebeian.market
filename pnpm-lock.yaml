@@ -1,5 +1,9 @@
 lockfileVersion: '6.0'
 
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
 importers:
 
   .:
@@ -25,9 +29,18 @@ importers:
       '@internationalized/date':
         specifier: ^3.5.2
         version: 3.5.2
+      '@noble/hashes':
+        specifier: ^1.4.0
+        version: 1.4.0
       '@nostr-dev-kit/ndk':
         specifier: ^2.8.1
         version: 2.8.1(typescript@5.4.5)
+      '@nostr-dev-kit/ndk-cache-dexie':
+        specifier: ^2.4.1
+        version: 2.4.1(typescript@5.4.5)
+      '@nostr-dev-kit/ndk-svelte':
+        specifier: ^2.2.14
+        version: 2.2.14(typescript@5.4.5)
       '@nostrify/nostrify':
         specifier: npm:@jsr/nostrify__nostrify@^0.18.0
         version: /@jsr/nostrify__nostrify@0.18.0(typescript@5.4.5)
@@ -94,7 +107,7 @@ importers:
     devDependencies:
       '@egoist/tailwindcss-icons':
         specifier: ^1.7.4
-        version: 1.7.4(tailwindcss@3.3.6)
+        version: 1.8.0(tailwindcss@3.3.6)
       '@iconify-json/game-icons':
         specifier: ^1.1.9
         version: 1.1.9
@@ -635,8 +648,8 @@ packages:
       chalk: 5.3.0
     dev: true
 
-  /@egoist/tailwindcss-icons@1.7.4(tailwindcss@3.3.6):
-    resolution: {integrity: sha512-883qx0sqeNb8km7os0w8K6UYue88dbgTWwyEUwW74Bgz0H7t+m7PMIIEvSQ4JqHwA823Qd5ciz+NoTBWKaMYfg==}
+  /@egoist/tailwindcss-icons@1.8.0(tailwindcss@3.3.6):
+    resolution: {integrity: sha512-75LfllKL2lq0sGH+wcpsn/sLtJ0kMkDWmcZTLAB76QLDTmfsFu4QHwZVbtCD2woGyKl9c8KvtOUW9JSjRqOVtA==}
     peerDependencies:
       tailwindcss: '*'
     dependencies:
@@ -1323,11 +1336,13 @@ packages:
 
   /@hapi/hoek@9.3.0:
     resolution: {integrity: sha512-/c6rf4UJlmHlC9b5BaNvzAcFv7HZ2QHaV0D4/HNlBdvFnvQq8RI4kYdhyPCl7Xj+oWvTWQ8ujhqS53LIgAe6KQ==}
+    requiresBuild: true
     dev: false
     optional: true
 
   /@hapi/topo@5.1.0:
     resolution: {integrity: sha512-foQZKJig7Ob0BMAYBfcJk8d77QtOe7Wo4ox7ff1lQYoNNAb6jwcY1ncdoy2e9wQZzvNy7ODZCYJkK8kzmcAnAg==}
+    requiresBuild: true
     dependencies:
       '@hapi/hoek': 9.3.0
     dev: false
@@ -1608,6 +1623,29 @@ packages:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.17.1
 
+  /@nostr-dev-kit/ndk-cache-dexie@2.4.1(typescript@5.4.5):
+    resolution: {integrity: sha512-empWfMpJYLvudnSRIjpiQu4OLnnT1Gp4rVdSlpstkRmcrFDYbPzFMcN0S/Cfrwoddj0Ir22f+oXivzqqra9INQ==}
+    dependencies:
+      '@nostr-dev-kit/ndk': 2.8.1(typescript@5.4.5)
+      debug: 4.3.4
+      dexie: 4.0.4
+      nostr-tools: 2.5.1(typescript@5.4.5)
+      typescript-lru-cache: 2.0.0
+    transitivePeerDependencies:
+      - supports-color
+      - typescript
+    dev: false
+
+  /@nostr-dev-kit/ndk-svelte@2.2.14(typescript@5.4.5):
+    resolution: {integrity: sha512-XP6D9SuNsPPGqJk1nrCXnWfg4D4yQjFptomWgfScG/RGrWobPoPRLxq5c9V7cxW2/BvrHoJSAT7qmTtiIs/plA==}
+    dependencies:
+      '@nostr-dev-kit/ndk': 2.8.1(typescript@5.4.5)
+      svelte: 4.2.7
+    transitivePeerDependencies:
+      - supports-color
+      - typescript
+    dev: false
+
   /@nostr-dev-kit/ndk@2.8.1(typescript@5.4.5):
     resolution: {integrity: sha512-2WPN1FVhxcLxFYwva2Ti6XKQUjqU0jfdoHHhqDF+0Mxp8f/uDyLflsUQCXsZym5rOIHY85eCYhAXi6V6q6gpRg==}
     dependencies:
@@ -1654,6 +1692,7 @@ packages:
   /@poppinss/macroable@1.0.2:
     resolution: {integrity: sha512-xhhEcEvhQC8mP5oOr5hbE4CmUgmw/IPV1jhpGg2xSkzoFrt9i8YVqBQt9744EFesi5F7pBheWozg63RUBM/5JA==}
     engines: {node: '>=18.16.0'}
+    requiresBuild: true
     dev: false
     optional: true
 
@@ -1809,6 +1848,7 @@ packages:
 
   /@sideway/address@4.1.5:
     resolution: {integrity: sha512-IqO/DUQHUkPeixNQ8n0JA6102hT9CmaljNTPmQ1u8MEhBo/R4Q8eKLN/vGZxuebwOroDB4cbpjheD4+/sKFK4Q==}
+    requiresBuild: true
     dependencies:
       '@hapi/hoek': 9.3.0
     dev: false
@@ -1816,11 +1856,13 @@ packages:
 
   /@sideway/formula@3.0.1:
     resolution: {integrity: sha512-/poHZJJVjx3L+zVD6g9KgHfYnb443oi7wLu/XKojDviHy6HOEOA6z1Trk5aR1dGcmPenJEgb2sK2I80LeS3MIg==}
+    requiresBuild: true
     dev: false
     optional: true
 
   /@sideway/pinpoint@2.0.0:
     resolution: {integrity: sha512-RNiOoTPkptFtSVzQevY/yWtZwf/RxyVnPy/OcA9HBM3MlGDnBEYL5B41H0MTn0Uec8Hi+2qUtTfG2WWZBmMejQ==}
+    requiresBuild: true
     dev: false
     optional: true
 
@@ -1959,6 +2001,7 @@ packages:
 
   /@types/validator@13.11.9:
     resolution: {integrity: sha512-FCTsikRozryfayPuiI46QzH3fnrOoctTjvOYZkho9BTFLCOZ2rgZJHMOVgCOfttjPJcgOx52EpkY0CMfy87MIw==}
+    requiresBuild: true
     dev: false
     optional: true
 
@@ -2092,6 +2135,7 @@ packages:
   /@vinejs/compiler@2.5.0:
     resolution: {integrity: sha512-hg4ekaB5Y2zh+IWzBiC/WCDWrIfpVnKu/ubUvelKlidc/VbulsexoFRw5kJGHZenPVI5YzNnDeTdYSALkTV7jQ==}
     engines: {node: '>=18.0.0'}
+    requiresBuild: true
     dev: false
     optional: true
 
@@ -2515,6 +2559,7 @@ packages:
   /camelcase@8.0.0:
     resolution: {integrity: sha512-8WB3Jcas3swSvjIeA2yvCJ+Miyz5l1ZmB6HFb9R1317dt9LCQoswg/BGrmAmkWVEszSrrg4RwmO46qIm2OEnSA==}
     engines: {node: '>=16'}
+    requiresBuild: true
     dev: false
     optional: true
 
@@ -2801,6 +2846,7 @@ packages:
 
   /dayjs@1.11.11:
     resolution: {integrity: sha512-okzr3f11N6WuqYtZSvm+F776mB41wRZMhKP+hc34YdW+KmtYYK9iqvHSwo2k9FEH3fhGXvOPV6yz2IcSrfRUDg==}
+    requiresBuild: true
     dev: false
     optional: true
 
@@ -2897,6 +2943,10 @@ packages:
 
   /devalue@4.3.3:
     resolution: {integrity: sha512-UH8EL6H2ifcY8TbD2QsxwCC/pr5xSwPvv85LrLXVihmHVC3T3YqTCIwnR5ak0yO1KYqlxrPVOA/JVZJYPy2ATg==}
+
+  /dexie@4.0.4:
+    resolution: {integrity: sha512-wFzwWSUdi+MC3jiFeQcCp9nInR7EaX8edzYY+4wmiITkQAiSnHpe4Wo2o5Ce5tJZe2nqt7mLW91MsW4GYx3ziQ==}
+    dev: false
 
   /didyoumean@1.2.2:
     resolution: {integrity: sha512-gxtyfqMg7GKyhQmb056K7M3xszy/myH8w+B4RT+QXBQsvAOdc3XymqDDPHx1BgPgsdAA5SIifona89YtRATDzw==}
@@ -4729,6 +4779,7 @@ packages:
   /normalize-url@8.0.1:
     resolution: {integrity: sha512-IO9QvjUMWxPQQhs60oOu10CRkWCiZzSUkzbXGGV9pviYl1fXYcvkzQ5jV9z8Y6un8ARoVRl4EtC6v6jNqbaJ/w==}
     engines: {node: '>=14.16'}
+    requiresBuild: true
     dev: false
     optional: true
 
@@ -5254,6 +5305,7 @@ packages:
 
   /property-expr@2.0.6:
     resolution: {integrity: sha512-SVtmxhRE/CGkn3eZY1T6pC8Nln6Fr/lu1mKSgRud0eC73whjGfoAogbn78LkD8aFL0zz3bAFerKSnOl7NlErBA==}
+    requiresBuild: true
     dev: false
     optional: true
 
@@ -5990,6 +6042,7 @@ packages:
 
   /tiny-case@1.0.3:
     resolution: {integrity: sha512-Eet/eeMhkO6TX8mnUteS9zgPbUMQa4I6Kkp5ORiBD5476/m+PIRiumP5tmh5ioJpH7k51Kehawy2UDfsnxxY8Q==}
+    requiresBuild: true
     dev: false
     optional: true
 
@@ -6025,6 +6078,7 @@ packages:
 
   /toposort@2.0.2:
     resolution: {integrity: sha512-0a5EOkAUp8D4moMi2W8ZF8jcga7BgZd91O/yabJCFY8az+XSzeGyTKs0Aoo897iV1Nj6guFq8orWDS96z91oGg==}
+    requiresBuild: true
     dev: false
     optional: true
 
@@ -6121,6 +6175,7 @@ packages:
   /type-fest@2.19.0:
     resolution: {integrity: sha512-RAH822pAdBgcNMAfWnCBU3CFZcfZ/i1eZjwFU/dsLKumyuuP3niueg2UAukXYF0E2AAoc82ZSSf9J0WQBinzHA==}
     engines: {node: '>=12.20'}
+    requiresBuild: true
     dev: false
     optional: true
 
@@ -6266,6 +6321,7 @@ packages:
   /validator@13.11.0:
     resolution: {integrity: sha512-Ii+sehpSfZy+At5nPdnyMhx78fEoPDkR2XW/zimHEL3MyGJQOCQ7WeP20jPYRz7ZCpcKLB21NxuXHF3bxjStBQ==}
     engines: {node: '>= 0.10'}
+    requiresBuild: true
     dev: false
     optional: true
 
