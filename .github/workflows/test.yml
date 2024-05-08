@@ -12,7 +12,8 @@ jobs:
           node-version: 20
           cache: "pnpm"
       - run: pnpm install
-      - run: npx playwright install --with-deps
+      - run: pnpm playwright install --with-deps
+        working-directory: ./packages/app
       - run: pnpm test
         env:
           APP_HOST: localhost
