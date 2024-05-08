@@ -1,0 +1,1 @@
+ALTER TABLE stalls ADD `identifier` text NOT NULL;

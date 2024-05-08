@@ -20,3 +20,18 @@ export const productEventSchema = z.object({
 		)
 		.optional(),
 })
+
+export const stallEventSchema = z.object({
+	id: z.string(),
+	name: z.string(),
+	description: z.string().optional(),
+	currency: z.string(),
+	shipping: z.array(
+		z.object({
+			id: z.string(),
+			name: z.string().optional(),
+			cost: z.number(),
+			regions: z.array(z.string()),
+		}),
+	),
+})

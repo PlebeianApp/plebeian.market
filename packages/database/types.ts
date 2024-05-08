@@ -32,7 +32,7 @@ export type ProductCategory = InferSelectModel<typeof dbSchema.productCategories
 export type NewProductCategory = InferInsertModel<typeof dbSchema.productCategories>
 
 export type Product = InferSelectModel<typeof dbSchema.products>
-export type NewProduct = Omit<InferInsertModel<typeof dbSchema.products>, 'id' | 'createdAt' | 'updatedAt'>
+export type NewProduct = InferInsertModel<typeof dbSchema.products>
 
 export type ProductImage = InferSelectModel<typeof dbSchema.productImages>
 export type NewProductImage = InferInsertModel<typeof dbSchema.productImages>
