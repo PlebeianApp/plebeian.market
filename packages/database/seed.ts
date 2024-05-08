@@ -15,6 +15,7 @@ import {
 	invoiceStatus,
 	orderStatus,
 	paymentDetailsMethod,
+	popularCurrencies,
 	productMetaTypes,
 	productTypes,
 } from './constants'
@@ -88,7 +89,7 @@ const main = async () => {
 				name: faker.commerce.productMaterial(),
 				description: faker.commerce.productDescription(),
 				identifier: identifier,
-				currency: faker.finance.currencyCode(),
+				currency: faker.helpers.arrayElement(popularCurrencies),
 			} as Stall
 		})
 	})
@@ -108,7 +109,7 @@ const main = async () => {
 					description: faker.commerce.productDescription(),
 					price: faker.finance.amount(),
 					productType: productTypes[0],
-					currency: faker.finance.currencyCode(),
+					currency: faker.helpers.arrayElement(popularCurrencies),
 					isFeatured: i % 2 === 0,
 					isDigital: faker.datatype.boolean({ probability: 0.8 }),
 					parentId: null,
@@ -173,7 +174,7 @@ const main = async () => {
 				productName: faker.commerce.productName(),
 				description: faker.commerce.productDescription(),
 				productType: faker.helpers.arrayElement(productTypes),
-				currency: faker.finance.currencyCode(),
+				currency: faker.helpers.arrayElement(popularCurrencies),
 				stockQty: faker.number.int(),
 				parentId: null,
 				startingBidAmount: faker.finance.amount(),
@@ -322,14 +323,14 @@ const main = async () => {
 	})
 
 	const productImagesData = productData.flat(2).map((product) => {
-		const galleryImages = randomLengthArrayFromTo(0, 4).map((i) => {
+		const galleryImages = randomLengthArrayFromTo(0, 4).map((_, index) => {
 			return {
 				productId: product.id,
 				imageUrl: faker.image.urlLoremFlickr({
 					category: 'product',
 				}),
 				imageType: 'gallery',
-				imageOrder: i,
+				imageOrder: index,
 				createdAt: faker.date.recent(),
 				updatedAt: faker.date.future(),
 			} as ProductImage
