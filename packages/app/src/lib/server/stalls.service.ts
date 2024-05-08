@@ -184,6 +184,7 @@ export const createStall = async (stallEvent: Event | NDKEvent): Promise<Display
 		createdAt: new Date(stallEvent.created_at!),
 		updatedAt: new Date(),
 		name: parsedProduct.name,
+		identifier: eventCoordinates.tagD,
 		description: parsedProduct.description as string,
 		currency: parsedProduct.currency,
 		userId: stallEvent.pubkey,
@@ -224,7 +225,6 @@ export const updateStall = async (stallId: string, stallEvent: Event | NDKEvent)
 		name: parsedStall.name,
 		description: parsedStall.description,
 		currency: parsedStall.currency,
-		userId: stallEvent.pubkey,
 	}
 
 	const stallResult = await db
