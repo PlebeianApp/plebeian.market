@@ -46,7 +46,6 @@ describe('products service', () => {
 			price: NaN,
 			currency: 'testCurrency',
 			stockQty: 1,
-			mainImage: '',
 			galleryImages: [],
 		})
 	})
@@ -125,7 +124,6 @@ describe('products service', () => {
 			currency: 'USD',
 			description: 'Hello Description',
 			galleryImages: ['http://example.com/image1.jpg', 'http://example.com/image2.jpg'],
-			mainImage: '',
 			name: 'Hello Product',
 			price: 133,
 			stockQty: 6,
@@ -156,7 +154,6 @@ describe('products service', () => {
 			currency: targetProduct.currency,
 			description: targetProduct.description,
 			galleryImages: expect.any(Array),
-			mainImage: expect.any(String),
 			name: 'Hello Product changed',
 			price: targetProduct.price,
 			stockQty: targetProduct.stockQty,

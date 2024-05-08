@@ -17,7 +17,6 @@ export type DisplayProduct = Pick<Product, 'id' | 'description' | 'currency' | '
 	name: Product['productName']
 	createdAt: string
 	price: number
-	mainImage: string
 	galleryImages: string[]
 }
 
@@ -31,8 +30,7 @@ export const toDisplayProduct = async (product: Product): Promise<DisplayProduct
 		price: parseFloat(product.price),
 		currency: product.currency,
 		stockQty: product.stockQty,
-		mainImage: images.mainImage,
-		galleryImages: images.galleryImages,
+		galleryImages: images,
 	}
 }
 
@@ -99,8 +97,7 @@ export const getProductById = async (productId: string): Promise<DisplayProduct>
 		price: parseFloat(productResult.price),
 		currency: productResult.currency,
 		stockQty: productResult.stockQty,
-		mainImage: images.mainImage,
-		galleryImages: images.galleryImages,
+		galleryImages: images,
 	}
 }
 

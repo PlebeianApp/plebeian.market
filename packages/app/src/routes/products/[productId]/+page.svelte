@@ -10,19 +10,13 @@
 
 	export let data: PageData
 	$: ({ product, seller, products } = data)
+	console.log(data)
 </script>
 
 <div class="container py-16">
 	<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
 		<div class="grid grid-cols-3 gap-6">
 			<ul class="grid gap-4 md:col-span-1">
-				<li>
-					{#if product.mainImage}
-						<img class="border-2 border-primary p-1" src={product.mainImage} alt="" />
-					{:else}
-						<ImgPlaceHolder imageType={'gallery'} />
-					{/if}
-				</li>
 				{#if product.galleryImages.length}
 					{#each product.galleryImages as item}
 						<li>
@@ -31,8 +25,8 @@
 					{/each}
 				{/if}
 			</ul>
-			{#if product.mainImage}
-				<img class="col-span-2 border-2 border-black p-1" src={product.mainImage} alt="" />
+			{#if product.galleryImages.length}
+				<img class="col-span-2 border-2 border-black p-1" src={product.galleryImages[0]} alt="" />
 			{:else}
 				<ImgPlaceHolder imageType={'main'} />
 			{/if}
@@ -73,7 +67,7 @@
 	<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
 		{#each products as item}
 			<a href={`/products/${item.id}`}>
-				<ProductItem imageUrl={item.mainImage} productName={item.name} price={item.price} currency={item.currency} />
+				<ProductItem imageUrl={item.galleryImages[0]} productName={item.name} price={item.price} currency={item.currency} />
 			</a>
 		{/each}
 	</div>
