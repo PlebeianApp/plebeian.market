@@ -23,6 +23,9 @@
 	--input: 323 20% 50%;
 	--ring: 323 100% 62.2%;
 	--radius: 0rem;
+
+	/* our own colors */
+	--neo-yellow: #ffd53e;
 }
 .dark {
 	--background: 323 10% 10%;
