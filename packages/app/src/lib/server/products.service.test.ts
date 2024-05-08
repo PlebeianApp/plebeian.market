@@ -1,4 +1,5 @@
 import NDK, { NDKEvent, NDKKind, NDKPrivateKeySigner } from '@nostr-dev-kit/ndk'
+import { KindProducts } from '$lib/constants'
 import { getStallsByUserId } from '$lib/server/stalls.service'
 import { slugify } from '$lib/utils'
 import { describe, expect, it } from 'vitest'
@@ -22,6 +23,7 @@ describe('products service', () => {
 			id: 'testProductId',
 			updatedAt: new Date(),
 			createdAt: new Date(),
+			identifier: 'testIdentifier',
 			userId: 'testUserId',
 			stallId: 'testStallId',
 			productName: 'testProductName',
@@ -86,10 +88,11 @@ describe('products service', () => {
 	it('creates a product', async () => {
 		const stall = await getStallsByUserId(devUser1.pk).then((stalls) => stalls[0])
 		const skSigner = new NDKPrivateKeySigner(devUser1.sk)
+		const identifier = createId()
 		const evContent = {
 			stall_id: stall.id,
 			name: 'Hello Product',
-			id: createId(),
+			id: `${KindProducts}:${stall.userId}:${identifier}`,
 			type: 'simple',
 			description: 'Hello Description',
 			images: ['http://example.com/image1.jpg', 'http://example.com/image2.jpg'],
