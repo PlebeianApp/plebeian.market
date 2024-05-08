@@ -74,7 +74,6 @@ describe('/products', () => {
 			currency: 'USD',
 			description: 'Hello Description',
 			galleryImages: ['http://example.com/image1.jpg', 'http://example.com/image2.jpg'],
-			mainImage: '',
 			name: 'Hello Product',
 			price: 133,
 			stockQty: 6,

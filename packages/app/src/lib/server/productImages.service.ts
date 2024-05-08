@@ -2,29 +2,19 @@ import { error } from '@sveltejs/kit'
 
 import { db, eq, productImages } from '@plebeian/database'
 
-export type ImagesForProduct = {
-	mainImage: string
-	galleryImages: string[]
-}
-
-export const getImagesByProductId = async (productId: string): Promise<ImagesForProduct> => {
+export const getImagesByProductId = async (productId: string): Promise<string[]> => {
 	const productImagesResult = await db.select().from(productImages).where(eq(productImages.productId, productId)).execute()
 
-	const images: ImagesForProduct = {
-		mainImage: '',
-		galleryImages: [],
-	}
+	const galleryImages: string[] = []
 
 	productImagesResult.forEach((image) => {
-		if (image.imageType === 'main' && image.imageUrl) {
-			images.mainImage = image.imageUrl
-		} else if (image.imageType === 'gallery' && image.imageUrl) {
-			images.galleryImages.push(image.imageUrl)
+		if (image.imageUrl) {
+			galleryImages.push(image.imageUrl)
 		}
 	})
 
-	if (images) {
-		return images
+	if (galleryImages) {
+		return galleryImages
 	}
 
 	error(404, 'Not found')
