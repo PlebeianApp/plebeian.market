@@ -1,3 +1,4 @@
+import type { NostrEvent } from '@nostr-dev-kit/ndk'
 import NDK, { NDKEvent, NDKPrivateKeySigner } from '@nostr-dev-kit/ndk'
 import { KindProducts, KindStalls } from '$lib/constants'
 import { createStall, getAllStalls, getStallById, getStallsByUserId, updateStall } from '$lib/server/stalls.service'
@@ -67,7 +68,7 @@ describe('stalls service', () => {
 			tags: [['d', `${slugify(evContent.name)}${identifier}`]],
 		})
 		await newEvent.sign(skSigner)
-		const product = await createStall(newEvent)
+		const product = await createStall(newEvent as NostrEvent)
 		expect(product).toStrictEqual({
 			id: expect.any(String),
 			createDate: expect.any(String),
@@ -91,7 +92,7 @@ describe('stalls service', () => {
 			content: JSON.stringify(evContent),
 			created_at: Math.floor(Date.now() / 1000),
 			tags: [['d', targetStall.identifier]],
-		})
+		}) as NostrEvent
 
 		const product = await updateStall(targetStall.id, newEvent)
 
