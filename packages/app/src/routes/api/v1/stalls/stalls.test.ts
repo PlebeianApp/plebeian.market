@@ -54,10 +54,11 @@ describe('/stalls', () => {
 		})
 
 		await newEvent.sign(skSigner)
+		const nostrEvent = await newEvent.toNostrEvent()
 
 		const result = await fetch(`http://${process.env.APP_HOST}:${process.env.APP_PORT}/api/v1/stalls`, {
 			method: 'POST',
-			body: JSON.stringify(newEvent),
+			body: JSON.stringify(nostrEvent),
 			headers: {
 				'Content-Type': 'application/json',
 			},

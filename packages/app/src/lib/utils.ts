@@ -1,6 +1,5 @@
-import type { NDKEvent, NDKTag } from '@nostr-dev-kit/ndk'
+import type { NDKTag, NostrEvent } from '@nostr-dev-kit/ndk'
 import type { ClassValue } from 'clsx'
-import type { Event } from 'nostr-tools'
 import type { TransitionConfig } from 'svelte/transition'
 import { error } from '@sveltejs/kit'
 import { clsx } from 'clsx'
@@ -88,7 +87,7 @@ export const bitcoinToSatoshis = (amountInBtc: string) => {
 	return Math.floor(btc * numSatsInBtc)
 }
 
-export function getEventCoordinates(event: Event | NDKEvent): EventCoordinates {
+export function getEventCoordinates(event: NostrEvent): EventCoordinates {
 	const { kind, pubkey, tags } = event
 
 	const [_, tagD] = tags.find(([key]) => key === 'd') ?? []
