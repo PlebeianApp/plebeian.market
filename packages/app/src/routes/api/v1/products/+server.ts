@@ -1,9 +1,8 @@
-import { NSchema as n } from '@nostrify/nostrify'
 import { error, json } from '@sveltejs/kit'
 import { KindProducts } from '$lib/constants'
 import { productsFilterSchema } from '$lib/schema'
+import { verifyAndPersistRawEvent } from '$lib/server/nostrEvents.service'
 import { createProduct, getAllProducts } from '$lib/server/products.service.js'
-import { verifyEvent } from 'nostr-tools'
 
 export async function GET({ url: { searchParams } }) {
 	const spObj = Object.fromEntries(searchParams)
@@ -18,16 +17,10 @@ export async function GET({ url: { searchParams } }) {
 }
 
 export async function POST({ request }) {
-	const body = await request.json()
-	const verifiedEvent = n
-		.event()
-		.refine(verifyEvent)
-		.refine((val) => val.kind === KindProducts)
-		.safeParse(body)
-
-	if (!verifiedEvent.success) {
-		return error(400, `Invalid request: ${JSON.stringify(verifiedEvent.error)}`)
-	} else {
-		return json(await createProduct(verifiedEvent.data))
+	try {
+		const verifiedEvent = await verifyAndPersistRawEvent(request, KindProducts)
+		return json(await createProduct(verifiedEvent))
+	} catch (e) {
+		error(500, JSON.stringify(e))
 	}
 }
