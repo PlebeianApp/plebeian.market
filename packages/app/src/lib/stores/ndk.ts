@@ -7,11 +7,18 @@ let cacheAdapter: NDKCacheAdapter | undefined = undefined
 
 if (typeof window !== 'undefined') {
 	cacheAdapter = new NDKCacheAdapterDexie({
-		dbName: 'plebeian.v0',
+		dbName: 'plebeian.ndk.v0',
 	})
 }
 
-export const defaulRelaysUrls: string[] = ['wss://purplepag.es', 'wss://relay.nostr.band', 'wss://nos.lol', 'wss://bouncer.nostree.me']
+export const defaulRelaysUrls: string[] = [
+	'wss://purplepag.es',
+	'wss://relay.nostr.band',
+	'wss://nos.lol',
+	'wss://bouncer.nostree.me',
+	'wss://nostr.land/',
+	'wss://purplerelay.com/',
+]
 
 export const ndk: NDKSvelte = new NDKSvelte({
 	explicitRelayUrls: defaulRelaysUrls,
