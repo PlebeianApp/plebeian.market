@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Auth from '$lib/components/auth.svelte'
 	import { Button } from '$lib/components/ui/button/index.js'
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js'
 </script>
@@ -20,8 +21,10 @@
 				<DropdownMenu.Trigger asChild let:builder>
 					<Button class="p-2 bg-white" builders={[builder]}><span class="i-tdesign-view-list text-black w-6 h-6"></span></Button>
 				</DropdownMenu.Trigger>
-				<DropdownMenu.Content class="w-56">
-					<DropdownMenu.Label>My Account</DropdownMenu.Label>
+				<DropdownMenu.Content class="w-32">
+					<DropdownMenu.Label>
+						<Auth />
+					</DropdownMenu.Label>
 				</DropdownMenu.Content>
 			</DropdownMenu.Root>
 		</div>
