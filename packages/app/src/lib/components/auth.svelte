@@ -4,7 +4,7 @@
 	import { Input } from '$lib/components/ui/input/index.js'
 	import { Separator } from '$lib/components/ui/separator'
 	import * as Tabs from '$lib/components/ui/tabs/index.js'
-	import { loginWithExtension } from '$lib/stores/ndk'
+	import { loginWithExtension } from '$lib/ndkLogin'
 	import { type BaseAccount } from '$lib/stores/session'
 
 	import Pattern from './Pattern.svelte'
