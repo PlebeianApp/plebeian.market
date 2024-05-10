@@ -1,6 +1,7 @@
 import type { NDKKind, NostrEvent } from '@nostr-dev-kit/ndk'
 import { NSchema as n } from '@nostrify/nostrify'
 import { error } from '@sveltejs/kit'
+import { getEventCoordinates, isPReplacEvent } from '$lib/utils'
 import { verifyEvent } from 'nostr-tools'
 
 import { db, eq, events, users } from '@plebeian/database'
@@ -12,7 +13,6 @@ export const verifyAndPersistRawEvent = async (event: Request, kind: NDKKind): P
 		.refine(verifyEvent)
 		.refine((val) => val.kind === kind)
 		.safeParse(body)
-
 	if (!verifiedEvent.success) {
 		error(400, `Invalid nostr Event: ${JSON.stringify(verifiedEvent.error)}`)
 	}
@@ -34,10 +34,11 @@ export const verifyAndPersistRawEvent = async (event: Request, kind: NDKKind): P
 	let insertEventResult
 
 	try {
+		// Maybe we should verify if the event exist already and update if its the case, can happen with parameterized replaceable events
 		insertEventResult = await db
 			.insert(events)
 			.values({
-				id: verifiedEvent.data.id,
+				id: isPReplacEvent(verifiedEvent.data.kind) ? getEventCoordinates(verifiedEvent.data).coordinates : verifiedEvent.data.id,
 				kind: verifiedEvent.data.kind,
 				event: JSON.stringify(verifiedEvent.data),
 				author: targetId,

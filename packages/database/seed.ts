@@ -2,6 +2,8 @@ import { faker } from '@faker-js/faker'
 import { sql } from 'drizzle-orm'
 
 import {
+	DigitalProductMetaName,
+	ProductMetaName,
 	allowedMetaNames,
 	auctionStatus,
 	bidStatus,
@@ -271,13 +273,20 @@ const main = async () => {
 	const metaTypeData = allowedMetaNames.map((metaName) => {
 		let scope: string
 
-		if (productMetaTypes.some((meta) => meta.name === metaName) || digitalProductMetaTypes.some((meta) => meta.name === metaName)) {
-			scope = 'products'
-		} else {
-			scope = 'products'
-		}
+		const isProductMeta = (metaName: string) => 
+			(metaName in ProductMetaName) || (metaName in DigitalProductMetaName);
+		  
+		  if (isProductMeta(metaName)) {
+			scope = 'products';
+		  } else {
+			scope = 'products';
+		  }
+		  
+		  const metaTypes = [
+			...Object.entries({ ...productMetaTypes, ...digitalProductMetaTypes, ...generalMetaTypes })
+			  .map(([name, { dataType }]) => ({ name, dataType })),
+		  ];
 
-		const metaTypes = [...productMetaTypes, ...digitalProductMetaTypes, ...generalMetaTypes]
 		const findMetaType = metaTypes.find((meta) => meta.name === metaName)
 		const dataType = findMetaType?.dataType || 'text'
 
