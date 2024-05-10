@@ -1,34 +1,28 @@
 <script lang="ts">
-	import { NDKNip07Signer } from '@nostr-dev-kit/ndk'
 	import { Button } from '$lib/components/ui/button/index.js'
 	import * as Dialog from '$lib/components/ui/dialog/index.js'
 	import { Input } from '$lib/components/ui/input/index.js'
 	import { Separator } from '$lib/components/ui/separator'
 	import * as Tabs from '$lib/components/ui/tabs/index.js'
-	import { ndk } from '$lib/stores/ndk'
-	import { addAccount } from '$lib/stores/session'
+	import { loginWithExtension } from '$lib/stores/ndk'
+	import { type BaseAccount } from '$lib/stores/session'
 
 	import Pattern from './Pattern.svelte'
 
+	async function login(loginMethod: BaseAccount['type']) {
+		let result: boolean
+		if (loginMethod == 'NIP07') {
+			try {
+				result = await loginWithExtension()
+				console.log(result)
+			} catch (e) {
+				throw Error('No loging')
+			}
+		}
+	}
+
 	const activeTab =
 		'w-full font-bold border-b-2 border-black text-black data-[state=active]:border-b-primary data-[state=active]:text-primary'
-
-	async function extensionSignIn() {
-		const signer = new NDKNip07Signer()
-		await signer.blockUntilReady()
-
-		const user = await signer.user()
-		ndk.signer = signer
-
-		await addAccount({
-			hexPubKey: user.pubkey,
-			lastLogged: +new Date(),
-			relays: user.relayUrls,
-			type: 'NIP07',
-		})
-		localStorage.setItem('last_account', user.pubkey)
-		localStorage.setItem('auto_login', 'true')
-	}
 </script>
 
 <Dialog.Root open>
@@ -50,7 +44,7 @@
 				<Tabs.Trigger value="create" class={activeTab}>Sign up</Tabs.Trigger>
 			</Tabs.List>
 			<Tabs.Content value="join" class="flex flex-col gap-2">
-				<Button on:click={extensionSignIn} variant="outline" class="w-full border-black border-2 font-bold flex items-center gap-1"
+				<Button on:click={() => login('NIP07')} variant="outline" class="w-full border-black border-2 font-bold flex items-center gap-1"
 					><span class="text-black text-md">Sign in with extension</span>
 					<span class="i-mdi-puzzle-outline text-black w-6 h-6"> </span></Button
 				>

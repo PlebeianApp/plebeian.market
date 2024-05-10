@@ -1,7 +1,9 @@
 <script lang="ts">
 	import Auth from '$lib/components/auth.svelte'
+	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar'
 	import { Button } from '$lib/components/ui/button/index.js'
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js'
+	import ndk from '$lib/stores/ndk'
 </script>
 
 <header class="sticky top-0 z-30 bg-black px-4 py-4 text-white lg:px-12">
@@ -20,6 +22,12 @@
 			<DropdownMenu.Root>
 				<DropdownMenu.Trigger asChild let:builder>
 					<Button class="p-2 bg-white" builders={[builder]}><span class="i-tdesign-view-list text-black w-6 h-6"></span></Button>
+					{#if $ndk.activeUser}
+						<Avatar>
+							<AvatarImage src={$ndk.activeUser.profile?.image} alt="@shadcn" />
+							<AvatarFallback>{$ndk.activeUser.profile?.name ?? $ndk.activeUser.profile?.displayName}</AvatarFallback>
+						</Avatar>
+					{/if}
 				</DropdownMenu.Trigger>
 				<DropdownMenu.Content class="w-32">
 					<DropdownMenu.Label>

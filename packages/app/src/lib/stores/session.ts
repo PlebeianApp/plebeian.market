@@ -14,7 +14,7 @@ class SessionDexie extends Dexie {
 
 const sessions = new SessionDexie()
 
-type BaseAccount = {
+export type BaseAccount = {
 	hexPubKey: string
 	type: 'NIP07' | 'NSEC' | 'NIP46'
 	lastLogged: number
@@ -37,7 +37,16 @@ type Nip46Account = BaseAccount & {
 type Account = Nip07Account | NsecAccount | Nip46Account
 
 export async function addAccount(account: Account) {
-	return await sessions.accounts.add(account)
+	try {
+		const result = await sessions.accounts.add(account)
+		result && console.log('Account added to indexDB', account)
+	} catch (error) {
+		if (error instanceof Dexie.DexieError) {
+			console.warn(error.message)
+		} else {
+			throw error
+		}
+	}
 }
 
 export async function getAccount(hexPubKey: string): Promise<Account | undefined> {
