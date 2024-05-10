@@ -8,7 +8,7 @@ import { customTagValue, getEventCoordinates, takeUniqueOrThrow } from '$lib/uti
 import { format } from 'date-fns'
 
 import type { Product, ProductImage, ProductMeta } from '@plebeian/database'
-import { createId, db, devUser1, eq, productImages, productImagesType, productMeta, productMetaTypes, products } from '@plebeian/database'
+import { createId, db, devUser1, eq, productImages, productImagesType, productMeta, ProductMetaName, products } from '@plebeian/database'
 
 import { productEventSchema } from '../../schema/nostr-events'
 
@@ -134,7 +134,7 @@ export const createProduct = async (productEvent: NostrEvent) => {
 		createdAt: new Date(productEvent.created_at!),
 		updatedAt: new Date(),
 		productId: eventCoordinates.coordinates,
-		metaName: productMetaTypes[3].name,
+		metaName: ProductMetaName.SPEC,
 		key: spec[0],
 		valueText: spec[1],
 		valueBoolean: null,
