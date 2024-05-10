@@ -4,6 +4,7 @@ import { error } from '@sveltejs/kit'
 import { getEventCoordinates, isPReplacEvent } from '$lib/utils'
 import { verifyEvent } from 'nostr-tools'
 
+import type { InferSelectModel } from '@plebeian/database'
 import { db, eq, events, users } from '@plebeian/database'
 
 export const verifyAndPersistRawEvent = async (event: Request, kind: NDKKind): Promise<NostrEvent> => {
@@ -23,34 +24,39 @@ export const verifyAndPersistRawEvent = async (event: Request, kind: NDKKind): P
 
 	if (!authorExists[0].id) {
 		const newUser = await db.insert(users).values({ id: verifiedEvent.data.pubkey }).returning()
-
-		console.log('newUser:', newUser)
 		if (!newUser[0].id) {
-			error(500, `err 1 ${JSON.stringify(authorExists)} ---- ${newUser}`)
+			error(500, 'Failed to insert user')
 		}
 		targetId = newUser[0].id
 	}
 
-	let insertEventResult
+	let eventResult
+	const isPReplaceableEvent = isPReplacEvent(verifiedEvent.data.kind)
+	const eventTargetId = isPReplaceableEvent ? getEventCoordinates(verifiedEvent.data).coordinates : verifiedEvent.data.id
+	type Event = InferSelectModel<typeof events>
+	const eventExists = (await db.select().from(events).where(eq(events.id, eventTargetId)).execute()) as unknown as Event
 
-	try {
-		// Maybe we should verify if the event exist already and update if its the case, can happen with parameterized replaceable events
-		insertEventResult = await db
+	if (!isPReplaceableEvent || !eventExists.id) {
+		eventResult = await db
 			.insert(events)
 			.values({
-				id: isPReplacEvent(verifiedEvent.data.kind) ? getEventCoordinates(verifiedEvent.data).coordinates : verifiedEvent.data.id,
+				id: eventTargetId,
 				kind: verifiedEvent.data.kind,
 				event: JSON.stringify(verifiedEvent.data),
 				author: targetId,
 			})
-			.execute()
-	} catch (e) {
-		error(500, `err 2 ${JSON.stringify(e)}`)
+			.returning()
+	} else {
+		eventResult = await db
+			.update(events)
+			.set({
+				event: JSON.stringify(verifiedEvent.data),
+			})
+			.where(eq(events.id, eventTargetId))
+			.returning()
 	}
 
-	console.log('insertEventResult:', insertEventResult)
-
-	if (!insertEventResult) {
+	if (!eventResult) {
 		error(500, 'Failed to insert event')
 	}
 
