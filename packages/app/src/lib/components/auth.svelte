@@ -4,16 +4,28 @@
 	import { Input } from '$lib/components/ui/input/index.js'
 	import { Separator } from '$lib/components/ui/separator'
 	import * as Tabs from '$lib/components/ui/tabs/index.js'
-	import { loginWithExtension } from '$lib/ndkLogin'
+	import { loginWithExtension, loginWithPrivateKey } from '$lib/ndkLogin'
 	import { type BaseAccount } from '$lib/stores/session'
 
 	import Pattern from './Pattern.svelte'
 
-	async function login(loginMethod: BaseAccount['type']) {
+	let isLoading: boolean = false
+	let isInputFrom: boolean = false
+	async function login(loginMethod: BaseAccount['type'], submitEvent?: SubmitEvent) {
 		let result: boolean
 		if (loginMethod == 'NIP07') {
 			try {
 				result = await loginWithExtension()
+				console.log(result)
+			} catch (e) {
+				throw Error('No loging')
+			}
+		} else if (loginMethod == 'NSEC' && submitEvent) {
+			const form = submitEvent.target as HTMLFormElement
+			const keyInput = form.elements.namedItem('key') as HTMLInputElement
+			const passwordInput = form.elements.namedItem('password') as HTMLInputElement
+			try {
+				result = await loginWithPrivateKey(keyInput.value, passwordInput.value)
 				console.log(result)
 			} catch (e) {
 				throw Error('No loging')
@@ -63,8 +75,19 @@
 					<span> OR </span>
 					<Separator class="w-1/2" />
 				</div>
-				<Input class="border-black border-2" id="nsec" placeholder="Private key (nsec1...)" />
-				<Button>Sign in</Button>
+				<form class="flex flex-col gap-2" on:submit|preventDefault={(sEvent) => login('NSEC', sEvent)}>
+					<Input
+						class="border-black border-2"
+						id="key"
+						placeholder="Private key (nsec1...)"
+						type="password"
+						on:focus={() => (isInputFrom = true)}
+					/>
+					{#if isInputFrom}
+						<Input class="border-black border-2" id="password" placeholder="Password" type="password" />
+						<Button type="submit">Sign in</Button>
+					{/if}
+				</form>
 				<p class="w-full text-center">
 					Don’t have an account? <span class="underline cursor-pointer">Sign up</span>
 				</p>
