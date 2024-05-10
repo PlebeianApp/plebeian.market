@@ -71,7 +71,7 @@ export const createUser = async (userMetaEvent: NostrEvent): Promise<User> => {
 		lud06: userMetaData.lud06,
 		lud16: userMetaData.lud16,
 		displayName: userMetaData.displayName,
-		image: userMetaData.image,
+		image: userMetaData.image ? userMetaData.image : userMetaData.picture,
 		website: userMetaData.website,
 		zapService: userMetaData.zapService,
 	}
@@ -103,7 +103,7 @@ export const updateUser = async (userId: string, userMetaEvent: NostrEvent): Pro
 		lud06: userMetaData.lud06,
 		lud16: userMetaData.lud16,
 		displayName: userMetaData.displayName,
-		image: userMetaData.image,
+		image: userMetaData.image ? userMetaData.image : userMetaData.picture,
 		website: userMetaData.website,
 		zapService: userMetaData.zapService,
 	}
