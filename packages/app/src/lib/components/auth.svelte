@@ -9,6 +9,7 @@
 
 	import Pattern from './Pattern.svelte'
 
+	let dialogOpen = false
 	let isLoading: boolean = false
 	let isInputFrom: boolean = false
 	async function login(loginMethod: BaseAccount['type'], submitEvent?: SubmitEvent) {
@@ -17,7 +18,9 @@
 			try {
 				result = await loginWithExtension()
 				console.log(result)
+				dialogOpen = false
 			} catch (e) {
+				dialogOpen = false
 				throw Error('No loging')
 			}
 		} else if (loginMethod == 'NSEC' && submitEvent) {
@@ -25,9 +28,11 @@
 			const keyInput = form.elements.namedItem('key') as HTMLInputElement
 			const passwordInput = form.elements.namedItem('password') as HTMLInputElement
 			try {
+				dialogOpen = false
 				result = await loginWithPrivateKey(keyInput.value, passwordInput.value)
 				console.log(result)
 			} catch (e) {
+				dialogOpen = false
 				throw Error('No loging')
 			}
 		}
@@ -37,9 +42,9 @@
 		'w-full font-bold border-b-2 border-black text-black data-[state=active]:border-b-primary data-[state=active]:text-primary'
 </script>
 
-<Dialog.Root open>
+<Dialog.Root bind:open={dialogOpen}>
 	<Dialog.Trigger class="flex items-center cursor-pointer gap-2">
-		<span class="i-tdesign-login text-black w-6 h-6"></span> <span class="font-bold">Log in</span>
+		<Button class="p-2 bg-white"><span class="i-tdesign-view-list text-black w-6 h-6"></span></Button>
 	</Dialog.Trigger>
 	<Dialog.Content class="max-w-[425px] gap-0 p-0 text-black">
 		<Dialog.Header class="relative w-full bg-black text-center text-white py-8 flex items-center">
@@ -49,7 +54,6 @@
 				<span class="relative z-10 text-left text-lg font-bold text-primary">plebeian<br />market</span>
 			</div>
 		</Dialog.Header>
-
 		<Tabs.Root value="join" class="p-4">
 			<Tabs.List class="w-full justify-around bg-transparent">
 				<Tabs.Trigger value="join" class={activeTab}>Sign in</Tabs.Trigger>

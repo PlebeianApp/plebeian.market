@@ -2,7 +2,6 @@
 	import Auth from '$lib/components/auth.svelte'
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar'
 	import { Button } from '$lib/components/ui/button/index.js'
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js'
 	import ndk from '$lib/stores/ndk'
 </script>
 
@@ -19,22 +18,13 @@
 		<div class="flex items-center gap-4">
 			<Button class="hidden sm:flex p-2 bg-[var(--neo-yellow)]" href="/"><span class="i-tdesign-mail text-black w-6 h-6"></span></Button>
 			<Button class="p-2 hidden sm:flex" href="/"><span class="i-tdesign-cart text-black w-6 h-6"></span></Button>
-			<DropdownMenu.Root>
-				<DropdownMenu.Trigger asChild let:builder>
-					<Button class="p-2 bg-white" builders={[builder]}><span class="i-tdesign-view-list text-black w-6 h-6"></span></Button>
-					{#if $ndk.activeUser}
-						<Avatar>
-							<AvatarImage src={$ndk.activeUser.profile?.image} alt="@shadcn" />
-							<AvatarFallback>{$ndk.activeUser.profile?.name ?? $ndk.activeUser.profile?.displayName}</AvatarFallback>
-						</Avatar>
-					{/if}
-				</DropdownMenu.Trigger>
-				<DropdownMenu.Content class="w-32">
-					<DropdownMenu.Label>
-						<Auth />
-					</DropdownMenu.Label>
-				</DropdownMenu.Content>
-			</DropdownMenu.Root>
+			<Auth />
+			{#if $ndk.activeUser}
+				<Avatar>
+					<AvatarImage src={$ndk.activeUser.profile?.image} alt="@shadcn" />
+					<AvatarFallback>{$ndk.activeUser.profile?.name ?? $ndk.activeUser.profile?.displayName}</AvatarFallback>
+				</Avatar>
+			{/if}
 		</div>
 	</div>
 </header>
