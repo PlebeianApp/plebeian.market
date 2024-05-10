@@ -1,6 +1,5 @@
-import type { NDKEvent } from '@nostr-dev-kit/ndk'
+import type { NostrEvent } from '@nostr-dev-kit/ndk'
 import type { ProductsFilter } from '$lib/schema'
-import type { Event } from 'nostr-tools'
 import { error } from '@sveltejs/kit'
 import { standardDisplayDateFormat } from '$lib/constants'
 import { productsFilterSchema } from '$lib/schema'
@@ -9,7 +8,7 @@ import { customTagValue, getEventCoordinates, takeUniqueOrThrow } from '$lib/uti
 import { format } from 'date-fns'
 
 import type { Product, ProductImage, ProductMeta } from '@plebeian/database'
-import { createId, db, devUser1, eq, productImages, productImagesType, productMeta, productMetaTypes, products } from '@plebeian/database'
+import { createId, db, devUser1, eq, productImages, productImagesType, productMeta, ProductMetaName, products } from '@plebeian/database'
 
 import { productEventSchema } from '../../schema/nostr-events'
 
@@ -101,7 +100,7 @@ export const getProductById = async (productId: string): Promise<DisplayProduct>
 	}
 }
 
-export const createProduct = async (productEvent: Event | NDKEvent) => {
+export const createProduct = async (productEvent: NostrEvent) => {
 	const eventCoordinates = getEventCoordinates(productEvent)
 	const productEventContent = JSON.parse(productEvent.content)
 	const parsedProduct = productEventSchema.parse({ id: productEventContent.id, ...productEventContent })
@@ -135,7 +134,7 @@ export const createProduct = async (productEvent: Event | NDKEvent) => {
 		createdAt: new Date(productEvent.created_at!),
 		updatedAt: new Date(),
 		productId: eventCoordinates.coordinates,
-		metaName: productMetaTypes[5].name,
+		metaName: ProductMetaName.SPEC,
 		key: spec[0],
 		valueText: spec[1],
 		valueBoolean: null,
@@ -163,7 +162,7 @@ export const createProduct = async (productEvent: Event | NDKEvent) => {
 	error(500, 'Failed to create product')
 }
 
-export const updateProduct = async (productId: string, productEvent: Event | NDKEvent): Promise<DisplayProduct> => {
+export const updateProduct = async (productId: string, productEvent: NostrEvent): Promise<DisplayProduct> => {
 	const productEventContent = JSON.parse(productEvent.content)
 	const parsedProduct = productEventSchema.partial().parse({ id: productId, ...productEventContent })
 	const insertProduct: Partial<Product> = {

@@ -1,7 +1,6 @@
-import type { NDKEvent } from '@nostr-dev-kit/ndk'
+import type { NostrEvent } from '@nostr-dev-kit/ndk'
 import type { StallsFilter } from '$lib/schema'
 import type { DisplayProduct } from '$lib/server/products.service'
-import type { Event } from 'nostr-tools'
 import { error } from '@sveltejs/kit'
 import { standardDisplayDateFormat } from '$lib/constants'
 import { stallsFilterSchema } from '$lib/schema'
@@ -174,7 +173,7 @@ export const getStallsByUserId = async (userId: string): Promise<RichStall[]> =>
 	error(404, 'Not found')
 }
 
-export const createStall = async (stallEvent: Event | NDKEvent): Promise<DisplayStall> => {
+export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall> => {
 	const eventCoordinates = getEventCoordinates(stallEvent)
 	const productEventContent = JSON.parse(stallEvent.content)
 	const parsedProduct = stallEventSchema.parse({ id: productEventContent.id, ...productEventContent })
@@ -217,7 +216,7 @@ type StallResult = {
 	userId: string
 }
 
-export const updateStall = async (stallId: string, stallEvent: Event | NDKEvent): Promise<StallResult> => {
+export const updateStall = async (stallId: string, stallEvent: NostrEvent): Promise<StallResult> => {
 	const stallEventContent = JSON.parse(stallEvent.content)
 	const parsedStall = stallEventSchema.partial().parse({ id: stallId, ...stallEventContent })
 	const insertStall: Partial<Stall> = {

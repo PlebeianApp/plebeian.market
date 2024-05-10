@@ -1,6 +1,6 @@
-import type { NDKEvent, NDKTag } from '@nostr-dev-kit/ndk'
+import type { NDKKind, NDKTag, NostrEvent } from '@nostr-dev-kit/ndk'
 import type { ClassValue } from 'clsx'
-import type { Event } from 'nostr-tools'
+import type { VerifiedEvent } from 'nostr-tools'
 import type { TransitionConfig } from 'svelte/transition'
 import { error } from '@sveltejs/kit'
 import { clsx } from 'clsx'
@@ -88,7 +88,7 @@ export const bitcoinToSatoshis = (amountInBtc: string) => {
 	return Math.floor(btc * numSatsInBtc)
 }
 
-export function getEventCoordinates(event: Event | NDKEvent): EventCoordinates {
+export function getEventCoordinates(event: NostrEvent | VerifiedEvent): EventCoordinates {
 	const { kind, pubkey, tags } = event
 
 	const [_, tagD] = tags.find(([key]) => key === 'd') ?? []
@@ -130,4 +130,8 @@ export const slugify = (str: string) => {
 		.replace(/[^\w-]/g, '')
 		.replace(/-+/g, '-')
 		.replace(/^-*|-*$/g, '')
+}
+
+export function isPReplacEvent(n: number | NDKKind): boolean {
+	return n >= 30000 && n < 40000
 }

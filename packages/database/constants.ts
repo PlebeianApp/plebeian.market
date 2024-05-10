@@ -90,27 +90,48 @@ export const devUser5 = {
 	sk: 'ee40a2dc441238f241d1728af9507147e9b5ed18c1c61d84876d4f2502c044b3',
 }
 
-export const productMetaTypes = [
-	{ name: 'is_user_featured', dataType: 'boolean' },
-	{ name: 'is_stall_featured', dataType: 'boolean' },
-	{ name: 'is_global_featured', dataType: 'boolean' },
-	{ name: 'is_digital', dataType: 'boolean' },
-	{ name: 'spec', dataType: 'text' },
-] as const
+export enum ProductMetaName {
+	IS_USER_FEATURED = 'is_user_featured',
+	IS_STALL_FEATURED = 'is_stall_featured',
+	IS_GLOBAL_FEATURED = 'is_global_featured',
+	IS_DIGITAL = 'is_digital',
+	SPEC = 'spec',
+}
 
-export const digitalProductMetaTypes = [
-	{ name: 'license_key', dataType: 'text' },
-	{ name: 'download_link', dataType: 'text' },
-	{ name: 'mime_type', dataType: 'text' },
-	{ name: 'sha256_hash', dataType: 'text' },
-]
+export enum DigitalProductMetaName {
+	LICENSE_KEY = 'license_key',
+	DOWNLOAD_LINK = 'download_link',
+	MIME_TYPE = 'mime_type',
+	SHA256_HASH = 'sha256_hash',
+}
 
-export const generalMetaTypes = [{ name: 'comments', dataType: 'text' }]
+export enum GeneralMetaName {
+	COMMENTS = 'comments',
+}
+
+export const productMetaTypes = {
+	[ProductMetaName.IS_USER_FEATURED]: { dataType: 'boolean' },
+	[ProductMetaName.IS_STALL_FEATURED]: { dataType: 'boolean' },
+	[ProductMetaName.IS_GLOBAL_FEATURED]: { dataType: 'boolean' },
+	[ProductMetaName.IS_DIGITAL]: { dataType: 'boolean' },
+	[ProductMetaName.SPEC]: { dataType: 'text' },
+} as const
+
+export const digitalProductMetaTypes = {
+	[DigitalProductMetaName.LICENSE_KEY]: { dataType: 'text' },
+	[DigitalProductMetaName.DOWNLOAD_LINK]: { dataType: 'text' },
+	[DigitalProductMetaName.MIME_TYPE]: { dataType: 'text' },
+	[DigitalProductMetaName.SHA256_HASH]: { dataType: 'text' },
+} as const
+
+export const generalMetaTypes = {
+	[GeneralMetaName.COMMENTS]: { dataType: 'text' },
+} as const
 
 export const allowedMetaNames = [
-	...productMetaTypes.map((meta) => meta.name),
-	...digitalProductMetaTypes.map((meta) => meta.name),
-	...generalMetaTypes.map((meta) => meta.name),
+	...Object.values(ProductMetaName),
+	...Object.values(DigitalProductMetaName),
+	...Object.values(GeneralMetaName),
 ]
 
 export const metaScopes = ['products', 'users', 'orders']

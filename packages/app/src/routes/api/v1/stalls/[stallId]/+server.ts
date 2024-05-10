@@ -1,9 +1,8 @@
-import { NSchema as n } from '@nostrify/nostrify'
 import { error, json } from '@sveltejs/kit'
 import { KindStalls } from '$lib/constants'
+import { verifyAndPersistRawEvent } from '$lib/server/nostrEvents.service'
 import { deleteProduct } from '$lib/server/products.service'
 import { getStallById, updateStall } from '$lib/server/stalls.service'
-import { verifyEvent } from 'nostr-tools'
 
 import type { RequestHandler } from './$types'
 
@@ -12,17 +11,11 @@ export const GET: RequestHandler = async ({ params }) => {
 }
 
 export const PUT: RequestHandler = async ({ params, request }) => {
-	const body = await request.json()
-	const verifiedEvent = n
-		.event()
-		.refine(verifyEvent)
-		.refine((val) => val.kind === KindStalls)
-		.safeParse(body)
-
-	if (!verifiedEvent.success) {
-		return error(400, 'Invalid event')
-	} else {
-		return json(await updateStall(params.stallId, verifiedEvent.data))
+	try {
+		const verifiedEvent = await verifyAndPersistRawEvent(request, KindStalls)
+		return json(await updateStall(params.stallId, verifiedEvent))
+	} catch (e) {
+		error(500, JSON.stringify(e))
 	}
 }
 
