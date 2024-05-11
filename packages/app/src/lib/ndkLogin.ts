@@ -20,13 +20,18 @@ export async function loginWithExtension(): Promise<boolean> {
 		await signer.blockUntilReady()
 		const user = await signer.user()
 		ndk.signer = signer
+		const pkExist = await getAccount(user.pubkey)
+		if (!pkExist) {
+			await addAccount({
+				hexPubKey: user.pubkey,
+				lastLogged: +new Date(),
+				relays: user.relayUrls,
+				type: 'NIP07',
+			})
+		} else {
+			await updateAccount(user.pubkey, { lastLogged: +new Date() })
+		}
 		await fetchActiveUserData()
-		await addAccount({
-			hexPubKey: user.pubkey,
-			lastLogged: +new Date(),
-			relays: user.relayUrls,
-			type: 'NIP07',
-		})
 		localStorage.setItem('last_account', user.pubkey)
 		localStorage.setItem('auto_login', 'true')
 		return true

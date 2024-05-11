@@ -28,8 +28,8 @@
 			const keyInput = form.elements.namedItem('key') as HTMLInputElement
 			const passwordInput = form.elements.namedItem('password') as HTMLInputElement
 			try {
-				dialogOpen = false
 				result = await loginWithPrivateKey(keyInput.value, passwordInput.value)
+				dialogOpen = false
 				console.log(result)
 			} catch (e) {
 				dialogOpen = false

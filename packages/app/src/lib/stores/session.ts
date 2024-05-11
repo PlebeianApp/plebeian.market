@@ -53,6 +53,10 @@ export async function getAccount(hexPubKey: string): Promise<Account | undefined
 	return await sessions.accounts.get({ hexPubKey: hexPubKey })
 }
 
+export async function getAllAccounts(): Promise<Account[] | undefined> {
+	return await sessions.accounts.toArray()
+}
+
 export async function updateAccount(hexPubKey: string, updates: Partial<Account>): Promise<void> {
 	await sessions.accounts.update(hexPubKey, updates)
 }
