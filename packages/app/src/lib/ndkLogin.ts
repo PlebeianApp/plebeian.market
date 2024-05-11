@@ -60,7 +60,6 @@ export async function loginWithPrivateKey(key: string, password: string): Promis
 			throw Error(JSON.stringify(e))
 		}
 	} else if (key.startsWith('nsec')) {
-		console.log('hello')
 		try {
 			const decoded = decode(key)
 			if (decoded.type !== 'nsec') throw new Error('Not nsec')
