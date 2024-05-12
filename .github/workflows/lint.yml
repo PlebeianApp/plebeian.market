@@ -1,0 +1,41 @@
+name: Lint
+on: [push]
+
+jobs:
+  runs-on: [ubuntu-latest]
+  prettier:
+    steps:
+      - uses: actions/checkout@v4
+      - run: corepack enable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+      - run: pnpm install
+      - run: pnpm format
+
+  eslint:
+    steps:
+      - uses: actions/checkout@v4
+      - run: corepack enable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+      - run: pnpm install
+      - run: pnpm lint
+
+  commitlint:
+    steps:
+      - uses: actions/checkout@v4
+      - run: corepack enable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+      - run: pnpm install
+      - name: Fetch pull request title
+        id: pr_title
+        run: echo "::set-output name=title::$(jq -r .pull_request.title "$GITHUB_EVENT_PATH")"
+        if: github.event_name == 'pull_request'
+      - run: echo "${{ steps.pr_title.outputs.title }}" | pnpm commitlint

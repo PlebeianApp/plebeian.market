@@ -12,10 +12,6 @@
     "db:setup": "pnpm --filter './packages/database' run db:setup",
     "test": "pnpm --parallel --stream -r run test"
   },
-  "simple-git-hooks": {
-    "pre-commit": "pnpm lint && pnpm format",
-    "commit-msg": "pnpm exec commitlint --config commitlint.config.js --edit ${1}"
-  },
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -23,7 +19,6 @@
     "@commitlint/cli": "^19.3.0",
     "@commitlint/config-conventional": "^19.2.2",
     "@plebeian/eslint": "workspace:*",
-    "@plebeian/prettier": "workspace:*",
-    "simple-git-hooks": "^2.11.1"
+    "@plebeian/prettier": "workspace:*"
   }
 }
