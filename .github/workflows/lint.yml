@@ -1,5 +1,7 @@
-name: Lint
-on: [push]
+on:
+  pull_request:
+  push:
+    branches: [main]
 
 jobs:
   prettier:
@@ -36,8 +38,4 @@ jobs:
           node-version: 20
           cache: "pnpm"
       - run: pnpm install
-      - name: Fetch pull request title
-        id: pr_title
-        run: echo "::set-output name=title::$(jq -r .pull_request.title "$GITHUB_EVENT_PATH")"
-        if: github.event_name == 'pull_request'
-      - run: echo "${{ steps.pr_title.outputs.title }}" | pnpm commitlint
+      - run: echo "${{ github.event.pull_request.title || github.event.workflow_run.head_commit.message }}" | pnpm commitlint
