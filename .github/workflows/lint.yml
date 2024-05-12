@@ -2,8 +2,8 @@ name: Lint
 on: [push]
 
 jobs:
-  runs-on: [ubuntu-latest]
   prettier:
+    runs-on: [ubuntu-latest]
     steps:
       - uses: actions/checkout@v4
       - run: corepack enable
@@ -15,6 +15,7 @@ jobs:
       - run: pnpm format
 
   eslint:
+    runs-on: [ubuntu-latest]
     steps:
       - uses: actions/checkout@v4
       - run: corepack enable
@@ -26,6 +27,7 @@ jobs:
       - run: pnpm lint
 
   commitlint:
+    runs-on: [ubuntu-latest]
     steps:
       - uses: actions/checkout@v4
       - run: corepack enable
