@@ -21,7 +21,7 @@
 			<Auth />
 			{#if $ndkActiveUser}
 				<Avatar>
-					<AvatarImage src={$ndkActiveUser.profile?.image} alt="@shadcn" />
+					<AvatarImage src={$ndkActiveUser.profile?.image} alt="pfp" />
 					<AvatarFallback>{$ndkActiveUser.profile?.name ?? $ndkActiveUser.profile?.displayName}</AvatarFallback>
 				</Avatar>
 			{/if}

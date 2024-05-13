@@ -6,6 +6,7 @@
 	import * as Tabs from '$lib/components/ui/tabs/index.js'
 	import { loginWithExtension, loginWithPrivateKey } from '$lib/ndkLogin'
 	import { type BaseAccount } from '$lib/stores/session'
+	import { toast } from 'svelte-sonner'
 
 	import Pattern from './Pattern.svelte'
 
@@ -17,10 +18,11 @@
 		if (loginMethod == 'NIP07') {
 			try {
 				result = await loginWithExtension()
-				console.log(result)
 				dialogOpen = false
+				result ? toast.success('Login sucess!') : toast.error('Login error!')
 			} catch (e) {
 				dialogOpen = false
+				toast.error('Login error!')
 				throw Error('No loging')
 			}
 		} else if (loginMethod == 'NSEC' && submitEvent) {
@@ -30,9 +32,10 @@
 			try {
 				result = await loginWithPrivateKey(keyInput.value, passwordInput.value)
 				dialogOpen = false
-				console.log(result)
+				result ? toast.success('Login sucess!') : toast.error('Login error!')
 			} catch (e) {
 				dialogOpen = false
+				toast.error('Login error!')
 				throw Error('No loging')
 			}
 		}
