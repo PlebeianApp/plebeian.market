@@ -1,6 +1,6 @@
 import { bytesToHex } from '@noble/hashes/utils'
 import { NDKNip07Signer, NDKPrivateKeySigner } from '@nostr-dev-kit/ndk'
-import { ndk } from '$lib/stores/ndk'
+import { ndk, ndkActiveUser } from '$lib/stores/ndk'
 import { addAccount, getAccount, updateAccount } from '$lib/stores/session'
 import { getPublicKey } from 'nostr-tools'
 import { decode } from 'nostr-tools/nip19'
@@ -19,7 +19,7 @@ export async function loginWithExtension(): Promise<boolean> {
 		console.log('Waiting for NIP-07 signer')
 		await signer.blockUntilReady()
 		const user = await signer.user()
-		ndk.signer = signer
+		ndkActiveUser.set(user)
 		const pkExist = await getAccount(user.pubkey)
 		if (!pkExist) {
 			await addAccount({
@@ -47,7 +47,8 @@ export async function loginWithPrivateKey(key: string, password: string): Promis
 			const decryptedKey = decrypt(key, password)
 			ndk.signer = new NDKPrivateKeySigner(bytesToHex(decryptedKey))
 			await ndk.signer.blockUntilReady()
-
+			const user = await ndk.signer.user()
+			ndkActiveUser.set(user)
 			const pk = getPublicKey(decryptedKey)
 			const pkExist = await getAccount(pk)
 			if (!pkExist) {
@@ -71,9 +72,9 @@ export async function loginWithPrivateKey(key: string, password: string): Promis
 
 			const cSK = encrypt(decoded.data, password)
 			ndk.signer = new NDKPrivateKeySigner(bytesToHex(decoded.data))
-
 			await ndk.signer.blockUntilReady()
-
+			const user = await ndk.signer.user()
+			ndkActiveUser.set(user)
 			const pk = getPublicKey(decoded.data)
 			const pkExist = await getAccount(pk)
 			if (!pkExist) {

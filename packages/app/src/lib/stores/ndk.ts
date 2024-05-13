@@ -25,6 +25,8 @@ export const ndk: NDKSvelte = new NDKSvelte({
 	cacheAdapter,
 })
 
+export const ndkActiveUser = writable(ndk.activeUser)
+
 ndk.connect().then(() => console.log('ndk connected successfully'))
 
 const ndkStore = writable(ndk)
