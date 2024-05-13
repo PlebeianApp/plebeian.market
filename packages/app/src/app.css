@@ -27,7 +27,7 @@
 	/* our own colors */
 	--neo-yellow: #ffd53e;
 }
-.dark {
+/* .dark {
 	--background: 323 10% 10%;
 	--foreground: 323 0% 100%;
 	--card: 323 0% 10%;
@@ -48,7 +48,7 @@
 	--input: 323 20% 50%;
 	--ring: 323 100% 62.2%;
 	--radius: 0rem;
-}
+} */
 
 @layer base {
 	* {
