@@ -1,6 +1,7 @@
 <script>
 	import Footer from '$lib/components/footer.svelte'
 	import Header from '$lib/components/header.svelte'
+	import { Toaster } from '$lib/components/ui/sonner'
 
 	import '../app.css'
 </script>
@@ -11,6 +12,7 @@
 	href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap"
 	rel="stylesheet"
 />
+<Toaster richColors />
 <Header />
 <slot />
 <Footer />

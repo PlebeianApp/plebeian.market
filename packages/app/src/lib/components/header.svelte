@@ -1,6 +1,8 @@
 <script lang="ts">
+	import Auth from '$lib/components/auth.svelte'
+	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar'
 	import { Button } from '$lib/components/ui/button/index.js'
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js'
+	import { ndkActiveUser } from '$lib/stores/ndk'
 </script>
 
 <header class="sticky top-0 z-30 bg-black px-4 py-4 text-white lg:px-12">
@@ -16,14 +18,13 @@
 		<div class="flex items-center gap-4">
 			<Button class="hidden sm:flex p-2 bg-[var(--neo-yellow)]" href="/"><span class="i-tdesign-mail text-black w-6 h-6"></span></Button>
 			<Button class="p-2 hidden sm:flex" href="/"><span class="i-tdesign-cart text-black w-6 h-6"></span></Button>
-			<DropdownMenu.Root>
-				<DropdownMenu.Trigger asChild let:builder>
-					<Button class="p-2 bg-white" builders={[builder]}><span class="i-tdesign-view-list text-black w-6 h-6"></span></Button>
-				</DropdownMenu.Trigger>
-				<DropdownMenu.Content class="w-56">
-					<DropdownMenu.Label>My Account</DropdownMenu.Label>
-				</DropdownMenu.Content>
-			</DropdownMenu.Root>
+			<Auth />
+			{#if $ndkActiveUser}
+				<Avatar>
+					<AvatarImage src={$ndkActiveUser.profile?.image} alt="pfp" />
+					<AvatarFallback>{$ndkActiveUser.profile?.name ?? $ndkActiveUser.profile?.displayName}</AvatarFallback>
+				</Avatar>
+			{/if}
 		</div>
 	</div>
 </header>
