@@ -13,8 +13,8 @@ import {
 	paymentDetailsMethod,
 	productImagesType,
 	productTypes,
-	UserRoles,
-	UserTrustLevel,
+	USER_ROLES,
+	USER_TRUST_LEVEL,
 } from './constants'
 import { createId } from './utils'
 
@@ -90,14 +90,16 @@ export const events = sqliteTable('events', {
 	event: text('event').notNull(),
 })
 
+type NonEmptyArray<T> = [T, ...T[]]
+
 // Users table
 export const users = sqliteTable('users', {
 	...standardColumns,
 	name: text('name'),
-	role: text('role', { enum: [...Object.values(UserRoles)] as unknown as readonly [string, ...string[]] })
+	role: text('role', { enum: Object.values(USER_ROLES) as NonEmptyArray<USER_ROLES> })
 		.notNull()
-		.default('pleb'),
-	trustLevel: text('trust_lvl', { enum: [...Object.values(UserTrustLevel)] as unknown as readonly [string, ...string[]] }),
+		.default(USER_ROLES.PLEB),
+	trustLevel: text('trust_lvl', { enum: Object.values(USER_TRUST_LEVEL) as NonEmptyArray<USER_TRUST_LEVEL> }),
 	displayName: text('display_name'),
 	about: text('about'),
 	image: text('image'),

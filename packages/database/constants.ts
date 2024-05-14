@@ -137,13 +137,13 @@ export const allowedMetaNames = [
 export const metaScopes = ['products', 'users', 'orders']
 export const metaDataTypes = ['text', 'boolean', 'integer', 'numeric']
 
-export enum UserRoles {
+export enum USER_ROLES {
 	ADMIN = 'admin',
 	EDITOR = 'editor',
 	PLEB = 'pleb',
 }
 
-export enum UserTrustLevel {
+export enum USER_TRUST_LEVEL {
 	TRUST = 'trust',
 	REASONABLE = 'reasonable',
 	PARANOID = 'paranoid',
