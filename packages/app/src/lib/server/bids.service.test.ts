@@ -49,7 +49,7 @@ describe('bids service', () => {
 		expect(bid).toEqual({
 			auctionId: expect.any(String),
 			bidAmount: 123,
-			bidStatus: 'active',
+			bidStatus: 'pending',
 			createdAt: expect.any(Date),
 			id: expect.any(String),
 			updatedAt: expect.any(Date),

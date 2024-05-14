@@ -48,7 +48,6 @@
 	"type": "module",
 	"dependencies": {
 		"@internationalized/date": "^3.5.3",
-		"@noble/hashes": "^1.4.0",
 		"@nostr-dev-kit/ndk": "^2.8.1",
 		"@nostr-dev-kit/ndk-cache-dexie": "^2.4.1",
 		"@nostr-dev-kit/ndk-svelte": "^2.2.14",

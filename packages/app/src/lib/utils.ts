@@ -123,3 +123,9 @@ export const slugify = (str: string) => {
 export function isPReplacEvent(n: number | NDKKind): boolean {
 	return n >= 30000 && n < 40000
 }
+
+export const bytesToHex = (byteArray: Uint8Array) => {
+	return Array.from(byteArray, function (byte) {
+		return ('0' + (byte & 0xff).toString(16)).slice(-2)
+	}).join('')
+}

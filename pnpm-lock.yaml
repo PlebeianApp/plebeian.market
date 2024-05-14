@@ -22,9 +22,6 @@ importers:
       '@internationalized/date':
         specifier: ^3.5.3
         version: 3.5.3
-      '@noble/hashes':
-        specifier: ^1.4.0
-        version: 1.4.0
       '@nostr-dev-kit/ndk':
         specifier: ^2.8.1
         version: 2.8.1(typescript@5.4.5)

@@ -1,10 +1,11 @@
-import { bytesToHex } from '@noble/hashes/utils'
 import { NDKNip07Signer, NDKPrivateKeySigner } from '@nostr-dev-kit/ndk'
 import { ndk, ndkActiveUser } from '$lib/stores/ndk'
 import { addAccount, getAccount, updateAccount } from '$lib/stores/session'
 import { getPublicKey } from 'nostr-tools'
 import { decode } from 'nostr-tools/nip19'
 import { decrypt, encrypt } from 'nostr-tools/nip49'
+
+import { bytesToHex } from './utils'
 
 export async function fetchActiveUserData() {
 	if (!ndk.signer) return
