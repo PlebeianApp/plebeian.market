@@ -1,5 +1,4 @@
 import type { NDKUserProfile } from '@nostr-dev-kit/ndk'
-import { bytesToHex } from '@noble/hashes/utils'
 import { NDKPrivateKeySigner } from '@nostr-dev-kit/ndk'
 import { createUser, getAllUsers, getUserById, updateUser } from '$lib/server/users.service'
 import { generateSecretKey } from 'nostr-tools/pure'
@@ -20,7 +19,7 @@ describe('users service', () => {
 
 	it('creates a user', async () => {
 		const newUserSkArr = generateSecretKey()
-		const skSigner = new NDKPrivateKeySigner(bytesToHex(newUserSkArr))
+		const skSigner = new NDKPrivateKeySigner(Buffer.from(newUserSkArr).toString('hex'))
 		await skSigner.blockUntilReady()
 		const user = await skSigner.user()
 		user.profile = {
@@ -53,7 +52,7 @@ describe('users service', () => {
 			about: 'Software Developer with Experience',
 		} as NDKUserProfile
 
-		const res = await updateUser(targetUser.id, user)
+		const res = await updateUser(targetUser.id, user.profile)
 		expect(res).toBeDefined()
 		expect(res.about).toBe('Software Developer with Experience')
 	})

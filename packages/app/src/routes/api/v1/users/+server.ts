@@ -1,9 +1,6 @@
-import { NDKKind } from '@nostr-dev-kit/ndk'
-import { NSchema as n } from '@nostrify/nostrify'
 import { error, json } from '@sveltejs/kit'
 import { usersFilterSchema } from '$lib/schema'
 import { createUser, getAllUsers } from '$lib/server/users.service'
-import { verifyEvent } from 'nostr-tools'
 
 export const GET = async ({ url: { searchParams } }) => {
 	const spObj = Object.fromEntries(searchParams)
@@ -19,15 +16,7 @@ export const GET = async ({ url: { searchParams } }) => {
 export const POST = async ({ request }) => {
 	try {
 		const body = await request.json()
-		const verifiedEvent = n
-			.event()
-			.refine(verifyEvent)
-			.refine((val) => val.kind === NDKKind.Metadata)
-			.safeParse(body)
-		if (!verifiedEvent.success) {
-			error(400, `Invalid nostr Event: ${JSON.stringify(verifiedEvent.error)}`)
-		}
-		return json(await createUser(verifiedEvent.data))
+		return json(await createUser(body))
 	} catch (e) {
 		error(500, JSON.stringify(e))
 	}

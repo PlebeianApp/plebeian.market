@@ -1,4 +1,4 @@
-import type { NDKUser } from '@nostr-dev-kit/ndk'
+import type { NDKUserProfile } from '@nostr-dev-kit/ndk'
 import type { UsersFilter } from '$lib/schema'
 import { error } from '@sveltejs/kit'
 import { usersFilterSchema } from '$lib/schema'
@@ -52,17 +52,17 @@ export const getUserForProduct = async (productId: string): Promise<User> => {
 }
 
 export const createUser = async (
-	userMeta: NDKUser,
+	user: object,
 	role: UserRoles = UserRoles.PLEB,
 	trustLevel: UserTrustLevel = UserTrustLevel.REASONABLE,
 ): Promise<User> => {
-	const parsedUserMeta = userEventSchema.safeParse(userMeta.profile)
+	const parsedUserMeta = userEventSchema.safeParse(user)
 	if (!parsedUserMeta.success) throw Error('Bad user meta schema')
 
 	const userMetaData = parsedUserMeta.data
 
 	const insertUser: NewUser = {
-		id: userMeta.pubkey,
+		id: userMetaData.id,
 		createdAt: new Date(),
 		updatedAt: new Date(),
 		role: role,
@@ -77,10 +77,9 @@ export const createUser = async (
 		image: userMetaData.image ? userMetaData.image : userMetaData.picture,
 		website: userMetaData.website,
 		zapService: userMetaData.zapService,
+		lastLogin: new Date(),
 	}
-
 	const userResult = await db.insert(users).values(insertUser).returning()
-
 	const uniqueUser = takeUniqueOrThrow(userResult)
 
 	if (uniqueUser) {
@@ -90,30 +89,25 @@ export const createUser = async (
 	error(500, 'Failed to create user')
 }
 
-export const updateUser = async (userId: string, userMeta: NDKUser): Promise<User> => {
-	const parsedUserMeta = userEventSchema.safeParse(userMeta)
-	if (!parsedUserMeta.success) throw Error('Bad user meta schema')
-
-	const userMetaData = parsedUserMeta.data
-
+export const updateUser = async (userId: string, userMeta: NDKUserProfile): Promise<User> => {
 	const insertUser: Partial<User> = {
 		updatedAt: new Date(),
-		name: userMetaData.name,
-		nip05: userMetaData.nip05,
-		banner: userMetaData.banner,
-		about: userMetaData.about,
-		lud06: userMetaData.lud06,
-		lud16: userMetaData.lud16,
-		displayName: userMetaData.displayName,
-		image: userMetaData.image ? userMetaData.image : userMetaData.picture,
-		website: userMetaData.website,
-		zapService: userMetaData.zapService,
+		name: userMeta.name,
+		nip05: userMeta.nip05,
+		banner: userMeta.banner,
+		about: userMeta.about,
+		lud06: userMeta.lud06,
+		lud16: userMeta.lud16,
+		displayName: userMeta.displayName,
+		image: userMeta.image,
+		website: userMeta.website,
+		zapService: userMeta.zapService,
+		lastLogin: new Date(),
 	}
 
 	const userResult = await db
 		.update(users)
 		.set({
-			updatedAt: new Date(),
 			...insertUser,
 		})
 		.where(eq(users.id, userId))

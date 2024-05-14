@@ -37,6 +37,7 @@ export const stallEventSchema = z.object({
 })
 
 export const userEventSchema = z.object({
+	id: z.string(),
 	name: z.string().optional(),
 	about: z.string().optional(),
 	picture: z.string().optional(),
