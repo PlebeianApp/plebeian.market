@@ -11,8 +11,7 @@
 	import Pattern from './Pattern.svelte'
 
 	let dialogOpen = false
-	let isLoading: boolean = false
-	let isInputFrom: boolean = false
+
 	async function login(loginMethod: BaseAccount['type'], submitEvent?: SubmitEvent) {
 		let result: boolean
 		if (loginMethod == 'NIP07') {
@@ -83,23 +82,29 @@
 					<Separator class="w-1/2" />
 				</div>
 				<form class="flex flex-col gap-2" on:submit|preventDefault={(sEvent) => login('NSEC', sEvent)}>
-					<Input
-						class="border-black border-2"
-						id="key"
-						placeholder="Private key (nsec1...)"
-						type="password"
-						on:focus={() => (isInputFrom = true)}
-					/>
-					{#if isInputFrom}
-						<Input class="border-black border-2" id="password" placeholder="Password" type="password" />
-						<Button type="submit">Sign in</Button>
-					{/if}
+					<Input class="border-black border-2" id="key" placeholder="Private key (nsec1...)" type="password" />
+					<Input class="border-black border-2" id="password" placeholder="Password" type="password" />
+					<Button type="submit">Sign in</Button>
 				</form>
 				<p class="w-full text-center">
-					Don’t have an account? <span class="underline cursor-pointer">Sign up</span>
+					Don’t have an account?
+					<Tabs.Trigger value="create" class="underline cursor-pointer p-0">Sign up</Tabs.Trigger>
 				</p>
 			</Tabs.Content>
-			<Tabs.Content value="create">Sign up</Tabs.Content>
+			<Tabs.Content value="create" class="flex flex-col gap-2">
+				<span>
+					We use nostr’s private/public key pair system to generate accounts (keys). They act as your username and password. <a
+						href="/"
+						class="underline">Learn more</a
+					>.
+				</span>
+				<Button type="submit">Generate an account</Button>
+
+				<p class="w-full text-center">
+					Already have an account?
+					<Tabs.Trigger value="create" class="underline cursor-pointer p-0">Sign in</Tabs.Trigger>
+				</p>
+			</Tabs.Content>
 		</Tabs.Root>
 	</Dialog.Content>
 </Dialog.Root>

@@ -77,3 +77,7 @@
 .translated {
 	transform: translate(var(--translate-box-shadow-x), var(--translate-box-shadow-y));
 }
+
+[hidden] {
+	display: none !important;
+}
