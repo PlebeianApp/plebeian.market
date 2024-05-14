@@ -31,6 +31,15 @@ export type DisplayAuction = Pick<
 	endDate: Date | null
 }
 
+const formatAuction = (auction: Auction): DisplayAuction => {
+	return {
+		...auction,
+		createdAt: format(auction.createdAt, standardDisplayDateFormat),
+		startDate: auction.startDate,
+		endDate: auction.endDate,
+	}
+}
+
 export const getAllAuctions = async (filter: AuctionsFilter = auctionsFilterSchema.parse({})): Promise<DisplayAuction[]> => {
 	const orderBy = {
 		createdAt: auctions.createdAt,
@@ -45,14 +54,7 @@ export const getAllAuctions = async (filter: AuctionsFilter = auctionsFilterSche
 	})
 
 	if (auctionsResult) {
-		return auctionsResult.map((auction) => {
-			return {
-				...auction,
-				createdAt: format(auction.createdAt, standardDisplayDateFormat),
-				startDate: auction.startDate,
-				endDate: auction.endDate,
-			}
-		})
+		return auctionsResult.map(formatAuction)
 	}
 
 	error(404, 'Not found')
@@ -65,26 +67,14 @@ export const getAuctionById = async (auctionId: string): Promise<DisplayAuction>
 		error(404, 'Not found')
 	}
 
-	return {
-		...auctionResult,
-		createdAt: format(auctionResult.createdAt, standardDisplayDateFormat),
-		startDate: auctionResult.startDate,
-		endDate: auctionResult.endDate,
-	}
+	return formatAuction(auctionResult)
 }
 
 export const getAuctionsByStallId = async (stallId: string): Promise<DisplayAuction[]> => {
 	const auctionsResult = await db.select().from(auctions).where(eq(auctions.stallId, stallId)).execute()
 
 	if (auctionsResult) {
-		return auctionsResult.map((auction) => {
-			return {
-				...auction,
-				createdAt: format(auction.createdAt, standardDisplayDateFormat),
-				startDate: auction.startDate,
-				endDate: auction.endDate,
-			}
-		})
+		return auctionsResult.map(formatAuction)
 	}
 
 	error(404, 'Not found')
@@ -94,14 +84,7 @@ export const getAuctionsByUserId = async (auctionId: string): Promise<DisplayAuc
 	const auctionsResult = await db.select().from(auctions).where(eq(auctions.userId, auctionId)).execute()
 
 	if (auctionsResult) {
-		return auctionsResult.map((auction) => {
-			return {
-				...auction,
-				createdAt: format(auction.createdAt, standardDisplayDateFormat),
-				startDate: auction.startDate,
-				endDate: auction.endDate,
-			}
-		})
+		return auctionsResult.map(formatAuction)
 	}
 
 	error(404, 'Not found')
@@ -165,13 +148,7 @@ export const createAuction = async (auctionEvent: NostrEvent, auctionStatus: Auc
 	insertProductImages?.length && (await db.insert(productImages).values(insertProductImages).returning())
 
 	if (auctionResult) {
-		return {
-			...auctionResult,
-			createdAt: format(auctionResult.createdAt, standardDisplayDateFormat),
-			startDate: auctionResult.startDate,
-			endDate: auctionResult.endDate,
-			identifier: eventCoordinates.tagD,
-		}
+		return formatAuction(auctionResult)
 	}
 
 	return error(500, 'Failed to create auction')
@@ -206,7 +183,7 @@ export const updateAuction = async (auctionId: string, auctionEvent: NostrEvent)
 		stockQty: 1,
 	}
 
-	const auctionResult = await db
+	const [auctionResult] = await db
 		.update(auctions)
 		.set({
 			updatedAt: new Date(),
@@ -215,13 +192,8 @@ export const updateAuction = async (auctionId: string, auctionEvent: NostrEvent)
 		.where(eq(auctions.id, auctionId))
 		.returning()
 
-	if (auctionResult.length > 0) {
-		return {
-			...auctionResult[0],
-			createdAt: format(auctionResult[0].createdAt, standardDisplayDateFormat),
-			startDate: auctionResult[0].startDate,
-			endDate: auctionResult[0].endDate,
-		}
+	if (auctionResult) {
+		return formatAuction(auctionResult)
 	}
 
 	error(500, 'Failed to update auction')
