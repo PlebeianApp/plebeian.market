@@ -145,6 +145,8 @@ export const productImagesType = ['gallery', 'thumbnail'] as const
 export const productTypes = ['simple', 'variable', 'variation']
 
 export const auctionStatus = ['active', 'inactive', 'ended', 'canceled']
+export type AuctionStatus = (typeof auctionStatus)[number]
+
 export const bidStatus = ['accepted', 'rejected', 'pending', 'winner']
 
 export const orderStatus = ['confirmed', 'pending', 'shipped', 'completed', 'canceled']

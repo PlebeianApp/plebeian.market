@@ -12,16 +12,16 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "typescript-eslint": "^7.8.0",
-    "eslint-plugin-import": "^2.29.1",
     "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-svelte": "^2.38.0"
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-svelte": "^2.39.0",
+    "typescript-eslint": "^7.9.0"
   },
   "devDependencies": {
-    "@types/eslint": "^8.56.10",
     "@plebeian/prettier": "workspace:*",
-    "@typescript-eslint/eslint-plugin": "^7.8.0",
-    "@typescript-eslint/parser": "^7.8.0",
+    "@types/eslint": "^8.56.10",
+    "@typescript-eslint/eslint-plugin": "^7.9.0",
+    "@typescript-eslint/parser": "^7.9.0",
     "eslint": "^8.57.0",
     "typescript": "^5.4.5"
   },
