@@ -1,11 +1,11 @@
-import type { NostrEvent } from '@nostr-dev-kit/ndk'
+import type { NDKUser } from '@nostr-dev-kit/ndk'
 import type { UsersFilter } from '$lib/schema'
 import { error } from '@sveltejs/kit'
 import { usersFilterSchema } from '$lib/schema'
 import { takeUniqueOrThrow } from '$lib/utils'
 
 import type { NewUser, User } from '@plebeian/database'
-import { db, eq, products, users } from '@plebeian/database'
+import { db, eq, products, UserRoles, users, UserTrustLevel } from '@plebeian/database'
 
 import { userEventSchema } from '../../schema/nostr-events'
 
@@ -51,19 +51,22 @@ export const getUserForProduct = async (productId: string): Promise<User> => {
 	error(404, 'Not found')
 }
 
-export const createUser = async (userMetaEvent: NostrEvent): Promise<User> => {
-	const userMetaEventContent = JSON.parse(userMetaEvent.content)
-	const parsedUserMeta = userEventSchema.safeParse(userMetaEventContent)
+export const createUser = async (
+	userMeta: NDKUser,
+	role: UserRoles = UserRoles.PLEB,
+	trustLevel: UserTrustLevel = UserTrustLevel.REASONABLE,
+): Promise<User> => {
+	const parsedUserMeta = userEventSchema.safeParse(userMeta.profile)
 	if (!parsedUserMeta.success) throw Error('Bad user meta schema')
 
 	const userMetaData = parsedUserMeta.data
 
 	const insertUser: NewUser = {
-		id: userMetaEvent.pubkey,
+		id: userMeta.pubkey,
 		createdAt: new Date(),
 		updatedAt: new Date(),
-		role: 'pleb',
-		trustLevel: 'reasonable',
+		role: role,
+		trustLevel: trustLevel,
 		name: userMetaData.name,
 		nip05: userMetaData.nip05,
 		banner: userMetaData.banner,
@@ -87,9 +90,8 @@ export const createUser = async (userMetaEvent: NostrEvent): Promise<User> => {
 	error(500, 'Failed to create user')
 }
 
-export const updateUser = async (userId: string, userMetaEvent: NostrEvent): Promise<User> => {
-	const userMetaEventContent = JSON.parse(userMetaEvent.content)
-	const parsedUserMeta = userEventSchema.safeParse(userMetaEventContent)
+export const updateUser = async (userId: string, userMeta: NDKUser): Promise<User> => {
+	const parsedUserMeta = userEventSchema.safeParse(userMeta)
 	if (!parsedUserMeta.success) throw Error('Bad user meta schema')
 
 	const userMetaData = parsedUserMeta.data

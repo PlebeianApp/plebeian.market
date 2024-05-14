@@ -13,8 +13,8 @@ import {
 	paymentDetailsMethod,
 	productImagesType,
 	productTypes,
-	userRoles,
-	userTrustLevel,
+	UserRoles,
+	UserTrustLevel,
 } from './constants'
 import { createId } from './utils'
 
@@ -94,10 +94,10 @@ export const events = sqliteTable('events', {
 export const users = sqliteTable('users', {
 	...standardColumns,
 	name: text('name'),
-	role: text('role', { enum: [userRoles[0], ...userRoles.slice(1)] })
+	role: text('role', { enum: [...Object.values(UserRoles)] as unknown as readonly [string, ...string[]] })
 		.notNull()
 		.default('pleb'),
-	trustLevel: text('trust_lvl', { enum: [userTrustLevel[0], ...userTrustLevel.slice(1)] }),
+	trustLevel: text('trust_lvl', { enum: [...Object.values(UserTrustLevel)] as unknown as readonly [string, ...string[]] }),
 	displayName: text('display_name'),
 	about: text('about'),
 	image: text('image'),

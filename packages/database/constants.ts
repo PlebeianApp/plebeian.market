@@ -137,8 +137,18 @@ export const allowedMetaNames = [
 export const metaScopes = ['products', 'users', 'orders']
 export const metaDataTypes = ['text', 'boolean', 'integer', 'numeric']
 
-export const userRoles = ['admin', 'editor', 'pleb']
-export const userTrustLevel = ['trust', 'reasonable', 'paranoid']
+export enum UserRoles {
+	ADMIN = 'admin',
+	EDITOR = 'editor',
+	PLEB = 'pleb',
+}
+
+export enum UserTrustLevel {
+	TRUST = 'trust',
+	REASONABLE = 'reasonable',
+	PARANOID = 'paranoid',
+}
+
 export const paymentDetailsMethod = ['ln', 'on-chain', 'cashu', 'other']
 
 export const productImagesType = ['gallery', 'thumbnail'] as const

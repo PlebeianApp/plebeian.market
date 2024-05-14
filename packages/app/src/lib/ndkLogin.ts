@@ -1,3 +1,4 @@
+import type { NDKUserProfile } from '@nostr-dev-kit/ndk'
 import { bytesToHex } from '@noble/hashes/utils'
 import { NDKNip07Signer, NDKPrivateKeySigner } from '@nostr-dev-kit/ndk'
 import { ndk, ndkActiveUser } from '$lib/stores/ndk'
@@ -6,11 +7,10 @@ import { getPublicKey } from 'nostr-tools'
 import { decode } from 'nostr-tools/nip19'
 import { decrypt, encrypt } from 'nostr-tools/nip49'
 
-export async function fetchActiveUserData() {
-	if (!ndk.signer) return
+export async function fetchActiveUserData(): Promise<NDKUserProfile | null> {
+	if (!ndk.signer) return null
 	const user = await ndk.signer.user()
-	await user.fetchProfile()
-	console.log('Fetched user', user)
+	return await user.fetchProfile()
 }
 
 export async function loginWithExtension(): Promise<boolean> {

@@ -1,7 +1,8 @@
-import type { NostrEvent } from '@nostr-dev-kit/ndk'
-import NDK, { NDKEvent, NDKKind, NDKPrivateKeySigner } from '@nostr-dev-kit/ndk'
+import type { NDKUserProfile } from '@nostr-dev-kit/ndk'
+import { bytesToHex } from '@noble/hashes/utils'
+import { NDKPrivateKeySigner } from '@nostr-dev-kit/ndk'
 import { createUser, getAllUsers, getUserById, updateUser } from '$lib/server/users.service'
-import { generateSecretKey, getPublicKey } from 'nostr-tools/pure'
+import { generateSecretKey } from 'nostr-tools/pure'
 import { describe, expect, it } from 'vitest'
 
 import { devUser1 } from '@plebeian/database'
@@ -19,10 +20,10 @@ describe('users service', () => {
 
 	it('creates a user', async () => {
 		const newUserSkArr = generateSecretKey()
-		const newUserPk = getPublicKey(newUserSkArr)
-		const newUserSk = Buffer.from(newUserSkArr).toString('hex')
-		const skSigner = new NDKPrivateKeySigner(newUserSk)
-		const evContent = {
+		const skSigner = new NDKPrivateKeySigner(bytesToHex(newUserSkArr))
+		await skSigner.blockUntilReady()
+		const user = await skSigner.user()
+		user.profile = {
 			name: 'John Doe',
 			about: 'Software Developer',
 			picture: 'https://example.com/picture.jpg',
@@ -35,34 +36,24 @@ describe('users service', () => {
 			displayName: 'John',
 			image: 'https://example.com/image.jpg',
 		}
-		const newEvent = new NDKEvent(new NDK({ signer: skSigner }), {
-			kind: NDKKind.Metadata,
-			pubkey: newUserPk,
-			content: JSON.stringify(evContent),
-			created_at: Math.floor(Date.now() / 1000),
-			tags: [],
-		}) as NostrEvent
 
-		const res = await createUser(newEvent)
+		const res = await createUser(user)
 		expect(res).toBeDefined()
-		expect(res.id).toBe(newUserPk)
+		expect(res.id).toBe(user.pubkey)
 	})
 
 	it('updates a user', async () => {
 		const targetUser = await getUserById(devUser1.pk)
 		const skSigner = new NDKPrivateKeySigner(devUser1.sk)
-		const userUpdate = {
-			about: 'Software Developer with Experience',
-		}
-		const newEvent = new NDKEvent(new NDK({ signer: skSigner }), {
-			kind: NDKKind.Metadata,
-			pubkey: targetUser.id,
-			content: JSON.stringify(userUpdate),
-			created_at: Math.floor(Date.now() / 1000),
-			tags: [],
-		}) as NostrEvent
+		await skSigner.blockUntilReady()
+		const user = await skSigner.user()
 
-		const res = await updateUser(targetUser.id, newEvent)
+		user.profile = {
+			...user.profile,
+			about: 'Software Developer with Experience',
+		} as NDKUserProfile
+
+		const res = await updateUser(targetUser.id, user)
 		expect(res).toBeDefined()
 		expect(res.about).toBe('Software Developer with Experience')
 	})
