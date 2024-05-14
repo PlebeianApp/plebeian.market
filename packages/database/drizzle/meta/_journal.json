@@ -5,29 +5,8 @@
     {
       "idx": 0,
       "version": "5",
-      "when": 1714732435851,
-      "tag": "0000_orange_proemial_gods",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "5",
-      "when": 1715094126906,
-      "tag": "0001_special_proemial_gods",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "5",
-      "when": 1715161320405,
-      "tag": "0002_strong_typhoid_mary",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "5",
-      "when": 1715175688453,
-      "tag": "0003_peaceful_lionheart",
+      "when": 1715677755745,
+      "tag": "0000_motionless_chimera",
       "breakpoints": true
     }
   ]

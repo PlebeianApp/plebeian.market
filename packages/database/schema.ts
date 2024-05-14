@@ -38,13 +38,9 @@ const standardProductColumns = {
 	identifier: text('identifier').notNull(),
 	productName: text('product_name').notNull(),
 	description: text('description').notNull(),
-	productType: text('product_type', { enum: [productTypes[0], ...productTypes.slice(1)] })
-		.notNull()
-		.default('simple'),
 	currency: text('currency').notNull(),
 	stockQty: integer('stock_qty').notNull(),
 	extraCost: numeric('extra_cost').notNull().default('0'),
-	parentId: text('parent_id').references((): AnySQLiteColumn => products.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
 }
 
 /// Meta tables
@@ -61,9 +57,8 @@ export const productMeta = sqliteTable('product_meta', {
 	id: text('id')
 		.primaryKey()
 		.$defaultFn(() => createId()),
-	productId: text('product_id')
-		.notNull()
-		.references(() => products.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
+	productId: text('product_id').references(() => products.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
+	auctionId: text('auction_id').references(() => auctions.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
 	metaName: text('meta_name')
 		.notNull()
 		.references(() => metaTypes.name, { onDelete: 'cascade', onUpdate: 'cascade' }),
@@ -169,13 +164,18 @@ export const shippingZones = sqliteTable('shipping_zones', {
 export const products = sqliteTable('products', {
 	...standardColumns,
 	...standardProductColumns,
+	productType: text('product_type', { enum: [productTypes[0], ...productTypes.slice(1)] })
+		.notNull()
+		.default('simple'),
+	parentId: text('parent_id').references((): AnySQLiteColumn => products.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
 	price: numeric('price').notNull(),
 })
 
 export const productImages = sqliteTable(
 	'product_images',
 	{
-		productId: text('product_id').references(() => products.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
+		productId: text('product_id').references(() => products.id, { onDelete: 'set null', onUpdate: 'cascade' }),
+		auctionId: text('auction_id').references(() => auctions.id, { onDelete: 'set null', onUpdate: 'cascade' }),
 		imageUrl: text('image_url'),
 		imageType: text('image_type', { enum: [productImagesType[0], ...productImagesType.slice(1)] })
 			.notNull()
@@ -187,7 +187,7 @@ export const productImages = sqliteTable(
 	},
 	(table) => {
 		return {
-			pk: primaryKey({ columns: [table.productId, table.imageUrl] }),
+			pk: primaryKey({ columns: [table.productId, table.auctionId, table.imageUrl] }),
 		}
 	},
 )
@@ -221,10 +221,8 @@ export const auctions = sqliteTable('auctions', {
 	...standardColumns,
 	...standardProductColumns,
 	startingBidAmount: numeric('starting_bid_amount').notNull(),
-	startDate: integer('start_date', { mode: 'timestamp' })
-		.notNull()
-		.default(sql`(unixepoch())`),
-	endDate: integer('end_date', { mode: 'timestamp' }).notNull(),
+	startDate: integer('start_date', { mode: 'timestamp' }).default(sql`(unixepoch())`),
+	endDate: integer('end_date', { mode: 'timestamp' }),
 	status: text('status', { enum: [auctionStatus[0], ...auctionStatus.slice(1)] }).notNull(),
 })
 
