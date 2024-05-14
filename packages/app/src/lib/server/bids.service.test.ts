@@ -10,7 +10,7 @@ import { createBid, getBidsByAuctionId, getBidsByUserId } from './bids.service'
 
 describe('bids service', () => {
 	it('gets bids by user id', async () => {
-		const userId = 'test-user-id' // replace with a valid user id
+		const userId = devUser1.pk
 		const bids = await getBidsByUserId(userId)
 
 		expect(Array.isArray(bids)).toBe(true)

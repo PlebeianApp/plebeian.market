@@ -11,7 +11,8 @@ import { createAuction, getAllAuctions, getAuctionById, getAuctionsByStallId, ge
 
 describe('auctions service', () => {
 	it('gets auctions by user id', async () => {
-		const userId = 'test-user-id' // replace with a valid user id
+		const [auction] = await getAllAuctions()
+		const userId = auction.userId
 		const auctions = await getAuctionsByUserId(userId)
 
 		expect(Array.isArray(auctions)).toBe(true)
@@ -59,7 +60,6 @@ describe('auctions service', () => {
 			images: ['http://example.com/image1.jpg', 'http://example.com/image2.jpg'],
 			extraCost: '33',
 			startPrice: 133,
-			quantity: 6,
 			start_date: Math.floor(Date.now() / 1000),
 			starting_bid: 100,
 			duration: 60 * 60 * 24,
@@ -98,7 +98,7 @@ describe('auctions service', () => {
 			status: 'active',
 			stockQty: 1,
 			updatedAt: expect.any(Date),
-			userId: '86a82cab18b293f53cbaaae8cdcbee3f7ec427fdf9f9c933db77800bb5ef38a0',
+			userId: devUser1.pk,
 		})
 	})
 

@@ -24,7 +24,7 @@ import { getStallById } from './stalls.service'
 
 export type DisplayAuction = Pick<
 	Auction,
-	'id' | 'description' | 'productName' | 'currency' | 'stockQty' | 'startingBidAmount' | 'identifier'
+	'id' | 'description' | 'productName' | 'currency' | 'stockQty' | 'startingBidAmount' | 'identifier' | 'userId' | 'status'
 > & {
 	createdAt: string
 	startDate: Date | null
@@ -116,7 +116,7 @@ export const createAuction = async (auctionEvent: NostrEvent, auctionStatus: Auc
 		status: auctionStatus,
 		startDate: startDate,
 		endDate: startDate ? add(startDate, { seconds: parsedAuction.duration }) : null,
-		currency: stall.currency, // TODO: Check if this is correct
+		currency: stall.currency,
 		extraCost: '0',
 		stockQty: 1,
 	}

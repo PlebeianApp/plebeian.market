@@ -49,7 +49,7 @@ export const createBid = async (auctionId: string, bidEvent: NostrEvent): Promis
 		userId: bidEvent.pubkey,
 		bidAmount: parsedBid.toString(),
 		auctionId,
-		bidStatus: 'active',
+		bidStatus: 'pending',
 	}
 
 	const [bidResult] = await db.insert(bids).values(insertBid).returning()
