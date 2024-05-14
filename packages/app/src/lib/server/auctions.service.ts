@@ -31,7 +31,7 @@ export type DisplayAuction = Pick<
 	endDate: Date | null
 }
 
-const formatAuction = (auction: Auction): DisplayAuction => {
+const toDisplayAuction = (auction: Auction): DisplayAuction => {
 	return {
 		...auction,
 		createdAt: format(auction.createdAt, standardDisplayDateFormat),
@@ -54,7 +54,7 @@ export const getAllAuctions = async (filter: AuctionsFilter = auctionsFilterSche
 	})
 
 	if (auctionsResult) {
-		return auctionsResult.map(formatAuction)
+		return auctionsResult.map(toDisplayAuction)
 	}
 
 	error(404, 'Not found')
@@ -67,14 +67,14 @@ export const getAuctionById = async (auctionId: string): Promise<DisplayAuction>
 		error(404, 'Not found')
 	}
 
-	return formatAuction(auctionResult)
+	return toDisplayAuction(auctionResult)
 }
 
 export const getAuctionsByStallId = async (stallId: string): Promise<DisplayAuction[]> => {
 	const auctionsResult = await db.select().from(auctions).where(eq(auctions.stallId, stallId)).execute()
 
 	if (auctionsResult) {
-		return auctionsResult.map(formatAuction)
+		return auctionsResult.map(toDisplayAuction)
 	}
 
 	error(404, 'Not found')
@@ -84,7 +84,7 @@ export const getAuctionsByUserId = async (auctionId: string): Promise<DisplayAuc
 	const auctionsResult = await db.select().from(auctions).where(eq(auctions.userId, auctionId)).execute()
 
 	if (auctionsResult) {
-		return auctionsResult.map(formatAuction)
+		return auctionsResult.map(toDisplayAuction)
 	}
 
 	error(404, 'Not found')
@@ -148,7 +148,7 @@ export const createAuction = async (auctionEvent: NostrEvent, auctionStatus: Auc
 	insertProductImages?.length && (await db.insert(productImages).values(insertProductImages).returning())
 
 	if (auctionResult) {
-		return formatAuction(auctionResult)
+		return toDisplayAuction(auctionResult)
 	}
 
 	return error(500, 'Failed to create auction')
@@ -193,7 +193,7 @@ export const updateAuction = async (auctionId: string, auctionEvent: NostrEvent)
 		.returning()
 
 	if (auctionResult) {
-		return formatAuction(auctionResult)
+		return toDisplayAuction(auctionResult)
 	}
 
 	error(500, 'Failed to update auction')
