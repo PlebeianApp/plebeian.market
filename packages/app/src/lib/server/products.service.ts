@@ -4,7 +4,7 @@ import { error } from '@sveltejs/kit'
 import { standardDisplayDateFormat } from '$lib/constants'
 import { productsFilterSchema } from '$lib/schema'
 import { getImagesByProductId } from '$lib/server/productImages.service'
-import { customTagValue, getEventCoordinates, takeUniqueOrThrow } from '$lib/utils'
+import { customTagValue, getEventCoordinates } from '$lib/utils'
 import { format } from 'date-fns'
 
 import type { Product, ProductImage, ProductMeta } from '@plebeian/database'
@@ -79,8 +79,7 @@ export const getAllProducts = async (filter: ProductsFilter = productsFilterSche
 }
 
 export const getProductById = async (productId: string): Promise<DisplayProduct> => {
-	const product = await db.select().from(products).where(eq(products.id, productId)).execute()
-	const productResult = takeUniqueOrThrow(product)
+	const [productResult] = await db.select().from(products).where(eq(products.id, productId)).execute()
 
 	if (!productResult) {
 		error(404, 'Not found')
@@ -134,6 +133,7 @@ export const createProduct = async (productEvent: NostrEvent) => {
 		createdAt: new Date(productEvent.created_at!),
 		updatedAt: new Date(),
 		productId: eventCoordinates.coordinates,
+		auctionId: null,
 		metaName: ProductMetaName.SPEC,
 		key: spec[0],
 		valueText: spec[1],
