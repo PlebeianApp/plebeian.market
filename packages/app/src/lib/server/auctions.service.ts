@@ -94,7 +94,6 @@ export const createAuction = async (auctionEvent: NostrEvent, auctionStatus: Auc
 	const eventCoordinates = getEventCoordinates(auctionEvent)
 	const auctionEventContent = JSON.parse(auctionEvent.content)
 	const parsedAuction = auctionEventSchema.parse({ id: auctionEventContent.id, ...auctionEventContent })
-	console.log(parsedAuction)
 	const stall = await getStallById(parsedAuction.stall_id)
 	const extraCost = (parsedAuction.shipping && parsedAuction.shipping[0].cost) || 0
 

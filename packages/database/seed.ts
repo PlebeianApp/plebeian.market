@@ -268,9 +268,8 @@ const main = async () => {
 			}) as ProductCategory,
 	)
 
-	const metaTypeData = Object.keys(META_NAMES).map((metaName) => {
+	const metaTypeData = Object.values(META_NAMES).map((metaName) => {
 		let scope: string
-
 		const isProductMeta = (metaName: string) => 
 			(metaName in Object.values(PRODUCT_META)) || (metaName in Object.values(DIGITAL_PRODUCT_META));
 		  
@@ -284,9 +283,8 @@ const main = async () => {
 			...Object.entries(PRODUCT_META),
 			...Object.entries(DIGITAL_PRODUCT_META),
 			...Object.entries(GENERAL_META),
-		  ].map(([name, { dataType }]) => ({ name, dataType }));
-		  
-		  const findMetaType = metaTypes.find((meta) => meta.name === metaName);
+		  ].map(([_, { value, dataType }]) => ({ value, dataType }));
+		  const findMetaType = metaTypes.find((meta) => meta.value === metaName);
 		  const dataType = findMetaType?.dataType || 'text';
 
 		const metaType = {

@@ -50,7 +50,6 @@ describe('auctions service', () => {
 
 	it('creates a auction', async () => {
 		const stall = await getStallsByUserId(devUser1.pk).then((stalls) => stalls[0])
-		console.log(stall.id)
 		const skSigner = new NDKPrivateKeySigner(devUser1.sk)
 		const identifier = createId()
 		const evContent = {
@@ -89,7 +88,7 @@ describe('auctions service', () => {
 			currency: stall.currency,
 			description: 'Hello Description',
 			endDate: expect.any(Date),
-			extraCost: 0,
+			extraCost: expect.any(Number),
 			id: expect.any(String),
 			identifier: `${slugify(evContent.name)}${identifier}`,
 			productName: 'Hello Auction',

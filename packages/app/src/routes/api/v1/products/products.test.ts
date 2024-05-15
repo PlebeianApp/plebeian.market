@@ -30,7 +30,6 @@ describe('/products', () => {
 
 	it('POST', async () => {
 		const stallId = await getAllStalls().then((stalls) => stalls[0].id)
-		console.log(stallId)
 		const skSigner = new NDKPrivateKeySigner(devUser1.sk)
 		const identifier = createId()
 		const evContent = {
@@ -63,7 +62,6 @@ describe('/products', () => {
 
 		await newEvent.sign(skSigner)
 		const nostrEvent = await newEvent.toNostrEvent()
-		console.log(nostrEvent)
 		const result = await fetch(`http://${process.env.APP_HOST}:${process.env.APP_PORT}/api/v1/products`, {
 			method: 'POST',
 			body: JSON.stringify(nostrEvent),
