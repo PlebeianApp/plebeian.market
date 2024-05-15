@@ -7,10 +7,11 @@ import { getImagesByProductId } from '$lib/server/productImages.service'
 import { customTagValue, getEventCoordinates } from '$lib/utils'
 import { format } from 'date-fns'
 
-import type { Product, ProductImage, ProductMeta } from '@plebeian/database'
-import { createId, db, devUser1, eq, productImages, productImagesType, productMeta, ProductMetaName, products } from '@plebeian/database'
+import type { Product, ProductImage, ProductMeta, ProductTypes } from '@plebeian/database'
+import { createId, db, devUser1, eq, PRODUCT_META, productImages, productMeta, products } from '@plebeian/database'
 
 import { productEventSchema } from '../../schema/nostr-events'
+import { getStallById } from './stalls.service'
 
 export type DisplayProduct = Pick<Product, 'id' | 'description' | 'currency' | 'stockQty'> & {
 	name: Product['productName']
@@ -105,8 +106,13 @@ export const createProduct = async (productEvent: NostrEvent) => {
 	const parsedProduct = productEventSchema.parse({ id: productEventContent.id, ...productEventContent })
 	if (!parsedProduct) throw Error('Bad product schema')
 
+	const stall = await getStallById(parsedProduct.stall_id)
 	const parentId = customTagValue(productEvent.tags, 'a')[0] || null
 	const extraCost = (parsedProduct.shipping && parsedProduct.shipping[0].cost) || 0
+
+	if (!stall) {
+		error(400, 'Stall not found')
+	}
 
 	if (!parsedProduct.type) {
 		parsedProduct.type = 'simple'
@@ -122,7 +128,7 @@ export const createProduct = async (productEvent: NostrEvent) => {
 		currency: parsedProduct.currency,
 		price: parsedProduct.price.toString(),
 		extraCost: extraCost.toString(),
-		productType: parsedProduct.type,
+		productType: parsedProduct.type as ProductTypes,
 		parentId: parentId,
 		userId: productEvent.pubkey,
 		stallId: parsedProduct.stall_id,
@@ -134,7 +140,7 @@ export const createProduct = async (productEvent: NostrEvent) => {
 		updatedAt: new Date(),
 		productId: eventCoordinates.coordinates,
 		auctionId: null,
-		metaName: ProductMetaName.SPEC,
+		metaName: PRODUCT_META.SPEC.value,
 		key: spec[0],
 		valueText: spec[1],
 		valueBoolean: null,
@@ -145,8 +151,9 @@ export const createProduct = async (productEvent: NostrEvent) => {
 	const insertProductImages: ProductImage[] | undefined = parsedProduct.images?.map((imageUrl, index) => ({
 		createdAt: new Date(),
 		productId: eventCoordinates.coordinates,
+		auctionId: null,
 		imageUrl,
-		imageType: productImagesType[0],
+		imageType: 'gallery',
 		imageOrder: index + 1,
 	}))
 

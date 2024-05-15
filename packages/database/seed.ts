@@ -2,24 +2,22 @@ import { faker } from '@faker-js/faker'
 import { sql } from 'drizzle-orm'
 
 import {
-	DigitalProductMetaName,
-	ProductMetaName,
-	allowedMetaNames,
-	auctionStatus,
-	bidStatus,
+	AUCTION_STATUS,
+	BID_STATUS,
+	DIGITAL_PRODUCT_META,
+	GENERAL_META,
+	INVOICE_STATUS,
+	META_NAMES,
+	ORDER_STATUS,
+	PAYMENT_DETAILS_METHOD,
+	PRODUCT_META,
+	PRODUCT_TYPES,
 	devUser1,
 	devUser2,
 	devUser3,
 	devUser4,
 	devUser5,
-	digitalProductMetaTypes,
-	generalMetaTypes,
-	invoiceStatus,
-	orderStatus,
-	paymentDetailsMethod,
 	popularCurrencies,
-	productMetaTypes,
-	productTypes,
 } from './constants'
 import { db } from './database'
 import {
@@ -110,7 +108,7 @@ const main = async () => {
 					productName: faker.commerce.productName(),
 					description: faker.commerce.productDescription(),
 					price: faker.finance.amount(),
-					productType: productTypes[0],
+					productType: PRODUCT_TYPES.SIMPLE,
 					currency: faker.helpers.arrayElement(popularCurrencies),
 					isFeatured: i % 2 === 0,
 					isDigital: faker.datatype.boolean({ probability: 0.8 }),
@@ -128,7 +126,7 @@ const main = async () => {
 				id: createId(),
 				userId: stall.userId,
 				stallId: stall.id,
-				paymentMethod: faker.helpers.arrayElement(paymentDetailsMethod),
+				paymentMethod: faker.helpers.arrayElement(Object.values(PAYMENT_DETAILS_METHOD)),
 				paymentDetails: faker.finance.creditCardNumber(),
 			} as PaymentDetail
 		})
@@ -175,7 +173,7 @@ const main = async () => {
 				userId: stall.userId,
 				productName: faker.commerce.productName(),
 				description: faker.commerce.productDescription(),
-				productType: faker.helpers.arrayElement(productTypes),
+				productType: faker.helpers.arrayElement(Object.values(PRODUCT_TYPES)),
 				currency: faker.helpers.arrayElement(popularCurrencies),
 				stockQty: faker.number.int(),
 				parentId: null,
@@ -183,7 +181,7 @@ const main = async () => {
 				startDate: faker.date.recent(),
 				endDate: faker.date.future(),
 				specs: faker.commerce.productMaterial() || null,
-				status: faker.helpers.arrayElement(auctionStatus),
+				status: faker.helpers.arrayElement(Object.values(AUCTION_STATUS)),
 				extraCost: faker.finance.amount()
 			} as Auction
 		})
@@ -198,7 +196,7 @@ const main = async () => {
 				auctionId: auction.id,
 				userId: faker.helpers.arrayElement(userIds).id,
 				bidAmount: faker.finance.amount(),
-				bidStatus: faker.helpers.arrayElement(bidStatus),
+				bidStatus: faker.helpers.arrayElement(Object.values(BID_STATUS)),
 			} as Bid
 		})
 	})
@@ -212,7 +210,7 @@ const main = async () => {
 					updatedAt: faker.date.future(),
 					sellerUserId: faker.helpers.arrayElement(userIds).id,
 					buyerUserId: faker.helpers.arrayElement(userIds).id,
-					status: faker.helpers.arrayElement(orderStatus),
+					status: faker.helpers.arrayElement(Object.values(ORDER_STATUS)),
 					shippingId: shipping.id,
 					stallId: shipping.stallId,
 					address: faker.location.streetAddress(),
@@ -246,8 +244,8 @@ const main = async () => {
 				createdAt: faker.date.recent(),
 				updatedAt: faker.date.future(),
 				totalAmount: faker.finance.amount(),
-				invoiceStatus: faker.helpers.arrayElement(invoiceStatus),
-				paymentMethod: faker.helpers.arrayElement(paymentDetailsMethod),
+				invoiceStatus: faker.helpers.arrayElement(Object.values(INVOICE_STATUS)),
+				paymentMethod: faker.helpers.arrayElement(Object.values(PAYMENT_DETAILS_METHOD)),
 				paymentDetails: faker.finance.creditCardNumber(),
 			} as Invoice
 		})
@@ -270,11 +268,11 @@ const main = async () => {
 			}) as ProductCategory,
 	)
 
-	const metaTypeData = allowedMetaNames.map((metaName) => {
+	const metaTypeData = Object.keys(META_NAMES).map((metaName) => {
 		let scope: string
 
 		const isProductMeta = (metaName: string) => 
-			(metaName in ProductMetaName) || (metaName in DigitalProductMetaName);
+			(metaName in Object.values(PRODUCT_META)) || (metaName in Object.values(DIGITAL_PRODUCT_META));
 		  
 		  if (isProductMeta(metaName)) {
 			scope = 'products';
@@ -283,12 +281,13 @@ const main = async () => {
 		  }
 		  
 		  const metaTypes = [
-			...Object.entries({ ...productMetaTypes, ...digitalProductMetaTypes, ...generalMetaTypes })
-			  .map(([name, { dataType }]) => ({ name, dataType })),
-		  ];
-
-		const findMetaType = metaTypes.find((meta) => meta.name === metaName)
-		const dataType = findMetaType?.dataType || 'text'
+			...Object.entries(PRODUCT_META),
+			...Object.entries(DIGITAL_PRODUCT_META),
+			...Object.entries(GENERAL_META),
+		  ].map(([name, { dataType }]) => ({ name, dataType }));
+		  
+		  const findMetaType = metaTypes.find((meta) => meta.name === metaName);
+		  const dataType = findMetaType?.dataType || 'text';
 
 		const metaType = {
 			name: metaName,
@@ -335,6 +334,7 @@ const main = async () => {
 		const galleryImages = randomLengthArrayFromTo(0, 4).map((_, index) => {
 			return {
 				productId: product.id,
+				auctionId: null,
 				imageUrl: faker.image.urlLoremFlickr({
 					category: 'product',
 				}),

@@ -1,10 +1,23 @@
 import { z } from 'zod'
 
+import type { ProductTypes } from '@plebeian/database'
+import { PRODUCT_TYPES } from '@plebeian/database'
+
+const productTypeValidator = (value: unknown) => {
+	if (typeof value !== 'string') {
+		return { error: new Error(`Invalid product type: ${value}`) }
+	}
+	if (!Object.values(PRODUCT_TYPES).includes(value as ProductTypes)) {
+		return { error: new Error(`Invalid product type: ${value}`) }
+	}
+	return value
+}
+
 export const productEventSchema = z.object({
 	id: z.string(),
 	stall_id: z.string(),
 	name: z.string(),
-	type: z.string().optional(),
+	type: z.custom(productTypeValidator).optional(),
 	description: z.string().optional(),
 	images: z.array(z.string()).optional(),
 	currency: z.string(),

@@ -1,6 +1,5 @@
 import type { NDKUser, NDKUserProfile } from '@nostr-dev-kit/ndk'
 import type { BaseAccount } from '$lib/stores/session'
-import { bytesToHex } from './utils'
 import { NDKNip07Signer, NDKPrivateKeySigner } from '@nostr-dev-kit/ndk'
 import { ndk, ndkActiveUser } from '$lib/stores/ndk'
 import { addAccount, getAccount, updateAccount } from '$lib/stores/session'
@@ -8,10 +7,12 @@ import { getPublicKey } from 'nostr-tools'
 import { decode } from 'nostr-tools/nip19'
 import { decrypt, encrypt } from 'nostr-tools/nip49'
 
+import { bytesToHex } from './utils'
+
 export async function fetchActiveUserData(): Promise<NDKUserProfile | null> {
 	if (!ndk.signer) return null
 
-const user = await ndk.signer.user()
+	const user = await ndk.signer.user()
 	return user.fetchProfile()
 }
 

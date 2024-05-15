@@ -23,6 +23,7 @@ describe('users service', () => {
 		await skSigner.blockUntilReady()
 		const user = await skSigner.user()
 		user.profile = {
+			id: user.pubkey,
 			name: 'John Doe',
 			about: 'Software Developer',
 			picture: 'https://example.com/picture.jpg',
@@ -36,7 +37,7 @@ describe('users service', () => {
 			image: 'https://example.com/image.jpg',
 		}
 
-		const res = await createUser(user)
+		const res = await createUser(user.profile)
 		expect(res).toBeDefined()
 		expect(res.id).toBe(user.pubkey)
 	})

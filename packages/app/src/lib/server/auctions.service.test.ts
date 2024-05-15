@@ -50,6 +50,7 @@ describe('auctions service', () => {
 
 	it('creates a auction', async () => {
 		const stall = await getStallsByUserId(devUser1.pk).then((stalls) => stalls[0])
+		console.log(stall.id)
 		const skSigner = new NDKPrivateKeySigner(devUser1.sk)
 		const identifier = createId()
 		const evContent = {
@@ -82,7 +83,7 @@ describe('auctions service', () => {
 			tags: [['d', `${slugify(evContent.name)}${identifier}`]],
 		})
 		await newEvent.sign(skSigner)
-		const auction = await createAuction(newEvent as NostrEvent, 'active')
+		const auction = await createAuction(newEvent as NostrEvent, 'inactive')
 		expect(auction).toStrictEqual({
 			createdAt: expect.any(String),
 			currency: stall.currency,
@@ -95,7 +96,7 @@ describe('auctions service', () => {
 			stallId: stall.id,
 			startDate: expect.any(Date),
 			startingBidAmount: 100,
-			status: 'active',
+			status: 'inactive',
 			stockQty: 1,
 			updatedAt: expect.any(Date),
 			userId: devUser1.pk,
@@ -133,7 +134,7 @@ describe('auctions service', () => {
 			stallId: stall.id,
 			startDate: expect.any(Date),
 			startingBidAmount: '',
-			status: 'active',
+			status: 'inactive',
 			stockQty: 1,
 			updatedAt: expect.any(Date),
 			userId: stall.userId,
