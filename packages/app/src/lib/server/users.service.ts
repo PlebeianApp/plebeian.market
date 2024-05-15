@@ -4,8 +4,8 @@ import { error } from '@sveltejs/kit'
 import { usersFilterSchema } from '$lib/schema'
 import { takeUniqueOrThrow } from '$lib/utils'
 
-import type { NewUser, User } from '@plebeian/database'
-import { db, eq, products, UserRoles, users, UserTrustLevel } from '@plebeian/database'
+import type { NewUser, User, UserRoles, UserTrustLevel } from '@plebeian/database'
+import { db, eq, products, users } from '@plebeian/database'
 
 import { userEventSchema } from '../../schema/nostr-events'
 
@@ -51,11 +51,7 @@ export const getUserForProduct = async (productId: string): Promise<User> => {
 	error(404, 'Not found')
 }
 
-export const createUser = async (
-	user: object,
-	role: UserRoles = UserRoles.PLEB,
-	trustLevel: UserTrustLevel = UserTrustLevel.REASONABLE,
-): Promise<User> => {
+export const createUser = async (user: object, role: UserRoles = 'pleb', trustLevel: UserTrustLevel = 'reasonable'): Promise<User> => {
 	const parsedUserMeta = userEventSchema.safeParse(user)
 	if (!parsedUserMeta.success) throw Error('Bad user meta schema')
 

@@ -90,72 +90,134 @@ export const devUser5 = {
 	sk: 'ee40a2dc441238f241d1728af9507147e9b5ed18c1c61d84876d4f2502c044b3',
 }
 
-export enum ProductMetaName {
-	IS_USER_FEATURED = 'is_user_featured',
-	IS_STALL_FEATURED = 'is_stall_featured',
-	IS_GLOBAL_FEATURED = 'is_global_featured',
-	IS_DIGITAL = 'is_digital',
-	SPEC = 'spec',
-}
+export type ObjectValues<T> = T[keyof T]
 
-export enum DigitalProductMetaName {
-	LICENSE_KEY = 'license_key',
-	DOWNLOAD_LINK = 'download_link',
-	MIME_TYPE = 'mime_type',
-	SHA256_HASH = 'sha256_hash',
-}
-
-export enum GeneralMetaName {
-	COMMENTS = 'comments',
-}
-
-export const productMetaTypes = {
-	[ProductMetaName.IS_USER_FEATURED]: { dataType: 'boolean' },
-	[ProductMetaName.IS_STALL_FEATURED]: { dataType: 'boolean' },
-	[ProductMetaName.IS_GLOBAL_FEATURED]: { dataType: 'boolean' },
-	[ProductMetaName.IS_DIGITAL]: { dataType: 'boolean' },
-	[ProductMetaName.SPEC]: { dataType: 'text' },
+export const META_SCOPES = {
+	PRODUCTS: 'products',
+	USERS: 'users',
+	ORDERS: 'orders',
 } as const
 
-export const digitalProductMetaTypes = {
-	[DigitalProductMetaName.LICENSE_KEY]: { dataType: 'text' },
-	[DigitalProductMetaName.DOWNLOAD_LINK]: { dataType: 'text' },
-	[DigitalProductMetaName.MIME_TYPE]: { dataType: 'text' },
-	[DigitalProductMetaName.SHA256_HASH]: { dataType: 'text' },
+export type MetaScopes = ObjectValues<typeof META_SCOPES>
+
+export const META_DATA_TYPES = {
+	TEXT: 'text',
+	BOOLEAN: 'boolean',
+	INTEGER: 'integer',
+	NUMERIC: 'numeric',
 } as const
 
-export const generalMetaTypes = {
-	[GeneralMetaName.COMMENTS]: { dataType: 'text' },
+export type MetaDataTypes = ObjectValues<typeof META_DATA_TYPES>
+
+interface MetaInterface {
+	value: string
+	dataType: MetaDataTypes
+}
+
+export const PRODUCT_META: Record<string, MetaInterface> = {
+	IS_USER_FEATURED: { value: 'is_user_featured', dataType: 'boolean' },
+	IS_STALL_FEATURED: { value: 'is_stall_featured', dataType: 'boolean' },
+	IS_GLOBAL_FEATURED: { value: 'is_global_featured', dataType: 'boolean' },
+	IS_DIGITAL: { value: 'is_digital', dataType: 'boolean' },
+	SPEC: { value: 'spec', dataType: 'text' },
 } as const
 
-export const allowedMetaNames = [
-	...Object.values(ProductMetaName),
-	...Object.values(DigitalProductMetaName),
-	...Object.values(GeneralMetaName),
-]
+export type ProductMetaName = ObjectValues<typeof PRODUCT_META>
 
-export const metaScopes = ['products', 'users', 'orders']
-export const metaDataTypes = ['text', 'boolean', 'integer', 'numeric']
+export const DIGITAL_PRODUCT_META: Record<string, MetaInterface> = {
+	LICENSE_KEY: { value: 'license_key', dataType: 'text' },
+	DOWNLOAD_LINK: { value: 'download_link', dataType: 'text' },
+	MIME_TYPE: { value: 'mime_type', dataType: 'text' },
+	SHA256_HASH: { value: 'sha256_hash', dataType: 'text' },
+} as const
 
-export enum USER_ROLES {
-	ADMIN = 'admin',
-	EDITOR = 'editor',
-	PLEB = 'pleb',
-}
+export type DigitalProductMetaName = ObjectValues<typeof DIGITAL_PRODUCT_META>
 
-export enum USER_TRUST_LEVEL {
-	TRUST = 'trust',
-	REASONABLE = 'reasonable',
-	PARANOID = 'paranoid',
-}
+export const GENERAL_META: Record<string, MetaInterface> = {
+	COMMENTS: { value: 'comments', dataType: 'text' },
+} as const
 
-export const paymentDetailsMethod = ['ln', 'on-chain', 'cashu', 'other']
+export type GeneralMetaName = ObjectValues<typeof GENERAL_META>
 
-export const productImagesType = ['gallery', 'thumbnail'] as const
-export const productTypes = ['simple', 'variable', 'variation']
+export const META_NAMES = Object.fromEntries([
+	...Object.entries({ ...PRODUCT_META, ...DIGITAL_PRODUCT_META, ...GENERAL_META }).map(([key, { value }]) => [key, value]),
+]) as Record<string, string>
 
-export const auctionStatus = ['active', 'inactive', 'ended', 'canceled']
-export const bidStatus = ['accepted', 'rejected', 'pending', 'winner']
+export type MetaName = ObjectValues<typeof META_NAMES>
 
-export const orderStatus = ['confirmed', 'pending', 'shipped', 'completed', 'canceled']
-export const invoiceStatus = ['pending', 'paid', 'canceled', 'refunded']
+export const USER_ROLES = {
+	ADMIN: 'admin',
+	EDITOR: 'editor',
+	PLEB: 'pleb',
+} as const
+
+export type UserRoles = ObjectValues<typeof USER_ROLES>
+
+export const USER_TRUST_LEVEL = {
+	TRUST: 'trust',
+	REASONABLE: 'reasonable',
+	PARANOID: 'paranoid',
+} as const
+
+export type UserTrustLevel = ObjectValues<typeof USER_TRUST_LEVEL>
+
+export const PAYMENT_DETAILS_METHOD = {
+	LIGHTNING_NETWORK: 'ln',
+	ON_CHAIN: 'on-chain',
+	CASHU: 'cashu',
+	OTHER: 'other',
+} as const
+
+export type PaymentDetailsMethod = ObjectValues<typeof PAYMENT_DETAILS_METHOD>
+
+export const PRODUCT_IMAGES_TYPE = {
+	GALLERY: 'gallery',
+	THUMBNAIL: 'thumbnail',
+} as const
+
+export type ProductImagesType = ObjectValues<typeof PRODUCT_IMAGES_TYPE>
+
+export const PRODUCT_TYPES = {
+	SIMPLE: 'simple',
+	VARIABLE: 'variable',
+	VARIATION: 'variation',
+} as const
+
+export type ProductTypes = ObjectValues<typeof PRODUCT_TYPES>
+
+export const AUCTION_STATUS = {
+	ACTIVE: 'active',
+	INACTIVE: 'inactive',
+	ENDED: 'ended',
+	CANCELED: 'canceled',
+} as const
+
+export type AuctionStatus = ObjectValues<typeof AUCTION_STATUS>
+
+export const BID_STATUS = {
+	ACCEPTED: 'accepted',
+	REJECTED: 'rejected',
+	PENDING: 'pending',
+	WINNER: 'winner',
+} as const
+
+export type BidStatus = ObjectValues<typeof BID_STATUS>
+
+export const ORDER_STATUS = {
+	CONFIRMED: 'confirmed',
+	PENDING: 'pending',
+	SHIPPED: 'shipped',
+	COMPLETED: 'completed',
+	CANCELED: 'canceled',
+} as const
+
+export type OrderStatus = ObjectValues<typeof ORDER_STATUS>
+
+export const INVOICE_STATUS = {
+	PENDING: 'pending',
+	PAID: 'paid',
+	CANCELED: 'canceled',
+	REFUNDED: 'refunded',
+} as const
+
+export type InvoiceStatus = ObjectValues<typeof INVOICE_STATUS>
