@@ -44,16 +44,6 @@ describe('/users', () => {
 			displayName: 'John',
 			image: 'https://example.com/image.jpg',
 		}
-		// const newEvent = new NDKEvent(new NDK({ signer: skSigner }), {
-		// 	kind: NDKKind.Metadata,
-		// 	pubkey: newUserPk,
-		// 	content: JSON.stringify(evContent),
-		// 	created_at: Math.floor(Date.now() / 1000),
-		// 	tags: [],
-		// })
-
-		// await newEvent.sign(skSigner)
-		// const nostrEvent = await newEvent.toNostrEvent()
 
 		const result = await fetch(`http://${process.env.APP_HOST}:${process.env.APP_PORT}/api/v1/users`, {
 			method: 'POST',

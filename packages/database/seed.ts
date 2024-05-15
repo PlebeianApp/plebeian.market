@@ -1,6 +1,7 @@
 import { faker } from '@faker-js/faker'
 import { sql } from 'drizzle-orm'
 
+import { KindAuctionProduct, KindBids, KindProducts, KindStalls } from '../app/src/lib/constants'
 import {
 	AUCTION_STATUS,
 	BID_STATUS,
@@ -12,14 +13,9 @@ import {
 	PAYMENT_DETAILS_METHOD,
 	PRODUCT_META,
 	PRODUCT_TYPES,
-	devUser1,
-	devUser2,
-	devUser3,
-	devUser4,
-	devUser5,
-	popularCurrencies,
 } from './constants'
 import { db } from './database'
+import { devUser1, devUser2, devUser3, devUser4, devUser5, popularCurrencies } from './fixtures'
 import {
 	Auction,
 	Bid,
@@ -39,7 +35,6 @@ import {
 	Stall,
 	User,
 } from './types'
-import { KindAuctionProduct, KindBids, KindProducts, KindStalls } from '../app/src/lib/constants'
 import { createId } from './utils'
 
 const randomLengthArrayFromTo = (min: number, max: number) => {
@@ -182,7 +177,7 @@ const main = async () => {
 				endDate: faker.date.future(),
 				specs: faker.commerce.productMaterial() || null,
 				status: faker.helpers.arrayElement(Object.values(AUCTION_STATUS)),
-				extraCost: faker.finance.amount()
+				extraCost: faker.finance.amount(),
 			} as Auction
 		})
 	})
@@ -270,22 +265,19 @@ const main = async () => {
 
 	const metaTypeData = Object.values(META_NAMES).map((metaName) => {
 		let scope: string
-		const isProductMeta = (metaName: string) => 
-			(metaName in Object.values(PRODUCT_META)) || (metaName in Object.values(DIGITAL_PRODUCT_META));
-		  
-		  if (isProductMeta(metaName)) {
-			scope = 'products';
-		  } else {
-			scope = 'products';
-		  }
-		  
-		  const metaTypes = [
-			...Object.entries(PRODUCT_META),
-			...Object.entries(DIGITAL_PRODUCT_META),
-			...Object.entries(GENERAL_META),
-		  ].map(([_, { value, dataType }]) => ({ value, dataType }));
-		  const findMetaType = metaTypes.find((meta) => meta.value === metaName);
-		  const dataType = findMetaType?.dataType || 'text';
+		const isProductMeta = (metaName: string) => metaName in Object.values(PRODUCT_META) || metaName in Object.values(DIGITAL_PRODUCT_META)
+
+		if (isProductMeta(metaName)) {
+			scope = 'products'
+		} else {
+			scope = 'products'
+		}
+
+		const metaTypes = [...Object.entries(PRODUCT_META), ...Object.entries(DIGITAL_PRODUCT_META), ...Object.entries(GENERAL_META)].map(
+			([_, { value, dataType }]) => ({ value, dataType }),
+		)
+		const findMetaType = metaTypes.find((meta) => meta.value === metaName)
+		const dataType = findMetaType?.dataType || 'text'
 
 		const metaType = {
 			name: metaName,
@@ -347,61 +339,63 @@ const main = async () => {
 
 	const userStallsEvents = userStalls.flatMap((stallList) =>
 		stallList.map(
-		  (stall) =>
-			({
-			  id: stall.id,
-			  createdAt: stall.createdAt,
-			  updatedAt: stall.updatedAt,
-			  author: stall.userId,
-			  kind: KindStalls,
-			  event: faker.string.uuid(),
-			} as Event)
-		)
-	  );
+			(stall) =>
+				({
+					id: stall.id,
+					createdAt: stall.createdAt,
+					updatedAt: stall.updatedAt,
+					author: stall.userId,
+					kind: KindStalls,
+					event: faker.string.uuid(),
+				}) as Event,
+		),
+	)
 
-	  const userProductsEvents = productData.flatMap((productsByStall) =>
+	const userProductsEvents = productData.flatMap((productsByStall) =>
 		productsByStall.flatMap((stallProducts) =>
-		  stallProducts.map(
-			(product) =>
-			  ({
-				id: product.id,
-				createdAt: product.createdAt,
-				updatedAt: product.updatedAt,
-				author: product.userId,
-				kind: KindProducts,
-				event: faker.string.uuid(),
-			  } as Event)
-		  )
-		)
-	  );
-	  
-	  const userAuctionProductsEvents = auctionsData.map((stallByUser) =>
-		stallByUser.flatMap((auction) =>
-		  ({
-			id: auction.id,
-			createdAt: auction.createdAt,
-			updatedAt: auction.updatedAt,
-			author: auction.userId,
-			kind: KindAuctionProduct,
-			event: faker.string.uuid(),
-		  } as Event)
-		)
-	  );
-	  
-	  const userBidsEvents = bidsData.flatMap((auctionByStall) =>
-		auctionByStall.flatMap((bid) =>
-		  ({
-			id: bid.id,
-			createdAt: bid.createdAt,
-			updatedAt: bid.updatedAt,
-			author: bid.userId,
-			kind: KindBids,
-			event: faker.string.uuid(),
-		  } as Event)
-		)
-	  );
-	  
-	const eventData = [...userStallsEvents, ...userProductsEvents, ...userAuctionProductsEvents, ...userBidsEvents] as Event[];
+			stallProducts.map(
+				(product) =>
+					({
+						id: product.id,
+						createdAt: product.createdAt,
+						updatedAt: product.updatedAt,
+						author: product.userId,
+						kind: KindProducts,
+						event: faker.string.uuid(),
+					}) as Event,
+			),
+		),
+	)
+
+	const userAuctionProductsEvents = auctionsData.map((stallByUser) =>
+		stallByUser.flatMap(
+			(auction) =>
+				({
+					id: auction.id,
+					createdAt: auction.createdAt,
+					updatedAt: auction.updatedAt,
+					author: auction.userId,
+					kind: KindAuctionProduct,
+					event: faker.string.uuid(),
+				}) as Event,
+		),
+	)
+
+	const userBidsEvents = bidsData.flatMap((auctionByStall) =>
+		auctionByStall.flatMap(
+			(bid) =>
+				({
+					id: bid.id,
+					createdAt: bid.createdAt,
+					updatedAt: bid.updatedAt,
+					author: bid.userId,
+					kind: KindBids,
+					event: faker.string.uuid(),
+				}) as Event,
+		),
+	)
+
+	const eventData = [...userStallsEvents, ...userProductsEvents, ...userAuctionProductsEvents, ...userBidsEvents] as Event[]
 
 	db.run(sql`PRAGMA foreign_keys = OFF;`)
 
