@@ -22,15 +22,15 @@ export const verifyEventBody = async (event: Request, kind: NDKKind): Promise<Ve
 }
 
 export const ensureAuthorExists = async (pubkey: string): Promise<string> => {
-	const authorExists = await db.select().from(users).where(eq(users.id, pubkey)).execute()
-	if (!authorExists[0].id) {
-		const newUser = await db.insert(users).values({ id: pubkey }).returning()
-		if (!newUser[0].id) {
+	const [authorExists] = await db.select().from(users).where(eq(users.id, pubkey)).execute()
+	if (!authorExists.id) {
+		const [newUser] = await db.insert(users).values({ id: pubkey }).returning()
+		if (!newUser.id) {
 			error(500, 'Failed to insert user')
 		}
-		return newUser[0].id
+		return newUser.id
 	}
-	return authorExists[0].id
+	return authorExists.id
 }
 
 export const persistEvent = async (event: VerifiedEvent): Promise<void> => {

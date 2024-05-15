@@ -21,6 +21,26 @@ export const productEventSchema = z.object({
 		.optional(),
 })
 
+export const auctionEventSchema = z.object({
+	id: z.string(),
+	stall_id: z.string(),
+	name: z.string(),
+	description: z.string().optional(),
+	images: z.array(z.string()).optional(),
+	starting_bid: z.number().int(),
+	start_date: z.number().int().optional(),
+	duration: z.number().int(),
+	specs: z.array(z.tuple([z.string(), z.string()])),
+	shipping: z.array(
+		z.object({
+			id: z.string(),
+			cost: z.number(),
+		}),
+	),
+})
+
+export const bidEventSchema = z.number().int()
+
 export const stallEventSchema = z.object({
 	id: z.string(),
 	name: z.string(),

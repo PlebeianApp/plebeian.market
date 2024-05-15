@@ -59,18 +59,6 @@ export const flyAndScale = (node: Element, params: FlyAndScaleParams = { y: -8, 
 	}
 }
 
-// TODO: This is not ideal, we should not face duplicate ids at any case
-// And for 404, we should just throw error 404 as we do in other places
-// so let's remove this
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const takeUniqueOrThrow = <T extends any[]>(values: T): T[number] => {
-	if (!values.length) {
-		error(404, 'Not found')
-	}
-	if (values.length !== 1) throw new Error('Found non unique or inexistent value')
-	return values[0]!
-}
-
 export async function currencyToBtc(currency: string, amount: number, inSats?: boolean): Promise<number | null> {
 	const apiUrl = `https://api.yadio.io/convert/${amount}/${currency}/btc`
 	try {
@@ -134,4 +122,10 @@ export const slugify = (str: string) => {
 
 export function isPReplacEvent(n: number | NDKKind): boolean {
 	return n >= 30000 && n < 40000
+}
+
+export const bytesToHex = (byteArray: Uint8Array) => {
+	return Array.from(byteArray, function (byte) {
+		return ('0' + (byte & 0xff).toString(16)).slice(-2)
+	}).join('')
 }

@@ -1,4 +1,5 @@
-import NDK, { NDKEvent, NDKKind, NDKPrivateKeySigner } from '@nostr-dev-kit/ndk'
+import type { NostrEvent } from 'nostr-tools'
+import NDK, { NDKEvent, NDKPrivateKeySigner } from '@nostr-dev-kit/ndk'
 import { KindProducts } from '$lib/constants'
 import { getStallsByUserId } from '$lib/server/stalls.service'
 import { slugify } from '$lib/utils'
@@ -117,7 +118,7 @@ describe('products service', () => {
 			tags: [['d', `${slugify(evContent.name)}${createId()}`]],
 		})
 		await newEvent.sign(skSigner)
-		const product = await createProduct(newEvent)
+		const product = await createProduct(newEvent as NostrEvent)
 		expect(product).toStrictEqual({
 			id: expect.any(String),
 			createdAt: expect.any(String),
@@ -146,7 +147,7 @@ describe('products service', () => {
 			tags: [['d', targetProduct.id.split(':')[2]]],
 		})
 
-		const product = await updateProduct(targetProduct.id, newEvent)
+		const product = await updateProduct(targetProduct.id, newEvent as NostrEvent)
 
 		expect(product).toStrictEqual({
 			id: targetProduct.id,

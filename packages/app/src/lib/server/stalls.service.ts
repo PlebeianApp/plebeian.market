@@ -5,7 +5,7 @@ import { error } from '@sveltejs/kit'
 import { standardDisplayDateFormat } from '$lib/constants'
 import { stallsFilterSchema } from '$lib/schema'
 import { getProductsByStallId } from '$lib/server/products.service'
-import { getEventCoordinates, takeUniqueOrThrow } from '$lib/utils'
+import { getEventCoordinates } from '$lib/utils'
 import { format } from 'date-fns'
 
 import type { Stall } from '@plebeian/database'
@@ -27,7 +27,7 @@ export type RichStall = {
 }
 
 const resolveStalls = async (stall: Stall): Promise<RichStall> => {
-	const ownerRes = await db
+	const [ownerRes] = await db
 		.select({
 			userId: users.id,
 			userName: users.name,
@@ -36,7 +36,7 @@ const resolveStalls = async (stall: Stall): Promise<RichStall> => {
 		.where(eq(users.id, stall.userId))
 		.execute()
 
-	const productCount = (
+	const [productCount] = (
 		await db
 			.select({
 				count: sql<number>`cast(count(${stalls.id}) as int)`,
@@ -46,7 +46,7 @@ const resolveStalls = async (stall: Stall): Promise<RichStall> => {
 			.execute()
 	).map((product) => product.count)
 
-	const orderCount = (
+	const [orderCount] = (
 		await db
 			.select({
 				count: sql<number>`cast(count(${orders.id}) as int)`,
@@ -56,9 +56,7 @@ const resolveStalls = async (stall: Stall): Promise<RichStall> => {
 			.execute()
 	).map((order) => order.count)
 
-	const { userId, userName } = takeUniqueOrThrow(ownerRes)
-
-	if (!userId) {
+	if (!ownerRes.userId) {
 		error(404, 'Not found')
 	}
 
@@ -68,10 +66,10 @@ const resolveStalls = async (stall: Stall): Promise<RichStall> => {
 		description: stall.description,
 		currency: stall.currency,
 		createDate: format(stall.createdAt, standardDisplayDateFormat),
-		userId,
-		userName,
-		productCount: takeUniqueOrThrow(productCount),
-		orderCount: takeUniqueOrThrow(orderCount),
+		userId: ownerRes.userId,
+		userName: ownerRes.userName,
+		productCount,
+		orderCount,
 		identifier: stall.id.split(':')[2],
 	}
 }
@@ -114,10 +112,9 @@ type StallInfo = {
 }
 
 export const getStallById = async (id: string): Promise<StallInfo> => {
-	const stall = await db.select().from(stalls).where(eq(stalls.id, id)).execute()
-	const uniqueStall = takeUniqueOrThrow(stall)
+	const [uniqueStall] = await db.select().from(stalls).where(eq(stalls.id, id)).execute()
 
-	const ownerRes = await db
+	const [ownerRes] = await db
 		.select({
 			userId: users.id,
 		})
@@ -125,8 +122,7 @@ export const getStallById = async (id: string): Promise<StallInfo> => {
 		.where(eq(users.id, uniqueStall.userId))
 		.execute()
 
-	const { userId } = takeUniqueOrThrow(ownerRes)
-	if (!userId) {
+	if (!ownerRes.userId) {
 		error(404, 'Not found')
 	}
 	const stallProducts = await getProductsByStallId(uniqueStall.id)
@@ -137,7 +133,7 @@ export const getStallById = async (id: string): Promise<StallInfo> => {
 		description: uniqueStall.description,
 		currency: uniqueStall.currency,
 		createDate: format(uniqueStall.createdAt, standardDisplayDateFormat),
-		userId: userId,
+		userId: ownerRes.userId,
 		products: stallProducts,
 	}
 
@@ -189,13 +185,13 @@ export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall>
 		userId: stallEvent.pubkey,
 	}
 
-	const stallResult = await db.insert(stalls).values(insertStall).returning()
+	const [stallResult] = await db.insert(stalls).values(insertStall).returning()
 
-	if (!stallResult[0]) {
+	if (!stallResult) {
 		error(404, 'Not found')
 	}
 
-	const stall = stallResult[0]
+	const stall = stallResult
 
 	return {
 		id: stall.id,
@@ -226,7 +222,7 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
 		currency: parsedStall.currency,
 	}
 
-	const stallResult = await db
+	const [stallResult] = await db
 		.update(stalls)
 		.set({
 			updatedAt: new Date(),
@@ -235,14 +231,14 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
 		.where(eq(stalls.id, stallId))
 		.returning()
 
-	if (stallResult.length > 0) {
+	if (stallResult) {
 		return {
-			id: stallResult[0].id,
-			name: stallResult[0].name,
-			description: stallResult[0].description,
-			currency: stallResult[0].currency,
-			createDate: format(stallResult[0].createdAt, standardDisplayDateFormat),
-			userId: stallResult[0].userId,
+			id: stallResult.id,
+			name: stallResult.name,
+			description: stallResult.description,
+			currency: stallResult.currency,
+			createDate: format(stallResult.createdAt, standardDisplayDateFormat),
+			userId: stallResult.userId,
 		}
 	}
 

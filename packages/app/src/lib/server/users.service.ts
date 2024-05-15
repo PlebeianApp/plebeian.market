@@ -2,7 +2,6 @@ import type { NDKUserProfile } from '@nostr-dev-kit/ndk'
 import type { UsersFilter } from '$lib/schema'
 import { error } from '@sveltejs/kit'
 import { usersFilterSchema } from '$lib/schema'
-import { takeUniqueOrThrow } from '$lib/utils'
 
 import type { NewUser, User, UserRoles, UserTrustLevel } from '@plebeian/database'
 import { db, eq, products, users } from '@plebeian/database'
@@ -28,24 +27,21 @@ export const getAllUsers = async (filter: UsersFilter = usersFilterSchema.parse(
 }
 
 export const getUserById = async (id: string): Promise<User> => {
-	const user = await db.select().from(users).where(eq(users.id, id)).execute()
-	const uniqueUser = takeUniqueOrThrow(user)
+	const [user] = await db.select().from(users).where(eq(users.id, id)).execute()
 
-	if (uniqueUser) {
-		return uniqueUser
+	if (user) {
+		return user
 	}
 
 	error(404, 'Not found')
 }
 
 export const getUserForProduct = async (productId: string): Promise<User> => {
-	const product = await db.select().from(products).where(eq(products.id, productId)).execute()
-	const uniqueProduct = takeUniqueOrThrow(product)
-	const user = await db.select().from(users).where(eq(users.id, uniqueProduct.userId)).execute()
-	const uniqueUser = takeUniqueOrThrow(user)
+	const [product] = await db.select().from(products).where(eq(products.id, productId)).execute()
+	const [user] = await db.select().from(users).where(eq(users.id, product.userId)).execute()
 
-	if (uniqueUser) {
-		return uniqueUser
+	if (user) {
+		return user
 	}
 
 	error(404, 'Not found')
@@ -75,11 +71,11 @@ export const createUser = async (user: object, role: UserRoles = 'pleb', trustLe
 		zapService: userMetaData.zapService,
 		lastLogin: new Date(),
 	}
-	const userResult = await db.insert(users).values(insertUser).returning()
-	const uniqueUser = takeUniqueOrThrow(userResult)
 
-	if (uniqueUser) {
-		return uniqueUser
+	const [userResult] = await db.insert(users).values(insertUser).returning()
+
+	if (userResult) {
+		return userResult
 	}
 
 	error(500, 'Failed to create user')
