@@ -30,11 +30,10 @@ describe('/products', () => {
 
 	it('POST', async () => {
 		const stallId = await getAllStalls().then((stalls) => stalls[0].id)
-
 		const skSigner = new NDKPrivateKeySigner(devUser1.sk)
 		const identifier = createId()
 		const evContent = {
-			id: `${KindProducts}:${stallId}:${identifier}`,
+			id: identifier,
 			stall_id: stallId,
 			name: 'Hello Product',
 			description: 'Hello Description',
@@ -54,16 +53,15 @@ describe('/products', () => {
 			],
 		}
 		const newEvent = new NDKEvent(new NDK({ signer: skSigner }), {
-			kind: 30018 as NDKKind,
+			kind: KindProducts,
 			pubkey: devUser1.pk,
 			content: JSON.stringify(evContent),
 			created_at: Math.floor(Date.now() / 1000),
-			tags: [['d', `${slugify(evContent.name)}${createId()}`]],
+			tags: [['d', identifier]],
 		})
 
 		await newEvent.sign(skSigner)
 		const nostrEvent = await newEvent.toNostrEvent()
-
 		const result = await fetch(`http://${process.env.APP_HOST}:${process.env.APP_PORT}/api/v1/products`, {
 			method: 'POST',
 			body: JSON.stringify(nostrEvent),

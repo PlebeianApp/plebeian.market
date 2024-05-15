@@ -26,10 +26,12 @@ describe('/users', () => {
 
 	it('POST', async () => {
 		const newUserSkArr = generateSecretKey()
-		const newUserPk = getPublicKey(newUserSkArr)
 		const newUserSk = Buffer.from(newUserSkArr).toString('hex')
 		const skSigner = new NDKPrivateKeySigner(newUserSk)
-		const evContent = {
+		await skSigner.blockUntilReady()
+		const user = await skSigner.user()
+		const userProfile = {
+			id: user.pubkey,
 			name: 'John Doe',
 			about: 'Software Developer',
 			picture: 'https://example.com/picture.jpg',
@@ -42,20 +44,10 @@ describe('/users', () => {
 			displayName: 'John',
 			image: 'https://example.com/image.jpg',
 		}
-		const newEvent = new NDKEvent(new NDK({ signer: skSigner }), {
-			kind: NDKKind.Metadata,
-			pubkey: newUserPk,
-			content: JSON.stringify(evContent),
-			created_at: Math.floor(Date.now() / 1000),
-			tags: [],
-		})
-
-		await newEvent.sign(skSigner)
-		const nostrEvent = await newEvent.toNostrEvent()
 
 		const result = await fetch(`http://${process.env.APP_HOST}:${process.env.APP_PORT}/api/v1/users`, {
 			method: 'POST',
-			body: JSON.stringify(nostrEvent),
+			body: JSON.stringify(userProfile),
 			headers: {
 				'Content-Type': 'application/json',
 			},
@@ -66,7 +58,7 @@ describe('/users', () => {
 			banner: 'https://example.com/banner.jpg',
 			createdAt: expect.any(String),
 			displayName: 'John',
-			id: newUserPk,
+			id: user.pubkey,
 			image: 'https://example.com/image.jpg',
 			lastLogin: expect.any(String),
 			lud06: 'LUD06 value',

@@ -1,9 +1,9 @@
-import type { NostrEvent } from '@nostr-dev-kit/ndk'
+import type { NDKUserProfile } from '@nostr-dev-kit/ndk'
 import type { UsersFilter } from '$lib/schema'
 import { error } from '@sveltejs/kit'
 import { usersFilterSchema } from '$lib/schema'
 
-import type { NewUser, User } from '@plebeian/database'
+import type { NewUser, User, UserRoles, UserTrustLevel } from '@plebeian/database'
 import { db, eq, products, users } from '@plebeian/database'
 
 import { userEventSchema } from '../../schema/nostr-events'
@@ -47,19 +47,18 @@ export const getUserForProduct = async (productId: string): Promise<User> => {
 	error(404, 'Not found')
 }
 
-export const createUser = async (userMetaEvent: NostrEvent): Promise<User> => {
-	const userMetaEventContent = JSON.parse(userMetaEvent.content)
-	const parsedUserMeta = userEventSchema.safeParse(userMetaEventContent)
-	if (!parsedUserMeta.success) throw Error('Bad user meta schema')
+export const createUser = async (user: object, role: UserRoles = 'pleb', trustLevel: UserTrustLevel = 'reasonable'): Promise<User> => {
+	const parsedUserMeta = userEventSchema.safeParse(user)
+	if (!parsedUserMeta.success) throw Error(JSON.stringify(parsedUserMeta.error))
 
 	const userMetaData = parsedUserMeta.data
 
 	const insertUser: NewUser = {
-		id: userMetaEvent.pubkey,
+		id: userMetaData.id,
 		createdAt: new Date(),
 		updatedAt: new Date(),
-		role: 'pleb',
-		trustLevel: 'reasonable',
+		role: role,
+		trustLevel: trustLevel,
 		name: userMetaData.name,
 		nip05: userMetaData.nip05,
 		banner: userMetaData.banner,
@@ -70,6 +69,7 @@ export const createUser = async (userMetaEvent: NostrEvent): Promise<User> => {
 		image: userMetaData.image ? userMetaData.image : userMetaData.picture,
 		website: userMetaData.website,
 		zapService: userMetaData.zapService,
+		lastLogin: new Date(),
 	}
 
 	const [userResult] = await db.insert(users).values(insertUser).returning()
@@ -81,31 +81,25 @@ export const createUser = async (userMetaEvent: NostrEvent): Promise<User> => {
 	error(500, 'Failed to create user')
 }
 
-export const updateUser = async (userId: string, userMetaEvent: NostrEvent): Promise<User> => {
-	const userMetaEventContent = JSON.parse(userMetaEvent.content)
-	const parsedUserMeta = userEventSchema.safeParse(userMetaEventContent)
-	if (!parsedUserMeta.success) throw Error('Bad user meta schema')
-
-	const userMetaData = parsedUserMeta.data
-
+export const updateUser = async (userId: string, userMeta: NDKUserProfile): Promise<User> => {
 	const insertUser: Partial<User> = {
 		updatedAt: new Date(),
-		name: userMetaData.name,
-		nip05: userMetaData.nip05,
-		banner: userMetaData.banner,
-		about: userMetaData.about,
-		lud06: userMetaData.lud06,
-		lud16: userMetaData.lud16,
-		displayName: userMetaData.displayName,
-		image: userMetaData.image ? userMetaData.image : userMetaData.picture,
-		website: userMetaData.website,
-		zapService: userMetaData.zapService,
+		name: userMeta.name,
+		nip05: userMeta.nip05,
+		banner: userMeta.banner,
+		about: userMeta.about,
+		lud06: userMeta.lud06,
+		lud16: userMeta.lud16,
+		displayName: userMeta.displayName,
+		image: userMeta.image,
+		website: userMeta.website,
+		zapService: userMeta.zapService,
+		lastLogin: new Date(),
 	}
 
 	const userResult = await db
 		.update(users)
 		.set({
-			updatedAt: new Date(),
 			...insertUser,
 		})
 		.where(eq(users.id, userId))

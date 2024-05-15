@@ -11,9 +11,8 @@ export const GET: RequestHandler = async ({ params }) => {
 
 export const PUT: RequestHandler = async ({ params, request }) => {
 	try {
-		const verifiedEvent = await verifyAndPersistRawEvent(request, NDKKind.Metadata)
-		console.log(verifiedEvent)
-		return json(await updateUser(params.userId, verifiedEvent))
+		const body = await request.json()
+		return json(await updateUser(params.userId, body))
 	} catch (e) {
 		error(500, JSON.stringify(e))
 	}

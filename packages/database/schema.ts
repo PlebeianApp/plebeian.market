@@ -3,18 +3,30 @@ import { sql } from 'drizzle-orm'
 import { integer, numeric, primaryKey, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 
 import {
-	allowedMetaNames,
-	auctionStatus,
-	bidStatus,
-	invoiceStatus,
-	metaDataTypes,
-	metaScopes,
-	orderStatus,
-	paymentDetailsMethod,
-	productImagesType,
-	productTypes,
-	userRoles,
-	userTrustLevel,
+	AUCTION_STATUS,
+	AuctionStatus,
+	BID_STATUS,
+	BidStatus,
+	INVOICE_STATUS,
+	InvoiceStatus,
+	META_DATA_TYPES,
+	META_NAMES,
+	META_SCOPES,
+	MetaDataTypes,
+	MetaName,
+	MetaScopes,
+	ORDER_STATUS,
+	OrderStatus,
+	PAYMENT_DETAILS_METHOD,
+	PaymentDetailsMethod,
+	PRODUCT_IMAGES_TYPE,
+	PRODUCT_TYPES,
+	ProductImagesType,
+	ProductTypes,
+	USER_ROLES,
+	USER_TRUST_LEVEL,
+	UserRoles,
+	UserTrustLevel,
 } from './constants'
 import { createId } from './utils'
 
@@ -46,10 +58,10 @@ const standardProductColumns = {
 /// Meta tables
 // Meta types
 export const metaTypes = sqliteTable('meta_types', {
-	name: text('name', { enum: [allowedMetaNames[0], ...allowedMetaNames.slice(1)] }).primaryKey(),
+	name: text('name', { enum: Object.values(META_NAMES) as NonEmptyArray<MetaName> }).primaryKey(),
 	description: text('description'),
-	scope: text('scope', { enum: [metaScopes[0], ...metaScopes.slice(1)] }).notNull(),
-	dataType: text('data_type', { enum: [metaDataTypes[0], ...metaDataTypes.slice(1)] }).notNull(),
+	scope: text('scope', { enum: Object.values(META_SCOPES) as NonEmptyArray<MetaScopes> }).notNull(),
+	dataType: text('data_type', { enum: Object.values(META_DATA_TYPES) as NonEmptyArray<MetaDataTypes> }).notNull(),
 })
 
 // Product meta
@@ -85,14 +97,16 @@ export const events = sqliteTable('events', {
 	event: text('event').notNull(),
 })
 
+type NonEmptyArray<T> = [T, ...T[]]
+
 // Users table
 export const users = sqliteTable('users', {
 	...standardColumns,
 	name: text('name'),
-	role: text('role', { enum: [userRoles[0], ...userRoles.slice(1)] })
+	role: text('role', { enum: Object.values(USER_ROLES) as NonEmptyArray<UserRoles> })
 		.notNull()
-		.default('pleb'),
-	trustLevel: text('trust_lvl', { enum: [userTrustLevel[0], ...userTrustLevel.slice(1)] }),
+		.default(USER_ROLES.PLEB),
+	trustLevel: text('trust_lvl', { enum: Object.values(USER_TRUST_LEVEL) as NonEmptyArray<UserTrustLevel> }),
 	displayName: text('display_name'),
 	about: text('about'),
 	image: text('image'),
@@ -128,7 +142,7 @@ export const paymentDetails = sqliteTable('payment_details', {
 		.notNull()
 		.references(() => users.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
 	stallId: text('stall_id').references(() => stalls.id, { onUpdate: 'cascade' }),
-	paymentMethod: text('payment_method', { enum: [paymentDetailsMethod[0], ...paymentDetailsMethod.slice(1)] }).notNull(),
+	paymentMethod: text('payment_method', { enum: Object.values(PAYMENT_DETAILS_METHOD) as NonEmptyArray<PaymentDetailsMethod> }).notNull(),
 	paymentDetails: text('payment_details').notNull(),
 	isDefault: integer('default', { mode: 'boolean' }).notNull().default(false),
 })
@@ -164,7 +178,7 @@ export const shippingZones = sqliteTable('shipping_zones', {
 export const products = sqliteTable('products', {
 	...standardColumns,
 	...standardProductColumns,
-	productType: text('product_type', { enum: [productTypes[0], ...productTypes.slice(1)] })
+	productType: text('product_type', { enum: Object.values(PRODUCT_TYPES) as NonEmptyArray<ProductTypes> })
 		.notNull()
 		.default('simple'),
 	parentId: text('parent_id').references((): AnySQLiteColumn => products.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
@@ -177,7 +191,7 @@ export const productImages = sqliteTable(
 		productId: text('product_id').references(() => products.id, { onDelete: 'set null', onUpdate: 'cascade' }),
 		auctionId: text('auction_id').references(() => auctions.id, { onDelete: 'set null', onUpdate: 'cascade' }),
 		imageUrl: text('image_url'),
-		imageType: text('image_type', { enum: [productImagesType[0], ...productImagesType.slice(1)] })
+		imageType: text('image_type', { enum: Object.values(PRODUCT_IMAGES_TYPE) as NonEmptyArray<ProductImagesType> })
 			.notNull()
 			.default('gallery'),
 		imageOrder: integer('image_order').notNull().default(0),
@@ -221,9 +235,9 @@ export const auctions = sqliteTable('auctions', {
 	...standardColumns,
 	...standardProductColumns,
 	startingBidAmount: numeric('starting_bid_amount').notNull(),
+	status: text('status', { enum: Object.values(AUCTION_STATUS) as NonEmptyArray<AuctionStatus> }).notNull(),
 	startDate: integer('start_date', { mode: 'timestamp' }).default(sql`(unixepoch())`),
 	endDate: integer('end_date', { mode: 'timestamp' }),
-	status: text('status', { enum: [auctionStatus[0], ...auctionStatus.slice(1)] }).notNull(),
 })
 
 //Bids
@@ -236,7 +250,7 @@ export const bids = sqliteTable('bids', {
 		.notNull()
 		.references(() => users.id),
 	bidAmount: numeric('bid_amount').notNull(),
-	bidStatus: text('bid_status', { enum: [bidStatus[0], ...bidStatus.slice(1)] })
+	bidStatus: text('bid_status', { enum: Object.values(BID_STATUS) as NonEmptyArray<BidStatus> })
 		.notNull()
 		.default('pending'),
 })
@@ -258,7 +272,7 @@ export const orders = sqliteTable('orders', {
 	buyerUserId: text('buyer_user_id')
 		.notNull()
 		.references(() => users.id),
-	status: text('status', { enum: [orderStatus[0], ...orderStatus.slice(1)] })
+	status: text('status', { enum: Object.values(ORDER_STATUS) as NonEmptyArray<OrderStatus> })
 		.notNull()
 		.default('pending'),
 	shippingId: text('shipping_id')
@@ -311,7 +325,7 @@ export const invoices = sqliteTable('invoices', {
 		.notNull()
 		.references(() => orders.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
 	totalAmount: numeric('total_amount').notNull(),
-	invoiceStatus: text('invoice_status', { enum: [invoiceStatus[0], ...invoiceStatus.slice(1)] })
+	invoiceStatus: text('invoice_status', { enum: Object.values(INVOICE_STATUS) as NonEmptyArray<InvoiceStatus> })
 		.notNull()
 		.default('pending'),
 	paymentDetails: text('payment_details_id')

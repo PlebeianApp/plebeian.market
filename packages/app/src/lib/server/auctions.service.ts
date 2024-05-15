@@ -8,15 +8,15 @@ import { add, format } from 'date-fns'
 
 import type { Auction, AuctionStatus, ProductImage, ProductMeta } from '@plebeian/database'
 import {
+	AUCTION_STATUS,
 	auctions,
-	auctionStatus,
 	createId,
 	db,
 	eq,
+	PRODUCT_IMAGES_TYPE,
+	PRODUCT_META,
 	productImages,
-	productImagesType,
 	productMeta,
-	ProductMetaName,
 } from '@plebeian/database'
 
 import { auctionEventSchema } from '../../schema/nostr-events'
@@ -94,8 +94,8 @@ export const createAuction = async (auctionEvent: NostrEvent, auctionStatus: Auc
 	const eventCoordinates = getEventCoordinates(auctionEvent)
 	const auctionEventContent = JSON.parse(auctionEvent.content)
 	const parsedAuction = auctionEventSchema.parse({ id: auctionEventContent.id, ...auctionEventContent })
-
 	const stall = await getStallById(parsedAuction.stall_id)
+	const extraCost = (parsedAuction.shipping && parsedAuction.shipping[0].cost) || 0
 
 	if (!stall) {
 		error(400, 'Stall not found')
@@ -103,8 +103,8 @@ export const createAuction = async (auctionEvent: NostrEvent, auctionStatus: Auc
 
 	const startDate = parsedAuction.start_date ? new Date(parsedAuction.start_date * 1000) : null
 
-	const newAuction: Auction = {
-		id: parsedAuction.id,
+	const insertAuction: Auction = {
+		id: eventCoordinates.coordinates,
 		createdAt: new Date(),
 		updatedAt: new Date(),
 		identifier: eventCoordinates.tagD,
@@ -117,7 +117,7 @@ export const createAuction = async (auctionEvent: NostrEvent, auctionStatus: Auc
 		startDate: startDate,
 		endDate: startDate ? add(startDate, { seconds: parsedAuction.duration }) : null,
 		currency: stall.currency,
-		extraCost: '0',
+		extraCost: extraCost.toString(),
 		stockQty: 1,
 	}
 
@@ -125,8 +125,9 @@ export const createAuction = async (auctionEvent: NostrEvent, auctionStatus: Auc
 		id: createId(),
 		createdAt: new Date(auctionEvent.created_at!),
 		updatedAt: new Date(),
-		auctionId: parsedAuction.id,
-		metaName: ProductMetaName.SPEC,
+		auctionId: eventCoordinates.coordinates,
+		productId: null,
+		metaName: PRODUCT_META.SPEC.value,
 		key: spec[0],
 		valueText: spec[1],
 		valueBoolean: null,
@@ -136,13 +137,14 @@ export const createAuction = async (auctionEvent: NostrEvent, auctionStatus: Auc
 
 	const insertProductImages: ProductImage[] | undefined = parsedAuction.images?.map((imageUrl, index) => ({
 		createdAt: new Date(),
-		auctionId: parsedAuction.id,
+		auctionId: eventCoordinates.coordinates,
+		productId: null,
 		imageUrl,
-		imageType: productImagesType[0],
+		imageType: 'gallery',
 		imageOrder: index + 1,
 	}))
 
-	const [auctionResult] = await db.insert(auctions).values(newAuction).returning()
+	const [auctionResult] = await db.insert(auctions).values(insertAuction).returning()
 
 	insertSpecs?.length && (await db.insert(productMeta).values(insertSpecs).returning())
 	insertProductImages?.length && (await db.insert(productImages).values(insertProductImages).returning())
@@ -157,8 +159,10 @@ export const createAuction = async (auctionEvent: NostrEvent, auctionStatus: Auc
 export const updateAuction = async (auctionId: string, auctionEvent: NostrEvent): Promise<DisplayAuction> => {
 	const auctionEventContent = JSON.parse(auctionEvent.content)
 	const parsedAuction = auctionEventSchema.partial().parse({ id: auctionId, ...auctionEventContent })
-	const { tagD, coordinates } = getEventCoordinates(auctionEvent)
+	const eventCoordinates = getEventCoordinates(auctionEvent)
 	const startDate = parsedAuction?.start_date ? new Date(parsedAuction.start_date) : new Date()
+
+	const extraCost = (parsedAuction.shipping && parsedAuction.shipping[0].cost) || 0
 
 	if (!parsedAuction.stall_id) {
 		error(400, 'Stall ID is required')
@@ -167,7 +171,7 @@ export const updateAuction = async (auctionId: string, auctionEvent: NostrEvent)
 	const stall = await getStallById(parsedAuction.stall_id)
 
 	const insertProduct: Partial<Auction> = {
-		id: `${KindAuctionProduct}:${coordinates.split(':')[1]}:${tagD}`,
+		id: eventCoordinates.coordinates,
 		createdAt: new Date(),
 		updatedAt: new Date(),
 		stallId: parsedAuction.stall_id,
@@ -175,11 +179,11 @@ export const updateAuction = async (auctionId: string, auctionEvent: NostrEvent)
 		productName: parsedAuction.name,
 		description: parsedAuction.description,
 		startingBidAmount: parsedAuction?.starting_bid?.toString() ?? '',
-		status: auctionStatus[0],
+		status: AUCTION_STATUS.INACTIVE,
 		startDate: startDate,
 		endDate: add(startDate, { seconds: parsedAuction.duration }),
 		currency: stall.currency,
-		extraCost: '0', // TODO: Check if this is correct
+		extraCost: extraCost.toString(),
 		stockQty: 1,
 	}
 

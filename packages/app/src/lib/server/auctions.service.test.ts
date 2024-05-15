@@ -82,20 +82,20 @@ describe('auctions service', () => {
 			tags: [['d', `${slugify(evContent.name)}${identifier}`]],
 		})
 		await newEvent.sign(skSigner)
-		const auction = await createAuction(newEvent as NostrEvent, 'active')
+		const auction = await createAuction(newEvent as NostrEvent, 'inactive')
 		expect(auction).toStrictEqual({
 			createdAt: expect.any(String),
 			currency: stall.currency,
 			description: 'Hello Description',
 			endDate: expect.any(Date),
-			extraCost: 0,
+			extraCost: expect.any(Number),
 			id: expect.any(String),
 			identifier: `${slugify(evContent.name)}${identifier}`,
 			productName: 'Hello Auction',
 			stallId: stall.id,
 			startDate: expect.any(Date),
 			startingBidAmount: 100,
-			status: 'active',
+			status: 'inactive',
 			stockQty: 1,
 			updatedAt: expect.any(Date),
 			userId: devUser1.pk,
@@ -133,7 +133,7 @@ describe('auctions service', () => {
 			stallId: stall.id,
 			startDate: expect.any(Date),
 			startingBidAmount: '',
-			status: 'active',
+			status: 'inactive',
 			stockQty: 1,
 			updatedAt: expect.any(Date),
 			userId: stall.userId,

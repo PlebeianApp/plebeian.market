@@ -33,7 +33,7 @@ describe('products service', () => {
 			currency: 'testCurrency',
 			stockQty: 1,
 			extraCost: '0',
-			productType: 'testProductType',
+			productType: 'simple',
 			parentId: 'testParentId',
 		}
 
