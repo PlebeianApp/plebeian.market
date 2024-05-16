@@ -88,8 +88,8 @@
 					class="flex flex-col gap-2"
 					on:submit|preventDefault={(sEvent) => login('NSEC', new FormData(sEvent.currentTarget, sEvent.submitter))}
 				>
-					<Input class="border-black border-2" name="key" placeholder="Private key (nsec1...)" type="password" />
-					<Input class="border-black border-2" name="password" placeholder="Password" type="password" />
+					<Input required class="border-black border-2" name="key" placeholder="Private key (nsec1...)" type="password" />
+					<Input required class="border-black border-2" name="password" placeholder="Password" type="password" />
 					<Button type="submit">Sign in</Button>
 				</form>
 				<p class="w-full text-center">
@@ -117,7 +117,7 @@
 						createDialogOpen = true
 					}}
 				>
-					<Input class="border-black border-2" name="password" placeholder="Password" type="password" />
+					<Input required class="border-black border-2" name="password" placeholder="Password" type="password" />
 					<Button type="submit" class="w-full">Generate an account</Button>
 				</form>
 
