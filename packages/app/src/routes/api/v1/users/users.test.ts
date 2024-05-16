@@ -1,5 +1,5 @@
-import NDK, { NDKEvent, NDKKind, NDKPrivateKeySigner } from '@nostr-dev-kit/ndk'
-import { generateSecretKey, getPublicKey } from 'nostr-tools/pure'
+import { NDKPrivateKeySigner } from '@nostr-dev-kit/ndk'
+import { generateSecretKey } from 'nostr-tools/pure'
 import { describe, expect, it } from 'vitest'
 
 describe('/users', () => {

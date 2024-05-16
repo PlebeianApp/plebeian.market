@@ -1,10 +1,12 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button/index.js'
+	import { Checkbox } from '$lib/components/ui/checkbox/index.js'
 	import * as Dialog from '$lib/components/ui/dialog/index.js'
 	import { Input } from '$lib/components/ui/input/index.js'
+	import { Label } from '$lib/components/ui/label/index.js'
 	import { Separator } from '$lib/components/ui/separator'
 	import * as Tabs from '$lib/components/ui/tabs/index.js'
-	import { loginWithExtension, loginWithPrivateKey } from '$lib/ndkLogin'
+	import { login } from '$lib/ndkLogin'
 	import { type BaseAccount } from '$lib/stores/session'
 	import { generateSecretKey } from 'nostr-tools'
 	import * as nip19 from 'nostr-tools/nip19'
@@ -12,35 +14,13 @@
 
 	import Pattern from './Pattern.svelte'
 
+	let checked = false
 	let authDialogOpen = false
 	let createDialogOpen = false
 	let nsec: ReturnType<(typeof nip19)['nsecEncode']> | null = null
 
-	async function login(loginMethod: BaseAccount['type'], formData?: FormData) {
-		let result: boolean
-		if (loginMethod == 'NIP07') {
-			try {
-				result = await loginWithExtension()
-				authDialogOpen = false
-				result ? toast.success('Login sucess!') : toast.error('Login error!')
-			} catch (e) {
-				authDialogOpen = false
-				toast.error('Login error!')
-				throw Error('No loging')
-			}
-		} else if (loginMethod == 'NSEC' && formData) {
-			const key = `${formData.get('key')}`
-			const password = `${formData.get('password')}`
-			try {
-				result = await loginWithPrivateKey(key, password)
-				authDialogOpen = false
-				result ? toast.success('Login sucess!') : toast.error('Login error!')
-			} catch (e) {
-				authDialogOpen = false
-				toast.error('Login error!')
-				throw Error('No loging')
-			}
-		}
+	async function loginWrapper(loginMethod: BaseAccount['type'], formData?: FormData, autoLogin?: boolean) {
+		;(await login(loginMethod, formData, autoLogin)) ? toast.success('Login sucess!') : toast.error('Login error!')
 	}
 
 	const activeTab =
@@ -48,8 +28,8 @@
 </script>
 
 <Dialog.Root bind:open={authDialogOpen}>
-	<Dialog.Trigger class="flex items-center cursor-pointer gap-2">
-		<Button class="p-2 bg-white"><span class="i-tdesign-view-list text-black w-6 h-6"></span></Button>
+	<Dialog.Trigger class="flex items-center cursor-pointer gap-2 w-full">
+		<span class="i-tdesign-user-1" />Log in
 	</Dialog.Trigger>
 	<Dialog.Content class="max-w-[425px] gap-0 p-0 text-black">
 		<Dialog.Header class="relative w-full bg-black text-center text-white py-8 flex items-center">
@@ -65,7 +45,10 @@
 				<Tabs.Trigger value="create" class={activeTab}>Sign up</Tabs.Trigger>
 			</Tabs.List>
 			<Tabs.Content value="join" class="flex flex-col gap-2">
-				<Button on:click={() => login('NIP07')} variant="outline" class="w-full border-black border-2 font-bold flex items-center gap-1"
+				<Button
+					on:click={() => loginWrapper('NIP07', undefined, checked)}
+					variant="outline"
+					class="w-full border-black border-2 font-bold flex items-center gap-1"
 					><span class="text-black text-md">Sign in with extension</span>
 					<span class="i-mdi-puzzle-outline text-black w-6 h-6"> </span></Button
 				>
@@ -84,14 +67,25 @@
 					<span> OR </span>
 					<Separator class="w-1/2" />
 				</div>
+
 				<form
 					class="flex flex-col gap-2"
-					on:submit|preventDefault={(sEvent) => login('NSEC', new FormData(sEvent.currentTarget, sEvent.submitter))}
+					on:submit|preventDefault={(sEvent) => loginWrapper('NSEC', new FormData(sEvent.currentTarget, sEvent.submitter), checked)}
 				>
 					<Input required class="border-black border-2" name="key" placeholder="Private key (nsec1...)" type="password" />
 					<Input required class="border-black border-2" name="password" placeholder="Password" type="password" />
 					<Button type="submit">Sign in</Button>
 				</form>
+				<div class="flex items-center space-x-2">
+					<Checkbox id="terms" bind:checked aria-labelledby="terms-label" />
+					<Label
+						id="terms-label"
+						for="terms"
+						class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+					>
+						Remember me
+					</Label>
+				</div>
 				<p class="w-full text-center">
 					Don’t have an account?
 					<Tabs.Trigger value="create" class="underline cursor-pointer p-0">Sign up</Tabs.Trigger>
@@ -104,7 +98,6 @@
 						class="underline">Learn more</a
 					>.
 				</span>
-
 				<form
 					class="flex flex-col gap-2"
 					on:submit|preventDefault={async (sEvent) => {
@@ -112,7 +105,7 @@
 						nsec = nip19.nsecEncode(key)
 						const formData = new FormData(sEvent.currentTarget, sEvent.submitter)
 						formData.append('key', nsec)
-						await login('NSEC', formData)
+						await loginWrapper('NSEC', formData)
 						authDialogOpen = false
 						createDialogOpen = true
 					}}
@@ -120,7 +113,6 @@
 					<Input required class="border-black border-2" name="password" placeholder="Password" type="password" />
 					<Button type="submit" class="w-full">Generate an account</Button>
 				</form>
-
 				<p class="w-full text-center">
 					Already have an account?
 					<Tabs.Trigger value="join" class="underline cursor-pointer p-0">Sign in</Tabs.Trigger>

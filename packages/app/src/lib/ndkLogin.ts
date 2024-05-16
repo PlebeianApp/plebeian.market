@@ -3,17 +3,17 @@ import type { BaseAccount } from '$lib/stores/session'
 import { NDKNip07Signer, NDKPrivateKeySigner } from '@nostr-dev-kit/ndk'
 import { ndk, ndkActiveUser } from '$lib/stores/ndk'
 import { addAccount, getAccount, updateAccount } from '$lib/stores/session'
-import { getPublicKey } from 'nostr-tools'
 import { decode } from 'nostr-tools/nip19'
 import { decrypt, encrypt } from 'nostr-tools/nip49'
 
 import { bytesToHex } from './utils'
 
-export async function fetchActiveUserData(): Promise<NDKUserProfile | null> {
+export async function fetchActiveUserData(): Promise<NDKUser | null> {
 	if (!ndk.signer) return null
-
 	const user = await ndk.signer.user()
-	return user.fetchProfile()
+	await user.fetchProfile()
+	ndkActiveUser.set(user)
+	return user
 }
 
 export async function loginWithExtension(): Promise<boolean> {
@@ -21,12 +21,15 @@ export async function loginWithExtension(): Promise<boolean> {
 		const signer = new NDKNip07Signer()
 		console.log('Waiting for NIP-07 signer')
 		await signer.blockUntilReady()
-		const user = await signer.user()
-		ndkActiveUser.set(user)
-		await loginLocalDb(user.pubkey, 'NIP07')
-		await fetchActiveUserData()
-		await loginDb(user)
-		return true
+		await signer.user()
+		ndk.signer = signer
+		const user = await fetchActiveUserData()
+		if (user) {
+			await loginLocalDb(user.pubkey, 'NIP07')
+			await loginDb(user)
+			return true
+		}
+		return false
 	} catch (error) {
 		console.error(error)
 		return false
@@ -37,14 +40,18 @@ export async function loginWithPrivateKey(key: string, password: string): Promis
 	if (key.startsWith('ncryptsec')) {
 		try {
 			const decryptedKey = decrypt(key, password)
-			ndk.signer = new NDKPrivateKeySigner(bytesToHex(decryptedKey))
-			await ndk.signer.blockUntilReady()
-			const user = await ndk.signer.user()
-			ndkActiveUser.set(user)
-			const pk = getPublicKey(decryptedKey)
-			await loginLocalDb(pk, 'NSEC', key)
-			await fetchActiveUserData()
-			await loginDb(user)
+			const signer = new NDKPrivateKeySigner(bytesToHex(decryptedKey))
+			console.log('Waiting for PrivateKey signer')
+			await signer.blockUntilReady()
+			await signer.user()
+			ndk.signer = signer
+			const user = await fetchActiveUserData()
+			if (user) {
+				await loginLocalDb(user.pubkey, 'NSEC', key)
+				await loginDb(user)
+				return true
+			}
+			return false
 		} catch (e) {
 			throw Error(JSON.stringify(e))
 		}
@@ -53,21 +60,22 @@ export async function loginWithPrivateKey(key: string, password: string): Promis
 			const decoded = decode(key)
 			if (decoded.type !== 'nsec') throw new Error('Not nsec')
 			const cSK = encrypt(decoded.data, password)
-			ndk.signer = new NDKPrivateKeySigner(bytesToHex(decoded.data))
-			await ndk.signer.blockUntilReady()
-			const user = await ndk.signer.user()
-			ndkActiveUser.set(user)
-			const pk = getPublicKey(decoded.data)
-			await loginLocalDb(pk, 'NSEC', cSK)
-			await fetchActiveUserData()
-			await loginDb(user)
+			const signer = new NDKPrivateKeySigner(bytesToHex(decoded.data))
+			console.log('Waiting for PrivateKey signer')
+			await signer.blockUntilReady()
+			await signer.user()
+			ndk.signer = signer
+			const user = await fetchActiveUserData()
+			if (user) {
+				await loginLocalDb(user.pubkey, 'NSEC', cSK)
+				await loginDb(user)
+				return true
+			}
+			return false
 		} catch (e) {
 			throw Error(JSON.stringify(e))
 		}
 	} else throw new Error('Unknown private format')
-
-	await fetchActiveUserData()
-	return true
 }
 
 export async function logout() {
@@ -99,7 +107,6 @@ export async function loginLocalDb(userPk: string, loginMethod: BaseAccount['typ
 			await updateAccount(userPk, { lastLogged: +new Date() })
 		}
 		localStorage.setItem('last_account', userPk)
-		localStorage.setItem('auto_login', 'true')
 		return true
 	} catch (e) {
 		throw Error(JSON.stringify(e))
@@ -128,4 +135,31 @@ export async function loginDb(user: NDKUser) {
 		}).then((r) => r.json())
 		console.log(POST)
 	}
+}
+
+export async function login(loginMethod: BaseAccount['type'], formData?: FormData, autoLogin?: boolean): Promise<boolean> {
+	if (loginMethod === 'NIP07') {
+		try {
+			if (autoLogin) {
+				localStorage.setItem('auto_login', 'true')
+			}
+			return await loginWithExtension()
+		} catch (e) {
+			console.log(JSON.stringify(e))
+			return false
+		}
+	} else if (loginMethod === 'NSEC' && formData) {
+		const key = `${formData.get('key')}`
+		const password = `${formData.get('password')}`
+		try {
+			if (autoLogin) {
+				localStorage.setItem('auto_login', 'true')
+			}
+			return await loginWithPrivateKey(key, password)
+		} catch (e) {
+			console.log(JSON.stringify(e))
+			return false
+		}
+	}
+	return false
 }

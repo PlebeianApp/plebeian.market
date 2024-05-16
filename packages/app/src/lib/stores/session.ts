@@ -25,7 +25,7 @@ type Nip07Account = BaseAccount & {
 	type: 'NIP07'
 }
 
-type NsecAccount = BaseAccount & {
+export type NsecAccount = BaseAccount & {
 	type: 'NSEC'
 	cSk: string
 }
