@@ -1,23 +1,13 @@
 import type { NostrEvent } from '@nostr-dev-kit/ndk'
 import type { AuctionsFilter } from '$lib/schema'
 import { error } from '@sveltejs/kit'
-import { KindAuctionProduct, standardDisplayDateFormat } from '$lib/constants'
+import { standardDisplayDateFormat } from '$lib/constants'
 import { auctionsFilterSchema } from '$lib/schema'
 import { getEventCoordinates } from '$lib/utils'
 import { add, format } from 'date-fns'
 
 import type { Auction, AuctionStatus, ProductImage, ProductMeta } from '@plebeian/database'
-import {
-	AUCTION_STATUS,
-	auctions,
-	createId,
-	db,
-	eq,
-	PRODUCT_IMAGES_TYPE,
-	PRODUCT_META,
-	productImages,
-	productMeta,
-} from '@plebeian/database'
+import { AUCTION_STATUS, auctions, createId, db, eq, PRODUCT_META, productImages, productMeta } from '@plebeian/database'
 
 import { auctionEventSchema } from '../../schema/nostr-events'
 import { getStallById } from './stalls.service'
