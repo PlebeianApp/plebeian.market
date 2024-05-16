@@ -25,8 +25,8 @@
 
 	let checked: boolean
 
-	async function loginWrapper(loginMethod: BaseAccount['type'], submitEvent?: SubmitEvent) {
-		;(await login(loginMethod, submitEvent)) ? toast.success('Login sucess!') : toast.error('Login error!')
+	async function loginWrapper(loginMethod: BaseAccount['type'], formData?: FormData) {
+		;(await login(loginMethod, formData)) ? toast.success('Login sucess!') : toast.error('Login error!')
 		dialogOpen = false
 	}
 
@@ -78,9 +78,24 @@
 			</div>
 			<small>Last logged: {format(accointInfo.lastLogged, standardDisplayDateFormat)}</small>
 
-			<form class="flex flex-col gap-2" on:submit|preventDefault={(sEvent) => loginWrapper('NSEC', sEvent)}>
+			<!-- <form class="flex flex-col gap-2" on:submit|preventDefault={(sEvent) => loginWrapper('NSEC', new FormData(sEvent.currentTarget, sEvent.submitter))}>
 				<Input class="hidden" id="key" placeholder="Private key (nsec1...)" type="text" value={accointInfo.cSk} />
 				<Input class="border-black border-2" id="password" placeholder="Password" type="password" />
+				<Button type="submit">Sign in</Button>
+			</form> -->
+			<form
+				class="flex flex-col gap-2"
+				on:submit|preventDefault={(sEvent) => loginWrapper('NSEC', new FormData(sEvent.currentTarget, sEvent.submitter))}
+			>
+				<Input
+					required
+					class="border-black border-2 hidden"
+					name="key"
+					placeholder="Private key (nsec1...)"
+					type="password"
+					value={accointInfo.cSk}
+				/>
+				<Input required class="border-black border-2" name="password" placeholder="Password" type="password" />
 				<Button type="submit">Sign in</Button>
 			</form>
 			<div class="flex items-center space-x-2">

@@ -137,7 +137,7 @@ export async function loginDb(user: NDKUser) {
 	}
 }
 
-export async function login(loginMethod: BaseAccount['type'], submitEvent?: SubmitEvent, autoLogin?: boolean): Promise<boolean> {
+export async function login(loginMethod: BaseAccount['type'], formData?: FormData, autoLogin?: boolean): Promise<boolean> {
 	if (loginMethod === 'NIP07') {
 		try {
 			if (autoLogin) {
@@ -148,15 +148,14 @@ export async function login(loginMethod: BaseAccount['type'], submitEvent?: Subm
 			console.log(JSON.stringify(e))
 			return false
 		}
-	} else if (loginMethod === 'NSEC' && submitEvent) {
-		const form = submitEvent.target as HTMLFormElement
-		const keyInput = form.elements.namedItem('key') as HTMLInputElement
-		const passwordInput = form.elements.namedItem('password') as HTMLInputElement
+	} else if (loginMethod === 'NSEC' && formData) {
+		const key = `${formData.get('key')}`
+		const password = `${formData.get('password')}`
 		try {
 			if (autoLogin) {
 				localStorage.setItem('auto_login', 'true')
 			}
-			return await loginWithPrivateKey(keyInput.value, passwordInput.value)
+			return await loginWithPrivateKey(key, password)
 		} catch (e) {
 			console.log(JSON.stringify(e))
 			return false

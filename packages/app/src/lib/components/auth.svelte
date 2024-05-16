@@ -14,21 +14,22 @@
 
 	import Pattern from './Pattern.svelte'
 
-	async function loginWrapper(loginMethod: BaseAccount['type'], submitEvent?: SubmitEvent, autoLogin?: boolean) {
-		;(await login(loginMethod, submitEvent, autoLogin)) ? toast.success('Login sucess!') : toast.error('Login error!')
-		dialogOpen = false
-    
+	let checked = false
 	let authDialogOpen = false
 	let createDialogOpen = false
 	let nsec: ReturnType<(typeof nip19)['nsecEncode']> | null = null
+
+	async function loginWrapper(loginMethod: BaseAccount['type'], formData?: FormData, autoLogin?: boolean) {
+		;(await login(loginMethod, formData, autoLogin)) ? toast.success('Login sucess!') : toast.error('Login error!')
+	}
 
 	const activeTab =
 		'w-full font-bold border-b-2 border-black text-black data-[state=active]:border-b-primary data-[state=active]:text-primary'
 </script>
 
 <Dialog.Root bind:open={authDialogOpen}>
-	<Dialog.Trigger class="flex items-center cursor-pointer gap-2">
-		<Button class="p-2 bg-white"><span class="i-tdesign-view-list text-black w-6 h-6"></span></Button>
+	<Dialog.Trigger class="flex items-center cursor-pointer gap-2 w-full">
+		<span class="i-tdesign-user-1" />Log in
 	</Dialog.Trigger>
 	<Dialog.Content class="max-w-[425px] gap-0 p-0 text-black">
 		<Dialog.Header class="relative w-full bg-black text-center text-white py-8 flex items-center">
@@ -69,7 +70,7 @@
 
 				<form
 					class="flex flex-col gap-2"
-					on:submit|preventDefault={(sEvent) => loginWrapper('NSEC', new FormData(sEvent.currentTarget, sEvent.submitter))}
+					on:submit|preventDefault={(sEvent) => loginWrapper('NSEC', new FormData(sEvent.currentTarget, sEvent.submitter), checked)}
 				>
 					<Input required class="border-black border-2" name="key" placeholder="Private key (nsec1...)" type="password" />
 					<Input required class="border-black border-2" name="password" placeholder="Password" type="password" />
@@ -104,7 +105,7 @@
 						nsec = nip19.nsecEncode(key)
 						const formData = new FormData(sEvent.currentTarget, sEvent.submitter)
 						formData.append('key', nsec)
-						await login('NSEC', formData)
+						await loginWrapper('NSEC', formData)
 						authDialogOpen = false
 						createDialogOpen = true
 					}}
