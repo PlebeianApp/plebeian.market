@@ -24,8 +24,8 @@
 </script>
 
 <Dialog.Root bind:open={dialogOpen}>
-	<Dialog.Trigger class="flex items-center cursor-pointer gap-2">
-		<Button class="p-2 bg-white"><span class="i-tdesign-view-list text-black w-6 h-6"></span></Button>
+	<Dialog.Trigger class="flex items-center cursor-pointer gap-2 w-full">
+		<span class="i-tdesign-user-1" />Log in
 	</Dialog.Trigger>
 	<Dialog.Content class="max-w-[425px] gap-0 p-0 text-black">
 		<Dialog.Header class="relative w-full bg-black text-center text-white py-8 flex items-center">
@@ -75,7 +75,7 @@
 						for="terms"
 						class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
 					>
-						Keep me logged in
+						Remember me
 					</Label>
 				</div>
 				<p class="w-full text-center">

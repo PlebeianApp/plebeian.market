@@ -17,8 +17,7 @@
 	onMount(async () => {
 		const lastAccount = localStorage.getItem('last_account')
 		const autoLogin = localStorage.getItem('auto_login')
-		console.log(lastAccount, autoLogin)
-		if (lastAccount && autoLogin) {
+		if (lastAccount && autoLogin != 'false') {
 			const accountInfo = await getAccount(lastAccount)
 			if (!accountInfo) return
 			if (accountInfo.type == 'NIP07') {

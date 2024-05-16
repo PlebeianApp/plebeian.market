@@ -2,6 +2,8 @@
 	import Auth from '$lib/components/auth.svelte'
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar'
 	import { Button } from '$lib/components/ui/button/index.js'
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
+	import { logout } from '$lib/ndkLogin'
 	import { ndkActiveUser } from '$lib/stores/ndk'
 </script>
 
@@ -18,7 +20,33 @@
 		<div class="flex items-center gap-4">
 			<Button class="hidden sm:flex p-2 bg-[var(--neo-yellow)]" href="/"><span class="i-tdesign-mail text-black w-6 h-6"></span></Button>
 			<Button class="p-2 hidden sm:flex" href="/"><span class="i-tdesign-cart text-black w-6 h-6"></span></Button>
-			<Auth />
+			<DropdownMenu.Root>
+				<DropdownMenu.Trigger>
+					<Button class="p-2 bg-white"><span class="i-tdesign-view-list text-black w-6 h-6"></span></Button>
+				</DropdownMenu.Trigger>
+				<DropdownMenu.Content>
+					<DropdownMenu.Group>
+						<DropdownMenu.Label>
+							{#if !$ndkActiveUser}
+								<Auth />
+							{:else}
+								My account
+							{/if}
+						</DropdownMenu.Label>
+						{#if $ndkActiveUser}
+							<DropdownMenu.Separator />
+							<DropdownMenu.Item>
+								<a href={`/p/${$ndkActiveUser.pubkey}`} class="inline-flex items-center gap-2"><span class="i-tdesign-user-1" />Profile</a>
+							</DropdownMenu.Item>
+							<DropdownMenu.Item>
+								<Button variant="destructive" class="inline-flex items-center gap-2" on:click={() => logout()}
+									><span class="i-tdesign-user-arrow-right"></span>Log out</Button
+								>
+							</DropdownMenu.Item>
+						{/if}
+					</DropdownMenu.Group>
+				</DropdownMenu.Content>
+			</DropdownMenu.Root>
 			{#if $ndkActiveUser}
 				<Avatar>
 					<AvatarImage src={$ndkActiveUser.profile?.image} alt="pfp" />
