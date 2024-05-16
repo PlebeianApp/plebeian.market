@@ -23,7 +23,7 @@ export const getAllUsers = async (filter: UsersFilter = usersFilterSchema.parse(
 		return usersResult
 	}
 
-	error(404, 'Not found')
+	error(404, 'User not found')
 }
 
 export const getUserById = async (id: string): Promise<User> => {
