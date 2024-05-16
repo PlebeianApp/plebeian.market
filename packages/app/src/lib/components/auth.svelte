@@ -14,7 +14,7 @@
 
 	let authDialogOpen = false
 	let createDialogOpen = false
-	let nsec: ReturnType<typeof nip19['nsecEncode']> | null = null
+	let nsec: ReturnType<(typeof nip19)['nsecEncode']> | null = null
 
 	async function login(loginMethod: BaseAccount['type'], formData?: FormData) {
 		let result: boolean
@@ -145,6 +145,6 @@
 			<code class="truncate w-3/4">{nsec}</code>
 			<span class="i-tdesign-copy" style="width: 1rem; height: 1rem; color: black;"></span>
 		</Button>
-		<Button on:click={() => createDialogOpen = false} class="w-full font-bold">I understand, and I saved my key</Button>
+		<Button on:click={() => (createDialogOpen = false)} class="w-full font-bold">I understand, and I saved my key</Button>
 	</Dialog.Content>
 </Dialog.Root>
