@@ -107,7 +107,6 @@ export async function loginLocalDb(userPk: string, loginMethod: BaseAccount['typ
 			await updateAccount(userPk, { lastLogged: +new Date() })
 		}
 		localStorage.setItem('last_account', userPk)
-		localStorage.setItem('auto_login', 'true')
 		return true
 	} catch (e) {
 		throw Error(JSON.stringify(e))
@@ -138,9 +137,12 @@ export async function loginDb(user: NDKUser) {
 	}
 }
 
-export async function login(loginMethod: BaseAccount['type'], submitEvent?: SubmitEvent): Promise<boolean> {
+export async function login(loginMethod: BaseAccount['type'], submitEvent?: SubmitEvent, autoLogin?: boolean): Promise<boolean> {
 	if (loginMethod === 'NIP07') {
 		try {
+			if (autoLogin) {
+				localStorage.setItem('auto_login', 'true')
+			}
 			return await loginWithExtension()
 		} catch (e) {
 			console.log(JSON.stringify(e))
@@ -151,6 +153,9 @@ export async function login(loginMethod: BaseAccount['type'], submitEvent?: Subm
 		const keyInput = form.elements.namedItem('key') as HTMLInputElement
 		const passwordInput = form.elements.namedItem('password') as HTMLInputElement
 		try {
+			if (autoLogin) {
+				localStorage.setItem('auto_login', 'true')
+			}
 			return await loginWithPrivateKey(keyInput.value, passwordInput.value)
 		} catch (e) {
 			console.log(JSON.stringify(e))

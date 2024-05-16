@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button/index.js'
+	import { Checkbox } from '$lib/components/ui/checkbox/index.js'
 	import * as Dialog from '$lib/components/ui/dialog/index.js'
 	import { Input } from '$lib/components/ui/input/index.js'
+	import { Label } from '$lib/components/ui/label/index.js'
 	import { Separator } from '$lib/components/ui/separator'
 	import * as Tabs from '$lib/components/ui/tabs/index.js'
 	import { login } from '$lib/ndkLogin'
@@ -10,9 +12,11 @@
 
 	import Pattern from './Pattern.svelte'
 
+	let checked = false
+
 	let dialogOpen = false
-	async function loginWrapper(loginMethod: BaseAccount['type'], submitEvent?: SubmitEvent) {
-		;(await login(loginMethod, submitEvent)) ? toast.success('Login sucess!') : toast.error('Login error!')
+	async function loginWrapper(loginMethod: BaseAccount['type'], submitEvent?: SubmitEvent, autoLogin?: boolean) {
+		;(await login(loginMethod, submitEvent, autoLogin)) ? toast.success('Login sucess!') : toast.error('Login error!')
 		dialogOpen = false
 	}
 	const activeTab =
@@ -38,7 +42,7 @@
 			</Tabs.List>
 			<Tabs.Content value="join" class="flex flex-col gap-2">
 				<Button
-					on:click={() => loginWrapper('NIP07')}
+					on:click={() => loginWrapper('NIP07', undefined, checked)}
 					variant="outline"
 					class="w-full border-black border-2 font-bold flex items-center gap-1"
 					><span class="text-black text-md">Sign in with extension</span>
@@ -59,11 +63,21 @@
 					<span> OR </span>
 					<Separator class="w-1/2" />
 				</div>
-				<form class="flex flex-col gap-2" on:submit|preventDefault={(sEvent) => loginWrapper('NSEC', sEvent)}>
+				<form class="flex flex-col gap-2" on:submit|preventDefault={(sEvent) => loginWrapper('NSEC', sEvent, checked)}>
 					<Input class="border-black border-2" id="key" placeholder="Private key (nsec1...)" type="password" />
 					<Input class="border-black border-2" id="password" placeholder="Password" type="password" />
 					<Button type="submit">Sign in</Button>
 				</form>
+				<div class="flex items-center space-x-2">
+					<Checkbox id="terms" bind:checked aria-labelledby="terms-label" />
+					<Label
+						id="terms-label"
+						for="terms"
+						class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+					>
+						Keep me logged in
+					</Label>
+				</div>
 				<p class="w-full text-center">
 					Don’t have an account?
 					<Tabs.Trigger value="create" class="underline cursor-pointer p-0">Sign up</Tabs.Trigger>
@@ -77,7 +91,6 @@
 					>.
 				</span>
 				<Button type="submit">Generate an account</Button>
-
 				<p class="w-full text-center">
 					Already have an account?
 					<Tabs.Trigger value="create" class="underline cursor-pointer p-0">Sign in</Tabs.Trigger>
