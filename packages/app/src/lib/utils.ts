@@ -2,7 +2,6 @@ import type { NDKKind, NDKTag, NDKUserProfile, NostrEvent } from '@nostr-dev-kit
 import type { ClassValue } from 'clsx'
 import type { VerifiedEvent } from 'nostr-tools'
 import type { TransitionConfig } from 'svelte/transition'
-import { browser } from '$app/environment'
 import { clsx } from 'clsx'
 import { cubicOut } from 'svelte/easing'
 import { get } from 'svelte/store'
@@ -134,7 +133,7 @@ export const bytesToHex = (byteArray: Uint8Array) => {
 
 export async function fetchUserProfile(pk: string): Promise<NDKUserProfile | undefined> {
 	try {
-		if (browser) {
+		if (typeof window !== 'undefined') {
 			const ndk = get(ndkStore)
 			const ndkUser = ndk.getUser({ pubkey: pk })
 
