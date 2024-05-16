@@ -1,14 +1,16 @@
-import type { NDKKind, NDKTag, NostrEvent } from '@nostr-dev-kit/ndk'
+import type { NDKKind, NDKTag, NDKUserProfile, NostrEvent } from '@nostr-dev-kit/ndk'
 import type { ClassValue } from 'clsx'
 import type { VerifiedEvent } from 'nostr-tools'
 import type { TransitionConfig } from 'svelte/transition'
-import { error } from '@sveltejs/kit'
+import { browser } from '$app/environment'
 import { clsx } from 'clsx'
 import { cubicOut } from 'svelte/easing'
+import { get } from 'svelte/store'
 import { twMerge } from 'tailwind-merge'
 
 import type { EventCoordinates } from './interfaces'
 import { numSatsInBtc } from './constants'
+import ndkStore from './stores/ndk'
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs))
@@ -128,4 +130,23 @@ export const bytesToHex = (byteArray: Uint8Array) => {
 	return Array.from(byteArray, function (byte) {
 		return ('0' + (byte & 0xff).toString(16)).slice(-2)
 	}).join('')
+}
+
+export async function fetchUserProfile(pk: string): Promise<NDKUserProfile | undefined> {
+	try {
+		if (browser) {
+			const ndk = get(ndkStore)
+			const ndkUser = ndk.getUser({ pubkey: pk })
+
+			await ndkUser.fetchProfile({
+				closeOnEose: true,
+				groupable: false,
+				groupableDelay: 200,
+			})
+			return ndkUser.profile as NDKUserProfile
+		}
+	} catch (error) {
+		console.error(error)
+		throw error
+	}
 }

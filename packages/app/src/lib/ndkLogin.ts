@@ -3,7 +3,6 @@ import type { BaseAccount } from '$lib/stores/session'
 import { NDKNip07Signer, NDKPrivateKeySigner } from '@nostr-dev-kit/ndk'
 import { ndk, ndkActiveUser } from '$lib/stores/ndk'
 import { addAccount, getAccount, updateAccount } from '$lib/stores/session'
-import { getPublicKey } from 'nostr-tools'
 import { decode } from 'nostr-tools/nip19'
 import { decrypt, encrypt } from 'nostr-tools/nip49'
 
@@ -137,4 +136,26 @@ export async function loginDb(user: NDKUser) {
 		}).then((r) => r.json())
 		console.log(POST)
 	}
+}
+
+export async function login(loginMethod: BaseAccount['type'], submitEvent?: SubmitEvent): Promise<boolean> {
+	if (loginMethod === 'NIP07') {
+		try {
+			return await loginWithExtension()
+		} catch (e) {
+			console.log(JSON.stringify(e))
+			return false
+		}
+	} else if (loginMethod === 'NSEC' && submitEvent) {
+		const form = submitEvent.target as HTMLFormElement
+		const keyInput = form.elements.namedItem('key') as HTMLInputElement
+		const passwordInput = form.elements.namedItem('password') as HTMLInputElement
+		try {
+			return await loginWithPrivateKey(keyInput.value, passwordInput.value)
+		} catch (e) {
+			console.log(JSON.stringify(e))
+			return false
+		}
+	}
+	return false
 }

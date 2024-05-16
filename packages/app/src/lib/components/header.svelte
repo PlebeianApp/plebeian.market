@@ -22,7 +22,7 @@
 			{#if $ndkActiveUser}
 				<Avatar>
 					<AvatarImage src={$ndkActiveUser.profile?.image} alt="pfp" />
-					<AvatarFallback>{$ndkActiveUser.profile?.name ?? $ndkActiveUser.profile?.displayName}</AvatarFallback>
+					<AvatarFallback>{$ndkActiveUser.profile?.name ?? $ndkActiveUser.profile?.displayName ?? ''}</AvatarFallback>
 				</Avatar>
 			{/if}
 		</div>

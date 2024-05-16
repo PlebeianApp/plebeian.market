@@ -4,42 +4,17 @@
 	import { Input } from '$lib/components/ui/input/index.js'
 	import { Separator } from '$lib/components/ui/separator'
 	import * as Tabs from '$lib/components/ui/tabs/index.js'
-	import { loginWithExtension, loginWithPrivateKey } from '$lib/ndkLogin'
+	import { login } from '$lib/ndkLogin'
 	import { type BaseAccount } from '$lib/stores/session'
 	import { toast } from 'svelte-sonner'
 
 	import Pattern from './Pattern.svelte'
 
 	let dialogOpen = false
-
-	async function login(loginMethod: BaseAccount['type'], submitEvent?: SubmitEvent) {
-		let result: boolean
-		if (loginMethod == 'NIP07') {
-			try {
-				result = await loginWithExtension()
-				dialogOpen = false
-				result ? toast.success('Login sucess!') : toast.error('Login error!')
-			} catch (e) {
-				dialogOpen = false
-				toast.error('Login error!')
-				throw Error('No loging')
-			}
-		} else if (loginMethod == 'NSEC' && submitEvent) {
-			const form = submitEvent.target as HTMLFormElement
-			const keyInput = form.elements.namedItem('key') as HTMLInputElement
-			const passwordInput = form.elements.namedItem('password') as HTMLInputElement
-			try {
-				result = await loginWithPrivateKey(keyInput.value, passwordInput.value)
-				dialogOpen = false
-				result ? toast.success('Login sucess!') : toast.error('Login error!')
-			} catch (e) {
-				dialogOpen = false
-				toast.error('Login error!')
-				throw Error('No loging')
-			}
-		}
+	async function loginWrapper(loginMethod: BaseAccount['type'], submitEvent?: SubmitEvent) {
+		;(await login(loginMethod, submitEvent)) ? toast.success('Login sucess!') : toast.error('Login error!')
+		dialogOpen = false
 	}
-
 	const activeTab =
 		'w-full font-bold border-b-2 border-black text-black data-[state=active]:border-b-primary data-[state=active]:text-primary'
 </script>
@@ -62,7 +37,10 @@
 				<Tabs.Trigger value="create" class={activeTab}>Sign up</Tabs.Trigger>
 			</Tabs.List>
 			<Tabs.Content value="join" class="flex flex-col gap-2">
-				<Button on:click={() => login('NIP07')} variant="outline" class="w-full border-black border-2 font-bold flex items-center gap-1"
+				<Button
+					on:click={() => loginWrapper('NIP07')}
+					variant="outline"
+					class="w-full border-black border-2 font-bold flex items-center gap-1"
 					><span class="text-black text-md">Sign in with extension</span>
 					<span class="i-mdi-puzzle-outline text-black w-6 h-6"> </span></Button
 				>
@@ -81,7 +59,7 @@
 					<span> OR </span>
 					<Separator class="w-1/2" />
 				</div>
-				<form class="flex flex-col gap-2" on:submit|preventDefault={(sEvent) => login('NSEC', sEvent)}>
+				<form class="flex flex-col gap-2" on:submit|preventDefault={(sEvent) => loginWrapper('NSEC', sEvent)}>
 					<Input class="border-black border-2" id="key" placeholder="Private key (nsec1...)" type="password" />
 					<Input class="border-black border-2" id="password" placeholder="Password" type="password" />
 					<Button type="submit">Sign in</Button>
