@@ -29,8 +29,8 @@
 				throw Error('No loging')
 			}
 		} else if (loginMethod == 'NSEC' && formData) {
-			const key = formData.get('key')!.toString()
-			const password = formData.get('password')!.toString()
+			const key = `${formData.get('key')}`
+			const password = `${formData.get('password')}`
 			try {
 				result = await loginWithPrivateKey(key, password)
 				authDialogOpen = false
