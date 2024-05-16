@@ -9,7 +9,7 @@ import { getEventCoordinates } from '$lib/utils'
 import { format } from 'date-fns'
 
 import type { Stall } from '@plebeian/database'
-import { db, eq, orders, products, sql, stalls, users } from '@plebeian/database'
+import { db, eq, orders, products, shipping, shippingZones, sql, stalls, users } from '@plebeian/database'
 
 import { stallEventSchema } from '../../schema/nostr-events'
 
@@ -243,4 +243,18 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
 	}
 
 	error(500, 'Failed to update product')
+}
+
+export const getShippingByStallId = async (stallId: string) => {
+	const shippingResult = await db
+		.select()
+		.from(shipping)
+		.where(eq(shipping.stallId, stallId))
+		.leftJoin(shippingZones, eq(shipping.id, shippingZones.shippingId))
+		.execute()
+	if (shippingResult) {
+		return shippingResult
+	}
+
+	error(404, 'Not found')
 }

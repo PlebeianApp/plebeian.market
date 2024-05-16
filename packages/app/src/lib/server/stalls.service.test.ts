@@ -1,7 +1,7 @@
 import type { NostrEvent } from '@nostr-dev-kit/ndk'
 import NDK, { NDKEvent, NDKPrivateKeySigner } from '@nostr-dev-kit/ndk'
 import { KindProducts, KindStalls } from '$lib/constants'
-import { createStall, getAllStalls, getStallById, getStallsByUserId, updateStall } from '$lib/server/stalls.service'
+import { createStall, getAllStalls, getShippingByStallId, getStallById, getStallsByUserId, updateStall } from '$lib/server/stalls.service'
 import { slugify } from '$lib/utils'
 import { describe, expect, it } from 'vitest'
 
@@ -40,6 +40,14 @@ describe('stalls service', () => {
 		const product = await getStallById(stalls[0].id)
 
 		expect(product).toBeDefined()
+	})
+
+	it('gets shipping by stall id', async () => {
+		const [stalls] = await getAllStalls()
+
+		const shipping = await getShippingByStallId(stalls.id)
+
+		expect(shipping).toBeDefined()
 	})
 
 	it('creates a stalls', async () => {
