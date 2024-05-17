@@ -2,7 +2,6 @@ import type { NostrEvent } from 'nostr-tools'
 import NDK, { NDKEvent, NDKPrivateKeySigner } from '@nostr-dev-kit/ndk'
 import { KindAuctionProduct } from '$lib/constants'
 import { getStallsByUserId } from '$lib/server/stalls.service'
-import { slugify } from '$lib/utils'
 import { describe, expect, it } from 'vitest'
 
 import { createId, devUser1 } from '@plebeian/database'
@@ -60,7 +59,7 @@ describe('auctions service', () => {
 			images: ['http://example.com/image1.jpg', 'http://example.com/image2.jpg'],
 			extraCost: '33',
 			startPrice: 133,
-			start_date: Math.floor(Date.now() / 1000),
+			start_date: Math.floor(Date.now()),
 			starting_bid: 100,
 			duration: 60 * 60 * 24,
 			specs: [
@@ -79,8 +78,9 @@ describe('auctions service', () => {
 			pubkey: devUser1.pk,
 			content: JSON.stringify(evContent),
 			created_at: Math.floor(Date.now() / 1000),
-			tags: [['d', `${slugify(evContent.name)}${identifier}`]],
+			tags: [['d', identifier]],
 		})
+		console.log(newEvent.created_at)
 		await newEvent.sign(skSigner)
 		const auction = await createAuction(newEvent as NostrEvent, 'inactive')
 		expect(auction).toStrictEqual({
@@ -90,7 +90,7 @@ describe('auctions service', () => {
 			endDate: expect.any(Date),
 			extraCost: expect.any(Number),
 			id: expect.any(String),
-			identifier: `${slugify(evContent.name)}${identifier}`,
+			identifier: identifier,
 			productName: 'Hello Auction',
 			stallId: stall.id,
 			startDate: expect.any(Date),
@@ -115,7 +115,7 @@ describe('auctions service', () => {
 			kind: KindAuctionProduct,
 			pubkey: devUser1.pk,
 			content: JSON.stringify(evContent),
-			created_at: Math.floor(Date.now() / 1000),
+			created_at: Math.floor(Date.now()),
 			tags: [['d', targetAuction.id.split(':')[2]]],
 		})
 

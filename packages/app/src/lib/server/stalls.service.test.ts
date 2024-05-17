@@ -1,8 +1,7 @@
 import type { NostrEvent } from '@nostr-dev-kit/ndk'
 import NDK, { NDKEvent, NDKPrivateKeySigner } from '@nostr-dev-kit/ndk'
 import { KindProducts, KindStalls } from '$lib/constants'
-import { createStall, getAllStalls, getShippingByStallId, getStallById, getStallsByUserId, updateStall } from '$lib/server/stalls.service'
-import { slugify } from '$lib/utils'
+import { createStall, getAllStalls, getStallById, getStallsByUserId, updateStall } from '$lib/server/stalls.service'
 import { describe, expect, it } from 'vitest'
 
 import { createId, devUser1 } from '@plebeian/database'
@@ -42,14 +41,6 @@ describe('stalls service', () => {
 		expect(product).toBeDefined()
 	})
 
-	it('gets shipping by stall id', async () => {
-		const [stalls] = await getAllStalls()
-
-		const shipping = await getShippingByStallId(stalls.id)
-
-		expect(shipping).toBeDefined()
-	})
-
 	it('creates a stalls', async () => {
 		const skSigner = new NDKPrivateKeySigner(devUser1.sk)
 		const identifier = createId()
@@ -72,12 +63,12 @@ describe('stalls service', () => {
 			kind: KindStalls,
 			pubkey: devUser1.pk,
 			content: JSON.stringify(evContent),
-			created_at: Math.floor(Date.now() / 1000),
-			tags: [['d', `${slugify(evContent.name)}${identifier}`]],
+			created_at: Date.now(),
+			tags: [['d', identifier]],
 		})
 		await newEvent.sign(skSigner)
-		const product = await createStall(newEvent as NostrEvent)
-		expect(product).toStrictEqual({
+		const stall = await createStall(newEvent as NostrEvent)
+		expect(stall).toStrictEqual({
 			id: expect.any(String),
 			createDate: expect.any(String),
 			currency: 'USD',
@@ -98,7 +89,7 @@ describe('stalls service', () => {
 			kind: KindStalls,
 			pubkey: devUser1.pk,
 			content: JSON.stringify(evContent),
-			created_at: Math.floor(Date.now() / 1000),
+			created_at: Math.floor(Date.now()),
 			tags: [['d', targetStall.identifier]],
 		}) as NostrEvent
 

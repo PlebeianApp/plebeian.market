@@ -9,7 +9,7 @@ import { getEventCoordinates } from '$lib/utils'
 import { format } from 'date-fns'
 
 import type { Stall } from '@plebeian/database'
-import { db, eq, orders, products, shipping, shippingZones, sql, stalls, users } from '@plebeian/database'
+import { db, eq, orders, products, sql, stalls, users } from '@plebeian/database'
 
 import { stallEventSchema } from '../../schema/nostr-events'
 
@@ -176,17 +176,15 @@ export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall>
 
 	const insertStall: Stall = {
 		id: eventCoordinates.coordinates,
-		createdAt: new Date(stallEvent.created_at!),
-		updatedAt: new Date(),
+		createdAt: new Date(stallEvent.created_at! * 1000),
+		updatedAt: new Date(stallEvent.created_at! * 1000),
 		name: parsedProduct.name,
 		identifier: eventCoordinates.tagD,
 		description: parsedProduct.description as string,
 		currency: parsedProduct.currency,
 		userId: stallEvent.pubkey,
 	}
-
 	const [stallResult] = await db.insert(stalls).values(insertStall).returning()
-
 	if (!stallResult) {
 		error(404, 'Not found')
 	}
@@ -225,7 +223,6 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
 	const [stallResult] = await db
 		.update(stalls)
 		.set({
-			updatedAt: new Date(),
 			...insertStall,
 		})
 		.where(eq(stalls.id, stallId))
@@ -243,18 +240,4 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
 	}
 
 	error(500, 'Failed to update product')
-}
-
-export const getShippingByStallId = async (stallId: string) => {
-	const shippingResult = await db
-		.select()
-		.from(shipping)
-		.where(eq(shipping.stallId, stallId))
-		.leftJoin(shippingZones, eq(shipping.id, shippingZones.shippingId))
-		.execute()
-	if (shippingResult) {
-		return shippingResult
-	}
-
-	error(404, 'Not found')
 }

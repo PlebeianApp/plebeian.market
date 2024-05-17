@@ -13,6 +13,7 @@ import {
 	PAYMENT_DETAILS_METHOD,
 	PRODUCT_META,
 	PRODUCT_TYPES,
+	USER_TRUST_LEVEL,
 } from './constants'
 import { db } from './database'
 import { devUser1, devUser2, devUser3, devUser4, devUser5, popularCurrencies } from './fixtures'
@@ -70,6 +71,7 @@ const main = async () => {
 				website: faker.internet.url(),
 				zapService: faker.internet.url(),
 				lastLogin: faker.date.future(),
+				trustLevel: faker.helpers.arrayElement(Object.values(USER_TRUST_LEVEL))
 			}) as User,
 	)
 
@@ -127,35 +129,41 @@ const main = async () => {
 		})
 	})
 
-	const shippingData = userStalls.map((stallsByUser) => {
+	const shippingData = userStalls.flatMap((stallsByUser) => {
 		return stallsByUser.map((stall) => {
+		const shippingMethods = randomLengthArrayFromTo(1, 3).map(() => {
 			return {
-				id: createId(),
-				stallId: stall.id,
-				userId: stall.userId,
-				name: faker.commerce.productName(),
-				shippingMethod: faker.helpers.arrayElement(['standard', 'express', 'overnight']),
-				shippingDetails: faker.commerce.productDescription(),
-				baseCost: faker.finance.amount(),
-				isDefault: faker.datatype.boolean(),
-				createdAt: faker.date.recent(),
-				updatedAt: faker.date.future(),
+			id: createId(),
+			stallId: stall.id,
+			userId: stall.userId,
+			name: faker.commerce.productName(),
+			shippingMethod: faker.helpers.arrayElement(['standard', 'express', 'overnight']),
+			shippingDetails: faker.commerce.productDescription(),
+			baseCost: faker.finance.amount(),
+			isDefault: faker.datatype.boolean(),
+			createdAt: faker.date.recent(),
+			updatedAt: faker.date.future(),
 			} as Shipping
 		})
-	})
-
-	const shippingZonesData = shippingData.map((shippingByStall) => {
-		return shippingByStall.map((shipping) => {
-			return {
-				id: createId(),
-				shippingId: shipping.id,
-				stallId: shipping.stallId,
-				regionCode: faker.location.countryCode(),
-				countryCode: faker.location.countryCode(),
-			} as ShippingZone
+		return shippingMethods
 		})
 	})
-
+	
+	const shippingZonesData = shippingData.flatMap((shippingMethods) => {
+		return shippingMethods.map((shipping) => {
+		const shippingZones = randomLengthArrayFromTo(2, 4).map(() => {
+			return {
+			id: createId(),
+			shippingId: shipping.id,
+			stallId: shipping.stallId,
+			regionCode: faker.location.countryCode(),
+			countryCode: faker.location.countryCode(),
+			} as ShippingZone
+		})
+		return shippingZones
+		})
+	})
+	
 	const auctionsData = userStalls.map((stallByUser) => {
 		return stallByUser.map((stall) => {
 			const identifier = createId()
@@ -246,14 +254,25 @@ const main = async () => {
 		})
 	})
 
-	const categoryData = [
-		{
-			id: createId(),
-			name: faker.commerce.department(),
-			description: faker.commerce.productDescription(),
-			parentId: null,
-		},
-	] as Category[]
+	const categoryData = randomLengthArrayFromTo(5, 10).map(() => {
+		const category: Category = {
+		  id: createId(),
+		  name: faker.commerce.department(),
+		  description: faker.commerce.productDescription(),
+		  parentId: null,
+		}	  
+		return category
+	}) as Category[]
+
+	const subCategoryData = randomLengthArrayFromTo(2, 5).map(() => {
+		const category: Category = {
+		  id: createId(),
+		  name: faker.commerce.department(),
+		  description: faker.commerce.productDescription(),
+		  parentId: faker.helpers.arrayElement(categoryData).id,
+		}	  
+		return category
+	}) as Category[]
 
 	const productCategoryData = productData.flat(2).map(
 		(product) =>
@@ -430,6 +449,7 @@ const main = async () => {
 			{ table: dbSchema.auctions, data: auctionsData.flat(2) },
 			{ table: dbSchema.bids, data: bidsData.flat(2) },
 			{ table: dbSchema.categories, data: categoryData },
+			{ table: dbSchema.categories, data: subCategoryData },
 			{ table: dbSchema.products, data: productData.flat(2) },
 			{ table: dbSchema.metaTypes, data: metaTypeData.flat(1) },
 			{ table: dbSchema.productMeta, data: productMetaData.flat(1) },
