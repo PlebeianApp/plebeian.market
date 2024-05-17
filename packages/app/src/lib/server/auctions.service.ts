@@ -91,12 +91,11 @@ export const createAuction = async (auctionEvent: NostrEvent, auctionStatus: Auc
 		error(400, 'Stall not found')
 	}
 
-	const startDate = parsedAuction.start_date ? new Date(parsedAuction.start_date * 1000) : null
-
+	const startDate = parsedAuction.start_date ? new Date(parsedAuction.start_date) : null
 	const insertAuction: Auction = {
 		id: eventCoordinates.coordinates,
-		createdAt: new Date(),
-		updatedAt: new Date(),
+		createdAt: new Date(auctionEvent.created_at! * 1000),
+		updatedAt: new Date(auctionEvent.created_at! * 1000),
 		identifier: eventCoordinates.tagD,
 		stallId: parsedAuction.stall_id,
 		userId: auctionEvent.pubkey,
@@ -113,8 +112,8 @@ export const createAuction = async (auctionEvent: NostrEvent, auctionStatus: Auc
 
 	const insertSpecs: ProductMeta[] | undefined = parsedAuction.specs?.map((spec) => ({
 		id: createId(),
-		createdAt: new Date(auctionEvent.created_at!),
-		updatedAt: new Date(),
+		createdAt: new Date(auctionEvent.created_at! * 1000),
+		updatedAt: new Date(auctionEvent.created_at! * 1000),
 		auctionId: eventCoordinates.coordinates,
 		productId: null,
 		metaName: PRODUCT_META.SPEC.value,
@@ -126,7 +125,7 @@ export const createAuction = async (auctionEvent: NostrEvent, auctionStatus: Auc
 	}))
 
 	const insertProductImages: ProductImage[] | undefined = parsedAuction.images?.map((imageUrl, index) => ({
-		createdAt: new Date(),
+		createdAt: new Date(auctionEvent.created_at! * 1000),
 		auctionId: eventCoordinates.coordinates,
 		productId: null,
 		imageUrl,
@@ -150,7 +149,7 @@ export const updateAuction = async (auctionId: string, auctionEvent: NostrEvent)
 	const auctionEventContent = JSON.parse(auctionEvent.content)
 	const parsedAuction = auctionEventSchema.partial().parse({ id: auctionId, ...auctionEventContent })
 	const eventCoordinates = getEventCoordinates(auctionEvent)
-	const startDate = parsedAuction?.start_date ? new Date(parsedAuction.start_date) : new Date()
+	const startDate = parsedAuction?.start_date ? new Date(parsedAuction.start_date * 1000) : new Date()
 
 	const extraCost = (parsedAuction.shipping && parsedAuction.shipping[0].cost) || 0
 
@@ -162,7 +161,6 @@ export const updateAuction = async (auctionId: string, auctionEvent: NostrEvent)
 
 	const insertProduct: Partial<Auction> = {
 		id: eventCoordinates.coordinates,
-		createdAt: new Date(),
 		updatedAt: new Date(),
 		stallId: parsedAuction.stall_id,
 		userId: auctionEvent.pubkey,

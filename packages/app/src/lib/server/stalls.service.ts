@@ -176,17 +176,15 @@ export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall>
 
 	const insertStall: Stall = {
 		id: eventCoordinates.coordinates,
-		createdAt: new Date(stallEvent.created_at!),
-		updatedAt: new Date(),
+		createdAt: new Date(stallEvent.created_at! * 1000),
+		updatedAt: new Date(stallEvent.created_at! * 1000),
 		name: parsedProduct.name,
 		identifier: eventCoordinates.tagD,
 		description: parsedProduct.description as string,
 		currency: parsedProduct.currency,
 		userId: stallEvent.pubkey,
 	}
-
 	const [stallResult] = await db.insert(stalls).values(insertStall).returning()
-
 	if (!stallResult) {
 		error(404, 'Not found')
 	}
@@ -225,7 +223,6 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
 	const [stallResult] = await db
 		.update(stalls)
 		.set({
-			updatedAt: new Date(),
 			...insertStall,
 		})
 		.where(eq(stalls.id, stallId))

@@ -120,8 +120,8 @@ export const createProduct = async (productEvent: NostrEvent) => {
 
 	const insertProduct: Product = {
 		id: eventCoordinates.coordinates,
-		createdAt: new Date(productEvent.created_at!),
-		updatedAt: new Date(),
+		createdAt: new Date(productEvent.created_at! * 1000),
+		updatedAt: new Date(productEvent.created_at! * 1000),
 		identifier: eventCoordinates.tagD,
 		productName: parsedProduct.name,
 		description: parsedProduct.description as string,
@@ -136,8 +136,8 @@ export const createProduct = async (productEvent: NostrEvent) => {
 	}
 	const insertSpecs: ProductMeta[] | undefined = parsedProduct.specs?.map((spec) => ({
 		id: createId(),
-		createdAt: new Date(productEvent.created_at!),
-		updatedAt: new Date(),
+		createdAt: new Date(productEvent.created_at! * 1000),
+		updatedAt: new Date(productEvent.created_at! * 1000),
 		productId: eventCoordinates.coordinates,
 		auctionId: null,
 		metaName: PRODUCT_META.SPEC.value,
@@ -149,7 +149,7 @@ export const createProduct = async (productEvent: NostrEvent) => {
 	}))
 
 	const insertProductImages: ProductImage[] | undefined = parsedProduct.images?.map((imageUrl, index) => ({
-		createdAt: new Date(),
+		createdAt: new Date(productEvent.created_at! * 1000),
 		productId: eventCoordinates.coordinates,
 		auctionId: null,
 		imageUrl,
@@ -175,6 +175,7 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 	const insertProduct: Partial<Product> = {
 		id: parsedProduct.id,
 		description: parsedProduct?.description as string,
+		updatedAt: new Date(),
 		currency: parsedProduct?.currency,
 		price: parsedProduct?.price?.toString(),
 		extraCost: parsedProduct?.shipping && parsedProduct?.shipping[0].cost.toString(),
@@ -187,7 +188,6 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 	const productResult = await db
 		.update(products)
 		.set({
-			updatedAt: new Date(),
 			...insertProduct,
 		})
 		.where(eq(products.id, productId))

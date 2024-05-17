@@ -1,7 +1,6 @@
 import NDK, { NDKEvent, NDKKind, NDKPrivateKeySigner } from '@nostr-dev-kit/ndk'
 import { KindProducts } from '$lib/constants'
 import { getAllStalls } from '$lib/server/stalls.service'
-import { slugify } from '$lib/utils'
 import { describe, expect, it } from 'vitest'
 
 import { createId, devUser1 } from '@plebeian/database'
@@ -56,7 +55,7 @@ describe('/products', () => {
 			kind: KindProducts,
 			pubkey: devUser1.pk,
 			content: JSON.stringify(evContent),
-			created_at: Math.floor(Date.now() / 1000),
+			created_at: Math.floor(Date.now()),
 			tags: [['d', identifier]],
 		})
 

@@ -43,9 +43,9 @@ export const createBid = async (auctionId: string, bidEvent: NostrEvent): Promis
 	const parsedBid = bidEventSchema.parse(bidEventContent)
 
 	const insertBid: Bid = {
-		id: createId(),
-		createdAt: new Date(bidEvent.created_at!),
-		updatedAt: new Date(),
+		id: bidEvent.id!,
+		createdAt: new Date(bidEvent.created_at! * 1000),
+		updatedAt: new Date(bidEvent.created_at! * 1000),
 		userId: bidEvent.pubkey,
 		bidAmount: parsedBid.toString(),
 		auctionId,

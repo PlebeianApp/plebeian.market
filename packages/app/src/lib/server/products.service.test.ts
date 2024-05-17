@@ -2,7 +2,6 @@ import type { NostrEvent } from 'nostr-tools'
 import NDK, { NDKEvent, NDKPrivateKeySigner } from '@nostr-dev-kit/ndk'
 import { KindProducts } from '$lib/constants'
 import { getStallsByUserId } from '$lib/server/stalls.service'
-import { slugify } from '$lib/utils'
 import { describe, expect, it } from 'vitest'
 
 import type { Product } from '@plebeian/database'
@@ -114,8 +113,8 @@ describe('products service', () => {
 			kind: KindProducts,
 			pubkey: devUser1.pk,
 			content: JSON.stringify(evContent),
-			created_at: Math.floor(Date.now() / 1000),
-			tags: [['d', `${slugify(evContent.name)}${createId()}`]],
+			created_at: Math.floor(Date.now()),
+			tags: [['d', createId()]],
 		})
 		await newEvent.sign(skSigner)
 		const product = await createProduct(newEvent as NostrEvent)
@@ -143,7 +142,7 @@ describe('products service', () => {
 			kind: KindProducts,
 			pubkey: devUser1.pk,
 			content: JSON.stringify(evContent),
-			created_at: Math.floor(Date.now() / 1000),
+			created_at: Math.floor(Date.now()),
 			tags: [['d', targetProduct.id.split(':')[2]]],
 		})
 
