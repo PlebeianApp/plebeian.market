@@ -1,11 +1,13 @@
 <script lang="ts">
 	import ProductItem from '$lib/components/product/item.svelte'
+	import * as Accordion from '$lib/components/ui/accordion'
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar'
+	import { Badge } from '$lib/components/ui/badge'
 
 	import type { PageData } from './$types'
 
 	export let data: PageData
-	$: ({ stall, user } = data)
+	$: ({ stall, user, zones } = data)
 </script>
 
 <div class="flex min-h-screen w-full flex-col bg-muted/40">
@@ -23,6 +25,22 @@
 				</section>
 				<h1>{stall.name}</h1>
 				<p class="text-2xl">{stall.description}</p>
+
+				<Accordion.Root class="w-full sm:max-w-sm">
+					<Accordion.Item value="item-1">
+						<Accordion.Trigger>More info</Accordion.Trigger>
+						<Accordion.Content>
+							<div class=" flex flex-col gap-2 items-start">
+								<span>Shipping zones</span>
+								<section class=" flex gap-2 flex-wrap">
+									{#each zones as zone}
+										<Badge variant="secondary">{zone.region}</Badge>
+									{/each}
+								</section>
+							</div>
+						</Accordion.Content>
+					</Accordion.Item>
+				</Accordion.Root>
 			</div>
 			<div class="px-4 py-20 lg:px-12">
 				<div class="container">

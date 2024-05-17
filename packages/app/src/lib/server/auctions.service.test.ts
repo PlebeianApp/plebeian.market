@@ -80,7 +80,7 @@ describe('auctions service', () => {
 			created_at: Math.floor(Date.now() / 1000),
 			tags: [['d', identifier]],
 		})
-		console.log(newEvent.created_at)
+
 		await newEvent.sign(skSigner)
 		const auction = await createAuction(newEvent as NostrEvent, 'inactive')
 		expect(auction).toStrictEqual({

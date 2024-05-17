@@ -1,5 +1,5 @@
 import type { AnySQLiteColumn } from 'drizzle-orm/sqlite-core'
-import { sql } from 'drizzle-orm'
+import { relations, sql } from 'drizzle-orm'
 import { integer, numeric, primaryKey, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 
 import {
@@ -173,6 +173,16 @@ export const shippingZones = sqliteTable('shipping_zones', {
 	regionCode: text('region_code').notNull(),
 	countryCode: text('country_code').notNull(),
 })
+
+// Shipping relations
+
+export const shippingRelations = relations(shipping, ({ many }) => ({
+	shippingZones: many(shippingZones),
+}))
+
+export const shippingZoneRelations = relations(shippingZones, ({ one }) => ({
+	shipping: one(shipping, { fields: [shippingZones.shippingId], references: [shipping.id] }),
+}))
 
 // Products
 export const products = sqliteTable('products', {
