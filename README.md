@@ -1,6 +1,6 @@
 ## Plebeian.market
 ### WIP!
-In this repo we will develop the new plebeian.market app.
+In this repo we will develop the new plebeian app.
 - Stack [here](https://github.com/PlebeianTech/plebeian.market/blob/main/docs/stack.md) 
 - Roadmap [here](https://github.com/PlebeianTech/plebeian.market/blob/main/docs/roadmap.md) (We will end using github projects to manage the roadmap)
 - DB design [here](https://github.com/PlebeianTech/plebeian.market/blob/main/docs/db-design.md)
