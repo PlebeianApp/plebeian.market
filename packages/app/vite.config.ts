@@ -9,7 +9,7 @@ export default defineConfig({
 			/* pwa options */
 			manifest: {
 				name: 'Plebeian Market',
-				short_name: 'MyApp',
+				short_name: 'Plebeian Market',
 				description: 'Sell stuff for sats',
 				theme_color: '#ffffff',
 				icons: [
