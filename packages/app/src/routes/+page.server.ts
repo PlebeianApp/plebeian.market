@@ -27,4 +27,4 @@ export const load: PageServerLoad = () => {
 	return getHomeProducts()
 }
 
-export const prerender = true;
+export const prerender = true

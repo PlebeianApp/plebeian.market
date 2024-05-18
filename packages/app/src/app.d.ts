@@ -1,6 +1,6 @@
 // See https://kit.svelte.dev/docs/types#app
 // for information about these interfaces
-import 'vite-plugin-pwa/pwa-assets';
+import 'vite-plugin-pwa/pwa-assets'
 
 declare global {
 	namespace App {
