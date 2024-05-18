@@ -26,3 +26,5 @@ const getHomeProducts = async () => {
 export const load: PageServerLoad = () => {
 	return getHomeProducts()
 }
+
+export const prerender = true;
