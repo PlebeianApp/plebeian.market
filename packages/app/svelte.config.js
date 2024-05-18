@@ -15,7 +15,7 @@ const config = {
 			$lib: './src/lib',
 		},
 		serviceWorker: {
-			// register: false
+			register: false
 		}
 	},
 }
