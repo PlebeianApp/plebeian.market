@@ -4,13 +4,14 @@
 	import ProductItem from '$lib/components/product/item.svelte'
 	import Button from '$lib/components/ui/button/button.svelte'
 	import Input from '$lib/components/ui/input/input.svelte'
-	import { currencyToBtc } from '$lib/utils'
+	import { cn, currencyToBtc } from '$lib/utils'
 
 	import type { PageData } from './$types'
 
 	export let data: PageData
 	$: ({ product, seller, products } = data)
-	console.log(data)
+
+	let selectedImage = 0
 </script>
 
 <div class="container py-16">
@@ -18,15 +19,18 @@
 		<div class="grid grid-cols-3 gap-6">
 			<ul class="grid gap-4 md:col-span-1">
 				{#if product.galleryImages.length}
-					{#each product.galleryImages as item}
-						<li>
+					{#each product.galleryImages as item, i}
+						<button
+							class={cn('cursor-pointer p-1', i === selectedImage ? 'border border-2 border-primary' : null)}
+							on:click={() => (selectedImage = i)}
+						>
 							<img src={item} alt="" />
-						</li>
+						</button>
 					{/each}
 				{/if}
 			</ul>
 			{#if product.galleryImages.length}
-				<img class="col-span-2 border-2 border-black p-1" src={product.galleryImages[0]} alt="" />
+				<img class="col-span-2 border-2 border-black p-1" src={product.galleryImages[selectedImage]} alt="" />
 			{:else}
 				<ImgPlaceHolder imageType={'main'} />
 			{/if}
