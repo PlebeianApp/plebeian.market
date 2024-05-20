@@ -13,24 +13,23 @@
 				- [x] NDK
 				- [ ] js-lightning-tools
 		- [x] Create database and tables
-		- [ ] Design hybrid mode to fetch data from database with fallback to Nostr and insert
-			- [ ] Verify event before inserting into database
+		- [x] Design hybrid mode to fetch data from database with fallback to Nostr and insert
+			- [x] Verify event before inserting into database
 			- [ ] Users browsing triggers fetch Nostr data and update database if more recent
 		- [ ] Nostr functionalities
-			- [ ] Use NDK with Svelte
-			- [ ] NDK cache (IndexDB)
-			- [ ] Logging with NIP07
+			- [x] Use NDK with Svelte
+			- [x] NDK cache (IndexDB)
+			- [x] Logging with NIP07
 			- [ ] Logging with NIP46
-			- [ ] Logging with private key (NIP-49)
-				- [ ] Use IndexDB to store the private key in NIP-49 format
-				- [ ] Use [tweetNaCl.js](https://www.npmjs.com/package/tweetnacl) and a `secretbox` to securely handle key during session
+			- [x] Logging with private key (NIP-49)
+				- [x] Use IndexDB to store the private key in NIP-49 format
 			- [ ] Create stall
 			- [ ] Add product
 			- [ ] User sign-up and onboarding
 		- [ ] E-commerce functionalities
 			- [x] Product page
 				- [ ] Implement variable products
-				- [ ] Image carrousel
+				- [x] Image carrousel
 			- [ ] Auction page (same as product but with bids, time to end, etc.)
 			- [ ] Add to cart
 			- [ ] Checkout page
@@ -60,15 +59,14 @@
 				- [ ] DMs
 			- [ ] Delete account
 		- [ ] App setup ("/setup")
-			- [ ] Add app settings '.env' config file
-				- [ ] Super admins: List of pubkeys that are super admins
-				- [ ] Configure external endpoints: fetch price API, currencies allowed
+			- [ ] Add new table in db for app configuration
+				- [ ] Set up process in first time execution
+				- [ ] Set admins: List of pubkeys that are admins
+				- [ ] Instance pubkey
 				- [ ] Contact details: support/contact email, etc.
-			- [ ] Add super admins
 			- [ ] Add admins
 			- [ ] Remove admins
 			- [ ] Add roles
-			- [ ] Configure app settings (just for super admins: users with role 'admin' that are also in the list of the '.env' file)
 
 		- [x] Design API
 			- [x] Base route ("/api/<_version_>/" )
