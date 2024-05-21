@@ -3,6 +3,7 @@ import { sql } from 'drizzle-orm'
 
 import { KindAuctionProduct, KindBids, KindProducts, KindStalls } from '../app/src/lib/constants'
 import {
+	APP_SETTINGS_META,
 	AUCTION_STATUS,
 	BID_STATUS,
 	DIGITAL_PRODUCT_META,
@@ -295,11 +296,13 @@ const main = async () => {
 
 		if (isProductMeta(metaName)) {
 			scope = 'products'
+		} else if (metaName in Object.values(APP_SETTINGS_META)) {
+			scope = 'app_settings'
 		} else {
 			scope = 'products'
 		}
 
-		const metaTypes = [...Object.entries(PRODUCT_META), ...Object.entries(DIGITAL_PRODUCT_META), ...Object.entries(GENERAL_META)].map(
+		const metaTypes = [...Object.entries(PRODUCT_META), ...Object.entries(DIGITAL_PRODUCT_META), ...Object.entries(APP_SETTINGS_META),...Object.entries(GENERAL_META)].map(
 			([_, { value, dataType }]) => ({ value, dataType }),
 		)
 		const findMetaType = metaTypes.find((meta) => meta.value === metaName)

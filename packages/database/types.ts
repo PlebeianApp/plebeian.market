@@ -57,3 +57,6 @@ export type NewProductMeta = InferInsertModel<typeof dbSchema.productMeta>
 
 export type AppSettings = InferSelectModel<typeof dbSchema.appSettings>
 export type NewAppSettings = InferInsertModel<typeof dbSchema.appSettings>
+
+export type AppMeta = InferSelectModel<typeof dbSchema.appSettingsMeta>
+export type NewAppMeta = InferInsertModel<typeof dbSchema.appSettingsMeta>
