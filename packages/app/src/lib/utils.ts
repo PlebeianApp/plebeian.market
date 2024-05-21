@@ -149,7 +149,7 @@ export async function fetchUserProfile(pk: string): Promise<NDKUserProfile | und
 		throw error
 	}
 }
-
+// Code extracted from https://github.com/paulmillr/noble-hashes/blob/b930aa959dfb95a936096b5ac79a3dcfbdab2332/src/utils.ts#L73
 const asciis = { _0: 48, _9: 57, _A: 65, _F: 70, _a: 97, _f: 102 } as const
 function asciiToBase16(char: number): number | undefined {
 	if (char >= asciis._0 && char <= asciis._9) return char - asciis._0
