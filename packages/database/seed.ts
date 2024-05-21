@@ -68,7 +68,7 @@ const main = async () => {
 				createdAt: faker.date.recent(),
 				updatedAt: faker.date.future(),
 				name: faker.person.firstName(),
-				role: 'pleb',
+				role: user.id == devUser1.pk ? 'admin' : 'pleb',
 				displayName: faker.person.middleName(),
 				about: faker.person.bio(),
 				image: faker.image.avatar(),
