@@ -6,3 +6,4 @@ export const KindAuctionProduct = 30020
 export const KindProducts: NDKKind = 30018
 export const KindStalls: NDKKind = 30017
 export const KindBids = 1021
+export const HEX_KEYS_REGEX = /^(?:[0-9a-fA-F]{64})$/

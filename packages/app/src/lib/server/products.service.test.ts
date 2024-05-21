@@ -41,6 +41,9 @@ describe('products service', () => {
 		expect(displayProduct).toEqual({
 			createdAt: expect.any(String),
 			id: 'testProductId',
+			userId: 'testUserId',
+			userNip05: null,
+			identifier: 'testIdentifier',
 			name: 'testProductName',
 			description: 'testDescription',
 			price: NaN,
@@ -114,7 +117,7 @@ describe('products service', () => {
 			pubkey: devUser1.pk,
 			content: JSON.stringify(evContent),
 			created_at: Math.floor(Date.now()),
-			tags: [['d', createId()]],
+			tags: [['d', identifier]],
 		})
 		await newEvent.sign(skSigner)
 		const product = await createProduct(newEvent as NostrEvent)
@@ -123,6 +126,9 @@ describe('products service', () => {
 			createdAt: expect.any(String),
 			currency: 'USD',
 			description: 'Hello Description',
+			identifier: identifier,
+			userId: devUser1.pk,
+			userNip05: expect.any(String),
 			galleryImages: ['http://example.com/image1.jpg', 'http://example.com/image2.jpg'],
 			name: 'Hello Product',
 			price: 133,
@@ -154,7 +160,10 @@ describe('products service', () => {
 			currency: targetProduct.currency,
 			description: targetProduct.description,
 			galleryImages: expect.any(Array),
+			identifier: product.identifier,
 			name: 'Hello Product changed',
+			userId: devUser1.pk,
+			userNip05: expect.any(String),
 			price: targetProduct.price,
 			stockQty: targetProduct.stockQty,
 		})

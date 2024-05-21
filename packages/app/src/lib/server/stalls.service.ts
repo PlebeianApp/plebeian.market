@@ -20,6 +20,7 @@ export type RichStall = {
 	currency: string
 	createDate: string
 	userId: string
+	userNip05: string | null
 	userName: string | null
 	productCount: number
 	orderCount: number
@@ -31,6 +32,7 @@ const resolveStalls = async (stall: Stall): Promise<RichStall> => {
 		.select({
 			userId: users.id,
 			userName: users.name,
+			userNip05: users.nip05,
 		})
 		.from(users)
 		.where(eq(users.id, stall.userId))
@@ -68,6 +70,7 @@ const resolveStalls = async (stall: Stall): Promise<RichStall> => {
 		createDate: format(stall.createdAt, standardDisplayDateFormat),
 		userId: ownerRes.userId,
 		userName: ownerRes.userName,
+		userNip05: ownerRes.userNip05,
 		productCount,
 		orderCount,
 		identifier: stall.id.split(':')[2],

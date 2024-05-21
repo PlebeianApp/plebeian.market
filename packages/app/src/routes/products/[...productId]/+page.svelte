@@ -21,7 +21,7 @@
 				{#if product.galleryImages.length}
 					{#each product.galleryImages as item, i}
 						<button
-							class={cn('cursor-pointer p-1', i === selectedImage ? 'border border-2 border-primary' : null)}
+							class={cn('cursor-pointer p-1', i === selectedImage ? 'border border-primary' : null)}
 							on:click={() => (selectedImage = i)}
 						>
 							<img src={item} alt="" />
@@ -70,9 +70,7 @@
 	<h2>More from {seller.name}</h2>
 	<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
 		{#each products as item}
-			<a href={`/products/${item.id}`}>
-				<ProductItem imageUrl={item.galleryImages[0]} productName={item.name} price={item.price} currency={item.currency} />
-			</a>
+			<ProductItem product={item} />
 		{/each}
 	</div>
 </div>

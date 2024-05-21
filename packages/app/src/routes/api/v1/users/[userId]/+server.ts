@@ -1,6 +1,4 @@
-import { NDKKind } from '@nostr-dev-kit/ndk'
 import { error, json } from '@sveltejs/kit'
-import { verifyAndPersistRawEvent } from '$lib/server/nostrEvents.service'
 import { deleteUser, getUserById, updateUser } from '$lib/server/users.service'
 
 import type { RequestHandler } from './$types'

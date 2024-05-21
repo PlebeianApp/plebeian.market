@@ -36,6 +36,26 @@ export const getUserById = async (id: string): Promise<User> => {
 	error(404, 'Not found')
 }
 
+export const getNip05ByUserId = async (id: string): Promise<string | null> => {
+	const [user] = await db.select({ nip05: users.nip05 }).from(users).where(eq(users.id, id)).execute()
+
+	if (user) {
+		return user.nip05
+	}
+
+	return null
+}
+
+export const getUserByNip05 = async (nip05addr: string): Promise<User> => {
+	const [user] = await db.select().from(users).where(eq(users.nip05, nip05addr)).execute()
+
+	if (user) {
+		return user
+	}
+
+	error(404, 'Not found')
+}
+
 export const getUserForProduct = async (productId: string): Promise<User> => {
 	const [product] = await db.select().from(products).where(eq(products.id, productId)).execute()
 	const [user] = await db.select().from(users).where(eq(users.id, product.userId)).execute()
@@ -60,7 +80,7 @@ export const createUser = async (user: object, role: UserRoles = 'pleb', trustLe
 		role: role,
 		trustLevel: trustLevel,
 		name: userMetaData.name,
-		nip05: userMetaData.nip05,
+		nip05: userMetaData.nip05?.toLowerCase(),
 		banner: userMetaData.banner,
 		about: userMetaData.about,
 		lud06: userMetaData.lud06,
@@ -85,7 +105,7 @@ export const updateUser = async (userId: string, userMeta: NDKUserProfile): Prom
 	const insertUser: Partial<User> = {
 		updatedAt: new Date(),
 		name: userMeta.name,
-		nip05: userMeta.nip05,
+		nip05: userMeta.nip05?.toLowerCase(),
 		banner: userMeta.banner,
 		about: userMeta.about,
 		lud06: userMeta.lud06,
