@@ -73,7 +73,7 @@ const main = async () => {
 				about: faker.person.bio(),
 				image: faker.image.avatar(),
 				banner: faker.image.urlLoremFlickr({ width: 800, height: 400 }),
-				nip05: faker.internet.email(),
+				nip05: faker.internet.email().toLowerCase(),
 				lud06: randomHexValue(),
 				lud16: randomHexValue(),
 				website: faker.internet.url(),

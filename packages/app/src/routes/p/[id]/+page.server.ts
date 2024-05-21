@@ -1,12 +1,14 @@
 import { getProductsByUserId } from '$lib/server/products.service'
 import { getStallsByUserId } from '$lib/server/stalls.service'
-import { getUserById } from '$lib/server/users.service.js'
+import { getUserById, getUserByNip05 } from '$lib/server/users.service.js'
+import { NIP05_REGEX } from 'nostr-tools/nip05'
 import { npubEncode } from 'nostr-tools/nip19'
 
 import type { PageServerLoad } from './$types'
 
 export const load: PageServerLoad = async ({ params }) => {
-	const userRes = await getUserById(params.id)
+	const { id } = params
+	const userRes = NIP05_REGEX.test(id) ? await getUserByNip05(id) : await getUserById(id)
 	const getStallsByUserIdRes = await getStallsByUserId(params.id)
 	const getProductsByUserIdRes = await getProductsByUserId(params.id)
 

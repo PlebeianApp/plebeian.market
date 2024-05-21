@@ -21,7 +21,7 @@
 				{#if product.galleryImages.length}
 					{#each product.galleryImages as item, i}
 						<button
-							class={cn('cursor-pointer p-1', i === selectedImage ? 'border border-2 border-primary' : null)}
+							class={cn('cursor-pointer p-1', i === selectedImage ? 'border border-primary' : null)}
 							on:click={() => (selectedImage = i)}
 						>
 							<img src={item} alt="" />
