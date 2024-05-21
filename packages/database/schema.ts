@@ -87,6 +87,28 @@ export const productMeta = sqliteTable('product_meta', {
 		.default(sql`(unixepoch())`),
 })
 
+// App settings meta
+export const appSettingsMeta = sqliteTable('app_meta', {
+	id: text('id')
+		.primaryKey()
+		.$defaultFn(() => createId()),
+	productId: text('app_id').references(() => appSettings.instancePk, { onDelete: 'cascade', onUpdate: 'cascade' }),
+	metaName: text('meta_name')
+		.notNull()
+		.references(() => metaTypes.name, { onDelete: 'cascade', onUpdate: 'cascade' }),
+	key: text('key'),
+	valueText: text('value_text'),
+	valueBoolean: integer('value_boolean', { mode: 'boolean' }),
+	valueInteger: integer('value_boolean'),
+	valueNumeric: numeric('value_integer'),
+	createdAt: integer('created_at', { mode: 'timestamp' })
+		.notNull()
+		.default(sql`(unixepoch())`),
+	updatedAt: integer('updated_at', { mode: 'timestamp' })
+		.notNull()
+		.default(sql`(unixepoch())`),
+})
+
 // Events
 export const events = sqliteTable('events', {
 	...standardColumns,
