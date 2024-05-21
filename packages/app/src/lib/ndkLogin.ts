@@ -45,7 +45,7 @@ export async function loginWithPrivateKey(key: string, password: string): Promis
 			await signer.blockUntilReady()
 			await signer.user()
 			ndk.signer = signer
-			const user = await fetchActiveUserData()
+			const user = ndk.signer ? await fetchActiveUserData() : null
 			if (user) {
 				await loginLocalDb(user.pubkey, 'NSEC', key)
 				await loginDb(user)
@@ -65,7 +65,7 @@ export async function loginWithPrivateKey(key: string, password: string): Promis
 			await signer.blockUntilReady()
 			await signer.user()
 			ndk.signer = signer
-			const user = await fetchActiveUserData()
+			const user = ndk.signer ? await fetchActiveUserData() : null
 			if (user) {
 				await loginLocalDb(user.pubkey, 'NSEC', cSK)
 				await loginDb(user)
