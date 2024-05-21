@@ -26,6 +26,8 @@
 
 	/* our own colors */
 	--neo-yellow: #ffd53e;
+	--neo-blue: #18B9FE;
+	--neo-gray: #F8F8F8;
 }
 /* .dark {
 	--background: 323 10% 10%;
