@@ -16,8 +16,9 @@ import {
 	USER_TRUST_LEVEL,
 } from './constants'
 import { db } from './database'
-import { devUser1, devUser2, devUser3, devUser4, devUser5, popularCurrencies } from './fixtures'
+import { devInstance, devUser1, devUser2, devUser3, devUser4, devUser5, popularCurrencies } from './fixtures'
 import {
+	AppSettings,
 	Auction,
 	Bid,
 	Category,
@@ -51,6 +52,12 @@ const randomHexValue = () => {
 }
 
 const main = async () => {
+
+	const appSettings = {
+		instancePk: devInstance.pk,
+		instanceName: 'Dev Instance',
+	} as AppSettings
+
 	const userIds = [devUser1, devUser2, devUser3, devUser4, devUser5].map((user) => ({ id: user.pk }))
 
 	const fullUsers = userIds.map(
@@ -421,6 +428,7 @@ const main = async () => {
 	console.log('Reset start')
 	const dbSchema = db._.fullSchema
 	await Promise.all([
+		db.delete(dbSchema.appSettings),
 		db.delete(dbSchema.categories),
 		db.delete(dbSchema.stalls),
 		db.delete(dbSchema.products),
@@ -444,6 +452,7 @@ const main = async () => {
 	console.log('Seed start')
 	await db.transaction(async (tx) => {
 		for (const { table, data } of [
+			{ table: dbSchema.appSettings, data: appSettings},
 			{ table: dbSchema.users, data: fullUsers },
 			{ table: dbSchema.stalls, data: userStalls.flat(1) },
 			{ table: dbSchema.auctions, data: auctionsData.flat(2) },

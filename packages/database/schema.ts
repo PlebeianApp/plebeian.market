@@ -342,3 +342,21 @@ export const invoices = sqliteTable('invoices', {
 		.notNull()
 		.references(() => paymentDetails.id),
 })
+
+// App Settings
+export const appSettings = sqliteTable('app_settings', {
+	instancePk: text('instance_pk').primaryKey(),
+	isFirstTimeRunning: integer('is_first_time_running', { mode: 'boolean' }).notNull().default(true),
+	instanceName: text('instance_name').notNull().default('Plebeian Market'),
+	logoUrl: text('logo_url').notNull().default('/logo.svg'),
+	contactEmail: text('contact_email'),
+	ownerPk: text('owner_pk'),
+	allowRegister: integer('allow_register', { mode: 'boolean' }).notNull().default(true),
+	defaultCurrency: text('default_currency').notNull().default('BTC'),
+	createdAt: integer('created_at', { mode: 'timestamp' })
+		.notNull()
+		.default(sql`(unixepoch())`),
+	updatedAt: integer('updated_at', { mode: 'timestamp' })
+		.notNull()
+		.default(sql`(unixepoch())`),
+})
