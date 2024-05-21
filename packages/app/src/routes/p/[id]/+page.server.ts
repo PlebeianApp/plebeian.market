@@ -9,8 +9,8 @@ import type { PageServerLoad } from './$types'
 export const load: PageServerLoad = async ({ params }) => {
 	const { id } = params
 	const userRes = NIP05_REGEX.test(id) ? await getUserByNip05(id) : await getUserById(id)
-	const getStallsByUserIdRes = await getStallsByUserId(params.id)
-	const getProductsByUserIdRes = await getProductsByUserId(params.id)
+	const getStallsByUserIdRes = await getStallsByUserId(userRes.id)
+	const getProductsByUserIdRes = await getProductsByUserId(userRes.id)
 
 	return {
 		npub: npubEncode(userRes.id),
