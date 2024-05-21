@@ -7,7 +7,7 @@ import type { PageServerLoad } from './$types'
 
 export const load: PageServerLoad = async ({ params }) => {
 	let userId: string | undefined
-	let productSlug: string | undefined
+	let productIdentifier: string | undefined
 
 	const parts: string[] = params.productId.split('/')
 	if (parts.length < 1 || parts.length > 2) {
@@ -18,10 +18,11 @@ export const load: PageServerLoad = async ({ params }) => {
 
 	if (NIP05_REGEX.test(root) && productId) {
 		userId = (await getUserByNip05(root)).id
-		productSlug = productId
+		productIdentifier = productId
 	}
 
-	const product = userId && productSlug ? await getProductById(`${KindProducts}:${userId}:${productSlug}`) : await getProductById(root)
+	const product =
+		userId && productIdentifier ? await getProductById(`${KindProducts}:${userId}:${productIdentifier}`) : await getProductById(root)
 	const seller = await getUserForProduct(product.id)
 	const products = (await getProductsByUserId(seller.id)).slice(0, 4)
 

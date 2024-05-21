@@ -38,9 +38,7 @@
 						<h2>Stalls</h2>
 						<div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
 							{#each stalls as item}
-								<a href={`/stalls/${item.id}`}>
-									<StallItem {item} />
-								</a>
+								<StallItem stall={item} />
 							{/each}
 						</div>
 					</div>
@@ -53,9 +51,7 @@
 						<h2>Products</h2>
 						<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
 							{#each products as item}
-								<a href={`/products/${item.id}`}>
-									<ProductItem imageUrl={item.galleryImages[0]} productName={item.name} price={item.price} currency={item.currency} />
-								</a>
+								<ProductItem product={item} />
 							{/each}
 						</div>
 					</div>

@@ -36,6 +36,16 @@ export const getUserById = async (id: string): Promise<User> => {
 	error(404, 'Not found')
 }
 
+export const getNip05ByUserId = async (id: string): Promise<string | null> => {
+	const [user] = await db.select({ nip05: users.nip05 }).from(users).where(eq(users.id, id)).execute()
+
+	if (user) {
+		return user.nip05
+	}
+
+	return null
+}
+
 export const getUserByNip05 = async (nip05addr: string): Promise<User> => {
 	const [user] = await db.select().from(users).where(eq(users.nip05, nip05addr)).execute()
 

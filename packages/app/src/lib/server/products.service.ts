@@ -12,9 +12,11 @@ import { createId, db, devUser1, eq, PRODUCT_META, productImages, productMeta, p
 
 import { productEventSchema } from '../../schema/nostr-events'
 import { getStallById } from './stalls.service'
+import { getNip05ByUserId } from './users.service'
 
-export type DisplayProduct = Pick<Product, 'id' | 'description' | 'currency' | 'stockQty'> & {
+export type DisplayProduct = Pick<Product, 'id' | 'description' | 'currency' | 'stockQty' | 'userId' | 'identifier'> & {
 	name: Product['productName']
+	userNip05: string | null
 	createdAt: string
 	price: number
 	galleryImages: string[]
@@ -22,8 +24,12 @@ export type DisplayProduct = Pick<Product, 'id' | 'description' | 'currency' | '
 
 export const toDisplayProduct = async (product: Product): Promise<DisplayProduct> => {
 	const images = await getImagesByProductId(product.id)
+	const userNip05 = await getNip05ByUserId(product.userId)
 	return {
 		id: product.id,
+		identifier: product.identifier,
+		userId: product.userId,
+		userNip05: userNip05,
 		createdAt: format(product.createdAt, standardDisplayDateFormat),
 		name: product.productName,
 		description: product.description,
@@ -87,9 +93,13 @@ export const getProductById = async (productId: string): Promise<DisplayProduct>
 	}
 
 	const images = await getImagesByProductId(productId)
+	const userNip05 = await getNip05ByUserId(productResult.userId)
 
 	return {
 		id: productResult.id,
+		identifier: productResult.identifier,
+		userId: productResult.userId,
+		userNip05: userNip05,
 		createdAt: format(productResult.createdAt, standardDisplayDateFormat),
 		name: productResult.productName,
 		description: productResult.description,
