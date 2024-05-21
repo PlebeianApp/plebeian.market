@@ -1,9 +1,95 @@
 {
   "version": "5",
   "dialect": "sqlite",
-  "id": "7dd30a1a-e46b-4e66-afd1-32d9b6fbda78",
+  "id": "10f587e9-39fa-4ccf-b188-2134a08d8292",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
+    "app_settings": {
+      "name": "app_settings",
+      "columns": {
+        "instance_pk": {
+          "name": "instance_pk",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "is_first_time_running": {
+          "name": "is_first_time_running",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": true
+        },
+        "instance_name": {
+          "name": "instance_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'Plebeian Market'"
+        },
+        "logo_url": {
+          "name": "logo_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'/logo.svg'"
+        },
+        "contact_email": {
+          "name": "contact_email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "owner_pk": {
+          "name": "owner_pk",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "allow_register": {
+          "name": "allow_register",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": true
+        },
+        "default_currency": {
+          "name": "default_currency",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'BTC'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(unixepoch())"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(unixepoch())"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
     "auctions": {
       "name": "auctions",
       "columns": {
@@ -94,6 +180,13 @@
           "notNull": true,
           "autoincrement": false
         },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
         "start_date": {
           "name": "start_date",
           "type": "integer",
@@ -107,13 +200,6 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": false,
-          "autoincrement": false
-        },
-        "status": {
-          "name": "status",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
           "autoincrement": false
         }
       },

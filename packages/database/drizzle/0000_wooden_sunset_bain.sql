@@ -1,3 +1,16 @@
+CREATE TABLE `app_settings` (
+	`instance_pk` text PRIMARY KEY NOT NULL,
+	`is_first_time_running` integer DEFAULT true NOT NULL,
+	`instance_name` text DEFAULT 'Plebeian Market' NOT NULL,
+	`logo_url` text DEFAULT '/logo.svg' NOT NULL,
+	`contact_email` text,
+	`owner_pk` text,
+	`allow_register` integer DEFAULT true NOT NULL,
+	`default_currency` text DEFAULT 'BTC' NOT NULL,
+	`created_at` integer DEFAULT (unixepoch()) NOT NULL,
+	`updated_at` integer DEFAULT (unixepoch()) NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE `auctions` (
 	`id` text PRIMARY KEY NOT NULL,
 	`created_at` integer DEFAULT (unixepoch()) NOT NULL,
@@ -11,9 +24,9 @@ CREATE TABLE `auctions` (
 	`stock_qty` integer NOT NULL,
 	`extra_cost` numeric DEFAULT '0' NOT NULL,
 	`starting_bid_amount` numeric NOT NULL,
+	`status` text NOT NULL,
 	`start_date` integer DEFAULT (unixepoch()),
 	`end_date` integer,
-	`status` text NOT NULL,
 	FOREIGN KEY (`stall_id`) REFERENCES `stalls`(`id`) ON UPDATE cascade ON DELETE cascade,
 	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE cascade ON DELETE cascade
 );
