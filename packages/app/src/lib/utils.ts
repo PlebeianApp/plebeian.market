@@ -1,15 +1,17 @@
 import type { NDKKind, NDKTag, NDKUserProfile, NostrEvent } from '@nostr-dev-kit/ndk'
+import type { HttpMethod } from '@sveltejs/kit'
 import type { ClassValue } from 'clsx'
 import type { VerifiedEvent } from 'nostr-tools'
 import type { TransitionConfig } from 'svelte/transition'
+import { NDKEvent, NDKUser } from '@nostr-dev-kit/ndk'
+import ndkStore from '$lib/stores/ndk'
 import { clsx } from 'clsx'
 import { cubicOut } from 'svelte/easing'
 import { get } from 'svelte/store'
 import { twMerge } from 'tailwind-merge'
 
 import type { EventCoordinates } from './interfaces'
-import { numSatsInBtc } from './constants'
-import ndkStore from './stores/ndk'
+import { KindHttpAuth, numSatsInBtc } from './constants'
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs))
@@ -174,4 +176,60 @@ export function hexToBytes(hex: string): Uint8Array {
 		array[ai] = n1 * 16 + n2
 	}
 	return array
+}
+
+export const createToken = async (url: string, method: HttpMethod): Promise<string> => {
+	const ndk = get(ndkStore)
+	const authEvent = new NDKEvent(ndk)
+	const uTag: NDKTag = ['u', url]
+	const methodTag: NDKTag = ['method', method]
+	authEvent.kind = KindHttpAuth
+	authEvent.tags = [uTag, methodTag]
+	await authEvent.toNostrEvent()
+	await authEvent.sign()
+	const strEvent = JSON.stringify(authEvent.rawEvent())
+	const strEventB64 = btoa(strEvent)
+	return `Nostr ${strEventB64}`
+}
+
+export function findCustomTags(tags: NDKTag[], tagName: string): string[] {
+	return tags.filter(([name]) => name === tagName).map(([, ...values]) => values[0])
+}
+
+// API wrapper methods
+export const GETUserFromId = async (userPk: string, authToken?: string): Promise<Response> => {
+	const headers = new Headers()
+	if (authToken) {
+		headers.append('Authorization', authToken)
+	}
+	return await fetch(`/api/v1/users/${userPk}`, {
+		method: 'GET',
+		headers: headers,
+	})
+}
+
+export const PUTUser = async (user: NDKUser, authToken?: string): Promise<Response> => {
+	const headers = new Headers()
+	if (authToken) {
+		headers.append('Authorization', authToken)
+	}
+	headers.append('Content-Type', 'application/json')
+	return await fetch(`/api/v1/users/${user.pubkey}`, {
+		method: 'PUT',
+		headers: headers,
+		body: JSON.stringify(user.profile),
+	})
+}
+
+export const POSTUser = async (user: NDKUser, authToken?: string): Promise<Response> => {
+	const headers = new Headers()
+	if (authToken) {
+		headers.append('Authorization', authToken)
+	}
+	headers.append('Content-Type', 'application/json')
+	return await fetch('/api/v1/users', {
+		method: 'POST',
+		headers: headers,
+		body: JSON.stringify({ id: user.pubkey, ...user.profile }),
+	})
 }

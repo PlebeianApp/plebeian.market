@@ -7,7 +7,6 @@
 	import { Label } from '$lib/components/ui/label'
 	import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '$lib/components/ui/select'
 	import Separator from '$lib/components/ui/separator/separator.svelte'
-	import { bytesToHex } from '$lib/utils'
 	import { generateSecretKey, getPublicKey, nip19 } from 'nostr-tools'
 
 	import type { PageData } from './$types'

@@ -1,19 +1,19 @@
 import type { NDKUser } from '@nostr-dev-kit/ndk'
 import type { BaseAccount } from '$lib/stores/session'
 import { NDKNip07Signer, NDKPrivateKeySigner } from '@nostr-dev-kit/ndk'
-import { ndk, ndkActiveUser } from '$lib/stores/ndk'
+import ndkStore, { ndk } from '$lib/stores/ndk'
 import { addAccount, getAccount, updateAccount } from '$lib/stores/session'
 import { decode, nsecEncode } from 'nostr-tools/nip19'
 import { decrypt, encrypt } from 'nostr-tools/nip49'
 
 import { HEX_KEYS_REGEX } from './constants'
-import { bytesToHex, hexToBytes } from './utils'
+import { bytesToHex, GETUserFromId, hexToBytes, POSTUser, PUTUser } from './utils'
 
 export async function fetchActiveUserData(): Promise<NDKUser | null> {
 	if (!ndk.signer) return null
 	const user = await ndk.signer.user()
 	await user.fetchProfile()
-	ndkActiveUser.set(user)
+	ndkStore.set(ndk)
 	return user
 }
 
@@ -24,6 +24,7 @@ export async function loginWithExtension(): Promise<boolean> {
 		await signer.blockUntilReady()
 		await signer.user()
 		ndk.signer = signer
+		ndkStore.set(ndk)
 		const user = await fetchActiveUserData()
 		if (user) {
 			await loginLocalDb(user.pubkey, 'NIP07')
@@ -46,6 +47,7 @@ export async function loginWithPrivateKey(key: string, password: string): Promis
 			await signer.blockUntilReady()
 			await signer.user()
 			ndk.signer = signer
+			ndkStore.set(ndk)
 			const user = await fetchActiveUserData()
 			if (user) {
 				await loginLocalDb(user.pubkey, 'NSEC', key)
@@ -66,6 +68,7 @@ export async function loginWithPrivateKey(key: string, password: string): Promis
 			await signer.blockUntilReady()
 			await signer.user()
 			ndk.signer = signer
+			ndkStore.set(ndk)
 			const user = await fetchActiveUserData()
 			if (user) {
 				await loginLocalDb(user.pubkey, 'NSEC', cSK)
@@ -115,25 +118,14 @@ export async function loginLocalDb(userPk: string, loginMethod: BaseAccount['typ
 }
 
 export async function loginDb(user: NDKUser) {
-	const response = await fetch(`/api/v1/users/${user.pubkey}`)
+	const response = await GETUserFromId(user.pubkey)
 	if (response.ok) {
 		console.log('updating user')
-		const PUT = await fetch(`/api/v1/users/${user.pubkey}`, {
-			method: 'PUT',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify(user.profile),
-		}).then((r) => r.json())
+		const PUT = await PUTUser(user)
 		console.log(PUT)
 	} else {
 		console.log('creating user')
-		const POST = await fetch('/api/v1/users', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({
-				id: user.pubkey,
-				...user.profile,
-			}),
-		}).then((r) => r.json())
+		const POST = await POSTUser(user)
 		console.log(POST)
 	}
 }
