@@ -1,12 +1,12 @@
 {
-  "version": "5",
+  "version": "6",
   "dialect": "sqlite",
   "entries": [
     {
       "idx": 0,
-      "version": "5",
-      "when": 1716279859647,
-      "tag": "0000_wooden_sunset_bain",
+      "version": "6",
+      "when": 1716281011523,
+      "tag": "0000_square_supreme_intelligence",
       "breakpoints": true
     },
     {
