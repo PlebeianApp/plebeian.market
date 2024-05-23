@@ -5,11 +5,11 @@
 	import { Label } from '$lib/components/ui/label/index.js'
 	import { Textarea } from '$lib/components/ui/textarea'
 	import { KindProducts } from '$lib/constants'
-	import { createId } from '@plebeian/database'
+	import { createId } from '@plebeian/database/utils'
 	import { ndk, ndkActiveUser } from '$lib/stores/ndk'
 	import NDK, { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk'
 
-	export let item: RichStall | null = null
+	// export let item: RichStall | null = null
 
 	async function create(sEvent: SubmitEvent) {
 		const formData = new FormData(sEvent.currentTarget as HTMLFormElement, sEvent.submitter)
@@ -38,17 +38,15 @@
 
 		await newEvent.sign(ndk.signer)
 		const nostrEvent = await newEvent.toNostrEvent()
-	console.log(nostrEvent)
 
-		// const result = await fetch(`http://${process.env.APP_HOST}:${process.env.APP_PORT}/api/v1/stalls`, {
-		// 	method: 'POST',
-		// 	body: JSON.stringify(nostrEvent),
-		// 	headers: {
-		// 		'Content-Type': 'application/json',
-		// 	},
-		// }).then((response) => response.json())
+		const response = await fetch(new URL('/api/v1/stalls', window.location.origin), {
+			method: 'POST',
+			body: JSON.stringify(nostrEvent),
+			headers: {
+				'Content-Type': 'application/json',
+			},
+		})
 
-		
 	}
 </script>
 

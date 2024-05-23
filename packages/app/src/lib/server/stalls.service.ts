@@ -95,7 +95,7 @@ export const getAllStalls = async (
     .from(stalls)
     .limit(filter.pageSize)
     .offset((filter.page - 1) * filter.pageSize)
-    .orderBy(filter.order === "asc" ? asc(orderBy) : desc(orderBy))
+    // .orderBy(filter.order === "asc" ? asc(orderBy) : desc(orderBy))
     .where(and(filter.userId ? eq(stalls.userId, filter.userId) : undefined))
     .execute();
 
