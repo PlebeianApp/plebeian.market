@@ -7,6 +7,7 @@
 	import { Label } from '$lib/components/ui/label'
 	import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '$lib/components/ui/select'
 	import Separator from '$lib/components/ui/separator/separator.svelte'
+	import { copyToClipboard } from '$lib/utils'
 	import { generateSecretKey, getPublicKey, nip19 } from 'nostr-tools'
 
 	import type { PageData } from './$types'
@@ -29,8 +30,8 @@
 	}
 </script>
 
-<div class="flex min-h-screen w-full flex-col bg-muted/40">
-	<div class="flex flex-col">
+<div class="px-4 py-20 lg:px-12 min-h-[100vh]">
+	<div class="mx-auto max-w-2xl flex flex-col gap-2">
 		<main class="text-black">
 			<div class="px-4 py-20 lg:px-12">
 				<div class="container">
@@ -59,7 +60,7 @@
 								<Input class="border-black border-2" value={newInstanceNsec} readonly />
 								<Button
 									on:click={() => {
-										navigator.clipboard.writeText(newInstanceNsec)
+										copyToClipboard(newInstanceNsec)
 									}}><span class="i-mingcute-clipboard-fill text-black w-6 h-6"></span></Button
 								>
 							</div>
