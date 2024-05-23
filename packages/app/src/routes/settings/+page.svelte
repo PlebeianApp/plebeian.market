@@ -1,14 +1,32 @@
 <script lang="ts">
+	import type { RichStall } from '$lib/server/stalls.service'
+	import { createQuery } from '@tanstack/svelte-query'
+	import CreateEditStall from '$lib/components/stalls/create-edit.svelte'
 	import * as Alert from '$lib/components/ui/alert/index.js'
 	import { Button } from '$lib/components/ui/button/index.js'
 	import { Input } from '$lib/components/ui/input/index.js'
 	import { Label } from '$lib/components/ui/label/index.js'
 	import { Separator } from '$lib/components/ui/separator'
+	import { Skeleton } from '$lib/components/ui/skeleton'
 	import { Slider } from '$lib/components/ui/slider/index.js'
 	import * as Tabs from '$lib/components/ui/tabs/index.js'
 	import ndkStore, { defaulRelaysUrls, ndk, ndkActiveUser } from '$lib/stores/ndk'
 
 	$: relayUrls = [...new Set([...(ndk.activeUser?.relayUrls ?? []), ...defaulRelaysUrls])].map((u) => new URL(u))
+
+	$: stallsQuery = createQuery<RichStall[]>({
+		queryKey: ['stalls', !!$ndkActiveUser?.pubkey],
+		queryFn: async () => {
+			if ($ndkActiveUser?.pubkey) {
+				const filter = { userId: $ndkActiveUser.pubkey }
+				const res = await fetch(new URL(`/api/v1/stalls?${new URLSearchParams(filter)}`, window.location.origin))
+				return res.json()
+			}
+			return null
+		},
+	})
+
+	$: console.log($stallsQuery.data)
 
 	let v4v = [50]
 </script>
@@ -32,13 +50,24 @@
 						<h3 class="text-xl">My Stalls</h3>
 						<Button variant="outline" class="border-2 border-black font-bold px-6">New</Button>
 					</div>
-					<div class="flex flex-col">
-						<div class="cursor-pointer border border-gray flex items-center p-4 font-bold">
-							<div class="flex items-center gap-2">
-								<span class="i-tdesign-store w-6 h-6" />
-								<span>Stall 1</span>
+
+					<div class="flex flex-col gap-2">
+						{#if $stallsQuery.isLoading}
+							<Skeleton class="h-12 w-full" />
+							<Skeleton class="h-12 w-full" />
+							<Skeleton class="h-12 w-full" />
+						{/if}
+
+						{#each [...($stallsQuery.data ?? [])] as stall}
+							<div class="cursor-pointer border border-gray flex items-center p-4 font-bold">
+								<div class="flex items-center gap-2">
+									<span class="i-tdesign-store w-6 h-6" />
+									<span>{stall.name}</span>
+								</div>
 							</div>
-						</div>
+						{/each}
+
+						<CreateEditStall />
 					</div>
 				</Tabs.Content>
 

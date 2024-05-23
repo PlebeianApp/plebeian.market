@@ -25,6 +25,7 @@ export const productsFilterSchema = generalFilterSchema.extend({
 export type ProductsFilter = z.infer<typeof productsFilterSchema>
 
 export const stallsFilterSchema = generalFilterSchema.extend({
+	userId: z.string().optional(),
 	orderBy: z.enum(['createdAt']).default('createdAt'),
 })
 

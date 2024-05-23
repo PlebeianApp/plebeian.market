@@ -7,6 +7,13 @@
 
 	import '../app.css'
 
+	import type { NsecAccount } from '$lib/stores/session'
+	import { QueryClient, QueryClientProvider } from '@tanstack/svelte-query'
+	import { login } from '$lib/ndkLogin'
+	import { getAccount } from '$lib/stores/session'
+
+	const queryClient = new QueryClient()
+
 	onMount(async () => {
 		if (pwaInfo) {
 			const { registerSW } = await import('virtual:pwa-register')
@@ -70,6 +77,8 @@
 		href="/apple-splash-landscape-dark-2048x1536.png"
 	/>
 </svelte:head>
-<Header />
-<slot />
-<Footer />
+<QueryClientProvider client={queryClient}>
+	<Header />
+	<slot />
+	<Footer />
+</QueryClientProvider>
