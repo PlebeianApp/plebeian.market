@@ -14,8 +14,10 @@
 
 	$: relayUrls = [...new Set([...(ndk.activeUser?.relayUrls ?? []), ...defaulRelaysUrls])].map((u) => new URL(u))
 
+	let stallsMode: 'list' | 'create' | 'edit' = 'list'
+
 	$: stallsQuery = createQuery<RichStall[]>({
-		queryKey: ['stalls', !!$ndkActiveUser?.pubkey],
+		queryKey: ['stalls', stallsMode, !!$ndkActiveUser?.pubkey],
 		queryFn: async () => {
 			if ($ndkActiveUser?.pubkey) {
 				const filter = { userId: $ndkActiveUser.pubkey }
@@ -26,9 +28,9 @@
 		},
 	})
 
-	$: console.log($stallsQuery.data)
-
 	let v4v = [50]
+
+	let currentStall: RichStall | null = null
 </script>
 
 {#if $ndkActiveUser && $ndkStore.signer}
@@ -46,28 +48,50 @@
 					<Tabs.Trigger value="v4v" class="px-0 data-[state=active]:text-primary">Value for Value</Tabs.Trigger>
 				</Tabs.List>
 				<Tabs.Content value="stalls" class="flex flex-col w-full gap-6">
-					<div class="flex justify-between items-center">
-						<h3 class="text-xl">My Stalls</h3>
-						<Button variant="outline" class="border-2 border-black font-bold px-6">New</Button>
-					</div>
+					{#if stallsMode === 'list'}
+						<div class="flex justify-between items-center">
+							<h3 class="text-xl">My Stalls</h3>
+							<Button
+								on:click={() => {
+									stallsMode = 'create'
+									currentStall = null
+								}}
+								variant="outline"
+								class="border-2 border-black font-bold px-6">New</Button
+							>
+						</div>
+					{:else if stallsMode === 'create' || stallsMode === 'edit'}
+						<button class="w-fit" on:click={() => (stallsMode = 'list')}>
+							<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
+						</button>
+					{/if}
 
 					<div class="flex flex-col gap-2">
-						{#if $stallsQuery.isLoading}
-							<Skeleton class="h-12 w-full" />
-							<Skeleton class="h-12 w-full" />
-							<Skeleton class="h-12 w-full" />
+						{#if stallsMode === 'list'}
+							{#if $stallsQuery.isLoading}
+								<Skeleton class="h-12 w-full" />
+								<Skeleton class="h-12 w-full" />
+								<Skeleton class="h-12 w-full" />
+							{/if}
+
+							{#each [...($stallsQuery.data ?? [])] as stall}
+								<Button
+									on:click={() => {
+										stallsMode = 'edit'
+										currentStall = stall
+									}}
+									class="cursor-pointer border border-gray flex justify-start items-center p-4 font-bold"
+									variant="outline"
+								>
+									<div class="flex items-center gap-2">
+										<span class="i-tdesign-store w-6 h-6" />
+										<span>{stall.name}</span>
+									</div>
+								</Button>
+							{/each}
+						{:else if stallsMode === 'create' || stallsMode === 'edit'}
+							<CreateEditStall stall={currentStall} on:success={() => (stallsMode = 'list')} />
 						{/if}
-
-						{#each [...($stallsQuery.data ?? [])] as stall}
-							<div class="cursor-pointer border border-gray flex items-center p-4 font-bold">
-								<div class="flex items-center gap-2">
-									<span class="i-tdesign-store w-6 h-6" />
-									<span>{stall.name}</span>
-								</div>
-							</div>
-						{/each}
-
-						<CreateEditStall />
 					</div>
 				</Tabs.Content>
 

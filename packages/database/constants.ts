@@ -1,3 +1,33 @@
+export const CURRENCIES = [
+	'USD', // United States Dollar
+	'EUR', // Euro
+	'JPY', // Japanese Yen
+	'GBP', // Pound Sterling
+	'CHF', // Swiss Franc
+	'CNY', // Chinese Renminbi (RMB)
+	'AUD', // Australian Dollar
+	'CAD', // Canadian Dollar
+	'HKD', // Hong Kong Dollar
+	'SGD', // Singapore Dollar
+	'INR', // Indian Rupee
+	'MXN', // Mexican Peso
+	'RUB', // Russian Ruble
+	'BRL', // Brazilian Real
+	'TRY', // Turkish Lira
+	'KRW', // South Korean Won
+	'ZAR', // South African Rand
+	'ARS', // Argentine Peso
+	'CLP', // Chilean Peso
+	'COP', // Colombian Peso
+	'PEN', // Peruvian Sol
+	'UYU', // Uruguayan Peso
+	'VEF', // Venezuelan Bolivar (note: highly volatile and subject to frequent changes)
+	'PHP', // Philippine Peso
+	'THB', // Thai Baht
+	'IDR', // Indonesian Rupiah
+	'MYR', // Malaysian Ringgit
+] as const
+
 export const allowedMimeTypes = [
 	'application/pdf',
 	'application/msword',

@@ -18,6 +18,7 @@
 	},
 	"exports": {
 		".": "./index.ts",
+		"./constants": "./constants.ts",
 		"./utils": "./utils.ts"
 	},
 	"devDependencies": {

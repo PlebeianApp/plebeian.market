@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 import type { ProductTypes } from '@plebeian/database'
-import { PRODUCT_TYPES } from '@plebeian/database'
+import { PRODUCT_TYPES } from '@plebeian/database/constants'
 
 const productTypeValidator = (value: unknown) => {
 	if (typeof value !== 'string') {

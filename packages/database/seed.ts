@@ -3,6 +3,7 @@ import { sql } from 'drizzle-orm'
 
 import { KindAuctionProduct, KindBids, KindProducts, KindStalls } from '../app/src/lib/constants'
 import {
+	CURRENCIES,
 	APP_SETTINGS_META,
 	AUCTION_STATUS,
 	BID_STATUS,
@@ -17,7 +18,7 @@ import {
 	USER_TRUST_LEVEL,
 } from './constants'
 import { db } from './database'
-import { devInstance, devUser1, devUser2, devUser3, devUser4, devUser5, popularCurrencies } from './fixtures'
+import { devInstance, devUser1, devUser2, devUser3, devUser4, devUser5 } from './fixtures'
 import {
 	AppSettings,
 	Auction,
@@ -94,7 +95,7 @@ const main = async () => {
 				name: faker.commerce.productMaterial(),
 				description: faker.commerce.productDescription(),
 				identifier: identifier,
-				currency: faker.helpers.arrayElement(popularCurrencies),
+				currency: faker.helpers.arrayElement(CURRENCIES),
 			} as Stall
 		})
 	})
@@ -114,7 +115,7 @@ const main = async () => {
 					description: faker.commerce.productDescription(),
 					price: faker.finance.amount(),
 					productType: PRODUCT_TYPES.SIMPLE,
-					currency: faker.helpers.arrayElement(popularCurrencies),
+					currency: faker.helpers.arrayElement(CURRENCIES),
 					isFeatured: i % 2 === 0,
 					isDigital: faker.datatype.boolean({ probability: 0.8 }),
 					parentId: null,
@@ -185,7 +186,7 @@ const main = async () => {
 				productName: faker.commerce.productName(),
 				description: faker.commerce.productDescription(),
 				productType: faker.helpers.arrayElement(Object.values(PRODUCT_TYPES)),
-				currency: faker.helpers.arrayElement(popularCurrencies),
+				currency: faker.helpers.arrayElement(CURRENCIES),
 				stockQty: faker.number.int(),
 				parentId: null,
 				startingBidAmount: faker.finance.amount(),
