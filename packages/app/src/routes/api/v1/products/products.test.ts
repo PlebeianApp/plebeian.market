@@ -1,4 +1,4 @@
-import NDK, { NDKEvent, NDKKind, NDKPrivateKeySigner } from '@nostr-dev-kit/ndk'
+import NDK, { NDKEvent, NDKPrivateKeySigner } from '@nostr-dev-kit/ndk'
 import { KindProducts } from '$lib/constants'
 import { getAllStalls } from '$lib/server/stalls.service'
 import { describe, expect, it } from 'vitest'

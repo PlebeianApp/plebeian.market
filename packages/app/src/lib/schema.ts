@@ -29,3 +29,14 @@ export const stallsFilterSchema = generalFilterSchema.extend({
 })
 
 export type StallsFilter = z.infer<typeof stallsFilterSchema>
+
+export const initialSetupDataSchema = z.object({
+	instancePk: z.string().startsWith('npub'),
+	ownerPk: z.string().startsWith('npub'),
+	instanceName: z.string(),
+	logoUrl: z.string().url(),
+	contactEmail: z.string().email(),
+	defaultCurrency: z.string(),
+	allowRegister: z.coerce.boolean(),
+	derp: z.string().optional(),
+})

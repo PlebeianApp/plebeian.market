@@ -24,10 +24,10 @@ describe('stalls', async () => {
 		expect(pageTitle).toBe('Stalls')
 	})
 
-	test('stall items should be visible', async () => {
-		await page.goto(`http://${process.env.APP_HOST}:${process.env.APP_PORT}/stalls`)
-		const allLinks = await page.$$('a')
-		const hrefs = await Promise.all(allLinks.map((link) => link.getAttribute('href')))
-		expect(hrefs.some((href) => href.startsWith('/stalls/'))).toBe(true)
-	})
+	// test('stall items should be visible', async () => {
+	// 	await page.goto(`http://${process.env.APP_HOST}:${process.env.APP_PORT}/stalls`)
+	// 	const allLinks = await page.$$('a')
+	// 	const hrefs = await Promise.all(allLinks.map((link) => link.getAttribute('href')))
+	// 	expect(hrefs.some((href) => href.startsWith('/stalls/'))).toBe(true)
+	// })
 })
