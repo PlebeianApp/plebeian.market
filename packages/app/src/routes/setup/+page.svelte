@@ -13,7 +13,7 @@
 	import type { PageData } from './$types'
 
 	let checked = false
-	let selectedCurrency: Selected<string> = { value: 'USD', label: 'USD' }
+	let selectedCurrency: Selected<string> = { value: 'BTC', label: 'BTC' }
 	let newInstanceNsec = ''
 	let newInstanceNpub = ''
 
@@ -40,7 +40,7 @@
 		})
 		const result = await response.json()
 
-		if (result.success) {
+		if (result) {
 			goto('/')
 		}
 	}

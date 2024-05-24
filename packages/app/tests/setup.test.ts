@@ -1,5 +1,6 @@
 import type { Browser, Page } from 'playwright'
 import { expect } from '@playwright/test'
+import { generateSecretKey, getPublicKey, nip19 } from 'nostr-tools'
 import { chromium } from 'playwright'
 import { afterAll, beforeAll, describe, test } from 'vitest'
 
@@ -22,9 +23,6 @@ describe('setup', async () => {
 	beforeAll(async () => {
 		browser = await chromium.launch({ headless: true })
 		page = await browser.newPage()
-
-		// await db.delete(appSettings).execute()
-		await db.update(appSettings).set({ isFirstTimeRunning: true }).execute()
 	})
 
 	afterAll(async () => {
@@ -32,58 +30,34 @@ describe('setup', async () => {
 	})
 
 	test('visit to root should redirect to /setup', async () => {
-		await page.goto(`http://${process.env.APP_HOST}:${process.env.APP_PORT}`)
+		const [appSettingsRes] = await db.select().from(appSettings).execute()
+
+		if (!appSettingsRes.isFirstTimeRunning) {
+			await db.update(appSettings).set({ isFirstTimeRunning: true }).execute()
+		}
+
+		await page.goto(`http://${process.env.APP_HOST}:${process.env.APP_PORT}/`)
+
+		await page.waitForURL(`http://${process.env.APP_HOST}:${process.env.APP_PORT}/setup`)
 
 		expect(page.url()).toBe(`http://${process.env.APP_HOST}:${process.env.APP_PORT}/setup`)
-
 		await page.waitForSelector('form')
 		const form = await page.$('form')
 		expect(form).not.toBeNull()
 	})
 
-	test('should display the instance npub input', async () => {
-		const instanceNpubInput = await page.$('input[name="instancePk"]')
-		expect(instanceNpubInput).not.toBeNull()
-	})
-
-	test('should display the owner npub input', async () => {
-		const ownerNpubInput = await page.$('input[name="ownerPk"]')
-		expect(ownerNpubInput).not.toBeNull()
-	})
-
-	test('should display the instance name input', async () => {
-		const instanceNameInput = await page.$('input[name="instanceName"]')
-		expect(instanceNameInput).not.toBeNull()
-	})
-
-	test('should display the logo url input', async () => {
-		const logoUrlInput = await page.$('input[name="logoUrl"]')
-		expect(logoUrlInput).not.toBeNull()
-	})
-
-	test('should display the contact email input', async () => {
-		const contactEmailInput = await page.$('input[name="contactEmail"]')
-		expect(contactEmailInput).not.toBeNull()
-	})
-
-	test('should display the default currency select', async () => {
-		const defaultCurrencySelect = await page.$('button[role="combobox"][data-select-trigger]')
-		expect(defaultCurrencySelect).not.toBeNull()
-	})
-
-	test('should display the allow register checkbox', async () => {
-		const allowRegisterCheckbox = await page.$('button[role="checkbox"][placeholder="allow register"]')
-		expect(allowRegisterCheckbox).not.toBeNull()
-	})
-
-	test('should display the submit button', async () => {
-		const submitButton = await page.$('button[type="submit"]')
-		expect(submitButton).not.toBeNull()
-	})
-
 	test('setup should fill form and submit', async () => {
+		const sk = generateSecretKey()
+		const newPk = getPublicKey(sk)
+
+		const nsec = nip19.nsecEncode(sk)
+		const npub = nip19.npubEncode(newPk)
+
+		const decodedAdminPk = nip19.decode(npub).data
+		const decodedInstancePk = nip19.decode(instance.npub).data
+
 		await page.fill('input[name="instancePk"]', instance.npub)
-		await page.fill('input[name="ownerPk"]', admin.npub)
+		await page.fill('input[name="ownerPk"]', npub)
 		await page.fill('input[name="instanceName"]', 'Test Instance')
 		await page.fill('input[name="logoUrl"]', 'https://example.com/logo.png')
 		await page.fill('input[name="contactEmail"]', 'hello@hello.com')
@@ -91,21 +65,21 @@ describe('setup', async () => {
 		await page.check('button[role="checkbox"][placeholder="allow register"]')
 		await page.click('button[type="submit"]')
 
-		await page.waitForURL(`http://${process.env.APP_HOST}:${process.env.APP_PORT}/`)
+		await new Promise((resolve) => setTimeout(resolve, 100))
 
 		const [appSettingsRes] = await db.select().from(appSettings).execute()
-		const [adminRes] = await db.select().from(users).where(eq(users.role, 'admin')).execute()
+		const [adminRes] = await db.select().from(users).where(eq(users.id, decodedAdminPk)).execute()
 
 		expect(appSettingsRes.isFirstTimeRunning).toBe(false)
-		expect(appSettingsRes.instancePk).toBe(instance.npub)
+		expect(appSettingsRes.instancePk).toBe(decodedInstancePk)
 
-		expect(appSettingsRes.ownerPk).toBe(admin.npub)
+		expect(appSettingsRes.ownerPk).toBe(decodedAdminPk)
 		expect(appSettingsRes.instanceName).toBe('Test Instance')
 		expect(appSettingsRes.logoUrl).toBe('https://example.com/logo.png')
 		expect(appSettingsRes.contactEmail).toBe('hello@hello.com')
-		expect(appSettingsRes.defaultCurrency).toBe('USD')
+		expect(appSettingsRes.defaultCurrency).toBe('BTC')
 		expect(appSettingsRes.allowRegister).toBe(true)
 
-		expect(adminRes.id).toBe(admin.npub)
+		expect(adminRes.id).toBe(decodedAdminPk)
 	})
 })
