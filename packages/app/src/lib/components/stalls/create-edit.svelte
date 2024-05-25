@@ -9,8 +9,9 @@
 	import * as Popover from '$lib/components/ui/popover/index.js'
 	import { Textarea } from '$lib/components/ui/textarea'
 	import { KindProducts } from '$lib/constants'
-	import ndkStore, { ndk, ndkActiveUser } from '$lib/stores/ndk'
-	import { createEventDispatcher, tick } from 'svelte'
+	import { ndk, ndkActiveUser } from '$lib/stores/ndk'
+	import { countries } from 'country-code-lookup'
+	import { createEventDispatcher, onMount } from 'svelte'
 
 	import { COUNTRIES_ISO, CURRENCIES } from '@plebeian/database/constants'
 	import { createId } from '@plebeian/database/utils'
@@ -70,7 +71,19 @@
 		shippingMethods = shippingMethods.filter((s) => s.id !== id)
 	}
 
-	addShipping()
+	onMount(async () => {
+		if (stall) {
+			const response = await fetch(new URL(`/api/v1/shipping/${stall.id}`, window.location.origin), {
+				method: 'GET',
+			})
+			console.log(await response.json())
+			shipping = await response.json() as Shipping[]
+		}
+
+		if (!shipping.length) {
+			addShipping()
+		}
+	})
 
 	function closeAndFocusTrigger(triggerId: string) {
 		tick().then(() => {
@@ -158,7 +171,7 @@
 			</div>
 			<div>
 				<Label for="from" class="font-bold">Base Cost</Label>
-				<Input bind:value={item.cost} class="border border-black" min={0} type="number" name="shipping" placeholder="e.g. $30" />
+				<Input bind:value={item.baseCost} class="border border-2 border-black" min={0} type="number" name="shipping" placeholder="e.g. $30" />
 			</div>
 
 			<div class=" block max-w-44">
@@ -205,6 +218,28 @@
 				<Button on:click={() => addShipping(item.id)} variant="outline" class="font-bold border-0 h-full"
 					><span class=" i-mdi-content-copy"></span></Button
 				>
+				<DropdownMenu.Root>
+					<DropdownMenu.Trigger asChild let:builder>
+						<Button variant="outline" class="w-full border border-2 border-black" builders={[builder]}
+							>{item.regions.length ? item.regions.join(', ') : 'Select'}</Button
+						>
+					</DropdownMenu.Trigger>
+					<DropdownMenu.Content class="w-56 h-56 overflow-y-scroll">
+						<DropdownMenu.Separator />
+						{#each countries as option}
+							<DropdownMenu.CheckboxItem
+								checked={item.regions.includes(option.iso2)}
+								on:click={() => {
+									item.regions = item.regions.includes(option.iso2)
+										? item.regions.filter((region) => region !== option.iso2)
+										: [...item.regions, option.iso2]
+								}}
+							>
+								{option.country}
+							</DropdownMenu.CheckboxItem>
+						{/each}
+					</DropdownMenu.Content>
+				</DropdownMenu.Root>
 			</div>
 		</div>
 	{/each}
