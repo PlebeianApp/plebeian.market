@@ -1,16 +1,18 @@
 <script lang="ts">
 	import type { RichStall } from '$lib/server/stalls.service'
-	import NDK, { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk'
+	import { NDKEvent } from '@nostr-dev-kit/ndk'
 	import { Button } from '$lib/components/ui/button/index.js'
+	import * as Command from '$lib/components/ui/command/index.js'
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js'
 	import { Input } from '$lib/components/ui/input/index.js'
 	import { Label } from '$lib/components/ui/label/index.js'
+	import * as Popover from '$lib/components/ui/popover/index.js'
 	import { Textarea } from '$lib/components/ui/textarea'
 	import { KindProducts } from '$lib/constants'
-	import { ndk, ndkActiveUser } from '$lib/stores/ndk'
-	import { createEventDispatcher } from 'svelte'
+	import ndkStore, { ndk, ndkActiveUser } from '$lib/stores/ndk'
+	import { createEventDispatcher, tick } from 'svelte'
 
-	import { CURRENCIES } from '@plebeian/database/constants'
+	import { COUNTRIES_ISO, CURRENCIES } from '@plebeian/database/constants'
 	import { createId } from '@plebeian/database/utils'
 
 	import { stallEventSchema } from '../../../schema/nostr-events'
@@ -18,24 +20,63 @@
 	export let stall: RichStall | null = null
 
 	type Currency = (typeof CURRENCIES)[number]
-	type Shipping = (typeof stallEventSchema._type)['shipping']
+	type Shipping = (typeof stallEventSchema._type)['shipping'][0]
 
 	let currency: Currency = (stall?.currency as Currency) ?? 'USD'
-	let shipping: Shipping = []
 
-	function addShipping() {
-		shipping = [
-			...shipping,
-			{
-				id: Math.random().toString(36).substring(2, 15),
-				name: '',
-				cost: 0,
-				regions: [],
-			},
-		]
+	class ShippingMethod implements Shipping {
+		id: string
+		name: string | undefined
+		cost: number
+		regions: string[]
+
+		constructor(id: string, name: string, cost: number, regions: string[] = []) {
+			this.id = id
+			this.name = name
+			this.cost = cost
+			this.regions = regions
+		}
+
+		addZone(zone: string) {
+			this.regions.push(zone)
+			shippingMethods = shippingMethods
+		}
+
+		removeZone(zone: string) {
+			this.regions = this.regions.filter((z) => z !== zone)
+			shippingMethods = shippingMethods
+		}
+	}
+
+	let shippingMethods: ShippingMethod[] = []
+
+	function addShipping(id?: string) {
+		if (id) {
+			const existingMethod = shippingMethods.find((method) => method.id === id)
+			if (existingMethod) {
+				const duplicatedMethod = new ShippingMethod(createId(), existingMethod.name!, existingMethod.cost, existingMethod.regions)
+				shippingMethods = [...shippingMethods, duplicatedMethod]
+			} else {
+				console.error(`No shipping method found with id ${id}`)
+			}
+		} else {
+			const newMethod = new ShippingMethod(createId(), '', 0)
+			shippingMethods = [...shippingMethods, newMethod]
+		}
+		console.log(shippingMethods)
+	}
+
+	function removeShipping(id: string) {
+		shippingMethods = shippingMethods.filter((s) => s.id !== id)
 	}
 
 	addShipping()
+
+	function closeAndFocusTrigger(triggerId: string) {
+		tick().then(() => {
+			document.getElementById(triggerId)?.focus()
+		})
+	}
 
 	const dispatch = createEventDispatcher<{
 		success: unknown
@@ -50,10 +91,10 @@
 			name: formData.get('title'),
 			description: formData.get('description'),
 			currency: currency,
-			shipping,
+			shipping: shippingMethods,
 		}
-		const newEvent = new NDKEvent(new NDK({ signer: ndk.signer! }), {
-			kind: 30017 as NDKKind,
+		const newEvent = new NDKEvent($ndkStore, {
+			kind: KindProducts,
 			pubkey: $ndkActiveUser.pubkey,
 			content: JSON.stringify(evContent),
 			created_at: Math.floor(Date.now()),
@@ -78,69 +119,98 @@
 <form class="flex flex-col gap-4" on:submit|preventDefault={create}>
 	<div class="grid w-full items-center gap-1.5">
 		<Label for="title" class="font-bold">Title</Label>
-		<Input value={stall?.name} required class="border border-2 border-black" type="text" name="title" placeholder="e.g. Fancy Wears" />
+		<Input value={stall?.name} required class="border border-black" type="text" name="title" placeholder="e.g. Fancy Wears" />
 	</div>
 	<div class="grid w-full items-center gap-1.5">
 		<Label for="description" class="font-bold">Description (Optional)</Label>
-		<Textarea value={stall?.description} class="border border-2 border-black" placeholder="Description" name="description" />
+		<Textarea value={stall?.description} class="border border-black" placeholder="Description" name="description" />
 	</div>
 	<div class="grid w-full items-center gap-1.5">
 		<Label for="from" class="font-bold">Shipping From (Optional)</Label>
-		<Input class="border border-2 border-black" type="text" name="from" placeholder="e.g. London" />
+		<Input class="border border-black" type="text" name="from" placeholder="e.g. London" />
 	</div>
 
 	<div class="grid w-full items-center gap-1.5">
 		<Label for="from" class="font-bold">Currency</Label>
 		<DropdownMenu.Root>
 			<DropdownMenu.Trigger asChild let:builder>
-				<Button variant="outline" class="border border-2 border-black" builders={[builder]}>{currency}</Button>
+				<Button variant="outline" class="border border-black" builders={[builder]}>{currency}</Button>
 			</DropdownMenu.Trigger>
 			<DropdownMenu.Content class="w-56">
 				<DropdownMenu.Label>Currency</DropdownMenu.Label>
 				<DropdownMenu.Separator />
-				{#each CURRENCIES as option}
-					<DropdownMenu.CheckboxItem checked={currency === option} on:click={() => (currency = option)}>
-						{option}
-					</DropdownMenu.CheckboxItem>
-				{/each}
+				<section class=" max-h-[350px] overflow-y-auto">
+					{#each CURRENCIES as option}
+						<DropdownMenu.CheckboxItem checked={currency === option} on:click={() => (currency = option)}>
+							{option}
+						</DropdownMenu.CheckboxItem>
+					{/each}
+				</section>
 			</DropdownMenu.Content>
 		</DropdownMenu.Root>
 	</div>
 
-	{#each shipping as item, i}
-		<div class="grid grid-cols-3 w-full items-center gap-1.5">
+	{#each shippingMethods as item, i}
+		<div class="grid grid-cols-[1fr_1fr_auto_auto] w-full items-start gap-2">
 			<div>
 				<Label for="from" class="font-bold">{i + 1}. Shipping Name</Label>
-				<Input bind:value={item.name} class="border border-2 border-black" type="text" name="shipping" placeholder="24/28h Europe" />
+				<Input bind:value={item.name} class="border border-black" type="text" name="shipping" placeholder="24/28h Europe" />
 			</div>
 			<div>
 				<Label for="from" class="font-bold">Base Cost</Label>
-				<Input bind:value={item.cost} class="border border-2 border-black" min={0} type="number" name="shipping" placeholder="e.g. $30" />
+				<Input bind:value={item.cost} class="border border-black" min={0} type="number" name="shipping" placeholder="e.g. $30" />
 			</div>
 
-			<div class="w-full">
+			<div class=" block max-w-44">
 				<Label for="from" class="font-bold">Zones</Label>
+				<section>
+					{#each item.regions as zone}
+						<Button size="sm" variant="ghost" class="p-1 rounded h-fit hover:bg-red-500" on:click={() => item.removeZone(zone)}
+							>{zone}</Button
+						>
+					{/each}
+					<Popover.Root let:ids>
+						<Popover.Trigger asChild let:builder>
+							<Button builders={[builder]} variant="outline" role="combobox" aria-expanded="true" class="justify-between">+</Button>
+						</Popover.Trigger>
+						<Popover.Content class="w-[200px] max-h-[350px] overflow-y-auto p-0">
+							<Command.Root>
+								<Command.Input placeholder="Search country..." />
+								<Command.Empty>No country found.</Command.Empty>
+								<Command.Group>
+									{#each Object.values(COUNTRIES_ISO) as country}
+										<Command.Item
+											value={country.iso3}
+											onSelect={(currentValue) => {
+												item.addZone(currentValue)
+												closeAndFocusTrigger(ids.trigger)
+											}}
+										>
+											<section class="flex flex-col">
+												{country.iso3}<small>({country.name})</small>
+											</section>
+										</Command.Item>
+									{/each}
+								</Command.Group>
+							</Command.Root>
+						</Popover.Content>
+					</Popover.Root>
+				</section>
+			</div>
 
-				<DropdownMenu.Root>
-					<DropdownMenu.Trigger asChild let:builder>
-						<Button variant="outline" class="w-full border border-2 border-black" builders={[builder]}>{currency}</Button>
-					</DropdownMenu.Trigger>
-					<DropdownMenu.Content class="w-56">
-						<DropdownMenu.Label>Currency</DropdownMenu.Label>
-						<DropdownMenu.Separator />
-						{#each CURRENCIES as option}
-							<DropdownMenu.CheckboxItem checked={currency === option} on:click={() => (currency = option)}>
-								{option}
-							</DropdownMenu.CheckboxItem>
-						{/each}
-					</DropdownMenu.Content>
-				</DropdownMenu.Root>
+			<div class=" flex flex-col gap-1">
+				<Button on:click={() => removeShipping(item.id)} variant="outline" class="font-bold text-red-500 border-0 h-full"
+					><span class=" i-mdi-trash-can"></span></Button
+				>
+				<Button on:click={() => addShipping(item.id)} variant="outline" class="font-bold border-0 h-full"
+					><span class=" i-mdi-content-copy"></span></Button
+				>
 			</div>
 		</div>
 	{/each}
 
 	<div class="grid gap-1.5">
-		<Button on:click={addShipping} variant="outline" class="font-bold ml-auto">Add Shipping Method</Button>
+		<Button on:click={() => addShipping()} variant="outline" class="font-bold ml-auto">Add Shipping Method</Button>
 	</div>
 	<Button type="submit" class="w-full font-bold">Save</Button>
 </form>

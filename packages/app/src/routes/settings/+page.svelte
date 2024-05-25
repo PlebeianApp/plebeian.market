@@ -12,7 +12,7 @@
 	import * as Tabs from '$lib/components/ui/tabs/index.js'
 	import ndkStore, { defaulRelaysUrls, ndk, ndkActiveUser } from '$lib/stores/ndk'
 
-	$: relayUrls = [...new Set([...(ndk.activeUser?.relayUrls ?? []), ...defaulRelaysUrls])].map((u) => new URL(u))
+	$: relayUrls = [...new Set([...($ndkActiveUser?.relayUrls ?? []), ...defaulRelaysUrls])].map((u) => new URL(u))
 
 	let stallsMode: 'list' | 'create' | 'edit' = 'list'
 
