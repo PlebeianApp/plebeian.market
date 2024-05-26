@@ -146,8 +146,6 @@ const main = async () => {
 			stallId: stall.id,
 			userId: stall.userId,
 			name: faker.commerce.productName(),
-			shippingMethod: faker.helpers.arrayElement(['standard', 'express', 'overnight']),
-			shippingDetails: faker.commerce.productDescription(),
 			baseCost: faker.finance.amount(),
 			isDefault: faker.datatype.boolean(),
 			createdAt: faker.date.recent(),

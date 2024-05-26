@@ -177,8 +177,6 @@ export const shipping = sqliteTable('shipping', {
 		.notNull()
 		.references(() => users.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
 	name: text('name').notNull(),
-	shippingMethod: text('shipping_method').notNull(),
-	shippingDetails: text('shipping_details').notNull(),
 	baseCost: numeric('base_cost').notNull(),
 	isDefault: integer('default', { mode: 'boolean' }).notNull().default(false),
 })

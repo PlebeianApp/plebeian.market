@@ -8,7 +8,7 @@ import { getProductsByStallId } from '$lib/server/products.service'
 import { getEventCoordinates } from '$lib/utils'
 import { format } from 'date-fns'
 
-import type { Stall } from '@plebeian/database'
+import { shipping, shippingZones, Stall } from '@plebeian/database'
 import { and, db, eq, orders, products, sql, stalls, users } from '@plebeian/database'
 
 import { stallEventSchema } from '../../schema/nostr-events'
@@ -199,6 +199,23 @@ export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall>
 		error(404, 'Not found')
 	}
 
+	for (const method of parsedProduct.shipping) {
+		const [shippingResult] = await db.insert(shipping).values({
+      id: method.id,
+      name: method.name,
+      baseCost: String(method.baseCost),
+      userId: stallResult.userId,
+      stallId: stallResult.id
+    }).returning()
+    for (const region of method.regions) {
+      await db.insert(shippingZones).values({
+        countryCode: region,
+        regionCode: region,
+        shippingId: shippingResult.id 
+      })
+    }
+	}
+
 	const stall = stallResult
 
 	return {
@@ -239,6 +256,31 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
 		.returning()
 
 	if (stallResult) {
+
+	for (const method of parsedStall.shipping ?? []) {
+		const [shippingResult] = await db.insert(shipping).values({
+      id: method.id,
+      name: method.name,
+      baseCost: String(method.baseCost),
+      userId: stallResult.userId,
+      stallId: stallResult.id
+    }).onConflictDoUpdate({
+        target: shipping.id,
+        set: {
+          name: method.name,
+          baseCost: String(method.baseCost),
+        }
+      }).returning()
+    for (const region of method.regions) {
+      await db.insert(shippingZones).values({
+        countryCode: region,
+        regionCode: region,
+        shippingId: shippingResult.id 
+      }).onConflictDoNothing({
+          target: shippingZones.regionCode
+        })
+    }
+	}
 		return {
 			id: stallResult.id,
 			name: stallResult.name,

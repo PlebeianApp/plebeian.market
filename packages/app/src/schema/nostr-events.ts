@@ -62,8 +62,8 @@ export const stallEventSchema = z.object({
 	shipping: z.array(
 		z.object({
 			id: z.string(),
-			name: z.string().optional(),
-			cost: z.number(),
+			name: z.string(),
+			baseCost: z.number(),
 			regions: z.array(z.string()),
 		}),
 	),
