@@ -9,6 +9,7 @@
     "lint": "pnpm --filter \"./packages/**\" --parallel --stream -r run lint",
     "format": "pnpm --filter \"./packages/**\" --parallel --stream -r run format",
     "db:setup": "pnpm --filter './packages/database' run db:setup",
+    "test:fresh": "pnpm db:setup && pnpm --parallel --stream -r run test",
     "test": "pnpm --parallel --stream -r run test",
     "studio": "cd packages/database && pnpm drizzle-kit studio"
   },

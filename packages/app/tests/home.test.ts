@@ -19,15 +19,15 @@ describe('home', async () => {
 	})
 
 	test('h1 should be visible or redirect to setup page', async () => {
+		await db.update(appSettings).set({ isFirstTimeRunning: true }).execute()
 		const [appSettingsRes] = await db.select().from(appSettings).execute()
-		await page.goto(`http://${process.env.APP_HOST}:${process.env.APP_PORT}`)
+		await page.goto(`http://${process.env.APP_HOST}:${process.env.APP_PORT}/`)
 
 		if (appSettingsRes.isFirstTimeRunning) {
 			expect(page.url()).toBe(`http://${process.env.APP_HOST}:${process.env.APP_PORT}/setup`)
 		} else {
 			const pageTitle = await page.textContent('h1')
 			expect(pageTitle).toBe('Sell stuff for sats')
-
 			const listButton = await page.$('text=List my stuff')
 			expect(listButton).not.toBeNull()
 		}
