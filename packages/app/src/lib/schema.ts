@@ -34,9 +34,8 @@ export const initialSetupDataSchema = z.object({
 	instancePk: z.string().startsWith('npub'),
 	ownerPk: z.string().startsWith('npub'),
 	instanceName: z.string(),
-	logoUrl: z.string().url(),
-	contactEmail: z.string().email(),
+	logoUrl: z.string().url().optional(),
+	contactEmail: z.string().email().optional(),
 	defaultCurrency: z.string(),
 	allowRegister: z.coerce.boolean(),
-	derp: z.string().optional(),
 })

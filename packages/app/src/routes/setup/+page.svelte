@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Selected } from 'bits-ui'
+	import type { ZodError } from 'zod'
 	import { goto } from '$app/navigation'
 	import Button from '$lib/components/ui/button/button.svelte'
 	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte'
@@ -9,6 +10,7 @@
 	import Separator from '$lib/components/ui/separator/separator.svelte'
 	import { copyToClipboard } from '$lib/utils'
 	import { generateSecretKey, getPublicKey, nip19 } from 'nostr-tools'
+	import { toast } from 'svelte-sonner'
 
 	import type { PageData } from './$types'
 
@@ -38,6 +40,20 @@
 			method: 'POST',
 			body: JSON.stringify(formObject),
 		})
+
+		if (!response.ok) {
+			const error = (await response.json()) as ZodError
+			console.log('error', error)
+			if (error.issues.length > 0) {
+				error.issues.forEach((issue) => {
+					toast.error(issue.message)
+				})
+			} else {
+				console.error('Failed to submit form', error)
+			}
+			return
+		}
+
 		const result = await response.json()
 
 		if (result) {

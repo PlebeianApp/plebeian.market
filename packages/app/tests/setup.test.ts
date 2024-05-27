@@ -1,10 +1,11 @@
 import type { Browser, Page } from 'playwright'
 import { expect } from '@playwright/test'
+import * as setupSvcExports from '$lib/server/setup.service'
 import { generateSecretKey, getPublicKey, nip19 } from 'nostr-tools'
 import { chromium } from 'playwright'
-import { afterAll, beforeAll, describe, test } from 'vitest'
+import { afterAll, afterEach, beforeAll, describe, test, vi } from 'vitest'
 
-import { appSettings, db, eq, users } from '@plebeian/database'
+import { appSettings, db, desc, eq, users } from '@plebeian/database'
 
 const admin = {
 	nsec: 'nsec1p9vaycg0g58zsksxty5wlehqc38wy29agffph95hk0kfknp00gdq6y69rc',
@@ -16,11 +17,21 @@ const instance = {
 	npub: 'npub13k59umfmf0ql62wvfgyyljnxt3h4famacyd9rvzatx0kmmg9z9sqczhy8m',
 }
 
+vi.spyOn(setupSvcExports, 'isInitialSetup')
+vi.mock('$lib/server/setup.service', async (importOriginal) => {
+	return {
+		...(await importOriginal<typeof import('$lib/server/setup.service')>()),
+		isInitialSetup: async () => false,
+	}
+})
+
 describe('setup', async () => {
 	let browser: Browser
 	let page: Page
 
 	beforeAll(async () => {
+		await db.delete(appSettings).execute()
+		await db.insert(appSettings).values({ isFirstTimeRunning: true, instancePk: '' }).execute()
 		browser = await chromium.launch({ headless: true })
 		page = await browser.newPage()
 	})
@@ -29,13 +40,11 @@ describe('setup', async () => {
 		await browser?.close()
 	})
 
+	afterEach(() => {
+		vi.restoreAllMocks()
+	})
+
 	test('visit to root should redirect to /setup', async () => {
-		const [appSettingsRes] = await db.select().from(appSettings).execute()
-
-		if (!appSettingsRes.isFirstTimeRunning) {
-			await db.update(appSettings).set({ isFirstTimeRunning: true }).execute()
-		}
-
 		await page.goto(`http://${process.env.APP_HOST}:${process.env.APP_PORT}/`)
 
 		await page.waitForURL(`http://${process.env.APP_HOST}:${process.env.APP_PORT}/setup`)
@@ -50,7 +59,6 @@ describe('setup', async () => {
 		const sk = generateSecretKey()
 		const newPk = getPublicKey(sk)
 
-		const nsec = nip19.nsecEncode(sk)
 		const npub = nip19.npubEncode(newPk)
 
 		const decodedAdminPk = nip19.decode(npub).data
@@ -68,7 +76,7 @@ describe('setup', async () => {
 		await new Promise((resolve) => setTimeout(resolve, 100))
 
 		const [appSettingsRes] = await db.select().from(appSettings).execute()
-		const [adminRes] = await db.select().from(users).where(eq(users.id, decodedAdminPk)).execute()
+		const [adminRes] = await db.select().from(users).orderBy(desc(users.createdAt)).where(eq(users.id, decodedAdminPk)).execute()
 
 		expect(appSettingsRes.isFirstTimeRunning).toBe(false)
 		expect(appSettingsRes.instancePk).toBe(decodedInstancePk)

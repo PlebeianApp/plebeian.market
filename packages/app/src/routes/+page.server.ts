@@ -1,4 +1,3 @@
-import { redirect } from '@sveltejs/kit'
 import { toDisplayProduct } from '$lib/server/products.service'
 import { isInitialSetup } from '$lib/server/setup.service'
 
@@ -26,11 +25,9 @@ const getHomeProducts = async () => {
 }
 
 export const load: PageServerLoad = async () => {
-	const response = await isInitialSetup()
-	if (response) {
-		redirect(302, '/setup')
-	}
-	return getHomeProducts()
+	const initialSetup = await isInitialSetup()
+	const homeProducts = await getHomeProducts()
+	return { initialSetup, homeProducts }
 }
 
 export const prerender = true

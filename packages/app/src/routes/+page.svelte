@@ -1,12 +1,23 @@
 <script lang="ts">
+	import { goto } from '$app/navigation'
 	import Pattern from '$lib/components/Pattern.svelte'
 	import ProductItem from '$lib/components/product/item.svelte'
 	import { Button } from '$lib/components/ui/button/index.js'
+	import { onMount } from 'svelte'
 
 	import type { PageData } from './$types'
 
 	export let data: PageData
-	const { featured, products } = data
+	const {
+		initialSetup,
+		homeProducts: { featured, products },
+	} = data
+
+	onMount(() => {
+		if (initialSetup) {
+			goto('/setup')
+		}
+	})
 </script>
 
 <div class="flex min-h-screen w-full flex-col bg-muted/40">
