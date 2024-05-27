@@ -14,8 +14,8 @@ export const doSetup = async (setupData: NewAppSettings, adminList?: string[]) =
 		error(400, 'Invalid request')
 	}
 
-	const decodedInstancePk = nip19.decode(setupData.instancePk).data
-	const decodedOwnerPk = setupData.ownerPk ? nip19.decode(setupData.ownerPk).data : null
+	const decodedInstancePk = nip19.decode(setupData.instancePk).data.toString()
+	const decodedOwnerPk = setupData.ownerPk ? nip19.decode(setupData.ownerPk).data.toString() : null
 
 	const updatedAppSettings = await updateAppSettings({
 		...setupData,
@@ -27,14 +27,14 @@ export const doSetup = async (setupData: NewAppSettings, adminList?: string[]) =
 
 	const adminsToInsert = [
 		...(setupData.instancePk ? [{ id: decodedInstancePk.toString(), role: 'admin' }] : []),
-		...(setupData.ownerPk ? [{ id: decodedOwnerPk.toString(), role: 'admin' }] : []),
+		...(setupData.ownerPk ? [{ id: decodedOwnerPk, role: 'admin' }] : []),
 		...(adminList?.map((adminPk) => ({
 			id: nip19.decode(adminPk).data.toString(),
 			role: 'admin',
 		})) ?? []),
-	]
+	].filter((admin) => admin.id !== null)
 
-	const insertedUsers = await insertUsers(adminsToInsert)
+	const insertedUsers = await insertUsers(adminsToInsert as { id: string; role: UserRoles }[])
 
 	return { updatedAppSettings, insertedUsers }
 }
