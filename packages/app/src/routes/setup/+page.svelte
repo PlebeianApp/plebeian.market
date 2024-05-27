@@ -18,7 +18,8 @@
 	let selectedCurrency: Selected<string> = { value: 'BTC', label: 'BTC' }
 	let newInstanceNsec = ''
 	let newInstanceNpub = ''
-
+	let adminsList: string[] = []
+	let inputValue: string = ''
 	export let data: PageData
 	$: ({ currencies } = data)
 
@@ -35,10 +36,10 @@
 		const formObject = Object.fromEntries(formData.entries())
 		formObject.allowRegister = checked.toString()
 		formObject.defaultCurrency = selectedCurrency.value
-
+		const filteredFormObject = Object.fromEntries(Object.entries(formObject).filter(([_, value]) => value !== ''))
 		const response = await fetch('/setup', {
 			method: 'POST',
-			body: JSON.stringify(formObject),
+			body: JSON.stringify(filteredFormObject),
 		})
 
 		if (!response.ok) {
@@ -68,7 +69,9 @@
 			<div class="px-4 py-20 lg:px-12">
 				<div class="container">
 					<h2 class="max-w-2xl">GM ser, plase provide the setup data...</h2>
+					<Separator class=" my-2" />
 					<form on:submit|preventDefault={handleSubmit} class="max-w-2xl flex flex-col gap-3">
+						<h3>Identity</h3>
 						<Label class="truncate font-bold">Instance npub</Label>
 						<div class="flex flex-row gap-2">
 							<Input
@@ -99,9 +102,7 @@
 						{/if}
 
 						<Label class="truncate font-bold">Owner npub</Label>
-						<Input required class=" border-black border-2" name="ownerPk" placeholder="owner npub" type="text" />
-
-						<Separator class=" my-8" />
+						<Input class=" border-black border-2" name="ownerPk" placeholder="owner npub" type="text" />
 						<div class="flex flex-row gap-2">
 							<div class=" flex-grow">
 								<Label class="truncate font-bold">Instance name</Label>
@@ -116,7 +117,39 @@
 
 						<Label class="truncate font-bold">Contact email</Label>
 						<Input class="border-black border-2" name="contactEmail" placeholder="contact email" type="email" />
+						<Separator class=" my-2" />
+						<h3>Crew</h3>
+						{#each adminsList as admin}
+							<div class=" grid grid-cols-[1fr_auto] items-center">
+								<span class="truncate">{admin}</span>
+								<Button
+									type="button"
+									size="icon"
+									variant="outline"
+									class=" bg-red-500"
+									on:click={() => (adminsList = adminsList.filter((value) => value !== admin))}
+								>
+									<span class="i-mdi-trash-can"></span>
+								</Button>
+							</div>
+						{/each}
+						<textarea name="adminsList" value={adminsList} hidden />
+						<Input type="text" bind:value={inputValue} />
+						<Button
+							type="button"
+							on:click={() => {
+								inputValue = inputValue.trim()
+								if (inputValue) {
+									adminsList = [...adminsList, inputValue]
+									inputValue = ''
+								}
+							}}
+						>
+							Add Admin
+						</Button>
 
+						<Separator class=" my-2" />
+						<h3>Miscellanea</h3>
 						<div class="flex flex-row items-center justify-center gap-4">
 							<div class="flex-grow">
 								<Label class="truncate font-bold">Default currency</Label>
@@ -124,7 +157,7 @@
 									<SelectTrigger class="border-black border-2">
 										<SelectValue placeholder="Currency" />
 									</SelectTrigger>
-									<SelectContent class="border-black border-2">
+									<SelectContent class="border-black border-2 max-h-[350px] overflow-y-auto">
 										{#each currencies as currency}
 											<SelectItem value={currency}>{currency}</SelectItem>
 										{/each}
