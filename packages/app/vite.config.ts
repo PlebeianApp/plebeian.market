@@ -1,9 +1,19 @@
 import { sveltekit } from '@sveltejs/kit/vite'
 import { SvelteKitPWA } from '@vite-pwa/sveltekit'
-import { defineConfig } from 'vite'
+import tsconfigPaths from 'vite-tsconfig-paths'
+import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
+	test: {
+		testTimeout: 25_000,
+		hookTimeout: 25_000,
+		globalSetup: './tests/globalSetup.ts',
+		alias: {
+			$lib: new URL('./src/lib', import.meta.url).pathname,
+		},
+	},
 	plugins: [
+		tsconfigPaths(),
 		sveltekit(),
 		SvelteKitPWA({
 			/* pwa options */
