@@ -119,7 +119,7 @@ export const events = sqliteTable('events', {
 	event: text('event').notNull(),
 })
 
-type NonEmptyArray<T> = [T, ...T[]]
+export type NonEmptyArray<T> = [T, ...T[]]
 
 // Users table
 export const users = sqliteTable('users', {

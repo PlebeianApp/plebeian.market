@@ -199,6 +199,7 @@ export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall>
 		error(404, 'Not found')
 	}
 
+	
 	for (const method of parsedProduct.shipping) {
 		const [shippingResult] = await db.insert(shipping).values({
       id: method.id,
@@ -207,13 +208,12 @@ export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall>
       userId: stallResult.userId,
       stallId: stallResult.id
     }).returning()
-    for (const region of method.regions) {
-      await db.insert(shippingZones).values({
-        countryCode: region,
-        regionCode: region,
-        shippingId: shippingResult.id 
-      })
-    }
+		
+    await db.insert(shippingZones).values(method.regions.map((region) => ({
+      countryCode: region,
+      regionCode: region,
+      shippingId: shippingResult.id 
+    })))
 	}
 
 	const stall = stallResult
@@ -257,6 +257,9 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
 
 	if (stallResult) {
 
+
+	await db.delete(shipping).where(eq(shipping.stallId, stallResult.id)).execute()
+
 	for (const method of parsedStall.shipping ?? []) {
 		const [shippingResult] = await db.insert(shipping).values({
       id: method.id,
@@ -264,22 +267,15 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
       baseCost: String(method.baseCost),
       userId: stallResult.userId,
       stallId: stallResult.id
-    }).onConflictDoUpdate({
-        target: shipping.id,
-        set: {
-          name: method.name,
-          baseCost: String(method.baseCost),
-        }
-      }).returning()
-    for (const region of method.regions) {
-      await db.insert(shippingZones).values({
-        countryCode: region,
-        regionCode: region,
-        shippingId: shippingResult.id 
-      }).onConflictDoNothing({
-          target: shippingZones.regionCode
-        })
-    }
+    }).returning()
+
+		await db.delete(shippingZones).where(eq(shippingZones.shippingId, shippingResult.id)).execute()
+
+    await db.insert(shippingZones).values(method.regions.map((region) => ({
+      countryCode: region,
+      regionCode: region,
+      shippingId: shippingResult.id 
+    })))
 	}
 		return {
 			id: stallResult.id,

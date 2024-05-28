@@ -1,7 +1,9 @@
 import { z } from 'zod'
 
-import type { ProductTypes } from '@plebeian/database'
-import { PRODUCT_TYPES } from '@plebeian/database/constants'
+import type { NonEmptyArray, ProductTypes } from '@plebeian/database'
+import type { ISO3 } from '@plebeian/database/constants'
+import { COUNTRIES_ISO, PRODUCT_TYPES } from '@plebeian/database/constants'
+import { CURRENCIES } from '@plebeian/database/constants'
 
 const productTypeValidator = (value: unknown) => {
 	if (typeof value !== 'string') {
@@ -58,13 +60,13 @@ export const stallEventSchema = z.object({
 	id: z.string(),
 	name: z.string(),
 	description: z.string().optional(),
-	currency: z.string(),
+	currency: z.enum(CURRENCIES),
 	shipping: z.array(
 		z.object({
 			id: z.string(),
 			name: z.string(),
 			baseCost: z.number(),
-			regions: z.array(z.string()),
+			regions: z.array(z.enum(Object.values(COUNTRIES_ISO).map((c) => c.iso3) as NonEmptyArray<ISO3>)),
 		}),
 	),
 })

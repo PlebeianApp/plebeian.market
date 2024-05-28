@@ -1711,4 +1711,6 @@ export const COUNTRIES_ISO = {
 		original: 'Zimbabwe',
 		iso3: 'ZWE',
 	},
-}
+} as const
+
+export type ISO3 = typeof COUNTRIES_ISO[keyof typeof COUNTRIES_ISO]['iso3']

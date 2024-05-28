@@ -11,7 +11,6 @@
 	import { Textarea } from '$lib/components/ui/textarea'
 	import { KindProducts, KindStalls } from '$lib/constants'
 	import ndkStore, { ndk, ndkActiveUser } from '$lib/stores/ndk'
-	import { countries } from 'country-code-lookup'
 	import { createEventDispatcher, onMount, tick } from 'svelte'
 
 	import { COUNTRIES_ISO, CURRENCIES } from '@plebeian/database/constants'
@@ -180,7 +179,7 @@
 		<div class="grid grid-cols-[1fr_1fr_1fr_auto] w-full items-start gap-2">
 			<div>
 				<Label for="from" class="font-bold">{i + 1}. Shipping Name</Label>
-				<Input bind:value={item.name} class="border-2 border-black" type="text" name="shipping" placeholder="24/28h Europe" />
+				<Input required bind:value={item.name} class="border-2 border-black" type="text" name="shipping" placeholder="24/28h Europe" />
 			</div>
 			<div>
 				<Label for="from" class="font-bold">Base Cost</Label>
