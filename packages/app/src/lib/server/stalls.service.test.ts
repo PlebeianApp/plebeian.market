@@ -55,7 +55,7 @@ describe('stalls service', () => {
 					id: Math.random().toString(36).substring(2, 15),
 					name: 'USPS',
 					cost: Math.random() * 10,
-					regions: ['US', 'CA'],
+					regions: ['USA', 'CAN'],
 				},
 			],
 		}
