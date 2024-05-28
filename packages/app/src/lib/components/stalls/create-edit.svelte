@@ -13,6 +13,7 @@
 	import ndkStore, { ndk } from '$lib/stores/ndk'
 	import { createEventDispatcher, onMount, tick } from 'svelte'
 
+	import type { ISO3 } from '@plebeian/database/constants'
 	import { COUNTRIES_ISO, CURRENCIES } from '@plebeian/database/constants'
 	import { createId } from '@plebeian/database/utils'
 
@@ -22,7 +23,6 @@
 
 	type Currency = (typeof CURRENCIES)[number]
 	type Shipping = (typeof stallEventSchema._type)['shipping'][0]
-	type ISO3 = (typeof COUNTRIES_ISO)[keyof typeof COUNTRIES_ISO]['iso3']
 
 	let currency: Currency = (stall?.currency as Currency) ?? 'USD'
 
