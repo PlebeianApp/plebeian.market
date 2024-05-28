@@ -31,7 +31,6 @@ describe('setup', async () => {
 
 	beforeAll(async () => {
 		await db.delete(appSettings).execute()
-		await db.delete(users).execute()
 		await db.insert(appSettings).values({ isFirstTimeRunning: true, instancePk: '' }).execute()
 		browser = await chromium.launch({ headless: true })
 		page = await browser.newPage()

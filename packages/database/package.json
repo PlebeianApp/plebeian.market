@@ -24,7 +24,7 @@
 		"@types/better-sqlite3": "^7.6.10",
 		"drizzle-kit": "0.21.2",
 		"prettier": "^3.2.5",
-		"tsx": "^4.10.2",
+		"tsx": "^4.11.0",
 		"typescript": "^5.4.5"
 	},
 	"dependencies": {

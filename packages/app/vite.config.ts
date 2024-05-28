@@ -8,9 +8,9 @@ export default defineConfig({
 		testTimeout: 25_000,
 		hookTimeout: 25_000,
 		globalSetup: './tests/globalSetup.ts',
-		alias: {
-			$lib: new URL('./src/lib', import.meta.url).pathname,
-		},
+		// alias: {
+		// 	$lib: new URL('./src/lib', import.meta.url).pathname,
+		// },
 	},
 	plugins: [
 		tsconfigPaths(),
