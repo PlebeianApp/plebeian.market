@@ -2,14 +2,15 @@ import type { NDKKind, NDKTag, NDKUserProfile, NostrEvent } from '@nostr-dev-kit
 import type { ClassValue } from 'clsx'
 import type { VerifiedEvent } from 'nostr-tools'
 import type { TransitionConfig } from 'svelte/transition'
+import ndkStore from '$lib/stores/ndk'
 import { clsx } from 'clsx'
+import { toast } from 'svelte-sonner'
 import { cubicOut } from 'svelte/easing'
 import { get } from 'svelte/store'
 import { twMerge } from 'tailwind-merge'
 
 import type { EventCoordinates } from './interfaces'
 import { numSatsInBtc } from './constants'
-import ndkStore from './stores/ndk'
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs))
@@ -174,4 +175,33 @@ export function hexToBytes(hex: string): Uint8Array {
 		array[ai] = n1 * 16 + n2
 	}
 	return array
+}
+
+export function findCustomTags(tags: NDKTag[], tagName: string): string[] {
+	return tags.filter(([name]) => name === tagName).map(([, ...values]) => values[0])
+}
+
+export async function copyToClipboard(data: BlobPart, mimeType = 'text/plain') {
+	try {
+		if (navigator.clipboard.write) {
+			await navigator.clipboard.write([
+				new ClipboardItem({
+					[mimeType]: new Blob([data], {
+						type: mimeType,
+					}),
+					['text/plain']: new Blob([data], {
+						type: 'text/plain',
+					}),
+				}),
+			])
+		} else {
+			await new Promise((resolve) => {
+				resolve(navigator.clipboard.writeText(String(data)))
+			})
+		}
+		toast.success('Copied 👍')
+	} catch (e) {
+		toast.success(`Error: ${e}`)
+		console.log(e)
+	}
 }

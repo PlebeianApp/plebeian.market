@@ -1,4 +1,5 @@
 import { toDisplayProduct } from '$lib/server/products.service'
+import { isInitialSetup } from '$lib/server/setup.service'
 
 import { and, db, eq, getTableColumns, productMeta, products } from '@plebeian/database'
 
@@ -23,8 +24,10 @@ const getHomeProducts = async () => {
 	}
 }
 
-export const load: PageServerLoad = () => {
-	return getHomeProducts()
+export const load: PageServerLoad = async () => {
+	const initialSetup = await isInitialSetup()
+	const homeProducts = await getHomeProducts()
+	return { initialSetup, homeProducts }
 }
 
 export const prerender = true

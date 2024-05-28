@@ -11,7 +11,6 @@ export async function GET({ url: { searchParams } }) {
 	if (!filter.success) {
 		return error(400, `Invalid request: ${JSON.stringify(filter.error)}`)
 	} else {
-		console.log('filter.data:', filter.data)
 		return json(await getAllProducts(filter.data))
 	}
 }
