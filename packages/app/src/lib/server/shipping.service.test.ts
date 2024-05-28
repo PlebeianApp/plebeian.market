@@ -5,18 +5,18 @@ import { getShippingByStallId, getShippingZonesByStallId } from './shipping.serv
 
 describe('Shipping service', () => {
 	it('gets shipping by stall id', async () => {
-		const [stalls] = await getAllStalls()
+		const [stall] = await getAllStalls()
 
-		const shipping = await getShippingByStallId(stalls.id)
+		const shipping = await getShippingByStallId(stall.id)
 
 		expect(shipping).toBeDefined()
 	})
 
 	it('gets shipping zones by stall id', async () => {
-		const [stalls] = await getAllStalls()
+		const stalls = await getAllStalls()
 
-		const zones = await getShippingZonesByStallId(stalls.id)
+		const zonesForEachStall = await Promise.all(stalls.map((stall) => getShippingZonesByStallId(stall.id)))
 
-		expect(zones).toBeDefined()
+		expect(zonesForEachStall.some((stall) => !!stall.length)).toBeTruthy()
 	})
 })

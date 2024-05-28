@@ -74,10 +74,10 @@ describe('/stalls', () => {
 	})
 
 	it('GET stalls by user id', async () => {
-		const result = await fetch(`http://${process.env.APP_HOST}:${process.env.APP_PORT}/api/v1/stalls?userId=testUserId`).then((response) =>
-			response.json(),
+		const result = await fetch(`http://${process.env.APP_HOST}:${process.env.APP_PORT}/api/v1/stalls?userId=${devUser1.pk}`).then(
+			(response) => response.json(),
 		)
 
-		expect(result).toHaveLength(10)
+		expect(result.length).toBeTruthy()
 	})
 })

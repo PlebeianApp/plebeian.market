@@ -8,7 +8,7 @@ import { getProductsByStallId } from '$lib/server/products.service'
 import { getEventCoordinates } from '$lib/utils'
 import { format } from 'date-fns'
 
-import { and, db, eq, orders, products, shipping, shippingZones, sql, Stall, stalls, users } from '@plebeian/database'
+import { and, asc, db, desc, eq, orders, products, shipping, shippingZones, sql, Stall, stalls, users } from '@plebeian/database'
 
 import { stallEventSchema } from '../../schema/nostr-events'
 
@@ -218,6 +218,7 @@ export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall>
 				countryCode: region,
 				regionCode: region,
 				shippingId: shippingResult.id,
+				stallId: stallResult.id,
 			})),
 		)
 	}
@@ -262,7 +263,7 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
 		.returning()
 
 	if (stallResult) {
-		await db.delete(shipping).where(eq(shipping.stallId, stallResult.id)).execute()
+		await db.delete(shippingZones).where(eq(shippingZones.stallId, stallId)).execute()
 
 		for (const method of parsedStall.shipping ?? []) {
 			const [shippingResult] = await db
@@ -276,13 +277,12 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
 				})
 				.returning()
 
-			await db.delete(shippingZones).where(eq(shippingZones.shippingId, shippingResult.id)).execute()
-
 			await db.insert(shippingZones).values(
 				method.regions.map((region) => ({
 					countryCode: region,
 					regionCode: region,
 					shippingId: shippingResult.id,
+					stallId: stallResult.id,
 				})),
 			)
 		}

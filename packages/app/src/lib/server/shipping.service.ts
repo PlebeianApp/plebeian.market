@@ -47,9 +47,5 @@ export const getShippingZonesByStallId = async (stallId: string): Promise<Shippi
 		country: zone.countryCode,
 	}))
 
-	if (!zones.length) {
-		error(404, 'No zones for this stall')
-	}
-
 	return zones
 }
