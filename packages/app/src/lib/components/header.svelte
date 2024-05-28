@@ -7,6 +7,7 @@
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
 	import { login, logout } from '$lib/ndkLogin'
 	import { ndkActiveUser } from '$lib/stores/ndk'
+  import ndkStore from '$lib/stores/ndk'
 	import { getAccount } from '$lib/stores/session'
 	import { onMount } from 'svelte'
 
@@ -26,6 +27,7 @@
 			}
 		}
 	})
+	
 </script>
 
 <PassPromt dialogOpen={showPassPromt} accointInfo={nsecAccInfo} />
@@ -50,16 +52,18 @@
 				<DropdownMenu.Content>
 					<DropdownMenu.Group>
 						<DropdownMenu.Label>
-							{#if !$ndkActiveUser}
+							{#if !$ndkStore.activeUser}
 								<Auth />
 							{:else}
 								My account
 							{/if}
 						</DropdownMenu.Label>
-						{#if $ndkActiveUser}
+						{#if $ndkStore.activeUser}
 							<DropdownMenu.Separator />
 							<DropdownMenu.Item>
-								<a href={`/p/${$ndkActiveUser.pubkey}`} class="inline-flex items-center gap-2"><span class="i-tdesign-user-1" />Profile</a>
+								<a href={`/p/${$ndkStore.activeUser.pubkey}`} class="inline-flex items-center gap-2"
+									><span class="i-tdesign-user-1" />Profile</a
+								>
 							</DropdownMenu.Item>
 							<DropdownMenu.Item>
 								<a href="/settings" class="inline-flex items-center gap-2"><span class="i-tdesign-user-setting" />Settings</a>
@@ -73,10 +77,10 @@
 					</DropdownMenu.Group>
 				</DropdownMenu.Content>
 			</DropdownMenu.Root>
-			{#if $ndkActiveUser}
+			{#if $ndkStore.activeUser}
 				<Avatar>
-					<AvatarImage src={$ndkActiveUser.profile?.image} alt="pfp" />
-					<AvatarFallback>{$ndkActiveUser.profile?.name ?? $ndkActiveUser.profile?.displayName ?? ''}</AvatarFallback>
+					<AvatarImage src={$ndkStore.activeUser.profile?.image} alt="pfp" />
+					<AvatarFallback>{$ndkStore.activeUser.profile?.name ?? $ndkStore.activeUser.profile?.displayName ?? ''}</AvatarFallback>
 				</Avatar>
 			{/if}
 		</div>

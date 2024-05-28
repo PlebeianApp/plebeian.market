@@ -6,7 +6,7 @@ const dbPath = path.resolve(process.cwd(), '..', '..', 'sqlite.db')
 export default {
 	schema: './schema.ts',
 	out: './drizzle',
-	driver: 'better-sqlite',
+	dialect: 'sqlite',
 	dbCredentials: {
 		url: dbPath,
 	},

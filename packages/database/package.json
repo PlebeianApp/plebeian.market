@@ -11,7 +11,7 @@
 		"format:fix": "prettier --write . --ignore-path ../../.prettierignore",
 		"db:check": "drizzle-kit check:sqlite",
 		"db:push": "drizzle-kit push:sqlite",
-		"db:generate": "drizzle-kit generate:sqlite",
+		"db:generate": "drizzle-kit generate",
 		"db:migrate": "tsx ./migrate.ts",
 		"db:seed": "tsx ./seed.ts",
 		"db:setup": "pnpm run db:generate && pnpm db:migrate && pnpm db:seed"
@@ -24,9 +24,9 @@
 	"devDependencies": {
 		"@faker-js/faker": "^8.4.1",
 		"@types/better-sqlite3": "^7.6.10",
-		"drizzle-kit": "^0.20.18",
+		"drizzle-kit": "0.21.2",
 		"prettier": "^3.2.5",
-		"tsx": "^4.10.2",
+		"tsx": "^4.11.0",
 		"typescript": "^5.4.5"
 	},
 	"dependencies": {

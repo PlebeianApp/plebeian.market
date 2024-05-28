@@ -2,14 +2,15 @@ import type { NDKKind, NDKTag, NDKUserProfile, NostrEvent } from '@nostr-dev-kit
 import type { ClassValue } from 'clsx'
 import type { VerifiedEvent } from 'nostr-tools'
 import type { TransitionConfig } from 'svelte/transition'
+import ndkStore from '$lib/stores/ndk'
 import { clsx } from 'clsx'
+import { toast } from 'svelte-sonner'
 import { cubicOut } from 'svelte/easing'
 import { get } from 'svelte/store'
 import { twMerge } from 'tailwind-merge'
 
 import type { EventCoordinates } from './interfaces'
 import { numSatsInBtc } from './constants'
-import ndkStore from './stores/ndk'
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs))
@@ -147,5 +148,60 @@ export async function fetchUserProfile(pk: string): Promise<NDKUserProfile | und
 	} catch (error) {
 		console.error(error)
 		throw error
+	}
+}
+// Code extracted from https://github.com/paulmillr/noble-hashes/blob/b930aa959dfb95a936096b5ac79a3dcfbdab2332/src/utils.ts#L73
+const asciis = { _0: 48, _9: 57, _A: 65, _F: 70, _a: 97, _f: 102 } as const
+function asciiToBase16(char: number): number | undefined {
+	if (char >= asciis._0 && char <= asciis._9) return char - asciis._0
+	if (char >= asciis._A && char <= asciis._F) return char - (asciis._A - 10)
+	if (char >= asciis._a && char <= asciis._f) return char - (asciis._a - 10)
+	return
+}
+
+export function hexToBytes(hex: string): Uint8Array {
+	if (typeof hex !== 'string') throw new Error('hex string expected, got ' + typeof hex)
+	const hl = hex.length
+	const al = hl / 2
+	if (hl % 2) throw new Error('padded hex string expected, got unpadded hex of length ' + hl)
+	const array = new Uint8Array(al)
+	for (let ai = 0, hi = 0; ai < al; ai++, hi += 2) {
+		const n1 = asciiToBase16(hex.charCodeAt(hi))
+		const n2 = asciiToBase16(hex.charCodeAt(hi + 1))
+		if (n1 === undefined || n2 === undefined) {
+			const char = hex[hi] + hex[hi + 1]
+			throw new Error('hex string expected, got non-hex character "' + char + '" at index ' + hi)
+		}
+		array[ai] = n1 * 16 + n2
+	}
+	return array
+}
+
+export function findCustomTags(tags: NDKTag[], tagName: string): string[] {
+	return tags.filter(([name]) => name === tagName).map(([, ...values]) => values[0])
+}
+
+export async function copyToClipboard(data: BlobPart, mimeType = 'text/plain') {
+	try {
+		if (navigator.clipboard.write) {
+			await navigator.clipboard.write([
+				new ClipboardItem({
+					[mimeType]: new Blob([data], {
+						type: mimeType,
+					}),
+					['text/plain']: new Blob([data], {
+						type: 'text/plain',
+					}),
+				}),
+			])
+		} else {
+			await new Promise((resolve) => {
+				resolve(navigator.clipboard.writeText(String(data)))
+			})
+		}
+		toast.success('Copied 👍')
+	} catch (e) {
+		toast.success(`Error: ${e}`)
+		console.log(e)
 	}
 }

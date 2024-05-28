@@ -1,4 +1,4 @@
-import NDK, { NDKEvent, NDKKind, NDKPrivateKeySigner } from '@nostr-dev-kit/ndk'
+import NDK, { NDKEvent, NDKPrivateKeySigner } from '@nostr-dev-kit/ndk'
 import { KindProducts } from '$lib/constants'
 import { getAllStalls } from '$lib/server/stalls.service'
 import { describe, expect, it } from 'vitest'
@@ -74,6 +74,9 @@ describe('/products', () => {
 			createdAt: expect.any(String),
 			currency: 'USD',
 			description: 'Hello Description',
+			identifier: identifier,
+			userId: devUser1.pk,
+			userNip05: expect.any(String),
 			galleryImages: ['http://example.com/image1.jpg', 'http://example.com/image2.jpg'],
 			name: 'Hello Product',
 			price: 133,

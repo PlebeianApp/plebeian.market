@@ -1,12 +1,23 @@
 <script lang="ts">
+	import { goto } from '$app/navigation'
 	import Pattern from '$lib/components/Pattern.svelte'
 	import ProductItem from '$lib/components/product/item.svelte'
 	import { Button } from '$lib/components/ui/button/index.js'
+	import { onMount } from 'svelte'
 
 	import type { PageData } from './$types'
 
 	export let data: PageData
-	const { featured, cool } = data
+	const {
+		initialSetup,
+		homeProducts: { featured, products },
+	} = data
+
+	onMount(() => {
+		if (initialSetup) {
+			goto('/setup')
+		}
+	})
 </script>
 
 <div class="flex min-h-screen w-full flex-col bg-muted/40">
@@ -23,24 +34,20 @@
 						<h2>Featured Collections</h2>
 						<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
 							{#each featured as item}
-								<a href={`/products/${item.id}`}>
-									<ProductItem imageUrl={item.galleryImages[0]} productName={item.name} price={item.price} currency={item.currency} />
-								</a>
+								<ProductItem product={item} />
 							{/each}
 						</div>
 					</div>
 				</div>
 			{/if}
 
-			{#if cool.length}
+			{#if products.length}
 				<div class=" px-4 py-20 lg:px-12">
 					<div class="container">
 						<h2>Cool Products</h2>
 						<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-							{#each cool as item}
-								<a href={`/products/${item.id}`}>
-									<ProductItem imageUrl={item.galleryImages[0]} productName={item.name} price={item.price} currency={item.currency} />
-								</a>
+							{#each products as item}
+								<ProductItem product={item} />
 							{/each}
 						</div>
 					</div>

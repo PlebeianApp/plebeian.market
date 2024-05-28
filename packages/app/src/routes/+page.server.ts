@@ -1,4 +1,5 @@
 import { toDisplayProduct } from '$lib/server/products.service'
+import { isInitialSetup } from '$lib/server/setup.service'
 
 import { and, db, eq, getTableColumns, productMeta, products } from '@plebeian/database'
 
@@ -7,7 +8,7 @@ import type { PageServerLoad } from './$types'
 const getHomeProducts = async () => {
 	const productsQuery = db.select().from(products)
 
-	const coolProductsResult = await productsQuery.limit(6).execute()
+	const productsResult = await productsQuery.limit(8).execute()
 	const featuredProductsResult = await db
 		.select({
 			...getTableColumns(products),
@@ -19,12 +20,14 @@ const getHomeProducts = async () => {
 
 	return {
 		featured: await Promise.all(featuredProductsResult.map(toDisplayProduct)),
-		cool: await Promise.all(coolProductsResult.map(toDisplayProduct)),
+		products: await Promise.all(productsResult.map(toDisplayProduct)),
 	}
 }
 
-export const load: PageServerLoad = () => {
-	return getHomeProducts()
+export const load: PageServerLoad = async () => {
+	const initialSetup = await isInitialSetup()
+	const homeProducts = await getHomeProducts()
+	return { initialSetup, homeProducts }
 }
 
 export const prerender = true

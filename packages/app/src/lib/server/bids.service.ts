@@ -2,7 +2,7 @@ import type { NostrEvent } from '@nostr-dev-kit/ndk'
 import { error } from '@sveltejs/kit'
 
 import type { Bid } from '@plebeian/database'
-import { bids, createId, db, eq } from '@plebeian/database'
+import { bids, db, eq } from '@plebeian/database'
 
 import { bidEventSchema } from '../../schema/nostr-events'
 

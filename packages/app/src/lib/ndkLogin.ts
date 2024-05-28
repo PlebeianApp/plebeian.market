@@ -1,18 +1,19 @@
-import type { NDKUser, NDKUserProfile } from '@nostr-dev-kit/ndk'
+import type { NDKUser } from '@nostr-dev-kit/ndk'
 import type { BaseAccount } from '$lib/stores/session'
 import { NDKNip07Signer, NDKPrivateKeySigner } from '@nostr-dev-kit/ndk'
-import { ndk, ndkActiveUser } from '$lib/stores/ndk'
+import { GETUserFromId, POSTUser, PUTUser } from '$lib/apiUtils'
+import { HEX_KEYS_REGEX } from '$lib/constants'
+import ndkStore, { ndk } from '$lib/stores/ndk'
 import { addAccount, getAccount, updateAccount } from '$lib/stores/session'
-import { decode } from 'nostr-tools/nip19'
+import { bytesToHex, hexToBytes } from '$lib/utils'
+import { decode, nsecEncode } from 'nostr-tools/nip19'
 import { decrypt, encrypt } from 'nostr-tools/nip49'
-
-import { bytesToHex } from './utils'
 
 export async function fetchActiveUserData(): Promise<NDKUser | null> {
 	if (!ndk.signer) return null
 	const user = await ndk.signer.user()
 	await user.fetchProfile()
-	ndkActiveUser.set(user)
+	ndkStore.set(ndk)
 	return user
 }
 
@@ -23,6 +24,7 @@ export async function loginWithExtension(): Promise<boolean> {
 		await signer.blockUntilReady()
 		await signer.user()
 		ndk.signer = signer
+		ndkStore.set(ndk)
 		const user = await fetchActiveUserData()
 		if (user) {
 			await loginLocalDb(user.pubkey, 'NIP07')
@@ -45,7 +47,8 @@ export async function loginWithPrivateKey(key: string, password: string): Promis
 			await signer.blockUntilReady()
 			await signer.user()
 			ndk.signer = signer
-			const user = ndk.signer ? await fetchActiveUserData() : null
+			ndkStore.set(ndk)
+			const user = await fetchActiveUserData()
 			if (user) {
 				await loginLocalDb(user.pubkey, 'NSEC', key)
 				await loginDb(user)
@@ -65,7 +68,8 @@ export async function loginWithPrivateKey(key: string, password: string): Promis
 			await signer.blockUntilReady()
 			await signer.user()
 			ndk.signer = signer
-			const user = ndk.signer ? await fetchActiveUserData() : null
+			ndkStore.set(ndk)
+			const user = await fetchActiveUserData()
 			if (user) {
 				await loginLocalDb(user.pubkey, 'NSEC', cSK)
 				await loginDb(user)
@@ -112,27 +116,16 @@ export async function loginLocalDb(userPk: string, loginMethod: BaseAccount['typ
 		throw Error(JSON.stringify(e))
 	}
 }
-// TODO: Keep iterating over this
+
 export async function loginDb(user: NDKUser) {
-	const response = await fetch(`/api/v1/users/${user.pubkey}`)
+	const response = await GETUserFromId(user.pubkey)
 	if (response.ok) {
 		console.log('updating user')
-		const PUT = await fetch(`/api/v1/users/${user.pubkey}`, {
-			method: 'PUT',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify(user.profile),
-		}).then((r) => r.json())
+		const PUT = await PUTUser(user)
 		console.log(PUT)
 	} else {
 		console.log('creating user')
-		const POST = await fetch('/api/v1/users', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({
-				id: user.pubkey,
-				...user.profile,
-			}),
-		}).then((r) => r.json())
+		const POST = await POSTUser(user)
 		console.log(POST)
 	}
 }
@@ -149,8 +142,10 @@ export async function login(loginMethod: BaseAccount['type'], formData?: FormDat
 			return false
 		}
 	} else if (loginMethod === 'NSEC' && formData) {
-		const key = `${formData.get('key')}`
-		const password = `${formData.get('password')}`
+		const key = HEX_KEYS_REGEX.test(formData.get('key') as string)
+			? nsecEncode(hexToBytes(formData.get('key') as string))
+			: (formData.get('key') as string)
+		const password = formData.get('password') as string
 		try {
 			if (autoLogin) {
 				localStorage.setItem('auto_login', 'true')
