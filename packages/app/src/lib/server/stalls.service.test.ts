@@ -52,9 +52,9 @@ describe('stalls service', () => {
 			quantity: 6,
 			shipping: [
 				{
-					id: Math.random().toString(36).substring(2, 15),
+					id: createId(),
 					name: 'USPS',
-					baseCost: Math.random() * 10,
+					baseCost: '21.21',
 					regions: ['USA', 'CAN'],
 				},
 			],
