@@ -12,12 +12,12 @@ if (typeof window !== 'undefined') {
 }
 
 export const defaulRelaysUrls: string[] = [
-	'wss://purplepag.es',
-	'wss://relay.nostr.band',
+	// 'wss://purplepag.es',
+	// 'wss://relay.nostr.band',
 	'wss://nos.lol',
 	'wss://bouncer.nostree.me',
 	'wss://nostr.land/',
-	'wss://purplerelay.com/',
+	// 'wss://purplerelay.com/',
 ]
 
 export const ndk: NDKSvelte = new NDKSvelte({

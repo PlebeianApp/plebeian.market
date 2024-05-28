@@ -4,16 +4,9 @@
   "entries": [
     {
       "idx": 0,
-      "version": "6",
-      "when": 1716281011523,
-      "tag": "0000_square_supreme_intelligence",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
       "version": "5",
-      "when": 1716281601392,
-      "tag": "0001_wakeful_peter_quill",
+      "when": 1716723656835,
+      "tag": "0000_open_songbird",
       "breakpoints": true
     }
   ]

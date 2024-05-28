@@ -8,27 +8,11 @@
 	import '../app.css'
 
 	import type { NsecAccount } from '$lib/stores/session'
-	import PassPromt from '$lib/components/passPromt.svelte'
+	import { QueryClient, QueryClientProvider } from '@tanstack/svelte-query'
 	import { login } from '$lib/ndkLogin'
 	import { getAccount } from '$lib/stores/session'
 
-	let showPassPromt: boolean = false
-	let nsecAccInfo: NsecAccount
-
-	onMount(async () => {
-		const lastAccount = localStorage.getItem('last_account')
-		const autoLogin = localStorage.getItem('auto_login')
-		if (lastAccount && autoLogin != 'false') {
-			const accountInfo = await getAccount(lastAccount)
-			if (!accountInfo) return
-			if (accountInfo.type == 'NIP07') {
-				await login(accountInfo?.type)
-			} else if (accountInfo.type == 'NSEC') {
-				showPassPromt = true
-				nsecAccInfo = accountInfo
-			}
-		}
-	})
+	const queryClient = new QueryClient()
 
 	onMount(async () => {
 		if (pwaInfo) {
@@ -93,7 +77,8 @@
 		href="/apple-splash-landscape-dark-2048x1536.png"
 	/>
 </svelte:head>
-<Header />
-<PassPromt dialogOpen={showPassPromt} accointInfo={nsecAccInfo} />
-<slot />
-<Footer />
+<QueryClientProvider client={queryClient}>
+	<Header />
+	<slot />
+	<Footer />
+</QueryClientProvider>

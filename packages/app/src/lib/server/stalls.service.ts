@@ -9,7 +9,7 @@ import { getEventCoordinates } from '$lib/utils'
 import { format } from 'date-fns'
 
 import type { Stall } from '@plebeian/database'
-import { db, eq, orders, products, sql, stalls, users } from '@plebeian/database'
+import { and, db, eq, orders, products, shipping, shippingZones, sql, stalls, users } from '@plebeian/database'
 
 import { stallEventSchema } from '../../schema/nostr-events'
 
@@ -83,13 +83,20 @@ export const getAllStalls = async (filter: StallsFilter = stallsFilterSchema.par
 		price: products.price,
 	}[filter.orderBy]
 
-	const stallsResult = await db.query.stalls
-		.findMany({
-			limit: filter.pageSize,
-			offset: (filter.page - 1) * filter.pageSize,
-			orderBy: (stalls, { asc, desc }) => (filter.order === 'asc' ? asc(orderBy) : desc(orderBy)),
-		})
+	const stallsResult = await db
+		.select()
+		.from(stalls)
+		.limit(filter.pageSize)
+		.offset((filter.page - 1) * filter.pageSize)
+		// .orderBy(filter.order === "asc" ? asc(orderBy) : desc(orderBy))
+		.where(and(filter.userId ? eq(stalls.userId, filter.userId) : undefined))
 		.execute()
+
+	// .findMany({
+	// 	limit: filter.pageSize,
+	// 	offset: (filter.page - 1) * filter.pageSize,
+	// 	orderBy: (stalls, { asc, desc }) => (filter.order === 'asc' ? asc(orderBy) : desc(orderBy)),    })
+	// .execute()
 
 	const richStalls = await Promise.all(
 		stallsResult.map(async (stall) => {
@@ -175,7 +182,10 @@ export const getStallsByUserId = async (userId: string): Promise<RichStall[]> =>
 export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall> => {
 	const eventCoordinates = getEventCoordinates(stallEvent)
 	const productEventContent = JSON.parse(stallEvent.content)
-	const parsedProduct = stallEventSchema.parse({ id: productEventContent.id, ...productEventContent })
+	const parsedProduct = stallEventSchema.parse({
+		id: productEventContent.id,
+		...productEventContent,
+	})
 
 	const insertStall: Stall = {
 		id: eventCoordinates.coordinates,
@@ -190,6 +200,28 @@ export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall>
 	const [stallResult] = await db.insert(stalls).values(insertStall).returning()
 	if (!stallResult) {
 		error(404, 'Not found')
+	}
+
+	for (const method of parsedProduct.shipping) {
+		const [shippingResult] = await db
+			.insert(shipping)
+			.values({
+				id: method.id,
+				name: method.name,
+				baseCost: String(method.baseCost),
+				userId: stallResult.userId,
+				stallId: stallResult.id,
+			})
+			.returning()
+
+		await db.insert(shippingZones).values(
+			method.regions.map((region) => ({
+				countryCode: region,
+				regionCode: region,
+				shippingId: shippingResult.id,
+				stallId: stallResult.id,
+			})),
+		)
 	}
 
 	const stall = stallResult
@@ -232,6 +264,29 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
 		.returning()
 
 	if (stallResult) {
+		await db.delete(shippingZones).where(eq(shippingZones.stallId, stallId)).execute()
+
+		for (const method of parsedStall.shipping ?? []) {
+			const [shippingResult] = await db
+				.insert(shipping)
+				.values({
+					id: method.id,
+					name: method.name,
+					baseCost: String(method.baseCost),
+					userId: stallResult.userId,
+					stallId: stallResult.id,
+				})
+				.returning()
+
+			await db.insert(shippingZones).values(
+				method.regions.map((region) => ({
+					countryCode: region,
+					regionCode: region,
+					shippingId: shippingResult.id,
+					stallId: stallResult.id,
+				})),
+			)
+		}
 		return {
 			id: stallResult.id,
 			name: stallResult.name,

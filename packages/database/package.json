@@ -17,7 +17,9 @@
 		"db:setup": "pnpm run db:generate && pnpm db:migrate && pnpm db:seed"
 	},
 	"exports": {
-		".": "./index.ts"
+		".": "./index.ts",
+		"./constants": "./constants.ts",
+		"./utils": "./utils.ts"
 	},
 	"devDependencies": {
 		"@faker-js/faker": "^8.4.1",

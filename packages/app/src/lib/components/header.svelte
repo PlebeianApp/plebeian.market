@@ -1,11 +1,34 @@
 <script lang="ts">
+	import type { NsecAccount } from '$lib/stores/session'
 	import Auth from '$lib/components/auth.svelte'
+	import PassPromt from '$lib/components/passPromt.svelte'
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar'
 	import { Button } from '$lib/components/ui/button/index.js'
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
-	import { logout } from '$lib/ndkLogin'
+	import { login, logout } from '$lib/ndkLogin'
 	import ndkStore from '$lib/stores/ndk'
+	import { getAccount } from '$lib/stores/session'
+	import { onMount } from 'svelte'
+
+	let showPassPromt: boolean = false
+	let nsecAccInfo: NsecAccount
+	onMount(async () => {
+		const lastAccount = localStorage.getItem('last_account')
+		const autoLogin = localStorage.getItem('auto_login')
+		if (lastAccount && autoLogin != 'false') {
+			const accountInfo = await getAccount(lastAccount)
+			if (!accountInfo) return
+			if (accountInfo.type == 'NIP07') {
+				await login(accountInfo?.type)
+			} else if (accountInfo.type == 'NSEC') {
+				showPassPromt = true
+				nsecAccInfo = accountInfo
+			}
+		}
+	})
 </script>
+
+<PassPromt dialogOpen={showPassPromt} accointInfo={nsecAccInfo} />
 
 <header class="sticky top-0 z-30 bg-black px-4 py-4 text-white lg:px-12">
 	<div class="container flex h-full w-full items-center justify-between">
@@ -39,6 +62,9 @@
 								<a href={`/p/${$ndkStore.activeUser.pubkey}`} class="inline-flex items-center gap-2"
 									><span class="i-tdesign-user-1" />Profile</a
 								>
+							</DropdownMenu.Item>
+							<DropdownMenu.Item>
+								<a href="/settings" class="inline-flex items-center gap-2"><span class="i-tdesign-user-setting" />Settings</a>
 							</DropdownMenu.Item>
 							<DropdownMenu.Item>
 								<Button variant="destructive" class="inline-flex items-center gap-2" on:click={() => logout()}

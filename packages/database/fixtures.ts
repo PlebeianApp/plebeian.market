@@ -1,34 +1,3 @@
-export const popularCurrencies = [
-	'BTC', // Bitcoin
-	'USD', // United States Dollar
-	'EUR', // Euro
-	'JPY', // Japanese Yen
-	'GBP', // Pound Sterling
-	'CHF', // Swiss Franc
-	'CNY', // Chinese Renminbi (RMB)
-	'AUD', // Australian Dollar
-	'CAD', // Canadian Dollar
-	'HKD', // Hong Kong Dollar
-	'SGD', // Singapore Dollar
-	'INR', // Indian Rupee
-	'MXN', // Mexican Peso
-	'RUB', // Russian Ruble
-	'BRL', // Brazilian Real
-	'TRY', // Turkish Lira
-	'KRW', // South Korean Won
-	'ZAR', // South African Rand
-	'ARS', // Argentine Peso
-	'CLP', // Chilean Peso
-	'COP', // Colombian Peso
-	'PEN', // Peruvian Sol
-	'UYU', // Uruguayan Peso
-	'VEF', // Venezuelan Bolivar (note: highly volatile and subject to frequent changes)
-	'PHP', // Philippine Peso
-	'THB', // Thai Baht
-	'IDR', // Indonesian Rupiah
-	'MYR', // Malaysian Ringgit
-]
-
 export const devInstance = {
 	pk: 'b4348212f73cd9b13a10073f1231d14057960f1b37f732c6cd6757386b978e0c',
 	sk: '782cda4f3432101f07360ea30a10b228097e2b63e9e30806c510868b83ff5f52',

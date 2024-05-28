@@ -2,7 +2,7 @@ import { error } from '@sveltejs/kit'
 
 import { db, eq, shipping, shippingZones } from '@plebeian/database'
 
-type RichShippingInfo = {
+export type RichShippingInfo = {
 	id: string
 	name: string
 	baseCost: string
@@ -34,10 +34,6 @@ export const getShippingByStallId = async (stallId: string): Promise<RichShippin
 		})),
 	}))
 
-	if (!shippingInfos.length) {
-		error(404, 'No shipping for this stall')
-	}
-
 	return shippingInfos
 }
 
@@ -50,10 +46,6 @@ export const getShippingZonesByStallId = async (stallId: string): Promise<Shippi
 		region: zone.regionCode,
 		country: zone.countryCode,
 	}))
-
-	if (!zones.length) {
-		error(404, 'No zones for this stall')
-	}
 
 	return zones
 }

@@ -20,6 +20,7 @@ export async function POST({ request }) {
 		const verifiedEvent = await verifyAndPersistRawEvent(request, KindStalls)
 		return json(await createStall(verifiedEvent))
 	} catch (e) {
+		console.log('error', e)
 		error(500, JSON.stringify(e))
 	}
 }
