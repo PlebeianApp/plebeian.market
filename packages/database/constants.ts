@@ -1713,4 +1713,4 @@ export const COUNTRIES_ISO = {
 	},
 } as const
 
-export type ISO3 = typeof COUNTRIES_ISO[keyof typeof COUNTRIES_ISO]['iso3']
+export type ISO3 = (typeof COUNTRIES_ISO)[keyof typeof COUNTRIES_ISO]['iso3']

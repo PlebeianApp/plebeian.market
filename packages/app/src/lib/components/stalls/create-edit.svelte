@@ -10,7 +10,7 @@
 	import * as Popover from '$lib/components/ui/popover/index.js'
 	import { Textarea } from '$lib/components/ui/textarea'
 	import { KindProducts, KindStalls } from '$lib/constants'
-	import ndkStore, { ndk, ndkActiveUser } from '$lib/stores/ndk'
+	import ndkStore, { ndk } from '$lib/stores/ndk'
 	import { createEventDispatcher, onMount, tick } from 'svelte'
 
 	import { COUNTRIES_ISO, CURRENCIES } from '@plebeian/database/constants'
@@ -22,6 +22,7 @@
 
 	type Currency = (typeof CURRENCIES)[number]
 	type Shipping = (typeof stallEventSchema._type)['shipping'][0]
+	type ISO3 = (typeof COUNTRIES_ISO)[keyof typeof COUNTRIES_ISO]['iso3']
 
 	let currency: Currency = (stall?.currency as Currency) ?? 'USD'
 
@@ -29,9 +30,9 @@
 		id: string
 		name: string
 		baseCost: number
-		regions: string[]
+		regions: ISO3[]
 
-		constructor(id: string, name: string, baseCost: number, regions: string[] = []) {
+		constructor(id: string, name: string, baseCost: number, regions: ISO3[] = []) {
 			this.id = id
 			this.name = name
 			this.baseCost = baseCost
@@ -39,7 +40,7 @@
 		}
 
 		addZone(zone: string) {
-			this.regions.push(zone)
+			this.regions.push(zone as ISO3)
 			shippingMethods = shippingMethods
 		}
 
@@ -91,7 +92,7 @@
 						s.id,
 						s.name,
 						+s.baseCost,
-						s.zones.map((z) => z.region),
+						s.zones.map((z) => z.region as ISO3),
 					),
 			)
 		}
@@ -108,11 +109,12 @@
 	}>()
 
 	async function create(sEvent: SubmitEvent) {
+		if (!$ndkStore.activeUser?.pubkey) return
 		const formData = new FormData(sEvent.currentTarget as HTMLFormElement, sEvent.submitter)
-		const identifier = stall?.identifier ?? createId()
+		const identifier = stall?.identifier ? stall.identifier : createId()
 
 		const evContent = {
-			id: stall?.id ?? `${KindProducts}:${$ndkActiveUser.pubkey}:${identifier}`,
+			id: stall?.id ?? `${KindProducts}:${$ndkStore.activeUser.pubkey}:${identifier}`,
 			name: formData.get('title'),
 			description: formData.get('description'),
 			currency: currency,
@@ -120,7 +122,7 @@
 		}
 		const newEvent = new NDKEvent($ndkStore, {
 			kind: KindStalls,
-			pubkey: $ndkActiveUser.pubkey,
+			pubkey: $ndkStore.activeUser.pubkey,
 			content: JSON.stringify(evContent),
 			created_at: Math.floor(Date.now()),
 			tags: [['d', identifier]],
@@ -183,14 +185,7 @@
 			</div>
 			<div>
 				<Label for="from" class="font-bold">Base Cost</Label>
-				<Input
-					bind:value={item.baseCost}
-					class="border border-2 border-black"
-					min={0}
-					type="number"
-					name="shipping"
-					placeholder="e.g. $30"
-				/>
+				<Input bind:value={item.baseCost} class="border-2 border-black" min={0} type="number" name="shipping" placeholder="e.g. $30" />
 			</div>
 
 			<div>

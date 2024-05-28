@@ -6,8 +6,7 @@
 	import { Button } from '$lib/components/ui/button/index.js'
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
 	import { login, logout } from '$lib/ndkLogin'
-	import { ndkActiveUser } from '$lib/stores/ndk'
-  import ndkStore from '$lib/stores/ndk'
+	import ndkStore from '$lib/stores/ndk'
 	import { getAccount } from '$lib/stores/session'
 	import { onMount } from 'svelte'
 
@@ -27,7 +26,6 @@
 			}
 		}
 	})
-	
 </script>
 
 <PassPromt dialogOpen={showPassPromt} accointInfo={nsecAccInfo} />

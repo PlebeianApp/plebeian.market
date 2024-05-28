@@ -10,17 +10,17 @@
 	import { Skeleton } from '$lib/components/ui/skeleton'
 	import { Slider } from '$lib/components/ui/slider/index.js'
 	import * as Tabs from '$lib/components/ui/tabs/index.js'
-	import ndkStore, { defaulRelaysUrls, ndk, ndkActiveUser } from '$lib/stores/ndk'
+	import ndkStore, { defaulRelaysUrls } from '$lib/stores/ndk'
 
-	$: relayUrls = [...new Set([...($ndkActiveUser?.relayUrls ?? []), ...defaulRelaysUrls])].map((u) => new URL(u))
+	$: relayUrls = [...new Set([...($ndkStore.activeUser?.relayUrls ?? []), ...defaulRelaysUrls])].map((u) => new URL(u))
 
 	let stallsMode: 'list' | 'create' | 'edit' = 'list'
 
 	$: stallsQuery = createQuery<RichStall[]>({
-		queryKey: ['stalls', stallsMode, !!$ndkActiveUser?.pubkey],
+		queryKey: ['stalls', stallsMode, !!$ndkStore.activeUser?.pubkey],
 		queryFn: async () => {
-			if ($ndkActiveUser?.pubkey) {
-				const filter = { userId: $ndkActiveUser.pubkey }
+			if ($ndkStore.activeUser?.pubkey) {
+				const filter = { userId: $ndkStore.activeUser.pubkey }
 				const res = await fetch(new URL(`/api/v1/stalls?${new URLSearchParams(filter)}`, window.location.origin))
 				return res.json()
 			}
@@ -33,7 +33,7 @@
 	let currentStall: RichStall | null = null
 </script>
 
-{#if $ndkActiveUser && $ndkStore.signer}
+{#if $ndkStore.activeUser && $ndkStore.signer}
 	<div class="px-4 py-20 lg:px-12 min-h-[100vh]">
 		<div class="mx-auto w-full max-w-2xl flex flex-col gap-2">
 			<h2>Settings</h2>
