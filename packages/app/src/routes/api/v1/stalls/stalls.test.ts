@@ -39,7 +39,7 @@ describe('/stalls', () => {
 				{
 					id: Math.random().toString(36).substring(2, 15),
 					name: 'USPS',
-					cost: Math.random() * 10,
+					baseCost: Math.random() * 10,
 					regions: ['USA', 'CAN'],
 				},
 			],
