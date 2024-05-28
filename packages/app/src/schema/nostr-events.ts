@@ -64,7 +64,7 @@ export const stallEventSchema = z.object({
 		z.object({
 			id: z.string(),
 			name: z.string(),
-			baseCost: z.number(),
+			baseCost: z.string(),
 			regions: z.array(z.enum(Object.values(COUNTRIES_ISO).map((c) => c.iso3) as NonEmptyArray<ISO3>)),
 		}),
 	),

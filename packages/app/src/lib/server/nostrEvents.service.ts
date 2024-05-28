@@ -13,7 +13,7 @@ export const verifyEventBody = async (event: Request, kind: NDKKind): Promise<Ve
 	const verifiedEvent = n
 		.event()
 		.refine(verifyEvent)
-		.refine((val) => val.kind === kind)
+		.refine((val: NostrEvent) => val.kind === kind)
 		.safeParse(body)
 	if (!verifiedEvent.success) {
 		error(400, `Invalid nostr Event: ${JSON.stringify(verifiedEvent.error)}`)

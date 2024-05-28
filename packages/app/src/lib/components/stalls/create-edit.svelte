@@ -29,10 +29,10 @@
 	class ShippingMethod implements Shipping {
 		id: string
 		name: string
-		baseCost: number
+		baseCost: string
 		regions: ISO3[]
 
-		constructor(id: string, name: string, baseCost: number, regions: ISO3[] = []) {
+		constructor(id: string, name: string, baseCost: string, regions: ISO3[] = []) {
 			this.id = id
 			this.name = name
 			this.baseCost = baseCost
@@ -71,7 +71,7 @@
 				console.error(`No shipping method found with id ${id}`)
 			}
 		} else {
-			const newMethod = new ShippingMethod(createId(), '', 0)
+			const newMethod = new ShippingMethod(createId(), '', '0')
 			shippingMethods = [...shippingMethods, newMethod]
 		}
 	}
@@ -91,7 +91,7 @@
 					new ShippingMethod(
 						s.id,
 						s.name,
-						+s.baseCost,
+						s.baseCost,
 						s.zones.map((z) => z.region as ISO3),
 					),
 			)
@@ -185,7 +185,15 @@
 			</div>
 			<div>
 				<Label for="from" class="font-bold">Base Cost</Label>
-				<Input bind:value={item.baseCost} class="border-2 border-black" min={0} type="number" name="shipping" placeholder="e.g. $30" />
+				<Input
+					bind:value={item.baseCost}
+					class="border-2 border-black"
+					min={0}
+					type="text"
+					pattern="^(?!.*\\.\\.)[0-9]*([.][0-9]+)?"
+					name="shipping"
+					placeholder="e.g. $30"
+				/>
 			</div>
 
 			<div>

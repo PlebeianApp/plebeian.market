@@ -8,7 +8,8 @@ import { getProductsByStallId } from '$lib/server/products.service'
 import { getEventCoordinates } from '$lib/utils'
 import { format } from 'date-fns'
 
-import { and, asc, db, desc, eq, orders, products, shipping, shippingZones, sql, Stall, stalls, users } from '@plebeian/database'
+import type { Stall } from '@plebeian/database'
+import { and, db, eq, orders, products, shipping, shippingZones, sql, stalls, users } from '@plebeian/database'
 
 import { stallEventSchema } from '../../schema/nostr-events'
 
