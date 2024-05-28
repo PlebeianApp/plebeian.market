@@ -2,8 +2,7 @@ import { z } from 'zod'
 
 import type { NonEmptyArray, ProductTypes } from '@plebeian/database'
 import type { ISO3 } from '@plebeian/database/constants'
-import { COUNTRIES_ISO, PRODUCT_TYPES } from '@plebeian/database/constants'
-import { CURRENCIES } from '@plebeian/database/constants'
+import { COUNTRIES_ISO, CURRENCIES, PRODUCT_TYPES } from '@plebeian/database/constants'
 
 const productTypeValidator = (value: unknown) => {
 	if (typeof value !== 'string') {
