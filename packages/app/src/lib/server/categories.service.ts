@@ -63,7 +63,6 @@ export const getCategoryById = async (catId: string, filter: GeneralFilter = gen
 	const catResult = await db.query.categories.findFirst({
 		where: eq(categories.id, catId),
 	})
-
 	if (catResult) {
 		return catResult
 	}

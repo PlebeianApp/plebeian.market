@@ -5,7 +5,6 @@ import type { PageServerLoad } from './$types'
 
 export const load: PageServerLoad = async ({ params }) => {
 	const { catId } = params
-	const category = await getCategoryById(catId)
 	const products = await getProductsByCatId(catId)
-	return { cat: category, products: products }
+	return { products: products }
 }

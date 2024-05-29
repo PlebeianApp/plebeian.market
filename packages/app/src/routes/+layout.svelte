@@ -7,9 +7,23 @@
 
 	import '../app.css'
 
-	import { QueryClient, QueryClientProvider } from '@tanstack/svelte-query'
+	import type { RichCat } from '$lib/server/categories.service'
+	import { createQuery, QueryClient, QueryClientProvider } from '@tanstack/svelte-query'
+	import { GETAllCategories } from '$lib/apiUtils'
 
-	const queryClient = new QueryClient()
+	const queryClient = new QueryClient({
+		defaultOptions: {
+			queries: {
+				staleTime: 1000 * 30,
+			},
+		},
+	})
+	queryClient.setQueryDefaults(['categories'], {
+		queryFn: async () => {
+			const res = await GETAllCategories()
+			return res.json()
+		},
+	})
 
 	onMount(async () => {
 		if (pwaInfo) {
@@ -32,6 +46,9 @@
 	})
 
 	$: webManifestLink = pwaInfo ? pwaInfo.webManifest.linkTag : ''
+	queryClient.prefetchQuery<RichCat[]>({
+		queryKey: ['categories'],
+	})
 </script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com" />

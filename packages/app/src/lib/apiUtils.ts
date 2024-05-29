@@ -26,7 +26,7 @@ export const GETUserFromId = async (userPk: string, authToken?: string): Promise
 	if (authToken) {
 		headers.append('Authorization', authToken)
 	}
-	return await fetch(`/api/v1/users/${userPk}`, {
+	return await fetch(new URL(`/api/v1/users/${userPk}`, window.location.origin), {
 		method: 'GET',
 		headers: headers,
 	})
@@ -37,7 +37,7 @@ export const GETUsers = async (authToken?: string): Promise<Response> => {
 	if (authToken) {
 		headers.append('Authorization', authToken)
 	}
-	return await fetch(`/api/v1/users`, {
+	return await fetch(new URL(`/api/v1/users`, window.location.origin), {
 		method: 'GET',
 		headers: headers,
 	})
@@ -49,7 +49,7 @@ export const PUTUser = async (user: NDKUser, authToken?: string): Promise<Respon
 		headers.append('Authorization', authToken)
 	}
 	headers.append('Content-Type', 'application/json')
-	return await fetch(`/api/v1/users/${user.pubkey}`, {
+	return await fetch(new URL(`/api/v1/users/${user.pubkey}`, window.location.origin), {
 		method: 'PUT',
 		headers: headers,
 		body: JSON.stringify(user.profile),
@@ -62,7 +62,7 @@ export const POSTUser = async (user: NDKUser, authToken?: string): Promise<Respo
 		headers.append('Authorization', authToken)
 	}
 	headers.append('Content-Type', 'application/json')
-	return await fetch('/api/v1/users', {
+	return await fetch(new URL('/api/v1/users', window.location.origin), {
 		method: 'POST',
 		headers: headers,
 		body: JSON.stringify({ id: user.pubkey, ...user.profile }),
@@ -73,7 +73,7 @@ export const POSTUser = async (user: NDKUser, authToken?: string): Promise<Respo
 
 export const GETAllCategories = async (): Promise<Response> => {
 	const headers = new Headers()
-	return await fetch(`api/v1/categories`, {
+	return await fetch(new URL(`api/v1/category`, window.location.origin), {
 		method: 'GET',
 		headers: headers,
 	})
@@ -81,7 +81,7 @@ export const GETAllCategories = async (): Promise<Response> => {
 
 export const GETCatById = async (catId: string): Promise<Response> => {
 	const headers = new Headers()
-	return await fetch(`api/v1/categories/${catId}`, {
+	return await fetch(new URL(`/api/v1/category/${catId}`, window.location.origin), {
 		method: 'GET',
 		headers: headers,
 	})
