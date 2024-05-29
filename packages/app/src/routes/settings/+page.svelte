@@ -17,6 +17,7 @@
 	import * as Tabs from '$lib/components/ui/tabs/index.js'
 	import Textarea from '$lib/components/ui/textarea/textarea.svelte'
 	import ndkStore, { defaulRelaysUrls } from '$lib/stores/ndk'
+	import CreateEditProduct from '$lib/components/product/create-edit.svelte'
 
 	import type { User } from '@plebeian/database'
 
@@ -125,6 +126,7 @@
 					>
 				</Tabs.List>
 				<Tabs.Content value="stalls" class="flex flex-col w-full gap-6">
+					<CreateEditProduct />
 					{#if stallsMode === 'list'}
 						<div class="flex justify-between items-center">
 							<h3 class="text-xl">My Stalls</h3>
