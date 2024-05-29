@@ -32,7 +32,7 @@ export const GETUserFromId = async (userPk: string, authToken?: string): Promise
 	})
 }
 
-export const GETUsers = async (userPk: string, authToken?: string): Promise<Response> => {
+export const GETUsers = async (authToken?: string): Promise<Response> => {
 	const headers = new Headers()
 	if (authToken) {
 		headers.append('Authorization', authToken)
@@ -66,5 +66,23 @@ export const POSTUser = async (user: NDKUser, authToken?: string): Promise<Respo
 		method: 'POST',
 		headers: headers,
 		body: JSON.stringify({ id: user.pubkey, ...user.profile }),
+	})
+}
+
+// Categories
+
+export const GETAllCategories = async (): Promise<Response> => {
+	const headers = new Headers()
+	return await fetch(`api/v1/categories`, {
+		method: 'GET',
+		headers: headers,
+	})
+}
+
+export const GETCatById = async (catId: string): Promise<Response> => {
+	const headers = new Headers()
+	return await fetch(`api/v1/categories/${catId}`, {
+		method: 'GET',
+		headers: headers,
 	})
 }

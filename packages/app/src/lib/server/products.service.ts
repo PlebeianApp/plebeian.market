@@ -8,7 +8,19 @@ import { customTagValue, getEventCoordinates } from '$lib/utils'
 import { format } from 'date-fns'
 
 import type { Product, ProductImage, ProductMeta, ProductTypes } from '@plebeian/database'
-import { createId, db, devUser1, eq, PRODUCT_META, productImages, productMeta, products } from '@plebeian/database'
+import {
+	createId,
+	db,
+	devUser1,
+	eq,
+	getTableColumns,
+	PRODUCT_META,
+	productCategories,
+	productImages,
+	productMeta,
+	products,
+	sql,
+} from '@plebeian/database'
 
 import { productEventSchema } from '../../schema/nostr-events'
 import { getStallById } from './stalls.service'
@@ -218,4 +230,19 @@ export const deleteProduct = async (productId: string): Promise<boolean> => {
 	}
 
 	error(500, 'Failed to delete product')
+}
+
+const preparedProductsByCatId = db
+	.select({ ...getTableColumns(products) })
+	.from(products)
+	.innerJoin(productCategories, eq(products.id, productCategories.productId))
+	.where(eq(productCategories.catId, sql.placeholder('catId')))
+	.prepare()
+
+export const getProductsByCatId = async (catId: string): Promise<DisplayProduct[]> => {
+	const productRes = await preparedProductsByCatId.execute({ catId })
+	if (productRes) {
+		return await Promise.all(productRes.map(toDisplayProduct))
+	}
+	return []
 }

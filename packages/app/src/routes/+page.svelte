@@ -1,17 +1,20 @@
 <script lang="ts">
 	import { goto } from '$app/navigation'
+	import CatCompactItem from '$lib/components/category/cat-compact-item.svelte'
 	import Pattern from '$lib/components/Pattern.svelte'
-	import ProductItem from '$lib/components/product/item.svelte'
+	import ProductItem from '$lib/components/product/product-item.svelte'
 	import { Button } from '$lib/components/ui/button/index.js'
 	import { onMount } from 'svelte'
 
 	import type { PageData } from './$types'
 
 	export let data: PageData
-	const {
+
+	$: ({
 		initialSetup,
 		homeProducts: { featured, products },
-	} = data
+		categoriesRes,
+	} = data)
 
 	onMount(() => {
 		if (initialSetup) {
@@ -40,11 +43,22 @@
 					</div>
 				</div>
 			{/if}
-
+			<div class="py-5 lg:px-12">
+				<div class="container">
+					<h2>Categories</h2>
+					<div class=" grid grid-cols-4 gap-2">
+						{#each categoriesRes as cat}
+							{#if cat.productCount}
+								<CatCompactItem {cat} />
+							{/if}
+						{/each}
+					</div>
+				</div>
+			</div>
 			{#if products.length}
 				<div class=" px-4 py-20 lg:px-12">
 					<div class="container">
-						<h2>Cool Products</h2>
+						<h2>Products</h2>
 						<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
 							{#each products as item}
 								<ProductItem product={item} />

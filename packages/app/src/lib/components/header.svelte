@@ -36,6 +36,7 @@
 			<a href="/"><img src="/logo.svg" alt="logo" class="w-16 px-2" /></a>
 			<div class="hidden lg:flex mx-8 gap-8">
 				<a class="hover:underline font-semibold" href="/stalls/">Stall Browser</a>
+				<a class="hover:underline font-semibold" href="/cat/">Category Browser</a>
 				<a class="hover:underline font-semibold" href="/">Market Square</a>
 				<a class="hover:underline font-semibold" href="/">Plebeian Planet</a>
 			</div>
@@ -59,8 +60,9 @@
 						{#if $ndkStore.activeUser}
 							<DropdownMenu.Separator />
 							<DropdownMenu.Item>
-								<a href={`/p/${$ndkStore.activeUser.pubkey}`} class="inline-flex items-center gap-2"
-									><span class="i-tdesign-user-1" />Profile</a
+								<a
+									href={`/p/${$ndkStore.activeUser.profile?.nip05 ? $ndkStore.activeUser.profile?.nip05 : $ndkStore.activeUser.pubkey}`}
+									class="inline-flex items-center gap-2"><span class="i-tdesign-user-1" />Profile</a
 								>
 							</DropdownMenu.Item>
 							<DropdownMenu.Item>

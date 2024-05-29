@@ -6,6 +6,8 @@ export const generalFilterSchema = z.object({
 	order: z.enum(['asc', 'desc']).default('asc'),
 })
 
+export type GeneralFilter = z.infer<typeof generalFilterSchema>
+
 export const auctionsFilterSchema = generalFilterSchema.extend({
 	orderBy: z.enum(['createdAt', 'startDate', 'endDate']).default('createdAt'),
 })

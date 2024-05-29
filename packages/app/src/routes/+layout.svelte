@@ -7,10 +7,7 @@
 
 	import '../app.css'
 
-	import type { NsecAccount } from '$lib/stores/session'
 	import { QueryClient, QueryClientProvider } from '@tanstack/svelte-query'
-	import { login } from '$lib/ndkLogin'
-	import { getAccount } from '$lib/stores/session'
 
 	const queryClient = new QueryClient()
 

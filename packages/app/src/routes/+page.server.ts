@@ -1,3 +1,4 @@
+import { getAllCategories } from '$lib/server/categories.service'
 import { toDisplayProduct } from '$lib/server/products.service'
 import { isInitialSetup } from '$lib/server/setup.service'
 
@@ -27,7 +28,8 @@ const getHomeProducts = async () => {
 export const load: PageServerLoad = async () => {
 	const initialSetup = await isInitialSetup()
 	const homeProducts = await getHomeProducts()
-	return { initialSetup, homeProducts }
+	const categoriesRes = await getAllCategories()
+	return { initialSetup, homeProducts, categoriesRes }
 }
 
 export const prerender = true
