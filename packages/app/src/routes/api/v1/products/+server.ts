@@ -2,14 +2,15 @@ import { error, json } from '@sveltejs/kit'
 import { KindProducts } from '$lib/constants'
 import { productsFilterSchema } from '$lib/schema'
 import { verifyAndPersistRawEvent } from '$lib/server/nostrEvents.service'
-import { createProduct, getAllProducts } from '$lib/server/products.service.js'
+import { createProduct, getAllProducts, getProductsByCatId } from '$lib/server/products.service.js'
 
 export async function GET({ url: { searchParams } }) {
 	const spObj = Object.fromEntries(searchParams)
 	const filter = productsFilterSchema.safeParse(spObj)
-
 	if (!filter.success) {
 		return error(400, `Invalid request: ${JSON.stringify(filter.error)}`)
+	} else if (filter.data.catId) {
+		return json(await getProductsByCatId(filter.data))
 	} else {
 		return json(await getAllProducts(filter.data))
 	}

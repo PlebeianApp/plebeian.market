@@ -5,6 +5,7 @@
 	import StallItem from '$lib/components/stalls/item.svelte'
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar'
 	import Button from '$lib/components/ui/button/button.svelte'
+	import { copyToClipboard } from '$lib/utils'
 
 	import type { PageData } from './$types'
 
@@ -29,20 +30,22 @@
 						<Button variant="secondary" class="w-1/2 lg:w-auto">
 							<code class="truncate">{npub}</code>
 						</Button>
-						<Button>Copy</Button>
+						<Button on:click={() => copyToClipboard(npub)}>Copy</Button>
 					</div>
 				</div>
 			</div>
-			<div class="py-5 lg:px-12">
-				<div class="container">
-					<h2>Categories</h2>
-					<div class=" grid grid-cols-4 gap-2">
-						{#each categories as cat}
-							<CatCompactItem {cat} />
-						{/each}
+			{#if categories.length}
+				<div class="py-5 lg:px-12">
+					<div class="container">
+						<h2>Categories</h2>
+						<div class=" grid grid-cols-4 gap-2">
+							{#each categories as cat}
+								<CatCompactItem {cat} />
+							{/each}
+						</div>
 					</div>
 				</div>
-			</div>
+			{/if}
 			{#if stalls.length}
 				<div class="px-4 py-20 lg:px-12">
 					<div class="container">

@@ -1,9 +1,9 @@
-import type { GeneralFilter } from '$lib/schema'
+import type { CatsFilter } from '$lib/schema'
 import { error } from '@sveltejs/kit'
-import { generalFilterSchema } from '$lib/schema'
+import { catsFilterSchema } from '$lib/schema'
 
 import type { Category } from '@plebeian/database'
-import { categories, db, eq, productCategories, products, sql } from '@plebeian/database'
+import { and, categories, db, eq, inArray, productCategories, sql } from '@plebeian/database'
 
 // TODO get global categories, x
 // TODO get categories by id x
@@ -14,7 +14,7 @@ import { categories, db, eq, productCategories, products, sql } from '@plebeian/
 // TODO get products for category and user
 // TODO get products for category and stall
 
-export type RichCat = Pick<Category, 'id' | 'name' | 'description' | 'parentId'> & {
+export type RichCat = Pick<Category, 'id' | 'name' | 'description' | 'parentId' | 'userId'> & {
 	productCount?: number
 	stallCount?: number
 	userCount?: number
@@ -36,14 +36,20 @@ const resolveCategory = async (cat: Category): Promise<RichCat> => {
 		name: cat.name,
 		description: cat.description,
 		parentId: cat.parentId,
+		userId: cat.userId,
 		productCount: productCount,
 	}
 }
 
-export const getAllCategories = async (filter: GeneralFilter = generalFilterSchema.parse({})): Promise<RichCat[]> => {
+export const getAllCategories = async (filter: CatsFilter = catsFilterSchema.parse({})): Promise<RichCat[]> => {
 	const categoriesResult = await db.query.categories.findMany({
 		limit: filter.pageSize,
 		offset: (filter.page - 1) * filter.pageSize,
+		where: and(
+			filter.catId ? inArray(categories.id, filter.catId) : undefined,
+			filter.userId ? inArray(categories.userId, filter.userId) : undefined,
+			filter.catName ? inArray(categories.name, filter.catName) : undefined,
+		),
 	})
 
 	const richCats = await Promise.all(
@@ -56,45 +62,6 @@ export const getAllCategories = async (filter: GeneralFilter = generalFilterSche
 		return richCats
 	}
 
-	error(404, 'Not found')
-}
-
-export const getCategoryById = async (catId: string, filter: GeneralFilter = generalFilterSchema.parse({})): Promise<Category> => {
-	const catResult = await db.query.categories.findFirst({
-		where: eq(categories.id, catId),
-	})
-	if (catResult) {
-		return catResult
-	}
-
-	error(404, 'Not found')
-}
-
-const preparedCatsByUserId = db
-	.select({
-		id: categories.id,
-		name: categories.name,
-		description: categories.description,
-		parentId: categories.parentId,
-	})
-	.from(products)
-	.leftJoin(productCategories, eq(products.id, productCategories.productId))
-	.leftJoin(categories, eq(productCategories.catId, categories.id))
-	.where(eq(products.userId, sql.placeholder('userId')))
-	.groupBy(categories.id)
-	.prepare()
-
-export const getCategoryByUserId = async (userId: string): Promise<Category[]> => {
-	const categoriesResult = await preparedCatsByUserId.execute({ userId })
-
-	if (categoriesResult) {
-		return categoriesResult.map((category) => ({
-			id: category.id ?? '',
-			name: category.name ?? '',
-			description: category.description ?? '',
-			parentId: category.parentId ?? null,
-		}))
-	}
 	error(404, 'Not found')
 }
 

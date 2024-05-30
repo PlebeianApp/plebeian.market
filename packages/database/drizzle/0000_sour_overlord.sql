@@ -11,6 +11,20 @@ CREATE TABLE `app_settings` (
 	`updated_at` integer DEFAULT (unixepoch()) NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE `app_meta` (
+	`id` text PRIMARY KEY NOT NULL,
+	`app_id` text,
+	`meta_name` text NOT NULL,
+	`key` text,
+	`value_text` text,
+	`value_boolean` integer,
+	`value_integer` numeric,
+	`created_at` integer DEFAULT (unixepoch()) NOT NULL,
+	`updated_at` integer DEFAULT (unixepoch()) NOT NULL,
+	FOREIGN KEY (`app_id`) REFERENCES `app_settings`(`instance_pk`) ON UPDATE cascade ON DELETE cascade,
+	FOREIGN KEY (`meta_name`) REFERENCES `meta_types`(`name`) ON UPDATE cascade ON DELETE cascade
+);
+--> statement-breakpoint
 CREATE TABLE `auctions` (
 	`id` text PRIMARY KEY NOT NULL,
 	`created_at` integer DEFAULT (unixepoch()) NOT NULL,
@@ -46,8 +60,10 @@ CREATE TABLE `bids` (
 CREATE TABLE `categories` (
 	`id` text PRIMARY KEY NOT NULL,
 	`name` text NOT NULL,
+	`user_id` text NOT NULL,
 	`description` text NOT NULL,
 	`parent_id` text,
+	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`parent_id`) REFERENCES `categories`(`id`) ON UPDATE cascade ON DELETE cascade
 );
 --> statement-breakpoint
@@ -186,8 +202,6 @@ CREATE TABLE `shipping` (
 	`stall_id` text,
 	`user_id` text NOT NULL,
 	`name` text NOT NULL,
-	`shipping_method` text NOT NULL,
-	`shipping_details` text NOT NULL,
 	`base_cost` numeric NOT NULL,
 	`default` integer DEFAULT false NOT NULL,
 	FOREIGN KEY (`stall_id`) REFERENCES `stalls`(`id`) ON UPDATE cascade ON DELETE no action,

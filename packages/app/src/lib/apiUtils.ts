@@ -3,7 +3,9 @@ import type { HttpMethod } from '@sveltejs/kit'
 import { NDKEvent, NDKUser } from '@nostr-dev-kit/ndk'
 import { get } from 'svelte/store'
 
+import type { ProductsFilter } from './schema'
 import { KindHttpAuth } from './constants'
+import { productsFilterSchema } from './schema'
 import ndkStore from './stores/ndk'
 
 export const createToken = async (url: string, method: HttpMethod): Promise<string> => {
@@ -79,9 +81,23 @@ export const GETAllCategories = async (): Promise<Response> => {
 	})
 }
 
-export const GETCatById = async (catId: string): Promise<Response> => {
+export const GETCatById = async (catId: string[]): Promise<Response> => {
 	const headers = new Headers()
 	return await fetch(new URL(`/api/v1/category/${catId}`, window.location.origin), {
+		method: 'GET',
+		headers: headers,
+	})
+}
+
+// Products
+
+export const GETAllProducts = async (filter: ProductsFilter = productsFilterSchema.parse({})): Promise<Response> => {
+	const headers = new Headers()
+	const params = new URLSearchParams()
+	Object.entries(filter).forEach(([key, value]) => {
+		params.set(key, String(value))
+	})
+	return await fetch(new URL(`api/v1/products?${params}`, window.location.origin), {
 		method: 'GET',
 		headers: headers,
 	})

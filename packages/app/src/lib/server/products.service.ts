@@ -237,12 +237,23 @@ const preparedProductsByCatId = db
 	.from(products)
 	.innerJoin(productCategories, eq(products.id, productCategories.productId))
 	.where(eq(productCategories.catId, sql.placeholder('catId')))
+	.limit(sql.placeholder('limit'))
+	.offset(sql.placeholder('offset'))
 	.prepare()
 
-export const getProductsByCatId = async (catId: string): Promise<DisplayProduct[]> => {
-	const productRes = await preparedProductsByCatId.execute({ catId })
+export const getProductsByCatId = async (filter: ProductsFilter): Promise<DisplayProduct[]> => {
+	if (!filter.catId) {
+		throw new Error('Category ID must be provided')
+	}
+
+	const productRes = await preparedProductsByCatId.execute({
+		catId: filter.catId,
+		limit: filter.pageSize,
+		offset: (filter.page - 1) * filter.pageSize,
+	})
+
 	if (productRes) {
 		return await Promise.all(productRes.map(toDisplayProduct))
 	}
-	return []
+	error(404, 'not found')
 }
