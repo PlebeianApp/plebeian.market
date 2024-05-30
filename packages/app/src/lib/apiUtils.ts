@@ -3,7 +3,7 @@ import type { HttpMethod } from '@sveltejs/kit'
 import { NDKEvent, NDKUser } from '@nostr-dev-kit/ndk'
 import { get } from 'svelte/store'
 
-import type { ProductsFilter } from './schema'
+import type { CatsFilter, ProductsFilter } from './schema'
 import { KindHttpAuth } from './constants'
 import { productsFilterSchema } from './schema'
 import ndkStore from './stores/ndk'
@@ -73,12 +73,17 @@ export const POSTUser = async (user: NDKUser, authToken?: string): Promise<Respo
 
 // Categories
 
-export const GETAllCategories = async (): Promise<Response> => {
+export const GETAllCategories = async (filter: CatsFilter): Promise<Response> => {
 	const headers = new Headers()
-	return await fetch(new URL(`api/v1/category`, window.location.origin), {
+	const params = new URLSearchParams()
+	Object.entries(filter).forEach(([key, value]) => {
+		params.set(key, String(value))
+	})
+	const res = await fetch(new URL(`api/v1/category?${params}`, window.location.origin), {
 		method: 'GET',
 		headers: headers,
 	})
+	return res
 }
 
 export const GETCatById = async (catId: string[]): Promise<Response> => {

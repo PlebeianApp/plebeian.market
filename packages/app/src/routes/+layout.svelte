@@ -7,9 +7,11 @@
 
 	import '../app.css'
 
+	import type { CatsFilter } from '$lib/schema'
 	import type { RichCat } from '$lib/server/categories.service'
 	import { createQuery, QueryClient, QueryClientProvider } from '@tanstack/svelte-query'
 	import { GETAllCategories } from '$lib/apiUtils'
+	import { catsFilterSchema } from '$lib/schema'
 
 	const queryClient = new QueryClient({
 		defaultOptions: {
@@ -20,7 +22,8 @@
 	})
 	queryClient.setQueryDefaults(['categories'], {
 		queryFn: async () => {
-			const res = await GETAllCategories()
+			const filter: CatsFilter = catsFilterSchema.parse({ pageSize: 30 })
+			const res = await GETAllCategories(filter)
 			return res.json()
 		},
 	})

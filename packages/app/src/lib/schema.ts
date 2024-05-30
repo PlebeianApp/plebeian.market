@@ -23,6 +23,7 @@ export type UsersFilter = z.infer<typeof usersFilterSchema>
 export const productsFilterSchema = generalFilterSchema.extend({
 	orderBy: z.enum(['createdAt', 'price']).default('createdAt'),
 	stallId: z.string().optional(),
+	userId: z.string().optional(),
 	catId: z.string().optional(),
 })
 
@@ -36,9 +37,9 @@ export const stallsFilterSchema = generalFilterSchema.extend({
 export type StallsFilter = z.infer<typeof stallsFilterSchema>
 
 export const catsFilterSchema = generalFilterSchema.extend({
-	userId: z.array(z.string()).optional(),
-	catId: z.array(z.string()).optional(),
-	catName: z.array(z.string()).optional(),
+	userId: z.string().optional(),
+	catId: z.string().optional(),
+	catName: z.string().optional(),
 })
 
 export type CatsFilter = z.infer<typeof catsFilterSchema>

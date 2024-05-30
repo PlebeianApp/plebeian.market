@@ -9,6 +9,7 @@ import { format } from 'date-fns'
 
 import type { Product, ProductImage, ProductMeta, ProductTypes } from '@plebeian/database'
 import {
+	and,
 	createId,
 	db,
 	devUser1,
@@ -52,8 +53,13 @@ export const toDisplayProduct = async (product: Product): Promise<DisplayProduct
 	}
 }
 
-export const getProductsByUserId = async (userId: string): Promise<DisplayProduct[]> => {
-	const productsResult = await db.select().from(products).where(eq(products.userId, userId)).execute()
+export const getProductsByUserId = async (filter: ProductsFilter = productsFilterSchema.parse({})): Promise<DisplayProduct[]> => {
+	const productsResult = await db
+		.select()
+		.from(products)
+		.where(and(filter.userId ? eq(products.userId, filter.userId) : undefined))
+		.limit(filter.pageSize)
+		.execute()
 
 	const displayProducts: DisplayProduct[] = await Promise.all(productsResult.map(toDisplayProduct))
 

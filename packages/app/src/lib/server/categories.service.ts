@@ -42,19 +42,23 @@ const resolveCategory = async (cat: Category): Promise<RichCat> => {
 }
 
 export const getAllCategories = async (filter: CatsFilter = catsFilterSchema.parse({})): Promise<RichCat[]> => {
-	const categoriesResult = await db.query.categories.findMany({
-		limit: filter.pageSize,
-		offset: (filter.page - 1) * filter.pageSize,
-		where: and(
-			filter.catId ? inArray(categories.id, filter.catId) : undefined,
-			filter.userId ? inArray(categories.userId, filter.userId) : undefined,
-			filter.catName ? inArray(categories.name, filter.catName) : undefined,
-		),
-	})
+	const categoriesResult = await db
+		.select()
+		.from(categories)
+		.where(
+			and(
+				filter.catName ? eq(categories.name, filter.catName) : undefined,
+				filter.catId ? eq(categories.id, filter.catId) : undefined,
+				filter.userId ? eq(categories.userId, filter.userId) : undefined,
+			),
+		)
+		.groupBy(categories.name)
+		.limit(filter.pageSize)
+		.offset((filter.page - 1) * filter.pageSize)
 
 	const richCats = await Promise.all(
-		categoriesResult.map(async (stall) => {
-			return await resolveCategory(stall)
+		categoriesResult.map(async (cat) => {
+			return await resolveCategory(cat)
 		}),
 	)
 

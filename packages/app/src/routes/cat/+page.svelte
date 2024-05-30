@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { RichCat } from '$lib/server/categories.service'
 	import { createQuery } from '@tanstack/svelte-query'
-	import CatItem from '$lib/components/category/cat-item.svelte'
+	import CatCompactItem from '$lib/components/category/cat-compact-item.svelte'
 	import Skeleton from '$lib/components/ui/skeleton/skeleton.svelte'
 
 	$: catQuery = createQuery<RichCat[]>({
@@ -23,7 +23,7 @@
 							<Skeleton class=" h-96 w-full" />
 						{:else if $catQuery.data}
 							{#each $catQuery.data as cat}
-								<CatItem category={cat} />
+								<CatCompactItem {cat} />
 							{/each}
 						{/if}
 					</div>
