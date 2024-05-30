@@ -10,6 +10,7 @@ import { format } from 'date-fns'
 import type { Product, ProductImage, ProductMeta, ProductTypes } from '@plebeian/database'
 import {
 	and,
+	categories,
 	createId,
 	db,
 	devUser1,
@@ -262,4 +263,31 @@ export const getProductsByCatId = async (filter: ProductsFilter): Promise<Displa
 		return await Promise.all(productRes.map(toDisplayProduct))
 	}
 	error(404, 'not found')
+}
+
+const preparedProductsByCatName = db
+	.select({ ...getTableColumns(products) })
+	.from(products)
+	.innerJoin(productCategories, eq(products.id, productCategories.productId))
+	.innerJoin(categories, eq(productCategories.catId, categories.id))
+	.where(eq(categories.name, sql.placeholder('catName')))
+	.limit(sql.placeholder('limit'))
+	.offset(sql.placeholder('offset'))
+	.prepare()
+
+export const getProductsByCatName = async (filter: ProductsFilter): Promise<DisplayProduct[]> => {
+	if (!filter.catName) {
+		throw new Error('Category Name must be provided')
+	}
+
+	const productRes = await preparedProductsByCatName.execute({
+		catName: filter.catName,
+		limit: filter.pageSize,
+		offset: (filter.page - 1) * filter.pageSize,
+	})
+
+	if (productRes) {
+		return await Promise.all(productRes.map(toDisplayProduct))
+	}
+	throw error(404, 'not found')
 }

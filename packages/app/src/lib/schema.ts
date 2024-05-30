@@ -25,6 +25,7 @@ export const productsFilterSchema = generalFilterSchema.extend({
 	stallId: z.string().optional(),
 	userId: z.string().optional(),
 	catId: z.string().optional(),
+	catName: z.string().optional(),
 })
 
 export type ProductsFilter = z.infer<typeof productsFilterSchema>
