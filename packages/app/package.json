@@ -73,6 +73,7 @@
 		"mode-watcher": "^0.3.0",
 		"nostr-tools": "^2.6.0",
 		"paneforge": "^0.0.4",
+		"svelte-file-dropzone": "^2.0.7",
 		"svelte-sonner": "^0.3.24",
 		"sveltekit-superforms": "^2.14.0",
 		"tailwind-merge": "^2.3.0",

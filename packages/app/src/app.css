@@ -83,3 +83,9 @@
 [hidden] {
 	display: none !important;
 }
+
+.dropzone {
+	background: transparent!important;
+	color: black!important;
+	border-color: black!important;
+}
