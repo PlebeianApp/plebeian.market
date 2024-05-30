@@ -74,7 +74,7 @@
 				>
 					<Input required class="border-black border-2" name="key" placeholder="Private key (nsec1...)" type="password" />
 					<Input required class="border-black border-2" name="password" placeholder="Password" type="password" />
-					<Button type="submit">Sign in</Button>
+					<Button id="signInSubmit" type="submit">Sign in</Button>
 				</form>
 				<div class="flex items-center space-x-2">
 					<Checkbox id="terms" bind:checked aria-labelledby="terms-label" />
@@ -110,8 +110,8 @@
 						createDialogOpen = true
 					}}
 				>
-					<Input required class="border-black border-2" name="password" placeholder="Password" type="password" />
-					<Button type="submit" class="w-full">Generate an account</Button>
+					<Input id="signUpPassword" required class="border-black border-2" name="password" placeholder="Password" type="password" />
+					<Button id="signUpSubmit" type="submit" class="w-full">Generate an account</Button>
 				</form>
 				<p class="w-full text-center">
 					Already have an account?
