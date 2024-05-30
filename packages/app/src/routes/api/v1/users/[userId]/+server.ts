@@ -31,15 +31,27 @@ export const GET: RequestHandler = async ({ params, request }) => {
 		lud16: user.lud16,
 		zapService: user.zapService,
 		website: user.website,
+		trustLevel: user.trustLevel,
 	}
 
 	return json(userUnAuthResponse)
 }
 
 export const PUT: RequestHandler = async ({ params, request }) => {
+	const authorizationHeader = request.headers.get('Authorization')
+
+	if (authorizationHeader) {
+		const token = decodeJwtToEvent(authorizationHeader)
+		if (token.pubkey === params.userId && findCustomTags(token.tags, 'method')[0] === request.method) {
+			return json(await getUserById(params.userId))
+		}
+
+		return error(500, 'Invalid Token')
+	}
+
 	try {
 		const body = await request.json()
-		return json(await updateUser(params.userId, body))
+		return json(await updateUser(params.userId, body.profile))
 	} catch (e) {
 		error(500, JSON.stringify(e))
 	}
