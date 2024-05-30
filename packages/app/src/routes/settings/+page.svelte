@@ -69,7 +69,7 @@
 
 	const userDataMutation = createMutation({
 		mutationFn: async () => {
-			const ndkUser = new NDKUser({
+			const ndkUser = $ndkStore.getUser({
 				hexpubkey: $ndkStore.activeUser?.pubkey,
 			})
 
@@ -83,6 +83,7 @@
 					body: JSON.stringify(ndkUser),
 					headers: { 'Content-Type': 'application/json' },
 				})
+				await ndkUser.publish()
 				return res.json()
 			}
 			return null
