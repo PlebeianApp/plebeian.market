@@ -115,6 +115,7 @@ export const updateUser = async (userId: string, userMeta: NDKUserProfile): Prom
 		website: userMeta.website,
 		zapService: userMeta.zapService,
 		lastLogin: new Date(),
+		trustLevel: userMeta.trustLevel as UserTrustLevel,
 	}
 
 	const userResult = await db
