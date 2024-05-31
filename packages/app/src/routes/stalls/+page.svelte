@@ -1,5 +1,5 @@
 <script lang="ts">
-	import StallItem from '$lib/components/stalls/item.svelte'
+	import StallItem from '$lib/components/stalls/stall-item.svelte'
 
 	import type { PageData } from './$types'
 

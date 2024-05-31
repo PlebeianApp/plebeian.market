@@ -2,7 +2,7 @@
 	import CatCompactItem from '$lib/components/category/cat-compact-item.svelte'
 	import Pattern from '$lib/components/Pattern.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
-	import StallItem from '$lib/components/stalls/item.svelte'
+	import StallItem from '$lib/components/stalls/stall-item.svelte'
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar'
 	import Button from '$lib/components/ui/button/button.svelte'
 	import { copyToClipboard } from '$lib/utils'

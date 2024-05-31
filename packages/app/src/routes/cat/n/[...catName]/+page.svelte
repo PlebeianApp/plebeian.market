@@ -7,11 +7,13 @@
 	import { GETAllCategories, GETAllProducts } from '$lib/apiUtils'
 	import Pattern from '$lib/components/Pattern.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
+	import StallItem from '$lib/components/stalls/stall-item.svelte'
 	import { productsFilterSchema } from '$lib/schema'
 
 	import type { PageData } from './$types'
 
 	export let data: PageData
+	$: ({ stalls } = data)
 	$: catQuery = createQuery<RichCat>({
 		queryKey: ['categories', $page.params.catName],
 		queryFn: async () => {
@@ -19,6 +21,7 @@
 			return res
 		},
 	})
+
 	$: productsQuery = createQuery<DisplayProduct[]>({
 		queryKey: ['products', $page.params.catName],
 		queryFn: async () => {
@@ -38,9 +41,22 @@
 				<h1 class="relative z-10">{$catQuery.data?.name}</h1>
 				<p>{$catQuery.data?.description}</p>
 			</div>
+			{#if stalls.length}
+				<div class=" px-4 py-20 lg:px-12">
+					<div class="container">
+						<h2 class="relative z-10 flex gap-2 items-center justify-center">Stalls</h2>
+						<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+							{#each stalls as stall}
+								<StallItem {stall} />
+							{/each}
+						</div>
+					</div>
+				</div>
+			{/if}
 			{#if $productsQuery.data}
 				<div class=" px-4 py-20 lg:px-12">
 					<div class="container">
+						<h2 class="relative z-10 flex gap-2 items-center justify-center">Products</h2>
 						<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
 							{#each $productsQuery.data as product}
 								<ProductItem {product} />

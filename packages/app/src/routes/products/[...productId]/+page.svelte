@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { createQuery } from '@tanstack/svelte-query'
 	import Spinner from '$lib/components/assets/spinner.svelte'
 	import ImgPlaceHolder from '$lib/components/product/imgPlaceHolder.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
@@ -11,6 +12,13 @@
 
 	export let data: PageData
 	$: ({ product, seller, products, productCats } = data)
+
+	$: priceQuery = createQuery<number | null>({
+		queryKey: ['products', 'price', product.id],
+		queryFn: async () => {
+			return await currencyToBtc(product.currency, product.price, true)
+		},
+	})
 
 	let selectedImage = 0
 </script>
@@ -39,11 +47,11 @@
 		<div class="flex flex-col">
 			<h1>{product.name}</h1>
 			<h2 class=" inline-flex items-center">
-				{#await currencyToBtc(product.currency, product.price, true)}
+				{#if $priceQuery.isLoading}
 					<Spinner />
-				{:then result}
-					{result}
-				{/await}
+				{:else if $priceQuery.data}
+					{$priceQuery.data}
+				{/if}
 				sats
 			</h2>
 			<h3>${product.price} {product.currency}</h3>

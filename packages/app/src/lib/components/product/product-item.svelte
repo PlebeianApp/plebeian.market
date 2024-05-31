@@ -1,12 +1,21 @@
 <script lang="ts">
 	import type { DisplayProduct } from '$lib/server/products.service'
+	import { createQuery } from '@tanstack/svelte-query'
 	import * as Card from '$lib/components/ui/card/index.js'
 	import { currencyToBtc } from '$lib/utils'
 
+	import Spinner from '../assets/spinner.svelte'
 	import ImgPlaceHolder from './imgPlaceHolder.svelte'
 
 	export let product: DisplayProduct
 	const { galleryImages, name, currency, price, userNip05, identifier, id } = product
+
+	$: priceQuery = createQuery<number | null>({
+		queryKey: ['products', 'price', product.id],
+		queryFn: async () => {
+			return await currencyToBtc(product.currency, product.price, true)
+		},
+	})
 </script>
 
 <a href={userNip05 ? `/products/${userNip05}/${identifier}` : `/products/${id}`}>
@@ -20,9 +29,11 @@
 			<span class="truncate font-bold">{name}</span>
 			<div class="flex flex-col text-right">
 				<span class="font-red font-bold">
-					{#await currencyToBtc(currency, price, true) then result}
-						{result} <small>sats</small>
-					{/await}
+					{#if $priceQuery.isLoading}
+						<Spinner />
+					{:else if $priceQuery.data}
+						{$priceQuery.data}<small>sats</small>
+					{/if}
 				</span>
 				<span class="text-sm">{price} {currency}</span>
 			</div>
