@@ -73,5 +73,5 @@ export const getCategoriesByProductId = async (productId: string): Promise<Categ
 	if (categoriesResult) {
 		return categoriesResult.map((data) => data.categories)
 	}
-	throw new Error('Not found')
+	error(404, 'Not found')
 }
