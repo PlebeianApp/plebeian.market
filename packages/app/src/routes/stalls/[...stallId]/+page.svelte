@@ -1,5 +1,5 @@
 <script lang="ts">
-	import ProductItem from '$lib/components/product/item.svelte'
+	import ProductItem from '$lib/components/product/product-item.svelte'
 	import * as Accordion from '$lib/components/ui/accordion'
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar'
 	import { Badge } from '$lib/components/ui/badge'
@@ -15,7 +15,7 @@
 		<main class="text-black">
 			<div class="flex w-full flex-col items-center bg-black py-20 text-center text-white">
 				<section class="w-fit">
-					<a href={`/p/${user.id}`} class="flex flex-col items-center">
+					<a href={`/p/${user.nip05 ? user.nip05 : user.id}`} class="flex flex-col items-center">
 						<Avatar>
 							<AvatarImage src={user.image} alt="@shadcn" />
 							<AvatarFallback>{user.name?.substring(0, 2)}</AvatarFallback>

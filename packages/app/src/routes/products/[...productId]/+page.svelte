@@ -1,7 +1,9 @@
 <script lang="ts">
+	import { createQuery } from '@tanstack/svelte-query'
 	import Spinner from '$lib/components/assets/spinner.svelte'
 	import ImgPlaceHolder from '$lib/components/product/imgPlaceHolder.svelte'
-	import ProductItem from '$lib/components/product/item.svelte'
+	import ProductItem from '$lib/components/product/product-item.svelte'
+	import Badge from '$lib/components/ui/badge/badge.svelte'
 	import Button from '$lib/components/ui/button/button.svelte'
 	import Input from '$lib/components/ui/input/input.svelte'
 	import { cn, currencyToBtc } from '$lib/utils'
@@ -9,7 +11,14 @@
 	import type { PageData } from './$types'
 
 	export let data: PageData
-	$: ({ product, seller, products } = data)
+	$: ({ product, seller, products, productCats } = data)
+
+	$: priceQuery = createQuery<number | null>({
+		queryKey: ['products', 'price', product.id],
+		queryFn: async () => {
+			return await currencyToBtc(product.currency, product.price, true)
+		},
+	})
 
 	let selectedImage = 0
 </script>
@@ -38,11 +47,11 @@
 		<div class="flex flex-col">
 			<h1>{product.name}</h1>
 			<h2 class=" inline-flex items-center">
-				{#await currencyToBtc(product.currency, product.price, true)}
+				{#if $priceQuery.isLoading}
 					<Spinner />
-				{:then result}
-					{result}
-				{/await}
+				{:else if $priceQuery.data}
+					{$priceQuery.data}
+				{/if}
 				sats
 			</h2>
 			<h3>${product.price} {product.currency}</h3>
@@ -52,12 +61,19 @@
 				<Input class="border-2 border-black" type="number" value="1" min="1" max="5" />
 				<Button>Add to cart</Button>
 			</div>
-			<span class="my-8 font-bold">Sold by <a href={`/p/${seller.id}`}><span class="underline">{seller.name}<span /></span></a> </span>
+			<span class="my-8 font-bold"
+				>Sold by <a href={`/p/${seller.nip05 ? seller.nip05 : seller.id}`}><span class="underline">{seller.name}<span /></span></a>
+			</span>
 			<article>
 				<h4 class="text-2xl font-bold">Details</h4>
 				<p>
 					{product.description}
 				</p>
+				{#each productCats as cat}
+					<a href={`/cat/${cat.id}`}>
+						<Badge>{cat.name}</Badge>
+					</a>
+				{/each}
 			</article>
 		</div>
 	</div>

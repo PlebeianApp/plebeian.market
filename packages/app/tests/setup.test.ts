@@ -47,13 +47,13 @@ describe('setup', async () => {
 	test('visit to root should redirect to /setup', async () => {
 		await page.goto(`http://${process.env.APP_HOST}:${process.env.APP_PORT}/`)
 
-		await page.waitForURL(`http://${process.env.APP_HOST}:${process.env.APP_PORT}/setup`)
+		await page.waitForURL(() => page.url() === `http://${process.env.APP_HOST}:${process.env.APP_PORT}/setup`)
 
 		expect(page.url()).toBe(`http://${process.env.APP_HOST}:${process.env.APP_PORT}/setup`)
 		await page.waitForSelector('form')
 		const form = await page.$('form')
 		expect(form).not.toBeNull()
-	})
+	}, 30000)
 
 	test('setup should fill form and submit', async () => {
 		const sk = generateSecretKey()
@@ -73,7 +73,7 @@ describe('setup', async () => {
 		await page.check('button[role="checkbox"][placeholder="allow register"]')
 		await page.click('button[type="submit"]')
 
-		await new Promise((resolve) => setTimeout(resolve, 100))
+		await page.waitForURL(() => page.url() === `http://${process.env.APP_HOST}:${process.env.APP_PORT}/`)
 
 		const [appSettingsRes] = await db.select().from(appSettings).execute()
 		const [adminRes] = await db.select().from(users).orderBy(desc(users.createdAt)).where(eq(users.id, decodedAdminPk)).execute()
@@ -89,5 +89,5 @@ describe('setup', async () => {
 		expect(appSettingsRes.allowRegister).toBe(true)
 
 		expect(adminRes.id).toBe(decodedAdminPk)
-	})
+	}, 30000)
 })

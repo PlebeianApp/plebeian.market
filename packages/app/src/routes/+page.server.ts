@@ -1,3 +1,4 @@
+import { getAllCategories } from '$lib/server/categories.service'
 import { toDisplayProduct } from '$lib/server/products.service'
 import { isInitialSetup } from '$lib/server/setup.service'
 

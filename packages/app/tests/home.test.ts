@@ -23,7 +23,10 @@ describe('home', async () => {
 		const [appSettingsRes] = await db.select().from(appSettings).execute()
 		await page.goto(`http://${process.env.APP_HOST}:${process.env.APP_PORT}/`)
 
+		await page.waitForLoadState('networkidle')
+
 		if (appSettingsRes.isFirstTimeRunning) {
+			await page.waitForURL(() => page.url() === `http://${process.env.APP_HOST}:${process.env.APP_PORT}/setup`)
 			expect(page.url()).toBe(`http://${process.env.APP_HOST}:${process.env.APP_PORT}/setup`)
 		} else {
 			const pageTitle = await page.textContent('h1')

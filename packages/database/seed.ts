@@ -262,33 +262,39 @@ const main = async () => {
 	})
 
 	const categoryData = randomLengthArrayFromTo(5, 10).map(() => {
+		const user = faker.helpers.arrayElement(userIds);
 		const category: Category = {
 		  id: createId(),
 		  name: faker.commerce.department(),
 		  description: faker.commerce.productDescription(),
+		  userId: user.id,
 		  parentId: null,
-		}	  
+		}
 		return category
-	}) as Category[]
+	  }) as Category[]
 
 	const subCategoryData = randomLengthArrayFromTo(2, 5).map(() => {
+		const parentCategory = faker.helpers.arrayElement(categoryData)
+		const userId = parentCategory.userId;
 		const category: Category = {
-		  id: createId(),
-		  name: faker.commerce.department(),
-		  description: faker.commerce.productDescription(),
-		  parentId: faker.helpers.arrayElement(categoryData).id,
-		}	  
+			id: createId(),
+			name: faker.commerce.department(),
+			description: faker.commerce.productDescription(),
+			userId: userId,
+			parentId: parentCategory.id,
+		}
 		return category
 	}) as Category[]
-
-	const productCategoryData = productData.flat(2).map(
-		(product) =>
-			({
-				productId: product.id,
-				catId: faker.helpers.arrayElement(categoryData).id,
-			}) as ProductCategory,
-	)
-
+	
+	const productCategoryData = productData.flat(2).map((product) => {
+		const userCategories = categoryData.filter((category) => category.userId === product.userId);
+		const category = faker.helpers.arrayElement(userCategories);
+		return {
+		  productId: product.id,
+		  catId: category.id,
+		} as ProductCategory;
+	  });
+	  
 	const metaTypeData = Object.values(META_NAMES).map((metaName) => {
 		let scope: string
 		const isProductMeta = (metaName: string) => metaName in Object.values(PRODUCT_META) || metaName in Object.values(DIGITAL_PRODUCT_META)
@@ -431,9 +437,9 @@ const main = async () => {
 	const dbSchema = db._.fullSchema
 	await Promise.all([
 		db.delete(dbSchema.appSettings),
-		db.delete(dbSchema.categories),
 		db.delete(dbSchema.stalls),
 		db.delete(dbSchema.products),
+		db.delete(dbSchema.categories),
 		db.delete(dbSchema.productCategories),
 		db.delete(dbSchema.productImages),
 		db.delete(dbSchema.auctions),

@@ -6,6 +6,8 @@ export const generalFilterSchema = z.object({
 	order: z.enum(['asc', 'desc']).default('asc'),
 })
 
+export type GeneralFilter = z.infer<typeof generalFilterSchema>
+
 export const auctionsFilterSchema = generalFilterSchema.extend({
 	orderBy: z.enum(['createdAt', 'startDate', 'endDate']).default('createdAt'),
 })
@@ -20,6 +22,10 @@ export type UsersFilter = z.infer<typeof usersFilterSchema>
 
 export const productsFilterSchema = generalFilterSchema.extend({
 	orderBy: z.enum(['createdAt', 'price']).default('createdAt'),
+	stallId: z.string().optional(),
+	userId: z.string().optional(),
+	catId: z.string().optional(),
+	catName: z.string().optional(),
 })
 
 export type ProductsFilter = z.infer<typeof productsFilterSchema>
@@ -30,6 +36,14 @@ export const stallsFilterSchema = generalFilterSchema.extend({
 })
 
 export type StallsFilter = z.infer<typeof stallsFilterSchema>
+
+export const catsFilterSchema = generalFilterSchema.extend({
+	userId: z.string().optional(),
+	catId: z.string().optional(),
+	catName: z.string().optional(),
+})
+
+export type CatsFilter = z.infer<typeof catsFilterSchema>
 
 export const initialSetupDataSchema = z.object({
 	instancePk: z.string().startsWith('npub'),

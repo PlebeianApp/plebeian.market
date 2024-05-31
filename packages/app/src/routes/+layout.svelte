@@ -7,12 +7,27 @@
 
 	import '../app.css'
 
-	import type { NsecAccount } from '$lib/stores/session'
+	import type { CatsFilter } from '$lib/schema'
+	import type { RichCat } from '$lib/server/categories.service'
 	import { QueryClient, QueryClientProvider } from '@tanstack/svelte-query'
-	import { login } from '$lib/ndkLogin'
-	import { getAccount } from '$lib/stores/session'
+	import { GETAllCategories } from '$lib/apiUtils'
+	import { catsFilterSchema } from '$lib/schema'
 
-	const queryClient = new QueryClient()
+	const queryClient = new QueryClient({
+		defaultOptions: {
+			queries: {
+				staleTime: 1000 * 30,
+			},
+		},
+	})
+
+	queryClient.setQueryDefaults(['categories'], {
+		queryFn: async () => {
+			const filter: CatsFilter = catsFilterSchema.parse({ pageSize: 30 })
+			const res = await GETAllCategories(filter)
+			return res.json()
+		},
+	})
 
 	onMount(async () => {
 		if (pwaInfo) {
@@ -35,6 +50,9 @@
 	})
 
 	$: webManifestLink = pwaInfo ? pwaInfo.webManifest.linkTag : ''
+	queryClient.prefetchQuery<RichCat[]>({
+		queryKey: ['categories'],
+	})
 </script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com" />

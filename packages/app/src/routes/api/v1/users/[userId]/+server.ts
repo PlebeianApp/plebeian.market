@@ -20,6 +20,7 @@ export const GET: RequestHandler = async ({ params, request }) => {
 	const user = await getUserById(params.userId)
 
 	const userUnAuthResponse = {
+		id: user.id,
 		created_at: user.createdAt.getTime() / 1000,
 		name: user.name,
 		displayName: user.displayName,

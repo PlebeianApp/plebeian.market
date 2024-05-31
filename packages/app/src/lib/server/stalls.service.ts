@@ -9,7 +9,21 @@ import { getEventCoordinates } from '$lib/utils'
 import { format } from 'date-fns'
 
 import type { Stall } from '@plebeian/database'
-import { and, db, eq, orders, products, shipping, shippingZones, sql, stalls, users } from '@plebeian/database'
+import {
+	and,
+	categories,
+	db,
+	eq,
+	getTableColumns,
+	orders,
+	productCategories,
+	products,
+	shipping,
+	shippingZones,
+	sql,
+	stalls,
+	users,
+} from '@plebeian/database'
 
 import { stallEventSchema } from '../../schema/nostr-events'
 
@@ -25,6 +39,15 @@ export type RichStall = {
 	productCount: number
 	orderCount: number
 	identifier: string
+}
+
+export type DisplayStall = {
+	id: string
+	name: string
+	description: string
+	currency: string
+	createDate: string
+	userId: string
 }
 
 const resolveStalls = async (stall: Stall): Promise<RichStall> => {
@@ -92,12 +115,6 @@ export const getAllStalls = async (filter: StallsFilter = stallsFilterSchema.par
 		.where(and(filter.userId ? eq(stalls.userId, filter.userId) : undefined))
 		.execute()
 
-	// .findMany({
-	// 	limit: filter.pageSize,
-	// 	offset: (filter.page - 1) * filter.pageSize,
-	// 	orderBy: (stalls, { asc, desc }) => (filter.order === 'asc' ? asc(orderBy) : desc(orderBy)),    })
-	// .execute()
-
 	const richStalls = await Promise.all(
 		stallsResult.map(async (stall) => {
 			return await resolveStalls(stall)
@@ -154,13 +171,29 @@ export const getStallById = async (id: string): Promise<StallInfo> => {
 	error(404, 'Not found')
 }
 
-export type DisplayStall = {
-	id: string
-	name: string
-	description: string
-	currency: string
-	createDate: string
-	userId: string
+const stallsByCatNamePrepared = db
+	.select({ ...getTableColumns(stalls) })
+	.from(stalls)
+	.leftJoin(products, eq(stalls.id, products.stallId))
+	.leftJoin(productCategories, eq(products.id, productCategories.productId))
+	.leftJoin(categories, eq(productCategories.catId, categories.id))
+	.where(eq(categories.name, sql.placeholder('catName')))
+	.groupBy(stalls.id)
+	.prepare()
+
+export const getStallsByCatName = async (catName: string): Promise<RichStall[]> => {
+	const stallsRes = await stallsByCatNamePrepared.execute({ catName: catName })
+	const richStalls = await Promise.all(
+		stallsRes.map(async (stall) => {
+			return await resolveStalls(stall)
+		}),
+	)
+
+	if (richStalls) {
+		return richStalls
+	}
+
+	throw new Error('404: Not found')
 }
 
 export const getStallsByUserId = async (userId: string): Promise<RichStall[]> => {
@@ -236,16 +269,7 @@ export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall>
 	}
 }
 
-type StallResult = {
-	id: string
-	name: string
-	description: string
-	currency: string
-	createDate: string
-	userId: string
-}
-
-export const updateStall = async (stallId: string, stallEvent: NostrEvent): Promise<StallResult> => {
+export const updateStall = async (stallId: string, stallEvent: NostrEvent): Promise<DisplayStall> => {
 	const stallEventContent = JSON.parse(stallEvent.content)
 	const parsedStall = stallEventSchema.partial().parse({ id: stallId, ...stallEventContent })
 	const insertStall: Partial<Stall> = {

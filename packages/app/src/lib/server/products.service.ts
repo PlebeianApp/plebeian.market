@@ -8,7 +8,21 @@ import { customTagValue, getEventCoordinates } from '$lib/utils'
 import { format } from 'date-fns'
 
 import type { Product, ProductImage, ProductMeta, ProductTypes } from '@plebeian/database'
-import { createId, db, devUser1, eq, PRODUCT_META, productImages, productMeta, products } from '@plebeian/database'
+import {
+	and,
+	categories,
+	createId,
+	db,
+	devUser1,
+	eq,
+	getTableColumns,
+	PRODUCT_META,
+	productCategories,
+	productImages,
+	productMeta,
+	products,
+	sql,
+} from '@plebeian/database'
 
 import { productEventSchema } from '../../schema/nostr-events'
 import { getStallById } from './stalls.service'
@@ -40,8 +54,13 @@ export const toDisplayProduct = async (product: Product): Promise<DisplayProduct
 	}
 }
 
-export const getProductsByUserId = async (userId: string): Promise<DisplayProduct[]> => {
-	const productsResult = await db.select().from(products).where(eq(products.userId, userId)).execute()
+export const getProductsByUserId = async (filter: ProductsFilter = productsFilterSchema.parse({})): Promise<DisplayProduct[]> => {
+	const productsResult = await db
+		.select()
+		.from(products)
+		.where(and(filter.userId ? eq(products.userId, filter.userId) : undefined))
+		.limit(filter.pageSize)
+		.execute()
 
 	const displayProducts: DisplayProduct[] = await Promise.all(productsResult.map(toDisplayProduct))
 
@@ -218,4 +237,57 @@ export const deleteProduct = async (productId: string): Promise<boolean> => {
 	}
 
 	error(500, 'Failed to delete product')
+}
+
+const preparedProductsByCatId = db
+	.select({ ...getTableColumns(products) })
+	.from(products)
+	.innerJoin(productCategories, eq(products.id, productCategories.productId))
+	.where(eq(productCategories.catId, sql.placeholder('catId')))
+	.limit(sql.placeholder('limit'))
+	.offset(sql.placeholder('offset'))
+	.prepare()
+
+export const getProductsByCatId = async (filter: ProductsFilter): Promise<DisplayProduct[]> => {
+	if (!filter.catId) {
+		throw new Error('Category ID must be provided')
+	}
+
+	const productRes = await preparedProductsByCatId.execute({
+		catId: filter.catId,
+		limit: filter.pageSize,
+		offset: (filter.page - 1) * filter.pageSize,
+	})
+
+	if (productRes) {
+		return await Promise.all(productRes.map(toDisplayProduct))
+	}
+	error(404, 'not found')
+}
+
+const preparedProductsByCatName = db
+	.select({ ...getTableColumns(products) })
+	.from(products)
+	.innerJoin(productCategories, eq(products.id, productCategories.productId))
+	.innerJoin(categories, eq(productCategories.catId, categories.id))
+	.where(eq(categories.name, sql.placeholder('catName')))
+	.limit(sql.placeholder('limit'))
+	.offset(sql.placeholder('offset'))
+	.prepare()
+
+export const getProductsByCatName = async (filter: ProductsFilter): Promise<DisplayProduct[]> => {
+	if (!filter.catName) {
+		throw new Error('Category Name must be provided')
+	}
+
+	const productRes = await preparedProductsByCatName.execute({
+		catName: filter.catName,
+		limit: filter.pageSize,
+		offset: (filter.page - 1) * filter.pageSize,
+	})
+
+	if (productRes) {
+		return await Promise.all(productRes.map(toDisplayProduct))
+	}
+	throw error(404, 'not found')
 }
