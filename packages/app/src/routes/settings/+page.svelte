@@ -42,7 +42,7 @@
 		},
 	})
 
-	let userTrustLevel: Selected<string> | null = null
+	let userTrustLevel: Selected<string> | undefined = undefined
 
 	$: userQuery = createQuery<User>({
 		queryKey: ['user', !!$ndkStore.activeUser?.pubkey],
@@ -62,11 +62,11 @@
 			return null
 		},
 	})
-
 	$: userData = $userQuery.data ?? {
 		nip05: '',
 		about: '',
 		displayName: '',
+		name: '',
 		image: '',
 		lud16: '',
 	}
@@ -200,7 +200,12 @@
 
 					<div class="grid w-full items-center gap-1.5">
 						<Label for="name" class="font-bold">Name</Label>
-						<Input bind:value={userData.displayName} type="text" id="name" placeholder={userData.displayName} />
+						<Input bind:value={userData.name} type="text" id="name" placeholder={userData.name} />
+					</div>
+
+					<div class="grid w-full items-center gap-1.5">
+						<Label for="name" class="font-bold">Display Name</Label>
+						<Input bind:value={userData.displayName} type="text" id="displayName" placeholder={userData.displayName} />
 					</div>
 
 					<div class="grid w-full items-center gap-1.5">
