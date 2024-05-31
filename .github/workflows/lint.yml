@@ -1,3 +1,4 @@
+name: Lint
 on:
   pull_request:
   push:
@@ -5,7 +6,7 @@ on:
 
 jobs:
   prettier:
-    runs-on: [ubuntu-latest]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - run: corepack enable
@@ -13,11 +14,15 @@ jobs:
         with:
           node-version: 20
           cache: "pnpm"
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          version: 9.1.4
       - run: pnpm install
       - run: pnpm format
 
   eslint:
-    runs-on: [ubuntu-latest]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - run: corepack enable
@@ -25,5 +30,9 @@ jobs:
         with:
           node-version: 20
           cache: "pnpm"
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          version: 9.1.4
       - run: pnpm install
       - run: pnpm lint

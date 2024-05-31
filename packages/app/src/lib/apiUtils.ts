@@ -43,14 +43,18 @@ export const GETUsers = async (userPk: string, authToken?: string): Promise<Resp
 	})
 }
 
-export const PUTUser = async (user: NDKUser, authToken?: string): Promise<Response> => {
+export const PUTUser = async (user: NDKUser): Promise<Response> => {
+	const url = `/api/v1/users/${user.pubkey}`
+	const method: HttpMethod = 'PUT'
+	const authToken = await createToken(url, method)
+
 	const headers = new Headers()
 	if (authToken) {
 		headers.append('Authorization', authToken)
 	}
 	headers.append('Content-Type', 'application/json')
-	return await fetch(`/api/v1/users/${user.pubkey}`, {
-		method: 'PUT',
+	return await fetch(url, {
+		method: method,
 		headers: headers,
 		body: JSON.stringify(user.profile),
 	})
