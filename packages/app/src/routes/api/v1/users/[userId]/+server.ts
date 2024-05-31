@@ -14,7 +14,7 @@ export const GET: RequestHandler = async ({ params, request }) => {
 			return json(await getUserById(params.userId))
 		}
 
-		return error(500, 'Invalid Token')
+		return error(401, 'Invalid Token')
 	}
 
 	const user = await getUserById(params.userId)
@@ -40,21 +40,21 @@ export const GET: RequestHandler = async ({ params, request }) => {
 export const PUT: RequestHandler = async ({ params, request }) => {
 	const authorizationHeader = request.headers.get('Authorization')
 
-	if (authorizationHeader) {
-		const token = decodeJwtToEvent(authorizationHeader)
-		if (token.pubkey === params.userId && findCustomTags(token.tags, 'method')[0] === request.method) {
-			return json(await getUserById(params.userId))
+	if (!authorizationHeader) {
+		return error(401, 'Invalid Token')
+	}
+
+	const token = decodeJwtToEvent(authorizationHeader)
+	if (token.pubkey === params.userId && findCustomTags(token.tags, 'method')[0] === request.method) {
+		try {
+			const body = await request.json()
+			return json(await updateUser(params.userId, body))
+		} catch (e) {
+			error(500, JSON.stringify(e))
 		}
-
-		return error(500, 'Invalid Token')
 	}
 
-	try {
-		const body = await request.json()
-		return json(await updateUser(params.userId, body.profile))
-	} catch (e) {
-		error(500, JSON.stringify(e))
-	}
+	return error(401, 'Invalid Token')
 }
 
 export const DELETE: RequestHandler = async ({ params }) => {

@@ -2,9 +2,8 @@
 	import type { NDKUserProfile } from '@nostr-dev-kit/ndk'
 	import type { RichStall } from '$lib/server/stalls.service'
 	import type { Selected } from 'bits-ui'
-	import { NDKUser } from '@nostr-dev-kit/ndk'
 	import { createMutation, createQuery, useQueryClient } from '@tanstack/svelte-query'
-	import { GETUserFromId } from '$lib/apiUtils'
+	import { GETUserFromId, PUTUser } from '$lib/apiUtils'
 	import CreateEditStall from '$lib/components/stalls/create-edit.svelte'
 	import * as Alert from '$lib/components/ui/alert/index.js'
 	import { Button } from '$lib/components/ui/button/index.js'
@@ -43,17 +42,22 @@
 		},
 	})
 
-	$: userTrustLevel = { value: userTrustLevels[0], label: userTrustLevels[0] } as Selected<string>
+	let userTrustLevel: Selected<string> | null = null
 
 	$: userQuery = createQuery<User>({
 		queryKey: ['user', !!$ndkStore.activeUser?.pubkey],
 		queryFn: async () => {
 			if ($ndkStore.activeUser?.pubkey) {
 				const user = await GETUserFromId($ndkStore.activeUser.pubkey).then((res) => res.json())
-				userTrustLevel = user.trustLevel
-					? ({ value: user.trustLevel, label: user.trustLevel } as Selected<string>)
-					: ({ value: userTrustLevels[0], label: userTrustLevels[0] } as Selected<string>)
-				return GETUserFromId($ndkStore.activeUser.pubkey).then((res) => res.json())
+
+				if (!userTrustLevel) {
+					userTrustLevel = {
+						value: user.trustLevel,
+						label: user.trustLevel,
+					}
+				}
+
+				return user
 			}
 			return null
 		},
@@ -75,16 +79,13 @@
 
 			ndkUser.profile = {
 				...userData,
+				trustLevel: userTrustLevel?.value,
 			} as NDKUserProfile
 
 			if ($ndkStore.activeUser?.pubkey) {
-				const res = await fetch(new URL(`/api/v1/users/${$ndkStore.activeUser.pubkey}`, window.location.origin), {
-					method: 'PUT',
-					body: JSON.stringify(ndkUser),
-					headers: { 'Content-Type': 'application/json' },
-				})
+				const res = await PUTUser(ndkUser).then((res) => res.json())
 				await ndkUser.publish()
-				return res.json()
+				return res
 			}
 			return null
 		},
@@ -137,7 +138,6 @@
 							<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
 						</button>
 					{/if}
-
 					<div class="flex flex-col gap-2">
 						{#if stallsMode === 'list'}
 							{#if $stallsQuery.isLoading}
@@ -145,7 +145,6 @@
 								<Skeleton class="h-12 w-full" />
 								<Skeleton class="h-12 w-full" />
 							{/if}
-
 							{#each [...($stallsQuery.data ?? [])] as stall}
 								<Button
 									on:click={() => {
@@ -218,7 +217,7 @@
 						<Label class="truncate font-bold">Trust level</Label>
 						<Select bind:selected={userTrustLevel} name="trustLevel">
 							<SelectTrigger class="border-black border-2">
-								<SelectValue placeholder={userTrustLevel.label} />
+								<SelectValue placeholder={userTrustLevel?.label} />
 							</SelectTrigger>
 							<SelectContent class="border-black border-2 max-h-[350px] overflow-y-auto">
 								{#each userTrustLevels as trustLevel}
