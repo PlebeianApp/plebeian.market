@@ -7,7 +7,6 @@ import type { PageServerLoad } from './$types'
 export const load: PageServerLoad = async ({ params }) => {
 	const { catName } = params
 	const stalls = await getStallsByCatName(catName)
-	console.log(stalls)
 	return {
 		filter: catsFilterSchema.parse({ catName: catName }) as CatsFilter,
 		stalls: stalls,

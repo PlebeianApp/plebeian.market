@@ -1,0 +1,54 @@
+<script lang="ts">
+	import type { RichCat } from '$lib/server/categories.service'
+	import { createQuery } from '@tanstack/svelte-query'
+
+	import Button from '../ui/button/button.svelte'
+	import Skeleton from '../ui/skeleton/skeleton.svelte'
+	import CatCompactItem from './cat-compact-item.svelte'
+
+	export let isExpanded: boolean = false
+	let showMore = isExpanded
+	let pageSize = 4
+
+	$: catQuery = createQuery<RichCat[]>({
+		queryKey: ['categories'],
+	})
+</script>
+
+<div class="flex flex-col">
+	<div class="flex flex-col">
+		<main class="text-black">
+			<div class="lg:px-12">
+				<div class="container">
+					<div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+						{#if $catQuery.isLoading}
+							<Skeleton class=" h-96 w-full" />
+							<Skeleton class=" h-96 w-full" />
+							<Skeleton class=" h-96 w-full" />
+							<Skeleton class=" h-96 w-full" />
+						{:else if $catQuery.data}
+							{#each $catQuery.data.slice(0, showMore ? $catQuery.data.length : pageSize) as cat}
+								{#if cat.productCount}
+									<CatCompactItem {cat} />
+								{/if}
+							{/each}
+						{/if}
+					</div>
+					{#if $catQuery.data}
+						<div class=" text-center py-1">
+							{#if $catQuery.data.length > pageSize}
+								<Button on:click={() => (showMore = !showMore)} size="icon" class="cursor-pointer border-0" variant="ghost">
+									{#if showMore}
+										<span class=" i-tdesign-minus"></span>
+									{:else}
+										<span class=" i-tdesign-plus"></span>
+									{/if}
+								</Button>
+							{/if}
+						</div>
+					{/if}
+				</div>
+			</div>
+		</main>
+	</div>
+</div>

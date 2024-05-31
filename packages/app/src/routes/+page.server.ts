@@ -28,8 +28,7 @@ const getHomeProducts = async () => {
 export const load: PageServerLoad = async () => {
 	const initialSetup = await isInitialSetup()
 	const homeProducts = await getHomeProducts()
-	const categoriesRes = await getAllCategories()
-	return { initialSetup, homeProducts, categoriesRes }
+	return { initialSetup, homeProducts }
 }
 
 export const prerender = true

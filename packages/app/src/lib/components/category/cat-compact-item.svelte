@@ -5,18 +5,21 @@
 	import Button from '../ui/button/button.svelte'
 
 	export let cat: RichCat
+	export let isGlobal: boolean = true
 </script>
 
 <Button
 	class="cursor-pointer border border-gray flex justify-start items-center p-4 font-bold"
 	variant="outline"
 	on:click={() => {
-		goto(`/cat/n/${cat.name}`)
+		goto(isGlobal ? `/cat/n/${cat.name}` : `/cat/${cat.id}`)
 	}}
 >
-	<div class="flex items-center gap-2">
-		<span class=" i-mdi-category-outline w-6 h-6" />
-		<span>{cat.name}</span>
+	<div class="flex items-center gap-2 w-full justify-between">
+		<section class=" inline-flex items-center gap-2">
+			<span class=" i-mdi-category-outline w-6 h-6" />
+			<span>{cat.name}</span>
+		</section>
 		<span>{cat.productCount}</span>
 	</div>
 </Button>

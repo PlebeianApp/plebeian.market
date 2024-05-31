@@ -19,7 +19,6 @@ describe('home', async () => {
 	})
 
 	test('h1 should be visible or redirect to setup page', async () => {
-		await db.update(appSettings).set({ isFirstTimeRunning: true }).execute()
 		const [appSettingsRes] = await db.select().from(appSettings).execute()
 		await page.goto(`http://${process.env.APP_HOST}:${process.env.APP_PORT}/`)
 

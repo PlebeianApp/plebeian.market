@@ -9,7 +9,7 @@
 
 	import type { CatsFilter } from '$lib/schema'
 	import type { RichCat } from '$lib/server/categories.service'
-	import { createQuery, QueryClient, QueryClientProvider } from '@tanstack/svelte-query'
+	import { QueryClient, QueryClientProvider } from '@tanstack/svelte-query'
 	import { GETAllCategories } from '$lib/apiUtils'
 	import { catsFilterSchema } from '$lib/schema'
 
@@ -20,6 +20,7 @@
 			},
 		},
 	})
+
 	queryClient.setQueryDefaults(['categories'], {
 		queryFn: async () => {
 			const filter: CatsFilter = catsFilterSchema.parse({ pageSize: 30 })

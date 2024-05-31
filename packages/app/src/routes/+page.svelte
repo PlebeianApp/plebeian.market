@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation'
-	import CatCompactItem from '$lib/components/category/cat-compact-item.svelte'
+	import CatMenu from '$lib/components/category/cat-menu.svelte'
 	import Pattern from '$lib/components/Pattern.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
 	import { Button } from '$lib/components/ui/button/index.js'
@@ -13,7 +13,6 @@
 	$: ({
 		initialSetup,
 		homeProducts: { featured, products },
-		categoriesRes,
 	} = data)
 
 	onMount(() => {
@@ -46,13 +45,7 @@
 			<div class="py-5 lg:px-12">
 				<div class="container">
 					<h2>Categories</h2>
-					<div class=" grid grid-cols-4 gap-2">
-						{#each categoriesRes as cat}
-							{#if cat.productCount}
-								<CatCompactItem {cat} />
-							{/if}
-						{/each}
-					</div>
+					<CatMenu isExpanded={true} />
 				</div>
 			</div>
 			{#if products.length}

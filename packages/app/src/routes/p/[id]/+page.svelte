@@ -40,7 +40,7 @@
 						<h2>Categories</h2>
 						<div class=" grid grid-cols-4 gap-2">
 							{#each categories as cat}
-								<CatCompactItem {cat} />
+								<CatCompactItem {cat} isGlobal={false} />
 							{/each}
 						</div>
 					</div>

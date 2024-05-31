@@ -1,4 +1,3 @@
-// TODO Api for categories
 import { error, json } from '@sveltejs/kit'
 import { catsFilterSchema } from '$lib/schema'
 import { getAllCategories } from '$lib/server/categories.service'

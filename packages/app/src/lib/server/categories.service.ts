@@ -3,16 +3,7 @@ import { error } from '@sveltejs/kit'
 import { catsFilterSchema } from '$lib/schema'
 
 import type { Category } from '@plebeian/database'
-import { and, categories, db, eq, inArray, productCategories, sql } from '@plebeian/database'
-
-// TODO get global categories, x
-// TODO get categories by id x
-// TODO get categories by user x
-// TODO get categories by categoy name
-// TODO get categories for stall
-// TODO get products for category x
-// TODO get products for category and user
-// TODO get products for category and stall
+import { and, categories, db, eq, productCategories, sql } from '@plebeian/database'
 
 export type RichCat = Pick<Category, 'id' | 'name' | 'description' | 'parentId' | 'userId'> & {
 	productCount?: number

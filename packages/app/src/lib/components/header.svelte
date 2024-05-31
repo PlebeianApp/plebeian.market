@@ -36,7 +36,7 @@
 			<a href="/"><img src="/logo.svg" alt="logo" class="w-16 px-2" /></a>
 			<div class="hidden lg:flex mx-8 gap-8">
 				<a class="hover:underline font-semibold" href="/stalls/">Stall Browser</a>
-				<a class="hover:underline font-semibold" href="/cat/">Category Browser</a>
+				<!-- <a class="hover:underline font-semibold" href="/cat/">Category Browser</a> -->
 				<a class="hover:underline font-semibold" href="/">Market Square</a>
 				<a class="hover:underline font-semibold" href="/">Plebeian Planet</a>
 			</div>
