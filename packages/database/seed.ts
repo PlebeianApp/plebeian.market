@@ -288,12 +288,15 @@ const main = async () => {
 	
 	const productCategoryData = productData.flat(2).map((product) => {
 		const userCategories = categoryData.filter((category) => category.userId === product.userId);
+		if (!userCategories.length) {
+			return null	
+		}
 		const category = faker.helpers.arrayElement(userCategories);
 		return {
 		  productId: product.id,
 		  catId: category.id,
 		} as ProductCategory;
-	  });
+	  }).filter(Boolean);
 	  
 	const metaTypeData = Object.values(META_NAMES).map((metaName) => {
 		let scope: string
