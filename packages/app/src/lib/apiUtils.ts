@@ -75,6 +75,22 @@ export const POSTUser = async (user: NDKUser, authToken?: string): Promise<Respo
 	})
 }
 
+export const DELETEUser = async (userPk: string): Promise<Response> => {
+	const url = `/api/v1/users/${userPk}`
+	const method: HttpMethod = 'DELETE'
+	const authToken = await createToken(url, method)
+
+	const headers = new Headers()
+	if (authToken) {
+		headers.append('Authorization', authToken)
+	}
+	headers.append('Content-Type', 'application/json')
+	return await fetch(url, {
+		method: method,
+		headers: headers,
+	})
+}
+
 // Categories
 
 export const GETAllCategories = async (filter: CatsFilter): Promise<Response> => {
