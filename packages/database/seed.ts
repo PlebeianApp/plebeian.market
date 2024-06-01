@@ -288,7 +288,7 @@ const main = async () => {
 	
 	const productCategoryData = productData.flat(2).map((product) => {
 		const userCategories = categoryData.filter((category) => category.userId === product.userId);
-		if (userCategories.length) {
+		if (!userCategories.length) {
 			return null	
 		}
 		const category = faker.helpers.arrayElement(userCategories);
