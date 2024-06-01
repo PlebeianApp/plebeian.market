@@ -23,7 +23,7 @@ describe('categories service', () => {
 
 	it('gets categories by product id', async () => {
 		const products = await getAllProducts()
-		const categories = await Promise.all(products.flatMap(({id}) => getCategoriesByProductId(id))) 
+		const categories = await Promise.all(products.flatMap(({ id }) => getCategoriesByProductId(id)))
 		// at least one of the products should have few categories
 		expect(categories.length).toBeGreaterThan(0)
 	})
