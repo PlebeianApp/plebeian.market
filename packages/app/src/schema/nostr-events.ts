@@ -32,7 +32,8 @@ export const productEventSchema = z.object({
 			baseCost: z.string(),
 			regions: z.array(z.enum(Object.values(COUNTRIES_ISO).map((c) => c.iso3) as NonEmptyArray<ISO3>)),
 		}),
-	)})
+	),
+})
 
 export const auctionEventSchema = z.object({
 	id: z.string(),

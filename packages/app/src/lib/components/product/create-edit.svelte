@@ -2,7 +2,6 @@
 	import type { DisplayProduct } from '$lib/server/products.service'
 	import { NDKEvent } from '@nostr-dev-kit/ndk'
 	import { createMutation } from '@tanstack/svelte-query'
-	import AccordionContent from '$lib/components/ui/accordion/accordion-content.svelte'
 	import Button from '$lib/components/ui/button/button.svelte'
 	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte'
 	import * as Command from '$lib/components/ui/command/index.js'
@@ -29,7 +28,7 @@
 	type Category = { key: string; name: string; checked: boolean }
 	let categories: Category[] = []
 	let images: { file: File; base64: string }[] = []
-	async function handleFilesSelect(e: CustomEvent<any>) {
+	async function handleFilesSelect(e: CustomEvent) {
 		const { acceptedFiles } = e.detail
 		images = [
 			...images,
@@ -151,6 +150,14 @@
 			document.getElementById(triggerId)?.focus()
 		})
 	}
+
+	async function addCategory() {
+		const key = crypto.randomUUID()
+		categories = [...categories, { key, name: `category ${categories.length + 1}`, checked: true }]
+		await tick()
+		const el = document.querySelector(`span[data-category-key="${key}"]`) as HTMLSpanElement
+		el.focus()
+	}
 </script>
 
 <form on:submit|preventDefault={(sEvent) => $mutation.mutateAsync(sEvent)} class="flex flex-col gap-4">
@@ -215,17 +222,7 @@
 		</Tabs.Content>
 
 		<Tabs.Content value="categories" class="flex flex-col gap-2">
-			<Button
-				variant="outline"
-				class="w-24"
-				on:click={async () => {
-					const key = crypto.randomUUID()
-					categories = [...categories, { key, name: `category ${categories.length + 1}`, checked: true }]
-					await tick()
-					const el = document.querySelector(`span[data-category-key="${key}"]`)
-					el.focus()
-				}}>New</Button
-			>
+			<Button variant="outline" class="w-24" on:click={addCategory}>New</Button>
 			<div class="flex flex-col gap-1.5">
 				{#each categories as category (category.key)}
 					<div class="flex items-center space-x-2">
@@ -248,13 +245,13 @@
 			<ol class="flex gap-1.5">
 				{#each images as item}
 					<li class="relative">
-						<span
+						<button
 							class="cursor-pointer i-tdesign-close absolute text-white right-0"
 							on:click={() => {
 								images = images.filter((f) => f.file !== item.file)
 							}}
 						>
-						</span>
+						</button>
 						<img src={item.base64} alt="" />
 					</li>
 				{/each}

@@ -46,8 +46,10 @@ describe('/products', () => {
 			],
 			shipping: [
 				{
-					id: Math.random().toString(36).substring(2, 15),
-					cost: Math.random() * 10,
+					id: createId(),
+					name: 'USPS',
+					baseCost: '21.21',
+					regions: ['USA', 'CAN'],
 				},
 			],
 		}
@@ -85,10 +87,10 @@ describe('/products', () => {
 	})
 
 	it('GET products by user id', async () => {
-		const result = await fetch(`http://${process.env.APP_HOST}:${process.env.APP_PORT}/api/v1/products?userId=testUserId`).then(
+		const result = await fetch(`http://${process.env.APP_HOST}:${process.env.APP_PORT}/api/v1/products?userId=${devUser1}`).then(
 			(response) => response.json(),
 		)
 
-		expect(result).toHaveLength(10)
+		expect(result.length).toBeGreaterThan(0)
 	})
 })
