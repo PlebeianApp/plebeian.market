@@ -25,15 +25,14 @@ export const productEventSchema = z.object({
 	price: z.number(),
 	quantity: z.number().int().nullable(),
 	specs: z.array(z.tuple([z.string(), z.string()])).optional(),
-	shipping: z
-		.array(
-			z.object({
-				id: z.string(),
-				cost: z.number(),
-			}),
-		)
-		.optional(),
-})
+	shipping: z.array(
+		z.object({
+			id: z.string(),
+			name: z.string(),
+			baseCost: z.string(),
+			regions: z.array(z.enum(Object.values(COUNTRIES_ISO).map((c) => c.iso3) as NonEmptyArray<ISO3>)),
+		}),
+	)})
 
 export const auctionEventSchema = z.object({
 	id: z.string(),
