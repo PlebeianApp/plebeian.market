@@ -134,7 +134,7 @@ export const updateUser = async (userId: string, userMeta: NDKUserProfile): Prom
 }
 
 export const deleteUser = async (userId: string): Promise<boolean> => {
-	const userResult = await db.delete(users).where(eq(users.id, userId)).execute()
+	const userResult = await db.delete(users).where(eq(users.id, userId)).returning()
 
 	if (userResult) {
 		return true

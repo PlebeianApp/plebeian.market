@@ -44,4 +44,19 @@ describe('settings', async () => {
 		const userName = await page.$eval('#name', (el) => el.value)
 		expect(userName).toBe('Test User')
 	})
+
+	it('should navigate to account deletion and submit the form', async () => {
+		await page.waitForSelector('text=Delete account')
+		await page.click('text=Delete account')
+
+		await page.waitForSelector('#deletionIntent')
+		await page.click('#deletionIntent')
+
+		await page.waitForSelector('#accountDeletionChallange')
+		await page.fill('#accountDeletionChallange', 'Test User')
+
+		await page.click('#executeDeletion')
+
+		await page.waitForURL(`http://${process.env.APP_HOST}:${process.env.APP_PORT}`)
+	})
 })

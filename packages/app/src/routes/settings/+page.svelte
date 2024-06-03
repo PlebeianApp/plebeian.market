@@ -4,6 +4,7 @@
 	import type { Selected } from 'bits-ui'
 	import { createMutation, createQuery, useQueryClient } from '@tanstack/svelte-query'
 	import { GETUserFromId, PUTUser } from '$lib/apiUtils'
+	import DeleteAccount from '$lib/components/settings/delete-account.svelte'
 	import CreateEditStall from '$lib/components/stalls/create-edit.svelte'
 	import * as Alert from '$lib/components/ui/alert/index.js'
 	import { Button } from '$lib/components/ui/button/index.js'
@@ -119,6 +120,9 @@
 					<Tabs.Trigger value="network" class="px-0 data-[state=active]:text-primary">Network</Tabs.Trigger>
 					<Tabs.Trigger value="notifications" class="px-0 data-[state=active]:text-primary">Notifications</Tabs.Trigger>
 					<Tabs.Trigger value="v4v" class="px-0 data-[state=active]:text-primary">Value for Value</Tabs.Trigger>
+					<Tabs.Trigger value="deleteAccount" class="px-0 text-destructive data-[state=active]:text-destructive"
+						>Delete account</Tabs.Trigger
+					>
 				</Tabs.List>
 				<Tabs.Content value="stalls" class="flex flex-col w-full gap-6">
 					{#if stallsMode === 'list'}
@@ -297,6 +301,9 @@
 					</div>
 
 					<Button class="w-full font-bold">Save</Button>
+				</Tabs.Content>
+				<Tabs.Content value="deleteAccount" class="flex flex-col w-full gap-6">
+					<DeleteAccount userName={userData.name} />
 				</Tabs.Content>
 			</Tabs.Root>
 		</div>
