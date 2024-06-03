@@ -63,7 +63,7 @@ CREATE TABLE `categories` (
 	`user_id` text NOT NULL,
 	`description` text NOT NULL,
 	`parent_id` text,
-	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE cascade ON DELETE cascade,
 	FOREIGN KEY (`parent_id`) REFERENCES `categories`(`id`) ON UPDATE cascade ON DELETE cascade
 );
 --> statement-breakpoint

@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "bb3c9192-265e-4b50-b54f-b8f37d834a56",
+  "id": "8fce78b7-ebcd-4276-9e9a-5cf31859edcf",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "app_settings": {
@@ -475,8 +475,8 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
         },
         "categories_parent_id_categories_id_fk": {
           "name": "categories_parent_id_categories_id_fk",
