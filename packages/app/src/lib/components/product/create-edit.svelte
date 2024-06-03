@@ -152,7 +152,7 @@
 	}
 
 	async function addCategory() {
-		const key = crypto.randomUUID()
+		const key = createId()
 		categories = [...categories, { key, name: `category ${categories.length + 1}`, checked: true }]
 		await tick()
 		const el = document.querySelector(`span[data-category-key="${key}"]`) as HTMLSpanElement
