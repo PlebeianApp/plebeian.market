@@ -1,9 +1,9 @@
 import { z } from 'zod'
 
 export const generalFilterSchema = z.object({
-	pageSize: z.coerce.number().min(1).default(10).optional(),
-	page: z.coerce.number().min(1).default(1).optional(),
-	order: z.enum(['asc', 'desc']).default('asc').optional(),
+	pageSize: z.coerce.number().min(1).default(10),
+	page: z.coerce.number().min(1).default(1),
+	order: z.enum(['asc', 'desc']).default('asc'),
 })
 
 export type GeneralFilter = z.infer<typeof generalFilterSchema>
@@ -21,7 +21,7 @@ export const usersFilterSchema = generalFilterSchema.extend({
 export type UsersFilter = z.infer<typeof usersFilterSchema>
 
 export const productsFilterSchema = generalFilterSchema.extend({
-	orderBy: z.enum(['createdAt', 'price']).default('createdAt').optional(),
+	orderBy: z.enum(['createdAt', 'price']).default('createdAt'),
 	stallId: z.string().optional(),
 	userId: z.string().optional(),
 	catId: z.string().optional(),

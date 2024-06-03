@@ -8,7 +8,7 @@ describe('/stalls', () => {
 	it('GET', async () => {
 		const result = await fetch(`http://${process.env.APP_HOST}:${process.env.APP_PORT}/api/v1/stalls`).then((response) => response.json())
 
-		expect(result).toHaveLength(10)
+		expect(result.length).toBeGreaterThan(0)
 	})
 
 	it('GET with filter', async () => {

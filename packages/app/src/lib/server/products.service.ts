@@ -84,6 +84,7 @@ export const getProductsByStallId = async (stallId: string): Promise<DisplayProd
 }
 
 export const getAllProducts = async (filter: ProductsFilter = productsFilterSchema.parse({})): Promise<DisplayProduct[]> => {
+	console.log('hereeeee', filter)
 	const orderBy = {
 		createdAt: products.createdAt,
 		price: products.price,
