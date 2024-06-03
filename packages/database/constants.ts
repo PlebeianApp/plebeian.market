@@ -1,4 +1,5 @@
 export const CURRENCIES = [
+	'BTC', // Bitcoin
 	'USD', // United States Dollar
 	'EUR', // Euro
 	'JPY', // Japanese Yen

@@ -244,7 +244,7 @@ export const categories = sqliteTable('categories', {
 	name: text('name').notNull(),
 	userId: text('user_id')
 		.notNull()
-		.references(() => users.id),
+		.references(() => users.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
 	description: text('description').notNull(),
 	parentId: text('parent_id').references((): AnySQLiteColumn => categories.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
 })
