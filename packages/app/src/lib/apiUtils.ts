@@ -9,7 +9,9 @@ import { productsFilterSchema } from './schema'
 import ndkStore from './stores/ndk'
 
 export const createToken = async (url: string, method: HttpMethod): Promise<string> => {
+	console.log('here 1')
 	const ndk = get(ndkStore)
+	console.log('here 2')
 	const authEvent = new NDKEvent(ndk)
 	const uTag: NDKTag = ['u', url]
 	const methodTag: NDKTag = ['method', method]

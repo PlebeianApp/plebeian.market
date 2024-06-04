@@ -18,6 +18,7 @@
 	import { Slider } from '$lib/components/ui/slider/index.js'
 	import * as Tabs from '$lib/components/ui/tabs/index.js'
 	import Textarea from '$lib/components/ui/textarea/textarea.svelte'
+	import { userQuery } from '$lib/fetch/queries'
 	import ndkStore, { defaulRelaysUrls } from '$lib/stores/ndk'
 
 	import type { User } from '@plebeian/database'
@@ -58,26 +59,34 @@
 		},
 	})
 
-	let userTrustLevel: Selected<string> | undefined = undefined
+	let userTrustLevel: Selected<string> | null = null
 
-	$: userQuery = createQuery<User>({
-		queryKey: ['user', !!$ndkStore.activeUser?.pubkey],
-		queryFn: async () => {
-			if ($ndkStore.activeUser?.pubkey) {
-				const user = await GETUserFromId($ndkStore.activeUser.pubkey).then((res) => res.json())
+	$: console.log(userQuery)
+	// $: userTrustLevel =
+	// 	$userQuery !== null
+	// 		? {
+	// 				value: $userQuery.trustLevel,
+	// 				label: $userQuery.trustLevel,
+	// 			}
+	// 		: null
+	// $: userQuery = createQuery<User>({
+	// 	queryKey: ['user', !!$ndkStore.activeUser?.pubkey],
+	// 	queryFn: async () => {
+	// 		if ($ndkStore.activeUser?.pubkey) {
+	// 			const user = await GETUserFromId($ndkStore.activeUser.pubkey).then((res) => res.json())
 
-				if (!userTrustLevel) {
-					userTrustLevel = {
-						value: user.trustLevel,
-						label: user.trustLevel,
-					}
-				}
+	// 			if (!userTrustLevel) {
+	// 				userTrustLevel = {
+	// 					value: user.trustLevel,
+	// 					label: user.trustLevel,
+	// 				}
+	// 			}
 
-				return user
-			}
-			return null
-		},
-	})
+	// 			return user
+	// 		}
+	// 		return null
+	// 	},
+	// })
 	$: userData = $userQuery.data ?? {
 		nip05: '',
 		about: '',
