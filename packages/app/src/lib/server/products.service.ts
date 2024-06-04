@@ -93,6 +93,7 @@ export const getAllProducts = async (filter: ProductsFilter = productsFilterSche
 		limit: filter.pageSize,
 		offset: (filter.page - 1) * filter.pageSize,
 		orderBy: (products, { asc, desc }) => (filter.order === 'asc' ? asc(orderBy) : desc(orderBy)),
+		where: and(filter.userId ? eq(products.userId, filter.userId) : undefined),
 	})
 
 	const displayProducts: DisplayProduct[] = await Promise.all(productsResult.map(toDisplayProduct))
@@ -137,7 +138,7 @@ export const createProduct = async (productEvent: NostrEvent) => {
 
 	const stall = await getStallById(parsedProduct.stall_id)
 	const parentId = customTagValue(productEvent.tags, 'a')[0] || null
-	const extraCost = (parsedProduct.shipping && parsedProduct.shipping[0].cost) || 0
+	const extraCost = parsedProduct.shipping.length ? parsedProduct.shipping[0].baseCost : 0
 
 	if (!stall) {
 		error(400, 'Stall not found')
@@ -207,7 +208,7 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 		updatedAt: new Date(),
 		currency: parsedProduct?.currency,
 		price: parsedProduct?.price?.toString(),
-		extraCost: parsedProduct?.shipping && parsedProduct?.shipping[0].cost.toString(),
+		extraCost: parsedProduct?.shipping?.length ? parsedProduct?.shipping[0].baseCost.toString() : String(0),
 		userId: devUser1.pk,
 		stallId: parsedProduct?.stall_id,
 		productName: parsedProduct?.name,

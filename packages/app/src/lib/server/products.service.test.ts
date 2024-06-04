@@ -56,7 +56,7 @@ describe('products service', () => {
 	it('gets products by user id', async () => {
 		const userId = devUser1.pk
 
-		const products = await getProductsByUserId(userId)
+		const products = await getProductsByUserId({ userId: userId })
 
 		expect(products.length).toBeGreaterThan(0)
 	})
@@ -107,8 +107,10 @@ describe('products service', () => {
 			],
 			shipping: [
 				{
-					id: Math.random().toString(36).substring(2, 15),
-					cost: Math.random() * 10,
+					id: createId(),
+					name: 'USPS',
+					baseCost: '21.21',
+					regions: ['USA', 'CAN'],
 				},
 			],
 		}

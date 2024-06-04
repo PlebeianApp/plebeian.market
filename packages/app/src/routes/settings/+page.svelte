@@ -1,9 +1,11 @@
 <script lang="ts">
 	import type { NDKUserProfile } from '@nostr-dev-kit/ndk'
+	import type { DisplayProduct } from '$lib/server/products.service'
 	import type { RichStall } from '$lib/server/stalls.service'
 	import type { Selected } from 'bits-ui'
 	import { createMutation, createQuery, useQueryClient } from '@tanstack/svelte-query'
 	import { GETUserFromId, PUTUser } from '$lib/apiUtils'
+	import CreateEditProduct from '$lib/components/product/create-edit.svelte'
 	import DeleteAccount from '$lib/components/settings/delete-account.svelte'
 	import CreateEditStall from '$lib/components/stalls/create-edit.svelte'
 	import * as Alert from '$lib/components/ui/alert/index.js'
@@ -30,6 +32,7 @@
 	$: relayUrls = [...new Set([...($ndkStore.activeUser?.relayUrls ?? []), ...defaulRelaysUrls])].map((u) => new URL(u))
 
 	let stallsMode: 'list' | 'create' | 'edit' = 'list'
+	let productsMode: 'list' | 'create' | 'edit' = 'list'
 
 	$: stallsQuery = createQuery<RichStall[]>({
 		queryKey: ['stalls', stallsMode, !!$ndkStore.activeUser?.pubkey],
@@ -37,6 +40,18 @@
 			if ($ndkStore.activeUser?.pubkey) {
 				const filter = { userId: $ndkStore.activeUser.pubkey }
 				const res = await fetch(new URL(`/api/v1/stalls?${new URLSearchParams(filter)}`, window.location.origin))
+				return res.json()
+			}
+			return null
+		},
+	})
+
+	$: productsQuery = createQuery<DisplayProduct[]>({
+		queryKey: ['products', productsMode, !!$ndkStore.activeUser?.pubkey],
+		queryFn: async () => {
+			if ($ndkStore.activeUser?.pubkey) {
+				const filter = { userId: $ndkStore.activeUser.pubkey }
+				const res = await fetch(new URL(`/api/v1/products?${new URLSearchParams(filter)}`, window.location.origin))
 				return res.json()
 			}
 			return null
@@ -103,6 +118,7 @@
 	let v4v = [50]
 
 	let currentStall: RichStall | null = null
+	let currentProduct: DisplayProduct | null = null
 </script>
 
 {#if $ndkStore.activeUser && $ndkStore.signer}
@@ -111,9 +127,10 @@
 			<h2>Settings</h2>
 
 			<Separator />
-			<Tabs.Root value="stalls" class="w-full flex items-start gap-6">
+			<Tabs.Root value="products" class="w-full flex items-start gap-6">
 				<Tabs.List class="flex flex-col h-full bg-transparent items-start text-black">
 					<Tabs.Trigger value="stalls" class="px-0 data-[state=active]:text-primary">My Stalls</Tabs.Trigger>
+					<Tabs.Trigger value="products" class="px-0 data-[state=active]:text-primary">My Products</Tabs.Trigger>
 					<Tabs.Trigger value="wallet" class="px-0 data-[state=active]:text-primary">Wallet</Tabs.Trigger>
 					<Tabs.Trigger value="userSettings" class="px-0 data-[state=active]:text-primary">User settings</Tabs.Trigger>
 					<Tabs.Trigger value="email" class="px-0 data-[state=active]:text-primary">Email</Tabs.Trigger>
@@ -166,6 +183,52 @@
 							{/each}
 						{:else if stallsMode === 'create' || stallsMode === 'edit'}
 							<CreateEditStall stall={currentStall} on:success={() => (stallsMode = 'list')} />
+						{/if}
+					</div>
+				</Tabs.Content>
+
+				<Tabs.Content value="products" class="flex flex-col w-full gap-6">
+					{#if productsMode === 'list'}
+						<div class="flex justify-between items-center">
+							<h3 class="text-xl">My Products</h3>
+							<Button
+								on:click={() => {
+									productsMode = 'create'
+									currentProduct = null
+								}}
+								variant="outline"
+								class="border-2 border-black font-bold px-6">New</Button
+							>
+						</div>
+					{:else if productsMode === 'create' || productsMode === 'edit'}
+						<button class="w-fit" on:click={() => (productsMode = 'list')}>
+							<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
+						</button>
+					{/if}
+					<div class="flex flex-col gap-2">
+						{#if productsMode === 'list'}
+							{#if $productsQuery.isLoading}
+								<Skeleton class="h-12 w-full" />
+								<Skeleton class="h-12 w-full" />
+								<Skeleton class="h-12 w-full" />
+							{/if}
+							{#each [...($productsQuery.data ?? [])] as product}
+								<Button
+									on:click={() => {
+										productsMode = 'edit'
+										currentProduct = product
+									}}
+									class="cursor-pointer border border-gray flex justify-start items-center p-4 font-bold"
+									variant="outline"
+								>
+									<div class="flex items-center gap-2">
+										<span class="i-tdesign-store w-6 h-6" />
+										<span>{product.name}</span>
+									</div>
+								</Button>
+							{/each}
+						{:else if productsMode === 'create' || productsMode === 'edit'}
+							<CreateEditProduct product={currentProduct} on:success={() => (productsMode = 'list')} />
 						{/if}
 					</div>
 				</Tabs.Content>
