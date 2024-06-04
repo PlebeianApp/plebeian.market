@@ -62,31 +62,7 @@
 	let userTrustLevel: Selected<string> | null = null
 
 	$: console.log(userQuery)
-	// $: userTrustLevel =
-	// 	$userQuery !== null
-	// 		? {
-	// 				value: $userQuery.trustLevel,
-	// 				label: $userQuery.trustLevel,
-	// 			}
-	// 		: null
-	// $: userQuery = createQuery<User>({
-	// 	queryKey: ['user', !!$ndkStore.activeUser?.pubkey],
-	// 	queryFn: async () => {
-	// 		if ($ndkStore.activeUser?.pubkey) {
-	// 			const user = await GETUserFromId($ndkStore.activeUser.pubkey).then((res) => res.json())
 
-	// 			if (!userTrustLevel) {
-	// 				userTrustLevel = {
-	// 					value: user.trustLevel,
-	// 					label: user.trustLevel,
-	// 				}
-	// 			}
-
-	// 			return user
-	// 		}
-	// 		return null
-	// 	},
-	// })
 	$: userData = $userQuery.data ?? {
 		nip05: '',
 		about: '',

@@ -20,7 +20,7 @@ export async function fetchActiveUserData(): Promise<NDKUser | null> {
 export async function loginWithExtension(): Promise<boolean> {
 	try {
 		const signer = new NDKNip07Signer()
-		console.trace('Waiting for NIP-07 signer')
+		console.log('Waiting for NIP-07 signer')
 		await signer.blockUntilReady()
 		await signer.user()
 		ndk.signer = signer
