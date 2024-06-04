@@ -12,7 +12,7 @@
 	let value = menuItems[0].value
 
 	afterNavigate(() => {
-		value = menuItems.find((item) => $page.url.pathname === item.root)?.value || menuItems[0].value
+		value = menuItems.find((item) => `/${$page.url.pathname.split('/').slice(1, 3).join('/')}` === item.root)?.value || menuItems[0].value
 	})
 </script>
 
@@ -33,7 +33,7 @@
 						<Accordion.Content>
 							<ul class="pl-4">
 								{#each item.links as link}
-									<li><a href={link.href}>{link.title}</a></li>
+									<li><a class={$page.url.pathname == link.href ? ' font-bold' : ''} href={link.href}>{link.title}</a></li>
 								{/each}
 							</ul>
 						</Accordion.Content>
