@@ -9,11 +9,18 @@ import { bytesToHex, hexToBytes } from '$lib/utils'
 import { decode, nsecEncode } from 'nostr-tools/nip19'
 import { decrypt, encrypt } from 'nostr-tools/nip49'
 
-export async function fetchActiveUserData(): Promise<NDKUser | null> {
+export async function fetchActiveUserData(keyToLocalDb?: string): Promise<NDKUser | null> {
 	if (!ndk.signer) return null
+	console.log('Fetching profile')
 	const user = await ndk.signer.user()
 	await user.fetchProfile()
 	ndkStore.set(ndk)
+	if (keyToLocalDb) {
+		await loginLocalDb(user.pubkey, 'NSEC', keyToLocalDb)
+	} else {
+		await loginLocalDb(user.pubkey, 'NIP07')
+	}
+	await loginDb(user)
 	return user
 }
 
@@ -25,15 +32,10 @@ export async function loginWithExtension(): Promise<boolean> {
 		await signer.user()
 		ndk.signer = signer
 		ndkStore.set(ndk)
-		const user = await fetchActiveUserData()
-		if (user) {
-			await loginLocalDb(user.pubkey, 'NIP07')
-			await loginDb(user)
-			return true
-		}
-		return false
-	} catch (error) {
-		console.error(error)
+		fetchActiveUserData()
+		return true
+	} catch (e) {
+		console.error(e)
 		return false
 	}
 }
@@ -46,17 +48,14 @@ export async function loginWithPrivateKey(key: string, password: string): Promis
 			console.log('Waiting for PrivateKey signer')
 			await signer.blockUntilReady()
 			await signer.user()
+
 			ndk.signer = signer
 			ndkStore.set(ndk)
-			const user = await fetchActiveUserData()
-			if (user) {
-				await loginLocalDb(user.pubkey, 'NSEC', key)
-				await loginDb(user)
-				return true
-			}
-			return false
+			fetchActiveUserData(key)
+			return true
 		} catch (e) {
-			throw Error(JSON.stringify(e))
+			console.error(e)
+			return false
 		}
 	} else if (key.startsWith('nsec')) {
 		try {
@@ -69,15 +68,11 @@ export async function loginWithPrivateKey(key: string, password: string): Promis
 			await signer.user()
 			ndk.signer = signer
 			ndkStore.set(ndk)
-			const user = await fetchActiveUserData()
-			if (user) {
-				await loginLocalDb(user.pubkey, 'NSEC', cSK)
-				await loginDb(user)
-				return true
-			}
-			return false
+			fetchActiveUserData(cSK)
+			return true
 		} catch (e) {
-			throw Error(JSON.stringify(e))
+			console.error(e)
+			return false
 		}
 	} else throw new Error('Unknown private format')
 }

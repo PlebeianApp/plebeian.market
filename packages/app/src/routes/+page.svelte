@@ -45,7 +45,7 @@
 			<div class="py-5 lg:px-12">
 				<div class="container">
 					<h2>Categories</h2>
-					<CatMenu isExpanded={true} />
+					<CatMenu />
 				</div>
 			</div>
 			{#if products.length}

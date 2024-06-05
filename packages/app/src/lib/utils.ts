@@ -205,3 +205,7 @@ export async function copyToClipboard(data: BlobPart, mimeType = 'text/plain') {
 		console.log(e)
 	}
 }
+
+export function nav_back() {
+	if (typeof window !== 'undefined') window.history.back()
+}
