@@ -96,7 +96,11 @@
 	/>
 </svelte:head>
 <QueryClientProvider client={queryClient}>
-	<Header />
-	<slot />
-	<Footer />
+	<div class="  min-h-screen flex flex-col">
+		<Header />
+		<section class=" flex-1">
+			<slot />
+		</section>
+		<Footer />
+	</div>
 </QueryClientProvider>

@@ -1,4 +1,4 @@
-<footer class="bg-black p-4 font-bold text-white lg:px-12">
+<footer class="sticky top-0 bg-black p-4 font-bold text-white lg:px-12">
 	<div class="container flex justify-between items-center flex-col gap-4 md:gap-0 md:flex-row">
 		<div class="flex gap-4 flex-col md:flex-row items-center">
 			<span>Plug into the bitcoin economy. Powered by Nostr.</span>
