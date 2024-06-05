@@ -31,9 +31,9 @@
 		?.links.find((item) => item.href === $page.url.pathname)
 </script>
 
-{#if stallsMode === 'list'}
-	<div class="flex justify-between items-center">
-		<div>
+<div class="pb-4 space-y-2">
+	{#if stallsMode === 'list'}
+		<div class="flex justify-between items-center">
 			<div class=" flex items-center gap-1">
 				<Button size="icon" variant="outline" class=" border-none" on:click={() => nav_back()}>
 					<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
@@ -43,44 +43,44 @@
 					<p class="text-gray-600">{linkDetails?.description}</p>
 				</section>
 			</div>
-		</div>
-		<Button
-			on:click={() => {
-				stallsMode = 'create'
-				currentStall = null
-			}}
-			variant="outline"
-			class="border-2 border-black font-bold px-6">New</Button
-		>
-	</div>
-{:else if stallsMode === 'create' || stallsMode === 'edit'}
-	<button class="w-fit" on:click={() => (stallsMode = 'list')}>
-		<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
-	</button>
-{/if}
-<div class="flex flex-col gap-2">
-	{#if stallsMode === 'list'}
-		{#if $stallsQuery.isLoading}
-			<Skeleton class="h-12 w-full" />
-			<Skeleton class="h-12 w-full" />
-			<Skeleton class="h-12 w-full" />
-		{/if}
-		{#each [...($stallsQuery.data ?? [])] as stall}
 			<Button
 				on:click={() => {
-					stallsMode = 'edit'
-					currentStall = stall
+					stallsMode = 'create'
+					currentStall = null
 				}}
-				class="cursor-pointer border border-gray flex justify-start items-center p-4 font-bold"
 				variant="outline"
+				class="border-2 border-black font-bold px-6">New</Button
 			>
-				<div class="flex items-center gap-2">
-					<span class="i-tdesign-store w-6 h-6" />
-					<span>{stall.name}</span>
-				</div>
-			</Button>
-		{/each}
+		</div>
 	{:else if stallsMode === 'create' || stallsMode === 'edit'}
-		<CreateEditStall stall={currentStall} on:success={() => (stallsMode = 'list')} />
+		<button class="w-fit" on:click={() => (stallsMode = 'list')}>
+			<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
+		</button>
 	{/if}
+	<div class="flex flex-col gap-2">
+		{#if stallsMode === 'list'}
+			{#if $stallsQuery.isLoading}
+				<Skeleton class="h-12 w-full" />
+				<Skeleton class="h-12 w-full" />
+				<Skeleton class="h-12 w-full" />
+			{/if}
+			{#each [...($stallsQuery.data ?? [])] as stall}
+				<Button
+					on:click={() => {
+						stallsMode = 'edit'
+						currentStall = stall
+					}}
+					class="cursor-pointer border border-gray flex justify-start items-center p-4 font-bold"
+					variant="outline"
+				>
+					<div class="flex items-center gap-2">
+						<span class="i-tdesign-store w-6 h-6" />
+						<span>{stall.name}</span>
+					</div>
+				</Button>
+			{/each}
+		{:else if stallsMode === 'create' || stallsMode === 'edit'}
+			<CreateEditStall stall={currentStall} on:success={() => (stallsMode = 'list')} />
+		{/if}
+	</div>
 </div>

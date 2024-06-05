@@ -15,27 +15,28 @@
 		?.links.find((item) => item.href === $page.url.pathname)
 </script>
 
-<div class=" flex items-center gap-1">
-	<Button size="icon" variant="outline" class=" border-none" on:click={() => nav_back()}>
-		<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
-	</Button>
-	<section>
-		<h3 class="text-lg font-bold">{linkDetails?.title}</h3>
-		<p class="text-gray-600">{linkDetails?.description}</p>
-	</section>
-</div>
-
-<Alert.Root class="bg-[var(--neo-blue)]">
-	<Alert.Description
-		>All sales inquiries will go into your direct message inbox automatically. The email address helps ensure you don’t miss anything, just
-		in case.</Alert.Description
-	>
-</Alert.Root>
-
-<form class="flex flex-col gap-4">
-	<div class="grid w-full items-center gap-1.5">
-		<Label for="email" class="font-bold">Email Address</Label>
-		<Input type="email" id="email" placeholder="e.g. username@walletofsatoshi.com" />
+<div class="pb-4 space-y-2">
+	<div class=" flex items-center gap-1">
+		<Button size="icon" variant="outline" class=" border-none" on:click={() => nav_back()}>
+			<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
+		</Button>
+		<section>
+			<h3 class="text-lg font-bold">{linkDetails?.title}</h3>
+			<p class="text-gray-600">{linkDetails?.description}</p>
+		</section>
 	</div>
-	<Button class="w-full font-bold">Save</Button>
-</form>
+	<Alert.Root class="bg-[var(--neo-blue)]">
+		<Alert.Description
+			>All sales inquiries will go into your direct message inbox automatically. The email address helps ensure you don’t miss anything,
+			just in case.</Alert.Description
+		>
+	</Alert.Root>
+
+	<form class="flex flex-col gap-4">
+		<div class="grid w-full items-center gap-1.5">
+			<Label for="email" class="font-bold">Email Address</Label>
+			<Input type="email" id="email" placeholder="e.g. username@walletofsatoshi.com" />
+		</div>
+		<Button class="w-full font-bold">Save</Button>
+	</form>
+</div>

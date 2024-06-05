@@ -12,13 +12,15 @@
 		?.links.find((item) => item.href === $page.url.pathname)
 </script>
 
-<div class=" flex items-center gap-1">
-	<Button size="icon" variant="outline" class=" border-none" on:click={() => nav_back()}>
-		<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
-	</Button>
-	<section>
-		<h3 class="text-lg font-bold">{linkDetails?.title}</h3>
-		<p class="text-gray-600">{linkDetails?.description}</p>
-	</section>
+<div class="pb-4 space-y-2">
+	<div class=" flex items-center gap-1">
+		<Button size="icon" variant="outline" class=" border-none" on:click={() => nav_back()}>
+			<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
+		</Button>
+		<section>
+			<h3 class="text-lg font-bold">{linkDetails?.title}</h3>
+			<p class="text-gray-600">{linkDetails?.description}</p>
+		</section>
+	</div>
+	<DeleteAccount intentToDelete={true} />
 </div>
-<DeleteAccount intentToDelete={true} />

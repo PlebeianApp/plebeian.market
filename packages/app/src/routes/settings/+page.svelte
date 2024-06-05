@@ -8,19 +8,19 @@
 </script>
 
 {#each menuItems as item}
-	<div class="pb-4">
+	<div class="pb-4 space-y-2">
 		<section>
 			<a href={item.root}>
 				<h3 class="text-lg font-bold">{item.title}</h3>
-				<p class="text-gray-600">{item.description}</p>
+				<p class=" opacity-70">{item.description}</p>
 			</a>
 		</section>
-		<ul class="list-none">
+		<ul>
 			{#each item.links as link}
-				<li class="mb-2">
+				<li>
 					<a href={link.href}>
 						<p class={link.title == 'Delete account' ? 'text-[hsl(var(--destructive))]' : ''}>{link.title}</p>
-						<span class="text-gray-600 text-sm">{link.description}</span>
+						<span class="opacity-50 text-sm">{link.description}</span>
 					</a>
 				</li>
 			{/each}

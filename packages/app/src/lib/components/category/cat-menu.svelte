@@ -13,6 +13,8 @@
 	$: catQuery = createQuery<RichCat[]>({
 		queryKey: ['categories'],
 	})
+	let filteredCategories: RichCat[] = []
+	$: if ($catQuery.data) filteredCategories = $catQuery.data?.filter((cat) => (cat.productCount ?? 0) > 0) || []
 </script>
 
 <div class="flex flex-col">
@@ -27,24 +29,20 @@
 							<Skeleton class=" h-96 w-full" />
 							<Skeleton class=" h-96 w-full" />
 						{:else if $catQuery.data}
-							{#each $catQuery.data.slice(0, showMore ? $catQuery.data.length : pageSize) as cat}
-								{#if cat.productCount}
-									<CatCompactItem {cat} />
-								{/if}
+							{#each filteredCategories as cat}
+								<CatCompactItem {cat} />
 							{/each}
 						{/if}
 					</div>
-					{#if $catQuery.data}
+					{#if filteredCategories.length > pageSize}
 						<div class=" text-center py-1">
-							{#if $catQuery.data.length > pageSize}
-								<Button on:click={() => (showMore = !showMore)} size="icon" class="cursor-pointer border-0" variant="ghost">
-									{#if showMore}
-										<span class=" i-tdesign-minus"></span>
-									{:else}
-										<span class=" i-tdesign-plus"></span>
-									{/if}
-								</Button>
-							{/if}
+							<Button on:click={() => (showMore = !showMore)} size="icon" class="cursor-pointer border-0" variant="ghost">
+								{#if showMore}
+									<span class=" i-tdesign-minus"></span>
+								{:else}
+									<span class=" i-tdesign-plus"></span>
+								{/if}
+							</Button>
 						</div>
 					{/if}
 				</div>
