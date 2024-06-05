@@ -29,7 +29,7 @@
 							<Skeleton class=" h-96 w-full" />
 							<Skeleton class=" h-96 w-full" />
 						{:else if $catQuery.data}
-							{#each filteredCategories as cat}
+							{#each filteredCategories.slice(0, showMore ? filteredCategories.length : pageSize) as cat}
 								<CatCompactItem {cat} />
 							{/each}
 						{/if}
