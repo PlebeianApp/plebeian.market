@@ -72,8 +72,8 @@
 					class="flex flex-col gap-2"
 					on:submit|preventDefault={(sEvent) => loginWrapper('NSEC', new FormData(sEvent.currentTarget, sEvent.submitter), checked)}
 				>
-					<Input required class="border-black border-2" name="key" placeholder="Private key (nsec1...)" type="password" />
-					<Input required class="border-black border-2" name="password" placeholder="Password" type="password" />
+					<Input required class="border-black border-2" name="key" placeholder="Private key (nsec1...)" id="signInSk" type="password" />
+					<Input required class="border-black border-2" name="password" placeholder="Password" id="signInPass" type="password" />
 					<Button id="signInSubmit" type="submit">Sign in</Button>
 				</form>
 				<div class="flex items-center space-x-2">

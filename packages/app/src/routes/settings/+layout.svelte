@@ -24,7 +24,7 @@
 					{#each menuItems as item}
 						<Accordion.Item value={item.value}>
 							<Accordion.Trigger>
-								{item.title}
+								<span id={item.value}>{item.title}</span>
 							</Accordion.Trigger>
 							<Accordion.Content>
 								<ul class="pl-4 space-y-1">

@@ -2,6 +2,15 @@ import type { Browser, Page } from 'playwright'
 import { chromium } from 'playwright'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
+const login = async (page: Page) => {
+	await page.click('#menuButton')
+	await page.click('text=Log in')
+	await page.waitForSelector('#signInSk')
+	await page.fill('#signInSk', 'nsec159fuyawnrq4s2gxjdjuhusvz5s5cfxamu8kfkmkunrz90ydtwzfqsl6g37')
+	await page.fill('#signInPass', '123')
+	await page.click('#signInSubmit')
+}
+
 describe('settings', async () => {
 	let browser: Browser
 	let page: Page
@@ -9,22 +18,9 @@ describe('settings', async () => {
 	beforeAll(async () => {
 		browser = await chromium.launch({ headless: true })
 		page = await browser.newPage()
-
 		await page.goto(`http://${process.env.APP_HOST}:${process.env.APP_PORT}/settings`)
-
 		await page.waitForSelector('text=You must login')
-
-		await page.click('#menuButton')
-		await page.click('text=Log in')
-
-		await page.waitForSelector('text=Sign up')
-
-		await page.click('text=Sign up')
-
-		await page.waitForSelector('#signUpPassword')
-		await page.fill('input[id="signUpPassword"]', 'aaaaaaaa')
-
-		await page.click('button[id="signUpSubmit"]')
+		await login(page)
 	})
 
 	afterAll(async () => {
@@ -32,11 +28,10 @@ describe('settings', async () => {
 	})
 
 	it('should navigate to user settings and submit the form', async () => {
-		await page.waitForSelector('text=Settings')
-
-		await page.waitForSelector('text=User settings')
-		await page.click('text=User settings')
-
+		await page.goto(`http://${process.env.APP_HOST}:${process.env.APP_PORT}/settings/account/profile`)
+		await login(page)
+		await page.waitForSelector('h2>a[href="/settings"]')
+		await page.waitForSelector('label[for="userImage"]')
 		await page.fill('#name', 'Test User')
 		await page.fill('#about', 'This is a test bio')
 		await page.fill('#nip05', 'test@example.com')
@@ -46,17 +41,11 @@ describe('settings', async () => {
 	})
 
 	it('should navigate to account deletion and submit the form', async () => {
-		await page.waitForSelector('text=Delete account')
+		await page.waitForSelector('h2>a[href="/settings"]')
 		await page.click('text=Delete account')
-
-		await page.waitForSelector('#deletionIntent')
-		await page.click('#deletionIntent')
-
 		await page.waitForSelector('#accountDeletionChallange')
 		await page.fill('#accountDeletionChallange', 'Test User')
-
 		await page.click('#executeDeletion')
-
 		await page.waitForURL(`http://${process.env.APP_HOST}:${process.env.APP_PORT}`)
 	})
 })
