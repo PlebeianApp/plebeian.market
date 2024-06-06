@@ -1,6 +1,7 @@
 import type { NostrEvent } from 'nostr-tools'
 import NDK, { NDKEvent, NDKPrivateKeySigner } from '@nostr-dev-kit/ndk'
 import { KindProducts } from '$lib/constants'
+import { productsFilterSchema } from '$lib/schema'
 import { getStallsByUserId } from '$lib/server/stalls.service'
 import { describe, expect, it } from 'vitest'
 
@@ -56,7 +57,7 @@ describe('products service', () => {
 	it('gets products by user id', async () => {
 		const userId = devUser1.pk
 
-		const products = await getProductsByUserId({ userId: userId })
+		const products = await getProductsByUserId(productsFilterSchema.parse({ userId: userId }))
 
 		expect(products.length).toBeGreaterThan(0)
 	})
@@ -118,7 +119,7 @@ describe('products service', () => {
 			kind: KindProducts,
 			pubkey: devUser1.pk,
 			content: JSON.stringify(evContent),
-			created_at: Math.floor(Date.now()),
+			created_at: Math.floor(Date.now()) / 1000,
 			tags: [['d', identifier]],
 		})
 		await newEvent.sign(skSigner)
@@ -150,7 +151,7 @@ describe('products service', () => {
 			kind: KindProducts,
 			pubkey: devUser1.pk,
 			content: JSON.stringify(evContent),
-			created_at: Math.floor(Date.now()),
+			created_at: Math.floor(Date.now()) / 1000,
 			tags: [['d', targetProduct.id.split(':')[2]]],
 		})
 
