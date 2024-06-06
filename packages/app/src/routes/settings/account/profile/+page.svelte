@@ -29,12 +29,12 @@
 			if ($ndkStore.activeUser?.pubkey) {
 				const user = await GETUserFromId($ndkStore.activeUser.pubkey).then((res) => res.json())
 
-				if (!userTrustLevel) {
-					userTrustLevel = {
-						value: user.trustLevel,
-						label: user.trustLevel,
-					}
-				}
+				// if (!userTrustLevel) {
+				// 	userTrustLevel = {
+				// 		value: user.trustLevel,
+				// 		label: user.trustLevel,
+				// 	}
+				// }
 
 				return user
 			}
@@ -58,7 +58,7 @@
 
 			ndkUser.profile = {
 				...userData,
-				trustLevel: userTrustLevel?.value,
+				// trustLevel: userTrustLevel?.value,
 			} as NDKUserProfile
 
 			if ($ndkStore.activeUser?.pubkey) {

@@ -49,6 +49,9 @@ export type NewShippingZone = InferInsertModel<typeof dbSchema.shippingZones>
 export type User = InferSelectModel<typeof dbSchema.users>
 export type NewUser = InferInsertModel<typeof dbSchema.users>
 
+export type UserMeta = InferSelectModel<typeof dbSchema.userMeta>
+export type NewUserMeta = InferInsertModel<typeof dbSchema.userMeta>
+
 export type MetaType = InferSelectModel<typeof dbSchema.metaTypes>
 export type NewMetaType = InferInsertModel<typeof dbSchema.metaTypes>
 

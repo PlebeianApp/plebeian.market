@@ -6,6 +6,7 @@ import { verifyEvent } from 'nostr-tools'
 
 import { db, eq, users } from '@plebeian/database'
 
+// TODO Refactor this function to the new tables
 export const isPubkeyAdmin = async (pubkey: string): Promise<boolean> => {
 	const [adminUser] = await db.select().from(users).where(eq(users.id, pubkey)).execute()
 

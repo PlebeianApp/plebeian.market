@@ -26,7 +26,6 @@ export const GET: RequestHandler = async ({ params, request }) => {
 				lud16: user.lud16,
 				zapService: user.zapService,
 				website: user.website,
-				trustLevel: user.trustLevel,
 			}
 			return json(userUnAuthResponse)
 		}

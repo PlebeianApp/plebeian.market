@@ -117,6 +117,13 @@ export const APP_SETTINGS_META: Record<string, MetaInterface> = {
 
 export type AppSettingsMetaName = ObjectValues<typeof APP_SETTINGS_META>
 
+export const USER_META: Record<string, MetaInterface> = {
+	TRUST_LVL: { value: 'trust_lvl', dataType: 'text' },
+	ROLE: { value: 'role', dataType: 'text' },
+} as const
+
+export type UserMetaName = ObjectValues<typeof USER_META>
+
 export const GENERAL_META: Record<string, MetaInterface> = {
 	COMMENTS: { value: 'comments', dataType: 'text' },
 } as const
@@ -124,10 +131,9 @@ export const GENERAL_META: Record<string, MetaInterface> = {
 export type GeneralMetaName = ObjectValues<typeof GENERAL_META>
 
 export const META_NAMES = Object.fromEntries([
-	...Object.entries({ ...PRODUCT_META, ...DIGITAL_PRODUCT_META, ...APP_SETTINGS_META, ...GENERAL_META }).map(([key, { value }]) => [
-		key,
-		value,
-	]),
+	...Object.entries({ ...PRODUCT_META, ...DIGITAL_PRODUCT_META, ...APP_SETTINGS_META, ...USER_META, ...GENERAL_META }).map(
+		([key, { value }]) => [key, value],
+	),
 ]) as Record<string, string>
 
 export type MetaName = ObjectValues<typeof META_NAMES>

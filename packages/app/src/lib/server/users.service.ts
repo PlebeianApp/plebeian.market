@@ -8,6 +8,8 @@ import { db, eq, products, users } from '@plebeian/database'
 
 import { userEventSchema } from '../../schema/nostr-events'
 
+// TODO: Use event to create a user with the new NDK
+// TODO: refactor createUser service and so on to reflect new schema
 export const getAllUsers = async (filter: UsersFilter = usersFilterSchema.parse({})): Promise<User[]> => {
 	const orderBy = {
 		createdAt: products.createdAt,
@@ -68,6 +70,7 @@ export const getUserForProduct = async (productId: string): Promise<User> => {
 }
 
 export const createUser = async (user: object, role: UserRoles = 'pleb', trustLevel: UserTrustLevel = 'reasonable'): Promise<User> => {
+	// TODO: insert trust level and role in the new tables
 	const parsedUserMeta = userEventSchema.safeParse(user)
 	if (!parsedUserMeta.success) throw Error(JSON.stringify(parsedUserMeta.error))
 
@@ -77,8 +80,6 @@ export const createUser = async (user: object, role: UserRoles = 'pleb', trustLe
 		id: userMetaData.id,
 		createdAt: new Date(),
 		updatedAt: new Date(),
-		role: role,
-		trustLevel: trustLevel,
 		name: userMetaData.name,
 		nip05: userMetaData.nip05?.toLowerCase(),
 		banner: userMetaData.banner,
@@ -115,7 +116,6 @@ export const updateUser = async (userId: string, userMeta: NDKUserProfile): Prom
 		website: userMeta.website,
 		zapService: userMeta.zapService,
 		lastLogin: new Date(),
-		trustLevel: userMeta.trustLevel as UserTrustLevel,
 	}
 
 	const userResult = await db

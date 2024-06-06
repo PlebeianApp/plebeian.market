@@ -8,7 +8,7 @@ export const isInitialSetup = async (): Promise<boolean> => {
 	const [appSettingsRes] = await db.select().from(appSettings).execute()
 	return appSettingsRes.isFirstTimeRunning
 }
-
+// TODO: refactor this to the new tables
 export const doSetup = async (setupData: NewAppSettings, adminList?: string[]) => {
 	if (!setupData.instancePk) {
 		error(400, 'Invalid request')
