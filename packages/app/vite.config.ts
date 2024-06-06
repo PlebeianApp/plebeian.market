@@ -1,7 +1,47 @@
+import type { SvelteKitPWAOptions } from '@vite-pwa/sveltekit'
 import { sveltekit } from '@sveltejs/kit/vite'
 import { SvelteKitPWA } from '@vite-pwa/sveltekit'
 import tsconfigPaths from 'vite-tsconfig-paths'
 import { defineConfig } from 'vitest/config'
+
+const pwaOptions: Partial<SvelteKitPWAOptions> = {
+	/* pwa options */
+	mode: process.env.NODE_ENV === 'dev' ? 'development' : 'production',
+	manifest: {
+		name: 'Plebeian Market',
+		short_name: 'Plebeian Market',
+		description: 'Sell stuff for sats',
+		theme_color: '#ffffff',
+		icons: [
+			{
+				src: 'pwa-64x64.png',
+				sizes: '64x64',
+				type: 'image/png',
+			},
+			{
+				src: 'pwa-192x192.png',
+				sizes: '192x192',
+				type: 'image/png',
+			},
+			{
+				src: 'pwa-512x512.png',
+				sizes: '512x512',
+				type: 'image/png',
+			},
+			{
+				src: 'maskable-icon-512x512.png',
+				sizes: '512x512',
+				type: 'image/png',
+				purpose: 'maskable',
+			},
+		],
+	},
+}
+
+if (process.env.NODE_ENV === 'dev') {
+	pwaOptions.registerType = 'autoUpdate'
+	pwaOptions.selfDestroying = true
+}
 
 export default defineConfig({
 	test: {
@@ -12,42 +52,7 @@ export default defineConfig({
 		// 	$lib: new URL('./src/lib', import.meta.url).pathname,
 		// },
 	},
-	plugins: [
-		tsconfigPaths(),
-		sveltekit(),
-		SvelteKitPWA({
-			/* pwa options */
-			manifest: {
-				name: 'Plebeian Market',
-				short_name: 'Plebeian Market',
-				description: 'Sell stuff for sats',
-				theme_color: '#ffffff',
-				icons: [
-					{
-						src: 'pwa-64x64.png',
-						sizes: '64x64',
-						type: 'image/png',
-					},
-					{
-						src: 'pwa-192x192.png',
-						sizes: '192x192',
-						type: 'image/png',
-					},
-					{
-						src: 'pwa-512x512.png',
-						sizes: '512x512',
-						type: 'image/png',
-					},
-					{
-						src: 'maskable-icon-512x512.png',
-						sizes: '512x512',
-						type: 'image/png',
-						purpose: 'maskable',
-					},
-				],
-			},
-		}),
-	],
+	plugins: [tsconfigPaths(), sveltekit(), SvelteKitPWA(pwaOptions)],
 	envDir: '../../',
 	resolve: {
 		alias: {
