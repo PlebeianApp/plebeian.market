@@ -1,22 +1,22 @@
+import type { NDKEvent } from '@nostr-dev-kit/ndk'
 import type { VerifiedEvent } from 'nostr-tools'
 import { NSchema as n } from '@nostrify/nostrify'
 import { error } from '@sveltejs/kit'
 import { KindHttpAuth } from '$lib/constants'
 import { verifyEvent } from 'nostr-tools'
 
-import { db, eq, users } from '@plebeian/database'
+import { and, db, eq, userMeta, users } from '@plebeian/database'
 
-// TODO Refactor this function to the new tables
 export const isPubkeyAdmin = async (pubkey: string): Promise<boolean> => {
-	const [adminUser] = await db.select().from(users).where(eq(users.id, pubkey)).execute()
+	const [adminUser] = await db
+		.select({
+			valueText: userMeta.valueText,
+		})
+		.from(userMeta)
+		.where(and(eq(userMeta.userId, pubkey), eq(userMeta.metaName, 'role')))
+		.execute()
 
-	if (!adminUser) {
-		return false
-	} else if (adminUser.role === 'admin') {
-		return true
-	} else {
-		return false
-	}
+	return adminUser?.valueText === 'admin'
 }
 
 export const decodeJwtToEvent = (jwt: string): VerifiedEvent => {
@@ -31,7 +31,7 @@ export const decodeJwtToEvent = (jwt: string): VerifiedEvent => {
 	const verifiedEvent = n
 		.event()
 		.refine(verifyEvent)
-		.refine((val) => val.kind === KindHttpAuth)
+		.refine((val: NDKEvent) => val.kind === KindHttpAuth)
 		.safeParse(decodedJson)
 
 	if (!verifiedEvent.success) {

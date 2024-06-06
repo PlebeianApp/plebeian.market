@@ -29,7 +29,6 @@ export async function loginWithExtension(): Promise<boolean> {
 		const signer = new NDKNip07Signer()
 		console.log('Waiting for NIP-07 signer')
 		await signer.blockUntilReady()
-		await signer.user()
 		ndk.signer = signer
 		ndkStore.set(ndk)
 		fetchActiveUserData()
@@ -47,8 +46,6 @@ export async function loginWithPrivateKey(key: string, password: string): Promis
 			const signer = new NDKPrivateKeySigner(bytesToHex(decryptedKey))
 			console.log('Waiting for PrivateKey signer')
 			await signer.blockUntilReady()
-			await signer.user()
-
 			ndk.signer = signer
 			ndkStore.set(ndk)
 			fetchActiveUserData(key)
@@ -65,7 +62,6 @@ export async function loginWithPrivateKey(key: string, password: string): Promis
 			const signer = new NDKPrivateKeySigner(bytesToHex(decoded.data))
 			console.log('Waiting for PrivateKey signer')
 			await signer.blockUntilReady()
-			await signer.user()
 			ndk.signer = signer
 			ndkStore.set(ndk)
 			fetchActiveUserData(cSK)
