@@ -32,7 +32,7 @@ describe('/stalls', () => {
 		const evContent = {
 			id: `${KindProducts}:${devUser1.pk}:${identifier}`,
 			name: 'Hello Stall',
-			description: 'Hello Stall Description',
+			description: 'Hello Stall Description from api',
 			currency: 'USD',
 			quantity: 6,
 			shipping: [
@@ -48,7 +48,7 @@ describe('/stalls', () => {
 			kind: 30017 as NDKKind,
 			pubkey: devUser1.pk,
 			content: JSON.stringify(evContent),
-			created_at: Math.floor(Date.now()),
+			created_at: Math.floor(Date.now()) / 1000,
 			tags: [['d', identifier]],
 		})
 
@@ -67,7 +67,7 @@ describe('/stalls', () => {
 			id: expect.any(String),
 			createDate: expect.any(String),
 			currency: 'USD',
-			description: 'Hello Stall Description',
+			description: 'Hello Stall Description from api',
 			name: 'Hello Stall',
 			userId: '86a82cab18b293f53cbaaae8cdcbee3f7ec427fdf9f9c933db77800bb5ef38a0',
 		})
