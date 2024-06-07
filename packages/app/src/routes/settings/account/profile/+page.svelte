@@ -1,27 +1,25 @@
 <script lang="ts">
 	import type { NDKUserProfile } from '@nostr-dev-kit/ndk'
 	import type { Selected } from 'bits-ui'
-	import { createMutation, useQueryClient } from '@tanstack/svelte-query'
 	import { page } from '$app/stores'
-	import { PUTUser } from '$lib/apiUtils'
 	import { Button } from '$lib/components/ui/button/index.js'
 	import { Input } from '$lib/components/ui/input/index.js'
 	import { Label } from '$lib/components/ui/label/index.js'
 	import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '$lib/components/ui/select'
 	import Textarea from '$lib/components/ui/textarea/textarea.svelte'
-	import { userQuery } from '$lib/fetch/queries'
+	import { userDataMutation } from '$lib/fetch/mutations'
+	import { activeUserQuery } from '$lib/fetch/queries'
 	import ndkStore from '$lib/stores/ndk'
 	import { nav_back } from '$lib/utils'
 
 	import type { PageData } from './$types'
-	import { userDataMutation } from '$lib/fetch/mutations'
 
 	export let data: PageData
 	const { userTrustLevels } = data
 
 	let userTrustLevel: Selected<string> | null = null
 
-	$: userData = $userQuery.data ?? {
+	$: userData = $activeUserQuery.data ?? {
 		nip05: '',
 		about: '',
 		displayName: '',
@@ -30,27 +28,12 @@
 		lud16: '',
 	}
 	$: userTrustLevel =
-		!userTrustLevel && $userQuery.data
+		!userTrustLevel && $activeUserQuery.data
 			? {
-					value: $userQuery.data.trustLevel!,
-					label: $userQuery.data.trustLevel!,
+					value: $activeUserQuery.data.trustLevel!,
+					label: $activeUserQuery.data.trustLevel!,
 				}
 			: userTrustLevel
-
-	// const userDataMutation = createMutation({
-	// 	mutationFn: async () => {
-	// 		if ($ndkStore.activeUser?.pubkey) {
-	// 			const res = await PUTUser(ndkUser).then((res) => res.json())
-	// 			await ndkUser.publish()
-	// 			return res
-	// 		}
-	// 		return null
-	// 	},
-	// 	onSuccess: (data) => {
-	// 		queryClient.invalidateQueries({ queryKey: ['user', !!$ndkStore.activeUser?.pubkey] })
-	// 		queryClient.setQueryData(['user', !!$ndkStore.activeUser?.pubkey], data)
-	// 	},
-	// })
 
 	const handleUserDataSubmit = async () => {
 		const ndkUser = $ndkStore.getUser({

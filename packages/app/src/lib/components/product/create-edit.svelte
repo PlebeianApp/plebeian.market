@@ -1,7 +1,5 @@
 <script lang="ts">
 	import type { DisplayProduct } from '$lib/server/products.service'
-	import { NDKEvent } from '@nostr-dev-kit/ndk'
-	import { createMutation } from '@tanstack/svelte-query'
 	import Button from '$lib/components/ui/button/button.svelte'
 	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte'
 	import * as Command from '$lib/components/ui/command/index.js'
@@ -11,8 +9,7 @@
 	import * as Popover from '$lib/components/ui/popover/index.js'
 	import * as Tabs from '$lib/components/ui/tabs/index.js'
 	import Textarea from '$lib/components/ui/textarea/textarea.svelte'
-	import { KindProducts } from '$lib/constants'
-	import ndkStore, { ndk } from '$lib/stores/ndk'
+	import { createEditProductMutation } from '$lib/fetch/mutations'
 	import { tick } from 'svelte'
 	import Dropzone from 'svelte-file-dropzone'
 
@@ -49,46 +46,6 @@
 	export let product: DisplayProduct | null = null
 	type Currency = (typeof CURRENCIES)[number]
 	let currency: Currency = (product?.currency as Currency) ?? 'USD'
-
-	const mutation = createMutation({
-		mutationFn: async (sEvent: SubmitEvent) => {
-			if (!$ndkStore.activeUser?.pubkey) return
-			const formData = new FormData(sEvent.currentTarget as HTMLFormElement, sEvent.submitter)
-			const identifier = product?.identifier ? product.identifier : createId()
-
-			const evContent = {
-				id: identifier,
-				stall_id: '30017:96c727f4d1ea18a80d03621520ebfe3c9be1387033009a4f5b65959d09222eec:ttrndvmz9q',
-				name: formData.get('title'),
-				description: formData.get('description'),
-				// TODO: implement image uploading in a seperate api
-				images: images.map((image) => image.base64),
-				price: Number(formData.get('price')),
-				quantity: Number(formData.get('quantity')),
-				shipping: shippingMethods.map((s) => s.json),
-				currency,
-			}
-			const newEvent = new NDKEvent($ndkStore, {
-				kind: KindProducts,
-				pubkey: $ndkStore.activeUser.pubkey,
-				content: JSON.stringify(evContent),
-				created_at: Math.floor(Date.now()),
-				tags: [['d', identifier]],
-			})
-
-			await newEvent.sign(ndk.signer)
-			const nostrEvent = await newEvent.toNostrEvent()
-			const result = await fetch(new URL(product ? `/api/v1/products/${product.id}` : '/api/v1/products', window.location.origin), {
-				method: 'POST',
-				body: JSON.stringify(nostrEvent),
-				headers: {
-					'Content-Type': 'application/json',
-				},
-			}).then((response) => response.json())
-			return result
-		},
-	})
-
 	type Shipping = (typeof stallEventSchema._type)['shipping'][0]
 
 	class ShippingMethod implements Shipping {
@@ -160,7 +117,17 @@
 	}
 </script>
 
-<form on:submit|preventDefault={(sEvent) => $mutation.mutateAsync(sEvent)} class="flex flex-col gap-4">
+<form
+	on:submit|preventDefault={(sEvent) =>
+		$createEditProductMutation.mutateAsync([
+			sEvent,
+			product,
+			currency,
+			images.map((image) => image.base64),
+			shippingMethods.map((s) => s.json),
+		])}
+	class="flex flex-col gap-4"
+>
 	<Tabs.Root value="basic" class="p-4">
 		<Tabs.List class="w-full justify-around bg-transparent">
 			<Tabs.Trigger value="basic" class={activeTab}>Basic</Tabs.Trigger>

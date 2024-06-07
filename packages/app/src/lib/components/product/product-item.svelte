@@ -1,10 +1,10 @@
 <script lang="ts">
 	import type { DisplayProduct } from '$lib/server/products.service'
 	import * as Card from '$lib/components/ui/card/index.js'
+	import { createProductPriceQuery } from '$lib/fetch/queries'
 
 	import Spinner from '../assets/spinner.svelte'
 	import ImgPlaceHolder from './imgPlaceHolder.svelte'
-	import { createProductPriceQuery } from '$lib/fetch/queries'
 
 	export let product: DisplayProduct
 	const { galleryImages, name, currency, price, userNip05, identifier, id } = product

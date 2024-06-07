@@ -1,34 +1,21 @@
 <script lang="ts">
-	import type { CatsFilter, ProductsFilter } from '$lib/schema'
-	import type { RichCat } from '$lib/server/categories.service'
-	import type { DisplayProduct } from '$lib/server/products.service'
-	import { createQuery } from '@tanstack/svelte-query'
 	import { page } from '$app/stores'
-	import { GETAllCategories, GETAllProducts } from '$lib/apiUtils'
 	import Pattern from '$lib/components/Pattern.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
 	import StallItem from '$lib/components/stalls/stall-item.svelte'
-	import { productsFilterSchema } from '$lib/schema'
+	import { createCategoriesByFilterQuery, createProductsByFilterQuery } from '$lib/fetch/queries'
 
 	import type { PageData } from './$types'
 
 	export let data: PageData
 	$: ({ stalls } = data)
-	$: catQuery = createQuery<RichCat>({
-		queryKey: ['categories', $page.params.catName],
-		queryFn: async () => {
-			const [res] = await GETAllCategories(data.filter).then((res) => res.json())
-			return res
-		},
-	})
 
-	$: productsQuery = createQuery<DisplayProduct[]>({
-		queryKey: ['products', $page.params.catName],
-		queryFn: async () => {
-			const filter: ProductsFilter = productsFilterSchema.parse({ catName: $page.params.catName, pageSize: 15 })
-			const res = await GETAllProducts(filter)
-			return res.json()
-		},
+	$: categoriesQuery = createCategoriesByFilterQuery({ catName: $page.params.catName })
+	$: categoryData = $categoriesQuery.data?.[0]
+
+	$: productsQuery = createProductsByFilterQuery({
+		catName: $page.params.catName,
+		pageSize: 15,
 	})
 </script>
 
@@ -38,8 +25,8 @@
 			<div class="relative w-full bg-black py-20 text-center text-white">
 				<Pattern />
 				<h2 class="relative z-10 flex gap-2 items-center justify-center"><span class=" i-mdi-category-outline w-6 h-6" />Category</h2>
-				<h1 class="relative z-10">{$catQuery.data?.name}</h1>
-				<p>{$catQuery.data?.description}</p>
+				<h1 class="relative z-10">{categoryData?.name}</h1>
+				<p>{categoryData?.description}</p>
 			</div>
 			{#if stalls.length}
 				<div class=" px-4 py-20 lg:px-12">

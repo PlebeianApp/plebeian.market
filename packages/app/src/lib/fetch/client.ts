@@ -52,7 +52,6 @@ export async function createRequest<K extends keyof Endpoints, RequestOperation 
 		auth?: boolean
 	},
 ) {
-	console.log('here')
 	const [method, url] = endpoint.split(' ') as [RequestOperation['method'], RequestOperation['url']]
 	const headers = new Headers(options.headers)
 

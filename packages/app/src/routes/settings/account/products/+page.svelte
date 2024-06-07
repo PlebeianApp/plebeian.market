@@ -1,10 +1,10 @@
 <script lang="ts">
 	import type { DisplayProduct } from '$lib/server/products.service'
-	import { createQuery } from '@tanstack/svelte-query'
 	import { page } from '$app/stores'
 	import CreateEditProduct from '$lib/components/product/create-edit.svelte'
 	import { Button } from '$lib/components/ui/button/index.js'
 	import { Skeleton } from '$lib/components/ui/skeleton'
+	import { createProductsByFilterQuery } from '$lib/fetch/queries'
 	import ndkStore from '$lib/stores/ndk'
 	import { nav_back } from '$lib/utils'
 
@@ -12,17 +12,15 @@
 
 	export let data: PageData
 	let productsMode: 'list' | 'create' | 'edit' = 'list'
-	$: productsQuery = createQuery<DisplayProduct[]>({
-		queryKey: ['products', productsMode, !!$ndkStore.activeUser?.pubkey],
-		queryFn: async () => {
-			if ($ndkStore.activeUser?.pubkey) {
-				const filter = { userId: $ndkStore.activeUser.pubkey }
-				const res = await fetch(new URL(`/api/v1/products?${new URLSearchParams(filter)}`, window.location.origin))
-				return res.json()
-			}
-			return null
-		},
-	})
+
+	$: productsQuery = $ndkStore.activeUser?.pubkey
+		? createProductsByFilterQuery({
+				userId: $ndkStore.activeUser.pubkey,
+			})
+		: null
+
+	$: productsMode === 'list' ? $productsQuery?.refetch() : null
+
 	let currentProduct: DisplayProduct | null = null
 	const linkDetails = data.menuItems
 		.find((item) => item.value === 'account-settings')
@@ -58,12 +56,12 @@
 	{/if}
 	<div class="flex flex-col gap-2">
 		{#if productsMode === 'list'}
-			{#if $productsQuery.isLoading}
+			{#if $productsQuery?.isLoading}
 				<Skeleton class="h-12 w-full" />
 				<Skeleton class="h-12 w-full" />
 				<Skeleton class="h-12 w-full" />
 			{/if}
-			{#each [...($productsQuery.data ?? [])] as product}
+			{#each [...($productsQuery?.data ?? [])] as product}
 				<Button
 					on:click={() => {
 						productsMode = 'edit'
