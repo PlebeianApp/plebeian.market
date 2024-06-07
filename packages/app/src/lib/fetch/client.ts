@@ -25,14 +25,7 @@ const createToken = async (url: string, method: HttpMethod): Promise<`Nostr ${st
 	return `Nostr ${strEventB64}`
 }
 
-export type Operation<
-	U extends string,
-	M extends HttpMethod,
-	H extends Record<string, string>,
-	B extends unknown,
-	R extends unknown,
-	P extends unknown,
-> = {
+export type Operation<U extends string, M extends HttpMethod, H extends Record<string, string>, B, R, P> = {
 	url: U
 	method: M
 	headers: H

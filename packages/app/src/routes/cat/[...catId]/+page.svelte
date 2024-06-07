@@ -7,8 +7,6 @@
 
 	import type { PageData } from './$types'
 
-	export let data: PageData
-
 	$: categoriesQuery = createCategoriesByFilterQuery({ catId: $page.params.catId })
 	$: categoryData = $categoriesQuery.data?.[0]
 
