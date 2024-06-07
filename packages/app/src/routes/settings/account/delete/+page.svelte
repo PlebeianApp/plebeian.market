@@ -11,7 +11,6 @@
 
 	import type { PageData } from './$types'
 
-	let userName = $ndkStore.activeUser?.profile?.name || $ndkStore.activeUser?.profile?.displayName
 	let challengeSolved = false
 
 	export let data: PageData
@@ -44,7 +43,7 @@
 	}
 
 	const handleChallangeInputChange = (input: string) => {
-		if (input === userName) {
+		if (input === 'DELETE') {
 			challengeSolved = true
 		} else {
 			challengeSolved = false
@@ -66,7 +65,7 @@
 		<div class="flex flex-col gap-4">
 			<p class="text-lg">Are you sure you want to delete your account?</p>
 			<p class="text-sm">This action is irreversible and will delete all your data.</p>
-			<p class="text-sm">Please type your username <b>{userName}</b> to confirm</p>
+			<p class="text-sm">Please type <strong>DELETE</strong> to confirm</p>
 			<div class="flex flex-col gap-4">
 				<Input id="accountDeletionChallange" type="password" on:input={(e) => handleChallangeInputChange(e.target?.value)} />
 				<Button id="executeDeletion" disabled={!challengeSolved} class="w-full font-bold bg-destructive" on:click={handleDeleteAccount}

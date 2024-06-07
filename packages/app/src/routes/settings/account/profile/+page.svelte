@@ -4,7 +4,7 @@
 	import type { Selected } from 'bits-ui'
 	import { createMutation, createQuery, useQueryClient } from '@tanstack/svelte-query'
 	import { page } from '$app/stores'
-	import { GETUserFromId, PUTUser } from '$lib/apiUtils'
+	import { createToken, GETUserFromId, PUTUser } from '$lib/apiUtils'
 	import { Button } from '$lib/components/ui/button/index.js'
 	import { Input } from '$lib/components/ui/input/index.js'
 	import { Label } from '$lib/components/ui/label/index.js'
@@ -12,14 +12,14 @@
 	import Textarea from '$lib/components/ui/textarea/textarea.svelte'
 	import ndkStore from '$lib/stores/ndk'
 	import { nav_back } from '$lib/utils'
+	import { onMount } from 'svelte'
 
 	import type { PageData } from './$types'
 
 	const queryClient = useQueryClient()
-
+	let token: string
 	export let data: PageData
-	const { userTrustLevels, token } = data
-	console.log(token)
+	const { userTrustLevels } = data
 
 	let userTrustLevel: Selected<string> | undefined = undefined
 
@@ -28,16 +28,11 @@
 		queryFn: async () => {
 			const userData = await GETUserFromId($ndkStore.activeUser?.pubkey ?? '', token).then((res) => res.json())
 			const user: RichUser = userData[0]
-			if (!userTrustLevel) {
-				userTrustLevel = {
-					value: user.trustLevel ?? '',
-					label: user.trustLevel ?? '',
-				}
-			}
 			return user
 		},
 		enabled: !!token,
 	})
+
 	$: userData = $userQuery.data ?? {
 		nip05: '',
 		about: '',
@@ -73,6 +68,16 @@
 	const linkDetails = data.menuItems
 		.find((item) => item.value === 'account-settings')
 		?.links.find((item) => item.href === $page.url.pathname)
+
+	onMount(async () => {
+		token = await createToken(window.location.href, 'GET')
+		if (!userTrustLevel) {
+			userTrustLevel = {
+				value: $userQuery.data?.trustLevel ?? '',
+				label: $userQuery.data?.trustLevel ?? '',
+			}
+		}
+	})
 </script>
 
 <div class="pb-4 space-y-2">
