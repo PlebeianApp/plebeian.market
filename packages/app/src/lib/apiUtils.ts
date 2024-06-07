@@ -9,17 +9,21 @@ import { productsFilterSchema } from './schema'
 import ndkStore from './stores/ndk'
 
 export const createToken = async (url: string, method: HttpMethod): Promise<string> => {
-	const ndk = get(ndkStore)
-	const authEvent = new NDKEvent(ndk)
-	const uTag: NDKTag = ['u', url]
-	const methodTag: NDKTag = ['method', method]
-	authEvent.kind = KindHttpAuth
-	authEvent.tags = [uTag, methodTag]
-	await authEvent.toNostrEvent()
-	await authEvent.sign()
-	const strEvent = JSON.stringify(authEvent.rawEvent())
-	const strEventB64 = btoa(strEvent)
-	return `Nostr ${strEventB64}`
+	try {
+		const ndk = get(ndkStore)
+		const authEvent = new NDKEvent(ndk)
+		const uTag: NDKTag = ['u', url]
+		const methodTag: NDKTag = ['method', method]
+		authEvent.kind = KindHttpAuth
+		authEvent.tags = [uTag, methodTag]
+		await authEvent.toNostrEvent()
+		await authEvent.sign()
+		const strEvent = JSON.stringify(authEvent.rawEvent())
+		const strEventB64 = btoa(strEvent)
+		return `Nostr ${strEventB64}`
+	} catch (e) {
+		return ``
+	}
 }
 
 // API wrapper methods
@@ -46,9 +50,9 @@ export const GETUsers = async (authToken?: string): Promise<Response> => {
 }
 
 export const PUTUser = async (user: NDKUser): Promise<Response> => {
-	const url = `/api/v1/users/${user.pubkey}`
+	const url = new URL(`/api/v1/users/${user.pubkey}`, window.location.origin)
 	const method: HttpMethod = 'PUT'
-	const authToken = await createToken(url, method)
+	const authToken = await createToken(url.toString(), method)
 
 	const headers = new Headers()
 	if (authToken) {

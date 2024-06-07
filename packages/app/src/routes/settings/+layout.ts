@@ -1,4 +1,7 @@
-export const load = () => {
+import { createToken } from '$lib/apiUtils'
+
+export const load = async ({ url }) => {
+	const token = await createToken(url.href, 'GET')
 	const menuItems = [
 		{
 			title: 'App Settings',
@@ -38,5 +41,6 @@ export const load = () => {
 	]
 	return {
 		menuItems: menuItems,
+		token: token,
 	}
 }

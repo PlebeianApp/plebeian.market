@@ -1,15 +1,15 @@
 import { error, json } from '@sveltejs/kit'
 import { authorize } from '$lib/auth'
-import { deleteUser, getUserById, updateUser } from '$lib/server/users.service'
+import { usersFilterSchema } from '$lib/schema'
+import { deleteUser, getRichUsers, getUserById, updateUser } from '$lib/server/users.service'
 
 import type { RequestHandler } from './$types'
 
 export const GET: RequestHandler = async ({ params, request }) => {
 	const { userId } = params
-
 	try {
 		await authorize(request, userId, 'GET')
-		return json(await getUserById(userId))
+		return json(await getRichUsers(usersFilterSchema.parse({ userId })))
 	} catch (e) {
 		if (e.status === 401) {
 			const user = await getUserById(userId)

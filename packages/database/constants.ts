@@ -86,12 +86,15 @@ export const META_DATA_TYPES = {
 
 export type MetaDataTypes = ObjectValues<typeof META_DATA_TYPES>
 
-interface MetaInterface {
-	value: string
+interface MetaInterface<T> {
+	value: T
 	dataType: MetaDataTypes
 }
 
-export const PRODUCT_META: Record<string, MetaInterface> = {
+export const PRODUCT_META: Record<
+	string,
+	MetaInterface<'is_user_featured' | 'is_stall_featured' | 'is_global_featured' | 'is_digital' | 'spec'>
+> = {
 	IS_USER_FEATURED: { value: 'is_user_featured', dataType: 'boolean' },
 	IS_STALL_FEATURED: { value: 'is_stall_featured', dataType: 'boolean' },
 	IS_GLOBAL_FEATURED: { value: 'is_global_featured', dataType: 'boolean' },
@@ -101,7 +104,7 @@ export const PRODUCT_META: Record<string, MetaInterface> = {
 
 export type ProductMetaName = ObjectValues<typeof PRODUCT_META>
 
-export const DIGITAL_PRODUCT_META: Record<string, MetaInterface> = {
+export const DIGITAL_PRODUCT_META: Record<string, MetaInterface<'license_key' | 'download_link' | 'mime_type' | 'sha256_hash'>> = {
 	LICENSE_KEY: { value: 'license_key', dataType: 'text' },
 	DOWNLOAD_LINK: { value: 'download_link', dataType: 'text' },
 	MIME_TYPE: { value: 'mime_type', dataType: 'text' },
@@ -110,21 +113,21 @@ export const DIGITAL_PRODUCT_META: Record<string, MetaInterface> = {
 
 export type DigitalProductMetaName = ObjectValues<typeof DIGITAL_PRODUCT_META>
 
-export const APP_SETTINGS_META: Record<string, MetaInterface> = {
+export const APP_SETTINGS_META: Record<string, MetaInterface<'blossom_server' | 'nip96_server'>> = {
 	BLOSSOM_SERVER: { value: 'blossom_server', dataType: 'text' },
 	NIP96_SERVER: { value: 'nip96_server', dataType: 'text' },
 } as const
 
 export type AppSettingsMetaName = ObjectValues<typeof APP_SETTINGS_META>
 
-export const USER_META: Record<string, MetaInterface> = {
+export const USER_META: Record<string, MetaInterface<'trust_lvl' | 'role'>> = {
 	TRUST_LVL: { value: 'trust_lvl', dataType: 'text' },
 	ROLE: { value: 'role', dataType: 'text' },
 } as const
 
 export type UserMetaName = ObjectValues<typeof USER_META>
 
-export const GENERAL_META: Record<string, MetaInterface> = {
+export const GENERAL_META: Record<string, MetaInterface<'comments'>> = {
 	COMMENTS: { value: 'comments', dataType: 'text' },
 } as const
 
@@ -144,7 +147,7 @@ export const USER_ROLES = {
 	PLEB: 'pleb',
 } as const
 
-export type UserRoles = ObjectValues<typeof USER_ROLES>
+export type UserRoles = ObjectValues<typeof USER_ROLES> | null
 
 export const USER_TRUST_LEVEL = {
 	TRUST: 'trust',
@@ -152,7 +155,7 @@ export const USER_TRUST_LEVEL = {
 	PARANOID: 'paranoid',
 } as const
 
-export type UserTrustLevel = ObjectValues<typeof USER_TRUST_LEVEL>
+export type UserTrustLevel = ObjectValues<typeof USER_TRUST_LEVEL> | null
 
 export const PAYMENT_DETAILS_METHOD = {
 	LIGHTNING_NETWORK: 'ln',

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { NDKUserProfile } from '@nostr-dev-kit/ndk'
+	import type { RichUser } from '$lib/server/users.service'
 	import type { Selected } from 'bits-ui'
 	import { createMutation, createQuery, useQueryClient } from '@tanstack/svelte-query'
 	import { page } from '$app/stores'
@@ -12,34 +13,30 @@
 	import ndkStore from '$lib/stores/ndk'
 	import { nav_back } from '$lib/utils'
 
-	import type { User } from '@plebeian/database'
-
 	import type { PageData } from './$types'
 
 	const queryClient = useQueryClient()
 
 	export let data: PageData
-	const { userTrustLevels } = data
+	const { userTrustLevels, token } = data
+	console.log(token)
 
 	let userTrustLevel: Selected<string> | undefined = undefined
 
-	$: userQuery = createQuery<User>({
+	$: userQuery = createQuery<RichUser>({
 		queryKey: ['user', !!$ndkStore.activeUser?.pubkey],
 		queryFn: async () => {
-			if ($ndkStore.activeUser?.pubkey) {
-				const user = await GETUserFromId($ndkStore.activeUser.pubkey).then((res) => res.json())
-
-				// if (!userTrustLevel) {
-				// 	userTrustLevel = {
-				// 		value: user.trustLevel,
-				// 		label: user.trustLevel,
-				// 	}
-				// }
-
-				return user
+			const userData = await GETUserFromId($ndkStore.activeUser?.pubkey ?? '', token).then((res) => res.json())
+			const user: RichUser = userData[0]
+			if (!userTrustLevel) {
+				userTrustLevel = {
+					value: user.trustLevel ?? '',
+					label: user.trustLevel ?? '',
+				}
 			}
-			return null
+			return user
 		},
+		enabled: !!token,
 	})
 	$: userData = $userQuery.data ?? {
 		nip05: '',
@@ -58,15 +55,11 @@
 
 			ndkUser.profile = {
 				...userData,
-				// trustLevel: userTrustLevel?.value,
 			} as NDKUserProfile
 
-			if ($ndkStore.activeUser?.pubkey) {
-				const res = await PUTUser(ndkUser).then((res) => res.json())
-				await ndkUser.publish()
-				return res
-			}
-			return null
+			const res = await PUTUser(ndkUser).then((res) => res.json())
+			await ndkUser.publish()
+			return res
 		},
 		onSuccess: (data) => {
 			queryClient.invalidateQueries({ queryKey: ['user', !!$ndkStore.activeUser?.pubkey] })

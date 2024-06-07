@@ -1,7 +1,7 @@
 import { error, json } from '@sveltejs/kit'
 import { usersFilterSchema } from '$lib/schema'
 import { decodeJwtToEvent } from '$lib/server/nostrAuth.service.js'
-import { createUser, getAllUsers } from '$lib/server/users.service'
+import { createUser, getAllUsers, getRichUsers } from '$lib/server/users.service'
 
 import type { RequestHandler } from './$types.js'
 
@@ -9,16 +9,14 @@ export const GET: RequestHandler = async ({ request, url: { searchParams } }) =>
 	const authorizationHeader = request.headers.get('Authorization')
 	const spObj = Object.fromEntries(searchParams)
 	const filter = usersFilterSchema.safeParse(spObj)
-
 	if (!filter.success) {
 		return error(400, `Invalid request: ${JSON.stringify(filter.error)}`)
 	}
 
 	if (authorizationHeader) {
 		const token = decodeJwtToEvent(authorizationHeader)
-		// Maybe we want just admins to get all the data
-		if (token) {
-			const users = await getAllUsers(filter.data)
+		if (token && token.pubkey == filter.data.userId) {
+			const users = await getRichUsers(filter.data)
 			return json(users)
 		}
 	}

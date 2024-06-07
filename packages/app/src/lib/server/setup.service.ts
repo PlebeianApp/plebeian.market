@@ -2,13 +2,13 @@ import { error } from '@sveltejs/kit'
 import { nip19 } from 'nostr-tools'
 
 import type { NewAppSettings, UserRoles } from '@plebeian/database'
-import { appSettings, db, eq, users } from '@plebeian/database'
+import { appSettings, db, eq, USER_META, userMeta, users } from '@plebeian/database'
 
 export const isInitialSetup = async (): Promise<boolean> => {
 	const [appSettingsRes] = await db.select().from(appSettings).execute()
 	return appSettingsRes.isFirstTimeRunning
 }
-// TODO: refactor this to the new tables
+
 export const doSetup = async (setupData: NewAppSettings, adminList?: string[]) => {
 	if (!setupData.instancePk) {
 		error(400, 'Invalid request')
@@ -50,6 +50,12 @@ const updateAppSettings = async (newAppSettings: NewAppSettings) => {
 }
 
 const insertUsers = async (usersToInsert: { id: string; role: UserRoles }[]) => {
-	const newUser = await db.insert(users).values(usersToInsert).returning().execute()
-	return newUser
+	const insertedUsers = await Promise.all(
+		usersToInsert.map(async (user) => {
+			const insertedUser = await db.insert(users).values({ id: user.id }).returning().execute()
+			await db.insert(userMeta).values({ userId: user.id, metaName: USER_META.ROLE.value, valueText: user.role }).returning().execute()
+			return insertedUser
+		}),
+	)
+	return insertedUsers
 }

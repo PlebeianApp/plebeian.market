@@ -3,13 +3,41 @@ import type { UsersFilter } from '$lib/schema'
 import { error } from '@sveltejs/kit'
 import { usersFilterSchema } from '$lib/schema'
 
-import type { NewUser, User, UserRoles, UserTrustLevel } from '@plebeian/database'
-import { db, eq, products, users } from '@plebeian/database'
+import type { NewUser, User, UserMeta, UserRoles, UserTrustLevel } from '@plebeian/database'
+import { and, db, eq, products, USER_META, userMeta, users } from '@plebeian/database'
 
 import { userEventSchema } from '../../schema/nostr-events'
 
+export interface RichUser extends User {
+	role: UserRoles
+	trustLevel: UserTrustLevel
+}
+
+const resolveUser = async (user: User): Promise<RichUser> => {
+	const [roleRes] = await db
+		.select({
+			valueText: userMeta.valueText,
+		})
+		.from(userMeta)
+		.where(and(eq(userMeta.userId, user.id), eq(userMeta.metaName, USER_META.ROLE.value)))
+		.execute()
+
+	const [trustRes] = await db
+		.select({
+			valueText: userMeta.valueText,
+		})
+		.from(userMeta)
+		.where(and(eq(userMeta.userId, user.id), eq(userMeta.metaName, USER_META.TRUST_LVL.value)))
+		.execute()
+
+	return {
+		...user,
+		role: roleRes.valueText as UserRoles,
+		trustLevel: trustRes.valueText as UserTrustLevel,
+	}
+}
+
 // TODO: Use event to create a user with the new NDK
-// TODO: refactor createUser service and so on to reflect new schema
 export const getAllUsers = async (filter: UsersFilter = usersFilterSchema.parse({})): Promise<User[]> => {
 	const orderBy = {
 		createdAt: products.createdAt,
@@ -23,6 +51,33 @@ export const getAllUsers = async (filter: UsersFilter = usersFilterSchema.parse(
 
 	if (usersResult) {
 		return usersResult
+	}
+
+	error(404, 'User not found')
+}
+
+export const getRichUsers = async (filter: UsersFilter = usersFilterSchema.parse({})): Promise<RichUser[]> => {
+	const orderBy = {
+		createdAt: products.createdAt,
+		price: products.price,
+	}[filter.orderBy]
+
+	const userResult = await db
+		.select()
+		.from(users)
+		.limit(filter.pageSize)
+		.offset((filter.page - 1) * filter.pageSize)
+		.where(and(filter.userId ? eq(users.id, filter.userId) : undefined))
+		.execute()
+
+	const richUsers = await Promise.all(
+		userResult.map(async (user) => {
+			return await resolveUser(user)
+		}),
+	)
+
+	if (richUsers) {
+		return richUsers
 	}
 
 	error(404, 'User not found')
@@ -70,7 +125,6 @@ export const getUserForProduct = async (productId: string): Promise<User> => {
 }
 
 export const createUser = async (user: object, role: UserRoles = 'pleb', trustLevel: UserTrustLevel = 'reasonable'): Promise<User> => {
-	// TODO: insert trust level and role in the new tables
 	const parsedUserMeta = userEventSchema.safeParse(user)
 	if (!parsedUserMeta.success) throw Error(JSON.stringify(parsedUserMeta.error))
 
@@ -96,25 +150,33 @@ export const createUser = async (user: object, role: UserRoles = 'pleb', trustLe
 	const [userResult] = await db.insert(users).values(insertUser).returning()
 
 	if (userResult) {
+		await Promise.all([
+			db.insert(userMeta).values({ userId: userResult.id, metaName: USER_META.ROLE.value, valueText: role }).returning().execute(),
+			db
+				.insert(userMeta)
+				.values({ userId: userResult.id, metaName: USER_META.TRUST_LVL.value, valueText: trustLevel })
+				.returning()
+				.execute(),
+		])
 		return userResult
 	}
 
 	error(500, 'Failed to create user')
 }
 
-export const updateUser = async (userId: string, userMeta: NDKUserProfile): Promise<User> => {
+export const updateUser = async (userId: string, userProfile: NDKUserProfile): Promise<User> => {
 	const insertUser: Partial<User> = {
 		updatedAt: new Date(),
-		name: userMeta.name,
-		nip05: userMeta.nip05?.toLowerCase(),
-		banner: userMeta.banner,
-		about: userMeta.about,
-		lud06: userMeta.lud06,
-		lud16: userMeta.lud16,
-		displayName: userMeta.displayName,
-		image: userMeta.image,
-		website: userMeta.website,
-		zapService: userMeta.zapService,
+		name: userProfile.name,
+		nip05: userProfile.nip05?.toLowerCase(),
+		banner: userProfile.banner,
+		about: userProfile.about,
+		lud06: userProfile.lud06,
+		lud16: userProfile.lud16,
+		displayName: userProfile.displayName,
+		image: userProfile.image,
+		website: userProfile.website,
+		zapService: userProfile.zapService,
 		lastLogin: new Date(),
 	}
 
@@ -131,6 +193,25 @@ export const updateUser = async (userId: string, userMeta: NDKUserProfile): Prom
 	}
 
 	error(500, 'Failed to update user')
+}
+
+export const updateUserMeta = async (userId: string, role?: UserRoles, trustLevel?: UserTrustLevel): Promise<UserMeta[]> => {
+	const result = await Promise.all([
+		role &&
+			db
+				.update(userMeta)
+				.set({ valueText: role })
+				.where(and(eq(userMeta.userId, userId), eq(userMeta.metaName, USER_META.ROLE.value)))
+				.returning(),
+		trustLevel &&
+			db
+				.update(userMeta)
+				.set({ valueText: trustLevel })
+				.where(and(eq(userMeta.userId, userId), eq(userMeta.metaName, USER_META.TRUST_LVL.value)))
+				.returning(),
+	]).then((results) => results.flat().filter((result): result is UserMeta => result !== undefined))
+
+	return result ?? error(500, 'Failed to update user')
 }
 
 export const deleteUser = async (userId: string): Promise<boolean> => {
