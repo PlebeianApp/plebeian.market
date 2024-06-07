@@ -1,10 +1,9 @@
 <script lang="ts">
 	import type { ProductsFilter } from '$lib/schema'
-	import type { RichCat } from '$lib/server/categories.service'
 	import type { DisplayProduct } from '$lib/server/products.service'
 	import { createQuery } from '@tanstack/svelte-query'
 	import { page } from '$app/stores'
-	import { GETAllCategories, GETAllProducts, GETUserFromId } from '$lib/apiUtils'
+	import { GETAllProducts, GETUserFromId } from '$lib/apiUtils'
 	import Pattern from '$lib/components/Pattern.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
 	import UserCardCompact from '$lib/components/users/user-card-compact.svelte'
@@ -13,16 +12,11 @@
 	import type { User } from '@plebeian/database'
 
 	import type { PageData } from './$types'
+	import { createCategoryByFilterQuery } from '$lib/fetch/queries'
 
 	export let data: PageData
 
-	$: catQuery = createQuery<RichCat>({
-		queryKey: ['categories', $page.params.catId],
-		queryFn: async () => {
-			const [res] = await GETAllCategories(data.filter).then((res) => res.json())
-			return res
-		},
-	})
+	$: catQuery = createCategoryByFilterQuery({ catId: $page.params.catId })
 
 	$: productsQuery = createQuery<DisplayProduct[]>({
 		queryKey: ['products', $page.params.catId],
