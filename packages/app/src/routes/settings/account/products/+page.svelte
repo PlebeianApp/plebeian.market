@@ -12,7 +12,6 @@
 
 	export let data: PageData
 	let productsMode: 'list' | 'create' | 'edit' = 'list'
-
 	$: productsQuery = $ndkStore.activeUser?.pubkey
 		? createProductsByFilterQuery({
 				userId: $ndkStore.activeUser.pubkey,
