@@ -1,17 +1,23 @@
 <script lang="ts">
+	import { goto } from '$app/navigation'
 	import Footer from '$lib/components/footer.svelte'
 	import Header from '$lib/components/header.svelte'
 	import { Toaster } from '$lib/components/ui/sonner'
-	import { onMount } from 'svelte'
+	import { beforeUpdate, onMount } from 'svelte'
 	import { pwaInfo } from 'virtual:pwa-info'
 
-	import '../app.css'
+	import '../../app.css'
 
 	import type { CatsFilter } from '$lib/schema'
 	import type { RichCat } from '$lib/server/categories.service'
 	import { QueryClient, QueryClientProvider } from '@tanstack/svelte-query'
 	import { GETAllCategories } from '$lib/apiUtils'
 	import { catsFilterSchema } from '$lib/schema'
+
+	import type { LayoutData } from './$types'
+
+	export let data: LayoutData
+	const { initialSetup } = data
 
 	const queryClient = new QueryClient({
 		defaultOptions: {
@@ -27,6 +33,12 @@
 			const res = await GETAllCategories(filter)
 			return res.json()
 		},
+	})
+
+	beforeUpdate(() => {
+		if (initialSetup) {
+			goto('/setup')
+		}
 	})
 
 	onMount(async () => {
@@ -96,11 +108,13 @@
 	/>
 </svelte:head>
 <QueryClientProvider client={queryClient}>
-	<div class="  min-h-screen flex flex-col">
-		<Header />
-		<section class=" flex-1">
-			<slot />
-		</section>
-		<Footer />
-	</div>
+	{#if !initialSetup}
+		<div class="min-h-screen flex flex-col">
+			<Header />
+			<section class="flex-1">
+				<slot />
+			</section>
+			<Footer />
+		</div>
+	{/if}
 </QueryClientProvider>
