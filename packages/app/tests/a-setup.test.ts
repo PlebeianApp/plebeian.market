@@ -19,9 +19,10 @@ const instance = {
 
 vi.spyOn(setupSvcExports, 'isInitialSetup')
 vi.mock('$lib/server/setup.service', async (importOriginal) => {
+	const actual = await importOriginal<typeof import('$lib/server/setup.service')>()
 	return {
-		...(await importOriginal<typeof import('$lib/server/setup.service')>()),
-		isInitialSetup: async () => false,
+		...actual,
+		isInitialSetup: vi.fn().mockResolvedValue(true),
 	}
 })
 
@@ -32,6 +33,7 @@ describe('setup', async () => {
 	beforeAll(async () => {
 		await db.delete(appSettings).execute()
 		await db.insert(appSettings).values({ isFirstTimeRunning: true, instancePk: '' }).execute()
+
 		browser = await chromium.launch({ headless: true })
 		page = await browser.newPage()
 	})

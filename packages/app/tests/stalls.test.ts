@@ -1,7 +1,17 @@
 import type { Browser, Page } from 'playwright'
 import { expect } from '@playwright/test'
+import * as setupSvcExports from '$lib/server/setup.service'
 import { chromium } from 'playwright'
-import { afterAll, beforeAll, describe, test } from 'vitest'
+import { afterAll, beforeAll, describe, test, vi } from 'vitest'
+
+vi.spyOn(setupSvcExports, 'isInitialSetup')
+vi.mock('$lib/server/setup.service', async (importOriginal) => {
+	const actual = await importOriginal<typeof import('$lib/server/setup.service')>()
+	return {
+		...actual,
+		isInitialSetup: vi.fn().mockResolvedValue(false),
+	}
+})
 
 describe('stalls', async () => {
 	let browser: Browser

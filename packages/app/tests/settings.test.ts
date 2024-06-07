@@ -1,8 +1,14 @@
 import type { Browser, Page } from 'playwright'
+import { isInitialSetup } from '$lib/server/setup.service'
+import * as setupSvcExports from '$lib/server/setup.service'
 import { chromium } from 'playwright'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 
 const login = async (page: Page) => {
+	const pageCOnteng = await page.innerHTML('body')
+
+	console.log(pageCOnteng)
+
 	await page.click('#menuButton')
 	await page.click('text=Log in')
 	await page.waitForSelector('#signInSk')
@@ -11,6 +17,15 @@ const login = async (page: Page) => {
 	await page.click('#signInSubmit')
 }
 
+vi.spyOn(setupSvcExports, 'isInitialSetup')
+vi.mock('$lib/server/setup.service', async (importOriginal) => {
+	const actual = await importOriginal<typeof import('$lib/server/setup.service')>()
+	return {
+		...actual,
+		isInitialSetup: vi.fn().mockResolvedValue(false),
+	}
+})
+
 describe('settings', async () => {
 	let browser: Browser
 	let page: Page
@@ -18,7 +33,13 @@ describe('settings', async () => {
 	beforeAll(async () => {
 		browser = await chromium.launch({ headless: true })
 		page = await browser.newPage()
+
 		await page.goto(`http://${process.env.APP_HOST}:${process.env.APP_PORT}/settings`)
+
+		const pageContent = await page.innerHTML('h2')
+
+		console.log(pageContent)
+
 		await page.waitForSelector('text=You must login')
 		await login(page)
 	})
@@ -27,9 +48,22 @@ describe('settings', async () => {
 		await browser?.close()
 	})
 
+	it('should always return initialSetup as false', async () => {
+		// Call the load function
+		const result = await isInitialSetup()
+
+		// Assert the result
+		expect(result).toEqual(false)
+	})
+
 	it('should navigate to user settings and submit the form', async () => {
 		await page.goto(`http://${process.env.APP_HOST}:${process.env.APP_PORT}/settings/account/profile`)
 		await login(page)
+
+		const pageTitle = await page.textContent('h2')
+
+		expect(pageTitle).toBe('Profile')
+
 		await page.waitForSelector('h2>a[href="/settings"]')
 		await page.waitForSelector('label[for="userImage"]')
 		await page.fill('#name', 'Test User')
