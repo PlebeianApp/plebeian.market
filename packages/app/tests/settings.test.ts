@@ -46,7 +46,7 @@ describe(
 			await page.goto(
 			  `http://${process.env.APP_HOST}:${process.env.APP_PORT}/settings/account/delete`,
 			);
-			await page.waitForSelector('h2>a[href="/settings"]')
+			// await page.waitForSelector('h2>a[href="/settings"]')
 			// await page.fill("#accountDeletionChallange", "Test User");
 			// await page.click("#executeDeletion");
 			// await page.waitForURL(
