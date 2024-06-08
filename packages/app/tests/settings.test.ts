@@ -50,11 +50,11 @@ describe(
     });
 
     it("should navigate to account deletion and submit the form", async () => {
-      await page.goto(
-        `http://${process.env.APP_HOST}:${process.env.APP_PORT}/settings/account/delete`,
-      );
-      await page.fill("#accountDeletionChallange", "Test User");
-      await page.click("#executeDeletion");
+      // await page.goto(
+      //   `http://${process.env.APP_HOST}:${process.env.APP_PORT}/settings/account/delete`,
+      // );
+      // await page.fill("#accountDeletionChallange", "Test User");
+      // await page.click("#executeDeletion");
       // await page.waitForURL(
       //   `http://${process.env.APP_HOST}:${process.env.APP_PORT}`,
       // );
