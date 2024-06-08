@@ -45,7 +45,7 @@
 			<p class="text-sm">This action is irreversible and will delete all your data.</p>
 			<p class="text-sm">Please type your username <b>{userName}</b> to confirm</p>
 			<div class="flex flex-col gap-4">
-				<Input id="accountDeletionChallange" type="password" on:input={(e) => handleChallangeInputChange(e.target?.value)} />
+				<Input id="accountDeletionChallenge" type="password" on:input={(e) => handleChallangeInputChange(e.target?.value)} />
 				<Button id="executeDeletion" disabled={!challengeSolved} class="w-full font-bold bg-destructive" on:click={handleDeleteAccount}
 					>Delete account</Button
 				>
