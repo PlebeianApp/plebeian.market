@@ -51,7 +51,7 @@
 			trustLevel: userTrustLevel?.value,
 		} as NDKUserProfile
 
-		await $userDataMutation.mutateAsync()
+		await $userDataMutation.mutateAsync(ndkUser.profile)
 		await $activeUserQuery.refetch()
 		await ndkUser.publish()
 	}

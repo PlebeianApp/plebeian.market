@@ -54,6 +54,7 @@ export async function createRequest<K extends keyof Endpoints, RequestOperation 
 	}
 
 	return $fetch<RequestOperation['response']>(url, {
+		method,
 		params: options.params,
 		headers,
 		body: JSON.stringify(options.body),

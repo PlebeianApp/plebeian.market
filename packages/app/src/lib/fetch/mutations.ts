@@ -1,5 +1,5 @@
 import type { DisplayProduct } from '$lib/server/products.service'
-import { NDKEvent, NDKUser } from '@nostr-dev-kit/ndk'
+import type { NDKEvent, NDKUser, NDKUserProfile } from '@nostr-dev-kit/ndk'
 import { createMutation } from '@tanstack/svelte-query'
 import { goto } from '$app/navigation'
 import { KindProducts } from '$lib/constants'
@@ -21,15 +21,14 @@ declare module './client' {
 
 export const userDataMutation = createMutation(
 	{
-		mutationFn: async () => {
+		mutationKey: [],
+		mutationFn: async (profile: NDKUserProfile) => {
 			const $ndkStore = get(ndkStore)
-			const ndkUser = $ndkStore.getUser({
-				hexpubkey: $ndkStore.activeUser?.pubkey,
-			})
+
 			if ($ndkStore.activeUser?.pubkey) {
 				const user = await createRequest(`PUT /api/v1/users/${$ndkStore.activeUser.pubkey}`, {
 					auth: true,
-					body: ndkUser.profile,
+					body: profile,
 				})
 				return user
 			}
