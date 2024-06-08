@@ -1,8 +1,8 @@
-import type { KindProducts } from '$lib/constants'
 import type { DisplayProduct } from '$lib/server/products.service'
 import { NDKEvent, NDKUser } from '@nostr-dev-kit/ndk'
 import { createMutation } from '@tanstack/svelte-query'
 import { goto } from '$app/navigation'
+import { KindProducts } from '$lib/constants'
 import ndkStore, { ndk } from '$lib/stores/ndk'
 import { deleteAccount } from '$lib/stores/session'
 import { get } from 'svelte/store'
@@ -73,10 +73,9 @@ export const userDeleteAccountMutation = createMutation(
 
 export const createEditProductMutation = createMutation(
 	{
-		mutationFn: async ([sEvent, product, currency, images, shippingMethods]: [
+		mutationFn: async ([sEvent, product, images, shippingMethods]: [
 			SubmitEvent,
 			DisplayProduct | null,
-			(typeof CURRENCIES)[number],
 			string[],
 			{
 				id: string
@@ -89,10 +88,9 @@ export const createEditProductMutation = createMutation(
 			if (!$ndkStore.activeUser?.pubkey) return
 			const formData = new FormData(sEvent.currentTarget as HTMLFormElement)
 			const identifier = product?.identifier ? product.identifier : createId()
-
 			const evContent = {
 				id: identifier,
-				stall_id: '30017:96c727f4d1ea18a80d03621520ebfe3c9be1387033009a4f5b65959d09222eec:ttrndvmz9q',
+				stall_id: product?.stallId,
 				name: formData.get('title'),
 				description: formData.get('description'),
 				// TODO: implement image uploading in a seperate api
@@ -100,7 +98,7 @@ export const createEditProductMutation = createMutation(
 				price: Number(formData.get('price')),
 				quantity: Number(formData.get('quantity')),
 				shipping: shippingMethods,
-				currency,
+				currency: product?.currency,
 			}
 			const newEvent = new NDKEvent($ndkStore, {
 				kind: KindProducts,
@@ -112,7 +110,9 @@ export const createEditProductMutation = createMutation(
 
 			await newEvent.sign(ndk.signer)
 			const nostrEvent = await newEvent.toNostrEvent()
+			console.log(nostrEvent)
 			const result = await fetch(new URL(product ? `/api/v1/products/${product.id}` : '/api/v1/products', window.location.origin), {
+				// TODO: POST & PUT?
 				method: 'POST',
 				body: JSON.stringify(nostrEvent),
 				headers: {

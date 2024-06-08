@@ -51,6 +51,7 @@ describe('products service', () => {
 			currency: 'testCurrency',
 			stockQty: 1,
 			galleryImages: [],
+			stallId: 'testStallId',
 		})
 	})
 
