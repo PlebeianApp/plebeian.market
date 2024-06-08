@@ -18,10 +18,15 @@ import {
 	USER_TRUST_LEVEL,
 	USER_META,
 	USER_ROLES,
+	AppSettingsMetaName,
+	ProductMetaName,
+	DigitalProductMetaName,
+	UserMetaName,
 } from './constants'
 import { db } from './database'
 import { devInstance, devUser1, devUser2, devUser3, devUser4, devUser5 } from './fixtures'
 import {
+	AppMeta,
 	AppSettings,
 	Auction,
 	Bid,
@@ -88,11 +93,11 @@ const main = async () => {
 	const metaTypeData = Object.values(META_NAMES).map((metaName) => {
 		let scope: string
 
-		if (Object.values(PRODUCT_META).map((meta) => meta.value).includes(metaName) || Object.values(DIGITAL_PRODUCT_META).map((meta) => meta.value).includes(metaName)) {
+		if (Object.values(PRODUCT_META).map((meta) => meta.value).includes(metaName as ProductMetaName['value']) || Object.values(DIGITAL_PRODUCT_META).map((meta) => meta.value).includes(metaName as DigitalProductMetaName['value'])) {
 			scope = 'products'
-		  } else if (Object.values(APP_SETTINGS_META).map((meta) => meta.value).includes(metaName)) {
+		  } else if (Object.values(APP_SETTINGS_META).map((meta) => meta.value).includes(metaName as AppSettingsMetaName['value'])) {
 			scope = 'app_settings'
-		  } else if (Object.values(USER_META).map((meta) => meta.value).includes(metaName)) {
+		  } else if (Object.values(USER_META).map((meta) => meta.value).includes(metaName as UserMetaName['value'])) {
 			scope = 'users'
 		  } else {
 			scope = 'products'
@@ -122,9 +127,9 @@ const main = async () => {
 		let valueInteger: number | null = null
 		let valueNumeric: number | null = null
 	
-		if (name == 'trust_lvl') {
+		if (name == USER_META.TRUST_LVL.value) {
 		  valueText = faker.helpers.arrayElement(Object.values(USER_TRUST_LEVEL))
-		} else if (name == 'role') {
+		} else if (name == USER_META.ROLE.value) {
 		  valueText = faker.helpers.arrayElement(Object.values(USER_ROLES))
 		}
 	
