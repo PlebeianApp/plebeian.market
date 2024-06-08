@@ -1,5 +1,5 @@
-import type { DisplayProduct } from '$lib/server/products.service'
 import type { NDKEvent, NDKUser, NDKUserProfile } from '@nostr-dev-kit/ndk'
+import type { DisplayProduct } from '$lib/server/products.service'
 import { createMutation } from '@tanstack/svelte-query'
 import { goto } from '$app/navigation'
 import { KindProducts } from '$lib/constants'

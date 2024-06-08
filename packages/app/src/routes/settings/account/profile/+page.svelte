@@ -47,7 +47,8 @@
 
 		console.log(userData)
 		ndkUser.profile = {
-			...userData as any,
+			// @ts-expect-error todo to fix this
+			...userData,
 			trustLevel: userTrustLevel?.value,
 		} as NDKUserProfile
 
