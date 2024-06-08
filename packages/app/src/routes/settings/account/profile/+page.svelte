@@ -11,6 +11,7 @@
 	import { activeUserQuery } from '$lib/fetch/queries'
 	import ndkStore from '$lib/stores/ndk'
 	import { nav_back } from '$lib/utils'
+	import { get } from 'svelte/store'
 
 	import type { PageData } from './$types'
 
@@ -19,14 +20,18 @@
 
 	let userTrustLevel: Selected<string> | null = null
 
-	$: userData = $activeUserQuery.data ?? {
-		nip05: '',
-		about: '',
-		displayName: '',
-		name: '',
-		image: '',
-		lud16: '',
-	}
+	$: isFetched = $activeUserQuery.isFetched
+	$: userData = isFetched
+		? { ...get(activeUserQuery).data }
+		: {
+				nip05: '',
+				about: '',
+				displayName: '',
+				name: '',
+				image: '',
+				lud16: '',
+			}
+
 	$: userTrustLevel =
 		!userTrustLevel && $activeUserQuery.data
 			? {
@@ -40,12 +45,14 @@
 			hexpubkey: $ndkStore.activeUser?.pubkey,
 		})
 
+		console.log(userData)
 		ndkUser.profile = {
-			...userData,
+			...userData as any,
 			trustLevel: userTrustLevel?.value,
 		} as NDKUserProfile
 
 		await $userDataMutation.mutateAsync()
+		await $activeUserQuery.refetch()
 		await ndkUser.publish()
 	}
 	const linkDetails = data.menuItems
