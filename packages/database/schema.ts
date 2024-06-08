@@ -73,8 +73,8 @@ export const productMeta = sqliteTable('product_meta', {
 	key: text('key'),
 	valueText: text('value_text'),
 	valueBoolean: integer('value_boolean', { mode: 'boolean' }),
-	valueInteger: integer('value_boolean'),
-	valueNumeric: numeric('value_integer'),
+
+	valueNumeric: numeric('value_number'),
 	createdAt: integer('created_at', { mode: 'timestamp' })
 		.notNull()
 		.default(sql`(unixepoch())`),
@@ -88,15 +88,14 @@ export const appSettingsMeta = sqliteTable('app_meta', {
 	id: text('id')
 		.primaryKey()
 		.$defaultFn(() => createId()),
-	productId: text('app_id').references(() => appSettings.instancePk, { onDelete: 'cascade', onUpdate: 'cascade' }),
+	appId: text('app_id').references(() => appSettings.instancePk, { onDelete: 'cascade', onUpdate: 'cascade' }),
 	metaName: text('meta_name')
 		.notNull()
 		.references(() => metaTypes.name, { onDelete: 'cascade', onUpdate: 'cascade' }),
 	key: text('key'),
 	valueText: text('value_text'),
 	valueBoolean: integer('value_boolean', { mode: 'boolean' }),
-	valueInteger: integer('value_boolean'),
-	valueNumeric: numeric('value_integer'),
+	valueNumeric: numeric('value_number'),
 	createdAt: integer('created_at', { mode: 'timestamp' })
 		.notNull()
 		.default(sql`(unixepoch())`),
@@ -147,8 +146,7 @@ export const userMeta = sqliteTable('user_meta', {
 	key: text('key'),
 	valueText: text('value_text'),
 	valueBoolean: integer('value_boolean', { mode: 'boolean' }),
-	valueInteger: integer('value_boolean'),
-	valueNumeric: numeric('value_integer'),
+	valueNumeric: numeric('value_number'),
 	createdAt: integer('created_at', { mode: 'timestamp' })
 		.notNull()
 		.default(sql`(unixepoch())`),
