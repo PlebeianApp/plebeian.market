@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "bd40e8ac-a5fd-4c53-b060-7d35c75aa1bc",
+  "id": "92718c56-f228-4c49-9fbc-174ca82d7a50",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "app_settings": {
@@ -135,8 +135,8 @@
           "notNull": false,
           "autoincrement": false
         },
-        "value_integer": {
-          "name": "value_integer",
+        "value_number": {
+          "name": "value_number",
           "type": "numeric",
           "primaryKey": false,
           "notNull": false,
@@ -1215,8 +1215,8 @@
           "notNull": false,
           "autoincrement": false
         },
-        "value_integer": {
-          "name": "value_integer",
+        "value_number": {
+          "name": "value_number",
           "type": "numeric",
           "primaryKey": false,
           "notNull": false,
@@ -1727,8 +1727,8 @@
           "notNull": false,
           "autoincrement": false
         },
-        "value_integer": {
-          "name": "value_integer",
+        "value_number": {
+          "name": "value_number",
           "type": "numeric",
           "primaryKey": false,
           "notNull": false,

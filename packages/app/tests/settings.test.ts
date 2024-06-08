@@ -49,7 +49,6 @@ describe('settings', async () => {
 		await page.click('text=Delete account')
 		await page.waitForSelector('#accountDeletionChallange')
 		await page.fill('#accountDeletionChallange', 'DELETE')
-		await page.screenshot({ path: 'screenshot-d.jpeg', type: 'jpeg' })
 		await page.click('#executeDeletion')
 		await page.waitForURL(`http://${process.env.APP_HOST}:${process.env.APP_PORT}`)
 	})
