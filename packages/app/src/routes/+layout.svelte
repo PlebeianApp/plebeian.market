@@ -13,6 +13,10 @@
 	import { GETAllCategories } from '$lib/apiUtils'
 	import { catsFilterSchema } from '$lib/schema'
 
+	import type { PageData } from './$types'
+
+	export let data: PageData
+	console.log(data.appSettings)
 	const queryClient = new QueryClient({
 		defaultOptions: {
 			queries: {
