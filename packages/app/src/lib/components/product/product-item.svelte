@@ -1,8 +1,7 @@
 <script lang="ts">
 	import type { DisplayProduct } from '$lib/server/products.service'
-	import { createQuery } from '@tanstack/svelte-query'
 	import * as Card from '$lib/components/ui/card/index.js'
-	import { currencyToBtc } from '$lib/utils'
+	import { createProductPriceQuery } from '$lib/fetch/queries'
 
 	import Spinner from '../assets/spinner.svelte'
 	import ImgPlaceHolder from './imgPlaceHolder.svelte'
@@ -10,12 +9,7 @@
 	export let product: DisplayProduct
 	const { galleryImages, name, currency, price, userNip05, identifier, id } = product
 
-	$: priceQuery = createQuery<number | null>({
-		queryKey: ['products', 'price', product.id],
-		queryFn: async () => {
-			return await currencyToBtc(product.currency, product.price, true)
-		},
-	})
+	$: priceQuery = createProductPriceQuery(product)
 </script>
 
 <a href={userNip05 ? `/products/${userNip05}/${identifier}` : `/products/${id}`}>

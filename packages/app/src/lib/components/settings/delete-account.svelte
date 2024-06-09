@@ -1,38 +1,15 @@
 <script lang="ts">
-	import { createMutation } from '@tanstack/svelte-query'
-	import { goto } from '$app/navigation'
-	import { DELETEUser } from '$lib/apiUtils'
 	import { Button } from '$lib/components/ui/button'
 	import { Input } from '$lib/components/ui/input'
+	import { userDeleteAccountMutation } from '$lib/fetch/mutations'
 	import ndkStore from '$lib/stores/ndk'
-	import { deleteAccount } from '$lib/stores/session'
 
 	export let userName = $ndkStore.activeUser?.profile?.name || $ndkStore.activeUser?.profile?.displayName
 	export let intentToDelete = false
 	let challengeSolved = false
 
-	$: deleteAccountMutation = createMutation({
-		mutationFn: async () => {
-			const ndkUser = $ndkStore.getUser({
-				hexpubkey: $ndkStore.activeUser?.pubkey,
-			})
-
-			if ($ndkStore.activeUser?.pubkey) {
-				const res = await DELETEUser(ndkUser.pubkey).then((res) => res.json())
-				console.log('DELETEUser', res)
-				return res
-			}
-			return null
-		},
-		onSuccess: (data) => {
-			deleteAccount($ndkStore.activeUser?.pubkey ? $ndkStore.activeUser?.pubkey : '')
-			delete $ndkStore.signer
-			goto('/')
-		},
-	})
-
 	const handleDeleteAccount = async () => {
-		await $deleteAccountMutation.mutate()
+		await userDeleteAccountMutation.mutate()
 	}
 
 	const handleChallangeInputChange = (input: string) => {

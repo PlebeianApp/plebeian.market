@@ -51,6 +51,7 @@ describe('products service', () => {
 			currency: 'testCurrency',
 			stockQty: 1,
 			galleryImages: [],
+			stallId: 'testStallId',
 		})
 	})
 
@@ -129,6 +130,7 @@ describe('products service', () => {
 			createdAt: expect.any(String),
 			currency: 'USD',
 			description: 'Hello Description',
+			stallId: stall.id,
 			identifier: identifier,
 			userId: devUser1.pk,
 			userNip05: expect.any(String),
@@ -161,6 +163,7 @@ describe('products service', () => {
 			id: targetProduct.id,
 			createdAt: expect.any(String),
 			currency: targetProduct.currency,
+			stallId: stall.id,
 			description: targetProduct.description,
 			galleryImages: expect.any(Array),
 			identifier: product.identifier,
