@@ -1,6 +1,6 @@
 import type { NDKUser } from '@nostr-dev-kit/ndk'
 import type { BaseAccount } from '$lib/stores/session'
-import { NDKNip07Signer, NDKPrivateKeySigner } from '@nostr-dev-kit/ndk'
+import { NDKNip07Signer, NDKPrivateKeySigner, NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk'
 import { GETUserFromId, POSTUser, PUTUser } from '$lib/apiUtils'
 import { HEX_KEYS_REGEX } from '$lib/constants'
 import ndkStore, { ndk } from '$lib/stores/ndk'
@@ -13,7 +13,7 @@ export async function fetchActiveUserData(keyToLocalDb?: string): Promise<NDKUse
 	if (!ndk.signer) return null
 	console.log('Fetching profile')
 	const user = await ndk.signer.user()
-	await user.fetchProfile()
+	await user.fetchProfile({ cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY })
 	ndkStore.set(ndk)
 	if (keyToLocalDb) {
 		await loginLocalDb(user.pubkey, 'NSEC', keyToLocalDb)

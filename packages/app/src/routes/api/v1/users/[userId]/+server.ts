@@ -9,7 +9,8 @@ export const GET: RequestHandler = async ({ params, request }) => {
 	const { userId } = params
 	try {
 		await authorize(request, userId, 'GET')
-		return json(await getRichUsers(usersFilterSchema.parse({ userId })))
+		const [userRes] = await getRichUsers(usersFilterSchema.parse({ userId }))
+		return json(userRes)
 	} catch (e) {
 		if (e.status === 401) {
 			const user = await getUserById(userId)

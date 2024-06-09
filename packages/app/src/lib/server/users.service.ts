@@ -164,7 +164,7 @@ export const createUser = async (user: object, role: UserRoles = 'pleb', trustLe
 	error(500, 'Failed to create user')
 }
 
-export const updateUser = async (userId: string, userProfile: NDKUserProfile): Promise<User> => {
+export const updateUser = async (userId: string, userProfile: RichUser): Promise<User> => {
 	const insertUser: Partial<User> = {
 		updatedAt: new Date(),
 		name: userProfile.name,
@@ -177,7 +177,6 @@ export const updateUser = async (userId: string, userProfile: NDKUserProfile): P
 		image: userProfile.image,
 		website: userProfile.website,
 		zapService: userProfile.zapService,
-		lastLogin: new Date(),
 	}
 
 	const userResult = await db
@@ -187,6 +186,10 @@ export const updateUser = async (userId: string, userProfile: NDKUserProfile): P
 		})
 		.where(eq(users.id, userId))
 		.returning()
+
+	if (userProfile.role || userProfile.trustLevel) {
+		await updateUserMeta(userId, userProfile.role, userProfile.trustLevel)
+	}
 
 	if (userResult.length > 0) {
 		return userResult[0]
