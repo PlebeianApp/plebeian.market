@@ -28,7 +28,7 @@ import { productEventSchema } from '../../schema/nostr-events'
 import { getStallById } from './stalls.service'
 import { getNip05ByUserId } from './users.service'
 
-export type DisplayProduct = Pick<Product, 'id' | 'description' | 'currency' | 'stockQty' | 'userId' | 'identifier'> & {
+export type DisplayProduct = Pick<Product, 'id' | 'description' | 'currency' | 'stockQty' | 'userId' | 'identifier' | 'stallId'> & {
 	name: Product['productName']
 	userNip05: string | null
 	createdAt: string
@@ -51,6 +51,7 @@ export const toDisplayProduct = async (product: Product): Promise<DisplayProduct
 		currency: product.currency,
 		stockQty: product.stockQty,
 		galleryImages: images,
+		stallId: product.stallId,
 	}
 }
 
@@ -127,6 +128,7 @@ export const getProductById = async (productId: string): Promise<DisplayProduct>
 		currency: productResult.currency,
 		stockQty: productResult.stockQty,
 		galleryImages: images,
+		stallId: productResult.stallId,
 	}
 }
 

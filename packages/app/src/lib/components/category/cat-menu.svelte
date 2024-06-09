@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { RichCat } from '$lib/server/categories.service'
-	import { createQuery } from '@tanstack/svelte-query'
+	import { categoriesQuery } from '$lib/fetch/queries'
 
 	import Button from '../ui/button/button.svelte'
 	import Skeleton from '../ui/skeleton/skeleton.svelte'
@@ -10,11 +10,8 @@
 	let showMore = isExpanded
 	let pageSize = 4
 
-	$: catQuery = createQuery<RichCat[]>({
-		queryKey: ['categories'],
-	})
 	let filteredCategories: RichCat[] = []
-	$: if ($catQuery.data) filteredCategories = $catQuery.data?.filter((cat) => (cat.productCount ?? 0) > 0) || []
+	$: if ($categoriesQuery.data) filteredCategories = $categoriesQuery.data?.filter((cat) => (cat.productCount ?? 0) > 0) || []
 </script>
 
 <div class="flex flex-col">
@@ -23,12 +20,12 @@
 			<div class="lg:px-12">
 				<div class="container">
 					<div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-						{#if $catQuery.isLoading}
+						{#if $categoriesQuery.isLoading}
 							<Skeleton class=" h-96 w-full" />
 							<Skeleton class=" h-96 w-full" />
 							<Skeleton class=" h-96 w-full" />
 							<Skeleton class=" h-96 w-full" />
-						{:else if $catQuery.data}
+						{:else if $categoriesQuery.data}
 							{#each filteredCategories.slice(0, showMore ? filteredCategories.length : pageSize) as cat}
 								<CatCompactItem {cat} />
 							{/each}
