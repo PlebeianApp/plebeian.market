@@ -1,7 +1,7 @@
 import type { NDKUser } from '@nostr-dev-kit/ndk'
 import type { BaseAccount } from '$lib/stores/session'
-import { page } from '$app/stores'
 import { NDKNip07Signer, NDKPrivateKeySigner, NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk'
+import { page } from '$app/stores'
 import { GETUserFromId, POSTUser, PUTUser } from '$lib/apiUtils'
 import { HEX_KEYS_REGEX } from '$lib/constants'
 import ndkStore, { ndk } from '$lib/stores/ndk'
@@ -9,13 +9,9 @@ import { addAccount, getAccount, updateAccount } from '$lib/stores/session'
 import { bytesToHex, hexToBytes } from '$lib/utils'
 import { decode, nsecEncode } from 'nostr-tools/nip19'
 import { decrypt, encrypt } from 'nostr-tools/nip49'
-import { get } from 'svelte/store'
 
 import type { PageData } from '../routes/$types'
-
-const $page = get(page)
-
-const { appSettings } = $page.data as PageData
+import { createUserExist } from './fetch/queries'
 
 export async function fetchActiveUserData(keyToLocalDb?: string): Promise<NDKUser | null> {
 	if (!ndk.signer) return null
@@ -28,7 +24,18 @@ export async function fetchActiveUserData(keyToLocalDb?: string): Promise<NDKUse
 	} else {
 		await loginLocalDb(user.pubkey, 'NIP07')
 	}
-	if (appSettings.allowRegister) {
+	let userExist: boolean | undefined = undefined
+	let registerAllowed: boolean | undefined = undefined
+	createUserExist(user.pubkey).subscribe((sub) => (sub.data ? (userExist = sub.data) : (userExist = undefined)))
+	page.subscribe((sub) =>
+		(sub.data as PageData).appSettings
+			? (registerAllowed = (sub.data as PageData).appSettings.allowRegister)
+			: (registerAllowed = undefined),
+	)
+
+	if (userExist) {
+		await loginDb(user)
+	} else if (!userExist && registerAllowed) {
 		await loginDb(user)
 	}
 	return user
