@@ -32,8 +32,8 @@
 
 	const handlePersistNewPaymentMethod = async () => {
 		const res = await $persistPaymentMethodMutation.mutateAsync({
-			paymentDetails: newPaymentDetails,
-			paymentMethod: newPaymentMethodOpen,
+			paymentDetails: newPaymentDetails as string,
+			paymentMethod: newPaymentMethodOpen as string,
 		})
 
 		if (res) {
@@ -45,7 +45,7 @@
 	const handleDeletePaymentMethod = async (paymentDetailId: string) => {
 		$deletePaymentMethodMutation.mutate({
 			paymentDetailId,
-			userId: $ndkStore.activeUser.pubkey,
+			userId: $ndkStore.activeUser?.pubkey as string,
 		})
 	}
 </script>
