@@ -5,6 +5,8 @@
 	import { Content, Group, Item, Root, Trigger } from '$lib/components/ui/dropdown-menu'
 	import { Input } from '$lib/components/ui/input'
 	import Separator from '$lib/components/ui/separator/separator.svelte'
+	import { deletePaymentMethodMutation, persistPaymentMethodMutation } from '$lib/fetch/mutations'
+	import { paymentsQuery } from '$lib/fetch/queries'
 	import ndkStore from '$lib/stores/ndk'
 
 	import type { PaymentDetail, PaymentDetailsMethod } from '@plebeian/database'
@@ -19,95 +21,6 @@
 	let newPaymentMethodOpen: PaymentDetailsMethod | null = null
 	let newPaymentDetails: string | null = null
 
-	interface PaymentDetailWithPersisted extends Partial<PaymentDetail> {
-		persisted: boolean
-	}
-
-	$: paymentsQuery = createQuery<PaymentDetailWithPersisted[]>({
-		queryKey: ['paymentDetails', !!$ndkStore.activeUser?.pubkey],
-		queryFn: async () => {
-			if ($ndkStore.activeUser?.pubkey) {
-				const authToken = await createToken('/api/v1/payments/', 'GET')
-				const paymentDetails = await fetch(`/api/v1/payments/?userId=${$ndkStore.activeUser?.pubkey}`, {
-					method: 'GET',
-					headers: {
-						'Content-Type': 'application/json',
-						Authorization: authToken,
-					},
-				})
-					.then((res) => res.json())
-					.catch((err) => console.error(err))
-
-				return paymentDetails
-			}
-			return []
-		},
-	})
-
-	const persistPaymentMethodMutation = createMutation({
-		mutationFn: async () => {
-			const ndkUser = $ndkStore.getUser({
-				hexpubkey: $ndkStore.activeUser?.pubkey,
-			})
-
-			if ($ndkStore.activeUser?.pubkey) {
-				const authToken = await createToken('/api/v1/payments/', 'POST')
-				const res = await fetch(`/api/v1/payments/?userId=${$ndkStore.activeUser?.pubkey}`, {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						Authorization: authToken,
-					},
-					body: JSON.stringify({
-						paymentDetails: newPaymentDetails,
-						paymentMethod: newPaymentMethodOpen,
-					} as PaymentDetail),
-				})
-					.then((res) => res.json())
-					.catch((err) => console.error(err))
-				return res
-			}
-			return null
-		},
-		onSuccess: (data) => {
-			queryClient.invalidateQueries({ queryKey: ['paymentDetails', !!$ndkStore.activeUser?.pubkey] })
-			newPaymentMethodOpen = null
-			newPaymentDetails = null
-		},
-	})
-
-	const deletePaymentMethodMutation = createMutation<{ paymentDetailId: string }>({
-		mutationFn: async ({ paymentDetailId }) => {
-			const ndkUser = $ndkStore.getUser({
-				hexpubkey: $ndkStore.activeUser?.pubkey,
-			})
-
-			if ($ndkStore.activeUser?.pubkey) {
-				const authToken = await createToken('/api/v1/payments/', 'DELETE')
-				const res = await fetch(`/api/v1/payments/?paymentDetailId=${paymentDetailId}&userId=${$ndkStore.activeUser?.pubkey}`, {
-					method: 'DELETE',
-					headers: {
-						'Content-Type': 'application/json',
-						Authorization: authToken,
-					},
-					body: JSON.stringify({
-						paymentDetails: newPaymentDetails,
-						paymentMethod: newPaymentMethodOpen,
-					} as PaymentDetail),
-				})
-					.then((res) => res.json())
-					.catch((err) => console.error(err))
-				return res
-			}
-			return null
-		},
-		onSuccess: (data) => {
-			queryClient.invalidateQueries({ queryKey: ['paymentDetails', !!$ndkStore.activeUser?.pubkey] })
-		},
-	})
-
-	$: paymentsData = $paymentsQuery.data
-
 	const handleAddPaymentMethodLine = (method: PaymentDetailsMethod) => {
 		newPaymentMethodOpen = method
 	}
@@ -118,11 +31,22 @@
 	}
 
 	const handlePersistNewPaymentMethod = async () => {
-		$persistPaymentMethodMutation.mutate()
+		const res = await $persistPaymentMethodMutation.mutateAsync({
+			paymentDetails: newPaymentDetails,
+			paymentMethod: newPaymentMethodOpen,
+		})
+
+		if (res) {
+			newPaymentMethodOpen = null
+			newPaymentDetails = null
+		}
 	}
 
 	const handleDeletePaymentMethod = async (paymentDetailId: string) => {
-		$deletePaymentMethodMutation.mutate({ paymentDetailId })
+		$deletePaymentMethodMutation.mutate({
+			paymentDetailId,
+			userId: $ndkStore.activeUser.pubkey,
+		})
 	}
 </script>
 
@@ -134,7 +58,7 @@
 	{#if $paymentsQuery.isLoading}
 		<p>Loading...</p>
 	{:else}
-		{#each [...(paymentsData ?? [])] as paymentDetail}
+		{#each [...($paymentsQuery.data ?? [])] as paymentDetail}
 			<div class="border border-gray flex justify-between items-center p-2 font-bold">
 				<div class="flex items-center gap-2">
 					{#if paymentDetail.paymentMethod === paymentDetailsMethod[0]}
