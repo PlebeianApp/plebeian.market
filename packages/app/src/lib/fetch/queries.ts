@@ -8,7 +8,7 @@ import ndkStore from '$lib/stores/ndk'
 import { currencyToBtc } from '$lib/utils'
 import { derived } from 'svelte/store'
 
-import type { User } from '@plebeian/database'
+import type { PaymentDetail, User } from '@plebeian/database'
 
 import { createRequest, queryClient } from './client'
 
@@ -18,8 +18,26 @@ declare module './client' {
 		'GET /api/v1/category': Operation<'/api/v1/category', 'GET', never, never, RichCat[], CatsFilter>
 		'GET /api/v1/products': Operation<'/api/v1/products', 'GET', never, never, DisplayProduct[], ProductsFilter>
 		'GET /api/v1/stalls': Operation<'/api/v1/stalls', 'GET', never, never, RichStall[], StallsFilter>
+		[k: `GET /api/v1/payments/?userId=${string}`]: Operation<string, 'GET', never, never, PaymentDetail[], never>
 	}
 }
+
+export const paymentsQuery = createQuery(
+	derived(ndkStore, ($ndkStore) => ({
+		queryKey: ['paymentDetails', !!$ndkStore.activeUser?.pubkey],
+		queryFn: async () => {
+			if ($ndkStore.activeUser?.pubkey) {
+				const user = await createRequest(`GET /api/v1/payments/?userId=${$ndkStore.activeUser.pubkey}`, {
+					auth: true,
+				})
+
+				return user
+			}
+			return null
+		},
+	})),
+	queryClient,
+)
 
 export const activeUserQuery = createQuery(
 	derived(ndkStore, ($ndkStore) => ({

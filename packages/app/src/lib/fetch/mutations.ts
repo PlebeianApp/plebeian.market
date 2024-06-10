@@ -7,7 +7,7 @@ import ndkStore, { ndk } from '$lib/stores/ndk'
 import { deleteAccount } from '$lib/stores/session'
 import { get } from 'svelte/store'
 
-import type { CURRENCIES, ISO3, User } from '@plebeian/database'
+import type { ISO3, PaymentDetail, User } from '@plebeian/database'
 import { createId } from '@plebeian/database/utils'
 
 import { createRequest, queryClient } from './client'
@@ -16,8 +16,66 @@ declare module './client' {
 	interface Endpoints {
 		[k: `PUT /api/v1/users/${string}`]: Operation<string, 'PUT', never, NDKUser['profile'], User, never>
 		[k: `DELETE /api/v1/users/${string}`]: Operation<string, 'DELETE', never, never, boolean, never>
+		[k: `POST /api/v1/payments/?userId=${string}`]: Operation<
+			string,
+			'POST',
+			never,
+			{
+				paymentDetails: string
+				paymentMethod: string
+			},
+			PaymentDetail,
+			never
+		>
+		[k: `DELETE /api/v1/payments/?paymentDetailId=${string}`]: Operation<string, 'DELETE', never, never, boolean, never>
 	}
 }
+
+export const persistPaymentMethodMutation = createMutation(
+	{
+		mutationKey: [],
+		mutationFn: async ({ paymentDetails, paymentMethod }: { paymentDetails: string; paymentMethod: string }) => {
+			const $ndkStore = get(ndkStore)
+			if ($ndkStore.activeUser?.pubkey) {
+				const user = await createRequest(`POST /api/v1/payments/?userId=${$ndkStore.activeUser.pubkey}`, {
+					auth: true,
+					body: {
+						paymentDetails,
+						paymentMethod,
+					},
+				})
+				return user
+			}
+			return null
+		},
+		onSuccess: () => {
+			const $ndkStore = get(ndkStore)
+			queryClient.invalidateQueries({ queryKey: ['paymentDetails', !!$ndkStore.activeUser?.pubkey] })
+		},
+	},
+	queryClient,
+)
+
+export const deletePaymentMethodMutation = createMutation(
+	{
+		mutationKey: [],
+		mutationFn: async ({ paymentDetailId, userId }: { paymentDetailId: string; userId: string }) => {
+			const $ndkStore = get(ndkStore)
+			if ($ndkStore.activeUser?.pubkey) {
+				const pd = await createRequest(`DELETE /api/v1/payments/?paymentDetailId=${paymentDetailId}&userId=${userId}`, {
+					auth: true,
+				})
+				return pd
+			}
+			return null
+		},
+		onSuccess: () => {
+			const $ndkStore = get(ndkStore)
+			queryClient.invalidateQueries({ queryKey: ['paymentDetails', !!$ndkStore.activeUser?.pubkey] })
+		},
+	},
+	queryClient,
+)
 
 export const userDataMutation = createMutation(
 	{
