@@ -3,7 +3,7 @@ import { catsFilterSchema } from '$lib/schema'
 import { getAllCategories, getCategoriesByProductId } from '$lib/server/categories.service'
 import { describe, expect, it } from 'vitest'
 
-import { createId, devUser1 } from '@plebeian/database'
+import { createId, db } from '@plebeian/database'
 
 import { getAllProducts } from './products.service'
 
@@ -24,15 +24,14 @@ describe('categories service', () => {
 	it('gets categories by product id', async () => {
 		const products = await getAllProducts()
 		const categories = await Promise.all(products.flatMap(({ id }) => getCategoriesByProductId(id)))
-		// at least one of the products should have few categories
+
 		expect(categories.length).toBeGreaterThan(0)
 	})
 
 	it('gets categories by user id', async () => {
-		const userId = devUser1.pk
-		const filter: CatsFilter = catsFilterSchema.parse({ userId: userId })
+		const prodCat = await db.query.productCategories.findFirst()
+		const filter: CatsFilter = catsFilterSchema.parse({ userId: prodCat?.productId?.split(':')[1] })
 		const categories = await getAllCategories(filter)
-
 		expect(categories.length).toBeGreaterThan(0)
 	})
 

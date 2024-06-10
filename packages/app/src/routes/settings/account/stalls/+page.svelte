@@ -1,10 +1,10 @@
 <script lang="ts">
 	import type { RichStall } from '$lib/server/stalls.service'
-	import { createQuery } from '@tanstack/svelte-query'
 	import { page } from '$app/stores'
 	import CreateEditStall from '$lib/components/stalls/create-edit.svelte'
 	import { Button } from '$lib/components/ui/button/index.js'
 	import { Skeleton } from '$lib/components/ui/skeleton'
+	import { createStallsByFilterQuery } from '$lib/fetch/queries'
 	import ndkStore from '$lib/stores/ndk'
 	import { nav_back } from '$lib/utils'
 
@@ -14,17 +14,14 @@
 
 	let stallsMode: 'list' | 'create' | 'edit' = 'list'
 
-	$: stallsQuery = createQuery<RichStall[]>({
-		queryKey: ['stalls', stallsMode, !!$ndkStore.activeUser?.pubkey],
-		queryFn: async () => {
-			if ($ndkStore.activeUser?.pubkey) {
-				const filter = { userId: $ndkStore.activeUser.pubkey }
-				const res = await fetch(new URL(`/api/v1/stalls?${new URLSearchParams(filter)}`, window.location.origin))
-				return res.json()
-			}
-			return null
-		},
-	})
+	$: stallsQuery = $ndkStore.activeUser?.pubkey
+		? createStallsByFilterQuery({
+				userId: $ndkStore.activeUser.pubkey,
+			})
+		: null
+
+	$: stallsMode === 'list' ? $stallsQuery?.refetch() : null
+
 	let currentStall: RichStall | null = null
 	const linkDetails = data.menuItems
 		.find((item) => item.value === 'account-settings')

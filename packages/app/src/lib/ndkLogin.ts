@@ -1,7 +1,7 @@
 import type { NDKUser } from '@nostr-dev-kit/ndk'
 import type { BaseAccount } from '$lib/stores/session'
-import { NDKNip07Signer, NDKPrivateKeySigner } from '@nostr-dev-kit/ndk'
 import { page } from '$app/stores'
+import { NDKNip07Signer, NDKPrivateKeySigner, NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk'
 import { GETUserFromId, POSTUser, PUTUser } from '$lib/apiUtils'
 import { HEX_KEYS_REGEX } from '$lib/constants'
 import ndkStore, { ndk } from '$lib/stores/ndk'
@@ -21,7 +21,7 @@ export async function fetchActiveUserData(keyToLocalDb?: string): Promise<NDKUse
 	if (!ndk.signer) return null
 	console.log('Fetching profile')
 	const user = await ndk.signer.user()
-	await user.fetchProfile()
+	await user.fetchProfile({ cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY })
 	ndkStore.set(ndk)
 	if (keyToLocalDb) {
 		await loginLocalDb(user.pubkey, 'NSEC', keyToLocalDb)
@@ -39,7 +39,6 @@ export async function loginWithExtension(): Promise<boolean> {
 		const signer = new NDKNip07Signer()
 		console.log('Waiting for NIP-07 signer')
 		await signer.blockUntilReady()
-		await signer.user()
 		ndk.signer = signer
 		ndkStore.set(ndk)
 		fetchActiveUserData()
@@ -57,8 +56,6 @@ export async function loginWithPrivateKey(key: string, password: string): Promis
 			const signer = new NDKPrivateKeySigner(bytesToHex(decryptedKey))
 			console.log('Waiting for PrivateKey signer')
 			await signer.blockUntilReady()
-			await signer.user()
-
 			ndk.signer = signer
 			ndkStore.set(ndk)
 			fetchActiveUserData(key)
@@ -75,7 +72,6 @@ export async function loginWithPrivateKey(key: string, password: string): Promis
 			const signer = new NDKPrivateKeySigner(bytesToHex(decoded.data))
 			console.log('Waiting for PrivateKey signer')
 			await signer.blockUntilReady()
-			await signer.user()
 			ndk.signer = signer
 			ndkStore.set(ndk)
 			fetchActiveUserData(cSK)

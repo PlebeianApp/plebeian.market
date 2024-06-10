@@ -23,10 +23,6 @@ import {
 	PRODUCT_TYPES,
 	ProductImagesType,
 	ProductTypes,
-	USER_ROLES,
-	USER_TRUST_LEVEL,
-	UserRoles,
-	UserTrustLevel,
 } from './constants'
 import { createId } from './utils'
 
@@ -77,8 +73,8 @@ export const productMeta = sqliteTable('product_meta', {
 	key: text('key'),
 	valueText: text('value_text'),
 	valueBoolean: integer('value_boolean', { mode: 'boolean' }),
-	valueInteger: integer('value_boolean'),
-	valueNumeric: numeric('value_integer'),
+
+	valueNumeric: numeric('value_number'),
 	createdAt: integer('created_at', { mode: 'timestamp' })
 		.notNull()
 		.default(sql`(unixepoch())`),
@@ -92,15 +88,14 @@ export const appSettingsMeta = sqliteTable('app_meta', {
 	id: text('id')
 		.primaryKey()
 		.$defaultFn(() => createId()),
-	productId: text('app_id').references(() => appSettings.instancePk, { onDelete: 'cascade', onUpdate: 'cascade' }),
+	appId: text('app_id').references(() => appSettings.instancePk, { onDelete: 'cascade', onUpdate: 'cascade' }),
 	metaName: text('meta_name')
 		.notNull()
 		.references(() => metaTypes.name, { onDelete: 'cascade', onUpdate: 'cascade' }),
 	key: text('key'),
 	valueText: text('value_text'),
 	valueBoolean: integer('value_boolean', { mode: 'boolean' }),
-	valueInteger: integer('value_boolean'),
-	valueNumeric: numeric('value_integer'),
+	valueNumeric: numeric('value_number'),
 	createdAt: integer('created_at', { mode: 'timestamp' })
 		.notNull()
 		.default(sql`(unixepoch())`),
@@ -125,10 +120,6 @@ export type NonEmptyArray<T> = [T, ...T[]]
 export const users = sqliteTable('users', {
 	...standardColumns,
 	name: text('name'),
-	role: text('role', { enum: Object.values(USER_ROLES) as NonEmptyArray<UserRoles> })
-		.notNull()
-		.default(USER_ROLES.PLEB),
-	trustLevel: text('trust_lvl', { enum: Object.values(USER_TRUST_LEVEL) as NonEmptyArray<UserTrustLevel> }),
 	displayName: text('display_name'),
 	about: text('about'),
 	image: text('image'),
@@ -139,6 +130,27 @@ export const users = sqliteTable('users', {
 	website: text('website'),
 	zapService: text('zap_Service'),
 	lastLogin: integer('last_login', { mode: 'timestamp' })
+		.notNull()
+		.default(sql`(unixepoch())`),
+})
+
+// Users meta table
+export const userMeta = sqliteTable('user_meta', {
+	id: text('id')
+		.primaryKey()
+		.$defaultFn(() => createId()),
+	userId: text('user_id').references(() => users.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
+	metaName: text('meta_name')
+		.notNull()
+		.references(() => metaTypes.name, { onDelete: 'cascade', onUpdate: 'cascade' }),
+	key: text('key'),
+	valueText: text('value_text'),
+	valueBoolean: integer('value_boolean', { mode: 'boolean' }),
+	valueNumeric: numeric('value_number'),
+	createdAt: integer('created_at', { mode: 'timestamp' })
+		.notNull()
+		.default(sql`(unixepoch())`),
+	updatedAt: integer('updated_at', { mode: 'timestamp' })
 		.notNull()
 		.default(sql`(unixepoch())`),
 })
@@ -317,7 +329,8 @@ export const orders = sqliteTable('orders', {
 	address: text('address').notNull(), // Can be encrypted
 	zip: text('zip').notNull(), // Can be encrypted
 	city: text('city').notNull(), // Can be encrypted
-	region: text('region').notNull(), // Can be encrypted
+	country: text('country').notNull(), // Can be encrypted
+	region: text('region'), // Can be encrypted
 	contactName: text('contact_name').notNull(), // Can be encrypted
 	contactPhone: text('contact_phone'), // Can be encrypted
 	contactEmail: text('contact_email'), // Can be encrypted

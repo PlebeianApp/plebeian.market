@@ -1,4 +1,4 @@
-export const load = () => {
+export const load = async ({ url }) => {
 	const menuItems = [
 		{
 			title: 'App Settings',

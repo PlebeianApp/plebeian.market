@@ -65,8 +65,6 @@ describe('/users', () => {
 			lud16: 'LUD16 value',
 			name: 'John Doe',
 			nip05: 'fake@nip05value.com',
-			role: 'pleb',
-			trustLevel: 'reasonable',
 			updatedAt: expect.any(String),
 			website: 'https://johndoe.com',
 			zapService: 'Zap Service value',

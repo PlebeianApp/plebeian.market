@@ -1,24 +1,19 @@
 <script lang="ts">
-	import { createQuery } from '@tanstack/svelte-query'
 	import Spinner from '$lib/components/assets/spinner.svelte'
 	import ImgPlaceHolder from '$lib/components/product/imgPlaceHolder.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
 	import Badge from '$lib/components/ui/badge/badge.svelte'
 	import Button from '$lib/components/ui/button/button.svelte'
 	import Input from '$lib/components/ui/input/input.svelte'
-	import { cn, currencyToBtc } from '$lib/utils'
+	import { createProductPriceQuery } from '$lib/fetch/queries'
+	import { cn } from '$lib/utils'
 
 	import type { PageData } from './$types'
 
 	export let data: PageData
 	$: ({ product, seller, products, productCats } = data)
 
-	$: priceQuery = createQuery<number | null>({
-		queryKey: ['products', 'price', product.id],
-		queryFn: async () => {
-			return await currencyToBtc(product.currency, product.price, true)
-		},
-	})
+	$: priceQuery = createProductPriceQuery(product)
 
 	let selectedImage = 0
 </script>
