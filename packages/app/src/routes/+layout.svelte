@@ -9,9 +9,18 @@
 
 	import type { RichCat } from '$lib/server/categories.service'
 	import { QueryClientProvider } from '@tanstack/svelte-query'
+	import { goto } from '$app/navigation'
 	import { queryClient } from '$lib/fetch/client'
 
+	import type { LayoutData } from './$types'
+
+	export let data: LayoutData
+	const { initialSetup } = data
+
 	onMount(async () => {
+		if (initialSetup) {
+			goto('/setup')
+		}
 		if (pwaInfo) {
 			const { registerSW } = await import('virtual:pwa-register')
 			registerSW({
@@ -78,11 +87,15 @@
 	/>
 </svelte:head>
 <QueryClientProvider client={queryClient}>
-	<div class="  min-h-screen flex flex-col">
-		<Header />
-		<section class=" flex-1">
-			<slot />
-		</section>
-		<Footer />
-	</div>
+	{#if initialSetup}
+		<slot />
+	{:else}
+		<div class="min-h-screen flex flex-col">
+			<Header />
+			<section class="flex-1">
+				<slot />
+			</section>
+			<Footer />
+		</div>
+	{/if}
 </QueryClientProvider>
