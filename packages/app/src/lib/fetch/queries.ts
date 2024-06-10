@@ -2,6 +2,7 @@ import type { CatsFilter, ProductsFilter, StallsFilter } from '$lib/schema'
 import type { RichCat } from '$lib/server/categories.service'
 import type { DisplayProduct } from '$lib/server/products.service'
 import type { RichStall } from '$lib/server/stalls.service'
+import type { RichUser } from '$lib/server/users.service'
 import { createQuery } from '@tanstack/svelte-query'
 import { catsFilterSchema, productsFilterSchema, stallsFilterSchema } from '$lib/schema'
 import ndkStore from '$lib/stores/ndk'
@@ -14,7 +15,7 @@ import { createRequest, queryClient } from './client'
 
 declare module './client' {
 	interface Endpoints {
-		[k: `GET /api/v1/users/${string}`]: Operation<string, 'GET', never, never, User, never>
+		[k: `GET /api/v1/users/${string}`]: Operation<string, 'GET', never, never, RichUser | User, never>
 		'GET /api/v1/category': Operation<'/api/v1/category', 'GET', never, never, RichCat[], CatsFilter>
 		'GET /api/v1/products': Operation<'/api/v1/products', 'GET', never, never, DisplayProduct[], ProductsFilter>
 		'GET /api/v1/stalls': Operation<'/api/v1/stalls', 'GET', never, never, RichStall[], StallsFilter>
@@ -41,13 +42,12 @@ export const paymentsQuery = createQuery(
 
 export const activeUserQuery = createQuery(
 	derived(ndkStore, ($ndkStore) => ({
-		queryKey: ['user', !!$ndkStore.activeUser?.pubkey],
+		queryKey: ['users', !!$ndkStore.activeUser?.pubkey],
 		queryFn: async () => {
 			if ($ndkStore.activeUser?.pubkey) {
-				const user = await createRequest(`GET /api/v1/users/${$ndkStore.activeUser.pubkey}`, {
+				const user = (await createRequest(`GET /api/v1/users/${$ndkStore.activeUser.pubkey}`, {
 					auth: true,
-				})
-
+				})) as RichUser
 				return user
 			}
 			return null
@@ -61,14 +61,12 @@ export const createUserByIdQuery = (id: string) =>
 		{
 			queryKey: ['users', id],
 			queryFn: async () => {
-				const user = await createRequest(`GET /api/v1/users/${id}`, {})
-
+				const user = (await createRequest(`GET /api/v1/users/${id}`, {})) as User
 				return user
 			},
 		},
 		queryClient,
 	)
-
 export const createProductPriceQuery = (product: DisplayProduct) =>
 	createQuery<number | null>(
 		{

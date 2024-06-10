@@ -16,10 +16,17 @@ import {
 	PRODUCT_META,
 	PRODUCT_TYPES,
 	USER_TRUST_LEVEL,
+	USER_META,
+	USER_ROLES,
+	AppSettingsMetaName,
+	ProductMetaName,
+	DigitalProductMetaName,
+	UserMetaName,
 } from './constants'
 import { db } from './database'
 import { devInstance, devUser1, devUser2, devUser3, devUser4, devUser5 } from './fixtures'
 import {
+	AppMeta,
 	AppSettings,
 	Auction,
 	Bid,
@@ -38,6 +45,7 @@ import {
 	ShippingZone,
 	Stall,
 	User,
+	UserMeta,
 } from './types'
 import { createId } from './utils'
 
@@ -69,7 +77,6 @@ const main = async () => {
 				createdAt: faker.date.recent(),
 				updatedAt: faker.date.future(),
 				name: faker.person.firstName(),
-				role: user.id == devUser1.pk ? 'admin' : 'pleb',
 				displayName: faker.person.middleName(),
 				about: faker.person.bio(),
 				image: faker.image.avatar(),
@@ -80,9 +87,67 @@ const main = async () => {
 				website: faker.internet.url(),
 				zapService: faker.internet.url(),
 				lastLogin: faker.date.future(),
-				trustLevel: faker.helpers.arrayElement(Object.values(USER_TRUST_LEVEL))
 			}) as User,
 	)
+
+	const metaTypeData = Object.values(META_NAMES).map((metaName) => {
+		let scope: string
+
+		if (Object.values(PRODUCT_META).map((meta) => meta.value).includes(metaName as ProductMetaName['value']) || Object.values(DIGITAL_PRODUCT_META).map((meta) => meta.value).includes(metaName as DigitalProductMetaName['value'])) {
+			scope = 'products'
+		  } else if (Object.values(APP_SETTINGS_META).map((meta) => meta.value).includes(metaName as AppSettingsMetaName['value'])) {
+			scope = 'app_settings'
+		  } else if (Object.values(USER_META).map((meta) => meta.value).includes(metaName as UserMetaName['value'])) {
+			scope = 'users'
+		  } else {
+			scope = 'products'
+		  }
+
+		const metaTypes = [...Object.entries(PRODUCT_META), ...Object.entries(DIGITAL_PRODUCT_META), ...Object.entries(APP_SETTINGS_META),...Object.entries(USER_META),...Object.entries(GENERAL_META)].map(
+			([_, { value, dataType }]) => ({ value, dataType }),
+		)
+		const findMetaType = metaTypes.find((meta) => meta.value === metaName)
+		const dataType = findMetaType?.dataType || 'text'
+
+		const metaType = {
+			name: metaName,
+			description: faker.commerce.productDescription(),
+			scope: scope!!,
+			dataType: dataType,
+		} as MetaType
+
+		return metaType
+	})
+
+	const userMetaData = userIds.flatMap((userId) => {
+	  return metaTypeData.flat(2).filter((metaType) => metaType.scope === 'users').map((metaType) => {
+		const { dataType, name } = metaType
+		let valueText: string | null = null
+		let valueBoolean: boolean | null = null
+		let valueInteger: number | null = null
+		let valueNumeric: number | null = null
+	
+		if (name == USER_META.TRUST_LVL.value) {
+		  valueText = faker.helpers.arrayElement(Object.values(USER_TRUST_LEVEL))
+		} else if (name == USER_META.ROLE.value) {
+		  valueText = faker.helpers.arrayElement(Object.values(USER_ROLES))
+		}
+	
+		const userMeta = {
+		  id: createId(),
+		  userId: userId.id,
+		  metaName: name,
+		  valueText: valueText,
+		  valueBoolean: valueBoolean,
+		  valueInteger: valueInteger,
+		  valueNumeric: valueNumeric,
+		  createdAt: faker.date.recent(),
+		  updatedAt: faker.date.future(),
+		} as UserMeta
+	
+		return userMeta
+	  })
+	})
 
 	const userStalls = userIds.map((user) => {
 		return randomLengthArrayFromTo(4, 8).map(() => {
@@ -226,7 +291,8 @@ const main = async () => {
 					address: faker.location.streetAddress(),
 					zip: faker.location.zipCode(),
 					city: faker.location.city(),
-					region: faker.location.state(),
+					country: faker.location.countryCode(),
+					region: faker.location.county(),
 					contactName: faker.person.firstName(),
 					contactPhone: faker.phone.number(),
 					contactEmail: faker.internet.email(),
@@ -261,7 +327,7 @@ const main = async () => {
 		})
 	})
 
-	const categoryData = randomLengthArrayFromTo(5, 10).map(() => {
+	const categoryData = randomLengthArrayFromTo(7, 17).map(() => {
 		const user = faker.helpers.arrayElement(userIds);
 		const category: Category = {
 		  id: createId(),
@@ -298,34 +364,6 @@ const main = async () => {
 		} as ProductCategory;
 	  }).filter(Boolean);
 	  
-	const metaTypeData = Object.values(META_NAMES).map((metaName) => {
-		let scope: string
-		const isProductMeta = (metaName: string) => metaName in Object.values(PRODUCT_META) || metaName in Object.values(DIGITAL_PRODUCT_META)
-
-		if (isProductMeta(metaName)) {
-			scope = 'products'
-		} else if (metaName in Object.values(APP_SETTINGS_META)) {
-			scope = 'app_settings'
-		} else {
-			scope = 'products'
-		}
-
-		const metaTypes = [...Object.entries(PRODUCT_META), ...Object.entries(DIGITAL_PRODUCT_META), ...Object.entries(APP_SETTINGS_META),...Object.entries(GENERAL_META)].map(
-			([_, { value, dataType }]) => ({ value, dataType }),
-		)
-		const findMetaType = metaTypes.find((meta) => meta.value === metaName)
-		const dataType = findMetaType?.dataType || 'text'
-
-		const metaType = {
-			name: metaName,
-			description: faker.commerce.productDescription(),
-			scope: scope,
-			dataType: dataType,
-		} as MetaType
-
-		return metaType
-	})
-
 	const productMetaData = metaTypeData.flat(2).map((metaType) => {
 		const { dataType, name } = metaType
 		let valueText: string | null = null
@@ -456,6 +494,7 @@ const main = async () => {
 		db.delete(dbSchema.shippingZones),
 		db.delete(dbSchema.paymentDetails),
 		db.delete(dbSchema.events),
+		db.delete(dbSchema.userMeta),
 		db.delete(dbSchema.users),
 	])
 	console.log('Reset done')
@@ -465,6 +504,7 @@ const main = async () => {
 		for (const { table, data } of [
 			{ table: dbSchema.appSettings, data: appSettings},
 			{ table: dbSchema.users, data: fullUsers },
+			{ table: dbSchema.userMeta, data: userMetaData.flat(1) },
 			{ table: dbSchema.stalls, data: userStalls.flat(1) },
 			{ table: dbSchema.auctions, data: auctionsData.flat(2) },
 			{ table: dbSchema.bids, data: bidsData.flat(2) },

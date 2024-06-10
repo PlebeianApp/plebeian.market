@@ -5,9 +5,9 @@
 	import { Input } from '$lib/components/ui/input/index.js'
 	import { Skeleton } from '$lib/components/ui/skeleton/index.js'
 	import { standardDisplayDateFormat } from '$lib/constants'
+	import { createUserByIdQuery } from '$lib/fetch/queries'
 	import { login } from '$lib/ndkLogin'
 	import { type BaseAccount, type NsecAccount } from '$lib/stores/session'
-	import { fetchUserProfile } from '$lib/utils'
 	import { format } from 'date-fns'
 	import { npubEncode } from 'nostr-tools/nip19'
 	import { onMount } from 'svelte'
@@ -35,7 +35,7 @@
 			localStorage.setItem('auto_login', `${checked}`)
 		}
 	}
-
+	$: userQuery = createUserByIdQuery(accointInfo?.hexPubKey)
 	onMount(() => {
 		if (localStorage.getItem('auto_login') == 'true') {
 			checked = true
@@ -57,7 +57,7 @@
 		<section class="p-4 flex flex-col gap-2">
 			<span>Log with your last account</span>
 			<div class=" inline-flex w-full items-center gap-2">
-				{#await fetchUserProfile(accointInfo.hexPubKey)}
+				{#if $userQuery.isLoading}
 					<div class="flex items-center space-x-4">
 						<Skeleton class="h-12 w-12 rounded-full" />
 						<div class="space-y-2">
@@ -65,16 +65,16 @@
 							<Skeleton class="h-4 w-[200px]" />
 						</div>
 					</div>
-				{:then value}
+				{:else if $userQuery?.data}
 					<Avatar>
-						<AvatarImage src={value?.image} alt="pfp" />
-						<AvatarFallback>{value?.name ?? value?.displayName ?? ''}</AvatarFallback>
+						<AvatarImage src={$userQuery.data?.image} alt="pfp" />
+						<AvatarFallback>{$userQuery.data?.name ?? $userQuery.data?.displayName ?? ''}</AvatarFallback>
 					</Avatar>
 					<section class="flex flex-col">
-						<span class="font-bold">{value?.name ?? value?.displayName ?? ''}</span>
+						<span class="font-bold">{$userQuery.data?.name ?? $userQuery.data?.displayName ?? ''}</span>
 						<span>{npubEncode(accointInfo.hexPubKey).substring(0, 16)}...</span>
 					</section>
-				{/await}
+				{/if}
 			</div>
 			<small>Last logged: {format(accointInfo.lastLogged, standardDisplayDateFormat)}</small>
 

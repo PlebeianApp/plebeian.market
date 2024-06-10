@@ -1,7 +1,11 @@
 <script lang="ts">
 	import type { NDKUserProfile } from '@nostr-dev-kit/ndk'
+	import type { RichUser } from '$lib/server/users.service'
 	import type { Selected } from 'bits-ui'
 	import { page } from '$app/stores'
+	import AvatarFallback from '$lib/components/ui/avatar/avatar-fallback.svelte'
+	import AvatarImage from '$lib/components/ui/avatar/avatar-image.svelte'
+	import Avatar from '$lib/components/ui/avatar/avatar.svelte'
 	import { Button } from '$lib/components/ui/button/index.js'
 	import { Input } from '$lib/components/ui/input/index.js'
 	import { Label } from '$lib/components/ui/label/index.js'
@@ -13,12 +17,14 @@
 	import { nav_back } from '$lib/utils'
 	import { get } from 'svelte/store'
 
+	import type { UserTrustLevel } from '@plebeian/database'
+
 	import type { PageData } from './$types'
 
 	export let data: PageData
 	const { userTrustLevels } = data
 
-	let userTrustLevel: Selected<string> | null = null
+	let userTrustLevel: Selected<string>
 
 	$: isFetched = $activeUserQuery.isFetched
 	$: userData = isFetched
@@ -41,19 +47,20 @@
 			: userTrustLevel
 
 	const handleUserDataSubmit = async () => {
+		userData.trustLevel = userTrustLevel.value as UserTrustLevel
 		const ndkUser = $ndkStore.getUser({
 			hexpubkey: $ndkStore.activeUser?.pubkey,
 		})
-
-		console.log(userData)
 		ndkUser.profile = {
-			// @ts-expect-error todo to fix this
 			...userData,
-			trustLevel: userTrustLevel?.value,
 		} as NDKUserProfile
+		delete ndkUser.profile.role
+		delete ndkUser.profile.trustLevel
+		delete ndkUser.profile.updatedAt
+		delete ndkUser.profile.createdAt
+		delete ndkUser.profile.lastLogin
 
-		await $userDataMutation.mutateAsync(ndkUser.profile)
-		await $activeUserQuery.refetch()
+		await $userDataMutation.mutateAsync(userData as NDKUserProfile)
 		await ndkUser.publish()
 	}
 	const linkDetails = data.menuItems
@@ -74,7 +81,10 @@
 	<div>
 		<div class="grid w-full items-center gap-1.5">
 			<Label for="userImage" class="font-bold">Profile image</Label>
-			<Input bind:value={userData.image} type="image" id="userImage" src={userData.image} />
+			<Avatar class=" w-24 h-auto">
+				<AvatarImage src={userData.image} alt="pfp" />
+				<AvatarFallback>{userData.name ?? userData.displayName ?? ''}</AvatarFallback>
+			</Avatar>
 		</div>
 
 		<div class="grid w-full items-center gap-1.5">

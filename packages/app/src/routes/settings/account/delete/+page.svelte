@@ -8,7 +8,6 @@
 
 	import type { PageData } from './$types'
 
-	let userName = $ndkStore.activeUser?.profile?.name || $ndkStore.activeUser?.profile?.displayName
 	let challengeSolved = false
 
 	export let data: PageData

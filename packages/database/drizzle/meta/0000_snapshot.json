@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "8fce78b7-ebcd-4276-9e9a-5cf31859edcf",
+  "id": "92718c56-f228-4c49-9fbc-174ca82d7a50",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "app_settings": {
@@ -135,8 +135,8 @@
           "notNull": false,
           "autoincrement": false
         },
-        "value_integer": {
-          "name": "value_integer",
+        "value_number": {
+          "name": "value_number",
           "type": "numeric",
           "primaryKey": false,
           "notNull": false,
@@ -835,11 +835,18 @@
           "notNull": true,
           "autoincrement": false
         },
+        "country": {
+          "name": "country",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
         "region": {
           "name": "region",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "contact_name": {
@@ -1208,8 +1215,8 @@
           "notNull": false,
           "autoincrement": false
         },
-        "value_integer": {
-          "name": "value_integer",
+        "value_number": {
+          "name": "value_number",
           "type": "numeric",
           "primaryKey": false,
           "notNull": false,
@@ -1675,6 +1682,107 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
+    "user_meta": {
+      "name": "user_meta",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "meta_name": {
+          "name": "meta_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "key": {
+          "name": "key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "value_text": {
+          "name": "value_text",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "value_boolean": {
+          "name": "value_boolean",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "value_number": {
+          "name": "value_number",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(unixepoch())"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(unixepoch())"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "user_meta_user_id_users_id_fk": {
+          "name": "user_meta_user_id_users_id_fk",
+          "tableFrom": "user_meta",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        },
+        "user_meta_meta_name_meta_types_name_fk": {
+          "name": "user_meta_meta_name_meta_types_name_fk",
+          "tableFrom": "user_meta",
+          "tableTo": "meta_types",
+          "columnsFrom": [
+            "meta_name"
+          ],
+          "columnsTo": [
+            "name"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
     "users": {
       "name": "users",
       "columns": {
@@ -1703,21 +1811,6 @@
         },
         "name": {
           "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "role": {
-          "name": "role",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "'pleb'"
-        },
-        "trust_lvl": {
-          "name": "trust_lvl",
           "type": "text",
           "primaryKey": false,
           "notNull": false,
