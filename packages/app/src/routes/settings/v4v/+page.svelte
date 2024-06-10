@@ -9,7 +9,7 @@
 	import type { PageData } from './$types'
 
 	export let data: PageData
-
+	const { appSettings } = data
 	let v4v = [50]
 	const details = data.menuItems.find((item) => item.value === 'v4v-settings')
 </script>
@@ -29,8 +29,8 @@
 
 	<Alert.Root class="bg-[var(--neo-blue)]">
 		<Alert.Description
-			>Plebeian Market is powered by your generosity. Your contribution is the only thing that enables us to continue creating free and open
-			source solutions 🙏🙇‍♂️
+			>{appSettings.instanceName} is powered by your generosity. Your contribution is the only thing that enables us to continue creating free
+			and open source solutions 🙏🙇‍♂️
 		</Alert.Description>
 	</Alert.Root>
 
