@@ -10,7 +10,6 @@
 	import type { RichCat } from '$lib/server/categories.service'
 	import { QueryClientProvider } from '@tanstack/svelte-query'
 	import { queryClient } from '$lib/fetch/client'
-	import { createUserByIdQuery, createUserExist } from '$lib/fetch/queries'
 
 	onMount(async () => {
 		if (pwaInfo) {

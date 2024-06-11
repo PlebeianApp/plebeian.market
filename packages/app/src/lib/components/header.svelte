@@ -13,7 +13,7 @@
 
 	import type { PageData } from '../../routes/$types'
 
-	const { appSettings } = $page.data as PageData
+	$: ({ appSettings } = $page.data as PageData)
 
 	let showPassPromt: boolean = false
 	let nsecAccInfo: NsecAccount

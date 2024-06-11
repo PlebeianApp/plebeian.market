@@ -11,7 +11,25 @@ import { decode, nsecEncode } from 'nostr-tools/nip19'
 import { decrypt, encrypt } from 'nostr-tools/nip49'
 
 import type { PageData } from '../routes/$types'
-import { createUserExist } from './fetch/queries'
+import { createUserExistQuery } from './fetch/queries'
+
+async function checkUserExist(userId: string): Promise<boolean> {
+	return new Promise((resolve) => {
+		createUserExistQuery(userId).subscribe((exist) => {
+			if (exist.isFetched) {
+				resolve(exist.data ?? false)
+			}
+		})
+	})
+}
+
+async function getAppSettings(): Promise<boolean> {
+	return new Promise((resolve) => {
+		page.subscribe((settings) => {
+			resolve((settings.data as PageData).appSettings.allowRegister)
+		})
+	})
+}
 
 export async function fetchActiveUserData(keyToLocalDb?: string): Promise<NDKUser | null> {
 	if (!ndk.signer) return null
@@ -19,25 +37,20 @@ export async function fetchActiveUserData(keyToLocalDb?: string): Promise<NDKUse
 	const user = await ndk.signer.user()
 	await user.fetchProfile({ cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY })
 	ndkStore.set(ndk)
+
 	if (keyToLocalDb) {
 		await loginLocalDb(user.pubkey, 'NSEC', keyToLocalDb)
 	} else {
 		await loginLocalDb(user.pubkey, 'NIP07')
 	}
-	let userExist: boolean | undefined = undefined
-	let registerAllowed: boolean | undefined = undefined
-	createUserExist(user.pubkey).subscribe((sub) => (sub.data ? (userExist = sub.data) : (userExist = undefined)))
-	page.subscribe((sub) =>
-		(sub.data as PageData).appSettings
-			? (registerAllowed = (sub.data as PageData).appSettings.allowRegister)
-			: (registerAllowed = undefined),
-	)
 
-	if (userExist) {
-		await loginDb(user)
-	} else if (!userExist && registerAllowed) {
+	const [userExists, allowRegister] = await Promise.all([checkUserExist(user.pubkey), getAppSettings()])
+
+	if (userExists || (!userExists && allowRegister)) {
+		console.log('Registering user in db')
 		await loginDb(user)
 	}
+
 	return user
 }
 

@@ -26,7 +26,7 @@ declare module './client' {
 
 export const paymentsQuery = createQuery(
 	derived(ndkStore, ($ndkStore) => ({
-		queryKey: ['paymentDetails', !!$ndkStore.activeUser?.pubkey],
+		queryKey: ['paymentDetails', $ndkStore.activeUser?.pubkey],
 		queryFn: async () => {
 			if ($ndkStore.activeUser?.pubkey) {
 				const user = await createRequest(`GET /api/v1/payments/?userId=${$ndkStore.activeUser.pubkey}`, {
@@ -37,13 +37,14 @@ export const paymentsQuery = createQuery(
 			}
 			return null
 		},
+		enabled: !!$ndkStore.activeUser?.pubkey,
 	})),
 	queryClient,
 )
 
 export const activeUserQuery = createQuery(
 	derived(ndkStore, ($ndkStore) => ({
-		queryKey: ['users', !!$ndkStore.activeUser?.pubkey],
+		queryKey: ['users', $ndkStore.activeUser?.pubkey],
 		queryFn: async () => {
 			if ($ndkStore.activeUser?.pubkey) {
 				const user = (await createRequest(`GET /api/v1/users/${$ndkStore.activeUser.pubkey}`, {
@@ -51,8 +52,10 @@ export const activeUserQuery = createQuery(
 				})) as RichUser
 				return user
 			}
+
 			return null
 		},
+		enabled: !!$ndkStore.activeUser?.pubkey,
 	})),
 	queryClient,
 )
@@ -65,11 +68,12 @@ export const createUserByIdQuery = (id: string) =>
 				const user = (await createRequest(`GET /api/v1/users/${id}`, {})) as User
 				return user
 			},
+			enabled: !!id,
 		},
 		queryClient,
 	)
 
-export const createUserExist = (id: string) =>
+export const createUserExistQuery = (id: string) =>
 	createQuery<boolean>(
 		{
 			queryKey: ['users', id],

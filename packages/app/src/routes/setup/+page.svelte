@@ -58,7 +58,7 @@
 		const result = await response.json()
 
 		if (result) {
-			goto('/')
+			goto('/', { invalidateAll: true })
 		}
 	}
 </script>
