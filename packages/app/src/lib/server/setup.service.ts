@@ -9,6 +9,11 @@ export const isInitialSetup = async (): Promise<boolean> => {
 	return appSettingsRes.isFirstTimeRunning
 }
 
+export const getAppSettings = async () => {
+	const [appSettingsRes] = await db.select().from(appSettings).execute()
+	return appSettingsRes
+}
+
 export const doSetup = async (setupData: NewAppSettings, adminList?: string[]) => {
 	if (!setupData.instancePk) {
 		error(400, 'Invalid request')

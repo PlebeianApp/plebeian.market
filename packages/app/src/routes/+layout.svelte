@@ -15,11 +15,11 @@
 	import type { LayoutData } from './$types'
 
 	export let data: LayoutData
-	const { initialSetup } = data
+	const { appSettings } = data
 
 	onMount(async () => {
-		if (initialSetup) {
-			goto('/setup')
+		if (appSettings.isFirstTimeRunning) {
+			goto('/setup', { invalidateAll: true })
 		}
 		if (pwaInfo) {
 			const { registerSW } = await import('virtual:pwa-register')
@@ -87,7 +87,7 @@
 	/>
 </svelte:head>
 <QueryClientProvider client={queryClient}>
-	{#if initialSetup}
+	{#if appSettings.isFirstTimeRunning}
 		<slot />
 	{:else}
 		<div class="min-h-screen flex flex-col">

@@ -26,7 +26,7 @@
 
 	onMount(async () => {
 		if (!initialSetup) {
-			goto('/')
+			goto('/', { invalidateAll: true })
 		}
 	})
 
