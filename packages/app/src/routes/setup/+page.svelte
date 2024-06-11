@@ -13,8 +13,7 @@
 	import { availabeLogos } from '$lib/constants'
 	import { copyToClipboard } from '$lib/utils'
 	import { generateSecretKey, getPublicKey, nip19 } from 'nostr-tools'
-	import { tick } from 'svelte'
-	import { onMount } from 'svelte'
+	import { onMount, tick } from 'svelte'
 	import { toast } from 'svelte-sonner'
 
 	import type { PageData } from './$types'

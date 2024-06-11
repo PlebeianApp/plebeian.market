@@ -59,10 +59,10 @@ describe.skip(
 			const decodedAdminPk = nip19.decode(npub).data
 			const decodedInstancePk = nip19.decode(instance.npub).data
 
-      await page.fill('input[name="instancePk"]', instance.npub)
-      await page.fill('input[name="ownerPk"]', npub)
-      await page.fill('input[name="instanceName"]', 'Test Instance')
-      await page.fill('input[name="contactEmail"]', 'hello@hello.com')
+			await page.fill('input[name="instancePk"]', instance.npub)
+			await page.fill('input[name="ownerPk"]', npub)
+			await page.fill('input[name="instanceName"]', 'Test Instance')
+			await page.fill('input[name="contactEmail"]', 'hello@hello.com')
 
 			await page.check('button[role="checkbox"][placeholder="allow register"]')
 			await page.click('button[type="submit"]')
@@ -75,11 +75,11 @@ describe.skip(
 			expect(appSettingsRes.isFirstTimeRunning).toBe(false)
 			expect(appSettingsRes.instancePk).toBe(decodedInstancePk)
 
-		expect(appSettingsRes.ownerPk).toBe(decodedAdminPk)
-		expect(appSettingsRes.instanceName).toBe('Test Instance')
-		expect(appSettingsRes.contactEmail).toBe('hello@hello.com')
-		expect(appSettingsRes.defaultCurrency).toBe('BTC')
-		expect(appSettingsRes.allowRegister).toBe(true)
+			expect(appSettingsRes.ownerPk).toBe(decodedAdminPk)
+			expect(appSettingsRes.instanceName).toBe('Test Instance')
+			expect(appSettingsRes.contactEmail).toBe('hello@hello.com')
+			expect(appSettingsRes.defaultCurrency).toBe('BTC')
+			expect(appSettingsRes.allowRegister).toBe(true)
 
 			expect(adminRes.id).toBe(decodedAdminPk)
 		}, 2000)
