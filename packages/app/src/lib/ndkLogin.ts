@@ -13,7 +13,7 @@ import { decrypt, encrypt } from 'nostr-tools/nip49'
 import type { PageData } from '../routes/$types'
 import { createUserExistQuery } from './fetch/queries'
 
-async function checkUserExist(userId: string): Promise<boolean> {
+async function checkIfUserExist(userId: string): Promise<boolean> {
 	return new Promise((resolve) => {
 		createUserExistQuery(userId).subscribe((exist) => {
 			if (exist.isFetched) {
@@ -44,7 +44,7 @@ export async function fetchActiveUserData(keyToLocalDb?: string): Promise<NDKUse
 		await loginLocalDb(user.pubkey, 'NIP07')
 	}
 
-	const [userExists, allowRegister] = await Promise.all([checkUserExist(user.pubkey), getAppSettings()])
+	const [userExists, allowRegister] = await Promise.all([checkIfUserExist(user.pubkey), getAppSettings()])
 
 	if (userExists || (!userExists && allowRegister)) {
 		console.log('Registering user in db')
