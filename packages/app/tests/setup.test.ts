@@ -67,7 +67,6 @@ describe('setup', async () => {
 		await page.fill('input[name="instancePk"]', instance.npub)
 		await page.fill('input[name="ownerPk"]', npub)
 		await page.fill('input[name="instanceName"]', 'Test Instance')
-		await page.fill('input[name="logoUrl"]', 'https://example.com/logo.png')
 		await page.fill('input[name="contactEmail"]', 'hello@hello.com')
 
 		await page.check('button[role="checkbox"][placeholder="allow register"]')
@@ -83,7 +82,6 @@ describe('setup', async () => {
 
 		expect(appSettingsRes.ownerPk).toBe(decodedAdminPk)
 		expect(appSettingsRes.instanceName).toBe('Test Instance')
-		expect(appSettingsRes.logoUrl).toBe('https://example.com/logo.png')
 		expect(appSettingsRes.contactEmail).toBe('hello@hello.com')
 		expect(appSettingsRes.defaultCurrency).toBe('BTC')
 		expect(appSettingsRes.allowRegister).toBe(true)
