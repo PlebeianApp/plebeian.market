@@ -10,6 +10,7 @@
 	import Separator from '$lib/components/ui/separator/separator.svelte'
 	import { copyToClipboard } from '$lib/utils'
 	import { generateSecretKey, getPublicKey, nip19 } from 'nostr-tools'
+	import { onMount } from 'svelte'
 	import { toast } from 'svelte-sonner'
 
 	import type { PageData } from './$types'
@@ -21,7 +22,13 @@
 	let adminsList: string[] = []
 	let inputValue: string = ''
 	export let data: PageData
-	$: ({ currencies } = data)
+	$: ({ currencies, initialSetup } = data)
+
+	onMount(async () => {
+		if (!initialSetup) {
+			goto('/', { invalidateAll: true })
+		}
+	})
 
 	function setGeneratedSk() {
 		const sk = generateSecretKey()
@@ -58,7 +65,7 @@
 		const result = await response.json()
 
 		if (result) {
-			goto('/')
+			location.href = '/'
 		}
 	}
 </script>

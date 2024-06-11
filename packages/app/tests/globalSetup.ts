@@ -1,3 +1,4 @@
+import type { LaunchOptions } from 'playwright'
 import type { PreviewServer } from 'vite'
 import type { GlobalSetupContext } from 'vitest/node'
 import dotenv from 'dotenv'
@@ -23,3 +24,7 @@ export async function setup({ provide }: GlobalSetupContext) {
 		server.httpServer.close()
 	}
 }
+
+export const opts = {
+	headless: true,
+} as LaunchOptions

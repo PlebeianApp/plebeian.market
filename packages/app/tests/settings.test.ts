@@ -2,6 +2,8 @@ import type { Browser, Page } from 'playwright'
 import { chromium } from 'playwright'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
+import { opts } from './globalSetup'
+
 const login = async (page: Page) => {
 	await page.click('#menuButton')
 	await page.click('text=Log in')
@@ -18,7 +20,7 @@ describe(
 		let page: Page
 
 		beforeAll(async () => {
-			browser = await chromium.launch({ headless: true })
+			browser = await chromium.launch(opts)
 			page = await browser.newPage()
 			await page.goto(`http://${process.env.APP_HOST}:${process.env.APP_PORT}/settings`)
 			await page.waitForSelector('text=You must login')
