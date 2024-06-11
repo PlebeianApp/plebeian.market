@@ -14,6 +14,7 @@
 	import { copyToClipboard } from '$lib/utils'
 	import { generateSecretKey, getPublicKey, nip19 } from 'nostr-tools'
 	import { tick } from 'svelte'
+	import { onMount } from 'svelte'
 	import { toast } from 'svelte-sonner'
 
 	import type { PageData } from './$types'
@@ -27,8 +28,15 @@
 
 	let logoUrl: string = ''
 	export let data: PageData
-	$: ({ currencies } = data)
 	let open = false
+
+	$: ({ currencies, initialSetup } = data)
+
+	onMount(async () => {
+		if (!initialSetup) {
+			goto('/', { invalidateAll: true })
+		}
+	})
 
 	function setGeneratedSk() {
 		const sk = generateSecretKey()

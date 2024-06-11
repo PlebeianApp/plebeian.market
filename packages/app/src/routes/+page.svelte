@@ -11,15 +11,8 @@
 	export let data: PageData
 
 	$: ({
-		initialSetup,
 		homeProducts: { featured, products },
 	} = data)
-
-	onMount(() => {
-		if (initialSetup) {
-			goto('/setup')
-		}
-	})
 </script>
 
 <div class="flex min-h-screen w-full flex-col bg-muted/40">
