@@ -11,13 +11,13 @@ import { decode, nsecEncode } from 'nostr-tools/nip19'
 import { decrypt, encrypt } from 'nostr-tools/nip49'
 
 import type { PageData } from '../routes/$types'
-import { createUserExistQuery } from './fetch/queries'
+import { createUserExistsQuery } from './fetch/queries'
 
-async function checkIfUserExist(userId: string): Promise<boolean> {
+async function checkIfUserExists(userId: string): Promise<boolean> {
 	return new Promise((resolve) => {
-		createUserExistQuery(userId).subscribe((exist) => {
-			if (exist.isFetched) {
-				resolve(exist.data ?? false)
+		createUserExistsQuery(userId).subscribe((exists) => {
+			if (exists.isFetched) {
+				resolve(exists.data ?? false)
 			}
 		})
 	})
@@ -44,7 +44,7 @@ export async function fetchActiveUserData(keyToLocalDb?: string): Promise<NDKUse
 		await loginLocalDb(user.pubkey, 'NIP07')
 	}
 
-	const [userExists, allowRegister] = await Promise.all([checkIfUserExist(user.pubkey), getAppSettings()])
+	const [userExists, allowRegister] = await Promise.all([checkIfUserExists(user.pubkey), getAppSettings()])
 
 	if (userExists || (!userExists && allowRegister)) {
 		console.log('Registering user in db')
@@ -110,8 +110,8 @@ export async function logout() {
 
 export async function loginLocalDb(userPk: string, loginMethod: BaseAccount['type'], cSk?: string): Promise<boolean> {
 	try {
-		const pkExist = await getAccount(userPk)
-		if (!pkExist) {
+		const pkExists = await getAccount(userPk)
+		if (!pkExists) {
 			if (loginMethod == 'NIP07') {
 				await addAccount({
 					hexPubKey: userPk,

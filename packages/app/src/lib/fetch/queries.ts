@@ -16,7 +16,7 @@ import { createRequest, queryClient } from './client'
 declare module './client' {
 	interface Endpoints {
 		[k: `GET /api/v1/users/${string}`]: Operation<string, 'GET', never, never, RichUser | User, never>
-		[k: `GET /api/v1/users/${string}?exist`]: Operation<string, 'GET', never, never, boolean, never>
+		[k: `GET /api/v1/users/${string}?exists`]: Operation<string, 'GET', never, never, boolean, never>
 		'GET /api/v1/category': Operation<'/api/v1/category', 'GET', never, never, RichCat[], CatsFilter>
 		'GET /api/v1/products': Operation<'/api/v1/products', 'GET', never, never, DisplayProduct[], ProductsFilter>
 		'GET /api/v1/stalls': Operation<'/api/v1/stalls', 'GET', never, never, RichStall[], StallsFilter>
@@ -73,12 +73,12 @@ export const createUserByIdQuery = (id: string) =>
 		queryClient,
 	)
 
-export const createUserExistQuery = (id: string) =>
+export const createUserExistsQuery = (id: string) =>
 	createQuery<boolean>(
 		{
 			queryKey: ['users', id],
 			queryFn: async () => {
-				const user = await createRequest(`GET /api/v1/users/${id}?exist`, {})
+				const user = await createRequest(`GET /api/v1/users/${id}?exists`, {})
 				return user
 			},
 		},

@@ -227,7 +227,7 @@ export const deleteUser = async (userId: string): Promise<boolean> => {
 	error(500, 'Failed to delete user')
 }
 
-export const userExist = async (userId: string): Promise<boolean> => {
+export const userExists = async (userId: string): Promise<boolean> => {
 	const result = await db
 		.select({ id: sql`1` })
 		.from(users)

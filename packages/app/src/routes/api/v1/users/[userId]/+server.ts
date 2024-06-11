@@ -1,20 +1,20 @@
 import { error, json } from '@sveltejs/kit'
 import { authorize } from '$lib/auth'
 import { usersFilterSchema } from '$lib/schema'
-import { deleteUser, getRichUsers, getUserById, updateUser, userExist } from '$lib/server/users.service'
+import { deleteUser, getRichUsers, getUserById, updateUser, userExists } from '$lib/server/users.service'
 
 import type { RequestHandler } from './$types'
 
 export const GET: RequestHandler = async ({ params, request, url: { searchParams } }) => {
 	const { userId } = params
-	console.log(params, 'params', searchParams.has('exist'))
+	console.log(params, 'params', searchParams.has('exists'))
 	try {
 		await authorize(request, userId, 'GET')
 		const [userRes] = await getRichUsers(usersFilterSchema.parse({ userId }))
 		return json(userRes)
 	} catch (e) {
 		if (e.status === 401) {
-			if (!searchParams.has('exist')) {
+			if (!searchParams.has('exists')) {
 				const user = await getUserById(userId)
 				const userUnAuthResponse = {
 					id: user.id,
@@ -32,7 +32,7 @@ export const GET: RequestHandler = async ({ params, request, url: { searchParams
 				}
 				return json(userUnAuthResponse)
 			} else {
-				return json(await userExist(userId))
+				return json(await userExists(userId))
 			}
 		}
 		throw e
