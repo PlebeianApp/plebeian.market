@@ -8,10 +8,8 @@ export async function POST({ request }) {
 	if (bodyRes.adminsList) {
 		bodyRes.adminsList = bodyRes.adminsList.toString().split(',')
 	}
-	bodyRes.allowRegister = Boolean(bodyRes.allowRegister)
 
 	const parsedSetupData = initialSetupDataSchema.safeParse(bodyRes)
-
 	if (!parsedSetupData.success) {
 		error(400, parsedSetupData.error)
 	}

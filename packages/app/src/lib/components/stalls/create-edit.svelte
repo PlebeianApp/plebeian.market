@@ -2,6 +2,7 @@
 	import type { RichShippingInfo } from '$lib/server/shipping.service'
 	import type { RichStall } from '$lib/server/stalls.service'
 	import { NDKEvent } from '@nostr-dev-kit/ndk'
+	import { page } from '$app/stores'
 	import { Button } from '$lib/components/ui/button/index.js'
 	import * as Command from '$lib/components/ui/command/index.js'
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js'
@@ -17,14 +18,17 @@
 	import { COUNTRIES_ISO, CURRENCIES } from '@plebeian/database/constants'
 	import { createId } from '@plebeian/database/utils'
 
+	import type { PageData } from '../../../routes/$types'
 	import { stallEventSchema } from '../../../schema/nostr-events'
+
+	const { appSettings } = $page.data as PageData
 
 	export let stall: RichStall | null = null
 
 	type Currency = (typeof CURRENCIES)[number]
 	type Shipping = (typeof stallEventSchema._type)['shipping'][0]
 
-	let currency: Currency = (stall?.currency as Currency) ?? 'USD'
+	let currency: Currency = (stall?.currency as Currency) ?? appSettings.defaultCurrency ?? 'BTC'
 
 	class ShippingMethod implements Shipping {
 		id: string

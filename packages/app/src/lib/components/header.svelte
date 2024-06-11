@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { NsecAccount } from '$lib/stores/session'
+	import { page } from '$app/stores'
 	import Auth from '$lib/components/auth.svelte'
 	import PassPromt from '$lib/components/passPromt.svelte'
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar'
@@ -9,6 +10,10 @@
 	import ndkStore from '$lib/stores/ndk'
 	import { getAccount } from '$lib/stores/session'
 	import { onMount } from 'svelte'
+
+	import type { PageData } from '../../routes/$types'
+
+	$: ({ appSettings } = $page.data as PageData)
 
 	let showPassPromt: boolean = false
 	let nsecAccInfo: NsecAccount
@@ -33,7 +38,10 @@
 <header class="sticky top-0 z-30 bg-black px-4 py-4 text-white lg:px-12">
 	<div class="container flex h-full w-full items-center justify-between">
 		<section class=" inline-flex items-center">
-			<a href="/"><img src="/logo.svg" alt="logo" class="w-16 px-2" /></a>
+			<div class="flex items-center">
+				<a href="/"><img src={appSettings.logoUrl} alt="logo" class="w-16 px-2" /></a>
+				<a class="font-semibold text-2xl" href="/stalls/">{appSettings.instanceName}</a>
+			</div>
 			<div class="hidden lg:flex mx-8 gap-8">
 				<a class="hover:underline font-semibold" href="/stalls/">Stall Browser</a>
 				<!-- <a class="hover:underline font-semibold" href="/cat/">Category Browser</a> -->

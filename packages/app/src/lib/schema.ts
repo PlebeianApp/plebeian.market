@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+import { validUrls } from './constants'
+
 export const generalFilterSchema = z.object({
 	pageSize: z.coerce.number().min(1).default(10),
 	page: z.coerce.number().min(1).default(1),
@@ -52,7 +54,7 @@ export const initialSetupDataSchema = z.object({
 	ownerPk: z.string().startsWith('npub').optional(),
 	adminsList: z.array(z.string().startsWith('npub')).optional(),
 	instanceName: z.string(),
-	logoUrl: z.string().url().optional(),
+	logoUrl: z.union([z.string().url(), z.enum(validUrls)]).optional(),
 	contactEmail: z.string().email().optional(),
 	defaultCurrency: z.string(),
 	allowRegister: z.coerce.boolean(),

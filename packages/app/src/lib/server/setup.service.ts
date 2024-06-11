@@ -28,6 +28,7 @@ export const doSetup = async (setupData: NewAppSettings, adminList?: string[]) =
 		instancePk: decodedInstancePk,
 		defaultCurrency: setupData.defaultCurrency,
 		ownerPk: decodedOwnerPk,
+		allowRegister: JSON.parse(setupData.allowRegister as unknown as string),
 	})
 
 	const adminsToInsert = [

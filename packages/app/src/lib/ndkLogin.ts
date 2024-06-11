@@ -1,6 +1,7 @@
 import type { NDKUser } from '@nostr-dev-kit/ndk'
 import type { BaseAccount } from '$lib/stores/session'
 import { NDKNip07Signer, NDKPrivateKeySigner, NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk'
+import { page } from '$app/stores'
 import { GETUserFromId, POSTUser, PUTUser } from '$lib/apiUtils'
 import { HEX_KEYS_REGEX } from '$lib/constants'
 import ndkStore, { ndk } from '$lib/stores/ndk'
@@ -9,18 +10,47 @@ import { bytesToHex, hexToBytes } from '$lib/utils'
 import { decode, nsecEncode } from 'nostr-tools/nip19'
 import { decrypt, encrypt } from 'nostr-tools/nip49'
 
+import type { PageData } from '../routes/$types'
+import { createUserExistsQuery } from './fetch/queries'
+
+async function checkIfUserExists(userId: string): Promise<boolean> {
+	return new Promise((resolve) => {
+		createUserExistsQuery(userId).subscribe((exists) => {
+			if (exists.isFetched) {
+				resolve(exists.data ?? false)
+			}
+		})
+	})
+}
+
+async function getAppSettings(): Promise<boolean> {
+	return new Promise((resolve) => {
+		page.subscribe((settings) => {
+			resolve((settings.data as PageData).appSettings.allowRegister)
+		})
+	})
+}
+
 export async function fetchActiveUserData(keyToLocalDb?: string): Promise<NDKUser | null> {
 	if (!ndk.signer) return null
 	console.log('Fetching profile')
 	const user = await ndk.signer.user()
 	await user.fetchProfile({ cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY })
 	ndkStore.set(ndk)
+
 	if (keyToLocalDb) {
 		await loginLocalDb(user.pubkey, 'NSEC', keyToLocalDb)
 	} else {
 		await loginLocalDb(user.pubkey, 'NIP07')
 	}
-	await loginDb(user)
+
+	const [userExists, allowRegister] = await Promise.all([checkIfUserExists(user.pubkey), getAppSettings()])
+
+	if (userExists || (!userExists && allowRegister)) {
+		console.log('Registering user in db')
+		await loginDb(user)
+	}
+
 	return user
 }
 
@@ -80,8 +110,8 @@ export async function logout() {
 
 export async function loginLocalDb(userPk: string, loginMethod: BaseAccount['type'], cSk?: string): Promise<boolean> {
 	try {
-		const pkExist = await getAccount(userPk)
-		if (!pkExist) {
+		const pkExists = await getAccount(userPk)
+		if (!pkExists) {
 			if (loginMethod == 'NIP07') {
 				await addAccount({
 					hexPubKey: userPk,

@@ -4,13 +4,16 @@
 	import { goto } from '$app/navigation'
 	import Button from '$lib/components/ui/button/button.svelte'
 	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte'
+	import * as Command from '$lib/components/ui/command/index.js'
 	import { Input } from '$lib/components/ui/input'
 	import { Label } from '$lib/components/ui/label'
+	import * as Popover from '$lib/components/ui/popover/index.js'
 	import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '$lib/components/ui/select'
 	import Separator from '$lib/components/ui/separator/separator.svelte'
+	import { availabeLogos } from '$lib/constants'
 	import { copyToClipboard } from '$lib/utils'
 	import { generateSecretKey, getPublicKey, nip19 } from 'nostr-tools'
-	import { onMount } from 'svelte'
+	import { onMount, tick } from 'svelte'
 	import { toast } from 'svelte-sonner'
 
 	import type { PageData } from './$types'
@@ -21,7 +24,11 @@
 	let newInstanceNpub = ''
 	let adminsList: string[] = []
 	let inputValue: string = ''
+
+	let logoUrl: string = ''
 	export let data: PageData
+	let open = false
+
 	$: ({ currencies, initialSetup } = data)
 
 	onMount(async () => {
@@ -43,7 +50,9 @@
 		const formObject = Object.fromEntries(formData.entries())
 		formObject.allowRegister = checked.toString()
 		formObject.defaultCurrency = selectedCurrency.value
+		formObject.logoUrl = logoUrl
 		const filteredFormObject = Object.fromEntries(Object.entries(formObject).filter(([_, value]) => value !== ''))
+		console.log(filteredFormObject)
 		const response = await fetch('/setup', {
 			method: 'POST',
 			body: JSON.stringify(filteredFormObject),
@@ -65,8 +74,14 @@
 		const result = await response.json()
 
 		if (result) {
-			location.href = '/'
+			goto('/', { invalidateAll: true })
 		}
+	}
+	function closeAndFocusTrigger(triggerId: string) {
+		open = false
+		tick().then(() => {
+			document.getElementById(triggerId)?.focus()
+		})
 	}
 </script>
 
@@ -110,18 +125,67 @@
 
 						<Label class="truncate font-bold">Owner npub</Label>
 						<Input class=" border-black border-2" name="ownerPk" placeholder="owner npub" type="text" />
-						<div class="flex flex-row gap-2">
-							<div class=" flex-grow">
-								<Label class="truncate font-bold">Instance name</Label>
-								<Input required class="border-black border-2" name="instanceName" placeholder="instance name" type="text" />
-							</div>
-
-							<div class=" flex-grow">
-								<Label class="truncate font-bold">Logo url</Label>
-								<Input class="border-black border-2" name="logoUrl" placeholder="logo url" type="url" />
-							</div>
+						<div class=" flex-grow">
+							<Label class="truncate font-bold">Instance name</Label>
+							<Input required class="border-black border-2" name="instanceName" placeholder="instance name" type="text" />
 						</div>
 
+						<div class=" flex flex-col gap-2">
+							<div>
+								<Label class="truncate font-bold">Logo url</Label>
+								<Popover.Root bind:open let:ids>
+									<Popover.Trigger asChild let:builder>
+										<Button
+											builders={[builder]}
+											variant="outline"
+											role="combobox"
+											aria-expanded={open}
+											class="w-full justify-between border-black border-2"
+										>
+											{#if logoUrl}
+												{availabeLogos.find((logo) => logo.value === logoUrl)?.label || logoUrl}
+											{:else}
+												<span class=" opacity-50">Select logo</span>
+											{/if}
+										</Button>
+									</Popover.Trigger>
+									<Popover.Content class=" p-0">
+										<Command.Root>
+											<Command.Input placeholder="Select logo or introduce image url..." bind:value={logoUrl} />
+											<Command.Empty>No framework found.</Command.Empty>
+											<Command.Group>
+												{#each availabeLogos as logo}
+													<Command.Item
+														value={logo.value}
+														onSelect={(currentValue) => {
+															logoUrl = currentValue
+															closeAndFocusTrigger(ids.trigger)
+														}}
+													>
+														+
+														{logo.label}
+													</Command.Item>
+												{/each}
+											</Command.Group>
+										</Command.Root>
+									</Popover.Content>
+								</Popover.Root>
+							</div>
+							<div class="self-center">
+								{#if logoUrl}
+									<img
+										class=" max-w-28"
+										src={logoUrl}
+										alt="logo preview"
+										on:error={(e) => {
+											if (e.target instanceof HTMLImageElement) {
+												e.target.src = availabeLogos[0].value
+											}
+										}}
+									/>
+								{/if}
+							</div>
+						</div>
 						<Label class="truncate font-bold">Contact email</Label>
 						<Input class="border-black border-2" name="contactEmail" placeholder="contact email" type="email" />
 						<Separator class=" my-2" />

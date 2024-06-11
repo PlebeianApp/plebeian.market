@@ -128,8 +128,7 @@
 			<Dialog.Title>Save your account key</Dialog.Title>
 			<Dialog.Description class="text-black">
 				Here is your newly generated account key. It allows you to purchase anonymously, and is stored in your browser on this device only. <span
-					class="font-bold"
-					>Be sure to save it, or you’ll lose access to order history and won’t be able to communicate on Plebeian Market.</span
+					class="font-bold">Be sure to save it, or you’ll lose access to your account</span
 				>
 			</Dialog.Description>
 		</Dialog.Header>

@@ -16,6 +16,7 @@ import { createRequest, queryClient } from './client'
 declare module './client' {
 	interface Endpoints {
 		[k: `GET /api/v1/users/${string}`]: Operation<string, 'GET', never, never, RichUser | User, never>
+		[k: `GET /api/v1/users/${string}?exists`]: Operation<string, 'GET', never, never, boolean, never>
 		'GET /api/v1/category': Operation<'/api/v1/category', 'GET', never, never, RichCat[], CatsFilter>
 		'GET /api/v1/products': Operation<'/api/v1/products', 'GET', never, never, DisplayProduct[], ProductsFilter>
 		'GET /api/v1/stalls': Operation<'/api/v1/stalls', 'GET', never, never, RichStall[], StallsFilter>
@@ -25,7 +26,7 @@ declare module './client' {
 
 export const paymentsQuery = createQuery(
 	derived(ndkStore, ($ndkStore) => ({
-		queryKey: ['paymentDetails', !!$ndkStore.activeUser?.pubkey],
+		queryKey: ['paymentDetails', $ndkStore.activeUser?.pubkey],
 		queryFn: async () => {
 			if ($ndkStore.activeUser?.pubkey) {
 				const user = await createRequest(`GET /api/v1/payments/?userId=${$ndkStore.activeUser.pubkey}`, {
@@ -36,13 +37,14 @@ export const paymentsQuery = createQuery(
 			}
 			return null
 		},
+		enabled: !!$ndkStore.activeUser?.pubkey,
 	})),
 	queryClient,
 )
 
 export const activeUserQuery = createQuery(
 	derived(ndkStore, ($ndkStore) => ({
-		queryKey: ['users', !!$ndkStore.activeUser?.pubkey],
+		queryKey: ['users', $ndkStore.activeUser?.pubkey],
 		queryFn: async () => {
 			if ($ndkStore.activeUser?.pubkey) {
 				const user = (await createRequest(`GET /api/v1/users/${$ndkStore.activeUser.pubkey}`, {
@@ -50,8 +52,10 @@ export const activeUserQuery = createQuery(
 				})) as RichUser
 				return user
 			}
+
 			return null
 		},
+		enabled: !!$ndkStore.activeUser?.pubkey,
 	})),
 	queryClient,
 )
@@ -64,9 +68,23 @@ export const createUserByIdQuery = (id: string) =>
 				const user = (await createRequest(`GET /api/v1/users/${id}`, {})) as User
 				return user
 			},
+			enabled: !!id,
 		},
 		queryClient,
 	)
+
+export const createUserExistsQuery = (id: string) =>
+	createQuery<boolean>(
+		{
+			queryKey: ['users', id],
+			queryFn: async () => {
+				const user = await createRequest(`GET /api/v1/users/${id}?exists`, {})
+				return user
+			},
+		},
+		queryClient,
+	)
+
 export const createProductPriceQuery = (product: DisplayProduct) =>
 	createQuery<number | null>(
 		{

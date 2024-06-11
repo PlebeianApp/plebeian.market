@@ -4,7 +4,7 @@ import { error } from '@sveltejs/kit'
 import { usersFilterSchema } from '$lib/schema'
 
 import type { NewUser, User, UserMeta, UserRoles, UserTrustLevel } from '@plebeian/database'
-import { and, db, eq, products, USER_META, userMeta, users } from '@plebeian/database'
+import { and, db, eq, products, sql, USER_META, userMeta, users } from '@plebeian/database'
 
 import { userEventSchema } from '../../schema/nostr-events'
 
@@ -225,4 +225,12 @@ export const deleteUser = async (userId: string): Promise<boolean> => {
 	}
 
 	error(500, 'Failed to delete user')
+}
+
+export const userExists = async (userId: string): Promise<boolean> => {
+	const result = await db
+		.select({ id: sql`1` })
+		.from(users)
+		.where(eq(users.id, userId))
+	return result.length > 0
 }

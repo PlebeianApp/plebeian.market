@@ -1,34 +1,39 @@
 import { error, json } from '@sveltejs/kit'
 import { authorize } from '$lib/auth'
 import { usersFilterSchema } from '$lib/schema'
-import { deleteUser, getRichUsers, getUserById, updateUser } from '$lib/server/users.service'
+import { deleteUser, getRichUsers, getUserById, updateUser, userExists } from '$lib/server/users.service'
 
 import type { RequestHandler } from './$types'
 
-export const GET: RequestHandler = async ({ params, request }) => {
+export const GET: RequestHandler = async ({ params, request, url: { searchParams } }) => {
 	const { userId } = params
+	console.log(params, 'params', searchParams.has('exists'))
 	try {
 		await authorize(request, userId, 'GET')
 		const [userRes] = await getRichUsers(usersFilterSchema.parse({ userId }))
 		return json(userRes)
 	} catch (e) {
 		if (e.status === 401) {
-			const user = await getUserById(userId)
-			const userUnAuthResponse = {
-				id: user.id,
-				created_at: user.createdAt.getTime() / 1000,
-				name: user.name,
-				displayName: user.displayName,
-				about: user.about,
-				image: user.image,
-				banner: user.banner,
-				nip05: user.nip05,
-				lud06: user.lud06,
-				lud16: user.lud16,
-				zapService: user.zapService,
-				website: user.website,
+			if (!searchParams.has('exists')) {
+				const user = await getUserById(userId)
+				const userUnAuthResponse = {
+					id: user.id,
+					created_at: user.createdAt.getTime() / 1000,
+					name: user.name,
+					displayName: user.displayName,
+					about: user.about,
+					image: user.image,
+					banner: user.banner,
+					nip05: user.nip05,
+					lud06: user.lud06,
+					lud16: user.lud16,
+					zapService: user.zapService,
+					website: user.website,
+				}
+				return json(userUnAuthResponse)
+			} else {
+				return json(await userExists(userId))
 			}
-			return json(userUnAuthResponse)
 		}
 		throw e
 	}
