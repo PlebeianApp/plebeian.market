@@ -1,27 +1,32 @@
 import type { PaymentDetail } from '@plebeian/database'
-import { db, eq, paymentDetails } from '@plebeian/database'
+import { and, db, eq, paymentDetails } from '@plebeian/database'
 
 export type RichPaymentDetail = PaymentDetail & {
 	stallName: string
 }
 
 const stallHasDefaultPaymentDetail = async (stallId: string): Promise<string | null> => {
-	const paymentDetailsByStall = await db.query.paymentDetails.findMany({
-		where: eq(paymentDetails.stallId, stallId),
+	const [paymentDetailsByStall] = await db.query.paymentDetails.findMany({
+		where: and(eq(paymentDetails.stallId, stallId), eq(paymentDetails.isDefault, true)),
 	})
-	return paymentDetailsByStall.find((pd) => pd.isDefault)?.id || null
+	return paymentDetailsByStall.id || null
 }
 
 const unsetDefaultsForStall = async (stallId: string): Promise<void> => {
 	const paymentDetailsByStall = await db.query.paymentDetails.findMany({
 		where: eq(paymentDetails.stallId, stallId),
 	})
+
 	await Promise.all(
-		paymentDetailsByStall.map((pd) => db.update(paymentDetails).set({ isDefault: false }).where(eq(paymentDetails.id, pd.id))),
+		paymentDetailsByStall.map((pd) =>
+			db
+				.update(paymentDetails)
+				.set({ isDefault: false })
+				.where(and(eq(paymentDetails.id, pd.id), eq(paymentDetails.isDefault, true))),
+		),
 	)
 }
 
-// Enrichment function to add stall name to payment detail
 const enrichWithStallName = async (detail: PaymentDetail): Promise<RichPaymentDetail> => {
 	const stall = await db.query.stalls.findFirst({
 		where: (stalls) => eq(stalls.id, detail.stallId),
