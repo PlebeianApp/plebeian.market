@@ -41,7 +41,7 @@ export async function createRequest<K extends keyof Endpoints, RequestOperation 
 		headers?: RequestOperation['headers']
 		auth?: boolean
 		ignoreResponseError?: boolean
-			},
+	},
 ) {
 	const [method, url] = endpoint.split(' ') as [RequestOperation['method'], RequestOperation['url']]
 	const headers = new Headers(options.headers)
@@ -57,7 +57,7 @@ export async function createRequest<K extends keyof Endpoints, RequestOperation 
 		headers,
 		body: JSON.stringify(options.body),
 		baseURL: window.location.origin,
-		ignoreResponseError: options.ignoreResponseError 
+		ignoreResponseError: options.ignoreResponseError,
 	})
 }
 

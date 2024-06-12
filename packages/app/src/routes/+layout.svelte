@@ -11,10 +11,10 @@
 	import { QueryClientProvider } from '@tanstack/svelte-query'
 	import { goto } from '$app/navigation'
 	import { queryClient } from '$lib/fetch/client'
+	import { createCategoriesByFilterQuery } from '$lib/fetch/queries'
+	import { get } from 'svelte/store'
 
 	import type { LayoutData } from './$types'
-	import { get } from 'svelte/store'
-	import { createCategoriesByFilterQuery } from '$lib/fetch/queries'
 
 	export let data: LayoutData
 	$: ({ appSettings } = data)
@@ -44,19 +44,17 @@
 
 	$: webManifestLink = pwaInfo ? pwaInfo.webManifest.linkTag : ''
 
-	onMount(async () => {
-		queryClient.setQueryDefaults(['categories'], {
-			queryFn: async () => {
-				const query = get(createCategoriesByFilterQuery({pageSize: 30}))
-				const { data: categories } = await query.refetch()
+	queryClient.setQueryDefaults(['categories'], {
+		queryFn: async () => {
+			const query = get(createCategoriesByFilterQuery({ pageSize: 30 }))
+			const { data: categories } = await query.refetch()
 
-				return categories
-			},
-		})
+			return categories
+		},
+	})
 
-		queryClient.prefetchQuery<RichCat[]>({
-			queryKey: ['categories'],
-		})
+	queryClient.prefetchQuery<RichCat[]>({
+		queryKey: ['categories'],
 	})
 </script>
 

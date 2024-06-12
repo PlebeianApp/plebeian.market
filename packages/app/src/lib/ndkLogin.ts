@@ -8,11 +8,16 @@ import { addAccount, getAccount, updateAccount } from '$lib/stores/session'
 import { bytesToHex, hexToBytes } from '$lib/utils'
 import { decode, nsecEncode } from 'nostr-tools/nip19'
 import { decrypt, encrypt } from 'nostr-tools/nip49'
+import { FetchError } from 'ofetch'
 
 import type { PageData } from '../routes/$types'
-import { createUserExistsQuery } from './fetch/queries'
+import { userEventSchema } from '../schema/nostr-events'
 import { createRequest } from './fetch/client'
-import { FetchError } from 'ofetch'
+import { createUserExistsQuery } from './fetch/queries'
+
+function unNullify<T extends object>(obj: T): T {
+	return Object.fromEntries(Object.entries(obj).filter(([_, v]) => v != null)) as unknown as T
+}
 
 async function checkIfUserExists(userId: string): Promise<boolean> {
 	return new Promise((resolve) => {
@@ -148,14 +153,14 @@ export async function loginDb(user: NDKUser) {
 			auth: true,
 			body: user.profile,
 		})
-		
 	} catch (e) {
 		if (e instanceof FetchError) {
 			if (e.status === 404) {
 				console.log('creating user')
+				const body = userEventSchema.parse(unNullify({ id: user.pubkey, ...user.profile }))
 				await createRequest('POST /api/v1/users', {
 					auth: true,
-					body:  { id: user.pubkey, ...user.profile },
+					body,
 				})
 			}
 		}
