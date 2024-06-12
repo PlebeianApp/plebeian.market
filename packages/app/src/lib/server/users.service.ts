@@ -126,7 +126,10 @@ export const getUserForProduct = async (productId: string): Promise<User> => {
 
 export const createUser = async (user: object, role: UserRoles = 'pleb', trustLevel: UserTrustLevel = 'reasonable'): Promise<User> => {
 	const parsedUserMeta = userEventSchema.safeParse(user)
-	if (!parsedUserMeta.success) throw Error(JSON.stringify(parsedUserMeta.error))
+
+	if (!parsedUserMeta.success) {
+		throw Error(JSON.stringify(parsedUserMeta.error))
+	}
 
 	const userMetaData = parsedUserMeta.data
 

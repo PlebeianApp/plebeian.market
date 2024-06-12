@@ -20,6 +20,7 @@
 	import type { UserTrustLevel } from '@plebeian/database'
 
 	import type { PageData } from './$types'
+	import { userEventSchema } from '../../../../schema/nostr-events'
 
 	export let data: PageData
 	const { userTrustLevels } = data
@@ -27,6 +28,7 @@
 	let userTrustLevel: Selected<string>
 
 	$: isFetched = $activeUserQuery.isFetched
+	// FIXME right now fields are not editable, just trust level
 	$: userData = isFetched
 		? { ...$activeUserQuery.data }
 		: {
@@ -51,16 +53,8 @@
 		const ndkUser = $ndkStore.getUser({
 			hexpubkey: $ndkStore.activeUser?.pubkey,
 		})
-		ndkUser.profile = {
-			...userData,
-		} as NDKUserProfile
-		delete ndkUser.profile.role
-		delete ndkUser.profile.trustLevel
-		delete ndkUser.profile.updatedAt
-		delete ndkUser.profile.createdAt
-		delete ndkUser.profile.lastLogin
-		delete ndkUser.profile.id
-
+		ndkUser.profile = userEventSchema.strip().safeParse(userData).data as NDKUserProfile
+		console.log(ndkUser.profile, 'popopo')
 		await $userDataMutation.mutateAsync(userData as NDKUserProfile)
 		await ndkUser.publish()
 	}
