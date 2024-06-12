@@ -1,4 +1,5 @@
 import type { NDKEvent, NDKUser, NDKUserProfile } from '@nostr-dev-kit/ndk'
+import type { RichPaymentDetail } from '$lib/server/paymentDetails.service'
 import type { DisplayProduct } from '$lib/server/products.service'
 import { createMutation } from '@tanstack/svelte-query'
 import { goto } from '$app/navigation'
@@ -7,7 +8,7 @@ import ndkStore, { ndk } from '$lib/stores/ndk'
 import { deleteAccount } from '$lib/stores/session'
 import { get } from 'svelte/store'
 
-import type { ISO3, PaymentDetail, User } from '@plebeian/database'
+import type { ISO3, User } from '@plebeian/database'
 import { createId } from '@plebeian/database/utils'
 
 import { createRequest, queryClient } from './client'
@@ -23,8 +24,21 @@ declare module './client' {
 			{
 				paymentDetails: string
 				paymentMethod: string
+				stallId: string | undefined
 			},
-			PaymentDetail,
+			RichPaymentDetail,
+			never
+		>
+		[k: `PUT /api/v1/payments/?userId=${string}&paymentDetailId=${string}`]: Operation<
+			string,
+			'PUT',
+			never,
+			{
+				paymentDetails: string
+				paymentMethod: string
+				stallId: string | undefined
+			},
+			RichPaymentDetail,
 			never
 		>
 		[k: `DELETE /api/v1/payments/?paymentDetailId=${string}`]: Operation<string, 'DELETE', never, never, boolean, never>
@@ -34,23 +48,68 @@ declare module './client' {
 export const persistPaymentMethodMutation = createMutation(
 	{
 		mutationKey: [],
-		mutationFn: async ({ paymentDetails, paymentMethod }: { paymentDetails: string; paymentMethod: string }) => {
+		mutationFn: async ({
+			paymentDetails,
+			paymentMethod,
+			stallId,
+		}: {
+			paymentDetails: string
+			paymentMethod: string
+			stallId: string | undefined
+		}) => {
 			const $ndkStore = get(ndkStore)
 			if ($ndkStore.activeUser?.pubkey) {
-				const user = await createRequest(`POST /api/v1/payments/?userId=${$ndkStore.activeUser.pubkey}`, {
+				const pd = await createRequest(`POST /api/v1/payments/?userId=${$ndkStore.activeUser.pubkey}`, {
 					auth: true,
 					body: {
 						paymentDetails,
 						paymentMethod,
+						stallId,
 					},
 				})
-				return user
+				return pd
 			}
 			return null
 		},
 		onSuccess: () => {
 			const $ndkStore = get(ndkStore)
-			queryClient.invalidateQueries({ queryKey: ['paymentDetails', !!$ndkStore.activeUser?.pubkey] })
+			queryClient.invalidateQueries({ queryKey: ['paymentDetails', $ndkStore.activeUser?.pubkey] })
+		},
+	},
+	queryClient,
+)
+
+export const updatePaymentMethodMutation = createMutation(
+	{
+		mutationKey: [],
+		mutationFn: async ({
+			paymentDetails,
+			paymentMethod,
+			stallId,
+			paymentDetailId,
+		}: {
+			paymentDetails: string
+			paymentMethod: string
+			stallId: string | undefined
+			paymentDetailId: string
+		}) => {
+			const $ndkStore = get(ndkStore)
+			if ($ndkStore.activeUser?.pubkey) {
+				const pd = await createRequest(`PUT /api/v1/payments/?userId=${$ndkStore.activeUser.pubkey}&paymentDetailId=${paymentDetailId}`, {
+					auth: true,
+					body: {
+						paymentDetails,
+						paymentMethod,
+						stallId,
+					},
+				})
+				return pd
+			}
+			return null
+		},
+		onSuccess: () => {
+			const $ndkStore = get(ndkStore)
+			queryClient.invalidateQueries({ queryKey: ['paymentDetails', $ndkStore.activeUser?.pubkey] })
 		},
 	},
 	queryClient,

@@ -1,5 +1,6 @@
 import type { CatsFilter, ProductsFilter, StallsFilter } from '$lib/schema'
 import type { RichCat } from '$lib/server/categories.service'
+import type { RichPaymentDetail } from '$lib/server/paymentDetails.service'
 import type { DisplayProduct } from '$lib/server/products.service'
 import type { RichStall } from '$lib/server/stalls.service'
 import type { RichUser } from '$lib/server/users.service'
@@ -9,7 +10,7 @@ import ndkStore from '$lib/stores/ndk'
 import { currencyToBtc } from '$lib/utils'
 import { derived } from 'svelte/store'
 
-import type { PaymentDetail, User } from '@plebeian/database'
+import type { User } from '@plebeian/database'
 
 import { createRequest, queryClient } from './client'
 
@@ -20,7 +21,7 @@ declare module './client' {
 		'GET /api/v1/category': Operation<'/api/v1/category', 'GET', never, never, RichCat[], CatsFilter>
 		'GET /api/v1/products': Operation<'/api/v1/products', 'GET', never, never, DisplayProduct[], ProductsFilter>
 		'GET /api/v1/stalls': Operation<'/api/v1/stalls', 'GET', never, never, RichStall[], StallsFilter>
-		[k: `GET /api/v1/payments/?userId=${string}`]: Operation<string, 'GET', never, never, PaymentDetail[], never>
+		[k: `GET /api/v1/payments/?userId=${string}`]: Operation<string, 'GET', never, never, RichPaymentDetail[], never>
 	}
 }
 
