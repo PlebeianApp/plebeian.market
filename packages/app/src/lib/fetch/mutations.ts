@@ -1,5 +1,6 @@
 import type { NDKEvent, NDKUser, NDKUserProfile } from '@nostr-dev-kit/ndk'
 import type { DisplayProduct } from '$lib/server/products.service'
+import type { RichUser } from '$lib/server/users.service'
 import { createMutation } from '@tanstack/svelte-query'
 import { goto } from '$app/navigation'
 import { KindProducts } from '$lib/constants'
@@ -14,7 +15,7 @@ import { createRequest, queryClient } from './client'
 
 declare module './client' {
 	interface Endpoints {
-		[k: `PUT /api/v1/users/${string}`]: Operation<string, 'PUT', never, NDKUser['profile'], User, never>
+		[k: `PUT /api/v1/users/${string}`]: Operation<string, 'PUT', never, RichUser, User, never>
 		[k: `DELETE /api/v1/users/${string}`]: Operation<string, 'DELETE', never, never, boolean, never>
 		[k: `POST /api/v1/payments/?userId=${string}`]: Operation<
 			string,
@@ -80,7 +81,7 @@ export const deletePaymentMethodMutation = createMutation(
 export const userDataMutation = createMutation(
 	{
 		mutationKey: [],
-		mutationFn: async (profile: NDKUserProfile) => {
+		mutationFn: async (profile: RichUser) => {
 			const $ndkStore = get(ndkStore)
 
 			if ($ndkStore.activeUser?.pubkey) {
