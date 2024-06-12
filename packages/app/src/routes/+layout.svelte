@@ -13,6 +13,8 @@
 	import { queryClient } from '$lib/fetch/client'
 
 	import type { LayoutData } from './$types'
+	import { get } from 'svelte/store'
+	import { createCategoriesByFilterQuery } from '$lib/fetch/queries'
 
 	export let data: LayoutData
 	$: ({ appSettings } = data)
@@ -41,8 +43,20 @@
 	})
 
 	$: webManifestLink = pwaInfo ? pwaInfo.webManifest.linkTag : ''
-	queryClient.prefetchQuery<RichCat[]>({
-		queryKey: ['categories'],
+
+	onMount(async () => {
+		queryClient.setQueryDefaults(['categories'], {
+			queryFn: async () => {
+				const query = get(createCategoriesByFilterQuery({pageSize: 30}))
+				const { data: categories } = await query.refetch()
+
+				return categories
+			},
+		})
+
+		queryClient.prefetchQuery<RichCat[]>({
+			queryKey: ['categories'],
+		})
 	})
 </script>
 

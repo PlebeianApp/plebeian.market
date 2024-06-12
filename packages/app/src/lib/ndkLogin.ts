@@ -2,7 +2,6 @@ import type { NDKUser } from '@nostr-dev-kit/ndk'
 import type { BaseAccount } from '$lib/stores/session'
 import { NDKNip07Signer, NDKPrivateKeySigner, NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk'
 import { page } from '$app/stores'
-import { GETUserFromId, POSTUser, PUTUser } from '$lib/apiUtils'
 import { HEX_KEYS_REGEX } from '$lib/constants'
 import ndkStore, { ndk } from '$lib/stores/ndk'
 import { addAccount, getAccount, updateAccount } from '$lib/stores/session'
@@ -12,6 +11,8 @@ import { decrypt, encrypt } from 'nostr-tools/nip49'
 
 import type { PageData } from '../routes/$types'
 import { createUserExistsQuery } from './fetch/queries'
+import { createRequest } from './fetch/client'
+import { FetchError } from 'ofetch'
 
 async function checkIfUserExists(userId: string): Promise<boolean> {
 	return new Promise((resolve) => {
@@ -139,15 +140,25 @@ export async function loginLocalDb(userPk: string, loginMethod: BaseAccount['typ
 }
 
 export async function loginDb(user: NDKUser) {
-	const response = await GETUserFromId(user.pubkey)
-	if (response.ok) {
+	try {
+		await createRequest(`GET /api/v1/users/${user.pubkey}`, {})
+
 		console.log('updating user')
-		const PUT = await PUTUser(user)
-		console.log(PUT)
-	} else {
-		console.log('creating user')
-		const POST = await POSTUser(user)
-		console.log(POST)
+		await createRequest(`PUT /api/v1/users/${user.pubkey}`, {
+			auth: true,
+			body: user.profile,
+		})
+		
+	} catch (e) {
+		if (e instanceof FetchError) {
+			if (e.status === 404) {
+				console.log('creating user')
+				await createRequest('POST /api/v1/users', {
+					auth: true,
+					body:  { id: user.pubkey, ...user.profile },
+				})
+			}
+		}
 	}
 }
 

@@ -107,7 +107,7 @@ export const categoriesQuery = createQuery<RichCat[]>(
 export const createCategoriesByFilterQuery = (filter: Partial<CatsFilter>) =>
 	createQuery<RichCat[]>(
 		{
-			queryKey: ['categories', Object.values(filter)],
+			queryKey: ['categories', ...Object.values(filter)],
 			queryFn: async () => {
 				const categories = await createRequest('GET /api/v1/category', {
 					params: catsFilterSchema.parse(filter),
@@ -121,7 +121,7 @@ export const createCategoriesByFilterQuery = (filter: Partial<CatsFilter>) =>
 export const createProductsByFilterQuery = (filter: Partial<ProductsFilter>) =>
 	createQuery<DisplayProduct[]>(
 		{
-			queryKey: ['products', Object.values(filter)],
+			queryKey: ['products', ...Object.values(filter)],
 			queryFn: async () => {
 				const products = await createRequest('GET /api/v1/products', {
 					params: productsFilterSchema.parse(filter),
@@ -135,7 +135,7 @@ export const createProductsByFilterQuery = (filter: Partial<ProductsFilter>) =>
 export const createStallsByFilterQuery = (filter: Partial<StallsFilter>) =>
 	createQuery<RichStall[]>(
 		{
-			queryKey: ['stalls', Object.values(filter)],
+			queryKey: ['stalls', ...Object.values(filter)],
 			queryFn: async () => {
 				const stalls = await createRequest('GET /api/v1/stalls', {
 					params: stallsFilterSchema.parse(filter),

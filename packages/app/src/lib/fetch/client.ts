@@ -1,10 +1,7 @@
 import type { NDKTag } from '@nostr-dev-kit/ndk'
 import type { HttpMethod } from '@sveltejs/kit'
-import type { CatsFilter } from '$lib/schema'
 import { NDKEvent } from '@nostr-dev-kit/ndk'
 import { QueryClient } from '@tanstack/svelte-query'
-import { GETAllCategories } from '$lib/apiUtils'
-import { catsFilterSchema } from '$lib/schema'
 import { $fetch } from 'ofetch'
 import { get } from 'svelte/store'
 
@@ -43,7 +40,8 @@ export async function createRequest<K extends keyof Endpoints, RequestOperation 
 		params?: RequestOperation['params']
 		headers?: RequestOperation['headers']
 		auth?: boolean
-	},
+		ignoreResponseError?: boolean
+			},
 ) {
 	const [method, url] = endpoint.split(' ') as [RequestOperation['method'], RequestOperation['url']]
 	const headers = new Headers(options.headers)
@@ -59,6 +57,7 @@ export async function createRequest<K extends keyof Endpoints, RequestOperation 
 		headers,
 		body: JSON.stringify(options.body),
 		baseURL: window.location.origin,
+		ignoreResponseError: options.ignoreResponseError 
 	})
 }
 
@@ -67,13 +66,5 @@ export const queryClient = new QueryClient({
 		queries: {
 			staleTime: 1000 * 30,
 		},
-	},
-})
-
-queryClient.setQueryDefaults(['categories'], {
-	queryFn: async () => {
-		const filter: CatsFilter = catsFilterSchema.parse({ pageSize: 30 })
-		const res = await GETAllCategories(filter)
-		return res.json()
 	},
 })
