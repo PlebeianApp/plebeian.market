@@ -10,6 +10,7 @@
 	import type { PaymentDetailsMethod } from '@plebeian/database'
 
 	import { Button } from '../ui/button'
+	import { Checkbox } from '../ui/checkbox'
 	import { Label } from '../ui/label'
 
 	export let paymentDetail: RichPaymentDetail
@@ -43,6 +44,7 @@
 			paymentMethod: paymentDetailEdit.paymentMethod,
 			stallId: paymentDetailEdit.stallId ?? '',
 			paymentDetailId: paymentDetailEdit.id,
+			isDefault: paymentDetailEdit.isDefault,
 		})
 		inEdit = false
 	}
@@ -72,6 +74,13 @@
 			</div>
 			{#if paymentDetail.stallName}
 				<div class="flex flex-row gap-1 items-center">
+					{#if paymentDetail.isDefault}
+						<span
+							class="i-mdi-star
+						text-primary w-6 h-6"
+						/>
+					{/if}
+
 					<span class=" font-bold">{paymentDetail.stallName}</span>
 					<span class="i-tdesign-store w-6 h-6" />
 				</div>
@@ -126,6 +135,10 @@
 						{/each}
 					</SelectContent>
 				</Select>
+				<div class="flex flex-col items-center gap-1">
+					<Label class="truncate font-bold">Default</Label>
+					<Checkbox required class="border-black border-2" name="allowRegister" bind:checked={paymentDetailEdit.isDefault} />
+				</div>
 			</div>
 			<Label class="truncate font-bold">Payment details</Label>
 			<Input bind:value={paymentDetailEdit.paymentDetails} class="border-black border-2" placeholder="payment details" />

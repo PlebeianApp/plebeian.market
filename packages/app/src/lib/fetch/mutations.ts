@@ -25,6 +25,7 @@ declare module './client' {
 				paymentDetails: string
 				paymentMethod: string
 				stallId: string | undefined
+				isDefault: boolean
 			},
 			RichPaymentDetail,
 			never
@@ -37,6 +38,7 @@ declare module './client' {
 				paymentDetails: string
 				paymentMethod: string
 				stallId: string | undefined
+				isDefault: boolean
 			},
 			RichPaymentDetail,
 			never
@@ -52,10 +54,12 @@ export const persistPaymentMethodMutation = createMutation(
 			paymentDetails,
 			paymentMethod,
 			stallId,
+			isDefault,
 		}: {
 			paymentDetails: string
 			paymentMethod: string
 			stallId: string | undefined
+			isDefault: boolean
 		}) => {
 			const $ndkStore = get(ndkStore)
 			if ($ndkStore.activeUser?.pubkey) {
@@ -65,6 +69,7 @@ export const persistPaymentMethodMutation = createMutation(
 						paymentDetails,
 						paymentMethod,
 						stallId,
+						isDefault,
 					},
 				})
 				return pd
@@ -87,11 +92,13 @@ export const updatePaymentMethodMutation = createMutation(
 			paymentMethod,
 			stallId,
 			paymentDetailId,
+			isDefault,
 		}: {
 			paymentDetails: string
 			paymentMethod: string
 			stallId: string | undefined
 			paymentDetailId: string
+			isDefault: boolean
 		}) => {
 			const $ndkStore = get(ndkStore)
 			if ($ndkStore.activeUser?.pubkey) {
@@ -101,6 +108,7 @@ export const updatePaymentMethodMutation = createMutation(
 						paymentDetails,
 						paymentMethod,
 						stallId,
+						isDefault,
 					},
 				})
 				return pd

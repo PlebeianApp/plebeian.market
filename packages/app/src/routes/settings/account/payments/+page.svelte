@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button/index.js'
+	import { Checkbox } from '$lib/components/ui/checkbox'
 	import { Content, Group, Item, Root, Trigger } from '$lib/components/ui/dropdown-menu'
 	import { Input } from '$lib/components/ui/input'
 	import { Label } from '$lib/components/ui/label/index.js'
@@ -20,6 +21,8 @@
 	let newPaymentMethodOpen: PaymentDetailsMethod | null = null
 	let newPaymentDetails: string | null = null
 	let selectedStall: { value: string; label: string } | null = null
+	let isDefault: boolean = false
+	$: isDisabled = selectedStall === null
 
 	$: stallsQuery = $ndkStore.activeUser?.pubkey
 		? createStallsByFilterQuery({
@@ -37,19 +40,17 @@
 	}
 
 	const handlePersistNewPaymentMethod = async () => {
-		console.log('newPaymentDetails', newPaymentDetails)
-		console.log('newPaymentMethodOpen', newPaymentMethodOpen)
-		console.log('selectedStall', selectedStall)
-
 		const res = await $persistPaymentMethodMutation.mutateAsync({
 			paymentDetails: newPaymentDetails as string,
 			paymentMethod: newPaymentMethodOpen as string,
 			stallId: selectedStall?.value,
+			isDefault,
 		})
 		if (res) {
 			newPaymentMethodOpen = null
 			newPaymentDetails = null
 			selectedStall = null
+			isDefault = false
 		}
 	}
 </script>
@@ -83,20 +84,28 @@
 					{/if}
 				</label>
 				<Input bind:value={newPaymentDetails} id="paymentDetails" placeholder="Enter payment details" />
+				<div class="flex flex-row w-full items-center gap-2">
+					<div class="flex flex-col gap-1 flex-grow items-start">
+						<Label class="truncate font-bold">Select stall</Label>
+						<Select bind:selected={selectedStall} name="stallForPaymentMehtod">
+							<SelectTrigger class="border-black border-2">
+								<SelectValue placeholder="Select stall" />
+							</SelectTrigger>
+							<SelectContent class="border-black border-2 max-h-[350px] overflow-y-auto">
+								{#each $stallsQuery.data as stall}
+									<div class="flex items-center gap-2">
+										<SelectItem value={stall.id}>{stall.name}</SelectItem>
+									</div>
+								{/each}
+							</SelectContent>
+						</Select>
+					</div>
 
-				<Label class="truncate font-bold">Select stall</Label>
-				<Select bind:selected={selectedStall} name="stallForPaymentMehtod">
-					<SelectTrigger class="border-black border-2">
-						<SelectValue placeholder="Select stall" />
-					</SelectTrigger>
-					<SelectContent class="border-black border-2 max-h-[350px] overflow-y-auto">
-						{#each $stallsQuery.data as stall}
-							<div class="flex items-center gap-2">
-								<SelectItem value={stall.id}>{stall.name}</SelectItem>
-							</div>
-						{/each}
-					</SelectContent>
-				</Select>
+					<div class="flex flex-col items-center gap-3">
+						<Label class="truncate font-bold">Default</Label>
+						<Checkbox required class="border-black border-2" name="allowRegister" bind:disabled={isDisabled} bind:checked={isDefault} />
+					</div>
+				</div>
 
 				<div class="flex w-full gap-4">
 					<Button class="w-full font-bold" variant="outline" on:click={handleCancelAddPaymentMethod}>Cancel</Button>

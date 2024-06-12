@@ -5,6 +5,22 @@ export type RichPaymentDetail = PaymentDetail & {
 	stallName: string
 }
 
+const stallHasDefaultPaymentDetail = async (stallId: string): Promise<string | null> => {
+	const paymentDetailsByStall = await db.query.paymentDetails.findMany({
+		where: eq(paymentDetails.stallId, stallId),
+	})
+	return paymentDetailsByStall.find((pd) => pd.isDefault)?.id || null
+}
+
+const unsetDefaultsForStall = async (stallId: string): Promise<void> => {
+	const paymentDetailsByStall = await db.query.paymentDetails.findMany({
+		where: eq(paymentDetails.stallId, stallId),
+	})
+	await Promise.all(
+		paymentDetailsByStall.map((pd) => db.update(paymentDetails).set({ isDefault: false }).where(eq(paymentDetails.id, pd.id))),
+	)
+}
+
 // Enrichment function to add stall name to payment detail
 const enrichWithStallName = async (detail: PaymentDetail): Promise<RichPaymentDetail> => {
 	const stall = await db.query.stalls.findFirst({
@@ -25,11 +41,29 @@ export const getPaymentDetailsByUserId = async (userId: string): Promise<RichPay
 }
 
 export const createPaymentDetail = async (paymentDetail: PaymentDetail): Promise<RichPaymentDetail> => {
+	const intentToSetDefault = paymentDetail.stallId ? (paymentDetail.isDefault ? true : false) : false
+
+	if (intentToSetDefault && paymentDetail.stallId) {
+		const defaultPaymentDetailId = await stallHasDefaultPaymentDetail(paymentDetail.stallId)
+		if (defaultPaymentDetailId) {
+			await unsetDefaultsForStall(paymentDetail.stallId)
+		}
+	}
+
 	const [newPaymentDetails] = await db.insert(paymentDetails).values(paymentDetail).returning()
 	return enrichWithStallName(newPaymentDetails)
 }
 
 export const updatePaymentDetail = async (paymentDetailId: string, paymentDetail: PaymentDetail): Promise<RichPaymentDetail> => {
+	const intentToSetDefault = paymentDetail.stallId ? (paymentDetail.isDefault ? true : false) : false
+
+	if (intentToSetDefault && paymentDetail.stallId) {
+		const defaultPaymentDetailId = await stallHasDefaultPaymentDetail(paymentDetail.stallId)
+		if (defaultPaymentDetailId) {
+			await unsetDefaultsForStall(paymentDetail.stallId)
+		}
+	}
+
 	const [updatedPaymentDetail] = await db
 		.update(paymentDetails)
 		.set(paymentDetail)
