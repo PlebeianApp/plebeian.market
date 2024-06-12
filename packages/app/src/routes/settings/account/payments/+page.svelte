@@ -1,25 +1,31 @@
 <script lang="ts">
-	import { createMutation, createQuery, useQueryClient } from '@tanstack/svelte-query'
-	import { createToken } from '$lib/apiUtils'
 	import { Button } from '$lib/components/ui/button/index.js'
 	import { Content, Group, Item, Root, Trigger } from '$lib/components/ui/dropdown-menu'
 	import { Input } from '$lib/components/ui/input'
+	import { Label } from '$lib/components/ui/label/index.js'
+	import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '$lib/components/ui/select'
 	import Separator from '$lib/components/ui/separator/separator.svelte'
-	import { deletePaymentMethodMutation, persistPaymentMethodMutation } from '$lib/fetch/mutations'
-	import { paymentsQuery } from '$lib/fetch/queries'
+	import { persistPaymentMethodMutation } from '$lib/fetch/mutations'
+	import { createStallsByFilterQuery, paymentsQuery } from '$lib/fetch/queries'
 	import ndkStore from '$lib/stores/ndk'
 
-	import type { PaymentDetail, PaymentDetailsMethod } from '@plebeian/database'
+	import type { PaymentDetailsMethod } from '@plebeian/database'
 
 	import type { PageData } from './$types'
-
-	const queryClient = useQueryClient()
+	import PaymentDetailEdit from '/src/lib/components/settings/payment-detail-edit.svelte'
 
 	export let data: PageData
 	const { paymentDetailsMethod } = data
 
 	let newPaymentMethodOpen: PaymentDetailsMethod | null = null
 	let newPaymentDetails: string | null = null
+	let selectedStall: { value: string; label: string } | null = null
+
+	$: stallsQuery = $ndkStore.activeUser?.pubkey
+		? createStallsByFilterQuery({
+				userId: $ndkStore.activeUser.pubkey,
+			})
+		: null
 
 	const handleAddPaymentMethodLine = (method: PaymentDetailsMethod) => {
 		newPaymentMethodOpen = method
@@ -31,22 +37,20 @@
 	}
 
 	const handlePersistNewPaymentMethod = async () => {
+		console.log('newPaymentDetails', newPaymentDetails)
+		console.log('newPaymentMethodOpen', newPaymentMethodOpen)
+		console.log('selectedStall', selectedStall)
+
 		const res = await $persistPaymentMethodMutation.mutateAsync({
 			paymentDetails: newPaymentDetails as string,
 			paymentMethod: newPaymentMethodOpen as string,
+			stallId: selectedStall?.value,
 		})
-
 		if (res) {
 			newPaymentMethodOpen = null
 			newPaymentDetails = null
+			selectedStall = null
 		}
-	}
-
-	const handleDeletePaymentMethod = async (paymentDetailId: string) => {
-		$deletePaymentMethodMutation.mutate({
-			paymentDetailId,
-			userId: $ndkStore.activeUser?.pubkey as string,
-		})
 	}
 </script>
 
@@ -59,30 +63,7 @@
 		<p>Loading...</p>
 	{:else}
 		{#each [...($paymentsQuery.data ?? [])] as paymentDetail}
-			<div class="border border-gray flex justify-between items-center p-2 font-bold">
-				<div class="flex items-center gap-2">
-					{#if paymentDetail.paymentMethod === paymentDetailsMethod[0]}
-						<span class="i-mingcute-lightning-line w-6 h-6" />
-						<span>Lightning</span>
-						<span>{paymentDetail.paymentDetails}</span>
-					{:else if paymentDetail.paymentMethod === paymentDetailsMethod[1]}
-						<span class="i-mingcute-anchor-line w-6 h-6" />
-						<span>Onchain</span>
-						<span>{paymentDetail.paymentDetails}</span>
-					{:else if paymentDetail.paymentMethod === paymentDetailsMethod[2]}
-						<span class="i-tdesign-nut w-6 h-6" />
-						<span>Cashu</span>
-						<span>{paymentDetail.paymentDetails}</span>
-					{:else if paymentDetail.paymentMethod === paymentDetailsMethod[3]}
-						<span class="i-mingcute-question-line w-6 h-6" />
-						<span>Other</span>
-						<span>{paymentDetail.paymentDetails}</span>
-					{/if}
-				</div>
-				<Button class="font-bold" variant="outline" on:click={() => handleDeletePaymentMethod(paymentDetail.id)}>
-					<span class="i-mdi-trash w-6 h-6" /></Button
-				>
-			</div>
+			<PaymentDetailEdit {paymentDetail} {paymentDetailsMethod} />
 		{/each}
 	{/if}
 
@@ -102,6 +83,21 @@
 					{/if}
 				</label>
 				<Input bind:value={newPaymentDetails} id="paymentDetails" placeholder="Enter payment details" />
+
+				<Label class="truncate font-bold">Select stall</Label>
+				<Select bind:selected={selectedStall} name="stallForPaymentMehtod">
+					<SelectTrigger class="border-black border-2">
+						<SelectValue placeholder="Select stall" />
+					</SelectTrigger>
+					<SelectContent class="border-black border-2 max-h-[350px] overflow-y-auto">
+						{#each $stallsQuery.data as stall}
+							<div class="flex items-center gap-2">
+								<SelectItem value={stall.id}>{stall.name}</SelectItem>
+							</div>
+						{/each}
+					</SelectContent>
+				</Select>
+
 				<div class="flex w-full gap-4">
 					<Button class="w-full font-bold" variant="outline" on:click={handleCancelAddPaymentMethod}>Cancel</Button>
 					<Button type="submit" class="w-full font-bold" on:click={handlePersistNewPaymentMethod}>Save</Button>
