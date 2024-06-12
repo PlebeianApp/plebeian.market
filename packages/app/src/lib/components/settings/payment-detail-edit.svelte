@@ -84,6 +84,8 @@
 					<span class=" font-bold">{paymentDetail.stallName}</span>
 					<span class="i-tdesign-store w-6 h-6" />
 				</div>
+			{:else}
+				<span class=" font-bold">General</span>
 			{/if}
 		</Collapsible.Trigger>
 		<Collapsible.Content class="flex flex-col gap-4 py-4">
@@ -128,6 +130,7 @@
 						<SelectValue placeholder="assign a stall" />
 					</SelectTrigger>
 					<SelectContent class="border-black border-2 max-h-[350px] overflow-y-auto">
+						<SelectItem value={null}>General</SelectItem>
 						{#each $stallsQuery.data as stall}
 							<div class="flex items-center gap-2">
 								<SelectItem value={stall.id}>{stall.name}</SelectItem>

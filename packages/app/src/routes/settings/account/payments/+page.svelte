@@ -92,6 +92,7 @@
 								<SelectValue placeholder="Select stall" />
 							</SelectTrigger>
 							<SelectContent class="border-black border-2 max-h-[350px] overflow-y-auto">
+								<SelectItem value={null}>General</SelectItem>
 								{#each $stallsQuery.data as stall}
 									<div class="flex items-center gap-2">
 										<SelectItem value={stall.id}>{stall.name}</SelectItem>

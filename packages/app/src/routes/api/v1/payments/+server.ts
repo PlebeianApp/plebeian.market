@@ -74,8 +74,6 @@ export const DELETE: RequestHandler = async ({ request, url: { searchParams } })
 	const userId = searchParams.get('userId')
 	const paymentDetailId = searchParams.get('paymentDetailId')
 
-	console.log(userId, paymentDetailId)
-
 	if (!userId || !paymentDetailId) {
 		error(400, 'Invalid request')
 	}

@@ -234,7 +234,6 @@ export const createEditProductMutation = createMutation(
 
 			await newEvent.sign(ndk.signer)
 			const nostrEvent = await newEvent.toNostrEvent()
-			console.log(nostrEvent)
 			const result = await fetch(new URL(product ? `/api/v1/products/${product.id}` : '/api/v1/products', window.location.origin), {
 				// TODO: POST & PUT?
 				method: 'POST',
