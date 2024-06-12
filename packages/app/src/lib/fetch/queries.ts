@@ -10,7 +10,7 @@ import ndkStore from '$lib/stores/ndk'
 import { currencyToBtc } from '$lib/utils'
 import { derived } from 'svelte/store'
 
-import type { User } from '@plebeian/database'
+import type { Category, User } from '@plebeian/database'
 
 import { createRequest, queryClient } from './client'
 
@@ -105,7 +105,7 @@ export const categoriesQuery = createQuery<RichCat[]>(
 )
 
 export const createCategoriesByFilterQuery = (filter: Partial<CatsFilter>) =>
-	createQuery(
+	createQuery<RichCat[]>(
 		{
 			queryKey: ['categories', Object.values(filter)],
 			queryFn: async () => {
@@ -119,7 +119,7 @@ export const createCategoriesByFilterQuery = (filter: Partial<CatsFilter>) =>
 	)
 
 export const createProductsByFilterQuery = (filter: Partial<ProductsFilter>) =>
-	createQuery(
+	createQuery<DisplayProduct[]>(
 		{
 			queryKey: ['products', Object.values(filter)],
 			queryFn: async () => {
@@ -133,7 +133,7 @@ export const createProductsByFilterQuery = (filter: Partial<ProductsFilter>) =>
 	)
 
 export const createStallsByFilterQuery = (filter: Partial<StallsFilter>) =>
-	createQuery(
+	createQuery<RichStall[]>(
 		{
 			queryKey: ['stalls', Object.values(filter)],
 			queryFn: async () => {

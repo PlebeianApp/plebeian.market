@@ -1,6 +1,7 @@
-import type { NDKEvent, NDKUser, NDKUserProfile } from '@nostr-dev-kit/ndk'
+import type { NDKUserProfile } from '@nostr-dev-kit/ndk'
 import type { RichPaymentDetail } from '$lib/server/paymentDetails.service'
 import type { DisplayProduct } from '$lib/server/products.service'
+import { NDKEvent, NDKUser } from '@nostr-dev-kit/ndk'
 import { createMutation } from '@tanstack/svelte-query'
 import { goto } from '$app/navigation'
 import { KindProducts } from '$lib/constants'
@@ -138,7 +139,7 @@ export const deletePaymentMethodMutation = createMutation(
 		},
 		onSuccess: () => {
 			const $ndkStore = get(ndkStore)
-			queryClient.invalidateQueries({ queryKey: ['paymentDetails', !!$ndkStore.activeUser?.pubkey] })
+			queryClient.invalidateQueries({ queryKey: ['paymentDetails', $ndkStore.activeUser?.pubkey] })
 		},
 	},
 	queryClient,

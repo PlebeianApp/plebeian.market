@@ -37,7 +37,7 @@
 			userId: $ndkStore.activeUser?.pubkey as string,
 		})
 	}
-
+	// FIXME: Error 500 when trying to modify entry 'SQLITE_CONSTRAINT_FOREIGNKEY'
 	const handleUpdatePaymentMethod = async () => {
 		await $updatePaymentMethodMutation.mutateAsync({
 			paymentDetails: paymentDetailEdit.paymentDetails,
@@ -119,7 +119,7 @@
 						label: paymentDetailEdit.stallName,
 					}}
 					onSelectedChange={(sEvent) => {
-						if (sEvent) {
+						if (sEvent?.value && sEvent?.label) {
 							paymentDetailEdit.stallId = sEvent.value
 							paymentDetailEdit.stallName = sEvent.label
 						}
@@ -131,11 +131,13 @@
 					</SelectTrigger>
 					<SelectContent class="border-black border-2 max-h-[350px] overflow-y-auto">
 						<SelectItem value={null}>General</SelectItem>
-						{#each $stallsQuery.data as stall}
-							<div class="flex items-center gap-2">
-								<SelectItem value={stall.id}>{stall.name}</SelectItem>
-							</div>
-						{/each}
+						{#if $stallsQuery && $stallsQuery.data}
+							{#each $stallsQuery.data as stall}
+								<div class="flex items-center gap-2">
+									<SelectItem value={stall.id}>{stall.name}</SelectItem>
+								</div>
+							{/each}
+						{/if}
 					</SelectContent>
 				</Select>
 				<div class="flex flex-col items-center gap-1">
@@ -144,7 +146,7 @@
 				</div>
 			</div>
 			<Label class="truncate font-bold">Payment details</Label>
-			<Input bind:value={paymentDetailEdit.paymentDetails} class="border-black border-2" placeholder="payment details" />
+			<Input required bind:value={paymentDetailEdit.paymentDetails} class="border-black border-2" placeholder="payment details" />
 		</Collapsible.Content>
 	</Collapsible.Root>
 
