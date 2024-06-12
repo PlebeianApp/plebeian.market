@@ -7,7 +7,6 @@ import type { RequestHandler } from './$types'
 
 export const GET: RequestHandler = async ({ params, request, url: { searchParams } }) => {
 	const { userId } = params
-	console.log(params, 'params', searchParams.has('exists'))
 	try {
 		await authorize(request, userId, 'GET')
 		const [userRes] = await getRichUsers(usersFilterSchema.parse({ userId }))

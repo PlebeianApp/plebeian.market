@@ -52,7 +52,6 @@
 		formObject.defaultCurrency = selectedCurrency.value
 		formObject.logoUrl = logoUrl
 		const filteredFormObject = Object.fromEntries(Object.entries(formObject).filter(([_, value]) => value !== ''))
-		console.log(filteredFormObject)
 		const response = await fetch('/setup', {
 			method: 'POST',
 			body: JSON.stringify(filteredFormObject),

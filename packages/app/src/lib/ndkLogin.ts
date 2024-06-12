@@ -45,7 +45,7 @@ export async function fetchActiveUserData(keyToLocalDb?: string): Promise<NDKUse
 	}
 
 	const [userExists, allowRegister] = await Promise.all([checkIfUserExists(user.pubkey), getAppSettings()])
-
+	console.log(user)
 	if (userExists || (!userExists && allowRegister)) {
 		console.log('Registering user in db')
 		await loginDb(user)

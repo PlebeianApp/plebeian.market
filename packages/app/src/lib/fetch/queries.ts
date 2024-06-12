@@ -56,6 +56,7 @@ export const activeUserQuery = createQuery(
 			return null
 		},
 		enabled: !!$ndkStore.activeUser?.pubkey,
+		staleTime: 0,
 	})),
 	queryClient,
 )

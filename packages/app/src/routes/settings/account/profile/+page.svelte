@@ -28,7 +28,7 @@
 
 	$: isFetched = $activeUserQuery.isFetched
 	$: userData = isFetched
-		? { ...get(activeUserQuery).data }
+		? { ...$activeUserQuery.data }
 		: {
 				nip05: '',
 				about: '',
@@ -59,6 +59,7 @@
 		delete ndkUser.profile.updatedAt
 		delete ndkUser.profile.createdAt
 		delete ndkUser.profile.lastLogin
+		delete ndkUser.profile.id
 
 		await $userDataMutation.mutateAsync(userData as NDKUserProfile)
 		await ndkUser.publish()
