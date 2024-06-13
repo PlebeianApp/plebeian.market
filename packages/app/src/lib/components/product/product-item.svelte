@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { DisplayProduct } from '$lib/server/products.service'
 	import * as Card from '$lib/components/ui/card/index.js'
-	import { createProductPriceQuery } from '$lib/fetch/queries'
+	import { createProductPriceQuery } from '$lib/fetch/products.queries'
 
 	import Spinner from '../assets/spinner.svelte'
 	import ImgPlaceHolder from './imgPlaceHolder.svelte'

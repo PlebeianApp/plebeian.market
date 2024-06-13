@@ -8,8 +8,9 @@
 	import { Label } from '$lib/components/ui/label/index.js'
 	import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '$lib/components/ui/select'
 	import Separator from '$lib/components/ui/separator/separator.svelte'
-	import { persistPaymentMethodMutation } from '$lib/fetch/mutations'
-	import { createStallsByFilterQuery, paymentsQuery } from '$lib/fetch/queries'
+	import { persistPaymentMethodMutation } from '$lib/fetch/payments.mutations'
+	import { paymentsQuery } from '$lib/fetch/payments.queries'
+	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
 	import ndkStore from '$lib/stores/ndk'
 
 	import type { PaymentDetailsMethod } from '@plebeian/database'

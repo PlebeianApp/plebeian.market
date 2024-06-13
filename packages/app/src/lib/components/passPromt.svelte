@@ -5,7 +5,7 @@
 	import { Input } from '$lib/components/ui/input/index.js'
 	import { Skeleton } from '$lib/components/ui/skeleton/index.js'
 	import { standardDisplayDateFormat } from '$lib/constants'
-	import { createUserByIdQuery } from '$lib/fetch/queries'
+	import { createUserByIdQuery } from '$lib/fetch/users.queries'
 	import { login } from '$lib/ndkLogin'
 	import { type BaseAccount, type NsecAccount } from '$lib/stores/session'
 	import { format } from 'date-fns'

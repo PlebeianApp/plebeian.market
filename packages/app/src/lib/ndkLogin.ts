@@ -13,7 +13,7 @@ import { FetchError } from 'ofetch'
 import type { PageData } from '../routes/$types'
 import { userEventSchema } from '../schema/nostr-events'
 import { createRequest } from './fetch/client'
-import { createUserExistsQuery } from './fetch/queries'
+import { createUserExistsQuery } from './fetch/users.queries'
 
 function unNullify<T extends object>(obj: T): T {
 	return Object.fromEntries(Object.entries(obj).filter(([_, v]) => v != null)) as unknown as T

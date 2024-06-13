@@ -3,8 +3,8 @@
 	import * as Collapsible from '$lib/components/ui/collapsible'
 	import { Input } from '$lib/components/ui/input'
 	import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '$lib/components/ui/select'
-	import { deletePaymentMethodMutation, updatePaymentMethodMutation } from '$lib/fetch/mutations'
-	import { createStallsByFilterQuery } from '$lib/fetch/queries'
+	import { deletePaymentMethodMutation, updatePaymentMethodMutation } from '$lib/fetch/payments.mutations'
+	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
 	import ndkStore from '$lib/stores/ndk'
 
 	import type { PaymentDetailsMethod } from '@plebeian/database'
