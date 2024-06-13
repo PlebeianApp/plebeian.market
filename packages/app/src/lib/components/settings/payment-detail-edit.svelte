@@ -21,6 +21,8 @@
 
 	let inEdit = false
 
+	$: isDisabled = paymentDetailEdit.stallId === null
+
 	$: stallsQuery = $ndkStore.activeUser?.pubkey
 		? createStallsByFilterQuery({
 				userId: $ndkStore.activeUser.pubkey,
@@ -37,12 +39,11 @@
 			userId: $ndkStore.activeUser?.pubkey as string,
 		})
 	}
-
 	const handleUpdatePaymentMethod = async () => {
 		await $updatePaymentMethodMutation.mutateAsync({
 			paymentDetails: paymentDetailEdit.paymentDetails,
 			paymentMethod: paymentDetailEdit.paymentMethod,
-			stallId: paymentDetailEdit.stallId ?? '',
+			stallId: paymentDetailEdit.stallId ?? null,
 			paymentDetailId: paymentDetailEdit.id,
 			isDefault: paymentDetailEdit.isDefault,
 		})
@@ -72,21 +73,22 @@
 					<span>{paymentDetail.paymentDetails}</span>
 				{/if}
 			</div>
-			{#if paymentDetail.stallName}
-				<div class="flex flex-row gap-1 items-center">
+			<div class="flex flex-row gap-2 items-center">
+				{#if paymentDetail.stallName}
 					{#if paymentDetail.isDefault}
 						<span
 							class="i-mdi-star
-						text-primary w-6 h-6"
+							text-primary w-6 h-6"
 						/>
 					{/if}
 
 					<span class=" font-bold">{paymentDetail.stallName}</span>
 					<span class="i-tdesign-store w-6 h-6" />
-				</div>
-			{:else}
-				<span class=" font-bold">General</span>
-			{/if}
+				{:else}
+					<span class=" font-bold">General</span>
+					<span class=" i-mingcute-earth-2-line w-6 h-6" />
+				{/if}
+			</div>
 		</Collapsible.Trigger>
 		<Collapsible.Content class="flex flex-col gap-4 py-4">
 			<div class="flex flex-row gap-4 items-center">
@@ -119,9 +121,16 @@
 						label: paymentDetailEdit.stallName,
 					}}
 					onSelectedChange={(sEvent) => {
-						if (sEvent) {
+						if (sEvent?.value === null) {
+							paymentDetailEdit.stallId = null
+							paymentDetailEdit.stallName = 'General'
+							paymentDetailEdit.isDefault = false
+						}
+
+						if (sEvent?.value && sEvent?.label) {
 							paymentDetailEdit.stallId = sEvent.value
 							paymentDetailEdit.stallName = sEvent.label
+							paymentDetailEdit.isDefault = false
 						}
 					}}
 					name="assignStallForPaymentMehtod"
@@ -131,20 +140,28 @@
 					</SelectTrigger>
 					<SelectContent class="border-black border-2 max-h-[350px] overflow-y-auto">
 						<SelectItem value={null}>General</SelectItem>
-						{#each $stallsQuery.data as stall}
-							<div class="flex items-center gap-2">
-								<SelectItem value={stall.id}>{stall.name}</SelectItem>
-							</div>
-						{/each}
+						{#if $stallsQuery && $stallsQuery.data}
+							{#each $stallsQuery.data as stall}
+								<div class="flex items-center gap-2">
+									<SelectItem value={stall.id}>{stall.name}</SelectItem>
+								</div>
+							{/each}
+						{/if}
 					</SelectContent>
 				</Select>
 				<div class="flex flex-col items-center gap-1">
 					<Label class="truncate font-bold">Default</Label>
-					<Checkbox required class="border-black border-2" name="allowRegister" bind:checked={paymentDetailEdit.isDefault} />
+					<Checkbox
+						required
+						class="border-black border-2"
+						name="allowRegister"
+						bind:disabled={isDisabled}
+						bind:checked={paymentDetailEdit.isDefault}
+					/>
 				</div>
 			</div>
 			<Label class="truncate font-bold">Payment details</Label>
-			<Input bind:value={paymentDetailEdit.paymentDetails} class="border-black border-2" placeholder="payment details" />
+			<Input required bind:value={paymentDetailEdit.paymentDetails} class="border-black border-2" placeholder="payment details" />
 		</Collapsible.Content>
 	</Collapsible.Root>
 
@@ -154,8 +171,9 @@
 		>
 
 		{#if inEdit}
-			<Button id="signInSubmit" type="submit" size="icon" variant="outline" on:click={() => handleUpdatePaymentMethod()}>
-				<span class="i-mdi-content-save-outline w-6 h-6 cursor-pointer" />
+			<Button id="signInSubmit" type="submit" on:click={() => handleUpdatePaymentMethod()}>
+				<span class="i-mdi-content-save-outline w-6 h-6" />
+				<span>Save</span>
 			</Button>
 		{/if}
 	</div>
