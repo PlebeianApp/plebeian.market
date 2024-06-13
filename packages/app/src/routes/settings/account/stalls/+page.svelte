@@ -56,12 +56,12 @@
 	{/if}
 	<div class="flex flex-col gap-2">
 		{#if stallsMode === 'list'}
-			{#if $stallsQuery.isLoading}
+			{#if $stallsQuery?.isLoading}
 				<Skeleton class="h-12 w-full" />
 				<Skeleton class="h-12 w-full" />
 				<Skeleton class="h-12 w-full" />
 			{/if}
-			{#each [...($stallsQuery.data ?? [])] as stall}
+			{#each [...($stallsQuery?.data ?? [])] as stall}
 				<Button
 					on:click={() => {
 						stallsMode = 'edit'
