@@ -1,5 +1,5 @@
+import type { RichUser } from '$lib/server/users.service'
 import { createQuery } from '@tanstack/svelte-query'
-import { RichUser } from '$lib/server/users.service'
 import ndkStore from '$lib/stores/ndk'
 import { derived } from 'svelte/store'
 

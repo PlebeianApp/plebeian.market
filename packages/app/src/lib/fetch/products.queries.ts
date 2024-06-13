@@ -1,6 +1,7 @@
+import type { ProductsFilter } from '$lib/schema'
 import type { DisplayProduct } from '$lib/server/products.service'
 import { createQuery } from '@tanstack/svelte-query'
-import { ProductsFilter, productsFilterSchema } from '$lib/schema'
+import { productsFilterSchema } from '$lib/schema'
 import { currencyToBtc } from '$lib/utils'
 
 import { createRequest, queryClient } from './client'

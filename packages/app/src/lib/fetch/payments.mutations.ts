@@ -1,5 +1,5 @@
+import type { RichPaymentDetail } from '$lib/server/paymentDetails.service'
 import { createMutation } from '@tanstack/svelte-query'
-import { RichPaymentDetail } from '$lib/server/paymentDetails.service'
 import ndkStore from '$lib/stores/ndk'
 import { get } from 'svelte/store'
 
