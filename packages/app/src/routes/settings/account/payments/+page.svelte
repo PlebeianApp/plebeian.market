@@ -21,9 +21,9 @@
 
 	let newPaymentMethodOpen: PaymentDetailsMethod | null = null
 	let newPaymentDetails: string | null = null
-	let selectedStall: Selected<string> | undefined
+	let selectedStall: Selected<string | null> | undefined = undefined
 	let isDefault: boolean = false
-	$: isDisabled = selectedStall === null
+	$: isDisabled = selectedStall === undefined || selectedStall?.value === null
 
 	$: stallsQuery = $ndkStore.activeUser?.pubkey
 		? createStallsByFilterQuery({
@@ -31,8 +31,8 @@
 			})
 		: null
 
-	const handleAddPaymentMethodLine = (method: PaymentDetailsMethod) => {
-		newPaymentMethodOpen = method
+	const handleAddPaymentMethodLine = (method: string) => {
+		newPaymentMethodOpen = method as PaymentDetailsMethod
 	}
 
 	const handleCancelAddPaymentMethod = () => {
@@ -44,7 +44,7 @@
 		const res = await $persistPaymentMethodMutation.mutateAsync({
 			paymentDetails: newPaymentDetails as string,
 			paymentMethod: newPaymentMethodOpen as string,
-			stallId: selectedStall?.value,
+			stallId: selectedStall?.value ?? null,
 			isDefault,
 		})
 		if (res) {

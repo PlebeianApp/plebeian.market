@@ -21,6 +21,8 @@
 
 	let inEdit = false
 
+	$: isDisabled = paymentDetailEdit.stallId === null
+
 	$: stallsQuery = $ndkStore.activeUser?.pubkey
 		? createStallsByFilterQuery({
 				userId: $ndkStore.activeUser.pubkey,
@@ -37,12 +39,11 @@
 			userId: $ndkStore.activeUser?.pubkey as string,
 		})
 	}
-	// FIXME: Error 500 when trying to modify entry 'SQLITE_CONSTRAINT_FOREIGNKEY'
 	const handleUpdatePaymentMethod = async () => {
 		await $updatePaymentMethodMutation.mutateAsync({
 			paymentDetails: paymentDetailEdit.paymentDetails,
 			paymentMethod: paymentDetailEdit.paymentMethod,
-			stallId: paymentDetailEdit.stallId ?? '',
+			stallId: paymentDetailEdit.stallId ?? null,
 			paymentDetailId: paymentDetailEdit.id,
 			isDefault: paymentDetailEdit.isDefault,
 		})
@@ -119,9 +120,16 @@
 						label: paymentDetailEdit.stallName,
 					}}
 					onSelectedChange={(sEvent) => {
+						if (sEvent?.value === null) {
+							paymentDetailEdit.stallId = null
+							paymentDetailEdit.stallName = 'General'
+							paymentDetailEdit.isDefault = false
+						}
+
 						if (sEvent?.value && sEvent?.label) {
 							paymentDetailEdit.stallId = sEvent.value
 							paymentDetailEdit.stallName = sEvent.label
+							paymentDetailEdit.isDefault = false
 						}
 					}}
 					name="assignStallForPaymentMehtod"
@@ -142,7 +150,13 @@
 				</Select>
 				<div class="flex flex-col items-center gap-1">
 					<Label class="truncate font-bold">Default</Label>
-					<Checkbox required class="border-black border-2" name="allowRegister" bind:checked={paymentDetailEdit.isDefault} />
+					<Checkbox
+						required
+						class="border-black border-2"
+						name="allowRegister"
+						bind:disabled={isDisabled}
+						bind:checked={paymentDetailEdit.isDefault}
+					/>
 				</div>
 			</div>
 			<Label class="truncate font-bold">Payment details</Label>

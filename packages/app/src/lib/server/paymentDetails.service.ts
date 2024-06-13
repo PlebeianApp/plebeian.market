@@ -9,6 +9,9 @@ const stallHasDefaultPaymentDetail = async (stallId: string): Promise<string | n
 	const [paymentDetailsByStall] = await db.query.paymentDetails.findMany({
 		where: and(eq(paymentDetails.stallId, stallId), eq(paymentDetails.isDefault, true)),
 	})
+
+	if (!paymentDetailsByStall) return null
+
 	return paymentDetailsByStall.id || null
 }
 
@@ -46,7 +49,7 @@ export const getPaymentDetailsByUserId = async (userId: string): Promise<RichPay
 }
 
 export const createPaymentDetail = async (paymentDetail: PaymentDetail): Promise<RichPaymentDetail> => {
-	const intentToSetDefault = paymentDetail.stallId ? (paymentDetail.isDefault ? true : false) : false
+	const intentToSetDefault = paymentDetail.stallId ? !!paymentDetail.isDefault : false
 
 	if (intentToSetDefault && paymentDetail.stallId) {
 		const defaultPaymentDetailId = await stallHasDefaultPaymentDetail(paymentDetail.stallId)
@@ -60,7 +63,7 @@ export const createPaymentDetail = async (paymentDetail: PaymentDetail): Promise
 }
 
 export const updatePaymentDetail = async (paymentDetailId: string, paymentDetail: PaymentDetail): Promise<RichPaymentDetail> => {
-	const intentToSetDefault = paymentDetail.stallId ? (paymentDetail.isDefault ? true : false) : false
+	const intentToSetDefault = paymentDetail.stallId ? !!paymentDetail.isDefault : false
 
 	if (intentToSetDefault && paymentDetail.stallId) {
 		const defaultPaymentDetailId = await stallHasDefaultPaymentDetail(paymentDetail.stallId)
