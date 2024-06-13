@@ -1,11 +1,13 @@
-import { goto } from "$app/navigation"
-import ndkStore from "$lib/stores/ndk"
-import { deleteAccount } from "$lib/stores/session"
-import type { NDKUser, NDKUserProfile } from "@nostr-dev-kit/ndk"
-import type { User } from "@plebeian/database"
-import { createMutation } from "@tanstack/svelte-query"
-import { get } from "svelte/store"
-import { createRequest, queryClient } from "./client"
+import type { NDKUser, NDKUserProfile } from '@nostr-dev-kit/ndk'
+import { createMutation } from '@tanstack/svelte-query'
+import { goto } from '$app/navigation'
+import ndkStore from '$lib/stores/ndk'
+import { deleteAccount } from '$lib/stores/session'
+import { get } from 'svelte/store'
+
+import type { User } from '@plebeian/database'
+
+import { createRequest, queryClient } from './client'
 
 declare module './client' {
 	interface Endpoints {

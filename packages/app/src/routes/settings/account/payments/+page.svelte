@@ -10,12 +10,12 @@
 	import Separator from '$lib/components/ui/separator/separator.svelte'
 	import { persistPaymentMethodMutation } from '$lib/fetch/payments.mutations'
 	import { paymentsQuery } from '$lib/fetch/payments.queries'
+	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
 	import ndkStore from '$lib/stores/ndk'
 
 	import type { PaymentDetailsMethod } from '@plebeian/database'
 
 	import type { PageData } from './$types'
-	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
 
 	export let data: PageData
 	const { paymentDetailsMethod } = data

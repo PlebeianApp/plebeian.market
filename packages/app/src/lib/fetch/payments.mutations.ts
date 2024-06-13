@@ -1,8 +1,9 @@
-import { RichPaymentDetail } from "$lib/server/paymentDetails.service"
-import ndkStore from "$lib/stores/ndk"
-import { createMutation } from "@tanstack/svelte-query"
-import { get } from "svelte/store"
-import { createRequest, queryClient } from "./client"
+import { createMutation } from '@tanstack/svelte-query'
+import { RichPaymentDetail } from '$lib/server/paymentDetails.service'
+import ndkStore from '$lib/stores/ndk'
+import { get } from 'svelte/store'
+
+import { createRequest, queryClient } from './client'
 
 export type PostStall = {
 	paymentDetails: string

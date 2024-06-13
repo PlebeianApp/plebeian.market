@@ -1,9 +1,11 @@
-import { RichUser } from "$lib/server/users.service"
-import ndkStore from "$lib/stores/ndk"
-import type { User } from "@plebeian/database"
-import { createQuery } from "@tanstack/svelte-query"
-import { derived } from "svelte/store"
-import { createRequest, queryClient } from "./client"
+import { createQuery } from '@tanstack/svelte-query'
+import { RichUser } from '$lib/server/users.service'
+import ndkStore from '$lib/stores/ndk'
+import { derived } from 'svelte/store'
+
+import type { User } from '@plebeian/database'
+
+import { createRequest, queryClient } from './client'
 
 declare module './client' {
 	interface Endpoints {
@@ -54,4 +56,3 @@ export const createUserExistsQuery = (id: string) =>
 		},
 		queryClient,
 	)
-

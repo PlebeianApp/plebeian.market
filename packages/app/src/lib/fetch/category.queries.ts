@@ -1,8 +1,9 @@
-import type { CatsFilter } from "$lib/schema"
-import { catsFilterSchema } from "$lib/schema"
-import type { RichCat } from "$lib/server/categories.service"
-import { createQuery } from "@tanstack/svelte-query"
-import { createRequest, queryClient } from "./client"
+import type { CatsFilter } from '$lib/schema'
+import type { RichCat } from '$lib/server/categories.service'
+import { createQuery } from '@tanstack/svelte-query'
+import { catsFilterSchema } from '$lib/schema'
+
+import { createRequest, queryClient } from './client'
 
 declare module './client' {
 	interface Endpoints {

@@ -10,8 +10,8 @@
 	import type { RichCat } from '$lib/server/categories.service'
 	import { QueryClientProvider } from '@tanstack/svelte-query'
 	import { goto } from '$app/navigation'
-	import { queryClient } from '$lib/fetch/client'
 	import { createCategoriesByFilterQuery } from '$lib/fetch/category.queries'
+	import { queryClient } from '$lib/fetch/client'
 	import { get } from 'svelte/store'
 
 	import type { LayoutData } from './$types'

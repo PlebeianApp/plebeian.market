@@ -10,7 +10,6 @@ import { createId } from '@plebeian/database/utils'
 
 import { queryClient } from './client'
 
-
 export const createEditProductMutation = createMutation(
 	{
 		mutationFn: async ([sEvent, product, images, shippingMethods]: [

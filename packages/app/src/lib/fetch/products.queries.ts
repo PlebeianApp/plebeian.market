@@ -1,8 +1,9 @@
-import { ProductsFilter, productsFilterSchema } from "$lib/schema"
-import type { DisplayProduct } from "$lib/server/products.service"
-import { currencyToBtc } from "$lib/utils"
-import { createQuery } from "@tanstack/svelte-query"
-import { createRequest, queryClient } from "./client"
+import type { DisplayProduct } from '$lib/server/products.service'
+import { createQuery } from '@tanstack/svelte-query'
+import { ProductsFilter, productsFilterSchema } from '$lib/schema'
+import { currencyToBtc } from '$lib/utils'
+
+import { createRequest, queryClient } from './client'
 
 declare module './client' {
 	interface Endpoints {
@@ -34,4 +35,3 @@ export const createProductsByFilterQuery = (filter: Partial<ProductsFilter>) =>
 		},
 		queryClient,
 	)
-

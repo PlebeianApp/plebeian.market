@@ -1,8 +1,9 @@
-import type { StallsFilter } from "$lib/schema"
-import { stallsFilterSchema } from "$lib/schema"
-import type { RichStall } from "$lib/server/stalls.service"
-import { createQuery } from "@tanstack/svelte-query"
-import { createRequest, queryClient } from "./client"
+import type { StallsFilter } from '$lib/schema'
+import type { RichStall } from '$lib/server/stalls.service'
+import { createQuery } from '@tanstack/svelte-query'
+import { stallsFilterSchema } from '$lib/schema'
+
+import { createRequest, queryClient } from './client'
 
 declare module './client' {
 	interface Endpoints {
