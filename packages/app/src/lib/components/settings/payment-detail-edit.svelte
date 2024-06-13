@@ -73,21 +73,22 @@
 					<span>{paymentDetail.paymentDetails}</span>
 				{/if}
 			</div>
-			{#if paymentDetail.stallName}
-				<div class="flex flex-row gap-1 items-center">
+			<div class="flex flex-row gap-2 items-center">
+				{#if paymentDetail.stallName}
 					{#if paymentDetail.isDefault}
 						<span
 							class="i-mdi-star
-						text-primary w-6 h-6"
+							text-primary w-6 h-6"
 						/>
 					{/if}
 
 					<span class=" font-bold">{paymentDetail.stallName}</span>
 					<span class="i-tdesign-store w-6 h-6" />
-				</div>
-			{:else}
-				<span class=" font-bold">General</span>
-			{/if}
+				{:else}
+					<span class=" font-bold">General</span>
+					<span class=" i-mingcute-earth-2-line w-6 h-6" />
+				{/if}
+			</div>
 		</Collapsible.Trigger>
 		<Collapsible.Content class="flex flex-col gap-4 py-4">
 			<div class="flex flex-row gap-4 items-center">
@@ -170,8 +171,9 @@
 		>
 
 		{#if inEdit}
-			<Button id="signInSubmit" type="submit" size="icon" variant="outline" on:click={() => handleUpdatePaymentMethod()}>
-				<span class="i-mdi-content-save-outline w-6 h-6 cursor-pointer" />
+			<Button id="signInSubmit" type="submit" on:click={() => handleUpdatePaymentMethod()}>
+				<span class="i-mdi-content-save-outline w-6 h-6" />
+				<span>Save</span>
 			</Button>
 		{/if}
 	</div>
