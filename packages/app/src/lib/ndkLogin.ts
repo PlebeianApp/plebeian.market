@@ -37,7 +37,6 @@ export async function fetchActiveUserData(keyToLocalDb?: string): Promise<NDKUse
 	const user = await ndk.signer.user()
 	await user.fetchProfile({ cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY })
 	ndkStore.set(ndk)
-
 	if (keyToLocalDb) {
 		await loginLocalDb(user.pubkey, 'NSEC', keyToLocalDb)
 	} else {

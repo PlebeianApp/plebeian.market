@@ -16,42 +16,43 @@
 	import ndkStore from '$lib/stores/ndk'
 	import { nav_back } from '$lib/utils'
 
-	import type { UserTrustLevel } from '@plebeian/database'
-
 	import type { PageData } from './$types'
 	import { userEventSchema } from '../../../../schema/nostr-events'
 
 	export let data: PageData
 	const { userTrustLevels } = data
 
-	let userData: RichUser
 	let userTrustLevel: Selected<string> = { label: '', value: '' }
 
-	$: if ($activeUserQuery.isFetched && $activeUserQuery.data) {
-		userData = $activeUserQuery.data
-	}
-
 	const handleSubmit = async (event: SubmitEvent) => {
-		console.log(event)
 		const formData = new FormData(event.currentTarget as HTMLFormElement)
 		const formObject = Object.fromEntries(formData.entries())
 
-		formObject.trustLevel = userTrustLevel.value ? userTrustLevel.value : userData.trustLevel ? userData.trustLevel : userTrustLevels[0]
+		formObject.trustLevel = userTrustLevel.value
+			? userTrustLevel.value
+			: $activeUserQuery.data?.trustLevel
+				? $activeUserQuery.data.trustLevel
+				: userTrustLevels[0]
 		const filteredFormObject = Object.fromEntries(Object.entries(formObject).filter(([_, value]) => value !== '')) as unknown as RichUser
+
 		const ndkUser = $ndkStore.getUser({
 			hexpubkey: $ndkStore.activeUser?.pubkey,
 		})
-		ndkUser.profile = userEventSchema.strip().safeParse(userData).data as NDKUserProfile
-		console.log(ndkUser.profile, 'popopo')
+		ndkUser.profile = userEventSchema.strip().safeParse($activeUserQuery.data).data as NDKUserProfile
 		await $userDataMutation.mutateAsync(filteredFormObject)
 		await ndkUser.publish()
 	}
 	const linkDetails = data.menuItems
 		.find((item) => item.value === 'account-settings')
 		?.links.find((item) => item.href === $page.url.pathname)
+	console.log('dummy')
+	$: if (!$activeUserQuery.data?.id) {
+		console.log('hellooooooooo')
+		$activeUserQuery.refetch()
+	}
 </script>
 
-{#if $activeUserQuery.isFetched}
+{#if $activeUserQuery.data?.id}
 	<form on:submit|preventDefault={handleSubmit}>
 		<div class="pb-4 space-y-2">
 			<div class="flex items-center gap-1">
@@ -67,37 +68,43 @@
 			<div class="grid w-full items-center gap-1.5">
 				<Label for="userImage" class="font-bold">Profile image</Label>
 				<Avatar class="w-24 h-auto">
-					<AvatarImage src={userData.image} alt="pfp" />
-					<AvatarFallback>{userData.name ? userData.name : userData.displayName}</AvatarFallback>
+					<AvatarImage src={$activeUserQuery.data?.image} alt="pfp" />
+					<AvatarFallback>{$activeUserQuery.data?.name ? $activeUserQuery.data?.name : $activeUserQuery.data?.displayName}</AvatarFallback>
 				</Avatar>
 			</div>
 
 			<div class="grid w-full items-center gap-1.5">
 				<Label for="name" class="font-bold">Name</Label>
-				<Input bind:value={userData.name} type="text" id="name" name="name" placeholder={userData.name} />
+				<Input bind:value={$activeUserQuery.data.name} type="text" id="name" name="name" placeholder={$activeUserQuery.data?.name} />
 			</div>
 
 			<div class="grid w-full items-center gap-1.5">
 				<Label for="displayName" class="font-bold">Display Name</Label>
-				<Input bind:value={userData.displayName} type="text" id="displayName" name="displayName" placeholder={userData.displayName} />
+				<Input
+					bind:value={$activeUserQuery.data.displayName}
+					type="text"
+					id="displayName"
+					name="displayName"
+					placeholder={$activeUserQuery.data?.displayName}
+				/>
 			</div>
 
 			<div class="grid w-full items-center gap-1.5">
 				<Label for="about" class="font-bold">Short bio</Label>
-				<Textarea bind:value={userData.about} rows={8} id="about" name="about" placeholder={userData.about} />
+				<Textarea bind:value={$activeUserQuery.data.about} rows={8} id="about" name="about" placeholder={$activeUserQuery.data?.about} />
 			</div>
 
 			<div class="grid w-full items-center gap-1.5">
 				<Label for="nip05" class="font-bold">Nostr address</Label>
-				<Input bind:value={userData.nip05} type="text" id="nip05" name="nip05" placeholder={userData.nip05} />
+				<Input bind:value={$activeUserQuery.data.nip05} type="text" id="nip05" name="nip05" placeholder={$activeUserQuery.data?.nip05} />
 			</div>
 
-			{#if userData.trustLevel}
+			{#if $activeUserQuery.data?.trustLevel}
 				<div class="flex-grow">
 					<Label class="truncate font-bold">Trust level</Label>
 					<Select bind:selected={userTrustLevel} name="trustLevel">
 						<SelectTrigger class="border-black border-2">
-							<SelectValue placeholder={userData.trustLevel} />
+							<SelectValue placeholder={$activeUserQuery.data?.trustLevel} />
 						</SelectTrigger>
 						<SelectContent class="border-black border-2 max-h-[350px] overflow-y-auto">
 							{#each userTrustLevels as trustLevel}
