@@ -11,7 +11,7 @@
 	import { QueryClientProvider } from '@tanstack/svelte-query'
 	import { goto } from '$app/navigation'
 	import { queryClient } from '$lib/fetch/client'
-	import { createCategoriesByFilterQuery } from '$lib/fetch/queries'
+	import { createCategoriesByFilterQuery } from '$lib/fetch/category.queries'
 	import { get } from 'svelte/store'
 
 	import type { LayoutData } from './$types'

@@ -2,8 +2,7 @@
 	import { page } from '$app/stores'
 	import { Button } from '$lib/components/ui/button'
 	import { Input } from '$lib/components/ui/input'
-	import { userDeleteAccountMutation } from '$lib/fetch/mutations'
-	import ndkStore from '$lib/stores/ndk'
+	import { userDeleteAccountMutation } from '$lib/fetch/users.mutations'
 	import { nav_back } from '$lib/utils'
 
 	import type { PageData } from './$types'

@@ -4,7 +4,7 @@
 	import CreateEditProduct from '$lib/components/product/create-edit.svelte'
 	import { Button } from '$lib/components/ui/button/index.js'
 	import { Skeleton } from '$lib/components/ui/skeleton'
-	import { createProductsByFilterQuery } from '$lib/fetch/queries'
+	import { createProductsByFilterQuery } from '$lib/fetch/products.queries'
 	import ndkStore from '$lib/stores/ndk'
 	import { nav_back } from '$lib/utils'
 

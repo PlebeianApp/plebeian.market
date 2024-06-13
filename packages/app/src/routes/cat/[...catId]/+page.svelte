@@ -3,7 +3,7 @@
 	import Pattern from '$lib/components/Pattern.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
 	import UserCardCompact from '$lib/components/users/user-card-compact.svelte'
-	import { createCategoriesByFilterQuery, createProductsByFilterQuery, createUserByIdQuery } from '$lib/fetch/queries'
+	import { createCategoriesByFilterQuery } from '$lib/fetch/category.queries'
 
 	$: categoriesQuery = createCategoriesByFilterQuery({ catId: $page.params.catId })
 	$: categoryData = $categoriesQuery.data?.[0]

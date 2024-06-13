@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { RichCat } from '$lib/server/categories.service'
-	import { categoriesQuery } from '$lib/fetch/queries'
+	import { categoriesQuery } from '$lib/fetch/category.queries'
 
 	import Button from '../ui/button/button.svelte'
 	import Skeleton from '../ui/skeleton/skeleton.svelte'
