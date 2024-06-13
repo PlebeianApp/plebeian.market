@@ -24,6 +24,7 @@ export type PostStall = {
 declare module './client' {
 	interface Endpoints {
 		[k: `PUT /api/v1/users/${string}`]: Operation<string, 'PUT', never, NDKUser['profile'], User, never>
+		'POST /api/v1/users': Operation<string, 'POST', never, { id: string } & NDKUser['profile'], User, never>
 		[k: `DELETE /api/v1/users/${string}`]: Operation<string, 'DELETE', never, never, boolean, never>
 		[k: `POST /api/v1/payments/?userId=${string}`]: Operation<string, 'POST', never, PostStall, RichPaymentDetail, never>
 		[k: `PUT /api/v1/payments/?userId=${string}&paymentDetailId=${string}`]: Operation<
