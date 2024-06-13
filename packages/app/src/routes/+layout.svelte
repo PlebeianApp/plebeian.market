@@ -49,7 +49,7 @@
 			const query = get(createCategoriesByFilterQuery({ pageSize: 30 }))
 			const { data: categories } = await query.refetch()
 
-			return categories
+			return categories ?? null
 		},
 	})
 
