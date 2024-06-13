@@ -4,6 +4,8 @@
 	import ProductItem from '$lib/components/product/product-item.svelte'
 	import UserCardCompact from '$lib/components/users/user-card-compact.svelte'
 	import { createCategoriesByFilterQuery } from '$lib/fetch/category.queries'
+	import { createProductsByFilterQuery } from '$lib/fetch/products.queries'
+	import { createUserByIdQuery } from '$lib/fetch/users.queries'
 
 	$: categoriesQuery = createCategoriesByFilterQuery({ catId: $page.params.catId })
 	$: categoryData = $categoriesQuery.data?.[0]
