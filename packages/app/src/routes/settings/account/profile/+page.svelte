@@ -15,6 +15,7 @@
 	import { activeUserQuery } from '$lib/fetch/users.queries'
 	import ndkStore from '$lib/stores/ndk'
 	import { nav_back } from '$lib/utils'
+	import { onMount } from 'svelte'
 
 	import type { PageData } from './$types'
 	import { userEventSchema } from '../../../../schema/nostr-events'
@@ -44,9 +45,10 @@
 	const linkDetails = data.menuItems
 		.find((item) => item.value === 'account-settings')
 		?.links.find((item) => item.href === $page.url.pathname)
-	$: if (!$activeUserQuery.data?.id) {
+
+	onMount(() => {
 		$activeUserQuery.refetch()
-	}
+	})
 </script>
 
 {#if $activeUserQuery.data?.id}
