@@ -2,7 +2,13 @@ import { error, json } from '@sveltejs/kit'
 import { KindProducts } from '$lib/constants'
 import { productsFilterSchema } from '$lib/schema'
 import { verifyAndPersistRawEvent } from '$lib/server/nostrEvents.service'
-import { createProduct, getAllProducts, getProductsByCatId, getProductsByCatName } from '$lib/server/products.service.js'
+import {
+	createProduct,
+	getAllProducts,
+	getProductsByCatId,
+	getProductsByCatName,
+	getProductsByStallId,
+} from '$lib/server/products.service.js'
 
 export async function GET({ url: { searchParams } }) {
 	const spObj = Object.fromEntries(searchParams)
@@ -13,6 +19,9 @@ export async function GET({ url: { searchParams } }) {
 		return json(await getProductsByCatId(filter.data))
 	} else if (filter.data.catName) {
 		return json(await getProductsByCatName(filter.data))
+	} else if (filter.data.stallId) {
+		console.log('filter.data.stallId', filter.data.stallId)
+		return json(await getProductsByStallId(filter.data.stallId))
 	} else {
 		return json(await getAllProducts(filter.data))
 	}

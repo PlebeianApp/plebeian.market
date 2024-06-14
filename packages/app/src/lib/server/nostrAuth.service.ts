@@ -5,7 +5,7 @@ import { error } from '@sveltejs/kit'
 import { KindHttpAuth } from '$lib/constants'
 import { verifyEvent } from 'nostr-tools'
 
-import { and, db, eq, USER_META, userMeta, users } from '@plebeian/database'
+import { and, db, eq, USER_META, userMeta } from '@plebeian/database'
 
 export const isPubkeyAdmin = async (pubkey: string): Promise<boolean> => {
 	const [adminUser] = await db

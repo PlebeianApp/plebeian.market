@@ -1,4 +1,5 @@
 import type { NDKUser, NDKUserProfile } from '@nostr-dev-kit/ndk'
+import type { RichUser } from '$lib/server/users.service'
 import { createMutation } from '@tanstack/svelte-query'
 import { goto } from '$app/navigation'
 import ndkStore from '$lib/stores/ndk'
@@ -11,7 +12,7 @@ import { createRequest, queryClient } from './client'
 
 declare module './client' {
 	interface Endpoints {
-		[k: `PUT /api/v1/users/${string}`]: Operation<string, 'PUT', never, NDKUser['profile'], User, never>
+		[k: `PUT /api/v1/users/${string}`]: Operation<string, 'PUT', never, RichUser, User, never>
 		'POST /api/v1/users': Operation<string, 'POST', never, { id: string } & NDKUser['profile'], User, never>
 		[k: `DELETE /api/v1/users/${string}`]: Operation<string, 'DELETE', never, never, boolean, never>
 	}
@@ -20,7 +21,7 @@ declare module './client' {
 export const userDataMutation = createMutation(
 	{
 		mutationKey: [],
-		mutationFn: async (profile: NDKUserProfile) => {
+		mutationFn: async (profile: RichUser) => {
 			const $ndkStore = get(ndkStore)
 
 			if ($ndkStore.activeUser?.pubkey) {
@@ -35,8 +36,8 @@ export const userDataMutation = createMutation(
 		onSuccess: (data: User | null) => {
 			const $ndkStore = get(ndkStore)
 
-			queryClient.invalidateQueries({ queryKey: ['user', !!$ndkStore.activeUser?.pubkey] })
-			queryClient.setQueryData(['user', !!$ndkStore.activeUser?.pubkey], data)
+			queryClient.invalidateQueries({ queryKey: ['user', $ndkStore.activeUser?.pubkey] })
+			queryClient.setQueryData(['user', $ndkStore.activeUser?.pubkey], data)
 		},
 	},
 	queryClient,

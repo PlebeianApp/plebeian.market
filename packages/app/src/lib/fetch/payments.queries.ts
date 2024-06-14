@@ -8,6 +8,7 @@ import { createRequest, queryClient } from './client'
 declare module './client' {
 	interface Endpoints {
 		[k: `GET /api/v1/payments/?userId=${string}`]: Operation<string, 'GET', never, never, RichPaymentDetail[], never>
+		[k: `GET /api/v1/payments/${string}`]: Operation<string, 'GET', never, never, RichPaymentDetail[], never>
 	}
 }
 
@@ -28,3 +29,17 @@ export const paymentsQuery = createQuery(
 	})),
 	queryClient,
 )
+
+export const paymentsForStallQuery = (stallId: string) =>
+	createQuery<RichPaymentDetail[]>(
+		{
+			queryKey: ['paymentDetails', stallId],
+			queryFn: async () => {
+				const paymentDetails = await createRequest(`GET /api/v1/payments/${stallId}`, {
+					auth: true,
+				})
+				return paymentDetails
+			},
+		},
+		queryClient,
+	)

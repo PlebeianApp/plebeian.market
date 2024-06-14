@@ -38,10 +38,12 @@
 <header class="sticky top-0 z-30 bg-black px-4 py-4 text-white lg:px-12">
 	<div class="container flex h-full w-full items-center justify-between">
 		<section class=" inline-flex items-center">
-			<div class="flex items-center">
-				<a href="/"><img src={appSettings.logoUrl} alt="logo" class="w-16 px-2" /></a>
-				<a class="font-semibold text-2xl" href="/stalls/">{appSettings.instanceName}</a>
-			</div>
+			<a href="/">
+				<div class="flex items-center">
+					<img src={appSettings.logoUrl} alt="logo" class="w-16 px-2" />
+					<span class="font-semibold text-2xl">{appSettings.instanceName}</span>
+				</div>
+			</a>
 			<div class="hidden lg:flex mx-8 gap-8">
 				<a class="hover:underline font-semibold" href="/stalls/">Stall Browser</a>
 				<!-- <a class="hover:underline font-semibold" href="/cat/">Category Browser</a> -->
@@ -59,9 +61,8 @@
 				<DropdownMenu.Content>
 					<DropdownMenu.Group>
 						<DropdownMenu.Label>
-							{#if !$ndkStore.activeUser}
-								<Auth />
-							{:else}
+							<Auth />
+							{#if $ndkStore.activeUser}
 								My account
 							{/if}
 						</DropdownMenu.Label>
