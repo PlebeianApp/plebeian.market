@@ -20,8 +20,9 @@
 
 	import type { PageData } from '../../../routes/$types'
 	import { stallEventSchema } from '../../../schema/nostr-events'
+	import PaymentMethodsStall from './payment-methods-stall.svelte'
 
-	const { appSettings } = $page.data as PageData
+	const { appSettings, paymentDetailsMethod } = $page.data as PageData
 
 	export let stall: RichStall | null = null
 
@@ -277,5 +278,8 @@
 	<div class="grid gap-1.5">
 		<Button on:click={() => addShipping()} variant="outline" class="font-bold ml-auto">Add Shipping Method</Button>
 	</div>
+	{#if stall}
+		<PaymentMethodsStall {stall} {paymentDetailsMethod} />
+	{/if}
 	<Button type="submit" class="w-full font-bold">Save</Button>
 </form>
