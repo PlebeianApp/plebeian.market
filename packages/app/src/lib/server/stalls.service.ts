@@ -8,7 +8,7 @@ import { getProductsByStallId } from '$lib/server/products.service'
 import { getEventCoordinates } from '$lib/utils'
 import { format } from 'date-fns'
 
-import type { Stall } from '@plebeian/database'
+import type { PaymentDetail, Stall } from '@plebeian/database'
 import {
 	and,
 	categories,
@@ -16,6 +16,7 @@ import {
 	eq,
 	getTableColumns,
 	orders,
+	paymentDetails,
 	productCategories,
 	products,
 	shipping,
@@ -38,6 +39,7 @@ export type RichStall = {
 	userName: string | null
 	productCount: number
 	orderCount: number
+	paymentMethods: PaymentDetail[]
 	identifier: string
 }
 
@@ -85,6 +87,8 @@ const resolveStalls = async (stall: Stall): Promise<RichStall> => {
 		error(404, 'Not found')
 	}
 
+	const paymentMethods = await db.select().from(paymentDetails).where(eq(paymentDetails.stallId, stall.id)).execute()
+
 	return {
 		id: stall.id,
 		name: stall.name,
@@ -96,6 +100,7 @@ const resolveStalls = async (stall: Stall): Promise<RichStall> => {
 		userNip05: ownerRes.userNip05,
 		productCount,
 		orderCount,
+		paymentMethods,
 		identifier: stall.id.split(':')[2],
 	}
 }

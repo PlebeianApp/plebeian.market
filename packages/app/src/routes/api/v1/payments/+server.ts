@@ -1,6 +1,11 @@
 import { error, json } from '@sveltejs/kit'
 import { authorize } from '$lib/auth'
-import { createPaymentDetail, deletePaymentDetail, getPaymentDetailsByUserId } from '$lib/server/paymentDetails.service'
+import {
+	createPaymentDetail,
+	deletePaymentDetail,
+	getPaymentDetailsByUserId,
+	updatePaymentDetail,
+} from '$lib/server/paymentDetails.service'
 
 import type { RequestHandler } from './$types'
 
@@ -45,11 +50,29 @@ export const POST: RequestHandler = async ({ request, url: { searchParams } }) =
 	return json(newPaymentDetail)
 }
 
-export const DELETE: RequestHandler = async ({ request, url: { searchParams } }) => {
+export const PUT: RequestHandler = async ({ request, url: { searchParams } }) => {
 	const userId = searchParams.get('userId')
 	const paymentDetailId = searchParams.get('paymentDetailId')
 
-	console.log(userId, paymentDetailId)
+	if (!userId || !paymentDetailId) {
+		error(400, 'Invalid request')
+	}
+
+	try {
+		await authorize(request, userId, 'PUT')
+	} catch (e) {
+		error(401, 'Unauthorized')
+	}
+
+	const paymentDetail = await request.json()
+
+	const updatedPaymentDetail = await updatePaymentDetail(paymentDetailId, paymentDetail)
+	return json(updatedPaymentDetail)
+}
+
+export const DELETE: RequestHandler = async ({ request, url: { searchParams } }) => {
+	const userId = searchParams.get('userId')
+	const paymentDetailId = searchParams.get('paymentDetailId')
 
 	if (!userId || !paymentDetailId) {
 		error(400, 'Invalid request')
