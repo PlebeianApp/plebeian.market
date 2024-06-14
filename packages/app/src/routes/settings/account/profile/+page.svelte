@@ -45,9 +45,7 @@
 	const linkDetails = data.menuItems
 		.find((item) => item.value === 'account-settings')
 		?.links.find((item) => item.href === $page.url.pathname)
-	console.log('dummy')
 	$: if (!$activeUserQuery.data?.id) {
-		console.log('hellooooooooo')
 		$activeUserQuery.refetch()
 	}
 </script>
