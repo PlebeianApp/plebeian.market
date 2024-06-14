@@ -1,7 +1,7 @@
 import { error, json } from '@sveltejs/kit'
 import { usersFilterSchema } from '$lib/schema'
 import { decodeJwtToEvent } from '$lib/server/nostrAuth.service.js'
-import { createUser, getAllUsers, getRichUsers } from '$lib/server/users.service'
+import { createUser, getAllUsers, getRichUsers, getUsersByRole } from '$lib/server/users.service'
 
 import type { RequestHandler } from './$types.js'
 
@@ -15,8 +15,11 @@ export const GET: RequestHandler = async ({ request, url: { searchParams } }) =>
 
 	if (authorizationHeader) {
 		const token = decodeJwtToEvent(authorizationHeader)
-		if (token && token.pubkey == filter.data.userId) {
+		if (token && filter.data.userId) {
 			const users = await getRichUsers(filter.data)
+			return json(users)
+		} else if (token && filter.data.role) {
+			const users = await getUsersByRole(filter.data)
 			return json(users)
 		}
 	}

@@ -45,7 +45,7 @@ export const doSetup = async (setupData: NewAppSettings, adminList?: string[]) =
 	return { updatedAppSettings, insertedUsers }
 }
 
-const updateAppSettings = async (newAppSettings: NewAppSettings) => {
+export const updateAppSettings = async (newAppSettings: NewAppSettings) => {
 	const [appSettingsRes] = await db
 		.update(appSettings)
 		.set(newAppSettings)

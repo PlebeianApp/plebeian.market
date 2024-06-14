@@ -1,4 +1,4 @@
-import type { NDKUser, NDKUserProfile } from '@nostr-dev-kit/ndk'
+import type { NDKUser } from '@nostr-dev-kit/ndk'
 import type { RichUser } from '$lib/server/users.service'
 import { createMutation } from '@tanstack/svelte-query'
 import { goto } from '$app/navigation'

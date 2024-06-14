@@ -1,4 +1,14 @@
+import type { QueryObserverResult } from '@tanstack/svelte-query'
+import type { RichUser } from '$lib/server/users.service.js'
+import { activeUserQuery } from '$lib/fetch/users.queries'
+
 export const load = async ({ url }) => {
+	let activeUser: QueryObserverResult<RichUser | null, Error> | undefined
+	activeUserQuery.subscribe((user) => {
+		if (user.data) {
+			activeUser = user
+		}
+	})
 	const menuItems = [
 		{
 			title: 'App Settings',
@@ -6,9 +16,7 @@ export const load = async ({ url }) => {
 			value: 'app-settings',
 			root: '/settings/app',
 			links: [
-				{ title: 'App Identity', href: '/settings/app/identity', description: 'Manage app identity' },
-				{ title: 'Allow user registration', href: '/settings/app/registration', description: 'Enable or disable user registration' },
-				{ title: 'Default currency', href: '/settings/app/currency', description: 'Set the default currency for transactions' },
+				{ title: 'App Miscellanea', href: '/settings/app/misc', description: 'Manage app identity and other settings' },
 				{ title: 'Instance relay', href: '/settings/app/relay', description: 'Configure instance relay settings' },
 				{ title: 'Media services', href: '/settings/app/media', description: 'Manage media services' },
 			],
@@ -38,5 +46,6 @@ export const load = async ({ url }) => {
 	]
 	return {
 		menuItems: menuItems,
+		activeUser: activeUser,
 	}
 }
