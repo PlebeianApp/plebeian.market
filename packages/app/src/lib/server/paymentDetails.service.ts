@@ -1,3 +1,5 @@
+import { error } from '@sveltejs/kit'
+
 import type { PaymentDetail } from '@plebeian/database'
 import { and, db, eq, paymentDetails } from '@plebeian/database'
 
@@ -83,4 +85,31 @@ export const updatePaymentDetail = async (paymentDetailId: string, paymentDetail
 export const deletePaymentDetail = async (paymentDetailId: string): Promise<boolean> => {
 	const [deleted] = await db.delete(paymentDetails).where(eq(paymentDetails.id, paymentDetailId)).returning()
 	return !!deleted
+}
+
+export const getPaymentDetailsByStallId = async (stallId: string): Promise<RichPaymentDetail[]> => {
+	const paymentDetailsForStall = await db.query.paymentDetails.findMany({
+		where: eq(paymentDetails.stallId, stallId),
+	})
+	return await Promise.all(paymentDetailsForStall.map(enrichWithStallName))
+}
+
+export const setDefaultPaymentDetail = async (paymentDetailId: string, stallId: string): Promise<RichPaymentDetail> => {
+	const targetStall = await db.query.stalls.findFirst({
+		where: (stalls) => eq(stalls.id, stallId),
+	})
+
+	if (!targetStall) {
+		error(404, 'Stall not found')
+	}
+
+	await unsetDefaultsForStall(targetStall.id)
+
+	const [updatedPaymentDetail] = await db
+		.update(paymentDetails)
+		.set({ isDefault: true })
+		.where(eq(paymentDetails.id, paymentDetailId))
+		.returning()
+
+	return enrichWithStallName(updatedPaymentDetail)
 }
