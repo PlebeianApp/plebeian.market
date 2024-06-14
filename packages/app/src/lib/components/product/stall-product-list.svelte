@@ -5,6 +5,7 @@
 	import Spinner from '../assets/spinner.svelte'
 	import Separator from '../ui/separator/separator.svelte'
 	import ImgPlaceHolder from './imgPlaceHolder.svelte'
+	import SatPriceLoader from './sat-price-loader.svelte'
 
 	export let stall: RichStall
 
@@ -28,9 +29,9 @@
 					<div>{product.name}</div>
 					<div class="max-w-[300px] whitespace-nowrap overflow-hidden text-ellipsis">{product.description}</div>
 				</div>
-				<div class="flex flex-col justify-between">
-					<div>{product.price}</div>
-					<div>{product.price}</div>
+				<div class="flex flex-col justify-between text-right">
+					<SatPriceLoader {product} />
+					<div>({product.currency} {product.price})</div>
 				</div>
 			</a>
 			<Separator />
