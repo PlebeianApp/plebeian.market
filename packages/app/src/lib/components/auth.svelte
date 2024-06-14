@@ -20,8 +20,17 @@
 	let createDialogOpen = false
 	let nsec: ReturnType<(typeof nip19)['nsecEncode']> | null = null
 
-	async function loginWrapper(loginMethod: BaseAccount['type'], formData?: FormData, autoLogin?: boolean) {
+	async function handleLogin(loginMethod: BaseAccount['type'], formData?: FormData, autoLogin?: boolean) {
 		;(await login(loginMethod, formData, autoLogin)) ? toast.success('Login sucess!') : toast.error('Login error!')
+	}
+
+	async function handleSignUp(formData: FormData) {
+		const key = generateSecretKey()
+		nsec = nip19.nsecEncode(key)
+		formData.append('key', nsec)
+		await handleLogin('NSEC', formData)
+		authDialogOpen = false
+		createDialogOpen = true
 	}
 
 	const activeTab =
@@ -48,7 +57,7 @@
 				</Tabs.List>
 				<Tabs.Content value="join" class="flex flex-col gap-2">
 					<Button
-						on:click={() => loginWrapper('NIP07', undefined, checked)}
+						on:click={() => handleLogin('NIP07', undefined, checked)}
 						variant="outline"
 						class="w-full border-black border-2 font-bold flex items-center gap-1"
 						><span class="text-black text-md">Sign in with extension</span>
@@ -72,7 +81,7 @@
 
 					<form
 						class="flex flex-col gap-2"
-						on:submit|preventDefault={(sEvent) => loginWrapper('NSEC', new FormData(sEvent.currentTarget, sEvent.submitter), checked)}
+						on:submit|preventDefault={(sEvent) => handleLogin('NSEC', new FormData(sEvent.currentTarget, sEvent.submitter), checked)}
 					>
 						<Input required class="border-black border-2" name="key" placeholder="Private key (nsec1...)" id="signInSk" type="password" />
 						<Input required class="border-black border-2" name="password" placeholder="Password" id="signInPass" type="password" />
@@ -103,13 +112,7 @@
 					<form
 						class="flex flex-col gap-2"
 						on:submit|preventDefault={async (sEvent) => {
-							const key = generateSecretKey()
-							nsec = nip19.nsecEncode(key)
-							const formData = new FormData(sEvent.currentTarget, sEvent.submitter)
-							formData.append('key', nsec)
-							await loginWrapper('NSEC', formData)
-							authDialogOpen = false
-							createDialogOpen = true
+							handleSignUp(new FormData(sEvent.currentTarget, sEvent.submitter))
 						}}
 					>
 						<Input id="signUpPassword" required class="border-black border-2" name="password" placeholder="Password" type="password" />
