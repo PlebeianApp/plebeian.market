@@ -34,7 +34,6 @@
 				? $activeUserQuery.data.trustLevel
 				: userTrustLevels[0]
 		const filteredFormObject = Object.fromEntries(Object.entries(formObject).filter(([_, value]) => value !== '')) as unknown as RichUser
-
 		const ndkUser = $ndkStore.getUser({
 			hexpubkey: $ndkStore.activeUser?.pubkey,
 		})
@@ -73,13 +72,13 @@
 
 			<div class="grid w-full items-center gap-1.5">
 				<Label for="name" class="font-bold">Name</Label>
-				<Input bind:value={$activeUserQuery.data.name} type="text" id="name" name="name" placeholder={$activeUserQuery.data?.name} />
+				<Input value={$activeUserQuery.data.name} type="text" id="name" name="name" placeholder={$activeUserQuery.data?.name} />
 			</div>
 
 			<div class="grid w-full items-center gap-1.5">
 				<Label for="displayName" class="font-bold">Display Name</Label>
 				<Input
-					bind:value={$activeUserQuery.data.displayName}
+					value={$activeUserQuery.data.displayName}
 					type="text"
 					id="displayName"
 					name="displayName"
@@ -89,12 +88,12 @@
 
 			<div class="grid w-full items-center gap-1.5">
 				<Label for="about" class="font-bold">Short bio</Label>
-				<Textarea bind:value={$activeUserQuery.data.about} rows={8} id="about" name="about" placeholder={$activeUserQuery.data?.about} />
+				<Textarea value={$activeUserQuery.data.about} rows={8} id="about" name="about" placeholder={$activeUserQuery.data?.about} />
 			</div>
 
 			<div class="grid w-full items-center gap-1.5">
 				<Label for="nip05" class="font-bold">Nostr address</Label>
-				<Input bind:value={$activeUserQuery.data.nip05} type="text" id="nip05" name="nip05" placeholder={$activeUserQuery.data?.nip05} />
+				<Input value={$activeUserQuery.data.nip05} type="text" id="nip05" name="nip05" placeholder={$activeUserQuery.data?.nip05} />
 			</div>
 
 			{#if $activeUserQuery.data?.trustLevel}
