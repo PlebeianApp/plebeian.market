@@ -61,9 +61,8 @@
 				<DropdownMenu.Content>
 					<DropdownMenu.Group>
 						<DropdownMenu.Label>
-							{#if !$ndkStore.activeUser}
-								<Auth />
-							{:else}
+							<Auth />
+							{#if $ndkStore.activeUser}
 								My account
 							{/if}
 						</DropdownMenu.Label>
