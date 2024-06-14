@@ -1,7 +1,7 @@
 <script lang="ts">
 	import CatCompactItem from '$lib/components/category/cat-compact-item.svelte'
 	import Skeleton from '$lib/components/ui/skeleton/skeleton.svelte'
-	import { categoriesQuery } from '$lib/fetch/queries'
+	import { categoriesQuery } from '$lib/fetch/category.queries'
 </script>
 
 <div class="flex min-h-screen w-full flex-col bg-muted/40">

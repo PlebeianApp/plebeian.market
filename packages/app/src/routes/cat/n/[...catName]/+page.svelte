@@ -3,7 +3,8 @@
 	import Pattern from '$lib/components/Pattern.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
 	import StallItem from '$lib/components/stalls/stall-item.svelte'
-	import { createCategoriesByFilterQuery, createProductsByFilterQuery } from '$lib/fetch/queries'
+	import { createCategoriesByFilterQuery } from '$lib/fetch/category.queries'
+	import { createProductsByFilterQuery } from '$lib/fetch/products.queries'
 
 	import type { PageData } from './$types'
 

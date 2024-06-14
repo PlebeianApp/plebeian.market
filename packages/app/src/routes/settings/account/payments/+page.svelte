@@ -1,4 +1,6 @@
 <script lang="ts">
+	import type { Selected } from 'bits-ui'
+	import PaymentDetailEdit from '$lib/components/settings/payment-detail-edit.svelte'
 	import { Button } from '$lib/components/ui/button/index.js'
 	import { Checkbox } from '$lib/components/ui/checkbox'
 	import { Content, Group, Item, Root, Trigger } from '$lib/components/ui/dropdown-menu'
@@ -6,23 +8,23 @@
 	import { Label } from '$lib/components/ui/label/index.js'
 	import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '$lib/components/ui/select'
 	import Separator from '$lib/components/ui/separator/separator.svelte'
-	import { persistPaymentMethodMutation } from '$lib/fetch/mutations'
-	import { createStallsByFilterQuery, paymentsQuery } from '$lib/fetch/queries'
+	import { persistPaymentMethodMutation } from '$lib/fetch/payments.mutations'
+	import { paymentsQuery } from '$lib/fetch/payments.queries'
+	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
 	import ndkStore from '$lib/stores/ndk'
 
 	import type { PaymentDetailsMethod } from '@plebeian/database'
 
 	import type { PageData } from './$types'
-	import PaymentDetailEdit from '/src/lib/components/settings/payment-detail-edit.svelte'
 
 	export let data: PageData
 	const { paymentDetailsMethod } = data
 
 	let newPaymentMethodOpen: PaymentDetailsMethod | null = null
 	let newPaymentDetails: string | null = null
-	let selectedStall: { value: string; label: string } | null = null
+	let selectedStall: Selected<string | null> | undefined = undefined
 	let isDefault: boolean = false
-	$: isDisabled = selectedStall === null
+	$: isDisabled = selectedStall === undefined || selectedStall?.value === null
 
 	$: stallsQuery = $ndkStore.activeUser?.pubkey
 		? createStallsByFilterQuery({
@@ -30,8 +32,8 @@
 			})
 		: null
 
-	const handleAddPaymentMethodLine = (method: PaymentDetailsMethod) => {
-		newPaymentMethodOpen = method
+	const handleAddPaymentMethodLine = (method: string) => {
+		newPaymentMethodOpen = method as PaymentDetailsMethod
 	}
 
 	const handleCancelAddPaymentMethod = () => {
@@ -43,13 +45,13 @@
 		const res = await $persistPaymentMethodMutation.mutateAsync({
 			paymentDetails: newPaymentDetails as string,
 			paymentMethod: newPaymentMethodOpen as string,
-			stallId: selectedStall?.value,
+			stallId: selectedStall?.value ?? null,
 			isDefault,
 		})
 		if (res) {
 			newPaymentMethodOpen = null
 			newPaymentDetails = null
-			selectedStall = null
+			selectedStall = undefined
 			isDefault = false
 		}
 	}
@@ -83,7 +85,7 @@
 						Other Details
 					{/if}
 				</label>
-				<Input bind:value={newPaymentDetails} id="paymentDetails" placeholder="Enter payment details" />
+				<Input required bind:value={newPaymentDetails} id="paymentDetails" placeholder="Enter payment details" />
 				<div class="flex flex-row w-full items-center gap-2">
 					<div class="flex flex-col gap-1 flex-grow items-start">
 						<Label class="truncate font-bold">Select stall</Label>
@@ -93,11 +95,13 @@
 							</SelectTrigger>
 							<SelectContent class="border-black border-2 max-h-[350px] overflow-y-auto">
 								<SelectItem value={null}>General</SelectItem>
-								{#each $stallsQuery.data as stall}
-									<div class="flex items-center gap-2">
-										<SelectItem value={stall.id}>{stall.name}</SelectItem>
-									</div>
-								{/each}
+								{#if $stallsQuery && $stallsQuery.data}
+									{#each $stallsQuery.data as stall}
+										<div class="flex items-center gap-2">
+											<SelectItem value={stall.id}>{stall.name}</SelectItem>
+										</div>
+									{/each}
+								{/if}
 							</SelectContent>
 						</Select>
 					</div>

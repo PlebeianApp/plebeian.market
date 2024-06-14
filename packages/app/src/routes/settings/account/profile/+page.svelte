@@ -11,8 +11,8 @@
 	import { Label } from '$lib/components/ui/label/index.js'
 	import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '$lib/components/ui/select'
 	import Textarea from '$lib/components/ui/textarea/textarea.svelte'
-	import { userDataMutation } from '$lib/fetch/mutations'
-	import { activeUserQuery } from '$lib/fetch/queries'
+	import { userDataMutation } from '$lib/fetch/users.mutations'
+	import { activeUserQuery } from '$lib/fetch/users.queries'
 	import ndkStore from '$lib/stores/ndk'
 	import { nav_back } from '$lib/utils'
 

@@ -4,7 +4,7 @@
 	import CreateEditStall from '$lib/components/stalls/create-edit.svelte'
 	import { Button } from '$lib/components/ui/button/index.js'
 	import { Skeleton } from '$lib/components/ui/skeleton'
-	import { createStallsByFilterQuery } from '$lib/fetch/queries'
+	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
 	import ndkStore from '$lib/stores/ndk'
 	import { nav_back } from '$lib/utils'
 

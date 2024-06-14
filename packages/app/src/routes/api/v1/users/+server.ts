@@ -44,6 +44,7 @@ export const POST = async ({ request }) => {
 		const body = await request.json()
 		return json(await createUser(body))
 	} catch (e) {
+		console.log('e', e)
 		error(500, JSON.stringify(e))
 	}
 }
