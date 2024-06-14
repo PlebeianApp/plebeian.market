@@ -1,21 +1,22 @@
 <script lang="ts">
-	import { afterNavigate, goto } from '$app/navigation'
+	import { afterNavigate } from '$app/navigation'
 	import { page } from '$app/stores'
 	import * as Accordion from '$lib/components/ui/accordion'
+	import { activeUserQuery } from '$lib/fetch/users.queries'
 	import ndkStore from '$lib/stores/ndk'
 
 	import type { PageData } from './$types'
 
 	export let data: PageData
 	const { menuItems } = data
-	let value: string
 
+	let value: string
 	afterNavigate(() => {
 		value = menuItems.find((item) => `/${$page.url.pathname.split('/').slice(1, 3).join('/')}` === item.root)?.value || ''
 	})
 </script>
 
-{#if $ndkStore.activeUser && $ndkStore.signer}
+{#if $activeUserQuery.data && $ndkStore.signer}
 	<div class="max-w-3xl mx-auto p-4">
 		<div class="grid grid-cols-[200px_1fr] gap-2">
 			<div class="w-full">
