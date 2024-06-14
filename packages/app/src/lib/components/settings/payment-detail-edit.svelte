@@ -73,7 +73,7 @@
 					<span>{paymentDetail.paymentDetails}</span>
 				{/if}
 			</div>
-			<div class="flex flex-row gap-2 items-center">
+			<div class="flex flex-row gap-2 items-center mr-2">
 				{#if paymentDetail.stallName}
 					{#if paymentDetail.isDefault}
 						<span
@@ -166,14 +166,20 @@
 	</Collapsible.Root>
 
 	<div class="flex flex-row-reverse gap-2">
-		<Button id="signInSubmit" type="submit" size="icon" variant="destructive" on:click={() => handleDeletePaymentMethod(paymentDetail.id)}>
-			<span class="i-mdi-trash w-6 h-6 cursor-pointer" /></Button
+		<Button
+			id="signInSubmit"
+			type="submit"
+			class="border-none"
+			variant="ghost"
+			size="icon"
+			on:click={() => handleDeletePaymentMethod(paymentDetail.id)}
 		>
+			<span class="i-mdi-trash w-6 h-6 cursor-pointer" />
+		</Button>
 
 		{#if inEdit}
-			<Button id="signInSubmit" type="submit" on:click={() => handleUpdatePaymentMethod()}>
+			<Button id="signInSubmit" type="submit" class="border-none" variant="ghost" size="icon" on:click={() => handleUpdatePaymentMethod()}>
 				<span class="i-mdi-content-save-outline w-6 h-6" />
-				<span>Save</span>
 			</Button>
 		{/if}
 	</div>
