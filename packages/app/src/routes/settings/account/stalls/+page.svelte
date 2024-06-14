@@ -16,13 +16,11 @@
 
 	let stallsMode: 'list' | 'create' | 'edit' = 'list'
 
-	$: stallsQuery = $ndkStore.activeUser?.pubkey
-		? createStallsByFilterQuery({
-				userId: $ndkStore.activeUser.pubkey,
-			})
-		: null
+	$: stallsQuery = createStallsByFilterQuery({
+		userId: $ndkStore.activeUser?.pubkey,
+	})
 
-	$: stallsMode === 'list' ? $stallsQuery?.refetch() : null
+	$: stallsMode === 'list' ? $stallsQuery.refetch() : null
 
 	let currentStall: RichStall | null = null
 	const linkDetails = data.menuItems
