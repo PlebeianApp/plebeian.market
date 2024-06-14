@@ -178,8 +178,8 @@
 		</Button>
 
 		{#if inEdit}
-			<Button id="signInSubmit" type="submit" class="border-none" variant="ghost" size="icon" on:click={() => handleUpdatePaymentMethod()}>
-				<span class="i-mdi-content-save-outline w-6 h-6" />
+			<Button id="signInSubmit" type="submit" class="border-none" variant="ghost" size="sm" on:click={() => handleUpdatePaymentMethod()}>
+				<span class="i-mdi-content-save-outline w-6 h-6 mr-1" /><span>Save</span>
 			</Button>
 		{/if}
 	</div>
