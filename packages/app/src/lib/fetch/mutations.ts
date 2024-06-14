@@ -1,7 +1,7 @@
-import type { NDKEvent, NDKUser, NDKUserProfile } from '@nostr-dev-kit/ndk'
 import type { RichPaymentDetail } from '$lib/server/paymentDetails.service'
 import type { DisplayProduct } from '$lib/server/products.service'
 import type { RichUser } from '$lib/server/users.service'
+import { NDKEvent } from '@nostr-dev-kit/ndk'
 import { createMutation } from '@tanstack/svelte-query'
 import { goto } from '$app/navigation'
 import { KindProducts } from '$lib/constants'
