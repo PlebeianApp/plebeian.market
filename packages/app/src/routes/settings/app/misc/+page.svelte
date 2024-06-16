@@ -14,20 +14,18 @@
 	import SelectTrigger from '$lib/components/ui/select/select-trigger.svelte'
 	import Separator from '$lib/components/ui/separator/separator.svelte'
 	import { availabeLogos } from '$lib/constants'
-	import { createUsersByRoleQuery } from '$lib/fetch/users.queries'
 	import { nav_back } from '$lib/utils'
+	import { npubEncode } from 'nostr-tools/nip19'
 	import { onMount, tick } from 'svelte'
 	import { toast } from 'svelte-sonner'
 
 	export let data
-	$: ({ appSettings, currencies } = data)
+	const { adminUsers, currencies, appSettings } = data
 	const linkDetails = data.menuItems.find((item) => item.value === 'app-settings')?.links.find((item) => item.href === $page.url.pathname)
-	$: adminUsers = createUsersByRoleQuery({ role: 'admin' })
-
 	let checked = false
 	let selectedCurrency: Selected<string> = { value: 'BTC', label: 'BTC' }
 	let newInstanceNpub = ''
-	let adminsList: string[] = []
+	let adminsList: string[] = adminUsers.map((user) => npubEncode(user.userId))
 	let inputValue: string = ''
 	let logoUrl: string = ''
 	let open = false
@@ -39,6 +37,7 @@
 		formObject.defaultCurrency = selectedCurrency.value
 		formObject.logoUrl = logoUrl
 		const filteredFormObject = Object.fromEntries(Object.entries(formObject).filter(([_, value]) => value !== ''))
+		console.log(filteredFormObject)
 		const response = await fetch('/setup', {
 			method: 'POST',
 			body: JSON.stringify(filteredFormObject),
@@ -74,9 +73,6 @@
 		newInstanceNpub = appSettings.instancePk
 		logoUrl = appSettings.logoUrl
 		selectedCurrency = { value: appSettings.defaultCurrency, label: appSettings.defaultCurrency }
-		if ($adminUsers.data) {
-			adminsList = $adminUsers.data?.map((user) => user.userId).filter(Boolean) as string[]
-		}
 	})
 </script>
 
@@ -104,7 +100,6 @@
 								<Label class="truncate font-bold">Instance npub</Label>
 								<div class="flex flex-row gap-2">
 									<Input
-										disabled
 										bind:value={appSettings.instancePk}
 										class=" border-black border-2"
 										name="instancePk"
