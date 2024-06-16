@@ -83,7 +83,7 @@ export const getRichUsers = async (filter: UsersFilter = usersFilterSchema.parse
 	error(404, 'User not found')
 }
 
-export const getUsersByRole = async (filter: UsersFilter = usersFilterSchema.parse({})): Promise<UserMeta[]> => {
+export const getUsersByRole = async (filter: UsersFilter = usersFilterSchema.parse({})): Promise<string[]> => {
 	if (!filter.role) error(500, 'bad filter')
 
 	const userResult = await db
@@ -93,7 +93,7 @@ export const getUsersByRole = async (filter: UsersFilter = usersFilterSchema.par
 		.offset((filter.page - 1) * filter.pageSize)
 		.where(and(eq(userMeta.metaName, USER_META.ROLE.value), eq(userMeta.valueText, filter.role)))
 		.execute()
-	return userResult
+	return userResult.map((user) => user.userId) as string[]
 }
 
 export const getUserById = async (id: string): Promise<User> => {

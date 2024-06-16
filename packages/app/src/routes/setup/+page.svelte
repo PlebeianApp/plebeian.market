@@ -36,7 +36,7 @@
 			goto('/', { invalidateAll: true })
 		}
 	})
-
+	// FIXME age.svelte:63 Uncaught (in promise) TypeError: Cannot read properties of undefined (reading 'length' at HTMLFormElement.handleSubmit. Related with `updateAppSettings()`
 	function setGeneratedSk() {
 		const sk = generateSecretKey()
 		const newPk = getPublicKey(sk)
