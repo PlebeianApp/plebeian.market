@@ -27,7 +27,7 @@ export const doSetup = async (setupData: NewAppSettings, adminList?: string[]) =
 
 	const updatedAppSettings = await updateAppSettings({
 		...setupData,
-		isFirstTimeRunning: false,
+		isFirstTimeRunning: true,
 		instancePk: decodedInstancePk,
 		defaultCurrency: setupData.defaultCurrency,
 		ownerPk: decodedOwnerPk,
@@ -71,21 +71,25 @@ const revokeAdmins = async (adminsToInsert: { id: string; role: UserRoles }[], c
 		}),
 	)
 }
-// FIXME setup process doesnt works rn
+
 export const updateAppSettings = async (appSettingsData: NewAppSettings, adminList?: string[]) => {
-	const instancePk = appSettingsData.instancePk.startsWith('npub')
+	appSettingsData.instancePk = appSettingsData.instancePk.startsWith('npub')
 		? decode(appSettingsData.instancePk).data.toString()
 		: appSettingsData.instancePk
-	const decodedOwnerPk = appSettingsData.ownerPk ? decode(appSettingsData.ownerPk).data.toString() : null
+
+	appSettingsData.ownerPk = appSettingsData.ownerPk?.startsWith('npub')
+		? decode(appSettingsData.ownerPk).data.toString()
+		: appSettingsData.ownerPk
+
+	appSettingsData.allowRegister = JSON.parse(appSettingsData.allowRegister as unknown as string)
+
 	const [appSettingsRes] = await db
 		.update(appSettings)
 		.set({
 			...appSettingsData,
-			instancePk: instancePk,
-			ownerPk: decodedOwnerPk,
-			allowRegister: JSON.parse(appSettingsData.allowRegister as unknown as string),
+			isFirstTimeRunning: false,
 		})
-		.where(eq(appSettings.instancePk, instancePk))
+		.where(appSettingsData.isFirstTimeRunning ? eq(appSettings.isFirstTimeRunning, true) : eq(appSettings.instancePk, instancePk))
 		.returning()
 		.execute()
 
@@ -93,9 +97,12 @@ export const updateAppSettings = async (appSettingsData: NewAppSettings, adminLi
 		error(500, 'Failed to update app settings')
 	}
 
-	const insertedUsers = await adminsToInsert(appSettingsData, adminList)
+	if (adminList) {
+		const insertedUsers = await adminsToInsert(appSettingsData, adminList)
+		return { appSettingsRes, insertedUsers }
+	}
 
-	return { appSettingsRes, insertedUsers }
+	return { appSettingsRes }
 }
 
 const insertUsers = async (usersToInsert: { id: string; role: UserRoles }[]) => {

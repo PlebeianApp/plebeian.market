@@ -18,6 +18,8 @@
 
 	import type { PageData } from './$types'
 
+	$: ({ currencies, initialSetup } = data)
+	// TODO Load appSetting data
 	let checked = false
 	let selectedCurrency: Selected<string> = { value: 'BTC', label: 'BTC' }
 	let newInstanceNsec = ''
@@ -29,14 +31,11 @@
 	export let data: PageData
 	let open = false
 
-	$: ({ currencies, initialSetup } = data)
-
 	onMount(async () => {
 		if (!initialSetup) {
 			goto('/', { invalidateAll: true })
 		}
 	})
-	// FIXME age.svelte:63 Uncaught (in promise) TypeError: Cannot read properties of undefined (reading 'length' at HTMLFormElement.handleSubmit. Related with `updateAppSettings()`
 	function setGeneratedSk() {
 		const sk = generateSecretKey()
 		const newPk = getPublicKey(sk)
