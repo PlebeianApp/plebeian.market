@@ -13,29 +13,30 @@
 	import { availabeLogos } from '$lib/constants'
 	import { copyToClipboard } from '$lib/utils'
 	import { generateSecretKey, getPublicKey, nip19 } from 'nostr-tools'
+	import { npubEncode } from 'nostr-tools/nip19'
 	import { onMount, tick } from 'svelte'
 	import { toast } from 'svelte-sonner'
 
 	import type { PageData } from './$types'
 
-	$: ({ currencies, initialSetup } = data)
-	// TODO Load appSetting data
+	export let data: PageData
+	const { currencies, appSettings, adminUsers } = data
 	let checked = false
 	let selectedCurrency: Selected<string> = { value: 'BTC', label: 'BTC' }
 	let newInstanceNsec = ''
 	let newInstanceNpub = ''
-	let adminsList: string[] = []
+	let adminsList: string[] = adminUsers.map((user) => npubEncode(user))
 	let inputValue: string = ''
 
 	let logoUrl: string = ''
-	export let data: PageData
 	let open = false
 
 	onMount(async () => {
-		if (!initialSetup) {
+		if (!appSettings.isFirstTimeRunning) {
 			goto('/', { invalidateAll: true })
 		}
 	})
+
 	function setGeneratedSk() {
 		const sk = generateSecretKey()
 		const newPk = getPublicKey(sk)
