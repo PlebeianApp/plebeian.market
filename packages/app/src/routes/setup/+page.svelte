@@ -52,6 +52,7 @@
 		formObject.defaultCurrency = selectedCurrency.value
 		formObject.logoUrl = logoUrl
 		const filteredFormObject = Object.fromEntries(Object.entries(formObject).filter(([_, value]) => value !== ''))
+
 		const response = await fetch('/setup', {
 			method: 'POST',
 			body: JSON.stringify(filteredFormObject),
@@ -84,10 +85,10 @@
 	}
 </script>
 
-<div class="px-4 py-20 lg:px-12 min-h-[100vh]">
+<div class="px-4 py-10 lg:px-12">
 	<div class="mx-auto max-w-2xl flex flex-col gap-2">
 		<main class="text-black">
-			<div class="px-4 py-20 lg:px-12">
+			<div class="px-4 lg:px-12">
 				<div class="container">
 					<h2 class="max-w-2xl">GM ser, plase provide the setup data...</h2>
 					<Separator class=" my-2" />
