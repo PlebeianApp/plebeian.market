@@ -71,11 +71,11 @@
 							<DropdownMenu.Item>
 								<a
 									href={`/p/${$ndkStore.activeUser.profile?.nip05 ? $ndkStore.activeUser.profile?.nip05 : $ndkStore.activeUser.pubkey}`}
-									class="inline-flex items-center gap-2"><span class="i-tdesign-user-1" />Profile</a
+									class="inline-flex items-center gap-2 w-full"><span class="i-tdesign-user-1" />Profile</a
 								>
 							</DropdownMenu.Item>
 							<DropdownMenu.Item>
-								<a href="/settings" class="inline-flex items-center gap-2"><span class="i-tdesign-user-setting" />Settings</a>
+								<a href="/settings" class="inline-flex items-center gap-2 w-full"><span class="i-tdesign-user-setting" />Settings</a>
 							</DropdownMenu.Item>
 							<DropdownMenu.Item>
 								<Button variant="destructive" class="inline-flex items-center gap-2" on:click={() => logout()}

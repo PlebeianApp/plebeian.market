@@ -19,6 +19,7 @@ export type AuctionsFilter = z.infer<typeof auctionsFilterSchema>
 export const usersFilterSchema = generalFilterSchema.extend({
 	orderBy: z.enum(['createdAt']).default('createdAt'),
 	userId: z.string().optional(),
+	role: z.string().optional(),
 })
 
 export type UsersFilter = z.infer<typeof usersFilterSchema>

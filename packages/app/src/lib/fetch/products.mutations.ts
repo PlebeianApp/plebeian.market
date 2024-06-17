@@ -1,7 +1,7 @@
-import type { NDKEvent } from '@nostr-dev-kit/ndk'
-import type { KindProducts } from '$lib/constants'
 import type { DisplayProduct } from '$lib/server/products.service'
+import { NDKEvent } from '@nostr-dev-kit/ndk'
 import { createMutation } from '@tanstack/svelte-query'
+import { KindProducts } from '$lib/constants'
 import ndkStore, { ndk } from '$lib/stores/ndk'
 import { get } from 'svelte/store'
 

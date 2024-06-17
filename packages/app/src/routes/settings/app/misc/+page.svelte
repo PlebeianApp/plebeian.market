@@ -1,49 +1,34 @@
 <script lang="ts">
 	import type { Selected } from 'bits-ui'
 	import type { ZodError } from 'zod'
-	import { goto } from '$app/navigation'
-	import Button from '$lib/components/ui/button/button.svelte'
+	import { invalidateAll } from '$app/navigation'
+	import { page } from '$app/stores'
+	import { Button } from '$lib/components/ui/button'
 	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte'
 	import * as Command from '$lib/components/ui/command/index.js'
-	import { Input } from '$lib/components/ui/input'
-	import { Label } from '$lib/components/ui/label'
+	import Input from '$lib/components/ui/input/input.svelte'
+	import Label from '$lib/components/ui/label/label.svelte'
 	import * as Popover from '$lib/components/ui/popover/index.js'
-	import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '$lib/components/ui/select'
+	import { Select, SelectValue } from '$lib/components/ui/select/index.js'
+	import SelectContent from '$lib/components/ui/select/select-content.svelte'
+	import SelectItem from '$lib/components/ui/select/select-item.svelte'
+	import SelectTrigger from '$lib/components/ui/select/select-trigger.svelte'
 	import Separator from '$lib/components/ui/separator/separator.svelte'
 	import { availabeLogos } from '$lib/constants'
-	import { copyToClipboard } from '$lib/utils'
-	import { generateSecretKey, getPublicKey, nip19 } from 'nostr-tools'
+	import { copyToClipboard, nav_back } from '$lib/utils'
 	import { npubEncode } from 'nostr-tools/nip19'
 	import { onMount, tick } from 'svelte'
 	import { toast } from 'svelte-sonner'
 
-	import type { PageData } from './$types'
-
-	export let data: PageData
-	const { currencies, appSettings, adminUsers } = data
-	let checked = true
+	export let data
+	const { adminUsers, currencies, appSettings } = data
+	const linkDetails = data.menuItems.find((item) => item.value === 'app-settings')?.links.find((item) => item.href === $page.url.pathname)
+	let checked = appSettings.allowRegister
 	let selectedCurrency: Selected<string> = { value: 'BTC', label: 'BTC' }
-	let newInstanceNsec = ''
-	let newInstanceNpub = ''
 	let adminsList: string[] = adminUsers.map((user) => npubEncode(user))
 	let inputValue: string = ''
-
 	let logoUrl: string = ''
 	let open = false
-
-	onMount(async () => {
-		if (!appSettings.isFirstTimeRunning) {
-			goto('/', { invalidateAll: true })
-		}
-	})
-
-	function setGeneratedSk() {
-		const sk = generateSecretKey()
-		const newPk = getPublicKey(sk)
-
-		newInstanceNsec = nip19.nsecEncode(sk)
-		newInstanceNpub = nip19.npubEncode(newPk)
-	}
 
 	async function handleSubmit(event: SubmitEvent) {
 		const formData = new FormData(event.currentTarget as HTMLFormElement)
@@ -51,10 +36,11 @@
 		formObject.allowRegister = checked.toString()
 		formObject.defaultCurrency = selectedCurrency.value
 		formObject.logoUrl = logoUrl
+		formObject.instancePk = npubEncode(appSettings.instancePk)
 		const filteredFormObject = Object.fromEntries(Object.entries(formObject).filter(([_, value]) => value !== ''))
 
-		const response = await fetch('/setup', {
-			method: 'POST',
+		const response = await fetch($page.url.pathname, {
+			method: 'PUT',
 			body: JSON.stringify(filteredFormObject),
 		})
 
@@ -74,7 +60,8 @@
 		const result = await response.json()
 
 		if (result) {
-			goto('/', { invalidateAll: true })
+			toast.success('App settings successfully updated!')
+			invalidateAll()
 		}
 	}
 	function closeAndFocusTrigger(triggerId: string) {
@@ -83,51 +70,61 @@
 			document.getElementById(triggerId)?.focus()
 		})
 	}
+
+	onMount(() => {
+		logoUrl = appSettings.logoUrl
+		selectedCurrency = { value: appSettings.defaultCurrency, label: appSettings.defaultCurrency }
+	})
 </script>
 
-<div class="px-4 py-10 lg:px-12">
-	<div class="mx-auto max-w-2xl flex flex-col gap-2">
+<div class="pb-4 space-y-2 max-w-2xl">
+	<div>
+		<div class=" flex items-center gap-1">
+			<Button size="icon" variant="outline" class=" border-none" on:click={() => nav_back()}>
+				<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
+			</Button>
+			<section>
+				<h3 class="text-lg font-bold">{linkDetails?.title}</h3>
+				<p class="text-gray-600">{linkDetails?.description}</p>
+			</section>
+		</div>
+	</div>
+	<div class="flex flex-col gap-2 overflow-auto">
 		<main class="text-black">
-			<div class="px-4 lg:px-12">
+			<div class="">
 				<div class="container">
-					<h2 class="max-w-2xl">GM ser, plase provide the setup data...</h2>
 					<Separator class=" my-2" />
 					<form on:submit|preventDefault={handleSubmit} class="max-w-2xl flex flex-col gap-3">
 						<h3>Identity</h3>
 						<Label class="truncate font-bold">Instance npub</Label>
-						<div class="flex flex-row gap-2">
-							<Input
-								required
-								bind:value={newInstanceNpub}
-								class=" border-black border-2"
-								name="instancePk"
-								placeholder="instance npub"
-								type="text"
-							/>
+						<div>
 							<Button
-								on:click={() => {
-									setGeneratedSk()
-								}}>Generate</Button
+								variant="outline"
+								class="flex gap-1 p-2 border-black border-2"
+								on:click={() => copyToClipboard(appSettings.instancePk)}
 							>
+								<code class="truncate">{npubEncode(appSettings.instancePk)}</code>
+								<span class=" i-tdesign-copy"></span>
+							</Button>
 						</div>
 
-						{#if newInstanceNsec}
-							<Label class="truncate font-bold">New nsec</Label>
-							<div class="flex flex-row gap-2">
-								<Input class="border-black border-2" value={newInstanceNsec} readonly />
-								<Button
-									on:click={() => {
-										copyToClipboard(newInstanceNsec)
-									}}><span class="i-mingcute-clipboard-fill text-black w-6 h-6"></span></Button
-								>
-							</div>
-						{/if}
-
 						<Label class="truncate font-bold">Owner npub</Label>
-						<Input class=" border-black border-2" name="ownerPk" placeholder="owner npub" type="text" />
+						<Input
+							value={appSettings.ownerPk ? npubEncode(appSettings.ownerPk) : ''}
+							class=" border-black border-2"
+							name="ownerPk"
+							placeholder="owner npub"
+							type="text"
+						/>
 						<div class=" flex-grow">
 							<Label class="truncate font-bold">Instance name</Label>
-							<Input required class="border-black border-2" name="instanceName" placeholder="instance name" type="text" />
+							<Input
+								value={appSettings.instanceName}
+								class="border-black border-2"
+								name="instanceName"
+								placeholder="instance name"
+								type="text"
+							/>
 						</div>
 
 						<div class=" flex flex-col gap-2">
@@ -142,7 +139,7 @@
 											aria-expanded={open}
 											class="w-full justify-between border-black border-2"
 										>
-											{#if logoUrl}
+											{#if appSettings.logoUrl}
 												{availabeLogos.find((logo) => logo.value === logoUrl)?.label || logoUrl}
 											{:else}
 												<span class=" opacity-50">Select logo</span>
@@ -152,7 +149,6 @@
 									<Popover.Content class=" p-0">
 										<Command.Root>
 											<Command.Input placeholder="Select logo or introduce image url..." bind:value={logoUrl} />
-											<Command.Empty>No framework found.</Command.Empty>
 											<Command.Group>
 												{#each availabeLogos as logo}
 													<Command.Item
@@ -187,22 +183,30 @@
 							</div>
 						</div>
 						<Label class="truncate font-bold">Contact email</Label>
-						<Input class="border-black border-2" name="contactEmail" placeholder="contact email" type="email" />
+						<Input
+							value={appSettings.contactEmail}
+							class="border-black border-2"
+							name="contactEmail"
+							placeholder="contact email"
+							type="email"
+						/>
 						<Separator class=" my-2" />
 						<h3>Crew</h3>
 						{#each adminsList as admin}
-							<div class=" grid grid-cols-[1fr_auto] items-center">
-								<span class="truncate">{admin}</span>
-								<Button
-									type="button"
-									size="icon"
-									variant="outline"
-									class=" bg-red-500"
-									on:click={() => (adminsList = adminsList.filter((value) => value !== admin))}
-								>
-									<span class="i-mdi-trash-can"></span>
-								</Button>
-							</div>
+							{#if admin != npubEncode(appSettings.instancePk)}
+								<div class=" grid grid-cols-[1fr_auto] items-center">
+									<span class="truncate">{admin}</span>
+									<Button
+										type="button"
+										size="icon"
+										variant="outline"
+										class=" bg-red-500"
+										on:click={() => (adminsList = adminsList.filter((value) => value !== admin))}
+									>
+										<span class="i-mdi-trash-can"></span>
+									</Button>
+								</div>
+							{/if}
 						{/each}
 						<textarea name="adminsList" value={adminsList} hidden />
 						<Input type="text" bind:value={inputValue} />
