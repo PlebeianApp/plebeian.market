@@ -7,6 +7,10 @@ import { appSettings, db, eq, USER_META, USER_ROLES, userMeta, users } from '@pl
 
 import { getUsersByRole } from './users.service'
 
+type ExtendedAppSettings = NewAppSettings & {
+	adminsList: string[]
+}
+
 export const isInitialSetup = async (): Promise<boolean> => {
 	const [appSettingsRes] = await db.select().from(appSettings).execute()
 	return appSettingsRes.isFirstTimeRunning
@@ -17,12 +21,12 @@ export const getAppSettings = async () => {
 	return appSettingsRes
 }
 
-export const doSetup = async (setupData: NewAppSettings, adminList?: string[]) => {
+export const doSetup = async (setupData: ExtendedAppSettings) => {
 	if (!setupData.instancePk) {
 		error(400, 'Invalid request')
 	}
 
-	const decodedInstancePk = decode(setupData.instancePk).data.toString()
+	const decodedInstancePk = setupData.instancePk.startsWith('npub') ? decode(setupData.instancePk).data.toString() : setupData.instancePk
 	const decodedOwnerPk = setupData.ownerPk ? decode(setupData.ownerPk).data.toString() : null
 
 	const updatedAppSettings = await updateAppSettings({
@@ -34,19 +38,21 @@ export const doSetup = async (setupData: NewAppSettings, adminList?: string[]) =
 		allowRegister: JSON.parse(setupData.allowRegister as unknown as string),
 	})
 
-	const insertedUsers = adminsToInsert(setupData, adminList)
+	const insertedUsers = adminsToInsert(setupData)
 
 	return { updatedAppSettings, insertedUsers }
 }
 
-const adminsToInsert = async (appSettingsData: NewAppSettings, adminList?: string[]) => {
-	const instancePk = decode(appSettingsData.instancePk).data.toString()
-	const ownerPk = appSettingsData.ownerPk ? decode(appSettingsData.ownerPk).data.toString() : null
+const adminsToInsert = async (appSettingsData: ExtendedAppSettings) => {
+	const decodedInstancePk = appSettingsData.instancePk.startsWith('npub')
+		? decode(appSettingsData.instancePk).data.toString()
+		: appSettingsData.instancePk
+	const decodedOwnerPk = appSettingsData.ownerPk ? decode(appSettingsData.ownerPk).data.toString() : null
 
 	const adminsToInsert = [
-		...(instancePk ? [{ id: instancePk, role: USER_ROLES.ADMIN }] : []),
-		...(ownerPk ? [{ id: ownerPk, role: USER_ROLES.ADMIN }] : []),
-		...(adminList?.map((adminPk) => ({
+		...(decodedInstancePk ? [{ id: decodedInstancePk, role: USER_ROLES.ADMIN }] : []),
+		...(decodedOwnerPk ? [{ id: decodedOwnerPk, role: USER_ROLES.ADMIN }] : []),
+		...(appSettingsData.adminsList?.map((adminPk) => ({
 			id: decode(adminPk).data.toString(),
 			role: USER_ROLES.ADMIN,
 		})) ?? []),
@@ -72,24 +78,22 @@ const revokeAdmins = async (adminsToInsert: { id: string; role: UserRoles }[], c
 	)
 }
 
-export const updateAppSettings = async (appSettingsData: NewAppSettings, adminList?: string[]) => {
-	appSettingsData.instancePk = appSettingsData.instancePk.startsWith('npub')
+export const updateAppSettings = async (appSettingsData: ExtendedAppSettings) => {
+	const decodedInstancePk = appSettingsData.instancePk.startsWith('npub')
 		? decode(appSettingsData.instancePk).data.toString()
 		: appSettingsData.instancePk
-
-	appSettingsData.ownerPk = appSettingsData.ownerPk?.startsWith('npub')
-		? decode(appSettingsData.ownerPk).data.toString()
-		: appSettingsData.ownerPk
-
-	appSettingsData.allowRegister = JSON.parse(appSettingsData.allowRegister as unknown as string)
+	const decodedOwnerPk = appSettingsData.ownerPk ? decode(appSettingsData.ownerPk).data.toString() : null
 
 	const [appSettingsRes] = await db
 		.update(appSettings)
 		.set({
 			...appSettingsData,
 			isFirstTimeRunning: false,
+			instancePk: decodedInstancePk,
+			ownerPk: decodedOwnerPk,
+			allowRegister: JSON.parse(appSettingsData.allowRegister as unknown as string),
 		})
-		.where(appSettingsData.isFirstTimeRunning ? eq(appSettings.isFirstTimeRunning, true) : eq(appSettings.instancePk, instancePk))
+		.where(appSettingsData.isFirstTimeRunning ? eq(appSettings.isFirstTimeRunning, true) : eq(appSettings.instancePk, decodedInstancePk))
 		.returning()
 		.execute()
 
@@ -97,8 +101,8 @@ export const updateAppSettings = async (appSettingsData: NewAppSettings, adminLi
 		error(500, 'Failed to update app settings')
 	}
 
-	if (adminList) {
-		const insertedUsers = await adminsToInsert(appSettingsData, adminList)
+	if (appSettingsData.adminsList) {
+		const insertedUsers = await adminsToInsert(appSettingsData)
 		return { appSettingsRes, insertedUsers }
 	}
 

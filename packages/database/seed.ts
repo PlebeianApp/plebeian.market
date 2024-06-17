@@ -66,7 +66,7 @@ const main = async () => {
 	const appSettings = {
 		instancePk: devInstance.pk,
 		instanceName: 'Dev Instance',
-		isFirstTimeRunning: true,
+		isFirstTimeRunning: false,
 	} as AppSettings
 
 	const userIds = [devUser1, devUser2, devUser3, devUser4, devUser5].map((user) => ({ id: user.pk }))

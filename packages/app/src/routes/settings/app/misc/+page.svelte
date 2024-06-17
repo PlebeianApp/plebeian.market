@@ -38,7 +38,7 @@
 		formObject.logoUrl = logoUrl
 		formObject.instancePk = npubEncode(appSettings.instancePk)
 		const filteredFormObject = Object.fromEntries(Object.entries(formObject).filter(([_, value]) => value !== ''))
-		console.log(filteredFormObject)
+
 		const response = await fetch($page.url.pathname, {
 			method: 'PUT',
 			body: JSON.stringify(filteredFormObject),
@@ -60,7 +60,7 @@
 		const result = await response.json()
 
 		if (result) {
-			toast.success('yey!')
+			toast.success('App settings successfully updated!')
 			invalidateAll()
 		}
 	}
@@ -110,7 +110,7 @@
 
 						<Label class="truncate font-bold">Owner npub</Label>
 						<Input
-							value={npubEncode(appSettings.ownerPk)}
+							value={appSettings.ownerPk ? npubEncode(appSettings.ownerPk) : ''}
 							class=" border-black border-2"
 							name="ownerPk"
 							placeholder="owner npub"

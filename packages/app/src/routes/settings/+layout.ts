@@ -17,8 +17,8 @@ export const load = async ({ url }) => {
 			root: '/settings/app',
 			links: [
 				{ title: 'App Miscellanea', href: '/settings/app/misc', description: 'Manage app identity and other settings' },
-				{ title: 'Instance relay', href: '/settings/app/relay', description: 'Configure instance relay settings' },
-				{ title: 'Media services', href: '/settings/app/media', description: 'Manage media services' },
+				// { title: 'Instance relay', href: '/settings/app/relay', description: 'Configure instance relay settings' },
+				// { title: 'Media services', href: '/settings/app/media', description: 'Manage media services' },
 			],
 		},
 		{
