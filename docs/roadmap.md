@@ -16,6 +16,7 @@
 		- [x] Design hybrid mode to fetch data from database with fallback to Nostr and insert
 			- [x] Verify event before inserting into database
 			- [ ] Users browsing triggers fetch Nostr data and update database if more recent
+				- [ ] Based on docs: [Nostr sub and storage](https://github.com/PlebeianTech/plebeian.market/blob/main/docs/Nostr%20sub%20and%20storage.md)
 		- [ ] Nostr functionalities
 			- [x] Use NDK with Svelte
 			- [x] NDK cache (IndexDB)
@@ -84,7 +85,7 @@
 			- [x] Product pages ("/product/<product_id>")
 			- [x] User page ("/p/<user_id | other identifier>")
 			- [x] Stall page ("/stall/<stall_id>")
-		- [ ] BTS (Background Task Service)
+		- [ ] BTS [(Background Task Service)](https://github.com/PlebeianTech/plebeian.market/blob/main/docs/BTS.md)
 			- [ ] Add app to the monorepo
 			- [ ] Add tasks table to db
 			- [ ] Install croner lib
