@@ -7,7 +7,7 @@ import { appSettings, db, eq, USER_META, USER_ROLES, userMeta, users } from '@pl
 
 import { getUsersByRole } from './users.service'
 
-type ExtendedAppSettings = NewAppSettings & {
+export type ExtendedAppSettings = NewAppSettings & {
 	adminsList: string[]
 }
 
@@ -109,18 +109,25 @@ export const updateAppSettings = async (appSettingsData: ExtendedAppSettings) =>
 	return { appSettingsRes }
 }
 
-const insertUsers = async (usersToInsert: { id: string; role: UserRoles }[]) => {
-	const insertedUsers = await Promise.all(
-		usersToInsert.map(async (user) => {
+const insertUsers = async (usersToInsert: { id: string; role: UserRoles }[]): Promise<ReturnType<(typeof db)['insert']>[]> => {
+	const results = await Promise.all(
+		usersToInsert.map(async ({ id, role }) => {
 			try {
-				const insertedUser = await db.insert(users).values({ id: user.id }).onConflictDoNothing({ target: users.id }).returning().execute()
-				await db.insert(userMeta).values({ userId: user.id, metaName: USER_META.ROLE.value, valueText: user.role }).returning().execute()
-				return insertedUser
+				await db.transaction(async (trx) => {
+					const insertedUser = await trx.insert(users).values({ id }).onConflictDoNothing({ target: users.id }).returning().execute()
+
+					if (insertedUser) {
+						await trx.insert(userMeta).values({ userId: id, metaName: USER_META.ROLE.value, valueText: role }).returning().execute()
+					}
+
+					return insertedUser
+				})
 			} catch (error) {
-				console.error(error)
+				console.error('Error inserting user:', { id, role }, error)
 				return null
 			}
 		}),
 	)
-	return insertedUsers.filter((user) => user !== null)
+
+	return results.filter(Boolean) as unknown as ReturnType<(typeof db)['insert']>[]
 }

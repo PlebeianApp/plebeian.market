@@ -21,7 +21,7 @@
 
 	export let data: PageData
 	const { currencies, appSettings, adminUsers } = data
-	let checked = false
+	let checked = true
 	let selectedCurrency: Selected<string> = { value: 'BTC', label: 'BTC' }
 	let newInstanceNsec = ''
 	let newInstanceNpub = ''
