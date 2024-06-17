@@ -124,7 +124,7 @@
 						<Tabs.Trigger value="join" class="underline cursor-pointer p-0">Sign in</Tabs.Trigger>
 					</p>
 				</Tabs.Content>
-				<div class=" flex flex-col gap-2">
+				<div class=" flex flex-col gap-2 items-center">
 					<Separator />
 					<div class=" flex items-center gap-2">
 						<Checkbox id="terms" bind:checked aria-labelledby="terms-label" />
