@@ -37,108 +37,46 @@
 		'w-full font-bold border-b-2 border-black text-black data-[state=active]:border-b-primary data-[state=active]:text-primary'
 </script>
 
-<Dialog.Root bind:open={authDialogOpen}>
-	<Dialog.Trigger class="flex items-center cursor-pointer gap-2 w-full">
-		<span class="i-tdesign-user-1" />Log in
-	</Dialog.Trigger>
-	<Dialog.Content class="max-w-[425px] gap-0 p-0 text-black">
-		<Dialog.Header class="relative w-full bg-black text-center text-white py-8 flex items-center">
-			<Pattern />
-			<div class="flex flex-row gap-2 items-center">
-				<a href="/"><img src="/logo.svg" alt="logo" class="w-16" /></a>
-				<span class="relative z-10 text-left text-lg font-bold text-primary">plebeian<br />market</span>
-			</div>
-		</Dialog.Header>
-		<Tabs.Root value="nip07" class="p-4">
-			<Tabs.List class="w-full justify-around bg-transparent">
-				<Tabs.Trigger value="nip07" class={activeTab}>Extension</Tabs.Trigger>
-				<Tabs.Trigger value="sk" class={activeTab}>Private Key</Tabs.Trigger>
-				<Tabs.Trigger disabled value="nip46" class={activeTab}>Advanced</Tabs.Trigger>
-				<Tabs.Trigger value="create" class={activeTab}>Sign up</Tabs.Trigger>
-			</Tabs.List>
-			<Tabs.Content value="nip07" class="flex flex-col gap-2">
-				<Button
-					on:click={() => loginWrapper('NIP07', undefined, checked)}
-					variant="outline"
-					class="w-full border-black border-2 font-bold flex items-center gap-1"
-					><span class="text-black text-md">Sign in with extension</span>
-					<span class="i-mdi-puzzle-outline text-black w-6 h-6"> </span></Button
-				>
-				<span
-					>Recommended method. Use <a
-						class="underline"
-						href="https://chrome.google.com/webstore/detail/nos2x/kpgefcfmnafjgpblomihpgmejjdanjjp">nos2x</a
-					>,
-					<a class="underline" href="https://chromewebstore.google.com/detail/nostr-connect/ampjiinddmggbhpebhaegmjkbbeofoaj"
-						>nostrconnect</a
-					>,
-					<a class="underline" href="https://getalby.com/">alby</a> or similar.</span
-				>
-			</Tabs.Content>
-			<Tabs.Content value="sk" class="flex flex-col gap-2">
-				<form
-					class="flex flex-col gap-2"
-					on:submit|preventDefault={(sEvent) => loginWrapper('NSEC', new FormData(sEvent.currentTarget, sEvent.submitter), checked)}
-				>
-					<Input required class="border-black border-2" name="key" placeholder="Private key (nsec1...)" id="signInSk" type="password" />
-					<Input required class="border-black border-2" name="password" placeholder="Password" id="signInPass" type="password" />
-					<Button id="signInSubmit" type="submit">Sign in</Button>
-				</form>
-			</Tabs.Content>
-			<Tabs.Content value="nip46" class="flex flex-col gap-2">
-				<form
-					class="flex flex-col gap-2"
-					on:submit|preventDefault={(sEvent) => loginWrapper('NSEC', new FormData(sEvent.currentTarget, sEvent.submitter), checked)}
-				>
-					<Input required class="border-black border-2" name="key" placeholder="Private key (nsec1...)" id="signInSk" type="password" />
-					<Input required class="border-black border-2" name="password" placeholder="Password" id="signInPass" type="password" />
-					<Button id="signInSubmit" type="submit">Sign in</Button>
-				</form>
-			</Tabs.Content>
-			<Tabs.Content value="create" class="flex flex-col gap-2">
-				<span>
-					We use nostr’s private/public key pair system to generate accounts (keys). They act as your username and password. <a
-						href="/"
-						class="underline">Learn more</a
-					>.
-				</span>
-				<form
-					class="flex flex-col gap-2"
-					on:submit|preventDefault={async (sEvent) => {
-						const key = generateSecretKey()
-						nsec = nip19.nsecEncode(key)
-						const formData = new FormData(sEvent.currentTarget, sEvent.submitter)
-						formData.append('key', nsec)
-						await loginWrapper('NSEC', formData)
-						authDialogOpen = false
-						createDialogOpen = true
-					}}
-				>
-					<Input id="signUpPassword" required class="border-black border-2" name="password" placeholder="Password" type="password" />
-					<Button id="signUpSubmit" type="submit" class="w-full">Generate an account</Button>
-				</form>
-			</Tabs.Content>
-			<div class=" flex flex-col gap-2">
-				<Separator />
-				<div class="">
-					<Checkbox id="terms" bind:checked aria-labelledby="terms-label" />
-					<Label
-						id="terms-label"
-						for="terms"
-						class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-					>
-						Remember me
-					</Label>
+{#if !$ndkStore.activeUser}
+	<Dialog.Root bind:open={authDialogOpen}>
+		<Dialog.Trigger class="flex items-center cursor-pointer gap-2 w-full">
+			<span class="i-tdesign-user-1" />Log in
+		</Dialog.Trigger>
+		<Dialog.Content class="max-w-[425px] gap-0 p-0 text-black">
+			<Dialog.Header class="relative w-full bg-black text-center text-white py-8 flex items-center">
+				<Pattern />
+				<div class="flex flex-row gap-2 items-center">
+					<a href="/"><img src="/logo.svg" alt="logo" class="w-16" /></a>
+					<span class="relative z-10 text-left text-lg font-bold text-primary">plebeian<br />market</span>
 				</div>
-				<p class="text-center">
-					Don’t have an account?
-					<Tabs.Trigger value="create" class="underline cursor-pointer p-0">Sign up</Tabs.Trigger>
-				</p>
-			</div>
-		</Tabs.Root>
-	</Dialog.Content>
-</Dialog.Root>
-
+			</Dialog.Header>
+			<Tabs.Root value="nip07" class="p-4">
+				<Tabs.List class="w-full justify-around bg-transparent">
+					<Tabs.Trigger value="nip07" class={activeTab}>Extension</Tabs.Trigger>
+					<Tabs.Trigger value="sk" class={activeTab}>Private Key</Tabs.Trigger>
+					<Tabs.Trigger disabled value="nip46" class={activeTab}>Advanced</Tabs.Trigger>
+					<Tabs.Trigger value="create" class={activeTab}>Sign up</Tabs.Trigger>
+				</Tabs.List>
+				<Tabs.Content value="nip07" class="flex flex-col gap-2">
+					<Button
+						on:click={() => handleLogin('NIP07', undefined, checked)}
+						variant="outline"
+						class="w-full border-black border-2 font-bold flex items-center gap-1"
+						><span class="text-black text-md">Sign in with extension</span>
+						<span class="i-mdi-puzzle-outline text-black w-6 h-6"> </span></Button
+					>
+					<span
+						>Recommended method. Use <a
+							class="underline"
+							href="https://chrome.google.com/webstore/detail/nos2x/kpgefcfmnafjgpblomihpgmejjdanjjp">nos2x</a
+						>,
+						<a class="underline" href="https://chromewebstore.google.com/detail/nostr-connect/ampjiinddmggbhpebhaegmjkbbeofoaj"
+							>nostrconnect</a
+						>,
+						<a class="underline" href="https://getalby.com/">alby</a> or similar.</span
+					>
+				</Tabs.Content>
+				<Tabs.Content value="sk" class="flex flex-col gap-2">
 					<form
 						class="flex flex-col gap-2"
 						on:submit|preventDefault={(sEvent) => handleLogin('NSEC', new FormData(sEvent.currentTarget, sEvent.submitter), checked)}
@@ -147,20 +85,23 @@
 						<Input required class="border-black border-2" name="password" placeholder="Password" id="signInPass" type="password" />
 						<Button id="signInSubmit" type="submit">Sign in</Button>
 					</form>
-					<div class="flex items-center space-x-2">
-						<Checkbox id="terms" bind:checked aria-labelledby="terms-label" />
-						<Label
-							id="terms-label"
-							for="terms"
-							class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-						>
-							Remember me
-						</Label>
-					</div>
-					<p class="w-full text-center">
-						Don’t have an account?
-						<Tabs.Trigger value="create" class="underline cursor-pointer p-0">Sign up</Tabs.Trigger>
-					</p>
+				</Tabs.Content>
+				<Tabs.Content value="nip46" class="flex flex-col gap-2">
+					<form
+						class="flex flex-col gap-2"
+						on:submit|preventDefault={(sEvent) => handleLogin('NSEC', new FormData(sEvent.currentTarget, sEvent.submitter), checked)}
+					>
+						<Input
+							required
+							class="border-black border-2"
+							name="key"
+							placeholder="Private key (nsec1...)"
+							id="remoteSignIn"
+							type="password"
+						/>
+						<Input required class="border-black border-2" name="password" placeholder="Password" id="remoteSignInPass" type="password" />
+						<Button id="remoteSignInSubmit" type="submit">Sign in</Button>
+					</form>
 				</Tabs.Content>
 				<Tabs.Content value="create" class="flex flex-col gap-2">
 					<span>
@@ -183,6 +124,23 @@
 						<Tabs.Trigger value="join" class="underline cursor-pointer p-0">Sign in</Tabs.Trigger>
 					</p>
 				</Tabs.Content>
+				<div class=" flex flex-col gap-2">
+					<Separator />
+					<div class=" flex items-center gap-2">
+						<Checkbox id="terms" bind:checked aria-labelledby="terms-label" />
+						<Label
+							id="terms-label"
+							for="terms"
+							class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+						>
+							Remember me
+						</Label>
+					</div>
+					<p class="text-center">
+						Don’t have an account?
+						<Tabs.Trigger value="create" class="underline cursor-pointer p-0">Sign up</Tabs.Trigger>
+					</p>
+				</div>
 			</Tabs.Root>
 		</Dialog.Content>
 	</Dialog.Root>
