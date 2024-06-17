@@ -122,10 +122,9 @@ const main = async () => {
 
 	const userMetaData = userIds.flatMap((userId) => {
 	  return metaTypeData.flat(2).filter((metaType) => metaType.scope === 'users').map((metaType) => {
-		const { dataType, name } = metaType
+		const { name } = metaType
 		let valueText: string | null = null
 		let valueBoolean: boolean | null = null
-		let valueInteger: number | null = null
 		let valueNumeric: number | null = null
 	
 		if (name == USER_META.TRUST_LVL.value) {

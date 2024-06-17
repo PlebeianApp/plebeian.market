@@ -24,6 +24,7 @@ declare module './client' {
 			never
 		>
 		[k: `DELETE /api/v1/payments/?paymentDetailId=${string}`]: Operation<string, 'DELETE', never, never, boolean, never>
+		[k: `POST /api/v1/payments/${string}/?paymentDetailId=${string}`]: Operation<string, 'POST', never, never, RichPaymentDetail, never>
 	}
 }
 export const persistPaymentMethodMutation = createMutation(
@@ -96,6 +97,26 @@ export const deletePaymentMethodMutation = createMutation(
 		onSuccess: () => {
 			const $ndkStore = get(ndkStore)
 			queryClient.invalidateQueries({ queryKey: ['paymentDetails', $ndkStore.activeUser?.pubkey] })
+		},
+	},
+	queryClient,
+)
+
+export const setDefaultPaymentMethodForStallMutation = createMutation(
+	{
+		mutationKey: [],
+		mutationFn: async ({ stallId, paymentDetailId }: { stallId: string; paymentDetailId: string }) => {
+			const $ndkStore = get(ndkStore)
+			if ($ndkStore.activeUser?.pubkey) {
+				const pd = await createRequest(`POST /api/v1/payments/${stallId}/?paymentDetailId=${paymentDetailId}`, {
+					auth: true,
+				})
+				return pd
+			}
+			return null
+		},
+		onSuccess: (data) => {
+			queryClient.invalidateQueries({ queryKey: ['paymentDetails', data?.stallId] })
 		},
 	},
 	queryClient,

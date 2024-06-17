@@ -7,6 +7,7 @@
 	import { Separator } from '$lib/components/ui/separator'
 	import * as Tabs from '$lib/components/ui/tabs/index.js'
 	import { login } from '$lib/ndkLogin'
+	import ndkStore from '$lib/stores/ndk'
 	import { type BaseAccount } from '$lib/stores/session'
 	import { generateSecretKey } from 'nostr-tools'
 	import * as nip19 from 'nostr-tools/nip19'
@@ -19,8 +20,17 @@
 	let createDialogOpen = false
 	let nsec: ReturnType<(typeof nip19)['nsecEncode']> | null = null
 
-	async function loginWrapper(loginMethod: BaseAccount['type'], formData?: FormData, autoLogin?: boolean) {
+	async function handleLogin(loginMethod: BaseAccount['type'], formData?: FormData, autoLogin?: boolean) {
 		;(await login(loginMethod, formData, autoLogin)) ? toast.success('Login sucess!') : toast.error('Login error!')
+	}
+
+	async function handleSignUp(formData: FormData) {
+		const key = generateSecretKey()
+		nsec = nip19.nsecEncode(key)
+		formData.append('key', nsec)
+		await handleLogin('NSEC', formData)
+		authDialogOpen = false
+		createDialogOpen = true
 	}
 
 	const activeTab =
@@ -129,6 +139,54 @@
 	</Dialog.Content>
 </Dialog.Root>
 
+					<form
+						class="flex flex-col gap-2"
+						on:submit|preventDefault={(sEvent) => handleLogin('NSEC', new FormData(sEvent.currentTarget, sEvent.submitter), checked)}
+					>
+						<Input required class="border-black border-2" name="key" placeholder="Private key (nsec1...)" id="signInSk" type="password" />
+						<Input required class="border-black border-2" name="password" placeholder="Password" id="signInPass" type="password" />
+						<Button id="signInSubmit" type="submit">Sign in</Button>
+					</form>
+					<div class="flex items-center space-x-2">
+						<Checkbox id="terms" bind:checked aria-labelledby="terms-label" />
+						<Label
+							id="terms-label"
+							for="terms"
+							class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+						>
+							Remember me
+						</Label>
+					</div>
+					<p class="w-full text-center">
+						Don’t have an account?
+						<Tabs.Trigger value="create" class="underline cursor-pointer p-0">Sign up</Tabs.Trigger>
+					</p>
+				</Tabs.Content>
+				<Tabs.Content value="create" class="flex flex-col gap-2">
+					<span>
+						We use nostr’s private/public key pair system to generate accounts (keys). They act as your username and password. <a
+							href="/"
+							class="underline">Learn more</a
+						>.
+					</span>
+					<form
+						class="flex flex-col gap-2"
+						on:submit|preventDefault={async (sEvent) => {
+							handleSignUp(new FormData(sEvent.currentTarget, sEvent.submitter))
+						}}
+					>
+						<Input id="signUpPassword" required class="border-black border-2" name="password" placeholder="Password" type="password" />
+						<Button id="signUpSubmit" type="submit" class="w-full">Generate an account</Button>
+					</form>
+					<p class="w-full text-center">
+						Already have an account?
+						<Tabs.Trigger value="join" class="underline cursor-pointer p-0">Sign in</Tabs.Trigger>
+					</p>
+				</Tabs.Content>
+			</Tabs.Root>
+		</Dialog.Content>
+	</Dialog.Root>
+{/if}
 <Dialog.Root bind:open={createDialogOpen}>
 	<Dialog.Content>
 		<Dialog.Header>

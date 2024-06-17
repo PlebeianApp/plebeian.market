@@ -1,6 +1,7 @@
 import type { NDKUser } from '@nostr-dev-kit/ndk'
 import type { BaseAccount } from '$lib/stores/session'
 import { NDKNip07Signer, NDKPrivateKeySigner, NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk'
+import { invalidateAll } from '$app/navigation'
 import { page } from '$app/stores'
 import { HEX_KEYS_REGEX } from '$lib/constants'
 import ndkStore, { ndk } from '$lib/stores/ndk'
@@ -43,7 +44,6 @@ export async function fetchActiveUserData(keyToLocalDb?: string): Promise<NDKUse
 	const user = await ndk.signer.user()
 	await user.fetchProfile({ cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY })
 	ndkStore.set(ndk)
-
 	if (keyToLocalDb) {
 		await loginLocalDb(user.pubkey, 'NSEC', keyToLocalDb)
 	} else {
@@ -56,7 +56,7 @@ export async function fetchActiveUserData(keyToLocalDb?: string): Promise<NDKUse
 		console.log('Registering user in db')
 		await loginDb(user)
 	}
-
+	invalidateAll()
 	return user
 }
 

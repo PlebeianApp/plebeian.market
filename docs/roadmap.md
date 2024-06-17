@@ -16,6 +16,7 @@
 		- [x] Design hybrid mode to fetch data from database with fallback to Nostr and insert
 			- [x] Verify event before inserting into database
 			- [ ] Users browsing triggers fetch Nostr data and update database if more recent
+				- [ ] Based on docs: [Nostr sub and storage](https://github.com/PlebeianTech/plebeian.market/blob/main/docs/Nostr%20sub%20and%20storage.md)
 		- [ ] Nostr functionalities
 			- [x] Use NDK with Svelte
 			- [x] NDK cache (IndexDB)
@@ -23,9 +24,10 @@
 			- [ ] Logging with NIP46
 			- [x] Logging with private key (NIP-49)
 				- [x] Use IndexDB to store the private key in NIP-49 format
-			- [ ] Create stall
+			- [x] Create stall
 			- [ ] Add product
-			- [ ] User sign-up and onboarding
+			- [x] User sign-up 
+			- [ ] onboarding
 		- [ ] E-commerce functionalities
 			- [x] Product page
 				- [ ] Implement variable products
@@ -44,28 +46,27 @@
 			- [ ] Nostr DM
 			- [ ] Email
 		- [ ] User settings ("/settings")
-			- [ ] Edit profile
-			- [ ] Add payment details
-				- [ ] On-chain (xpub)
-				- [ ] On-chain (list of addresses)
+			- [x] Edit profile
+			- [x] Add payment details
+				- [x] On-chain (xpub)
 				- [ ] On-chain (Boltz or other swap service)
-				- [ ] LN (LUD06)
-				- [ ] LN (LUD16)
-				- [ ] Cashu
-				- [ ] Other (specify details and instructions) (interactive)
+				- [x] LN (LUD06)
+				- [x] LN (LUD16)
+				- [x] Cashu
+				- [x] Other (specify details and instructions) (interactive)
 				- [ ] None (interactive)
 			- [ ] Configure notifications
 				- [ ] Email
 				- [ ] DMs
-			- [ ] Delete account
-		- [ ] App setup ("/setup")
-			- [ ] Add new table in db for app configuration
-				- [ ] Set up process in first time execution
-				- [ ] Set admins: List of pubkeys that are admins
-				- [ ] Instance pubkey
-				- [ ] Contact details: support/contact email, etc.
-			- [ ] Add admins
-			- [ ] Remove admins
+			- [x] Delete account
+		- [x] App setup ("/setup")
+			- [x] Add new table in db for app configuration
+				- [x] Set up process in first time execution
+				- [x] Set admins: List of pubkeys that are admins
+				- [x] Instance pubkey
+				- [x] Contact details: support/contact email, etc.
+			- [x] Add admins
+			- [x] Remove admins
 			- [ ] Add roles
 
 		- [x] Design API
@@ -84,6 +85,12 @@
 			- [x] Product pages ("/product/<product_id>")
 			- [x] User page ("/p/<user_id | other identifier>")
 			- [x] Stall page ("/stall/<stall_id>")
+		- [ ] BTS [(Background Task Service)](https://github.com/PlebeianTech/plebeian.market/blob/main/docs/BTS.md)
+			- [ ] Add app to the monorepo
+			- [ ] Add tasks table to db
+			- [ ] Install croner lib
+			- [ ] Create heartbeat function
+			- [ ] Implement WoT computations
 
 1.  **Integrate phoenixd**
 	-  **Objective:** Integrating phoenixd into the project as a lightning solution
