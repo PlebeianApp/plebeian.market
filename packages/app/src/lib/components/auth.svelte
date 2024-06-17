@@ -50,12 +50,14 @@
 					<span class="relative z-10 text-left text-lg font-bold text-primary">plebeian<br />market</span>
 				</div>
 			</Dialog.Header>
-			<Tabs.Root value="join" class="p-4">
+			<Tabs.Root value="nip07" class="p-4">
 				<Tabs.List class="w-full justify-around bg-transparent">
-					<Tabs.Trigger value="join" class={activeTab}>Sign in</Tabs.Trigger>
+					<Tabs.Trigger value="nip07" class={activeTab}>Extension</Tabs.Trigger>
+					<Tabs.Trigger value="sk" class={activeTab}>Private Key</Tabs.Trigger>
+					<Tabs.Trigger disabled value="nip46" class={activeTab}>Advanced</Tabs.Trigger>
 					<Tabs.Trigger value="create" class={activeTab}>Sign up</Tabs.Trigger>
 				</Tabs.List>
-				<Tabs.Content value="join" class="flex flex-col gap-2">
+				<Tabs.Content value="nip07" class="flex flex-col gap-2">
 					<Button
 						on:click={() => handleLogin('NIP07', undefined, checked)}
 						variant="outline"
@@ -73,12 +75,8 @@
 						>,
 						<a class="underline" href="https://getalby.com/">alby</a> or similar.</span
 					>
-					<div class="w-full flex justify-center items-center gap-2 px-6">
-						<Separator class="w-1/2" />
-						<span> OR </span>
-						<Separator class="w-1/2" />
-					</div>
-
+				</Tabs.Content>
+				<Tabs.Content value="sk" class="flex flex-col gap-2">
 					<form
 						class="flex flex-col gap-2"
 						on:submit|preventDefault={(sEvent) => handleLogin('NSEC', new FormData(sEvent.currentTarget, sEvent.submitter), checked)}
@@ -87,20 +85,23 @@
 						<Input required class="border-black border-2" name="password" placeholder="Password" id="signInPass" type="password" />
 						<Button id="signInSubmit" type="submit">Sign in</Button>
 					</form>
-					<div class="flex items-center space-x-2">
-						<Checkbox id="terms" bind:checked aria-labelledby="terms-label" />
-						<Label
-							id="terms-label"
-							for="terms"
-							class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-						>
-							Remember me
-						</Label>
-					</div>
-					<p class="w-full text-center">
-						Don’t have an account?
-						<Tabs.Trigger value="create" class="underline cursor-pointer p-0">Sign up</Tabs.Trigger>
-					</p>
+				</Tabs.Content>
+				<Tabs.Content value="nip46" class="flex flex-col gap-2">
+					<form
+						class="flex flex-col gap-2"
+						on:submit|preventDefault={(sEvent) => handleLogin('NSEC', new FormData(sEvent.currentTarget, sEvent.submitter), checked)}
+					>
+						<Input
+							required
+							class="border-black border-2"
+							name="key"
+							placeholder="Private key (nsec1...)"
+							id="remoteSignIn"
+							type="password"
+						/>
+						<Input required class="border-black border-2" name="password" placeholder="Password" id="remoteSignInPass" type="password" />
+						<Button id="remoteSignInSubmit" type="submit">Sign in</Button>
+					</form>
 				</Tabs.Content>
 				<Tabs.Content value="create" class="flex flex-col gap-2">
 					<span>
@@ -123,6 +124,23 @@
 						<Tabs.Trigger value="join" class="underline cursor-pointer p-0">Sign in</Tabs.Trigger>
 					</p>
 				</Tabs.Content>
+				<div class=" flex flex-col gap-2 items-center">
+					<Separator />
+					<div class=" flex items-center gap-2">
+						<Checkbox id="terms" bind:checked aria-labelledby="terms-label" />
+						<Label
+							id="terms-label"
+							for="terms"
+							class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+						>
+							Remember me
+						</Label>
+					</div>
+					<p class="text-center">
+						Don’t have an account?
+						<Tabs.Trigger value="create" class="underline cursor-pointer p-0">Sign up</Tabs.Trigger>
+					</p>
+				</div>
 			</Tabs.Root>
 		</Dialog.Content>
 	</Dialog.Root>

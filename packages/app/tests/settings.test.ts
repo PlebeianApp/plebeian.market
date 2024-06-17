@@ -7,6 +7,7 @@ import { opts } from './globalSetup'
 const login = async (page: Page) => {
 	await page.click('#menuButton')
 	await page.click('text=Log in')
+	await page.click('text=Private Key')
 	await page.waitForSelector('#signInSk')
 	await page.fill('#signInSk', 'ee40a2dc441238f241d1728af9507147e9b5ed18c1c61d84876d4f2502c044b3')
 	await page.fill('#signInPass', '123')
