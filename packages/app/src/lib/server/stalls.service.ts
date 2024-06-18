@@ -37,9 +37,9 @@ export type RichStall = {
 	userId: string
 	userNip05: string | null
 	userName: string | null
-	productCount: number
-	orderCount: number
-	paymentMethods: PaymentDetail[]
+	productCount?: number
+	orderCount?: number
+	paymentMethods?: PaymentDetail[]
 	identifier: string
 }
 
@@ -219,20 +219,20 @@ export const getStallsByUserId = async (userId: string): Promise<RichStall[]> =>
 
 export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall> => {
 	const eventCoordinates = getEventCoordinates(stallEvent)
-	const productEventContent = JSON.parse(stallEvent.content)
-	const parsedProduct = stallEventSchema.parse({
-		id: productEventContent.id,
-		...productEventContent,
+	const stallEventContent = JSON.parse(stallEvent.content)
+	const parsedStall = stallEventSchema.parse({
+		id: stallEventContent.id,
+		...stallEventContent,
 	})
 
 	const insertStall: Stall = {
 		id: eventCoordinates.coordinates,
 		createdAt: new Date(stallEvent.created_at! * 1000),
 		updatedAt: new Date(stallEvent.created_at! * 1000),
-		name: parsedProduct.name,
+		name: parsedStall.name,
 		identifier: eventCoordinates.tagD,
-		description: parsedProduct.description as string,
-		currency: parsedProduct.currency,
+		description: parsedStall.description as string,
+		currency: parsedStall.currency,
 		userId: stallEvent.pubkey,
 	}
 	const [stallResult] = await db.insert(stalls).values(insertStall).returning()
@@ -240,7 +240,7 @@ export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall>
 		error(404, 'Not found')
 	}
 
-	for (const method of parsedProduct.shipping) {
+	for (const method of parsedStall.shipping) {
 		const [shippingResult] = await db
 			.insert(shipping)
 			.values({

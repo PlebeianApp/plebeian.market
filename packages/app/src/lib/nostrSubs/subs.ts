@@ -3,8 +3,8 @@ import type { ExtendedBaseType, NDKEventStore } from '@nostr-dev-kit/ndk-svelte'
 import { KindStalls } from '$lib/constants'
 import ndkStore from '$lib/stores/ndk'
 
-export let stallSub: NDKEventStore<ExtendedBaseType<NDKEvent>>
+export let stallsSub: NDKEventStore<ExtendedBaseType<NDKEvent>>
 
 ndkStore.subscribe((ndk) => {
-	stallSub = ndk.storeSubscribe({ kinds: [KindStalls as number], limit: 20 }, { closeOnEose: false, autoStart: false })
+	stallsSub = ndk.storeSubscribe({ kinds: [KindStalls as number], limit: 25 }, { closeOnEose: false, autoStart: false })
 })
