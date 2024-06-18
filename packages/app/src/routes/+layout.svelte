@@ -6,6 +6,7 @@
 	import { pwaInfo } from 'virtual:pwa-info'
 
 	import '../app.css'
+	import '$lib/nostrSubs/stallsPipeline'
 
 	import type { RichCat } from '$lib/server/categories.service'
 	import { QueryClientProvider } from '@tanstack/svelte-query'
