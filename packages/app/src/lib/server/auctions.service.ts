@@ -142,7 +142,7 @@ export const createAuction = async (auctionEvent: NostrEvent, auctionStatus: Auc
 		return toDisplayAuction(auctionResult)
 	}
 
-	return error(500, 'Failed to create auction')
+	error(500, 'Failed to create auction')
 }
 
 export const updateAuction = async (auctionId: string, auctionEvent: NostrEvent): Promise<DisplayAuction> => {

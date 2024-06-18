@@ -57,7 +57,7 @@ export const getAllCategories = async (filter: CatsFilter = catsFilterSchema.par
 		return richCats
 	}
 
-	error(404, 'Not found')
+	error(404, { message: `No categories found` })
 }
 
 const preparedCatByProductId = db

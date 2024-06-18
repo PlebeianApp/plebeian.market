@@ -2,19 +2,7 @@ import { error } from '@sveltejs/kit'
 import { decodeJwtToEvent } from '$lib/server/nostrAuth.service'
 import { findCustomTags } from '$lib/utils'
 
-import { db, eq, users } from '@plebeian/database'
-
-const userExists = async (userId: string): Promise<boolean> => {
-	const [user] = await db
-		.select({
-			userId: users.id,
-		})
-		.from(users)
-		.where(eq(users.id, userId))
-		.execute()
-
-	return !!user
-}
+import { userExists } from './server/users.service'
 
 const authorizeUserless = async (request: Request, method: string): Promise<string> => {
 	const authorizationHeader = request.headers.get('Authorization')

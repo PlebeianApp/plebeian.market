@@ -9,7 +9,7 @@ export async function GET({ url: { searchParams } }) {
 	const filter = stallsFilterSchema.safeParse(spObj)
 
 	if (!filter.success) {
-		return error(400, `Invalid request: ${JSON.stringify(filter.error)}`)
+		error(400, `Invalid request: ${JSON.stringify(filter.error)}`)
 	} else {
 		return json(await getAllStalls(filter.data))
 	}
