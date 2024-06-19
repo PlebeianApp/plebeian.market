@@ -6,13 +6,13 @@
 	import { pwaInfo } from 'virtual:pwa-info'
 
 	import '../app.css'
-	import '$lib/nostrSubs/stallsPipeline'
 
 	import type { RichCat } from '$lib/server/categories.service'
 	import { QueryClientProvider } from '@tanstack/svelte-query'
 	import { goto } from '$app/navigation'
 	import { createCategoriesByFilterQuery } from '$lib/fetch/category.queries'
 	import { queryClient } from '$lib/fetch/client'
+	import { pipeline } from '$lib/nostrSubs/stallsPipeline'
 	import { get } from 'svelte/store'
 
 	import type { LayoutData } from './$types'
@@ -56,6 +56,10 @@
 
 	queryClient.prefetchQuery<RichCat[]>({
 		queryKey: ['categories'],
+	})
+
+	onMount(() => {
+		pipeline.start()
 	})
 </script>
 
