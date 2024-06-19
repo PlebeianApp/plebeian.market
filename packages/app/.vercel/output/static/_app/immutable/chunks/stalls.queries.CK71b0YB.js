@@ -1,1 +1,0 @@
-import{c as a,s as e}from"./schema.DXwYpOb-.js";import"./index.yWj9ckWW.js";import{q as t,c as r}from"./client.Vo4oKtvm.js";const y=s=>a({queryKey:["stalls",...Object.values(s)],queryFn:async()=>await r("GET /api/v1/stalls",{params:e.parse(s)})},t);export{y as c};
