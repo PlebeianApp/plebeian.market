@@ -1,0 +1,1 @@
+function i(d,e){const t={};return e.forEach(a=>{t[a]={[`data-${d}-${a}`]:""}}),a=>t[a]}function r(d){return d?{"aria-disabled":"true","data-disabled":""}:{"aria-disabled":void 0,"data-disabled":void 0}}export{i as c,r as d};

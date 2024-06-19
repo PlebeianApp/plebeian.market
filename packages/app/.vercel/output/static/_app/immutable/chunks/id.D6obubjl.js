@@ -1,0 +1,1 @@
+let r="useandom-26T198340PX75pxJACKVERYMINDBUSHWOLF_GQZbfghjklqvwyzrict",a=(t=21)=>{let e="",n=t;for(;n--;)e+=r[Math.random()*64|0];return e};function u(){return a(10)}function l(t){return t.reduce((e,n)=>(e[n]=u(),e),{})}export{u as a,l as g,a as n};

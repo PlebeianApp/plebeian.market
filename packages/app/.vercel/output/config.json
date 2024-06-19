@@ -1,0 +1,51 @@
+{
+	"version": 3,
+	"routes": [
+		{
+			"src": "/settings/account/payments",
+			"dest": "/settings/account/payments/"
+		},
+		{
+			"src": "/settings/account/payments/",
+			"status": 308,
+			"headers": {
+				"Location": "/settings/account/payments"
+			}
+		},
+		{
+			"src": "/settings/account/profile",
+			"dest": "/settings/account/profile/"
+		},
+		{
+			"src": "/settings/account/profile/",
+			"status": 308,
+			"headers": {
+				"Location": "/settings/account/profile"
+			}
+		},
+		{
+			"src": "/_app/immutable/.+",
+			"headers": {
+				"cache-control": "public, immutable, max-age=31536000"
+			}
+		},
+		{
+			"handle": "filesystem"
+		},
+		{
+			"src": "/.*",
+			"dest": "/fn"
+		}
+	],
+	"overrides": {
+		"index.html": {
+			"path": ""
+		},
+		"settings/account/payments.html": {
+			"path": "settings/account/payments"
+		},
+		"settings/account/profile.html": {
+			"path": "settings/account/profile"
+		}
+	}
+}
