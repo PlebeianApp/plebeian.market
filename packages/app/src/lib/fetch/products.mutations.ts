@@ -5,7 +5,7 @@ import { KindProducts } from '$lib/constants'
 import ndkStore, { ndk } from '$lib/stores/ndk'
 import { get } from 'svelte/store'
 
-import type { ISO3 } from '@plebeian/database'
+import type { ISO3, ProductImage } from '@plebeian/database'
 import { createId } from '@plebeian/database/utils'
 
 import { queryClient } from './client'
@@ -15,7 +15,7 @@ export const createEditProductMutation = createMutation(
 		mutationFn: async ([sEvent, product, images, shippingMethods]: [
 			SubmitEvent,
 			DisplayProduct | null,
-			string[],
+			Partial<ProductImage>[],
 			{
 				id: string
 				name: string
