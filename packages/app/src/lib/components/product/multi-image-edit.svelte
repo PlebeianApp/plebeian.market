@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { queryClient } from '$lib/fetch/client'
-	import { addProductImageMutation, editProductImageMutation, removeProductImageMutation } from '$lib/fetch/productImages.mutations'
+	import { editProductImageMutation } from '$lib/fetch/productImages.mutations'
 	import ndkStore from '$lib/stores/ndk'
 	import { createEventDispatcher } from 'svelte'
 
@@ -10,7 +10,6 @@
 	import Button from '../ui/button/button.svelte'
 
 	export let images: Partial<ProductImage>[] = []
-	export let productId: string | undefined
 
 	const dispatch = createEventDispatcher()
 
@@ -23,26 +22,17 @@
 		invalidateProductsQuery()
 	}
 
-	const handleSetNewUrl = async (productId: string, imageUrl: string, newImageUrl: string) => {
-		await $editProductImageMutation.mutateAsync({ productId, imageUrl, newImageUrl })
-		invalidateProductsQuery()
+	const handleImageAdd = async (imageUrl: string) => {
+		dispatch('imageAdded', imageUrl)
 	}
 
-	const handleImageAdd = async (event: CustomEvent) => {
-		if (!productId) {
-			dispatch('imageAdded', event.detail)
-		} else {
-			await $addProductImageMutation.mutateAsync({
-				productId: productId,
-				imageUrl: event.detail,
-				imageType: 'gallery',
-			})
-			invalidateProductsQuery()
-		}
+	const handleImageRemove = async (imageUrl: string) => {
+		dispatch('imageRemoved', imageUrl)
 	}
 
-	const handleImageRemove = async (productId: string, imageUrl: string) => {
-		await $removeProductImageMutation.mutateAsync({ productId, imageUrl })
+	const handleSwapImageForNew = async (oldImageUrl: string, newImageUrl: string) => {
+		handleImageRemove(oldImageUrl)
+		handleImageAdd(newImageUrl)
 	}
 </script>
 
@@ -50,11 +40,7 @@
 	{#each images as image}
 		{#if image.imageUrl}
 			<div class="flex flex-col">
-				<EditableImage
-					marketKontext={true}
-					src={image.imageUrl}
-					on:save={(e) => handleSetNewUrl(image.productId ?? '', image.imageUrl ?? '', e.detail)}
-				/>
+				<EditableImage marketKontext={true} src={image.imageUrl} on:save={(e) => handleSwapImageForNew(image.imageUrl ?? '', e.detail)} />
 				<div class="border-r-2 border-b-2 border-l-2 border-black text-center">
 					<Button
 						on:click={() => handleSetMainImage(image.productId ?? '', image.imageUrl ?? '')}
@@ -68,16 +54,13 @@
 							<span class="i-mdi-star-outline w-4 h-4 cursor-pointer" />
 						{/if}
 					</Button>
-					<Button
-						on:click={() => handleImageRemove(image.productId ?? '', image.imageUrl ?? '')}
-						size="icon"
-						variant="ghost"
-						class=" text-destructive border-0"><span class="i-tdesign-delete-1 w-4 h-4"></span></Button
+					<Button on:click={() => handleImageRemove(image.imageUrl ?? '')} size="icon" variant="ghost" class=" text-destructive border-0"
+						><span class="i-tdesign-delete-1 w-4 h-4"></span></Button
 					>
 				</div>
 			</div>
 		{/if}
 	{/each}
 
-	<EditableImage marketKontext={true} src={null} on:save={(e) => handleImageAdd(e)} />
+	<EditableImage marketKontext={true} src={null} on:save={(e) => handleImageAdd(e.detail)} />
 </div>

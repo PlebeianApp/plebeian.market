@@ -9,7 +9,8 @@
 	import * as Popover from '$lib/components/ui/popover/index.js'
 	import * as Tabs from '$lib/components/ui/tabs/index.js'
 	import Textarea from '$lib/components/ui/textarea/textarea.svelte'
-	import { createEditProductMutation } from '$lib/fetch/products.mutations'
+	import { queryClient } from '$lib/fetch/client'
+	import { createProductMutation, editProductMutation } from '$lib/fetch/products.mutations'
 	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
 	import { stallsFilterSchema } from '$lib/schema'
 	import ndkStore from '$lib/stores/ndk'
@@ -31,7 +32,7 @@
 
 	type Category = { key: string; name: string; checked: boolean }
 	let categories: Category[] = []
-	let images: Partial<ProductImage>[] = []
+	let images: Partial<ProductImage>[] = product?.galleryImages ?? []
 
 	type Shipping = (typeof stallEventSchema._type)['shipping'][0]
 
@@ -112,6 +113,10 @@
 		]
 	}
 
+	function handleImagRemoved(e: CustomEvent) {
+		images = images.filter((image) => image.imageUrl !== e.detail)
+	}
+
 	$: stallsQuery = createStallsByFilterQuery(stallsFilterSchema.parse({ userId: $ndkStore.activeUser?.pubkey }))
 </script>
 
@@ -120,8 +125,15 @@
 {:else if $stallsQuery.data?.length}
 	{@const [stall] = $stallsQuery.data.filter((pStall) => pStall.id == product?.stallId)}
 	<form
-		on:submit|preventDefault={(sEvent) =>
-			$createEditProductMutation.mutateAsync([sEvent, product, images.map((image) => image.imageUrl), shippingMethods.map((s) => s.json)])}
+		on:submit|preventDefault={(sEvent) => {
+			if (!product) {
+				$createProductMutation.mutateAsync([sEvent, product, images.map((image) => image.imageUrl), shippingMethods.map((s) => s.json)])
+			} else {
+				$editProductMutation.mutateAsync([sEvent, product, images.map((image) => image.imageUrl), shippingMethods.map((s) => s.json)])
+			}
+
+			queryClient.invalidateQueries({ queryKey: ['products', $ndkStore.activeUser.pubkey] })
+		}}
 		class="flex flex-col gap-4"
 	>
 		<Tabs.Root value="basic" class="p-4">
@@ -228,11 +240,12 @@
 			</Tabs.Content>
 
 			<Tabs.Content value="images" class="flex flex-col">
-				{#if product}
-					<MultiImageEdit images={product.galleryImages} productId={product.id} on:imageAdded={(e) => handleNewImageAdded(e)} />
-				{:else}
-					<MultiImageEdit {images} productId={undefined} on:imageAdded={(e) => handleNewImageAdded(e)} />
-				{/if}
+				<MultiImageEdit
+					{images}
+					productId={product?.id ?? ''}
+					on:imageAdded={(e) => handleNewImageAdded(e)}
+					on:imageRemoved={(e) => handleImagRemoved(e)}
+				/>
 			</Tabs.Content>
 
 			<Tabs.Content value="shipping" class="flex flex-col gap-2 p-2">

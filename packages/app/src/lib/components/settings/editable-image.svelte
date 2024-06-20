@@ -130,7 +130,7 @@
 	<Dialog.Root bind:open={$imageChoiceDialogOpen}>
 		<Dialog.Content class="max-w-[66vw]">
 			<Dialog.Header>
-				<Dialog.Title>Set a remote image url or upload a new one</Dialog.Title>
+				<Dialog.Title>Set a remote image url or upload a new one {src}</Dialog.Title>
 			</Dialog.Header>
 			<div class="flex flex-row gap-4">
 				<div class="flex-1 flex flex-col gap-4">

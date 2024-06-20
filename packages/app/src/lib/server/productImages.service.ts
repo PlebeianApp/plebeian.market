@@ -33,7 +33,7 @@ export const getImagesByUserId = async (userId: string): Promise<ProductImage[]>
 	error(404, 'Not found')
 }
 
-export const editImage = async (productImage: PostProductImageFilter): Promise<ProductImage> => {
+export const editImage = async (productImage: { productId: string; imageOrder: number; imageUrl: string }): Promise<ProductImage> => {
 	let imageResult
 
 	if (productImage.imageOrder === 0) {
@@ -54,16 +54,6 @@ export const editImage = async (productImage: PostProductImageFilter): Promise<P
 			.set({
 				imageUrl: productImage.imageUrl,
 				imageOrder: productImage.imageOrder,
-			})
-			.where(and(eq(productImages.productId, productImage.productId), eq(productImages.imageUrl, productImage.imageUrl)))
-			.returning()
-			.execute()
-		imageResult = res
-	} else {
-		const [res] = await db
-			.update(productImages)
-			.set({
-				imageUrl: productImage.newImageUrl,
 			})
 			.where(and(eq(productImages.productId, productImage.productId), eq(productImages.imageUrl, productImage.imageUrl)))
 			.returning()

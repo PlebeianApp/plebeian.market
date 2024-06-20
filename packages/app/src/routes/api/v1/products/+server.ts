@@ -8,6 +8,7 @@ import {
 	getProductsByCatId,
 	getProductsByCatName,
 	getProductsByStallId,
+	getProductsByUserId,
 } from '$lib/server/products.service.js'
 
 export async function GET({ url: { searchParams } }) {
@@ -19,8 +20,9 @@ export async function GET({ url: { searchParams } }) {
 		return json(await getProductsByCatId(filter.data))
 	} else if (filter.data.catName) {
 		return json(await getProductsByCatName(filter.data))
+	} else if (filter.data.userId) {
+		return json(await getProductsByUserId(filter.data))
 	} else if (filter.data.stallId) {
-		console.log('filter.data.stallId', filter.data.stallId)
 		return json(await getProductsByStallId(filter.data.stallId))
 	} else {
 		return json(await getAllProducts(filter.data))

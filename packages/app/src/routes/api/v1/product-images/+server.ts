@@ -1,8 +1,8 @@
 import { error, json } from '@sveltejs/kit'
 import { authorize, authorizeUserless } from '$lib/auth'
-import { postProductImageSchema } from '$lib/schema'
-import { addImageForProduct, editImage, getImagesByUserId, removeImageForProduct } from '$lib/server/productImages.service'
+import { editImage, getImagesByUserId } from '$lib/server/productImages.service'
 import { getProductById } from '$lib/server/products.service'
+import { z } from 'zod'
 
 export async function GET({ request, url: { searchParams } }) {
 	const userId = searchParams.get('userId')
@@ -22,33 +22,16 @@ export async function GET({ request, url: { searchParams } }) {
 	}
 }
 
-export async function POST({ params, request }) {
-	const body = await request.json()
-
-	const productImage = postProductImageSchema.safeParse(body)
-
-	if (!productImage.success) {
-		return error(400, `Invalid request: ${JSON.stringify(productImage.error)}`)
-	}
-
-	try {
-		const userId = await authorizeUserless(request, 'POST')
-		const product = await getProductById(productImage.data.productId)
-
-		if (product.userId !== userId) {
-			error(401, 'Unauthorized')
-		}
-	} catch (e) {
-		error(401, 'Unauthorized')
-	}
-
-	return json(await addImageForProduct(productImage.data))
-}
-
 export async function PUT({ request }) {
 	const body = await request.json()
 
-	const productImage = postProductImageSchema.safeParse(body)
+	const productImage = z
+		.object({
+			productId: z.string(),
+			imageOrder: z.number(),
+			imageUrl: z.string(),
+		})
+		.safeParse(body)
 
 	if (!productImage.success) {
 		return error(400, `Invalid request: ${JSON.stringify(productImage.error)}`)
@@ -65,28 +48,7 @@ export async function PUT({ request }) {
 		error(401, 'Unauthorized')
 	}
 
+	console.log('productImage', productImage.data)
+
 	return json(await editImage(productImage.data))
-}
-
-export async function DELETE({ request, url: { searchParams } }) {
-	const imageUrl = searchParams.get('imageUrl')
-	const productId = searchParams.get('productId')
-
-	if (!imageUrl || !productId) {
-		error(400, 'Invalid request')
-	}
-
-	try {
-		const userId = await authorizeUserless(request, 'DELETE')
-		const product = await getProductById(productId)
-
-		if (product.userId !== userId) {
-			error(401, 'Unauthorized')
-		}
-	} catch (e) {
-		error(401, 'Unauthorized')
-	}
-
-	const productImages = await removeImageForProduct(productId, imageUrl)
-	return json(productImages)
 }

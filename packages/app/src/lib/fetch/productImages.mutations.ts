@@ -30,43 +30,6 @@ declare module './client' {
 	}
 }
 
-export const removeProductImageMutation = createMutation(
-	{
-		mutationKey: [],
-		mutationFn: async ({ productId, imageUrl }: RemoveProductImageArgs) => {
-			const $ndkStore = get(ndkStore)
-
-			if ($ndkStore.activeUser?.pubkey) {
-				const user = await createRequest(`DELETE /api/v1/product-images?productId=${productId}&imageUrl=${imageUrl}`, {
-					auth: true,
-				})
-				return user
-			}
-			return null
-		},
-	},
-	queryClient,
-)
-
-export const addProductImageMutation = createMutation(
-	{
-		mutationKey: [],
-		mutationFn: async ({ productId, imageUrl, imageOrder, imageType }: Partial<ProductImage>) => {
-			const $ndkStore = get(ndkStore)
-
-			if ($ndkStore.activeUser?.pubkey) {
-				const user = await createRequest(`POST /api/v1/product-images`, {
-					auth: true,
-					body: { productId, imageUrl, imageOrder, imageType },
-				})
-				return user
-			}
-			return null
-		},
-	},
-	queryClient,
-)
-
 export const editProductImageMutation = createMutation(
 	{
 		mutationKey: [],
