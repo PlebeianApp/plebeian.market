@@ -21,7 +21,7 @@
 		{#each $productsByStall.data as product}
 			<a class="flex flex-row justify-between my-4 gap-2" href="/products/{product.id}">
 				{#if product.galleryImages[0]}
-					<img class="contain h-[60px] aspect-square object-cover" src={product.galleryImages[0]} alt="" />
+					<img class="contain h-[60px] aspect-square object-cover" src={product.galleryImages[0].imageUrl} alt="" />
 				{:else}
 					<ImgPlaceHolder imageType={'mini'} />
 				{/if}
