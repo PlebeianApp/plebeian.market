@@ -25,6 +25,7 @@ jobs:
           bash
           cd plebeian.market
           pnpm i --frozen-lockfile
+          pnpm db:setup
           pnpm build
           pnpm preview
 
