@@ -31,6 +31,10 @@ jobs:
           rm ./sqlite.db || true
           pnpm db:setup
           pnpm build
-          # Run pnpm preview in the background
-          nohup pnpm preview &> /dev/null &
+          # Run pnpm preview in the background and log output to a file
+          nohup pnpm preview > preview.log 2>&1 &
+          # Give pnpm preview some time to start and log its initial output
+          sleep 10
+          # Display the first few lines of the pnpm preview output
+          head -n 20 preview.log
 
