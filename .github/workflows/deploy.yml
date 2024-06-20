@@ -10,12 +10,19 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Deploy final assets to server
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.REMOTE_HOST }}
-        username: ${{ secrets.REMOTE_USER }}
-        password: ${{ secrets.REMOTE_PASSWORD }}
-        script: |
-          rsync -avz --delete . /home/deployer/plebeian.market/
+    - name: rsync
+      run: |
+        rsync -avz --delete . ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:plebeian.market
+      env: 
+        RSYNC_PASSWORD: ${{ secrets.REMOTE_PASSWORD }}
+
+    # - name: Deploy final assets to server
+    #   uses: appleboy/ssh-action@master
+    #   with:
+    #     host: ${{ secrets.REMOTE_HOST }}
+    #     username: ${{ secrets.REMOTE_USER }}
+    #     password: ${{ secrets.REMOTE_PASSWORD }}
+
+    #     script: |
+    #       rsync -avz --delete . /home/deployer/plebeian.market/
 
