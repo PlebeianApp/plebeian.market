@@ -14,7 +14,7 @@ jobs:
     #   run: |
     #     mkdir -p ~/.ssh
     #     echo "${{ secrets.KNOWN_HOSTS }}" >> ~/.ssh/known_hosts
-    - run: sudo apt install sshpass 
+    - run: sudo apt install sshpass rsync 
 
     - name: rsync
       # run: rsync -avz --delete . ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:plebeian.market
