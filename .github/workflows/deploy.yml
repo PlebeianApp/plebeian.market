@@ -10,15 +10,17 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Create .ssh directory and add server to known_hosts
-      run: |
-        mkdir -p ~/.ssh
-        echo "${{ secrets.KNOWN_HOSTS }}" >> ~/.ssh/known_hosts
+    # - name: Create .ssh directory and add server to known_hosts
+    #   run: |
+    #     mkdir -p ~/.ssh
+    #     echo "${{ secrets.KNOWN_HOSTS }}" >> ~/.ssh/known_hosts
+    - run: apt install sshpass 
 
     - name: rsync
-      run: rsync -avz --delete . ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:plebeian.market
-      env: 
-        RSYNC_PASSWORD: ${{ secrets.REMOTE_PASSWORD }}
+      # run: rsync -avz --delete . ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:plebeian.market
+      run: rsync --rsh="/usr/bin/sshpass -p "${{ secrets.REMOTE_PASSWORD }}" ssh -o StrictHostKeyChecking=no -l root" . ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:plebeian.market
+      # env: 
+      #   RSYNC_PASSWORD: ${{ secrets.REMOTE_PASSWORD }}
 
     # - name: Deploy final assets to server
     #   uses: appleboy/ssh-action@master
