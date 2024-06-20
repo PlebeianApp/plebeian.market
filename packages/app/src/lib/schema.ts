@@ -60,3 +60,13 @@ export const initialSetupDataSchema = z.object({
 	defaultCurrency: z.string(),
 	allowRegister: z.coerce.boolean(),
 })
+
+export const postProductImageSchema = z.object({
+	productId: z.string(),
+	imageUrl: z.string(),
+	newImageUrl: z.string().optional(),
+	imageOrder: z.number().optional(),
+	imageType: z.string().optional(),
+})
+
+export type PostProductImageFilter = z.infer<typeof postProductImageSchema>
