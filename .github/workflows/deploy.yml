@@ -17,5 +17,5 @@ jobs:
         username: ${{ secrets.REMOTE_USER }}
         password: ${{ secrets.REMOTE_PASSWORD }}
         script: |
-          rsync -avz --delete . /root/plebeian.market/
+          rsync -avz --delete . /home/deployer/plebeian.market/
 
