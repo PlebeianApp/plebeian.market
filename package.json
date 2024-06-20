@@ -7,6 +7,8 @@
   "packageManager": "pnpm@9.1.4",
   "scripts": {
     "dev": "pnpm --parallel --stream -r run dev",
+    "build": "pnpm --filter=@plebeian/app run build",
+    "preview": "pnpm --filter=@plebeian/app run preview",
     "lint": "pnpm --filter \"./packages/**\" --parallel --stream -r run lint",
     "format": "pnpm --filter \"./packages/**\" --parallel --stream -r run format",
     "format:fix": "pnpm --filter \"./packages/**\" --parallel --stream -r run format:fix",
