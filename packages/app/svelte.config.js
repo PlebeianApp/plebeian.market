@@ -8,6 +8,15 @@ const config = {
 	preprocess: [vitePreprocess({})],
 	kit: {
 		adapter: adapter(),
+		prerender: {
+			handleHttpError: ({ status, path, referrer, referenceType }) => {
+			  if (status === 404) {
+				console.warn(`Received 404 error on path: ${path} from referrer: ${referrer}`);
+				return;
+			  }
+			  throw new Error(`${status} ${path} (${referenceType} from ${referrer})`);
+			}
+		  },
 		alias: {
 			$lib: './src/lib',
 		},
