@@ -12,13 +12,14 @@
 	import { goto } from '$app/navigation'
 	import { createCategoriesByFilterQuery } from '$lib/fetch/category.queries'
 	import { queryClient } from '$lib/fetch/client'
-	import { pipeline } from '$lib/nostrSubs/stallsPipeline'
+	import StallsPipeline from '$lib/nostrSubs/stallsPipeline'
+	import { stallsSub } from '$lib/nostrSubs/subs'
 	import { get } from 'svelte/store'
 
 	import type { LayoutData } from './$types'
 
 	export let data: LayoutData
-	$: ({ appSettings } = data)
+	const { appSettings } = data
 
 	onMount(async () => {
 		if (appSettings.isFirstTimeRunning) {
@@ -57,6 +58,8 @@
 	queryClient.prefetchQuery<RichCat[]>({
 		queryKey: ['categories'],
 	})
+
+	export const pipeline = new StallsPipeline(stallsSub, appSettings)
 
 	onMount(() => {
 		pipeline.start()

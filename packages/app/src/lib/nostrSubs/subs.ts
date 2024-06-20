@@ -6,5 +6,5 @@ import ndkStore from '$lib/stores/ndk'
 export let stallsSub: NDKEventStore<ExtendedBaseType<NDKEvent>>
 
 ndkStore.subscribe((ndk) => {
-	stallsSub = ndk.storeSubscribe({ kinds: [KindStalls as number], limit: 25 }, { closeOnEose: false, autoStart: false })
+	stallsSub = ndk.storeSubscribe({ kinds: [KindStalls as number], limit: 30 }, { closeOnEose: false, autoStart: false })
 })

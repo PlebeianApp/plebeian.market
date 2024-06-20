@@ -1,8 +1,10 @@
+import type { NostrEvent } from '@nostr-dev-kit/ndk'
 import type { DisplayProduct } from '$lib/server/products.service'
 import { NDKEvent } from '@nostr-dev-kit/ndk'
 import { createMutation } from '@tanstack/svelte-query'
 import { KindProducts } from '$lib/constants'
 import ndkStore, { ndk } from '$lib/stores/ndk'
+import { getEventCoordinates } from '$lib/utils'
 import { get } from 'svelte/store'
 
 import type { ISO3 } from '@plebeian/database'

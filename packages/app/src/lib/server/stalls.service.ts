@@ -8,10 +8,11 @@ import { getProductsByStallId } from '$lib/server/products.service'
 import { getEventCoordinates } from '$lib/utils'
 import { format } from 'date-fns'
 
-import type { PaymentDetail, Stall } from '@plebeian/database'
+import type { ISO3, PaymentDetail, Shipping, ShippingZone, Stall } from '@plebeian/database'
 import {
 	and,
 	categories,
+	createId,
 	db,
 	eq,
 	getTableColumns,
@@ -271,6 +272,73 @@ export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall>
 		currency: stall.currency,
 		createDate: format(stall.createdAt, standardDisplayDateFormat),
 		userId: stall.userId,
+	}
+}
+
+export const createStalls = async (stallEvents: NostrEvent[]): Promise<boolean> => {
+	if (!stallEvents || stallEvents.length === 0) {
+		throw new Error('StallEvents array is empty or null')
+	}
+
+	const stallsToInsert: Stall[] = []
+	const shippingToInsert: Shipping[] = []
+	const shippingZonesToInsert: ShippingZone[] = []
+
+	for (const stallEvent of stallEvents) {
+		const eventCoordinates = getEventCoordinates(stallEvent)
+		const stallEventContent = JSON.parse(stallEvent.content)
+		const parsedStall = stallEventSchema.parse({
+			id: stallEventContent.id,
+			...stallEventContent,
+		})
+
+		const insertStall: Stall = {
+			id: eventCoordinates.coordinates,
+			createdAt: new Date(stallEvent.created_at * 1000),
+			updatedAt: new Date(stallEvent.created_at * 1000),
+			name: parsedStall.name,
+			identifier: eventCoordinates.tagD,
+			description: parsedStall.description as string,
+			currency: parsedStall.currency,
+			userId: stallEvent.pubkey,
+		}
+		stallsToInsert.push(insertStall)
+
+		for (const method of parsedStall.shipping) {
+			const shipping: Shipping = {
+				id: method.id,
+				name: method.name,
+				baseCost: String(method.baseCost),
+				userId: stallEvent.pubkey,
+				stallId: eventCoordinates.coordinates,
+				createdAt: new Date(),
+				updatedAt: new Date(),
+				isDefault: false,
+			}
+			shippingToInsert.push(shipping)
+
+			for (const region of method.regions) {
+				const shippingZone: ShippingZone = {
+					id: createId(),
+					countryCode: region,
+					regionCode: region,
+					shippingId: method.id,
+					stallId: eventCoordinates.coordinates,
+				}
+				shippingZonesToInsert.push(shippingZone)
+			}
+		}
+	}
+
+	try {
+		await db.transaction(async (trx) => {
+			await trx.insert(stalls).values(stallsToInsert).returning()
+			await trx.insert(shipping).values(shippingToInsert).returning()
+			await trx.insert(shippingZones).values(shippingZonesToInsert)
+		})
+		return true
+	} catch (e) {
+		error(500, `Error creating stalls, ${JSON.stringify(e)}`)
 	}
 }
 

@@ -1,5 +1,9 @@
-import type { NDKEvent } from '@nostr-dev-kit/ndk'
+import type { NDKEvent, NostrEvent } from '@nostr-dev-kit/ndk'
 import type { ExtendedBaseType, NDKEventStore } from '@nostr-dev-kit/ndk-svelte'
+import { stallsFromNostrEvent } from '$lib/fetch/stalls.mutations'
+import { get } from 'svelte/store'
+
+import type { AppSettings } from '@plebeian/database'
 
 import { stallsSub } from './subs'
 
@@ -13,23 +17,31 @@ class StallsPipeline {
 	private readonly maxBatchSize: number
 	// private readonly dbInsertionLogic: () => Promise<void>;
 	private readonly sub: NDKEventStore<ExtendedBaseType<NDKEvent>>
+	private readonly appSettings: AppSettings
 
 	constructor(
 		sub: NDKEventStore<ExtendedBaseType<NDKEvent>>,
+		appSettings: AppSettings,
 		// dbInsertionLogic: () => Promise<void>,
 		threshold: number = 20,
-		timeoutDelay: number = 1000 * 5,
-		maxBatchSize: number = 100,
+		timeoutDelay: number = 1000 * 15,
+		maxBatchSize: number = 1000,
 	) {
 		this.sub = sub
 		// this.dbInsertionLogic = dbInsertionLogic;
 		this.threshold = threshold
 		this.timeoutDelay = timeoutDelay
 		this.maxBatchSize = maxBatchSize
+		this.appSettings = appSettings
 	}
 
 	start() {
-		this.sub.subscribe((events) => this.processEvents(events))
+		if (this.appSettings.allowRegister) {
+			this.sub.subscribe((events) => this.processEvents(events))
+			console.log(`${JSON.stringify(this.sub.filters ? this.sub.filters[0].kinds : '')} Pipeline started`)
+		} else {
+			console.log('Registration its not allowed')
+		}
 	}
 
 	private processEvents(events: NDKEvent[]) {
@@ -77,14 +89,20 @@ class StallsPipeline {
 			this.insertBatchIntoDatabase()
 		}, this.timeoutDelay)
 	}
-
+	// TODO not working yet
 	private async insertBatchIntoDatabase() {
 		if (this.isInserting) return
 		this.isInserting = true
 		try {
+			const stallsMutation = get(stallsFromNostrEvent)
 			const productsToInsert = this.batch.slice(0, this.threshold)
-			// await this.dbInsertionLogic();
+			console.log('Formating', productsToInsert)
+			const nostrEvents = await Promise.all(productsToInsert.map((event) => event.toNostrEvent()))
+			console.log('mutating')
+			const mutationResult = await stallsMutation.mutateAsync(nostrEvents)
+			console.log('mutation done', mutationResult)
 			this.batch = this.batch.filter((product) => !productsToInsert.includes(product))
+			console.log('batch cleaned', this.batch.length)
 		} catch (error) {
 			console.error(`Error inserting batch into database: ${error}`)
 		} finally {
@@ -115,7 +133,5 @@ class StallsPipeline {
 		this.isInserting = false
 	}
 }
-
-export const pipeline = new StallsPipeline(stallsSub)
 
 export default StallsPipeline
