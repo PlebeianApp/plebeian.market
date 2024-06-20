@@ -24,8 +24,13 @@ jobs:
         script: |
           bash
           cd plebeian.market
+          # Kill any process running on port 4173
+          fuser -k 4173/tcp || true
+          # Install dependencies and build the project
           pnpm i --frozen-lockfile
+          rm ./sqlite.db || true
           pnpm db:setup
           pnpm build
-          pnpm preview
+          # Run pnpm preview in the background
+          nohup pnpm preview &> /dev/null &
 
