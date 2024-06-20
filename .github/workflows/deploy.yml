@@ -13,12 +13,12 @@ jobs:
     - run: sudo apt install sshpass rsync 
 
     - name: rsync
-      run: rsync --rsh="/usr/bin/sshpass -p \"${{ secrets.REMOTE_PASSWORD }}\" ssh -o StrictHostKeyChecking=no -l deployer" -avz --delete . ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:plebeian.market
+      run: rsync --rsh="/usr/bin/sshpass -p \"${{ secrets.REMOTE_PASSWORD }}\" ssh -o StrictHostKeyChecking=no -l deployer" -avz --delete . ${{ secrets.REMOTE_USER }}@${{ vars.REMOTE_HOST }}:plebeian.market
 
     - name: Deploy final assets to server
       uses: appleboy/ssh-action@master
       with:
-        host: ${{ secrets.REMOTE_HOST }}
+        host: ${{ vars.REMOTE_HOST }}
         username: ${{ secrets.REMOTE_USER }}
         password: ${{ secrets.REMOTE_PASSWORD }}
         script: |
