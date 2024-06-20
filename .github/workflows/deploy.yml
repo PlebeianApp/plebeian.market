@@ -10,8 +10,10 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Add server to known_hosts
-      run: echo "${{ secrets.KNOWN_HOSTS }}" >> ~/.ssh/known_hosts
+    - name: Create .ssh directory and add server to known_hosts
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.KNOWN_HOSTS }}" >> ~/.ssh/known_hosts
 
     - name: rsync
       run: rsync -avz --delete . ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:plebeian.market
