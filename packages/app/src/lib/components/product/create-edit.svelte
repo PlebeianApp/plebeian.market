@@ -14,14 +14,15 @@
 	import { stallsFilterSchema } from '$lib/schema'
 	import ndkStore from '$lib/stores/ndk'
 	import { tick } from 'svelte'
-	import Dropzone from 'svelte-file-dropzone'
 
+	import type { ProductImage } from '@plebeian/database'
 	import type { ISO3 } from '@plebeian/database/constants'
-	import { COUNTRIES_ISO, CURRENCIES } from '@plebeian/database/constants'
+	import { COUNTRIES_ISO } from '@plebeian/database/constants'
 	import { createId } from '@plebeian/database/utils'
 
 	import type { stallEventSchema } from '../../../schema/nostr-events'
 	import Spinner from '../assets/spinner.svelte'
+	import MultiImageEdit from './multi-image-edit.svelte'
 
 	export let product: DisplayProduct | null = null
 
@@ -30,24 +31,7 @@
 
 	type Category = { key: string; name: string; checked: boolean }
 	let categories: Category[] = []
-	let images: { file: File; base64: string }[] = []
-	async function handleFilesSelect(e: CustomEvent) {
-		const { acceptedFiles } = e.detail
-		images = [
-			...images,
-			...(await Promise.all(
-				acceptedFiles.map(async (f: File) => {
-					const base64 = await new Promise<string>((resolve, reject) => {
-						const reader = new FileReader()
-						reader.onload = () => resolve(reader.result as string)
-						reader.onerror = reject
-						reader.readAsDataURL(f)
-					})
-					return { file: f, base64: base64 }
-				}),
-			)),
-		]
-	}
+	let images: Partial<ProductImage>[] = []
 
 	type Shipping = (typeof stallEventSchema._type)['shipping'][0]
 
@@ -119,6 +103,15 @@
 		el.focus()
 	}
 
+	function handleNewImageAdded(e: CustomEvent) {
+		images = [
+			...images,
+			{
+				imageUrl: e.detail,
+			},
+		]
+	}
+
 	$: stallsQuery = createStallsByFilterQuery(stallsFilterSchema.parse({ userId: $ndkStore.activeUser?.pubkey }))
 </script>
 
@@ -128,7 +121,7 @@
 	{@const [stall] = $stallsQuery.data.filter((pStall) => pStall.id == product?.stallId)}
 	<form
 		on:submit|preventDefault={(sEvent) =>
-			$createEditProductMutation.mutateAsync([sEvent, product, images.map((image) => image.base64), shippingMethods.map((s) => s.json)])}
+			$createEditProductMutation.mutateAsync([sEvent, product, images.map((image) => image.imageUrl), shippingMethods.map((s) => s.json)])}
 		class="flex flex-col gap-4"
 	>
 		<Tabs.Root value="basic" class="p-4">
@@ -234,25 +227,15 @@
 				</div>
 			</Tabs.Content>
 
-			<Tabs.Content value="images" class="flex flex-col gap-2">
-				<Dropzone accept={['image/png', 'image/jpeg', 'image/jpg', 'image/webp']} on:drop={handleFilesSelect} />
-				<ol class="flex gap-1.5">
-					{#each images as item}
-						<li class="relative">
-							<button
-								class="cursor-pointer i-tdesign-close absolute text-white right-0"
-								on:click={() => {
-									images = images.filter((f) => f.file !== item.file)
-								}}
-							>
-							</button>
-							<img src={item.base64} alt="" />
-						</li>
-					{/each}
-				</ol>
+			<Tabs.Content value="images" class="flex flex-col">
+				{#if product}
+					<MultiImageEdit images={product.galleryImages} productId={product.id} on:imageAdded={(e) => handleNewImageAdded(e)} />
+				{:else}
+					<MultiImageEdit {images} productId={undefined} on:imageAdded={(e) => handleNewImageAdded(e)} />
+				{/if}
 			</Tabs.Content>
 
-			<Tabs.Content value="shipping" class="flex flex-col gap-2">
+			<Tabs.Content value="shipping" class="flex flex-col gap-2 p-2">
 				{#each shippingMethods as item, i}
 					<div class="grid grid-cols-[1fr_1fr_1fr_auto] w-full items-start gap-2">
 						<div>
