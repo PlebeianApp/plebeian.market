@@ -22,8 +22,8 @@
 	<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
 		<div class="grid grid-cols-3 gap-6">
 			<ul class="grid gap-4 md:col-span-1">
-				{#if product.galleryImages.length}
-					{#each product.galleryImages as item, i}
+				{#if product.images.length}
+					{#each product.images as item, i}
 						<button
 							class={cn('cursor-pointer p-1', i === selectedImage ? 'border border-primary' : null)}
 							on:click={() => (selectedImage = i)}
@@ -33,8 +33,8 @@
 					{/each}
 				{/if}
 			</ul>
-			{#if product.galleryImages.length}
-				<img class="col-span-2 border-2 border-black p-1" src={product.galleryImages[selectedImage]} alt="" />
+			{#if product.images.length}
+				<img class="col-span-2 border-2 border-black p-1" src={product.images[selectedImage]} alt="" />
 			{:else}
 				<ImgPlaceHolder imageType={'main'} />
 			{/if}

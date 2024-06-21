@@ -1,11 +1,11 @@
-import type { NDKKind, NostrEvent } from '@nostr-dev-kit/ndk'
+import type { NDKKind, NDKUserProfile, NostrEvent } from '@nostr-dev-kit/ndk'
 import type { VerifiedEvent } from 'nostr-tools'
 import { NSchema as n } from '@nostrify/nostrify'
 import { error } from '@sveltejs/kit'
 import { getEventCoordinates, isPReplacEvent } from '$lib/utils'
 import { verifyEvent } from 'nostr-tools'
 
-import type { InferSelectModel } from '@plebeian/database'
+import type { InferSelectModel, User } from '@plebeian/database'
 import { db, eq, events, inArray, sql, users } from '@plebeian/database'
 
 import { userExists, usersExists } from './users.service'
@@ -48,6 +48,20 @@ export const ensureAuthorsExists = async (pubkeys: string[]): Promise<{ id: stri
 	}
 
 	return insertedAuthors
+}
+// TODO not used by the moment
+export const persistAuthor = async (pubkey: string, profile: NDKUserProfile | null): Promise<boolean> => {
+	const [newUser] = await db
+		.insert(users)
+		.values({
+			id: pubkey,
+			...(profile && { profile: profile as Partial<User> }),
+		})
+		.returning()
+	if (!newUser.id) {
+		error(500, 'Failed to insert user')
+	}
+	return !!newUser.id
 }
 
 export const persistEvent = async (event: VerifiedEvent): Promise<NostrEvent> => {

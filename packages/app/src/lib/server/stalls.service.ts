@@ -134,7 +134,7 @@ export const getAllStalls = async (filter: StallsFilter = stallsFilterSchema.par
 	error(404, 'Not found')
 }
 
-type StallInfo = {
+export type StallInfo = {
 	id: string
 	name: string
 	description: string
@@ -146,7 +146,9 @@ type StallInfo = {
 
 export const getStallById = async (id: string): Promise<StallInfo> => {
 	const [uniqueStall] = await db.select().from(stalls).where(eq(stalls.id, id)).execute()
-
+	if (!uniqueStall) {
+		error(404, 'Stall not found')
+	}
 	const [ownerRes] = await db
 		.select({
 			userId: users.id,
@@ -247,7 +249,7 @@ export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall>
 			.values({
 				id: method.id,
 				name: method.name,
-				baseCost: String(method.baseCost),
+				cost: String(method.cost),
 				userId: stallResult.userId,
 				stallId: stallResult.id,
 			})
@@ -308,7 +310,7 @@ export const createStalls = async (stallEvents: NostrEvent[]): Promise<boolean> 
 			const shipping: Shipping = {
 				id: method.id,
 				name: method.name,
-				baseCost: String(method.baseCost),
+				cost: String(method.cost),
 				userId: stallEvent.pubkey,
 				stallId: eventCoordinates.coordinates,
 				createdAt: new Date(),
@@ -369,7 +371,7 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
 				.values({
 					id: method.id,
 					name: method.name,
-					baseCost: String(method.baseCost),
+					cost: String(method.cost),
 					userId: stallResult.userId,
 					stallId: stallResult.id,
 				})

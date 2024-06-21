@@ -3,9 +3,12 @@
 	import type { RichStall } from '$lib/server/stalls.service'
 	import * as Card from '$lib/components/ui/card/index'
 	import { standardDisplayDateFormat } from '$lib/constants'
+	import { stallsFilterSchema } from '$lib/schema'
 	import { fetchUserProfile, getEventCoordinates } from '$lib/utils'
 	import { format } from 'date-fns'
 	import { onMount } from 'svelte'
+
+	import { stallEventSchema } from '../../../schema/nostr-events'
 
 	export let stall: RichStall | NDKEvent
 
@@ -14,7 +17,7 @@
 	async function normalizeStallData(stall: RichStall | NDKEvent): Promise<RichStall> {
 		if ('sig' in stall) {
 			const eventCoordinates = getEventCoordinates(stall)
-			const stallEventContent = JSON.parse(stall.content)
+			const stallEventContent = stallEventSchema.parse(JSON.parse(stall.content))
 			const userProfile = await fetchUserProfile(stall.pubkey)
 			return {
 				name: stallEventContent.name,

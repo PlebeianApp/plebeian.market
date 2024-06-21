@@ -6,16 +6,15 @@
 	import Spinner from '../assets/spinner.svelte'
 	import ImgPlaceHolder from './imgPlaceHolder.svelte'
 
-	export let product: DisplayProduct
-	const { galleryImages, name, currency, price, userNip05, identifier, id } = product
-
-	$: priceQuery = createProductPriceQuery(product)
+	export let product: Partial<DisplayProduct>
+	const { images, name, currency, price, userNip05, identifier, id } = product
+	$: priceQuery = createProductPriceQuery(product as DisplayProduct)
 </script>
 
 <a href={userNip05 ? `/products/${userNip05}/${identifier}` : `/products/${id}`}>
 	<Card.Root class="cursor-pointer border-4 border-black bg-transparent text-black">
-		{#if galleryImages}
-			<img class="contain h-[329px] object-cover" src={galleryImages[0]} alt="" />
+		{#if images}
+			<img class="contain h-[329px] object-cover" src={images[0]} alt="" />
 		{:else}
 			<ImgPlaceHolder imageType={'thumbnail'} />
 		{/if}

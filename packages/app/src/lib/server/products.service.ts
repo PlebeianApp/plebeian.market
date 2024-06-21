@@ -33,7 +33,7 @@ export type DisplayProduct = Pick<Product, 'id' | 'description' | 'currency' | '
 	userNip05: string | null
 	createdAt: string
 	price: number
-	galleryImages: string[]
+	images: string[]
 }
 
 export const toDisplayProduct = async (product: Product): Promise<DisplayProduct> => {
@@ -50,7 +50,7 @@ export const toDisplayProduct = async (product: Product): Promise<DisplayProduct
 		price: parseFloat(product.price),
 		currency: product.currency,
 		stockQty: product.stockQty,
-		galleryImages: images,
+		images: images,
 		stallId: product.stallId,
 	}
 }
@@ -127,7 +127,7 @@ export const getProductById = async (productId: string): Promise<DisplayProduct>
 		price: parseFloat(productResult.price),
 		currency: productResult.currency,
 		stockQty: productResult.stockQty,
-		galleryImages: images,
+		images: images,
 		stallId: productResult.stallId,
 	}
 }
@@ -140,7 +140,7 @@ export const createProduct = async (productEvent: NostrEvent) => {
 
 	const stall = await getStallById(parsedProduct.stall_id)
 	const parentId = customTagValue(productEvent.tags, 'a')[0] || null
-	const extraCost = parsedProduct.shipping.length ? parsedProduct.shipping[0].baseCost : 0
+	const extraCost = parsedProduct.shipping.length ? parsedProduct.shipping[0].cost : 0
 
 	if (!stall) {
 		error(400, 'Stall not found')
@@ -210,7 +210,7 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 		updatedAt: new Date(),
 		currency: parsedProduct?.currency,
 		price: parsedProduct?.price?.toString(),
-		extraCost: parsedProduct?.shipping?.length ? parsedProduct?.shipping[0].baseCost.toString() : String(0),
+		extraCost: parsedProduct?.shipping?.length ? parsedProduct?.shipping[0].cost.toString() : String(0),
 		userId: devUser1.pk,
 		stallId: parsedProduct?.stall_id,
 		productName: parsedProduct?.name,

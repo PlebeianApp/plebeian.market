@@ -21,7 +21,7 @@ export const createEditProductMutation = createMutation(
 			{
 				id: string
 				name: string
-				baseCost: string
+				cost: string
 				regions: ISO3[]
 			}[],
 		]) => {
@@ -34,7 +34,6 @@ export const createEditProductMutation = createMutation(
 				stall_id: product?.stallId,
 				name: formData.get('title'),
 				description: formData.get('description'),
-				// TODO: implement image uploading in a seperate api
 				images: images,
 				price: Number(formData.get('price')),
 				quantity: Number(formData.get('quantity')),
@@ -46,13 +45,12 @@ export const createEditProductMutation = createMutation(
 				pubkey: $ndkStore.activeUser.pubkey,
 				content: JSON.stringify(evContent),
 				created_at: Math.floor(Date.now()),
-				tags: [['d', identifier]],
+				tags: [['d', identifier], ...(product?.stallId ? [['a', product.stallId]] : [])],
 			})
 
 			await newEvent.sign(ndk.signer)
 			const nostrEvent = await newEvent.toNostrEvent()
 			const result = await fetch(new URL(product ? `/api/v1/products/${product.id}` : '/api/v1/products', window.location.origin), {
-				// TODO: POST & PUT?
 				method: 'POST',
 				body: JSON.stringify(nostrEvent),
 				headers: {

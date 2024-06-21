@@ -210,7 +210,7 @@ const main = async () => {
 			stallId: stall.id,
 			userId: stall.userId,
 			name: faker.commerce.productName(),
-			baseCost: faker.finance.amount(),
+			cost: faker.finance.amount(),
 			isDefault: faker.datatype.boolean(),
 			createdAt: faker.date.recent(),
 			updatedAt: faker.date.future(),
@@ -394,7 +394,7 @@ const main = async () => {
 	})
 
 	const productImagesData = productData.flat(2).map((product) => {
-		const galleryImages = randomLengthArrayFromTo(0, 4).map((_, index) => {
+		const images = randomLengthArrayFromTo(0, 4).map((_, index) => {
 			return {
 				productId: product.id,
 				auctionId: null,
@@ -407,7 +407,7 @@ const main = async () => {
 				updatedAt: faker.date.future(),
 			} as ProductImage
 		})
-		return galleryImages
+		return images
 	})
 
 	const userStallsEvents = userStalls.flatMap((stallList) =>

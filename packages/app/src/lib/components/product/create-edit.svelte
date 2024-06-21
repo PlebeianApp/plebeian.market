@@ -54,13 +54,13 @@
 	class ShippingMethod implements Shipping {
 		id: string
 		name: string
-		baseCost: string
+		cost: string
 		regions: ISO3[]
 
-		constructor(id: string, name: string, baseCost: string, regions: ISO3[] = []) {
+		constructor(id: string, name: string, cost: string, regions: ISO3[] = []) {
 			this.id = id
 			this.name = name
-			this.baseCost = baseCost
+			this.cost = cost
 			this.regions = regions
 		}
 
@@ -78,7 +78,7 @@
 			return {
 				id: this.id,
 				name: this.name,
-				baseCost: this.baseCost,
+				cost: this.cost,
 				regions: this.regions,
 			} as Shipping
 		}
@@ -90,7 +90,7 @@
 		if (id) {
 			const existingMethod = shippingMethods.find((method) => method.id === id)
 			if (existingMethod) {
-				const duplicatedMethod = new ShippingMethod(createId(), existingMethod.name!, existingMethod.baseCost, existingMethod.regions)
+				const duplicatedMethod = new ShippingMethod(createId(), existingMethod.name!, existingMethod.cost, existingMethod.regions)
 				shippingMethods = [...shippingMethods, duplicatedMethod]
 			} else {
 				console.error(`No shipping method found with id ${id}`)
@@ -269,7 +269,7 @@
 						<div>
 							<Label for="cost" class="font-bold">Base Cost</Label>
 							<Input
-								bind:value={item.baseCost}
+								bind:value={item.cost}
 								class="border-2 border-black"
 								min={0}
 								type="text"
