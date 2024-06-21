@@ -3,6 +3,7 @@
 	import { editProductImageMutation } from '$lib/fetch/productImages.mutations'
 	import ndkStore from '$lib/stores/ndk'
 	import { createEventDispatcher } from 'svelte'
+	import { toast } from 'svelte-sonner'
 
 	import type { ProductImage } from '@plebeian/database'
 
@@ -20,6 +21,7 @@
 	const handleSetMainImage = async (productId: string, imageUrl: string) => {
 		await $editProductImageMutation.mutateAsync({ productId, imageUrl, imageOrder: 0 })
 		invalidateProductsQuery()
+		toast.success('New image set as main image!')
 	}
 
 	const handleImageAdd = async (imageUrl: string) => {
@@ -40,7 +42,7 @@
 	{#each images as image}
 		{#if image.imageUrl}
 			<div class="flex flex-col">
-				<EditableImage marketKontext={true} src={image.imageUrl} on:save={(e) => handleSwapImageForNew(image.imageUrl ?? '', e.detail)} />
+				<EditableImage marketContext={true} src={image.imageUrl} on:save={(e) => handleSwapImageForNew(image.imageUrl ?? '', e.detail)} />
 				<div class="border-r-2 border-b-2 border-l-2 border-black text-center">
 					<Button
 						on:click={() => handleSetMainImage(image.productId ?? '', image.imageUrl ?? '')}
@@ -62,5 +64,5 @@
 		{/if}
 	{/each}
 
-	<EditableImage marketKontext={true} src={null} on:save={(e) => handleImageAdd(e.detail)} />
+	<EditableImage marketContext={true} src={null} on:save={(e) => handleImageAdd(e.detail)} />
 </div>

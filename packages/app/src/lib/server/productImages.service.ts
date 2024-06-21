@@ -34,8 +34,6 @@ export const getImagesByUserId = async (userId: string): Promise<ProductImage[]>
 }
 
 export const editImage = async (productImage: { productId: string; imageOrder: number; imageUrl: string }): Promise<ProductImage> => {
-	let imageResult
-
 	if (productImage.imageOrder === 0) {
 		const allImages = await db.select().from(productImages).where(eq(productImages.productId, productImage.productId)).execute()
 
@@ -48,24 +46,24 @@ export const editImage = async (productImage: { productId: string; imageOrder: n
 					.execute()
 			}
 		})
-
-		const [res] = await db
-			.update(productImages)
-			.set({
-				imageUrl: productImage.imageUrl,
-				imageOrder: productImage.imageOrder,
-			})
-			.where(and(eq(productImages.productId, productImage.productId), eq(productImages.imageUrl, productImage.imageUrl)))
-			.returning()
-			.execute()
-		imageResult = res
 	}
 
+	const [imageResult] = await db
+		.update(productImages)
+		.set({
+			imageUrl: productImage.imageUrl,
+			imageOrder: productImage.imageOrder,
+		})
+		.where(and(eq(productImages.productId, productImage.productId), eq(productImages.imageUrl, productImage.imageUrl)))
+		.returning()
+		.execute()
+
 	if (imageResult) {
+		await fixImageOrder(productImage.productId)
 		return imageResult
 	}
 
-	error(500, 'Update failed')
+	throw error(500, 'Update failed')
 }
 
 export const addImageForProduct = async (productImage: PostProductImageFilter): Promise<ProductImage> => {
@@ -83,6 +81,9 @@ export const addImageForProduct = async (productImage: PostProductImageFilter): 
 			imageOrder: productImageCount.count + 1,
 		})
 		.returning()
+		.execute()
+
+	await fixImageOrder(productImage.productId)
 	return imageResult
 }
 
@@ -92,5 +93,26 @@ export const removeImageForProduct = async (productId: string, imageUrl: string)
 		.where(and(eq(productImages.productId, productId), eq(productImages.imageUrl, imageUrl)))
 		.returning()
 		.execute()
+
+	await fixImageOrder(productId)
 	return imageResult
+}
+
+const fixImageOrder = async (productId: string): Promise<void> => {
+	const allImages = await db
+		.select()
+		.from(productImages)
+		.where(eq(productImages.productId, productId))
+		.orderBy(productImages.imageOrder)
+		.execute()
+
+	await db.transaction(async (trx) => {
+		for (let i = 0; i < allImages.length; i++) {
+			await trx
+				.update(productImages)
+				.set({ imageOrder: i })
+				.where(and(eq(productImages.productId, allImages[i].productId), eq(productImages.imageUrl, allImages[i].imageUrl)))
+				.execute()
+		}
+	})
 }

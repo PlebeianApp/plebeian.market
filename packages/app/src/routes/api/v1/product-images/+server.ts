@@ -12,7 +12,6 @@ export async function GET({ request, url: { searchParams } }) {
 	}
 
 	try {
-		await authorize(request, userId, 'GET')
 		return json(await getImagesByUserId(userId))
 	} catch (e) {
 		if (e.status) {

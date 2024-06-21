@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { DisplayProduct } from '$lib/server/products.service'
+	import { error } from '@sveltejs/kit'
 	import Button from '$lib/components/ui/button/button.svelte'
 	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte'
 	import * as Command from '$lib/components/ui/command/index.js'
@@ -15,6 +16,7 @@
 	import { stallsFilterSchema } from '$lib/schema'
 	import ndkStore from '$lib/stores/ndk'
 	import { tick } from 'svelte'
+	import { toast } from 'svelte-sonner'
 
 	import type { ProductImage } from '@plebeian/database'
 	import type { ISO3 } from '@plebeian/database/constants'
@@ -125,11 +127,33 @@
 {:else if $stallsQuery.data?.length}
 	{@const [stall] = $stallsQuery.data.filter((pStall) => pStall.id == product?.stallId)}
 	<form
-		on:submit|preventDefault={(sEvent) => {
+		on:submit|preventDefault={async (sEvent) => {
 			if (!product) {
-				$createProductMutation.mutateAsync([sEvent, product, images.map((image) => image.imageUrl), shippingMethods.map((s) => s.json)])
+				const res = await $createProductMutation.mutateAsync([
+					sEvent,
+					product,
+					images.map((image) => image.imageUrl),
+					shippingMethods.map((s) => s.json),
+				])
+
+				if (res.error) {
+					toast.error(`Failed to create product: ${res.error}`)
+				} else {
+					toast.success('Product created!')
+				}
 			} else {
-				$editProductMutation.mutateAsync([sEvent, product, images.map((image) => image.imageUrl), shippingMethods.map((s) => s.json)])
+				const res = await $editProductMutation.mutateAsync([
+					sEvent,
+					product,
+					images.map((image) => image.imageUrl),
+					shippingMethods.map((s) => s.json),
+				])
+
+				if (res.error) {
+					toast.error(`Failed to update product: ${res.error}`)
+				} else {
+					toast.success('Product updated!')
+				}
 			}
 
 			queryClient.invalidateQueries({ queryKey: ['products', $ndkStore.activeUser.pubkey] })
@@ -240,12 +264,7 @@
 			</Tabs.Content>
 
 			<Tabs.Content value="images" class="flex flex-col">
-				<MultiImageEdit
-					{images}
-					productId={product?.id ?? ''}
-					on:imageAdded={(e) => handleNewImageAdded(e)}
-					on:imageRemoved={(e) => handleImagRemoved(e)}
-				/>
+				<MultiImageEdit {images} on:imageAdded={(e) => handleNewImageAdded(e)} on:imageRemoved={(e) => handleImagRemoved(e)} />
 			</Tabs.Content>
 
 			<Tabs.Content value="shipping" class="flex flex-col gap-2 p-2">

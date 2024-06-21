@@ -19,7 +19,7 @@ export const productImagesForUserQuery = createQuery(
 		queryFn: async () => {
 			if ($ndkStore.activeUser?.pubkey) {
 				const user = await createRequest(`GET /api/v1/product-images?userId=${$ndkStore.activeUser.pubkey}`, {
-					auth: true,
+					auth: false,
 				})
 
 				return user

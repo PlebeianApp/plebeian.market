@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { NostrBuildUploader } from '@nostrify/nostrify/uploaders'
+	import * as Collapsible from '$lib/components/ui/collapsible'
 	import * as Dialog from '$lib/components/ui/dialog/index.js'
 	import ndkStore from '$lib/stores/ndk'
 	import { createEventDispatcher } from 'svelte'
@@ -11,7 +12,7 @@
 	import UserImageHistory from './user-image-history.svelte'
 
 	export let src: string | null
-	export let marketKontext: boolean = false
+	export let marketContext: boolean = false
 
 	const dispatch = createEventDispatcher()
 
@@ -157,10 +158,12 @@
 						<Button on:click={handleSave} class="w-full font-bold">Save</Button>
 					</div>
 				</div>
-				{#if marketKontext}
+				{#if marketContext}
 					<div class="flex-1 max-h-[40vh] overflow-y-auto">
-						<div class="text-bold">History</div>
-						<UserImageHistory on:imageClick={(e) => handleImageCLick(e)} />
+						<Collapsible.Root>
+							<Collapsible.Trigger><span class="text-bold">use and already uploaded photo</span></Collapsible.Trigger>
+							<Collapsible.Content><UserImageHistory on:imageClick={(e) => handleImageCLick(e)} /></Collapsible.Content>
+						</Collapsible.Root>
 					</div>
 				{/if}
 			</div>

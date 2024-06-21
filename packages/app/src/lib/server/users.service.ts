@@ -244,10 +244,10 @@ export const deleteUser = async (userId: string): Promise<boolean> => {
 }
 
 export const userExists = async (userId: string): Promise<boolean> => {
-	const result = await db.query.users
-		.findFirst({
-			where: eq(users.id, userId),
-		})
-		.execute()
-	return Boolean(result)
+	const result = await db
+		.select({ id: sql`1` })
+		.from(users)
+		.where(eq(users.id, userId))
+		.limit(1)
+	return result.length > 0
 }
