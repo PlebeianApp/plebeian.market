@@ -36,6 +36,8 @@
 		handleImageRemove(oldImageUrl)
 		handleImageAdd(newImageUrl)
 	}
+
+	$: images = images.sort((a, b) => (a.imageOrder ?? 0) - (b.imageOrder ?? 0))
 </script>
 
 <div class="grid grid-cols-2 gap-4">

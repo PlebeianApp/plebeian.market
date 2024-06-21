@@ -46,8 +46,5 @@ export async function PUT({ request }) {
 	} catch (e) {
 		error(401, 'Unauthorized')
 	}
-
-	console.log('productImage', productImage.data)
-
 	return json(await editImage(productImage.data))
 }

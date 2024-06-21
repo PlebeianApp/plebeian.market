@@ -36,6 +36,14 @@
 	let categories: Category[] = []
 	let images: Partial<ProductImage>[] = product?.galleryImages ?? []
 
+	function updateProductImages(updatedProduct: DisplayProduct | null) {
+		if (updatedProduct) {
+			images = updatedProduct.galleryImages ?? []
+		}
+	}
+
+	$: updateProductImages(product)
+
 	type Shipping = (typeof stallEventSchema._type)['shipping'][0]
 
 	class ShippingMethod implements Shipping {
