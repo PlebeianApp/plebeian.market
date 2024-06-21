@@ -31,6 +31,7 @@ export const createProductsByFilterQuery = (filter: Partial<ProductsFilter>) =>
 				const products = await createRequest('GET /api/v1/products', {
 					params: productsFilterSchema.parse(filter),
 				})
+				console.log(products)
 				return products
 			},
 		},

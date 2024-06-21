@@ -10,7 +10,7 @@ export const GET: RequestHandler = async ({ request, url: { searchParams } }) =>
 	const spObj = Object.fromEntries(searchParams)
 	const filter = usersFilterSchema.safeParse(spObj)
 	if (!filter.success) {
-		return error(400, `Invalid request: ${JSON.stringify(filter.error)}`)
+		error(400, `Invalid request: ${JSON.stringify(filter.error)}`)
 	}
 
 	if (authorizationHeader) {

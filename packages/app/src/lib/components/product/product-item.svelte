@@ -15,7 +15,8 @@
 <a href={userNip05 ? `/products/${userNip05}/${identifier}` : `/products/${id}`}>
 	<Card.Root class="cursor-pointer border-4 border-black bg-transparent text-black">
 		{#if galleryImages}
-			<img class="contain h-[329px] object-cover" src={galleryImages[0]} alt="" />
+			{@const mainImage = galleryImages.find((image) => image.imageOrder == 0)}
+			<img class="contain h-[329px] object-cover" src={mainImage?.imageUrl} alt="" />
 		{:else}
 			<ImgPlaceHolder imageType={'thumbnail'} />
 		{/if}

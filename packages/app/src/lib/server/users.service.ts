@@ -248,5 +248,6 @@ export const userExists = async (userId: string): Promise<boolean> => {
 		.select({ id: sql`1` })
 		.from(users)
 		.where(eq(users.id, userId))
+		.limit(1)
 	return result.length > 0
 }

@@ -28,13 +28,13 @@
 							class={cn('cursor-pointer p-1', i === selectedImage ? 'border border-primary' : null)}
 							on:click={() => (selectedImage = i)}
 						>
-							<img src={item} alt="" />
+							<img src={item.imageUrl} alt="" />
 						</button>
 					{/each}
 				{/if}
 			</ul>
 			{#if product.galleryImages.length}
-				<img class="col-span-2 border-2 border-black p-1" src={product.galleryImages[selectedImage]} alt="" />
+				<img class="col-span-2 border-2 border-black p-1" src={product.galleryImages[selectedImage].imageUrl} alt="" />
 			{:else}
 				<ImgPlaceHolder imageType={'main'} />
 			{/if}

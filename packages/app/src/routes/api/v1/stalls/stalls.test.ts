@@ -48,7 +48,7 @@ describe('/stalls', () => {
 			kind: 30017 as NDKKind,
 			pubkey: devUser1.pk,
 			content: JSON.stringify(evContent),
-			created_at: Math.floor(Date.now()) / 1000,
+			created_at: Math.floor(Date.now() / 1000),
 			tags: [['d', identifier]],
 		})
 

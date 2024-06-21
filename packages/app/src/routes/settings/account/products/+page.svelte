@@ -21,9 +21,17 @@
 	$: productsMode === 'list' ? $productsQuery?.refetch() : null
 
 	let currentProduct: DisplayProduct | null = null
+
 	const linkDetails = data.menuItems
 		.find((item) => item.value === 'account-settings')
 		?.links.find((item) => item.href === $page.url.pathname)
+
+	$: if (productsMode === 'edit' && $productsQuery?.data && currentProduct) {
+		const updatedProduct = $productsQuery.data.find((product) => product.id === currentProduct.id)
+		if (updatedProduct) {
+			currentProduct = updatedProduct
+		}
+	}
 </script>
 
 <div class="pb-4 space-y-2">

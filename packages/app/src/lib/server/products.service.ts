@@ -33,7 +33,7 @@ export type DisplayProduct = Pick<Product, 'id' | 'description' | 'currency' | '
 	userNip05: string | null
 	createdAt: string
 	price: number
-	galleryImages: string[]
+	galleryImages: ProductImage[]
 }
 
 export const toDisplayProduct = async (product: Product): Promise<DisplayProduct> => {
@@ -56,12 +56,7 @@ export const toDisplayProduct = async (product: Product): Promise<DisplayProduct
 }
 
 export const getProductsByUserId = async (filter: ProductsFilter = productsFilterSchema.parse({})): Promise<DisplayProduct[]> => {
-	const productsResult = await db
-		.select()
-		.from(products)
-		.where(and(filter.userId ? eq(products.userId, filter.userId) : undefined))
-		.limit(filter.pageSize)
-		.execute()
+	const productsResult = await db.select().from(products).where(eq(products.userId, filter.userId)).limit(filter.pageSize).execute()
 
 	const displayProducts: DisplayProduct[] = await Promise.all(productsResult.map(toDisplayProduct))
 
@@ -135,19 +130,20 @@ export const getProductById = async (productId: string): Promise<DisplayProduct>
 export const createProduct = async (productEvent: NostrEvent) => {
 	const eventCoordinates = getEventCoordinates(productEvent)
 	const productEventContent = JSON.parse(productEvent.content)
-	const parsedProduct = productEventSchema.parse({ id: productEventContent.id, ...productEventContent })
-	if (!parsedProduct) throw Error('Bad product schema')
 
-	const stall = await getStallById(parsedProduct.stall_id)
+	const parsedProduct = productEventSchema.safeParse({ id: productEventContent.id, ...productEventContent })
+	if (!parsedProduct.success) error(500, 'Bad product schema' + parsedProduct.error)
+
+	const stall = await getStallById(parsedProduct.data.stall_id)
 	const parentId = customTagValue(productEvent.tags, 'a')[0] || null
-	const extraCost = parsedProduct.shipping.length ? parsedProduct.shipping[0].baseCost : 0
+	const extraCost = parsedProduct.data.shipping.length ? parsedProduct.data.shipping[0].baseCost : 0
 
 	if (!stall) {
 		error(400, 'Stall not found')
 	}
 
-	if (!parsedProduct.type) {
-		parsedProduct.type = 'simple'
+	if (!parsedProduct.data.type) {
+		parsedProduct.data.type = 'simple'
 	}
 
 	const insertProduct: Product = {
@@ -155,18 +151,18 @@ export const createProduct = async (productEvent: NostrEvent) => {
 		createdAt: new Date(productEvent.created_at! * 1000),
 		updatedAt: new Date(productEvent.created_at! * 1000),
 		identifier: eventCoordinates.tagD,
-		productName: parsedProduct.name,
-		description: parsedProduct.description as string,
-		currency: parsedProduct.currency,
-		price: parsedProduct.price.toString(),
+		productName: parsedProduct.data.name,
+		description: parsedProduct.data.description as string,
+		currency: parsedProduct.data.currency,
+		price: parsedProduct.data.price.toString(),
 		extraCost: extraCost.toString(),
-		productType: parsedProduct.type as ProductTypes,
+		productType: parsedProduct.data.type as ProductTypes,
 		parentId: parentId,
 		userId: productEvent.pubkey,
-		stallId: parsedProduct.stall_id,
-		stockQty: parsedProduct.quantity ?? 0,
+		stallId: parsedProduct.data.stall_id,
+		stockQty: parsedProduct.data.quantity ?? 0,
 	}
-	const insertSpecs: ProductMeta[] | undefined = parsedProduct.specs?.map((spec) => ({
+	const insertSpecs: ProductMeta[] | undefined = parsedProduct.data.specs?.map((spec) => ({
 		id: createId(),
 		createdAt: new Date(productEvent.created_at! * 1000),
 		updatedAt: new Date(productEvent.created_at! * 1000),
@@ -180,7 +176,7 @@ export const createProduct = async (productEvent: NostrEvent) => {
 		valueNumeric: null,
 	}))
 
-	const insertProductImages: ProductImage[] | undefined = parsedProduct.images?.map((imageUrl, index) => ({
+	const insertProductImages: ProductImage[] | undefined = parsedProduct.data.images?.map((imageUrl, index) => ({
 		createdAt: new Date(productEvent.created_at! * 1000),
 		productId: eventCoordinates.coordinates,
 		auctionId: null,
@@ -203,18 +199,63 @@ export const createProduct = async (productEvent: NostrEvent) => {
 
 export const updateProduct = async (productId: string, productEvent: NostrEvent): Promise<DisplayProduct> => {
 	const productEventContent = JSON.parse(productEvent.content)
-	const parsedProduct = productEventSchema.partial().parse({ id: productId, ...productEventContent })
+	const parsedProduct = productEventSchema.partial().safeParse({ id: productId, ...productEventContent })
+
+	if (!parsedProduct.success) {
+		error(500, 'Bad product schema')
+	}
+
+	const parsedProductData = parsedProduct.data
+
 	const insertProduct: Partial<Product> = {
-		id: parsedProduct.id,
-		description: parsedProduct?.description as string,
+		id: productId,
+		description: parsedProductData?.description as string,
 		updatedAt: new Date(),
-		currency: parsedProduct?.currency,
-		price: parsedProduct?.price?.toString(),
-		extraCost: parsedProduct?.shipping?.length ? parsedProduct?.shipping[0].baseCost.toString() : String(0),
-		userId: devUser1.pk,
-		stallId: parsedProduct?.stall_id,
-		productName: parsedProduct?.name,
-		stockQty: parsedProduct?.quantity !== null ? parsedProduct?.quantity : undefined,
+		currency: parsedProductData?.currency,
+		price: parsedProductData?.price?.toString(),
+		extraCost: parsedProductData?.shipping?.length ? parsedProductData?.shipping[0].baseCost.toString() : String(0),
+		stallId: parsedProductData?.stall_id,
+		productName: parsedProductData?.name,
+		stockQty: parsedProductData?.quantity !== null ? parsedProductData?.quantity : undefined,
+	}
+
+	const existingImages = await getImagesByProductId(productId)
+
+	const newImages = parsedProductData?.images?.filter((img) => !existingImages.find((eImg) => eImg.imageUrl === img))
+	const removedImages = existingImages.map((img) => img.imageUrl).filter((img) => !parsedProductData?.images?.includes(img))
+
+	const removeProductImages = removedImages.map((imageUrl) => ({
+		productId,
+		imageUrl,
+	}))
+
+	if (newImages && newImages.length > 0) {
+		await Promise.all(
+			newImages.map((img) =>
+				db
+					.insert(productImages)
+					.values({
+						createdAt: new Date(),
+						productId,
+						auctionId: null,
+						imageUrl: img,
+						imageType: 'gallery',
+						imageOrder: 0,
+					})
+					.returning(),
+			),
+		)
+	}
+
+	if (removeProductImages.length) {
+		await Promise.all(
+			removeProductImages.map((img) =>
+				db
+					.delete(productImages)
+					.where(and(eq(productImages.productId, img.productId), eq(productImages.imageUrl, img.imageUrl)))
+					.execute(),
+			),
+		)
 	}
 
 	const productResult = await db
