@@ -252,14 +252,16 @@ export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall>
 			})
 			.returning()
 
-		await db.insert(shippingZones).values(
-			method.regions.map((region) => ({
-				countryCode: region,
-				regionCode: region,
-				shippingId: shippingResult.id,
-				stallId: stallResult.id,
-			})),
-		)
+		if (method.regions.length) {
+				await db.insert(shippingZones).values(
+				method.regions.map((region) => ({
+					countryCode: region,
+					regionCode: region,
+					shippingId: shippingResult.id,
+					stallId: stallResult.id,
+				})),
+			)		
+		}
 	}
 
 	const stall = stallResult
@@ -293,6 +295,7 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
 		.returning()
 
 	if (stallResult) {
+		await db.delete(shipping).where(eq(shipping.stallId, stallId)).execute()
 		await db.delete(shippingZones).where(eq(shippingZones.stallId, stallId)).execute()
 
 		for (const method of parsedStall.shipping ?? []) {
