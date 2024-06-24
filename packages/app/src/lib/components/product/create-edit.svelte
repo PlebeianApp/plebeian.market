@@ -1,6 +1,5 @@
 <script lang="ts">
 	import type { DisplayProduct } from '$lib/server/products.service'
-	import { error } from '@sveltejs/kit'
 	import Button from '$lib/components/ui/button/button.svelte'
 	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte'
 	import * as Command from '$lib/components/ui/command/index.js'
@@ -28,6 +27,8 @@
 	import MultiImageEdit from './multi-image-edit.svelte'
 
 	export let product: DisplayProduct | null = null
+
+	let currentStallId = product?.stallId
 
 	const activeTab =
 		'w-full font-bold border-b-2 border-black text-black data-[state=active]:border-b-primary data-[state=active]:text-primary'
@@ -128,22 +129,23 @@
 	}
 
 	$: stallsQuery = createStallsByFilterQuery(stallsFilterSchema.parse({ userId: $ndkStore.activeUser?.pubkey }))
+	$: currentStall = $stallsQuery.data?.find(({ id }) => id === currentStallId)!
 </script>
 
 {#if $stallsQuery.isLoading}
 	<Spinner />
 {:else if $stallsQuery.data?.length}
-	{@const [stall] = $stallsQuery.data.filter((pStall) => pStall.id == product?.stallId)}
 	<form
 		on:submit|preventDefault={async (sEvent) => {
 			if (!product) {
 				const res = await $createProductMutation.mutateAsync([
 					sEvent,
-					product,
+					currentStall,
 					images.map((image) => image.imageUrl),
 					shippingMethods.map((s) => s.json),
 				])
 
+				console.log(res)
 				if (res.error) {
 					toast.error(`Failed to create product: ${res.error}`)
 				} else {
@@ -227,18 +229,20 @@
 						<Label for="from" class="font-bold">Stall</Label>
 						<DropdownMenu.Root>
 							<DropdownMenu.Trigger asChild let:builder>
-								<Button variant="outline" class="border-2 border-black" builders={[builder]}>{stall?.name}</Button>
+								<Button variant="outline" class="border-2 border-black" builders={[builder]}>{currentStall?.name ?? 'Pick a stall'}</Button>
 							</DropdownMenu.Trigger>
 							<DropdownMenu.Content class="w-56">
 								<DropdownMenu.Label>Stall</DropdownMenu.Label>
 								<DropdownMenu.Separator />
 								<section class=" max-h-[350px] overflow-y-auto">
-									{#each $stallsQuery.data as userStall}
+									{#each $stallsQuery.data as item}
 										<DropdownMenu.CheckboxItem
-											checked={product?.stallId === userStall.id}
-											on:click={() => product && ((product.stallId = userStall.id), (product.currency = userStall.currency))}
+											checked={currentStallId === item.id}
+											on:click={() => {
+												currentStallId = item.id
+											}}
 										>
-											{userStall.name}
+											{item.name}
 										</DropdownMenu.CheckboxItem>
 									{/each}
 								</section>
@@ -247,7 +251,7 @@
 					</div>
 					<div class="grid w-full items-center gap-1.5">
 						<Label for="from" class="font-bold">Currency</Label>
-						<Input value={stall?.currency} required class="border-2 border-black" type="text" name="currency" disabled />
+						<Input value={currentStall?.currency} required class="border-2 border-black" type="text" name="currency" disabled />
 					</div>
 				</div>
 			</Tabs.Content>
@@ -384,4 +388,6 @@
 			<Button type="submit" class="w-full font-bold my-4">Save</Button>
 		</Tabs.Root>
 	</form>
+{:else if !$stallsQuery.data?.length}
+	<p>There should be stalls defined first</p>
 {/if}
