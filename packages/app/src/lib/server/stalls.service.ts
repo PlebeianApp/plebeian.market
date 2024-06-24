@@ -295,9 +295,10 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
 		.returning()
 
 	if (stallResult) {
-		await db.delete(shipping).where(eq(shipping.stallId, stallId)).execute()
 		await db.delete(shippingZones).where(eq(shippingZones.stallId, stallId)).execute()
-
+		for (const method of parsedStall.shipping ?? []) {
+			await db.delete(shipping).where(eq(shipping.id, method.id)).execute()
+		}
 		for (const method of parsedStall.shipping ?? []) {
 			const [shippingResult] = await db
 				.insert(shipping)
