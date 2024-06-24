@@ -253,14 +253,14 @@ export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall>
 			.returning()
 
 		if (method.regions.length) {
-				await db.insert(shippingZones).values(
+			await db.insert(shippingZones).values(
 				method.regions.map((region) => ({
 					countryCode: region,
 					regionCode: region,
 					shippingId: shippingResult.id,
 					stallId: stallResult.id,
 				})),
-			)		
+			)
 		}
 	}
 
