@@ -205,7 +205,7 @@ CREATE TABLE `shipping` (
 	`name` text NOT NULL,
 	`base_cost` numeric NOT NULL,
 	`default` integer DEFAULT false NOT NULL,
-	FOREIGN KEY (`stall_id`) REFERENCES `stalls`(`id`) ON UPDATE cascade ON DELETE no action,
+	FOREIGN KEY (`stall_id`) REFERENCES `stalls`(`id`) ON UPDATE cascade ON DELETE cascade,
 	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE cascade ON DELETE cascade
 );
 --> statement-breakpoint
@@ -216,7 +216,7 @@ CREATE TABLE `shipping_zones` (
 	`region_code` text NOT NULL,
 	`country_code` text NOT NULL,
 	FOREIGN KEY (`shipping_id`) REFERENCES `shipping`(`id`) ON UPDATE cascade ON DELETE cascade,
-	FOREIGN KEY (`stall_id`) REFERENCES `stalls`(`id`) ON UPDATE cascade ON DELETE no action
+	FOREIGN KEY (`stall_id`) REFERENCES `stalls`(`id`) ON UPDATE cascade ON DELETE cascade
 );
 --> statement-breakpoint
 CREATE TABLE `stalls` (

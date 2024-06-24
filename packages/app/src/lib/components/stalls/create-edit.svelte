@@ -96,7 +96,7 @@
 					new ShippingMethod(
 						s.id,
 						s.name,
-						s.baseCost,
+						String(s.baseCost),
 						s.zones.map((z) => z.region as ISO3),
 					),
 			)

@@ -184,7 +184,7 @@ export const paymentDetails = sqliteTable('payment_details', {
 // Shipping
 export const shipping = sqliteTable('shipping', {
 	...standardColumns,
-	stallId: text('stall_id').references(() => stalls.id, { onUpdate: 'cascade' }),
+	stallId: text('stall_id').references(() => stalls.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
 	userId: text('user_id')
 		.notNull()
 		.references(() => users.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
@@ -201,7 +201,7 @@ export const shippingZones = sqliteTable('shipping_zones', {
 	shippingId: text('shipping_id')
 		.notNull()
 		.references(() => shipping.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
-	stallId: text('stall_id').references(() => stalls.id, { onUpdate: 'cascade' }),
+	stallId: text('stall_id').references(() => stalls.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
 	regionCode: text('region_code').notNull(),
 	countryCode: text('country_code').notNull(),
 })
