@@ -220,127 +220,103 @@ export const getStallsByUserId = async (userId: string): Promise<RichStall[]> =>
 	error(404, 'Not found')
 }
 
-export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall> => {
-	const eventCoordinates = getEventCoordinates(stallEvent)
-	const stallEventContent = JSON.parse(stallEvent.content)
-	const parsedStall = stallEventSchema.parse({
-		id: stallEventContent.id,
-		...stallEventContent,
-	})
-
-	const insertStall: Stall = {
-		id: eventCoordinates.coordinates,
-		createdAt: new Date(stallEvent.created_at! * 1000),
-		updatedAt: new Date(stallEvent.created_at! * 1000),
-		name: parsedStall.name,
-		identifier: eventCoordinates.tagD,
-		description: parsedStall.description as string,
-		currency: parsedStall.currency,
-		userId: stallEvent.pubkey,
-	}
-	const [stallResult] = await db.insert(stalls).values(insertStall).returning()
-	if (!stallResult) {
-		error(404, 'Not found')
-	}
-
-	for (const method of parsedStall.shipping) {
-		const [shippingResult] = await db
-			.insert(shipping)
-			.values({
-				id: method.id,
-				name: method.name,
-				cost: String(method.cost),
-				userId: stallResult.userId,
-				stallId: stallResult.id,
-			})
-			.returning()
-
-		await db.insert(shippingZones).values(
-			method.regions.map((region) => ({
-				countryCode: region,
-				regionCode: region,
-				shippingId: shippingResult.id,
-				stallId: stallResult.id,
-			})),
-		)
-	}
-
-	const stall = stallResult
-
-	return {
-		id: stall.id,
-		name: stall.name,
-		description: stall.description,
-		currency: stall.currency,
-		createDate: format(stall.createdAt, standardDisplayDateFormat),
-		userId: stall.userId,
-	}
-}
-
-export const createStalls = async (stallEvents: NostrEvent[]): Promise<boolean> => {
-	if (!stallEvents || stallEvents.length === 0) {
-		throw new Error('StallEvents array is empty or null')
-	}
-
-	const stallsToInsert: Stall[] = []
-	const shippingToInsert: Shipping[] = []
-	const shippingZonesToInsert: ShippingZone[] = []
-
-	for (const stallEvent of stallEvents) {
-		const eventCoordinates = getEventCoordinates(stallEvent)
+export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall | undefined> => {
+	try {
+		const { coordinates, tagD } = getEventCoordinates(stallEvent)
 		const stallEventContent = JSON.parse(stallEvent.content)
-		const parsedStall = stallEventSchema.parse({
+
+		if (!stallEventContent) {
+			error(500, { message: `Error parsing stall event content` })
+		}
+
+		const { data, error: zodError } = stallEventSchema.safeParse({
 			id: stallEventContent.id,
 			...stallEventContent,
 		})
 
+		if (zodError) {
+			error(500, { message: `Invalid stall event data ${zodError}` })
+		}
+
 		const insertStall: Stall = {
-			id: eventCoordinates.coordinates,
+			id: coordinates,
 			createdAt: new Date(stallEvent.created_at * 1000),
 			updatedAt: new Date(stallEvent.created_at * 1000),
-			name: parsedStall.name,
-			identifier: eventCoordinates.tagD,
-			description: parsedStall.description as string,
-			currency: parsedStall.currency,
+			name: data.name,
+			identifier: tagD,
+			description: data.description as string,
+			currency: data.currency,
 			userId: stallEvent.pubkey,
 		}
-		stallsToInsert.push(insertStall)
 
-		for (const method of parsedStall.shipping) {
-			const shipping: Shipping = {
-				id: method.id,
-				name: method.name,
-				cost: String(method.cost),
-				userId: stallEvent.pubkey,
-				stallId: eventCoordinates.coordinates,
-				createdAt: new Date(),
-				updatedAt: new Date(),
-				isDefault: false,
-			}
-			shippingToInsert.push(shipping)
+		const promises: Promise<unknown>[] = []
 
-			for (const region of method.regions) {
-				const shippingZone: ShippingZone = {
-					id: createId(),
-					countryCode: region,
-					regionCode: region,
-					shippingId: method.id,
-					stallId: eventCoordinates.coordinates,
-				}
-				shippingZonesToInsert.push(shippingZone)
+		promises.push(
+			db
+				.insert(stalls)
+				.values(insertStall)
+				.returning()
+				.then(([stallResult]) => {
+					if (!stallResult) {
+						error(500, 'Error when creating stall')
+					}
+					return stallResult
+				}),
+		)
+
+		for (const method of data.shipping) {
+			if (!method) {
+				continue
 			}
+			promises.push(
+				db
+					.insert(shipping)
+					.values({
+						id: method?.id as string,
+						name: method?.name as string,
+						cost: String(method?.cost),
+						userId: insertStall.userId,
+						stallId: insertStall.id,
+					})
+					.onConflictDoNothing({ target: [shipping.id, shipping.userId] })
+					.returning()
+					.then(([shippingResult]) => {
+						if (!shippingResult) {
+							error(500, 'Error when creating shipping method')
+						}
+						return shippingResult
+					})
+					.then((shippingResult) => {
+						if (method.regions) {
+							return db.insert(shippingZones).values(
+								method.regions.map((region) => ({
+									countryCode: region,
+									regionCode: region,
+									shippingId: shippingResult?.id as string,
+									shippingUserId: shippingResult.userId,
+									stallId: insertStall.id,
+								})),
+							)
+						}
+					}),
+			)
 		}
-	}
 
-	try {
-		await db.transaction(async (trx) => {
-			await trx.insert(stalls).values(stallsToInsert).returning()
-			await trx.insert(shipping).values(shippingToInsert).returning()
-			await trx.insert(shippingZones).values(shippingZonesToInsert)
-		})
-		return true
+		const results = await Promise.all(promises)
+
+		const stallResult = results[0] as Stall
+
+		return {
+			id: stallResult.id,
+			name: stallResult.name,
+			description: stallResult.description,
+			currency: stallResult.currency,
+			createDate: format(stallResult.createdAt, standardDisplayDateFormat),
+			userId: stallResult.userId,
+		}
 	} catch (e) {
-		error(500, `Error creating stalls, ${JSON.stringify(e)}`)
+		console.error(e)
+		error(500, `Failed to create stall ${e}`)
 	}
 }
 
@@ -364,28 +340,33 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
 
 	if (stallResult) {
 		await db.delete(shippingZones).where(eq(shippingZones.stallId, stallId)).execute()
+		if (parsedStall.shipping) {
+			for (const method of parsedStall.shipping) {
+				const [shippingResult] = await db
+					.insert(shipping)
+					.values({
+						id: method.id as string,
+						name: method.name as string,
+						cost: String(method.cost),
+						userId: stallResult.userId as string,
+						stallId: stallResult.id as string,
+					})
+					.returning()
 
-		for (const method of parsedStall.shipping ?? []) {
-			const [shippingResult] = await db
-				.insert(shipping)
-				.values({
-					id: method.id,
-					name: method.name,
-					cost: String(method.cost),
-					userId: stallResult.userId,
-					stallId: stallResult.id,
-				})
-				.returning()
-
-			await db.insert(shippingZones).values(
-				method.regions.map((region) => ({
-					countryCode: region,
-					regionCode: region,
-					shippingId: shippingResult.id,
-					stallId: stallResult.id,
-				})),
-			)
+				if (method.regions) {
+					await db.insert(shippingZones).values(
+						method.regions.map((region) => ({
+							countryCode: region,
+							regionCode: region,
+							shippingId: shippingResult.id,
+							shippingUserId: shippingResult.userId,
+							stallId: stallResult.id,
+						})),
+					)
+				}
+			}
 		}
+
 		return {
 			id: stallResult.id,
 			name: stallResult.name,
@@ -397,4 +378,13 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
 	}
 
 	error(500, 'Failed to update product')
+}
+
+export const stallExists = async (stallId: string): Promise<boolean> => {
+	const result = await db
+		.select({ id: sql`1` })
+		.from(stalls)
+		.where(eq(stalls.id, stallId))
+		.limit(1)
+	return result.length > 0
 }

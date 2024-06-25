@@ -1,9 +1,8 @@
+import type { NostrEvent } from '@nostr-dev-kit/ndk'
 import { error, json } from '@sveltejs/kit'
-import { KindProducts } from '$lib/constants'
 import { productsFilterSchema } from '$lib/schema'
-import { verifyAndPersistRawEvent } from '$lib/server/nostrEvents.service'
 import {
-	createProduct,
+	createProducts,
 	getAllProducts,
 	getProductsByCatId,
 	getProductsByCatName,
@@ -20,7 +19,6 @@ export async function GET({ url: { searchParams } }) {
 	} else if (filter.data.catName) {
 		return json(await getProductsByCatName(filter.data))
 	} else if (filter.data.stallId) {
-		console.log('filter.data.stallId', filter.data.stallId)
 		return json(await getProductsByStallId(filter.data.stallId))
 	} else {
 		return json(await getAllProducts(filter.data))
@@ -29,8 +27,8 @@ export async function GET({ url: { searchParams } }) {
 
 export async function POST({ request }) {
 	try {
-		const verifiedEvent = await verifyAndPersistRawEvent(request, KindProducts)
-		return json(await createProduct(verifiedEvent))
+		const body = (await request.json()) as unknown as NostrEvent[]
+		return json(await createProducts(body))
 	} catch (e) {
 		error(500, JSON.stringify(e))
 	}

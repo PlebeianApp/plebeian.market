@@ -1,4 +1,3 @@
-import type { NDKUserProfile } from '@nostr-dev-kit/ndk'
 import type { UsersFilter } from '$lib/schema'
 import { error } from '@sveltejs/kit'
 import { usersFilterSchema } from '$lib/schema'
@@ -37,7 +36,7 @@ const resolveUser = async (user: User): Promise<RichUser> => {
 	}
 }
 
-// TODO: Use event to create a user with the new NDK
+// TODO: Use profile event (k:0) to create a user... Waiting for ndk bump
 export const getAllUsers = async (filter: UsersFilter = usersFilterSchema.parse({})): Promise<User[]> => {
 	const orderBy = {
 		createdAt: products.createdAt,
@@ -146,14 +145,18 @@ export const getUserForProduct = async (productId: string): Promise<User> => {
 	error(404, 'Not found')
 }
 
-export const createUser = async (user: object, role: UserRoles = 'pleb', trustLevel: UserTrustLevel = 'reasonable'): Promise<User> => {
-	const parsedUserMeta = userEventSchema.safeParse(user)
-
-	if (!parsedUserMeta.success) {
-		throw Error(JSON.stringify(parsedUserMeta.error))
+export const createUser = async (
+	user: User,
+	fromNostr: boolean = false,
+	role: UserRoles = 'pleb',
+	trustLevel: UserTrustLevel = 'reasonable',
+): Promise<User> => {
+	const parsedUserProfile = userEventSchema.safeParse(user)
+	if (!parsedUserProfile.success) {
+		throw Error(JSON.stringify(parsedUserProfile.error))
 	}
 
-	const userMetaData = parsedUserMeta.data
+	const userMetaData = parsedUserProfile.data
 
 	const insertUser: NewUser = {
 		id: userMetaData.id,
@@ -174,7 +177,9 @@ export const createUser = async (user: object, role: UserRoles = 'pleb', trustLe
 
 	const [userResult] = await db.insert(users).values(insertUser).returning()
 
-	if (userResult) {
+	if (!userResult) error(500, { message: 'Failed to create user' })
+
+	if (!fromNostr) {
 		await Promise.all([
 			db.insert(userMeta).values({ userId: userResult.id, metaName: USER_META.ROLE.value, valueText: role }).returning().execute(),
 			db
@@ -183,10 +188,9 @@ export const createUser = async (user: object, role: UserRoles = 'pleb', trustLe
 				.returning()
 				.execute(),
 		])
-		return userResult
 	}
 
-	error(500, 'Failed to create user')
+	return userResult
 }
 
 export const updateUser = async (userId: string, userProfile: RichUser): Promise<User> => {
@@ -257,6 +261,7 @@ export const userExists = async (userId: string): Promise<boolean> => {
 		.select({ id: sql`1` })
 		.from(users)
 		.where(eq(users.id, userId))
+		.limit(1)
 	return result.length > 0
 }
 

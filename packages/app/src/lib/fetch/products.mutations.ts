@@ -10,7 +10,13 @@ import { get } from 'svelte/store'
 import type { ISO3 } from '@plebeian/database'
 import { createId } from '@plebeian/database/utils'
 
-import { queryClient } from './client'
+import { createRequest, queryClient } from './client'
+
+declare module './client' {
+	interface Endpoints {
+		'POST /api/v1/products': Operation<string, 'POST', never, NostrEvent[], DisplayProduct[], never>
+	}
+}
 
 export const createEditProductMutation = createMutation(
 	{
@@ -58,6 +64,30 @@ export const createEditProductMutation = createMutation(
 				},
 			}).then((response) => response.json())
 			return result
+		},
+	},
+	queryClient,
+)
+
+export const createProductsFromNostrMutation = createMutation(
+	{
+		mutationFn: async (products: Set<NDKEvent>) => {
+			const nostrEventsToInsert = await Promise.all([...products].map((product) => product.toNostrEvent()))
+			try {
+				const response = createRequest(`POST /api/v1/products`, {
+					body: nostrEventsToInsert,
+				})
+				if (!response) {
+					return null
+				}
+				return response
+			} catch (e) {
+				console.log(e)
+			}
+		},
+		onSuccess: (data: DisplayProduct[] | undefined | null) => {
+			console.log('Products inserted in db successfully: ', data?.length)
+			queryClient.invalidateQueries({ queryKey: ['products'] })
 		},
 	},
 	queryClient,

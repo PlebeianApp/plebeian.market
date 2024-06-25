@@ -13,10 +13,13 @@ if (typeof window !== 'undefined') {
 
 export const defaulRelaysUrls: string[] = [
 	// 'wss://purplepag.es',
-	// 'wss://relay.nostr.band',
+	'wss://relay.nostr.band',
 	'wss://nos.lol',
 	'wss://bouncer.nostree.me',
 	'wss://nostr.land/',
+	'wss://relay.damus.io',
+	'wss://nostr.mom',
+	'wss://nostr.wine',
 	// 'wss://purplerelay.com/',
 ]
 

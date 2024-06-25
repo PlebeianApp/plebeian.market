@@ -1,9 +1,13 @@
 <script lang="ts">
 	import StallItem from '$lib/components/stalls/stall-item.svelte'
-	import { stallsSub } from '$lib/nostrSubs/subs'
+	import { stallsSub, validStalls } from '$lib/nostrSubs/subs'
 	import { onDestroy } from 'svelte'
 
 	stallsSub.ref()
+
+	stallsSub.onEose(() => {
+		console.log('Stalls sub EOSE')
+	})
 
 	onDestroy(() => {
 		stallsSub.unref()
@@ -17,8 +21,8 @@
 				<div class="container">
 					<h2>Stalls</h2>
 					<div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-						{#each $stallsSub as item}
-							<StallItem stall={item} />
+						{#each $validStalls as stall}
+							<StallItem {stall} />
 						{/each}
 					</div>
 				</div>

@@ -64,27 +64,35 @@ export const persistAuthor = async (pubkey: string, profile: NDKUserProfile | nu
 	return !!newUser.id
 }
 
-export const persistEvent = async (event: VerifiedEvent): Promise<NostrEvent> => {
+export const persistEvent = async (event: NostrEvent): Promise<NostrEvent | undefined> => {
 	await ensureAuthorExists(event.pubkey)
-	const eventTargetId: string = isPReplacEvent(event.kind) ? getEventCoordinates(event).coordinates : event.id
+	const eventTargetId: string = isPReplacEvent(event.kind as number) ? getEventCoordinates(event).coordinates : (event.id as string)
 	type Event = InferSelectModel<typeof events>
-	const eventExists = (await db.select().from(events).where(eq(events.id, eventTargetId)).execute()) as unknown as Event
-	const eventResult = await (eventExists
-		? db
-				.update(events)
-				.set({ event: JSON.stringify(event) })
-				.where(eq(events.id, eventTargetId))
-				.returning()
-		: db
-				.insert(events)
-				.values({ id: eventTargetId, kind: event.kind, event: JSON.stringify(event), author: event.pubkey })
-				.returning())
+	const eventExists = await db
+		.select({ id: sql`1` })
+		.from(events)
+		.where(eq(events.id, eventTargetId))
+		.limit(1)
+		.execute()
+	try {
+		const eventResult = await (eventExists.length > 0
+			? db
+					.update(events)
+					.set({ event: JSON.stringify(event) })
+					.where(eq(events.id, eventTargetId))
+					.returning()
+			: db
+					.insert(events)
+					.values({ id: eventTargetId, kind: event.kind as number, event: JSON.stringify(event), author: event.pubkey })
+					.returning())
 
-	if (!eventResult) {
-		error(500, 'Failed to persist event')
+		if (!eventResult) {
+			error(500, 'Failed to persist event')
+		}
+		return event
+	} catch (e) {
+		console.log(e)
 	}
-
-	return event
 }
 
 export const eventsExists = async (nostrEvents: NostrEvent[], persist: boolean = false): Promise<NostrEvent[]> => {

@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "92718c56-f228-4c49-9fbc-174ca82d7a50",
+  "id": "4084a87c-70a4-4917-be33-b188160ea127",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "app_settings": {
@@ -906,19 +906,6 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "orders_shipping_id_shipping_id_fk": {
-          "name": "orders_shipping_id_shipping_id_fk",
-          "tableFrom": "orders",
-          "tableTo": "shipping",
-          "columnsFrom": [
-            "shipping_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
         "orders_stall_id_stalls_id_fk": {
           "name": "orders_stall_id_stalls_id_fk",
           "tableFrom": "orders",
@@ -931,6 +918,21 @@
           ],
           "onDelete": "cascade",
           "onUpdate": "cascade"
+        },
+        "shipping_fk": {
+          "name": "shipping_fk",
+          "tableFrom": "orders",
+          "tableTo": "shipping",
+          "columnsFrom": [
+            "shipping_id",
+            "buyer_user_id"
+          ],
+          "columnsTo": [
+            "id",
+            "user_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -1441,7 +1443,7 @@
         "id": {
           "name": "id",
           "type": "text",
-          "primaryKey": true,
+          "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
@@ -1479,7 +1481,7 @@
           "name": "name",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "base_cost": {
@@ -1527,7 +1529,15 @@
           "onUpdate": "cascade"
         }
       },
-      "compositePrimaryKeys": {},
+      "compositePrimaryKeys": {
+        "shipping_id_user_id_pk": {
+          "columns": [
+            "id",
+            "user_id"
+          ],
+          "name": "shipping_id_user_id_pk"
+        }
+      },
       "uniqueConstraints": {}
     },
     "shipping_zones": {
@@ -1542,6 +1552,13 @@
         },
         "shipping_id": {
           "name": "shipping_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "shipping_user_id": {
+          "name": "shipping_user_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -1571,19 +1588,6 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "shipping_zones_shipping_id_shipping_id_fk": {
-          "name": "shipping_zones_shipping_id_shipping_id_fk",
-          "tableFrom": "shipping_zones",
-          "tableTo": "shipping",
-          "columnsFrom": [
-            "shipping_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "cascade"
-        },
         "shipping_zones_stall_id_stalls_id_fk": {
           "name": "shipping_zones_stall_id_stalls_id_fk",
           "tableFrom": "shipping_zones",
@@ -1596,6 +1600,21 @@
           ],
           "onDelete": "no action",
           "onUpdate": "cascade"
+        },
+        "shipping_fk": {
+          "name": "shipping_fk",
+          "tableFrom": "shipping_zones",
+          "tableTo": "shipping",
+          "columnsFrom": [
+            "shipping_id",
+            "shipping_user_id"
+          ],
+          "columnsTo": [
+            "id",
+            "user_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},

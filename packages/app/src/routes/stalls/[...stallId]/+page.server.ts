@@ -1,7 +1,7 @@
+import { error } from '@sveltejs/kit'
 import { KindStalls } from '$lib/constants'
-import { getShippingZonesByStallId } from '$lib/server/shipping.service'
 import { getStallById } from '$lib/server/stalls.service'
-import { getUserById, getUserByNip05, getUserIdByNip05, userExists } from '$lib/server/users.service.js'
+import { getUserIdByNip05, userExists } from '$lib/server/users.service.js'
 import ndkStore from '$lib/stores/ndk'
 import { NIP05_REGEX } from 'nostr-tools/nip05'
 import { get } from 'svelte/store'
@@ -9,13 +9,14 @@ import { get } from 'svelte/store'
 import type { PageServerLoad } from './$types'
 
 export const load: PageServerLoad = async ({ params }) => {
-	let userId: string = ''
-	let _stallIdentifier: string = ''
+	let userId: string | undefined = undefined
+	let _stallIdentifier: string | undefined = undefined
 	let _userExists: boolean = false
 	let _stallExists: boolean = false
+
 	const parts: string[] = params.stallId.split('/')
 	if (parts.length < 1 || parts.length > 2) {
-		throw new Error('Invalid stall format')
+		error(500, { message: 'Invalid stall id format' })
 	}
 
 	const [root, stallIdentifier] = parts
@@ -40,7 +41,7 @@ export const load: PageServerLoad = async ({ params }) => {
 		const userRes = await userExists(userId)
 		if (userRes) {
 			_userExists = true
-		} else _userExists = false
+		}
 	}
 
 	const stallId = userId && stallIdentifier ? `${KindStalls}:${userId}:${stallIdentifier}` : root
@@ -53,7 +54,6 @@ export const load: PageServerLoad = async ({ params }) => {
 		console.warn(JSON.stringify(e))
 	}
 
-	// const userRes = await getUserById(stallRes.userId)
 	return {
 		stall: { id: stallId, identifier: _stallIdentifier, exist: _stallExists },
 		user: { id: userId, exist: _userExists },

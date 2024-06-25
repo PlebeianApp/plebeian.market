@@ -226,6 +226,7 @@ const main = async () => {
 			return {
 			id: createId(),
 			shippingId: shipping.id,
+			shippingUserId: shipping.userId,
 			stallId: shipping.stallId,
 			regionCode: faker.location.countryCode(),
 			countryCode: faker.location.countryCode(),

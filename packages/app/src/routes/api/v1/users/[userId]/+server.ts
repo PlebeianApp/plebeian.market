@@ -1,7 +1,7 @@
 import { error, json } from '@sveltejs/kit'
 import { authorize } from '$lib/auth'
 import { usersFilterSchema } from '$lib/schema'
-import { deleteUser, getRichUsers, getUserById, updateUser, userExists } from '$lib/server/users.service'
+import { createUser, deleteUser, getRichUsers, getUserById, updateUser, userExists } from '$lib/server/users.service'
 
 import type { RequestHandler } from './$types'
 
@@ -40,11 +40,22 @@ export const GET: RequestHandler = async ({ params, request, url: { searchParams
 
 export const PUT: RequestHandler = async ({ params, request }) => {
 	const { userId } = params
-
 	try {
 		await authorize(request, userId, 'PUT')
 		const body = await request.json()
 		return json(await updateUser(userId, body))
+	} catch (e) {
+		if (e.status) {
+			return error(e.status, e.message)
+		}
+		return error(500, JSON.stringify(e))
+	}
+}
+
+export const POST: RequestHandler = async ({ request }) => {
+	try {
+		const body = await request.json()
+		return json(await createUser(body, true))
 	} catch (e) {
 		if (e.status) {
 			return error(e.status, e.message)
