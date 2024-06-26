@@ -9,15 +9,6 @@
 	const { name, createDate, description, currency, productCount, identifier, id } = stall
 	let { userName, userNip05 } = stall
 
-	// TODO add data to insert in db
-	// 	nostrStall.toNostrEvent().then((nostrEvent) => {
-	// 	get(stallFromNostrEvent).mutateAsync(nostrEvent)
-	// })
-
-	// if (appSettings.allowRegister) {
-
-	// }
-
 	onMount(async () => {
 		if (!userName || !userNip05) {
 			const user = $ndkStore.getUser({
@@ -32,7 +23,7 @@
 	})
 </script>
 
-<a href={userNip05 ? `/stalls/${userNip05}/${identifier}` : `/stalls/${id}`}>
+<a href={userNip05 ? `/stalls/${userNip05.toLocaleLowerCase()}/${identifier}` : `/stalls/${id?.replace(/^30017:/, '')}`}>
 	<Card.Root class="flex h-[34vh] cursor-pointer flex-col gap-4 border-4 border-black bg-transparent text-black">
 		<Card.Header class="flex flex-col justify-between">
 			<span class="truncate text-2xl font-bold">{name}</span>

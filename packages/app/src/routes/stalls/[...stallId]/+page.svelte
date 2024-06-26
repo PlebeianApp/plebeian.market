@@ -83,7 +83,6 @@
 			if (stallNostrRes) {
 				const stallEvent = await stallNostrRes.toNostrEvent()
 				await $stallFromNostrEvent.mutateAsync(stallEvent)
-				// TODO keep debuging for edge cases
 				if (products?.size) {
 					toDisplayProducts = [...products].map((event) => productEventSchema.parse(JSON.parse(event.content)))
 					await $createProductsFromNostrMutation.mutateAsync(products)

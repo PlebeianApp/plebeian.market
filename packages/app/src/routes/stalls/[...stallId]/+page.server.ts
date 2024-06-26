@@ -10,6 +10,7 @@ import type { PageServerLoad } from './$types'
 
 export const load: PageServerLoad = async ({ params }) => {
 	let userId: string | undefined = undefined
+	let stallId: string
 	let _stallIdentifier: string | undefined = undefined
 	let _userExists: boolean = false
 	let _stallExists: boolean = false
@@ -22,19 +23,30 @@ export const load: PageServerLoad = async ({ params }) => {
 	const [root, stallIdentifier] = parts
 
 	if (NIP05_REGEX.test(root) && stallIdentifier) {
+		const lowerNip05 = root.toLocaleLowerCase()
 		_stallIdentifier = stallIdentifier
-		const userRes = await getUserIdByNip05(root)
+		const userRes = await getUserIdByNip05(lowerNip05)
+
 		if (userRes) {
 			userId = userRes
 			_userExists = true
 		} else {
 			const $ndk = get(ndkStore)
-			const userNostrRes = await $ndk.getUserFromNip05(root)
+			const userNostrRes = await $ndk.getUserFromNip05(lowerNip05)
 			if (userNostrRes) {
 				userId = userNostrRes.pubkey
 				_userExists = false
 			}
 		}
+		stallId = `${KindStalls}:${userId}:${stallIdentifier}`
+	} else if (root.split(':').length == 2) {
+		userId = root.split(':')[0]
+		_stallIdentifier = root.split(':')[1]
+		const userRes = await userExists(userId)
+		if (userRes) {
+			_userExists = true
+		}
+		stallId = `${KindStalls}:${root}`
 	} else {
 		userId = root.split(':')[1]
 		_stallIdentifier = root.split(':')[2]
@@ -42,9 +54,9 @@ export const load: PageServerLoad = async ({ params }) => {
 		if (userRes) {
 			_userExists = true
 		}
+		stallId = root
 	}
 
-	const stallId = userId && stallIdentifier ? `${KindStalls}:${userId}:${stallIdentifier}` : root
 	try {
 		const stallRes = await getStallById(stallId)
 		if (stallRes) {

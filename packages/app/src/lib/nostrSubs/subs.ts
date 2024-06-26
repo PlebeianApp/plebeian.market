@@ -33,21 +33,25 @@ if (typeof window !== 'undefined') {
 }
 
 export const stallsSub: NDKEventStore<ExtendedBaseType<NDKEvent>> = ndk.storeSubscribe(
-	{ kinds: [KindStalls], limit: 50 },
-	{ closeOnEose: false, autoStart: false },
+	{ kinds: [KindStalls], limit: 25 },
+	{ closeOnEose: true, autoStart: false },
 )
 
-export const validStalls = derived(stallsSub, ($stallsSub) => $stallsSub.map(normalizeStallData))
+export const validStalls = derived(stallsSub, ($stallsSub) => $stallsSub.map(normalizeStallData).filter((stall) => stall !== null))
 
-export function normalizeStallData(nostrStall: NDKEvent): Partial<RichStall> {
+export function normalizeStallData(nostrStall: NDKEvent): Partial<RichStall> | null {
 	const { tagD: identifier, coordinates: id } = getEventCoordinates(nostrStall)
-	const { data } = stallEventSchema.safeParse(JSON.parse(nostrStall.content))
 
-	return {
-		...data,
-		createDate: format(nostrStall.created_at ? nostrStall.created_at * 1000 : '', standardDisplayDateFormat),
-		identifier,
-		id,
-		userId: nostrStall.pubkey,
+	try {
+		const data = stallEventSchema.parse(JSON.parse(nostrStall.content))
+		return {
+			...data,
+			createDate: format(nostrStall.created_at ? nostrStall.created_at * 1000 : '', standardDisplayDateFormat),
+			identifier,
+			id,
+			userId: nostrStall.pubkey,
+		}
+	} catch (error) {
+		return null
 	}
 }

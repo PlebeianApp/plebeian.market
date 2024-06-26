@@ -261,7 +261,9 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 			const productEventContent = JSON.parse(productEvent.content)
 			const parsedProduct = productEventSchema.parse({ id: productEventContent.id, ...productEventContent })
 
-			if (!parsedProduct) error(500, { message: 'Bad product schema' })
+			if (!parsedProduct) {
+				error(500, { message: 'Bad product schema' })
+			}
 
 			const stall = parsedProduct.stall_id.startsWith(`${KindStalls}`)
 				? await getStallById(parsedProduct.stall_id)
@@ -269,7 +271,6 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 
 			const parentId = customTagValue(productEvent.tags, 'a')[0] || null
 			const extraCost = parsedProduct.shipping.length ? parsedProduct.shipping[0].cost : 0
-
 			if (!stall) {
 				error(400, { message: 'Stall not found' })
 			}
@@ -280,8 +281,8 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 
 			const insertProduct: Product = {
 				id: eventCoordinates.coordinates,
-				createdAt: new Date(productEvent.created_at! * 1000),
-				updatedAt: new Date(productEvent.created_at! * 1000),
+				createdAt: new Date(productEvent.created_at * 1000),
+				updatedAt: new Date(productEvent.created_at * 1000),
 				identifier: eventCoordinates.tagD,
 				productName: parsedProduct.name,
 				description: parsedProduct.description as string,
@@ -297,8 +298,8 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 
 			const insertSpecs: ProductMeta[] | undefined = parsedProduct.specs?.map((spec) => ({
 				id: createId(),
-				createdAt: new Date(productEvent.created_at! * 1000),
-				updatedAt: new Date(productEvent.created_at! * 1000),
+				createdAt: new Date(productEvent.created_at * 1000),
+				updatedAt: new Date(productEvent.created_at * 1000),
 				productId: eventCoordinates.coordinates,
 				auctionId: null,
 				metaName: PRODUCT_META.SPEC.value,
@@ -310,7 +311,7 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 			}))
 
 			const insertProductImages: ProductImage[] | undefined = parsedProduct.images?.map((imageUrl, index) => ({
-				createdAt: new Date(productEvent.created_at! * 1000),
+				createdAt: new Date(productEvent.created_at * 1000),
 				productId: eventCoordinates.coordinates,
 				auctionId: null,
 				imageUrl,
@@ -320,11 +321,11 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 
 			const productResult = await db.insert(products).values(insertProduct).returning()
 
-			if (insertSpecs) {
+			if (insertSpecs?.length) {
 				await db.insert(productMeta).values(insertSpecs).returning()
 			}
 
-			if (insertProductImages) {
+			if (insertProductImages?.length) {
 				await db.insert(productImages).values(insertProductImages).returning()
 			}
 
@@ -338,6 +339,7 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 		const results = await Promise.all(productPromises)
 		return results
 	} catch (e) {
+		console.error('Error creating products:', e)
 		error(500, { message: `Failed to create products: ${e}` })
 	}
 }
