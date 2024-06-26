@@ -40,7 +40,7 @@
 	{:else}
 		<ImgPlaceHolder imageType={'thumbnail'} />
 	{/if}
-	<Card.Footer class="cursor-pointer flex items-start justify-between p-4">
+	<Card.Footer class="cursor-pointer flex justify-end p-4">
 		<a href={userNip05 ? `/products/${userNip05}/${identifier}` : `/products/${id}`}>
 			<span class="truncate font-bold">{name}</span>
 			<div class="flex flex-col text-right">
