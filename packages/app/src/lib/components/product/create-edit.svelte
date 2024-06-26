@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Category } from '$lib/fetch/products.mutations'
 	import type { DisplayProduct } from '$lib/server/products.service'
+	import type { StallIdType } from '$lib/stores/drawer-ui'
 	import Button from '$lib/components/ui/button/button.svelte'
 	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte'
 	import * as Command from '$lib/components/ui/command/index.js'
@@ -28,6 +29,7 @@
 	import MultiImageEdit from './multi-image-edit.svelte'
 
 	export let product: DisplayProduct | null = null
+	export let forStall: StallIdType | null = null
 
 	let currentStallId = product?.stallId
 
@@ -146,7 +148,6 @@
 					categories,
 				])
 
-				console.log(res)
 				if (res.error) {
 					toast.error(`Failed to create product: ${res.error}`)
 				} else {
@@ -170,7 +171,7 @@
 
 			queryClient.invalidateQueries({ queryKey: ['products', $ndkStore.activeUser.pubkey] })
 		}}
-		class="flex flex-col gap-4"
+		class="flex flex-col gap-4 grow h-full"
 	>
 		<Tabs.Root value="basic" class="p-4">
 			<Tabs.List class="w-full justify-around bg-transparent">
@@ -231,8 +232,15 @@
 						<Label for="from" class="font-bold">Stall</Label>
 						<DropdownMenu.Root>
 							<DropdownMenu.Trigger asChild let:builder>
-								<Button variant="outline" class="border-2 border-black" builders={[builder]}>{currentStall?.name ?? 'Pick a stall'}</Button>
-							</DropdownMenu.Trigger>
+                                <Button variant="outline" class="border-2 border-black" builders={[builder]}>
+                                    {#if forStall && $stallsQuery.data}
+                                        {@const defaultStall = $stallsQuery.data.find((stall) => stall.id === forStall)}
+                                        {defaultStall ? defaultStall.name : 'Select a stall'}
+                                    {:else}
+                                        {stall?.name}
+                                    {/if}
+                                </Button>
+                            </DropdownMenu.Trigger>
 							<DropdownMenu.Content class="w-56">
 								<DropdownMenu.Label>Stall</DropdownMenu.Label>
 								<DropdownMenu.Separator />

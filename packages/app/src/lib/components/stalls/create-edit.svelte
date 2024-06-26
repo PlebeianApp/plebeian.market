@@ -148,7 +148,7 @@
 	}
 </script>
 
-<form class="flex flex-col gap-4" on:submit|preventDefault={create}>
+<form class="flex flex-col gap-4 grow" on:submit|preventDefault={create}>
 	<div class="grid w-full items-center gap-1.5">
 		<Label for="title" class="font-bold">Title</Label>
 		<Input value={stall?.name} required class="border-2 border-black" type="text" name="title" placeholder="e.g. Fancy Wears" />
