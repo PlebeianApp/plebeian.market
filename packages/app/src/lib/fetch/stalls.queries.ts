@@ -8,8 +8,22 @@ import { createRequest, queryClient } from './client'
 declare module './client' {
 	interface Endpoints {
 		'GET /api/v1/stalls': Operation<'/api/v1/stalls', 'GET', never, never, RichStall[], StallsFilter>
+		[k: `GET /api/v1/stalls/${string}`]: Operation<string, 'GET', never, never, RichStall, never>
 	}
 }
+
+export const createStallQuery = (stallId: string) =>
+	createQuery<RichStall>(
+		{
+			queryKey: ['stalls', stallId],
+			queryFn: async () => {
+				return await createRequest(`GET /api/v1/stalls/${stallId}`, {
+					auth: true,
+				})
+			},
+		},
+		queryClient,
+	)
 
 export const createStallsByFilterQuery = (filter: Partial<StallsFilter>) =>
 	createQuery<RichStall[]>(
