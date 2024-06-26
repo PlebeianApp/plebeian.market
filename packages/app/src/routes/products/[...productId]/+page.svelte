@@ -28,7 +28,7 @@
 							class={cn('cursor-pointer p-1', i === selectedImage ? 'border border-primary' : null)}
 							on:click={() => (selectedImage = i)}
 						>
-							<img src={item} alt="" />
+							<img src={item.imageUrl} alt="" />
 						</button>
 					{/each}
 				{/if}

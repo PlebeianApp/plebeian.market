@@ -46,9 +46,9 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 		return json(await updateUser(userId, body))
 	} catch (e) {
 		if (e.status) {
-			return error(e.status, e.message)
+			error(e.status, e.message)
 		}
-		return error(500, JSON.stringify(e))
+		error(500, JSON.stringify(e))
 	}
 }
 
@@ -72,8 +72,8 @@ export const DELETE: RequestHandler = async ({ params, request }) => {
 		return json(await deleteUser(userId))
 	} catch (e) {
 		if (e.status) {
-			return error(e.status, e.message)
+			error(e.status, e.message)
 		}
-		return error(500, JSON.stringify(e))
+		error(500, JSON.stringify(e))
 	}
 }

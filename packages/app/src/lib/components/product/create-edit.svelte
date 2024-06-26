@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { Category } from '$lib/fetch/products.mutations'
 	import type { DisplayProduct } from '$lib/server/products.service'
 	import Button from '$lib/components/ui/button/button.svelte'
 	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte'
@@ -9,45 +10,40 @@
 	import * as Popover from '$lib/components/ui/popover/index.js'
 	import * as Tabs from '$lib/components/ui/tabs/index.js'
 	import Textarea from '$lib/components/ui/textarea/textarea.svelte'
-	import { createEditProductMutation } from '$lib/fetch/products.mutations'
+	import { queryClient } from '$lib/fetch/client'
+	import { createProductMutation, editProductMutation } from '$lib/fetch/products.mutations'
 	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
 	import { stallsFilterSchema } from '$lib/schema'
 	import ndkStore from '$lib/stores/ndk'
 	import { tick } from 'svelte'
-	import Dropzone from 'svelte-file-dropzone'
+	import { toast } from 'svelte-sonner'
 
+	import type { ProductImage } from '@plebeian/database'
 	import type { ISO3 } from '@plebeian/database/constants'
-	import { COUNTRIES_ISO, CURRENCIES } from '@plebeian/database/constants'
+	import { COUNTRIES_ISO } from '@plebeian/database/constants'
 	import { createId } from '@plebeian/database/utils'
 
 	import type { stallEventSchema } from '../../../schema/nostr-events'
 	import Spinner from '../assets/spinner.svelte'
+	import MultiImageEdit from './multi-image-edit.svelte'
 
 	export let product: DisplayProduct | null = null
+
+	let currentStallId = product?.stallId
 
 	const activeTab =
 		'w-full font-bold border-b-2 border-black text-black data-[state=active]:border-b-primary data-[state=active]:text-primary'
 
-	type Category = { key: string; name: string; checked: boolean }
 	let categories: Category[] = []
-	let images: { file: File; base64: string }[] = []
-	async function handleFilesSelect(e: CustomEvent) {
-		const { acceptedFiles } = e.detail
-		images = [
-			...images,
-			...(await Promise.all(
-				acceptedFiles.map(async (f: File) => {
-					const base64 = await new Promise<string>((resolve, reject) => {
-						const reader = new FileReader()
-						reader.onload = () => resolve(reader.result as string)
-						reader.onerror = reject
-						reader.readAsDataURL(f)
-					})
-					return { file: f, base64: base64 }
-				}),
-			)),
-		]
+	let images: Partial<ProductImage>[] = product?.galleryImages ?? []
+
+	function updateProductImages(updatedProduct: DisplayProduct | null) {
+		if (updatedProduct) {
+			images = updatedProduct.galleryImages ?? []
+		}
 	}
+
+	$: updateProductImages(product)
 
 	type Shipping = (typeof stallEventSchema._type)['shipping'][0]
 
@@ -119,16 +115,61 @@
 		el.focus()
 	}
 
+	function handleNewImageAdded(e: CustomEvent) {
+		images = [
+			...images,
+			{
+				imageUrl: e.detail,
+			},
+		]
+	}
+
+	function handleImagRemoved(e: CustomEvent) {
+		images = images.filter((image) => image.imageUrl !== e.detail)
+	}
+
 	$: stallsQuery = createStallsByFilterQuery(stallsFilterSchema.parse({ userId: $ndkStore.activeUser?.pubkey }))
+	$: currentStall = $stallsQuery.data?.find(({ id }) => id === currentStallId)
 </script>
 
 {#if $stallsQuery.isLoading}
 	<Spinner />
 {:else if $stallsQuery.data?.length}
-	{@const [stall] = $stallsQuery.data.filter((pStall) => pStall.id == product?.stallId)}
 	<form
-		on:submit|preventDefault={(sEvent) =>
-			$createEditProductMutation.mutateAsync([sEvent, product, images.map((image) => image.base64), shippingMethods.map((s) => s.json)])}
+		on:submit|preventDefault={async (sEvent) => {
+			if (!product) {
+				const res = await $createProductMutation.mutateAsync([
+					sEvent,
+					currentStall,
+					images.map((image) => image.imageUrl),
+					shippingMethods.map((s) => s.json),
+					categories,
+				])
+
+				console.log(res)
+				if (res.error) {
+					toast.error(`Failed to create product: ${res.error}`)
+				} else {
+					toast.success('Product created!')
+				}
+			} else {
+				const res = await $editProductMutation.mutateAsync([
+					sEvent,
+					product,
+					images.map((image) => image.imageUrl),
+					shippingMethods.map((s) => s.json),
+					categories,
+				])
+
+				if (res.error) {
+					toast.error(`Failed to update product: ${res.error}`)
+				} else {
+					toast.success('Product updated!')
+				}
+			}
+
+			queryClient.invalidateQueries({ queryKey: ['products', $ndkStore.activeUser.pubkey] })
+		}}
 		class="flex flex-col gap-4"
 	>
 		<Tabs.Root value="basic" class="p-4">
@@ -190,18 +231,20 @@
 						<Label for="from" class="font-bold">Stall</Label>
 						<DropdownMenu.Root>
 							<DropdownMenu.Trigger asChild let:builder>
-								<Button variant="outline" class="border-2 border-black" builders={[builder]}>{stall?.name}</Button>
+								<Button variant="outline" class="border-2 border-black" builders={[builder]}>{currentStall?.name ?? 'Pick a stall'}</Button>
 							</DropdownMenu.Trigger>
 							<DropdownMenu.Content class="w-56">
 								<DropdownMenu.Label>Stall</DropdownMenu.Label>
 								<DropdownMenu.Separator />
 								<section class=" max-h-[350px] overflow-y-auto">
-									{#each $stallsQuery.data as userStall}
+									{#each $stallsQuery.data as item}
 										<DropdownMenu.CheckboxItem
-											checked={product?.stallId === userStall.id}
-											on:click={() => product && ((product.stallId = userStall.id), (product.currency = userStall.currency))}
+											checked={currentStallId === item.id}
+											on:click={() => {
+												currentStallId = item.id
+											}}
 										>
-											{userStall.name}
+											{item.name}
 										</DropdownMenu.CheckboxItem>
 									{/each}
 								</section>
@@ -210,7 +253,7 @@
 					</div>
 					<div class="grid w-full items-center gap-1.5">
 						<Label for="from" class="font-bold">Currency</Label>
-						<Input value={stall?.currency} required class="border-2 border-black" type="text" name="currency" disabled />
+						<Input value={currentStall?.currency} required class="border-2 border-black" type="text" name="currency" disabled />
 					</div>
 				</div>
 			</Tabs.Content>
@@ -234,25 +277,11 @@
 				</div>
 			</Tabs.Content>
 
-			<Tabs.Content value="images" class="flex flex-col gap-2">
-				<Dropzone accept={['image/png', 'image/jpeg', 'image/jpg', 'image/webp']} on:drop={handleFilesSelect} />
-				<ol class="flex gap-1.5">
-					{#each images as item}
-						<li class="relative">
-							<button
-								class="cursor-pointer i-tdesign-close absolute text-white right-0"
-								on:click={() => {
-									images = images.filter((f) => f.file !== item.file)
-								}}
-							>
-							</button>
-							<img src={item.base64} alt="" />
-						</li>
-					{/each}
-				</ol>
+			<Tabs.Content value="images" class="flex flex-col">
+				<MultiImageEdit {images} on:imageAdded={(e) => handleNewImageAdded(e)} on:imageRemoved={(e) => handleImagRemoved(e)} />
 			</Tabs.Content>
 
-			<Tabs.Content value="shipping" class="flex flex-col gap-2">
+			<Tabs.Content value="shipping" class="flex flex-col gap-2 p-2">
 				{#each shippingMethods as item, i}
 					<div class="grid grid-cols-[1fr_1fr_1fr_auto] w-full items-start gap-2">
 						<div>
@@ -361,4 +390,6 @@
 			<Button type="submit" class="w-full font-bold my-4">Save</Button>
 		</Tabs.Root>
 	</form>
+{:else if !$stallsQuery.data?.length}
+	<p>There should be stalls defined first</p>
 {/if}

@@ -224,7 +224,6 @@ export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall 
 	try {
 		const { coordinates, tagD } = getEventCoordinates(stallEvent)
 		const stallEventContent = JSON.parse(stallEvent.content)
-
 		if (!stallEventContent) {
 			error(500, { message: `Error parsing stall event content` })
 		}

@@ -5,7 +5,7 @@
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
-		"preview": "vite preview",
+		"preview": "vite preview --host",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"lint": "eslint .",
@@ -56,7 +56,7 @@
 		"@nostr-dev-kit/ndk": "^2.8.2",
 		"@nostr-dev-kit/ndk-cache-dexie": "^2.4.2",
 		"@nostr-dev-kit/ndk-svelte": "^2.2.15",
-		"@nostrify/nostrify": "npm:@jsr/nostrify__nostrify@^0.18.0",
+		"@nostrify/nostrify": "npm:@jsr/nostrify__nostrify@^0.23.3",
 		"@plebeian/database": "workspace:*",
 		"@plebeian/eslint": "workspace:*",
 		"@plebeian/prettier": "workspace:*",

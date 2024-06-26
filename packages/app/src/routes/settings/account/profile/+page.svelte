@@ -3,9 +3,7 @@
 	import type { RichUser } from '$lib/server/users.service'
 	import type { Selected } from 'bits-ui'
 	import { page } from '$app/stores'
-	import AvatarFallback from '$lib/components/ui/avatar/avatar-fallback.svelte'
-	import AvatarImage from '$lib/components/ui/avatar/avatar-image.svelte'
-	import Avatar from '$lib/components/ui/avatar/avatar.svelte'
+	import SingleImage from '$lib/components/settings/editable-image.svelte'
 	import { Button } from '$lib/components/ui/button/index.js'
 	import { Input } from '$lib/components/ui/input/index.js'
 	import { Label } from '$lib/components/ui/label/index.js'
@@ -24,6 +22,8 @@
 
 	let userTrustLevel: Selected<string> = { label: '', value: '' }
 
+	$: editingActiveUser = activeUser?.data ?? ({} as RichUser)
+
 	const handleSubmit = async (event: SubmitEvent) => {
 		const formData = new FormData(event.currentTarget as HTMLFormElement)
 		const formObject = Object.fromEntries(formData.entries())
@@ -34,6 +34,8 @@
 				? activeUser?.data.trustLevel
 				: userTrustLevels[0]
 		const filteredFormObject = Object.fromEntries(Object.entries(formObject).filter(([_, value]) => value !== '')) as unknown as RichUser
+		filteredFormObject.banner = editingActiveUser.banner
+		filteredFormObject.image = editingActiveUser.image
 		const ndkUser = $ndkStore.getUser({
 			hexpubkey: $ndkStore.activeUser?.pubkey,
 		})
@@ -50,6 +52,14 @@
 			activeUser?.refetch()
 		}
 	})
+
+	const handleSaveBannerImage = (event: CustomEvent) => {
+		editingActiveUser.banner = event.detail
+	}
+
+	const handleSaveProfileImage = (event: CustomEvent) => {
+		editingActiveUser.image = event.detail
+	}
 </script>
 
 {#if activeUser?.data?.id}
@@ -66,45 +76,47 @@
 			</div>
 
 			<div class="grid w-full items-center gap-1.5">
+				<Label for="userImage" class="font-bold">Banner image</Label>
+				<SingleImage src={editingActiveUser?.banner} on:save={handleSaveBannerImage} />
+			</div>
+
+			<div class="grid items-center gap-1.5 w-28">
 				<Label for="userImage" class="font-bold">Profile image</Label>
-				<Avatar class="w-24 h-auto">
-					<AvatarImage src={activeUser?.data?.image} alt="pfp" />
-					<AvatarFallback>{activeUser?.data?.name ? activeUser?.data?.name : activeUser?.data?.displayName}</AvatarFallback>
-				</Avatar>
+				<SingleImage src={editingActiveUser?.image} on:save={handleSaveProfileImage} />
 			</div>
 
 			<div class="grid w-full items-center gap-1.5">
 				<Label for="name" class="font-bold">Name</Label>
-				<Input value={activeUser?.data.name} type="text" id="name" name="name" placeholder={activeUser?.data?.name} />
+				<Input value={activeUser?.data.name} type="text" id="name" name="name" placeholder={editingActiveUser?.name} />
 			</div>
 
 			<div class="grid w-full items-center gap-1.5">
 				<Label for="displayName" class="font-bold">Display Name</Label>
 				<Input
-					value={activeUser?.data.displayName}
+					value={editingActiveUser?.displayName}
 					type="text"
 					id="displayName"
 					name="displayName"
-					placeholder={activeUser?.data?.displayName}
+					placeholder={editingActiveUser?.displayName}
 				/>
 			</div>
 
 			<div class="grid w-full items-center gap-1.5">
 				<Label for="about" class="font-bold">Short bio</Label>
-				<Textarea value={activeUser?.data.about} rows={8} id="about" name="about" placeholder={activeUser?.data?.about} />
+				<Textarea value={editingActiveUser?.about} rows={8} id="about" name="about" placeholder={editingActiveUser?.about} />
 			</div>
 
 			<div class="grid w-full items-center gap-1.5">
 				<Label for="nip05" class="font-bold">Nostr address</Label>
-				<Input value={activeUser?.data.nip05} type="text" id="nip05" name="nip05" placeholder={activeUser?.data?.nip05} />
+				<Input value={activeUser?.data.nip05} type="text" id="nip05" name="nip05" placeholder={editingActiveUser?.nip05} />
 			</div>
 
-			{#if activeUser?.data?.trustLevel}
+			{#if editingActiveUser?.trustLevel}
 				<div class="flex-grow">
 					<Label class="truncate font-bold">Trust level</Label>
 					<Select bind:selected={userTrustLevel} name="trustLevel">
 						<SelectTrigger class="border-black border-2">
-							<SelectValue placeholder={activeUser?.data?.trustLevel} />
+							<SelectValue placeholder={editingActiveUser?.trustLevel} />
 						</SelectTrigger>
 						<SelectContent class="border-black border-2 max-h-[350px] overflow-y-auto">
 							{#each userTrustLevels as trustLevel}
