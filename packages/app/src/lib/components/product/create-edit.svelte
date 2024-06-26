@@ -129,7 +129,7 @@
 	}
 
 	$: stallsQuery = createStallsByFilterQuery(stallsFilterSchema.parse({ userId: $ndkStore.activeUser?.pubkey }))
-	$: currentStall = $stallsQuery.data?.find(({ id }) => id === currentStallId)!
+	$: currentStall = $stallsQuery.data?.find(({ id }) => id === currentStallId)
 </script>
 
 {#if $stallsQuery.isLoading}
