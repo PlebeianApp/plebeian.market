@@ -1,40 +1,133 @@
 <script lang="ts">
+	import type { NDKUserProfile, NostrEvent } from '@nostr-dev-kit/ndk'
+	import type { DisplayProduct } from '$lib/server/products.service'
+	import type { RichStall } from '$lib/server/stalls.service'
+	import { NDKEvent, NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk'
 	import CatCompactItem from '$lib/components/category/cat-compact-item.svelte'
 	import Pattern from '$lib/components/Pattern.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
 	import StallItem from '$lib/components/stalls/stall-item.svelte'
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar'
 	import Button from '$lib/components/ui/button/button.svelte'
+	import { KindProducts, KindStalls } from '$lib/constants'
+	import { createProductsByFilterQuery } from '$lib/fetch/products.queries'
+	import { stallFromNostrEvent } from '$lib/fetch/stalls.mutations'
+	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
+	import { userFromNostrMutation } from '$lib/fetch/users.mutations'
+	import { createUserByIdQuery } from '$lib/fetch/users.queries'
+	import { normalizeStallData } from '$lib/nostrSubs/subs'
+	import { productsFilterSchema, stallsFilterSchema } from '$lib/schema'
+	import ndkStore from '$lib/stores/ndk'
 	import { copyToClipboard } from '$lib/utils'
+	import { npubEncode } from 'nostr-tools/nip19'
+	import { onMount } from 'svelte'
 
 	import type { PageData } from './$types'
+	import { productEventSchema } from '../../../schema/nostr-events'
 
+	let userProfile: NDKUserProfile | null
+	let stalls: Partial<RichStall>[] | null
+	let toDisplayProducts: Partial<DisplayProduct>[]
 	export let data: PageData
-	$: ({ npub, name, image, products, stalls, categories } = data)
+	const { id, exist } = data
+	// TODO keep working on this
+	async function fetchStallData(userId: string): Promise<{
+		stallNostrRes: Set<NDKEvent> | null
+		userProfile: NDKUserProfile | null
+		products: Set<NDKEvent> | null
+	}> {
+		const stallFilter = {
+			kinds: [KindStalls],
+			authors: [userId],
+		}
+
+		let stallNostrRes = await $ndkStore.fetchEvents(stallFilter, { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST })
+
+		const ndkUser = $ndkStore.getUser({
+			pubkey: userId,
+		})
+
+		userProfile = await ndkUser.fetchProfile()
+
+		const productsFilter = {
+			kinds: [KindProducts],
+			authors: [userId],
+		}
+		const productsNostrRes = await $ndkStore.fetchEvents(productsFilter, { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST })
+
+		return { stallNostrRes, userProfile, products: productsNostrRes }
+	}
+
+	async function fetchStallDataFromDb() {
+		createUserByIdQuery(id).subscribe((userRes) => {
+			if (userRes.data) {
+				userProfile = userRes.data
+			}
+		})
+		createStallsByFilterQuery(stallsFilterSchema.parse({ userId: id })).subscribe((stallRes) => {
+			if (stallRes.data) {
+				stalls = stallRes.data
+			}
+		})
+		createProductsByFilterQuery(productsFilterSchema.parse({ userId: id })).subscribe((productsRes) => {
+			if (productsRes.data?.length) {
+				toDisplayProducts = productsRes.data
+			}
+		})
+	}
+
+	onMount(async () => {
+		if (!exist) {
+			const { stallNostrRes, userProfile, products } = await fetchStallData(id as string)
+			console.log(stallNostrRes, userProfile, products)
+			if (userProfile) await $userFromNostrMutation.mutateAsync({ profile: userProfile, pubkey: id as string })
+			if (stallNostrRes) stalls = [...stallNostrRes].map(normalizeStallData).filter((stall): stall is Partial<RichStall> => stall !== null)
+			if (products?.size) {
+				toDisplayProducts = [...products].map((event) => {
+					const product = productEventSchema.parse(JSON.parse(event.content))
+					return {
+						...product,
+						images: product.images?.map((image) => ({
+							createdAt: new Date(),
+							productId: product.id,
+							auctionId: null,
+							imageUrl: image,
+							imageType: 'gallery',
+							imageOrder: 0,
+						})),
+					}
+				})
+			}
+		} else {
+			await fetchStallDataFromDb()
+		}
+	})
 </script>
 
-<div class="flex min-h-screen w-full flex-col bg-muted/40">
-	<div class="flex flex-col">
-		<main class="text-black">
-			<div class="relative flex w-full flex-col items-center bg-black py-20 text-center text-white">
-				<Pattern />
-				<div class="w-fit z-10 justify-center">
-					<div class="flex justify-center">
-						<Avatar class="h-20 w-20">
-							<AvatarImage src={image} alt="@shadcn" />
-							<AvatarFallback>{name}</AvatarFallback>
-						</Avatar>
-					</div>
-					<h2>{name}</h2>
-					<div class="flex items-center">
-						<Button variant="secondary" class="w-1/2 lg:w-auto">
-							<code class="truncate">{npub}</code>
-						</Button>
-						<Button on:click={() => copyToClipboard(npub)}>Copy</Button>
+{#if userProfile}
+	{@const { image, name } = userProfile}
+	<div class="flex min-h-screen w-full flex-col bg-muted/40">
+		<div class="flex flex-col">
+			<main class="text-black">
+				<div class="relative flex w-full flex-col items-center bg-black py-20 text-center text-white">
+					<Pattern />
+					<div class="w-fit z-10 justify-center">
+						<div class="flex justify-center">
+							<Avatar class="h-20 w-20">
+								<AvatarImage src={image} alt="@shadcn" />
+								<AvatarFallback>{name}</AvatarFallback>
+							</Avatar>
+						</div>
+						<h2>{name}</h2>
+						<div class="flex items-center">
+							<Button variant="secondary" class="w-1/2 lg:w-auto">
+								<code class="truncate">{npubEncode(id)}</code>
+							</Button>
+							<Button on:click={() => copyToClipboard(npubEncode(id))}>Copy</Button>
+						</div>
 					</div>
 				</div>
-			</div>
-			{#if categories.length}
+				<!-- {#if categories.length}
 				<div class="py-5 lg:px-12">
 					<div class="container">
 						<h2>Categories</h2>
@@ -45,32 +138,33 @@
 						</div>
 					</div>
 				</div>
-			{/if}
-			{#if stalls.length}
-				<div class="px-4 py-20 lg:px-12">
-					<div class="container">
-						<h2>Stalls</h2>
-						<div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-							{#each stalls as item}
-								<StallItem stall={item} />
-							{/each}
+			{/if} -->
+				{#if stalls?.length}
+					<div class="px-4 py-20 lg:px-12">
+						<div class="container">
+							<h2>Stalls</h2>
+							<div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+								{#each stalls as item}
+									<StallItem stall={item} />
+								{/each}
+							</div>
 						</div>
 					</div>
-				</div>
-			{/if}
+				{/if}
 
-			{#if products.length}
-				<div class="px-4 py-20 lg:px-12">
-					<div class="container">
-						<h2>Products</h2>
-						<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-							{#each products as item}
-								<ProductItem product={item} />
-							{/each}
+				{#if toDisplayProducts?.length}
+					<div class="px-4 py-20 lg:px-12">
+						<div class="container">
+							<h2>Products</h2>
+							<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+								{#each toDisplayProducts as item}
+									<ProductItem product={item} />
+								{/each}
+							</div>
 						</div>
 					</div>
-				</div>
-			{/if}
-		</main>
+				{/if}
+			</main>
+		</div>
 	</div>
-</div>
+{/if}

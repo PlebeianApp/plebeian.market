@@ -1,26 +1,32 @@
-import { catsFilterSchema, productsFilterSchema } from '$lib/schema'
-import { getAllCategories } from '$lib/server/categories.service'
-import { getProductsByUserId } from '$lib/server/products.service'
-import { getStallsByUserId } from '$lib/server/stalls.service'
-import { getUserById, getUserByNip05 } from '$lib/server/users.service.js'
+import { getUserIdByNip05 } from '$lib/server/users.service.js'
+import ndkStore from '$lib/stores/ndk'
 import { NIP05_REGEX } from 'nostr-tools/nip05'
-import { npubEncode } from 'nostr-tools/nip19'
+import { get } from 'svelte/store'
 
 import type { PageServerLoad } from './$types'
 
 export const load: PageServerLoad = async ({ params }) => {
 	const { id } = params
-	const userRes = NIP05_REGEX.test(id) ? await getUserByNip05(id) : await getUserById(id)
-	const getStallsByUserIdRes = await getStallsByUserId(userRes.id)
-	const getProductsByUserIdRes = await getProductsByUserId(productsFilterSchema.parse({ userId: userRes.id, pageSize: 15 }))
-	const getCategoriesByUserIdRes = await getAllCategories(catsFilterSchema.parse({ userId: userRes.id }))
+	let userId: string | null = null
+	let _userExists: boolean = false
+
+	if (NIP05_REGEX.test(id)) {
+		const lowerNip05 = id.toLocaleLowerCase()
+		userId = await getUserIdByNip05(lowerNip05)
+		if (userId) {
+			_userExists = true
+		} else {
+			const $ndk = get(ndkStore)
+			const userNostrRes = await $ndk.getUserFromNip05(lowerNip05)
+			if (userNostrRes) {
+				userId = userNostrRes.pubkey
+				_userExists = false
+			}
+		}
+	}
 
 	return {
-		npub: npubEncode(userRes.id),
-		name: userRes.name,
-		image: userRes.image,
-		products: getProductsByUserIdRes,
-		stalls: getStallsByUserIdRes,
-		categories: getCategoriesByUserIdRes,
+		id: userId,
+		exist: _userExists,
 	}
 }

@@ -21,6 +21,7 @@
 	import { productEventSchema } from '../../../schema/nostr-events'
 
 	export let data: PageData
+	const { stall, user } = data
 	let stallResponse: Partial<RichStall>
 	let toDisplayProducts: Partial<DisplayProduct>[]
 	let userProfile: NDKUserProfile | null
@@ -75,11 +76,9 @@
 	}
 
 	onMount(async () => {
-		const { stall, user } = data
-
 		if (!stall.exist) {
 			const { stallNostrRes, userProfile, products } = await fetchStallData(stall.id, user.id as string)
-			if (!user.exist && userProfile) await $userFromNostrMutation.mutateAsync({ profile: userProfile, pubkey: user.id as string })
+			if (userProfile) await $userFromNostrMutation.mutateAsync({ profile: userProfile, pubkey: user.id as string })
 			if (stallNostrRes) {
 				const stallEvent = await stallNostrRes.toNostrEvent()
 				await $stallFromNostrEvent.mutateAsync(stallEvent)
