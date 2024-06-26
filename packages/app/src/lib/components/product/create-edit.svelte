@@ -137,6 +137,7 @@
 {#if $stallsQuery.isLoading}
 	<Spinner />
 {:else if $stallsQuery.data?.length}
+	{@const [stall] = $stallsQuery.data.filter((pStall) => pStall.id === product?.stallId)}
 	<form
 		on:submit|preventDefault={async (sEvent) => {
 			if (!product) {
@@ -232,15 +233,15 @@
 						<Label for="from" class="font-bold">Stall</Label>
 						<DropdownMenu.Root>
 							<DropdownMenu.Trigger asChild let:builder>
-                                <Button variant="outline" class="border-2 border-black" builders={[builder]}>
-                                    {#if forStall && $stallsQuery.data}
-                                        {@const defaultStall = $stallsQuery.data.find((stall) => stall.id === forStall)}
-                                        {defaultStall ? defaultStall.name : 'Select a stall'}
-                                    {:else}
-                                        {stall?.name}
-                                    {/if}
-                                </Button>
-                            </DropdownMenu.Trigger>
+								<Button variant="outline" class="border-2 border-black" builders={[builder]}>
+									{#if forStall && $stallsQuery.data}
+										{@const defaultStall = $stallsQuery.data.find((stall) => stall.id === forStall)}
+										{defaultStall ? defaultStall.name : 'Select a stall'}
+									{:else}
+										{stall?.name}
+									{/if}
+								</Button>
+							</DropdownMenu.Trigger>
 							<DropdownMenu.Content class="w-56">
 								<DropdownMenu.Label>Stall</DropdownMenu.Label>
 								<DropdownMenu.Separator />
