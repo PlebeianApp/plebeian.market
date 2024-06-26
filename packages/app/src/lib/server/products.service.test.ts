@@ -134,7 +134,7 @@ describe('products service', () => {
 			identifier: identifier,
 			userId: devUser1.pk,
 			userNip05: expect.any(String),
-			galleryImages: expect.any(Array),
+			images: expect.any(Array),
 			name: 'Hello Product',
 			price: 133,
 			stockQty: 6,
