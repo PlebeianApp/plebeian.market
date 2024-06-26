@@ -102,7 +102,7 @@ CREATE TABLE `order_items` (
 	`qty` integer NOT NULL,
 	PRIMARY KEY(`order_id`, `product_id`),
 	FOREIGN KEY (`order_id`) REFERENCES `orders`(`id`) ON UPDATE cascade ON DELETE cascade,
-	FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON UPDATE no action ON DELETE no action
+	FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON UPDATE cascade ON DELETE cascade
 );
 --> statement-breakpoint
 CREATE TABLE `orders` (
@@ -261,3 +261,5 @@ CREATE TABLE `users` (
 	`zap_Service` text,
 	`last_login` integer DEFAULT (unixepoch()) NOT NULL
 );
+--> statement-breakpoint
+CREATE UNIQUE INDEX `categories_name_unique` ON `categories` (`name`);

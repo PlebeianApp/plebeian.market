@@ -314,13 +314,12 @@ export const deleteProduct = async (productId: string, userId: string): Promise<
 		error(401, 'Unauthorized')
 	}
 
-	const deleteSuccess = await db.delete(products).where(eq(products.id, productId)).returning()
-
-	if (deleteSuccess) {
+	try {
+		await db.delete(products).where(eq(products.id, productId)).execute()
 		return productId
+	} catch (e) {
+		error(500, `Failed to delete product: ${e}`)
 	}
-
-	error(500, 'Failed to delete product')
 }
 
 const preparedProductsByCatId = db

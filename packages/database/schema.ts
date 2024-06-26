@@ -346,7 +346,7 @@ export const orderItems = sqliteTable(
 			.references(() => orders.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
 		productId: text('product_id')
 			.notNull()
-			.references(() => products.id),
+			.references(() => products.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
 		qty: integer('qty').notNull(),
 	},
 	(table) => {
