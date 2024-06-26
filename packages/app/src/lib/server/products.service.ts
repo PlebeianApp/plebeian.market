@@ -190,6 +190,25 @@ export const createProduct = async (productEvent: NostrEvent) => {
 	insertSpecs?.length && (await db.insert(productMeta).values(insertSpecs).returning())
 	insertProductImages?.length && (await db.insert(productImages).values(insertProductImages).returning())
 
+	const tags = productEvent.tags.filter(([kind]) => kind === 't').map(([_, tag]) => tag)
+	await db
+		.insert(categories)
+		.values(tags.map((tag) => ({ id: createId(), name: tag, description: 'here', userId: productEvent.pubkey })))
+		.onConflictDoNothing({
+			target: categories.name,
+		})
+		.returning()
+		.execute()
+
+	const insertedCategories = await Promise.all(
+		tags.map(async (tag) => (await db.query.categories.findFirst({ where: eq(categories.name, tag) }).execute())!),
+	)
+
+	await db
+		.insert(productCategories)
+		.values(insertedCategories.map(({ id }) => ({ productId: insertProduct.id, catId: id })))
+		.execute()
+
 	if (productResult[0]) {
 		return toDisplayProduct(productResult[0])
 	}
@@ -265,6 +284,14 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 		})
 		.where(eq(products.id, productId))
 		.returning()
+
+	for (const tag of productEvent.tags) {
+		if (tag[0] === 't') {
+			db.insert(categories).values({ name: tag[1], description: '', userId: productEvent.pubkey }).onConflictDoNothing({
+				target: categories.name,
+			})
+		}
+	}
 
 	if (productResult.length > 0) {
 		return toDisplayProduct(productResult[0])

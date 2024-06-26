@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { Category } from '$lib/fetch/products.mutations'
 	import type { DisplayProduct } from '$lib/server/products.service'
 	import Button from '$lib/components/ui/button/button.svelte'
 	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte'
@@ -33,7 +34,6 @@
 	const activeTab =
 		'w-full font-bold border-b-2 border-black text-black data-[state=active]:border-b-primary data-[state=active]:text-primary'
 
-	type Category = { key: string; name: string; checked: boolean }
 	let categories: Category[] = []
 	let images: Partial<ProductImage>[] = product?.galleryImages ?? []
 
@@ -143,6 +143,7 @@
 					currentStall,
 					images.map((image) => image.imageUrl),
 					shippingMethods.map((s) => s.json),
+					categories,
 				])
 
 				console.log(res)
@@ -157,6 +158,7 @@
 					product,
 					images.map((image) => image.imageUrl),
 					shippingMethods.map((s) => s.json),
+					categories,
 				])
 
 				if (res.error) {

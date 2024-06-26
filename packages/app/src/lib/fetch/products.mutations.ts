@@ -11,9 +11,11 @@ import { createId } from '@plebeian/database/utils'
 
 import { queryClient } from './client'
 
+export type Category = { key: string; name: string; checked: boolean }
+
 export const createProductMutation = createMutation(
 	{
-		mutationFn: async ([sEvent, stall, images, shippingMethods]: [
+		mutationFn: async ([sEvent, stall, images, shippingMethods, categories]: [
 			SubmitEvent,
 			RichStall,
 			Partial<ProductImage>[],
@@ -23,6 +25,7 @@ export const createProductMutation = createMutation(
 				baseCost: string
 				regions: ISO3[]
 			}[],
+			Category[],
 		]) => {
 			const $ndkStore = get(ndkStore)
 			if (!$ndkStore.activeUser?.pubkey) return
@@ -44,7 +47,7 @@ export const createProductMutation = createMutation(
 				pubkey: $ndkStore.activeUser.pubkey,
 				content: JSON.stringify(evContent),
 				created_at: Math.floor(Date.now()),
-				tags: [['d', identifier]],
+				tags: [['d', identifier], ...categories.map((c) => ['t', c.name])],
 			})
 
 			await newEvent.sign(ndk.signer)
@@ -64,7 +67,7 @@ export const createProductMutation = createMutation(
 
 export const editProductMutation = createMutation(
 	{
-		mutationFn: async ([sEvent, product, images, shippingMethods]: [
+		mutationFn: async ([sEvent, product, images, shippingMethods, categories]: [
 			SubmitEvent,
 			DisplayProduct,
 			Partial<ProductImage>[],
@@ -74,6 +77,7 @@ export const editProductMutation = createMutation(
 				baseCost: string
 				regions: ISO3[]
 			}[],
+			Category[],
 		]) => {
 			const $ndkStore = get(ndkStore)
 			if (!$ndkStore.activeUser?.pubkey) return
@@ -95,7 +99,7 @@ export const editProductMutation = createMutation(
 				pubkey: $ndkStore.activeUser.pubkey,
 				content: JSON.stringify(evContent),
 				created_at: Math.floor(Date.now()),
-				tags: [['d', identifier]],
+				tags: [['d', identifier], ...categories.map((c) => ['t', c.name])],
 			})
 
 			await newEvent.sign(ndk.signer)
