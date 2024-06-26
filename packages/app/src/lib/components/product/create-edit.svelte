@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Category } from '$lib/fetch/products.mutations'
 	import type { DisplayProduct } from '$lib/server/products.service'
+	import type { RichStall } from '$lib/server/stalls.service'
 	import Button from '$lib/components/ui/button/button.svelte'
 	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte'
 	import * as Command from '$lib/components/ui/command/index.js'
@@ -35,11 +36,11 @@
 		'w-full font-bold border-b-2 border-black text-black data-[state=active]:border-b-primary data-[state=active]:text-primary'
 
 	let categories: Category[] = []
-	let images: Partial<ProductImage>[] = product?.galleryImages ?? []
+	let images: Partial<ProductImage>[] = product?.images ?? []
 
 	function updateProductImages(updatedProduct: DisplayProduct | null) {
 		if (updatedProduct) {
-			images = updatedProduct.galleryImages ?? []
+			images = updatedProduct.images ?? []
 		}
 	}
 
@@ -129,7 +130,7 @@
 	}
 
 	$: stallsQuery = createStallsByFilterQuery(stallsFilterSchema.parse({ userId: $ndkStore.activeUser?.pubkey }))
-	$: currentStall = $stallsQuery.data?.find(({ id }) => id === currentStallId)
+	$: currentStall = $stallsQuery.data?.find(({ id }) => id === currentStallId) as RichStall
 </script>
 
 {#if $stallsQuery.isLoading}
@@ -141,8 +142,8 @@
 				const res = await $createProductMutation.mutateAsync([
 					sEvent,
 					currentStall,
-					images.map((image) => image.imageUrl),
-					shippingMethods.map((s) => s.json),
+					images.map((image) => ({ imageUrl: image.imageUrl })),
+					shippingMethods.map((s) => ({ id: s.id, name: s.name ?? '', cost: s.cost ?? '', regions: s.regions ?? [] })),
 					categories,
 				])
 
@@ -156,8 +157,8 @@
 				const res = await $editProductMutation.mutateAsync([
 					sEvent,
 					product,
-					images.map((image) => image.imageUrl),
-					shippingMethods.map((s) => s.json),
+					images.map((image) => ({ imageUrl: image.imageUrl })),
+					shippingMethods.map((s) => ({ id: s.id, name: s.name ?? '', cost: s.cost ?? '', regions: s.regions ?? [] })),
 					categories,
 				])
 
@@ -168,7 +169,7 @@
 				}
 			}
 
-			queryClient.invalidateQueries({ queryKey: ['products', $ndkStore.activeUser.pubkey] })
+			queryClient.invalidateQueries({ queryKey: ['products', $ndkStore.activeUser?.pubkey] })
 		}}
 		class="flex flex-col gap-4"
 	>

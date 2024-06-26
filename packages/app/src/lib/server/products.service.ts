@@ -33,7 +33,7 @@ export type DisplayProduct = Pick<Product, 'id' | 'description' | 'currency' | '
 	userNip05: string | null
 	createdAt: string
 	price: number
-	images: string[]
+	images: ProductImage[]
 }
 
 export const toDisplayProduct = async (product: Product): Promise<DisplayProduct> => {
@@ -183,15 +183,13 @@ export const getProductsByCatName = async (filter: ProductsFilter): Promise<Disp
 export const createProduct = async (productEvent: NostrEvent) => {
 	const eventCoordinates = getEventCoordinates(productEvent)
 	const productEventContent = JSON.parse(productEvent.content)
-	const parsedProduct = productEventSchema.parse({ id: productEventContent.id, ...productEventContent })
-	if (!parsedProduct) error(500, { message: 'Bad product schema' })
 
 	const parsedProduct = productEventSchema.safeParse({ id: productEventContent.id, ...productEventContent })
 	if (!parsedProduct.success) error(500, 'Bad product schema' + parsedProduct.error)
 
 	const stall = await getStallById(parsedProduct.data.stall_id)
 	const parentId = customTagValue(productEvent.tags, 'a')[0] || null
-	const extraCost = parsedProduct.data.shipping.length ? parsedProduct.data.shipping[0].baseCost : 0
+	const extraCost = parsedProduct.data.shipping.length ? parsedProduct.data.shipping[0].cost : 0
 
 	if (!stall) {
 		error(400, 'Stall not found')
@@ -210,7 +208,7 @@ export const createProduct = async (productEvent: NostrEvent) => {
 		description: parsedProduct.data.description as string,
 		currency: parsedProduct.data.currency,
 		price: parsedProduct.data.price.toString(),
-		extraCost: extraCost.toString(),
+		extraCost: extraCost?.toString() || '0',
 		productType: parsedProduct.data.type as ProductTypes,
 		parentId: parentId,
 		userId: productEvent.pubkey,
@@ -379,7 +377,7 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 		updatedAt: new Date(),
 		currency: parsedProductData?.currency,
 		price: parsedProductData?.price?.toString(),
-		extraCost: parsedProductData?.shipping?.length ? parsedProductData?.shipping[0].baseCost.toString() : String(0),
+		extraCost: parsedProductData?.shipping?.length ? parsedProductData?.shipping[0].cost?.toString() : String(0),
 		stallId: parsedProductData?.stall_id,
 		productName: parsedProductData?.name,
 		stockQty: parsedProductData?.quantity !== null ? parsedProductData?.quantity : undefined,

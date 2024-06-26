@@ -30,7 +30,7 @@ export const createProductMutation = createMutation(
 			{
 				id: string
 				name: string
-				baseCost: string
+				cost: string
 				regions: ISO3[]
 			}[],
 			Category[],

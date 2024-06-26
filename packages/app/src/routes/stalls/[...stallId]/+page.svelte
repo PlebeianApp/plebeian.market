@@ -84,7 +84,20 @@
 				const stallEvent = await stallNostrRes.toNostrEvent()
 				await $stallFromNostrEvent.mutateAsync(stallEvent)
 				if (products?.size) {
-					toDisplayProducts = [...products].map((event) => productEventSchema.parse(JSON.parse(event.content)))
+					toDisplayProducts = [...products].map((event) => {
+						const product = productEventSchema.parse(JSON.parse(event.content))
+						return {
+							...product,
+							images: product.images?.map((image) => ({
+								createdAt: new Date(),
+								productId: product.id,
+								auctionId: null,
+								imageUrl: image,
+								imageType: 'gallery',
+								imageOrder: 0,
+							})),
+						}
+					})
 					await $createProductsFromNostrMutation.mutateAsync(products)
 				}
 			}

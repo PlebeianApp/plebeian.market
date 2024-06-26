@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "4084a87c-70a4-4917-be33-b188160ea127",
+  "id": "daba380f-d7bf-40cd-a78f-3d665048e63d",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "app_settings": {
@@ -463,7 +463,15 @@
           "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "categories_name_unique": {
+          "name": "categories_name_unique",
+          "columns": [
+            "name"
+          ],
+          "isUnique": true
+        }
+      },
       "foreignKeys": {
         "categories_user_id_users_id_fk": {
           "name": "categories_user_id_users_id_fk",
@@ -1512,7 +1520,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
+          "onDelete": "no action",
           "onUpdate": "cascade"
         },
         "shipping_user_id_users_id_fk": {
@@ -1613,8 +1621,8 @@
             "id",
             "user_id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "cascade"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
