@@ -13,7 +13,6 @@ import {
 	categories,
 	createId,
 	db,
-	devUser1,
 	eq,
 	getTableColumns,
 	PRODUCT_META,
@@ -302,11 +301,23 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 	error(500, 'Failed to update product')
 }
 
-export const deleteProduct = async (productId: string): Promise<boolean> => {
-	const productResult = await db.delete(products).where(eq(products.id, productId)).execute()
+export const deleteProduct = async (productId: string, userId: string): Promise<string> => {
+	const productResult = await db.query.products.findFirst({
+		where: and(eq(products.id, productId), eq(products.userId, userId)),
+	})
 
-	if (productResult) {
-		return true
+	if (!productResult) {
+		error(404, 'Not found')
+	}
+
+	if (productResult.userId !== userId) {
+		error(401, 'Unauthorized')
+	}
+
+	const deleteSuccess = await db.delete(products).where(eq(products.id, productId)).returning()
+
+	if (deleteSuccess) {
+		return productId
 	}
 
 	error(500, 'Failed to delete product')
