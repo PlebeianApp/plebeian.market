@@ -1,4 +1,5 @@
 import type { DisplayProduct } from '$lib/server/products.service'
+import type { RichStall } from '$lib/server/stalls.service'
 import { NDKEvent } from '@nostr-dev-kit/ndk'
 import { createMutation } from '@tanstack/svelte-query'
 import { KindProducts } from '$lib/constants'
@@ -10,11 +11,13 @@ import { createId } from '@plebeian/database/utils'
 
 import { queryClient } from './client'
 
+export type Category = { key: string; name: string; checked: boolean }
+
 export const createProductMutation = createMutation(
 	{
-		mutationFn: async ([sEvent, product, images, shippingMethods]: [
+		mutationFn: async ([sEvent, stall, images, shippingMethods, categories]: [
 			SubmitEvent,
-			DisplayProduct | null,
+			RichStall,
 			Partial<ProductImage>[],
 			{
 				id: string
@@ -22,33 +25,34 @@ export const createProductMutation = createMutation(
 				baseCost: string
 				regions: ISO3[]
 			}[],
+			Category[],
 		]) => {
 			const $ndkStore = get(ndkStore)
 			if (!$ndkStore.activeUser?.pubkey) return
 			const formData = new FormData(sEvent.currentTarget as HTMLFormElement)
-			const identifier = product?.identifier ? product.identifier : createId()
+			const identifier = createId()
 			const evContent = {
 				id: identifier,
-				stall_id: product?.stallId,
+				stall_id: stall.id,
 				name: formData.get('title'),
 				description: formData.get('description'),
 				images: images,
 				price: Number(formData.get('price')),
 				quantity: Number(formData.get('quantity')),
 				shipping: shippingMethods,
-				currency: product?.currency,
+				currency: stall.currency,
 			}
 			const newEvent = new NDKEvent($ndkStore, {
 				kind: KindProducts,
 				pubkey: $ndkStore.activeUser.pubkey,
 				content: JSON.stringify(evContent),
 				created_at: Math.floor(Date.now()),
-				tags: [['d', identifier]],
+				tags: [['d', identifier], ...categories.map((c) => ['t', c.name])],
 			})
 
 			await newEvent.sign(ndk.signer)
 			const nostrEvent = await newEvent.toNostrEvent()
-			const result = await fetch(new URL(product ? `/api/v1/products` : '/api/v1/products', window.location.origin), {
+			const result = await fetch(new URL('/api/v1/products', window.location.origin), {
 				method: 'POST',
 				body: JSON.stringify(nostrEvent),
 				headers: {
@@ -63,9 +67,9 @@ export const createProductMutation = createMutation(
 
 export const editProductMutation = createMutation(
 	{
-		mutationFn: async ([sEvent, product, images, shippingMethods]: [
+		mutationFn: async ([sEvent, product, images, shippingMethods, categories]: [
 			SubmitEvent,
-			DisplayProduct | null,
+			DisplayProduct,
 			Partial<ProductImage>[],
 			{
 				id: string
@@ -73,6 +77,7 @@ export const editProductMutation = createMutation(
 				baseCost: string
 				regions: ISO3[]
 			}[],
+			Category[],
 		]) => {
 			const $ndkStore = get(ndkStore)
 			if (!$ndkStore.activeUser?.pubkey) return
@@ -94,12 +99,12 @@ export const editProductMutation = createMutation(
 				pubkey: $ndkStore.activeUser.pubkey,
 				content: JSON.stringify(evContent),
 				created_at: Math.floor(Date.now()),
-				tags: [['d', identifier]],
+				tags: [['d', identifier], ...categories.map((c) => ['t', c.name])],
 			})
 
 			await newEvent.sign(ndk.signer)
 			const nostrEvent = await newEvent.toNostrEvent()
-			const result = await fetch(new URL(product ? `/api/v1/products/${product.id}` : '/api/v1/products', window.location.origin), {
+			const result = await fetch(new URL(`/api/v1/products/${product.id}`, window.location.origin), {
 				method: 'PUT',
 				body: JSON.stringify(nostrEvent),
 				headers: {

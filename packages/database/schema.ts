@@ -253,7 +253,7 @@ export const categories = sqliteTable('categories', {
 	id: text('id')
 		.primaryKey()
 		.$defaultFn(() => createId()),
-	name: text('name').notNull(),
+	name: text('name').notNull().unique(),
 	userId: text('user_id')
 		.notNull()
 		.references(() => users.id, { onDelete: 'cascade', onUpdate: 'cascade' }),

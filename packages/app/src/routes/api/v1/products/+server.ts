@@ -34,6 +34,7 @@ export async function POST({ request }) {
 		const verifiedEvent = await verifyAndPersistRawEvent(request, KindProducts)
 		return json(await createProduct(verifiedEvent))
 	} catch (e) {
+		console.log(e)
 		error(500, JSON.stringify(e))
 	}
 }
