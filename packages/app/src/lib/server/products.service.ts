@@ -191,23 +191,25 @@ export const createProduct = async (productEvent: NostrEvent) => {
 	insertProductImages?.length && (await db.insert(productImages).values(insertProductImages).returning())
 
 	const tags = productEvent.tags.filter(([kind]) => kind === 't').map(([_, tag]) => tag)
-	await db
-		.insert(categories)
-		.values(tags.map((tag) => ({ id: createId(), name: tag, description: 'here', userId: productEvent.pubkey })))
-		.onConflictDoNothing({
-			target: categories.name,
-		})
-		.returning()
-		.execute()
+	if (tags.length) {
+		await db
+			.insert(categories)
+			.values(tags.map((tag) => ({ id: createId(), name: tag, description: 'here', userId: productEvent.pubkey })))
+			.onConflictDoNothing({
+				target: categories.name,
+			})
+			.returning()
+			.execute()
 
-	const insertedCategories = await Promise.all(
-		tags.map(async (tag) => (await db.query.categories.findFirst({ where: eq(categories.name, tag) }).execute())!),
-	)
+		const insertedCategories = await Promise.all(
+			tags.map(async (tag) => (await db.query.categories.findFirst({ where: eq(categories.name, tag) }).execute())!),
+		)
 
-	await db
-		.insert(productCategories)
-		.values(insertedCategories.map(({ id }) => ({ productId: insertProduct.id, catId: id })))
-		.execute()
+		await db
+			.insert(productCategories)
+			.values(insertedCategories.map(({ id }) => ({ productId: insertProduct.id, catId: id })))
+			.execute()
+	}
 
 	if (productResult[0]) {
 		return toDisplayProduct(productResult[0])
