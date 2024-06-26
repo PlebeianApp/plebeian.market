@@ -51,24 +51,27 @@
 	<Sheet.Content side="right" class="min-w-[30vw] flex flex-col border-l-black border-2">
 		<Sheet.Header>
 			{#if $drawerUI.id}
-				{#if $drawerUI.id === 'new:product'}
-					<Sheet.Title>Create new product</Sheet.Title>
-				{:else if $drawerUI.id === 'new:stall'}
-					<Sheet.Title>Create new stall</Sheet.Title>
-				{:else if $drawerUI.id.includes('30018')}
-					<Sheet.Title class="flex justify-between"
-						><span>Edit product</span><Button on:click={handleDeleteProduct} size="icon" variant="ghost" class=" text-destructive border-0"
-							><span class="i-tdesign-delete-1 w-4 h-4"></span></Button
-						></Sheet.Title
-					>
-				{:else}
-					<Sheet.Title class="flex justify-between"
-						><span>Edit stall</span>
+				<Sheet.Title class="flex flex-row justify-between items-center content-center">
+					<Button size="icon" variant="outline" class=" border-none" on:click={closeDrawer}>
+						<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
+					</Button>
+					{#if $drawerUI.id === 'new:product'}
+						Create new product
+					{:else if $drawerUI.id === 'new:stall'}
+						Create new stall
+					{:else if $drawerUI.id.includes('30018')}<span>Edit product</span><Button
+							on:click={handleDeleteProduct}
+							size="icon"
+							variant="ghost"
+							class=" text-destructive border-0"><span class="i-tdesign-delete-1 w-4 h-4"></span></Button
+						>
+						>
+					{:else}<span>Edit stall</span>
 						<Button on:click={handleDeleteStall} size="icon" variant="ghost" class=" text-destructive border-0"
 							><span class="i-tdesign-delete-1 w-4 h-4"></span></Button
-						></Sheet.Title
-					>
-				{/if}
+						>
+					{/if}
+				</Sheet.Title>
 			{/if}
 		</Sheet.Header>
 		<div class="grow">
