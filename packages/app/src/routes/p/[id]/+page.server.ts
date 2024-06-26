@@ -17,6 +17,7 @@ export const load: PageServerLoad = async ({ params }) => {
 
 	return {
 		npub: npubEncode(userRes.id),
+		pubkey: userRes.id,
 		name: userRes.name,
 		image: userRes.image,
 		products: getProductsByUserIdRes,
