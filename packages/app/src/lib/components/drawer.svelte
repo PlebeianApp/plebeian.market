@@ -38,12 +38,14 @@
 		closeDrawer()
 	}
 
-	const handleDeleteStall = () => {
-		$deleteStallMutation.mutate($currentStall.data.id)
+	const handleDeleteStall = async () => {
+		await $deleteStallMutation.mutateAsync($currentStall.data.id)
+		closeDrawer()
 	}
 
-	const handleDeleteProduct = () => {
-		$deleteProductMutation.mutate($currentProduct.data.id)
+	const handleDeleteProduct = async () => {
+		await $deleteProductMutation.mutateAsync($currentProduct.data.id)
+		closeDrawer()
 	}
 </script>
 
@@ -64,7 +66,6 @@
 							size="icon"
 							variant="ghost"
 							class=" text-destructive border-0"><span class="i-tdesign-delete-1 w-4 h-4"></span></Button
-						>
 						>
 					{:else}<span>Edit stall</span>
 						<Button on:click={handleDeleteStall} size="icon" variant="ghost" class=" text-destructive border-0"

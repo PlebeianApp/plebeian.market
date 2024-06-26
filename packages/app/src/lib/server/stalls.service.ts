@@ -146,6 +146,10 @@ type StallInfo = {
 export const getStallById = async (id: string): Promise<StallInfo> => {
 	const [uniqueStall] = await db.select().from(stalls).where(eq(stalls.id, id)).execute()
 
+	if (!uniqueStall) {
+		error(404, 'Not found')
+	}
+
 	const [ownerRes] = await db
 		.select({
 			userId: users.id,

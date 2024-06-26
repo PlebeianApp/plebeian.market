@@ -17,7 +17,7 @@
 	}
 </script>
 
-<Card.Root class="relative flex h-[34vh] flex-col gap-4 border-4 border-black bg-transparent text-black group">
+<Card.Root class="relative flex h-[38vh] flex-col gap-4 border-4 border-black bg-transparent text-black group">
 	<Card.Header class="flex flex-col justify-between">
 		<span class="truncate text-2xl font-bold">{name}</span>
 		<span class="font-red font-bold">Since: {createDate}</span>
