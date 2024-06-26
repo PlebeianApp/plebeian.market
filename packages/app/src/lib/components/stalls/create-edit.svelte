@@ -148,7 +148,7 @@
 	}
 </script>
 
-<form class="flex flex-col gap-4" on:submit|preventDefault={create}>
+<form class="flex flex-col gap-4 grow" on:submit|preventDefault={create}>
 	<div class="grid w-full items-center gap-1.5">
 		<Label for="title" class="font-bold">Title</Label>
 		<Input value={stall?.name} required class="border-2 border-black" type="text" name="title" placeholder="e.g. Fancy Wears" />
@@ -183,7 +183,7 @@
 	</div>
 
 	{#each shippingMethods as item, i}
-		<div class="grid grid-cols-[1fr_1fr_1fr_auto] w-full items-start gap-2">
+		<div class="grid grid-cols-[1fr_1fr_1fr_auto] w-full items-end gap-2">
 			<div>
 				<Label for="from" class="font-bold">{i + 1}. Shipping Name</Label>
 				<Input required bind:value={item.name} class="border-2 border-black" type="text" name="shipping" placeholder="24/28h Europe" />

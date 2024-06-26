@@ -6,14 +6,24 @@
 	import Button from '$lib/components/ui/button/button.svelte'
 	import Input from '$lib/components/ui/input/input.svelte'
 	import { createProductPriceQuery } from '$lib/fetch/products.queries'
+	import { openDrawerForProduct } from '$lib/stores/drawer-ui'
+	import ndkStore from '$lib/stores/ndk'
 	import { cn } from '$lib/utils'
 
 	import type { PageData } from './$types'
 
 	export let data: PageData
+
+	let isMyProduct = false
+
 	$: ({ product, seller, products, productCats } = data)
 
 	$: priceQuery = createProductPriceQuery(product)
+
+	$: {
+		const userId = $ndkStore.activeUser?.pubkey
+		isMyProduct = userId === product.userId
+	}
 
 	let selectedImage = 0
 </script>
@@ -40,6 +50,9 @@
 			{/if}
 		</div>
 		<div class="flex flex-col">
+			{#if isMyProduct}
+				<Button class="w-1/4" on:click={() => openDrawerForProduct(product.id)}>Edit product</Button>
+			{/if}
 			<h1>{product.name}</h1>
 			<h2 class=" inline-flex items-center">
 				{#if $priceQuery.isLoading}

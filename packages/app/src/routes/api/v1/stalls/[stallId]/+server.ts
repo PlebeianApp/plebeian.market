@@ -1,8 +1,8 @@
 import { error, json } from '@sveltejs/kit'
+import { authorizeUserless } from '$lib/auth'
 import { KindStalls } from '$lib/constants'
 import { verifyAndPersistRawEvent } from '$lib/server/nostrEvents.service'
-import { deleteProduct } from '$lib/server/products.service'
-import { getStallById, updateStall } from '$lib/server/stalls.service'
+import { deleteStall, getStallById, updateStall } from '$lib/server/stalls.service'
 
 import type { RequestHandler } from './$types'
 
@@ -19,6 +19,11 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 	}
 }
 
-export const DELETE: RequestHandler = async ({ params }) => {
-	return json(await deleteProduct(params.stallId))
+export const DELETE: RequestHandler = async ({ request, params }) => {
+	try {
+		const userId = await authorizeUserless(request, 'DELETE')
+		return json(await deleteStall(params.stallId, userId))
+	} catch (e) {
+		error(401, 'Unauthorized')
+	}
 }

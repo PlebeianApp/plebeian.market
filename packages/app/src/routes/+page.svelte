@@ -1,10 +1,9 @@
 <script lang="ts">
-	import { goto } from '$app/navigation'
 	import CatMenu from '$lib/components/category/cat-menu.svelte'
 	import Pattern from '$lib/components/Pattern.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
 	import { Button } from '$lib/components/ui/button/index.js'
-	import { onMount } from 'svelte'
+	import { openDrawerForNewStall } from '$lib/stores/drawer-ui'
 
 	import type { PageData } from './$types'
 
@@ -21,7 +20,7 @@
 			<div class="relative w-full bg-black py-20 text-center text-white">
 				<Pattern />
 				<h1 class="relative z-10">Sell stuff for sats</h1>
-				<Button class="relative z-10 p-6 text-xl font-bold">List my stuff</Button>
+				<Button class="relative z-10 p-6 text-xl font-bold" on:click={openDrawerForNewStall}>List my stuff</Button>
 			</div>
 			{#if featured.length}
 				<div class=" bg-primary px-4 py-20 lg:px-12">

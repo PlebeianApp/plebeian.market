@@ -9,7 +9,13 @@ import { get } from 'svelte/store'
 import type { ISO3, ProductImage } from '@plebeian/database'
 import { createId } from '@plebeian/database/utils'
 
-import { queryClient } from './client'
+import { createRequest, queryClient } from './client'
+
+declare module './client' {
+	interface Endpoints {
+		[k: `DELETE /api/v1/products/${string}`]: Operation<string, 'DELETE', never, string, string, never>
+	}
+}
 
 export type Category = { key: string; name: string; checked: boolean }
 
@@ -112,6 +118,29 @@ export const editProductMutation = createMutation(
 				},
 			}).then((response) => response.json())
 			return result
+		},
+	},
+	queryClient,
+)
+
+export const deleteProductMutation = createMutation(
+	{
+		mutationKey: [],
+		mutationFn: async (productId: string) => {
+			const $ndkStore = get(ndkStore)
+
+			if ($ndkStore.activeUser?.pubkey) {
+				const res = await createRequest(`DELETE /api/v1/products/${productId}`, {
+					auth: true,
+				})
+				return res
+			}
+			return null
+		},
+		onSuccess: (productId: string) => {
+			const $ndkStore = get(ndkStore)
+			queryClient.invalidateQueries({ queryKey: ['products', $ndkStore.activeUser?.pubkey] })
+			queryClient.invalidateQueries({ queryKey: ['categories', $ndkStore.activeUser?.pubkey] })
 		},
 	},
 	queryClient,

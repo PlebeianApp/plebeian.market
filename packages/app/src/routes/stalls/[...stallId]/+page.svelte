@@ -3,11 +3,21 @@
 	import * as Accordion from '$lib/components/ui/accordion'
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar'
 	import { Badge } from '$lib/components/ui/badge'
+	import { Button } from '$lib/components/ui/button'
+	import { openDrawerForProduct } from '$lib/stores/drawer-ui'
+	import ndkStore from '$lib/stores/ndk'
 
 	import type { PageData } from './$types'
 
 	export let data: PageData
 	$: ({ stall, user, zones } = data)
+
+	let isMyStall = false
+
+	$: {
+		const userId = $ndkStore.activeUser?.pubkey
+		isMyStall = userId === stall.userId
+	}
 </script>
 
 <div class="flex min-h-screen w-full flex-col bg-muted/40">
@@ -41,6 +51,10 @@
 						</Accordion.Content>
 					</Accordion.Item>
 				</Accordion.Root>
+
+				{#if isMyStall}
+					<Button class="mt-4" on:click={() => openDrawerForProduct(stall.id)}>Edit stall</Button>
+				{/if}
 			</div>
 			<div class="px-4 py-20 lg:px-12">
 				<div class="container">

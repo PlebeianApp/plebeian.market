@@ -1,5 +1,3 @@
-import { error } from '@sveltejs/kit'
-
 import { db, eq, shipping, shippingZones } from '@plebeian/database'
 
 export type RichShippingInfo = {

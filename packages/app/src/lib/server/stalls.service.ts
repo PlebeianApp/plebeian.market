@@ -146,6 +146,10 @@ type StallInfo = {
 export const getStallById = async (id: string): Promise<StallInfo> => {
 	const [uniqueStall] = await db.select().from(stalls).where(eq(stalls.id, id)).execute()
 
+	if (!uniqueStall) {
+		error(404, 'Not found')
+	}
+
 	const [ownerRes] = await db
 		.select({
 			userId: users.id,
@@ -330,5 +334,27 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
 		}
 	}
 
-	error(500, 'Failed to update product')
+	error(500, 'Failed to update stall')
+}
+
+export const deleteStall = async (stallId: string, userId: string): Promise<string> => {
+	const stallResult = await db.query.stalls.findFirst({
+		where: and(eq(stalls.id, stallId), eq(stalls.userId, userId)),
+	})
+
+	if (!stallResult) {
+		error(404, 'Not found')
+	}
+
+	if (stallResult.userId !== userId) {
+		error(401, 'Unauthorized')
+	}
+
+	const deleteSuccess = await db.delete(stalls).where(eq(stalls.id, stallId)).returning()
+
+	if (deleteSuccess) {
+		return stallId
+	}
+
+	error(500, 'Failed to delete stall')
 }
