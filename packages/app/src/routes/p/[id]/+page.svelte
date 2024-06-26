@@ -20,14 +20,14 @@
 
 	let isMe = false
 
-	$: categoriesQuery = createCategoriesByFilterQuery({ userId: $ndkStore.activeUser?.pubkey })
+	$: categoriesQuery = createCategoriesByFilterQuery({ userId: $ndkStore.activeUser?.pubkey ? $ndkStore.activeUser?.pubkey : pubkey })
 
 	$: stallsQuery = createStallsByFilterQuery({
-		userId: $ndkStore.activeUser?.pubkey,
+		userId: $ndkStore.activeUser?.pubkey ? $ndkStore.activeUser?.pubkey : pubkey,
 	})
 
 	$: productsQuery = createProductsByFilterQuery({
-		userId: $ndkStore.activeUser?.pubkey,
+		userId: $ndkStore.activeUser?.pubkey ? $ndkStore.activeUser?.pubkey : pubkey,
 	})
 
 	$: {

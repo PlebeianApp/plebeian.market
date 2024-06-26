@@ -3,6 +3,8 @@
 	import * as Card from '$lib/components/ui/card/index'
 	import { openDrawerForNewProductForStall, openDrawerForStall } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
+	import { truncateString } from '$lib/utils'
+	import { npubEncode } from 'nostr-tools/nip19'
 
 	import { Button } from '../ui/button'
 
@@ -17,13 +19,15 @@
 	}
 </script>
 
-<Card.Root class="relative flex h-[38vh] flex-col gap-4 border-4 border-black bg-transparent text-black group">
-	<Card.Header class="flex flex-col justify-between">
-		<span class="truncate text-2xl font-bold">{name}</span>
-		<span class="font-red font-bold">Since: {createDate}</span>
-		{isMyStall}
-	</Card.Header>
-	<div class="relative grow p-4">
+<Card.Root class="relative grid grid-rows-[auto_1fr_auto] h-[34vh] gap-4 border-4 border-black bg-transparent text-black group">
+	<a href={userNip05 ? `/stalls/${userNip05.toLocaleLowerCase()}/${identifier}` : `/stalls/${id?.replace(/^30017:/, '')}`}>
+		<Card.Header class="flex flex-col justify-between py-2 pb-0">
+			<span class="truncate text-2xl font-bold">{name}</span>
+			<span class="font-red font-bold">Since: {createDate}</span>
+			{isMyStall}
+		</Card.Header>
+	</a>
+	<Card.Content class="relative flex-grow truncate whitespace-normal">
 		<p>{description}</p>
 		{#if isMyStall}
 			<div
@@ -33,13 +37,25 @@
 				<Button class="bg-white" on:click={() => openDrawerForNewProductForStall(id)}>Add product</Button>
 			</div>
 		{/if}
-	</div>
-
-	<Card.Footer>
-		<a class="flex flex-col items-start font-bold" href={userNip05 ? `/stalls/${userNip05}/${identifier}` : `/stalls/${id}`}>
-			<span>Owner: {userName}</span>
-			<span>Currency: {currency}</span>
-			<span>{productCount} products</span>
-		</a>
-	</Card.Footer>
+	</Card.Content>
+	<a href={userNip05 ? `/stalls/${userNip05.toLocaleLowerCase()}/${identifier}` : `/stalls/${id?.replace(/^30017:/, '')}`}>
+		<Card.Footer class="flex flex-col items-start font-bold">
+			<div class="flex items-center gap-1">
+				<div class="flex flex-col">
+					{#if userName}
+						<span class="whitespace-normal">Owner: {userName}</span>
+					{/if}
+					{#if userNip05}
+						<small class="truncate font-light whitespace-normal">{userNip05}</small>
+					{:else}
+						<small class="font-light truncate whitespace-normal">@{truncateString(npubEncode(stall.userId))}</small>
+					{/if}
+				</div>
+			</div>
+			<span class="whitespace-normal">Currency: {currency}</span>
+			{#if productCount}
+				<span class="whitespace-normal">{productCount} products</span>
+			{/if}
+		</Card.Footer>
+	</a>
 </Card.Root>

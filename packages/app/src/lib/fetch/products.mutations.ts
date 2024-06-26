@@ -140,6 +140,7 @@ export const deleteProductMutation = createMutation(
 		onSuccess: (productId: string) => {
 			const $ndkStore = get(ndkStore)
 			queryClient.invalidateQueries({ queryKey: ['products', $ndkStore.activeUser?.pubkey] })
+			queryClient.invalidateQueries({ queryKey: ['categories', $ndkStore.activeUser?.pubkey] })
 		},
 	},
 	queryClient,

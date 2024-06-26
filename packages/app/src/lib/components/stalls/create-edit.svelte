@@ -183,7 +183,7 @@
 	</div>
 
 	{#each shippingMethods as item, i}
-		<div class="grid grid-cols-[1fr_1fr_1fr_auto] w-full items-start gap-2">
+		<div class="grid grid-cols-[1fr_1fr_1fr_auto] w-full items-end gap-2">
 			<div>
 				<Label for="from" class="font-bold">{i + 1}. Shipping Name</Label>
 				<Input required bind:value={item.name} class="border-2 border-black" type="text" name="shipping" placeholder="24/28h Europe" />

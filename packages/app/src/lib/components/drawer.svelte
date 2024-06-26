@@ -67,10 +67,11 @@
 							variant="ghost"
 							class=" text-destructive border-0"><span class="i-tdesign-delete-1 w-4 h-4"></span></Button
 						>
-					{:else}<span>Edit stall</span>
+					{:else}
+						<span>Edit stall</span>
 						<Button on:click={handleDeleteStall} size="icon" variant="ghost" class=" text-destructive border-0"
-							><span class="i-tdesign-delete-1 w-4 h-4"></span></Button
-						>
+							><span class="i-tdesign-delete-1 w-4 h-4"></span>
+						</Button>
 					{/if}
 				</Sheet.Title>
 			{/if}
