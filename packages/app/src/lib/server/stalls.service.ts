@@ -281,7 +281,7 @@ export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall 
 					.returning()
 					.then(([shippingResult]) => {
 						if (!shippingResult) {
-							error(500, 'Error when creating shipping method')
+							error(500, `Error when creating shipping method ${shippingResult}`)
 						}
 						return shippingResult
 					})

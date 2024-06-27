@@ -21,8 +21,9 @@
 	$: priceQuery = createProductPriceQuery(product)
 
 	$: {
-		const userId = $ndkStore.activeUser?.pubkey
-		isMyProduct = userId === product.userId
+		if ($ndkStore.activeUser?.pubkey) {
+			isMyProduct = $ndkStore.activeUser.pubkey === product.userId
+		}
 	}
 
 	let selectedImage = 0
@@ -31,9 +32,10 @@
 <div class="container py-16">
 	<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
 		<div class="grid grid-cols-3 gap-6">
-			<ul class="grid gap-4 md:col-span-1">
-				{#if product.images.length}
-					{#each product.images as item, i}
+			{#if product.images.length}
+				{@const sortedImages = product.images.slice().sort((a, b) => a.imageOrder - b.imageOrder)}
+				<ul class="grid gap-4 md:col-span-1">
+					{#each sortedImages as item, i}
 						<button
 							class={cn('cursor-pointer p-1', i === selectedImage ? 'border border-primary' : null)}
 							on:click={() => (selectedImage = i)}
@@ -41,10 +43,8 @@
 							<img src={item.imageUrl} alt="" />
 						</button>
 					{/each}
-				{/if}
-			</ul>
-			{#if product.images.length}
-				<img class="col-span-2 border-2 border-black p-1" src={product.images[selectedImage]} alt="" />
+				</ul>
+				<img class="col-span-2 border-2 border-black p-1" src={sortedImages[selectedImage].imageUrl} alt="" />
 			{:else}
 				<ImgPlaceHolder imageType={'main'} />
 			{/if}

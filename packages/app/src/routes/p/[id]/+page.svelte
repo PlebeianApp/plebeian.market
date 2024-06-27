@@ -1,23 +1,21 @@
 <script lang="ts">
-	import type { NDKUserProfile, NostrEvent } from '@nostr-dev-kit/ndk'
+	import type { NDKUserProfile } from '@nostr-dev-kit/ndk'
 	import type { DisplayProduct } from '$lib/server/products.service'
 	import type { RichStall } from '$lib/server/stalls.service'
 	import { NDKEvent, NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk'
-	import CatCompactItem from '$lib/components/category/cat-compact-item.svelte'
 	import Pattern from '$lib/components/Pattern.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
 	import StallItem from '$lib/components/stalls/stall-item.svelte'
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar'
 	import Button from '$lib/components/ui/button/button.svelte'
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
 	import { KindProducts, KindStalls } from '$lib/constants'
 	import { createProductsByFilterQuery } from '$lib/fetch/products.queries'
-	import { stallFromNostrEvent } from '$lib/fetch/stalls.mutations'
 	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
 	import { userFromNostrMutation } from '$lib/fetch/users.mutations'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
 	import { normalizeStallData } from '$lib/nostrSubs/subs'
 	import { productsFilterSchema, stallsFilterSchema } from '$lib/schema'
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
 	import { openDrawerForNewProduct, openDrawerForNewStall } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
 	import { copyToClipboard } from '$lib/utils'
@@ -61,7 +59,7 @@
 	}
 
 	async function fetchStallDataFromDb() {
-		createUserByIdQuery(id).subscribe((userRes) => {
+		createUserByIdQuery(id as string).subscribe((userRes) => {
 			if (userRes.data) {
 				userProfile = userRes.data
 			}
@@ -107,54 +105,56 @@
 
 	let isMe = false
 
-	$: categoriesQuery = createCategoriesByFilterQuery({ userId: $ndkStore.activeUser?.pubkey ? $ndkStore.activeUser?.pubkey : pubkey })
+	// $: categoriesQuery = createCategoriesByFilterQuery({ userId: $ndkStore.activeUser?.pubkey ? $ndkStore.activeUser?.pubkey : pubkey })
 
 	$: stallsQuery = createStallsByFilterQuery({
-		userId: $ndkStore.activeUser?.pubkey ? $ndkStore.activeUser?.pubkey : pubkey,
+		userId: $ndkStore.activeUser?.pubkey ? $ndkStore.activeUser?.pubkey : (id as string),
 	})
 
 	$: productsQuery = createProductsByFilterQuery({
-		userId: $ndkStore.activeUser?.pubkey ? $ndkStore.activeUser?.pubkey : pubkey,
+		userId: $ndkStore.activeUser?.pubkey ? $ndkStore.activeUser?.pubkey : (id as string),
 	})
 
 	$: {
-		const userId = $ndkStore.activeUser?.pubkey
-		isMe = userId === pubkey
+		if ($ndkStore.activeUser?.pubkey) {
+			isMe = $ndkStore.activeUser.pubkey === (id as string)
+		}
 	}
 </script>
-<!--{#if userProfile}
-	{@const { image, name } = userProfile}--!>
-<div class="flex min-h-screen w-full flex-col bg-muted/40">
-	<div class="flex flex-col">
-		<main class="text-black">
-			<div class="relative flex w-full flex-col items-center bg-black py-20 text-center text-white">
-				<Pattern />
-				<div class="w-fit z-10 justify-center">
-					<div class="flex justify-center">
-						<Avatar class="h-20 w-20">
-							<AvatarImage src={image} alt="@shadcn" />
-							<AvatarFallback>{name}</AvatarFallback>
-						</Avatar>
-					</div>
-					<h2>{name}</h2>
-					<div class="flex items-center">
-						<Button variant="secondary" class="w-1/2 lg:w-auto">
-							<code class="truncate">{npub}</code>
-						</Button>
-						<Button on:click={() => copyToClipboard(npub)}>Copy</Button>
-						<DropdownMenu.Root>
-							<DropdownMenu.Trigger><Button>Create...</Button></DropdownMenu.Trigger>
-							<DropdownMenu.Content>
-								<DropdownMenu.Group>
-									<DropdownMenu.Item on:click={openDrawerForNewStall}>Create stall</DropdownMenu.Item>
-									<DropdownMenu.Item on:click={openDrawerForNewProduct}>Create product</DropdownMenu.Item>
-								</DropdownMenu.Group>
-							</DropdownMenu.Content>
-						</DropdownMenu.Root>
+
+{#if userProfile}
+	{@const { image, name } = userProfile}
+	<div class="flex min-h-screen w-full flex-col bg-muted/40">
+		<div class="flex flex-col">
+			<main class="text-black">
+				<div class="relative flex w-full flex-col items-center bg-black py-20 text-center text-white">
+					<Pattern />
+					<div class="w-fit z-10 justify-center">
+						<div class="flex justify-center">
+							<Avatar class="h-20 w-20">
+								<AvatarImage src={image} alt="@shadcn" />
+								<AvatarFallback>{name}</AvatarFallback>
+							</Avatar>
+						</div>
+						<h2>{name}</h2>
+						<div class="flex items-center">
+							<Button variant="secondary" class="w-1/2 lg:w-auto">
+								<code class="truncate">{npubEncode(id)}</code>
+							</Button>
+							<Button on:click={() => copyToClipboard(npubEncode(id))}>Copy</Button>
+							<DropdownMenu.Root>
+								<DropdownMenu.Trigger><Button>Create...</Button></DropdownMenu.Trigger>
+								<DropdownMenu.Content>
+									<DropdownMenu.Group>
+										<DropdownMenu.Item on:click={openDrawerForNewStall}>Create stall</DropdownMenu.Item>
+										<DropdownMenu.Item on:click={openDrawerForNewProduct}>Create product</DropdownMenu.Item>
+									</DropdownMenu.Group>
+								</DropdownMenu.Content>
+							</DropdownMenu.Root>
+						</div>
 					</div>
 				</div>
-			</div>
-			{#if $categoriesQuery.data}
+				<!-- {#if $categoriesQuery.data}
 				<div class="py-5 lg:px-12">
 					<div class="container">
 						<h2>Categories</h2>
@@ -165,27 +165,29 @@
 						</div>
 					</div>
 				</div>
-			{/if}
-			{#if $stallsQuery.data}
-				<div class="px-4 py-20 lg:px-12">
-					<div class="container">
-						<h2>Stalls</h2>
-						<div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-							{#each $stallsQuery.data as item}
-								<StallItem stall={item} />
-							{/each}
+			{/if} -->
+				{#if $stallsQuery.data}
+					<div class="px-4 py-20 lg:px-12">
+						<div class="container">
+							<h2>Stalls</h2>
+							<div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+								{#each $stallsQuery.data as item}
+									<StallItem stall={item} />
+								{/each}
+							</div>
 						</div>
 					</div>
 				{/if}
 
-			{#if $productsQuery.data}
-				<div class="px-4 py-20 lg:px-12">
-					<div class="container">
-						<h2>Products</h2>
-						<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-							{#each $productsQuery.data as item}
-								<ProductItem product={item} />
-							{/each}
+				{#if $productsQuery.data}
+					<div class="px-4 py-20 lg:px-12">
+						<div class="container">
+							<h2>Products</h2>
+							<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+								{#each $productsQuery.data as item}
+									<ProductItem product={item} />
+								{/each}
+							</div>
 						</div>
 					</div>
 				{/if}

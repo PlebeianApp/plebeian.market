@@ -65,7 +65,6 @@ export const load: PageServerLoad = async ({ params }) => {
 	} catch (e) {
 		console.warn(JSON.stringify(e))
 	}
-
 	return {
 		stall: { id: stallId, identifier: _stallIdentifier, exist: _stallExists },
 		user: { id: userId, exist: _userExists },

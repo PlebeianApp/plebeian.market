@@ -3,7 +3,7 @@ import { authorizeUserless } from '$lib/auth'
 import { KindStalls } from '$lib/constants'
 import { persistEvent, verifyAndPersistRawEvent } from '$lib/server/nostrEvents.service'
 import { deleteProduct } from '$lib/server/products.service'
-import { createStall, getStallById, stallExists, updateStall, deleteStall } from '$lib/server/stalls.service'
+import { createStall, deleteStall, getStallById, stallExists, updateStall } from '$lib/server/stalls.service'
 
 import type { RequestHandler } from './$types'
 

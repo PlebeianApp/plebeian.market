@@ -1,13 +1,14 @@
 <script lang="ts">
 	import type { RichStall } from '$lib/server/stalls.service'
 	import * as Card from '$lib/components/ui/card/index'
+	import { openDrawerForNewProductForStall, openDrawerForStall } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
 	import { truncateString } from '$lib/utils'
 	import { npubEncode } from 'nostr-tools/nip19'
 	import { onMount } from 'svelte'
-  import { openDrawerForNewProductForStall, openDrawerForStall } from '$lib/stores/drawer-ui'
+
 	import { Button } from '../ui/button'
-  
+
 	export let stall: Partial<RichStall>
 
 	const { name, createDate, description, currency, productCount, identifier, id } = stall
@@ -16,8 +17,9 @@
 	let isMyStall = false
 
 	$: {
-		const userId = $ndkStore.activeUser?.pubkey
-		isMyStall = userId === stall.userId
+		if ($ndkStore.activeUser?.pubkey) {
+			isMyStall = $ndkStore.activeUser.pubkey === id?.split(':')[1]
+		}
 	}
 
 	onMount(async () => {
@@ -37,9 +39,8 @@
 <Card.Root class="relative grid grid-rows-[auto_1fr_auto] h-[34vh] gap-4 border-4 border-black bg-transparent text-black group">
 	<a href={userNip05 ? `/stalls/${userNip05.toLocaleLowerCase()}/${identifier}` : `/stalls/${id?.replace(/^30017:/, '')}`}>
 		<Card.Header class="flex flex-col justify-between py-2 pb-0">
-			<span class="truncate text-2xl font-bold">{name}</span>
-			<span class="font-red font-bold">Since: {createDate}</span>
-			{isMyStall}
+			<span class="truncate text-2xl font-bold whitespace-normal">{name}</span>
+			<span class="font-bold whitespace-normal">Since: {createDate}</span>
 		</Card.Header>
 	</a>
 	<Card.Content class="relative flex-grow truncate whitespace-normal">

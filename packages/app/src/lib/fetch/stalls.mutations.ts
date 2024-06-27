@@ -1,12 +1,9 @@
 import type { NostrEvent } from '@nostr-dev-kit/ndk'
 import type { DisplayStall } from '$lib/server/stalls.service'
-import type { VerifiedEvent } from 'nostr-tools'
 import { error } from '@sveltejs/kit'
 import { createMutation } from '@tanstack/svelte-query'
-import { getEventCoordinates } from '$lib/utils'
-
-import type { Stall } from '@plebeian/database'
 import ndkStore from '$lib/stores/ndk'
+import { getEventCoordinates } from '$lib/utils'
 import { get } from 'svelte/store'
 
 import { createRequest, queryClient } from './client'
@@ -14,7 +11,7 @@ import { createRequest, queryClient } from './client'
 declare module './client' {
 	interface Endpoints {
 		[k: `POST /api/v1/stalls/${string}`]: Operation<string, 'POST', never, NostrEvent, DisplayStall, never>
-    [k: `DELETE /api/v1/stalls/${string}`]: Operation<string, 'DELETE', never, string, string, never>
+		[k: `DELETE /api/v1/stalls/${string}`]: Operation<string, 'DELETE', never, string, string, never>
 	}
 }
 
@@ -42,8 +39,10 @@ export const stallFromNostrEvent = createMutation(
 				console.log('Stall inserted in db successfully', data)
 				queryClient.invalidateQueries({ queryKey: ['stalls'] })
 			}
-	}
-}
+		},
+	},
+	queryClient,
+)
 
 export const deleteStallMutation = createMutation(
 	{

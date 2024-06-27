@@ -6,6 +6,7 @@
 	import ProductItem from '$lib/components/product/product-item.svelte'
 	import * as Accordion from '$lib/components/ui/accordion'
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar'
+	import { Button } from '$lib/components/ui/button'
 	import { KindProducts, KindStalls } from '$lib/constants'
 	import { createProductsFromNostrMutation } from '$lib/fetch/products.mutations'
 	import { createProductsByFilterQuery } from '$lib/fetch/products.queries'
@@ -14,11 +15,9 @@
 	import { userFromNostrMutation } from '$lib/fetch/users.mutations'
 	import { stallsSub } from '$lib/nostrSubs/subs'
 	import { productsFilterSchema, stallsFilterSchema } from '$lib/schema'
+	import { openDrawerForProduct } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
 	import { onMount } from 'svelte'
-	import { Badge } from '$lib/components/ui/badge'
-	import { Button } from '$lib/components/ui/button'
-	import { openDrawerForProduct } from '$lib/stores/drawer-ui'
 
 	import type { PageData } from './$types'
 	import { productEventSchema } from '../../../schema/nostr-events'
@@ -81,7 +80,7 @@
 	onMount(async () => {
 		if (!stall.exist) {
 			const { stallNostrRes, userProfile, products } = await fetchStallData(stall.id, user.id as string)
-			if (userProfile) await $userFromNostrMutation.mutateAsync({ profile: userProfile, pubkey: user.id as string })
+			if (userProfile && !user.exist) await $userFromNostrMutation.mutateAsync({ profile: userProfile, pubkey: user.id as string })
 			if (stallNostrRes) {
 				const stallEvent = await stallNostrRes.toNostrEvent()
 				await $stallFromNostrEvent.mutateAsync(stallEvent)
@@ -98,6 +97,7 @@
 								imageType: 'gallery',
 								imageOrder: 0,
 							})),
+							userId: user.id,
 						}
 					})
 					await $createProductsFromNostrMutation.mutateAsync(products)
@@ -107,13 +107,13 @@
 			await fetchStallDataFromDb(stall.id)
 		}
 	})
-	$: ({ stall, user, zones } = data)
 
 	let isMyStall = false
 
 	$: {
-		const userId = $ndkStore.activeUser?.pubkey
-		isMyStall = userId === stall.userId
+		if ($ndkStore.activeUser?.pubkey) {
+			isMyStall = $ndkStore.activeUser?.pubkey === user.id
+		}
 	}
 </script>
 
@@ -144,28 +144,29 @@
 									{#each zones as zone}
 										<Badge variant="secondary">{zone.region}</Badge>
 									{/each}
-								</section>
-							</div>
-						</Accordion.Content>
-					</Accordion.Item>
-				</Accordion.Root>
+									</section>-->
+								</div>
+							</Accordion.Content>
+						</Accordion.Item>
+					</Accordion.Root>
 
-				{#if isMyStall}
-					<Button class="mt-4" on:click={() => openDrawerForProduct(stall.id)}>Edit stall</Button>
-				{/if}
-			</div>
-			<div class="px-4 py-20 lg:px-12">
-				<div class="container">
-					<h2>Products</h2>
-					<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-						{#each stall.products as item}
-							<ProductItem product={item} />
-						{/each}
+					{#if isMyStall}
+						<Button class="mt-4" on:click={() => openDrawerForProduct(stall.id)}>Edit stall</Button>
+					{/if}
+				</div>
+				<div class="px-4 py-20 lg:px-12">
+					<div class="container">
+						<h2>Products</h2>
+						<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+							{#if toDisplayProducts}
+								{#each toDisplayProducts as item}
+									<ProductItem product={item} />
+								{/each}
+							{/if}
+						</div>
 					</div>
 				</div>
 			</main>
 		</div>
 	</div>
-{:else}
-	wops
 {/if}
