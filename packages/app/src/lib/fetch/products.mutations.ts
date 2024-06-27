@@ -16,6 +16,7 @@ import { createRequest, queryClient } from './client'
 declare module './client' {
 	interface Endpoints {
 		'POST /api/v1/products': Operation<string, 'POST', never, NostrEvent[], DisplayProduct[], never>
+		[k: `DELETE /api/v1/products/${string}`]: Operation<string, 'DELETE', never, string, string, never>
 	}
 }
 
@@ -144,6 +145,29 @@ export const createProductsFromNostrMutation = createMutation(
 		onSuccess: (data: DisplayProduct[] | undefined | null) => {
 			console.log('Products inserted in db successfully: ', data?.length)
 			queryClient.invalidateQueries({ queryKey: ['products'] })
+		},
+	},
+	queryClient,
+)
+
+export const deleteProductMutation = createMutation(
+	{
+		mutationKey: [],
+		mutationFn: async (productId: string) => {
+			const $ndkStore = get(ndkStore)
+
+			if ($ndkStore.activeUser?.pubkey) {
+				const res = await createRequest(`DELETE /api/v1/products/${productId}`, {
+					auth: true,
+				})
+				return res
+			}
+			return null
+		},
+		onSuccess: (productId: string) => {
+			const $ndkStore = get(ndkStore)
+			queryClient.invalidateQueries({ queryKey: ['products', $ndkStore.activeUser?.pubkey] })
+			queryClient.invalidateQueries({ queryKey: ['categories', $ndkStore.activeUser?.pubkey] })
 		},
 	},
 	queryClient,

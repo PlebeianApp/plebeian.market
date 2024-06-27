@@ -17,6 +17,8 @@
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
 	import { normalizeStallData } from '$lib/nostrSubs/subs'
 	import { productsFilterSchema, stallsFilterSchema } from '$lib/schema'
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
+	import { openDrawerForNewProduct, openDrawerForNewStall } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
 	import { copyToClipboard } from '$lib/utils'
 	import { npubEncode } from 'nostr-tools/nip19'
@@ -102,65 +104,88 @@
 			await fetchStallDataFromDb()
 		}
 	})
-</script>
 
-{#if userProfile}
-	{@const { image, name } = userProfile}
-	<div class="flex min-h-screen w-full flex-col bg-muted/40">
-		<div class="flex flex-col">
-			<main class="text-black">
-				<div class="relative flex w-full flex-col items-center bg-black py-20 text-center text-white">
-					<Pattern />
-					<div class="w-fit z-10 justify-center">
-						<div class="flex justify-center">
-							<Avatar class="h-20 w-20">
-								<AvatarImage src={image} alt="@shadcn" />
-								<AvatarFallback>{name}</AvatarFallback>
-							</Avatar>
-						</div>
-						<h2>{name}</h2>
-						<div class="flex items-center">
-							<Button variant="secondary" class="w-1/2 lg:w-auto">
-								<code class="truncate">{npubEncode(id)}</code>
-							</Button>
-							<Button on:click={() => copyToClipboard(npubEncode(id))}>Copy</Button>
-						</div>
+	let isMe = false
+
+	$: categoriesQuery = createCategoriesByFilterQuery({ userId: $ndkStore.activeUser?.pubkey ? $ndkStore.activeUser?.pubkey : pubkey })
+
+	$: stallsQuery = createStallsByFilterQuery({
+		userId: $ndkStore.activeUser?.pubkey ? $ndkStore.activeUser?.pubkey : pubkey,
+	})
+
+	$: productsQuery = createProductsByFilterQuery({
+		userId: $ndkStore.activeUser?.pubkey ? $ndkStore.activeUser?.pubkey : pubkey,
+	})
+
+	$: {
+		const userId = $ndkStore.activeUser?.pubkey
+		isMe = userId === pubkey
+	}
+</script>
+<!--{#if userProfile}
+	{@const { image, name } = userProfile}--!>
+<div class="flex min-h-screen w-full flex-col bg-muted/40">
+	<div class="flex flex-col">
+		<main class="text-black">
+			<div class="relative flex w-full flex-col items-center bg-black py-20 text-center text-white">
+				<Pattern />
+				<div class="w-fit z-10 justify-center">
+					<div class="flex justify-center">
+						<Avatar class="h-20 w-20">
+							<AvatarImage src={image} alt="@shadcn" />
+							<AvatarFallback>{name}</AvatarFallback>
+						</Avatar>
+					</div>
+					<h2>{name}</h2>
+					<div class="flex items-center">
+						<Button variant="secondary" class="w-1/2 lg:w-auto">
+							<code class="truncate">{npub}</code>
+						</Button>
+						<Button on:click={() => copyToClipboard(npub)}>Copy</Button>
+						<DropdownMenu.Root>
+							<DropdownMenu.Trigger><Button>Create...</Button></DropdownMenu.Trigger>
+							<DropdownMenu.Content>
+								<DropdownMenu.Group>
+									<DropdownMenu.Item on:click={openDrawerForNewStall}>Create stall</DropdownMenu.Item>
+									<DropdownMenu.Item on:click={openDrawerForNewProduct}>Create product</DropdownMenu.Item>
+								</DropdownMenu.Group>
+							</DropdownMenu.Content>
+						</DropdownMenu.Root>
 					</div>
 				</div>
-				<!-- {#if categories.length}
+			</div>
+			{#if $categoriesQuery.data}
 				<div class="py-5 lg:px-12">
 					<div class="container">
 						<h2>Categories</h2>
 						<div class=" grid grid-cols-4 gap-2">
-							{#each categories.filter((cat) => (cat.productCount ?? 0) > 0) as cat}
+							{#each $categoriesQuery.data.filter((cat) => (cat.productCount ?? 0) > 0) as cat}
 								<CatCompactItem {cat} isGlobal={false} />
 							{/each}
 						</div>
 					</div>
 				</div>
-			{/if} -->
-				{#if stalls?.length}
-					<div class="px-4 py-20 lg:px-12">
-						<div class="container">
-							<h2>Stalls</h2>
-							<div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-								{#each stalls as item}
-									<StallItem stall={item} />
-								{/each}
-							</div>
+			{/if}
+			{#if $stallsQuery.data}
+				<div class="px-4 py-20 lg:px-12">
+					<div class="container">
+						<h2>Stalls</h2>
+						<div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+							{#each $stallsQuery.data as item}
+								<StallItem stall={item} />
+							{/each}
 						</div>
 					</div>
 				{/if}
 
-				{#if toDisplayProducts?.length}
-					<div class="px-4 py-20 lg:px-12">
-						<div class="container">
-							<h2>Products</h2>
-							<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-								{#each toDisplayProducts as item}
-									<ProductItem product={item} />
-								{/each}
-							</div>
+			{#if $productsQuery.data}
+				<div class="px-4 py-20 lg:px-12">
+					<div class="container">
+						<h2>Products</h2>
+						<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+							{#each $productsQuery.data as item}
+								<ProductItem product={item} />
+							{/each}
 						</div>
 					</div>
 				{/if}

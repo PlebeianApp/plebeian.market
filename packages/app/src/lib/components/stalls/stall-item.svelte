@@ -5,11 +5,20 @@
 	import { truncateString } from '$lib/utils'
 	import { npubEncode } from 'nostr-tools/nip19'
 	import { onMount } from 'svelte'
-
+  import { openDrawerForNewProductForStall, openDrawerForStall } from '$lib/stores/drawer-ui'
+	import { Button } from '../ui/button'
+  
 	export let stall: Partial<RichStall>
 
 	const { name, createDate, description, currency, productCount, identifier, id } = stall
 	let { userName, userNip05 } = stall
+
+	let isMyStall = false
+
+	$: {
+		const userId = $ndkStore.activeUser?.pubkey
+		isMyStall = userId === stall.userId
+	}
 
 	onMount(async () => {
 		if (!userName || !userNip05) {
@@ -25,14 +34,26 @@
 	})
 </script>
 
-<a href={userNip05 ? `/stalls/${userNip05.toLocaleLowerCase()}/${identifier}` : `/stalls/${id?.replace(/^30017:/, '')}`}>
-	<Card.Root class="grid grid-rows-[auto_1fr_auto] h-[34vh] cursor-pointer gap-4 border-4 border-black bg-transparent text-black">
+<Card.Root class="relative grid grid-rows-[auto_1fr_auto] h-[34vh] gap-4 border-4 border-black bg-transparent text-black group">
+	<a href={userNip05 ? `/stalls/${userNip05.toLocaleLowerCase()}/${identifier}` : `/stalls/${id?.replace(/^30017:/, '')}`}>
 		<Card.Header class="flex flex-col justify-between py-2 pb-0">
-			<span class="truncate text-2xl font-bold whitespace-normal">{name}</span>
-			<span class="font-bold whitespace-normal">Since: {createDate}</span>
+			<span class="truncate text-2xl font-bold">{name}</span>
+			<span class="font-red font-bold">Since: {createDate}</span>
+			{isMyStall}
 		</Card.Header>
-		<Card.Content class="flex-grow overflow-hidden truncate whitespace-normal">{description}</Card.Content>
-
+	</a>
+	<Card.Content class="relative flex-grow truncate whitespace-normal">
+		<p>{description}</p>
+		{#if isMyStall}
+			<div
+				class="flex flex-col gap-2 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-black font-bold opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+			>
+				<Button class="bg-white" on:click={() => openDrawerForStall(id)}>Edit stall</Button>
+				<Button class="bg-white" on:click={() => openDrawerForNewProductForStall(id)}>Add product</Button>
+			</div>
+		{/if}
+	</Card.Content>
+	<a href={userNip05 ? `/stalls/${userNip05.toLocaleLowerCase()}/${identifier}` : `/stalls/${id?.replace(/^30017:/, '')}`}>
 		<Card.Footer class="flex flex-col items-start font-bold">
 			<div class="flex items-center gap-1">
 				<div class="flex flex-col">
@@ -51,5 +72,5 @@
 				<span class="whitespace-normal">{productCount} products</span>
 			{/if}
 		</Card.Footer>
-	</Card.Root>
-</a>
+	</a>
+</Card.Root>

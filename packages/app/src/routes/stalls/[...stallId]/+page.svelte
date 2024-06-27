@@ -16,6 +16,9 @@
 	import { productsFilterSchema, stallsFilterSchema } from '$lib/schema'
 	import ndkStore from '$lib/stores/ndk'
 	import { onMount } from 'svelte'
+	import { Badge } from '$lib/components/ui/badge'
+	import { Button } from '$lib/components/ui/button'
+	import { openDrawerForProduct } from '$lib/stores/drawer-ui'
 
 	import type { PageData } from './$types'
 	import { productEventSchema } from '../../../schema/nostr-events'
@@ -104,6 +107,14 @@
 			await fetchStallDataFromDb(stall.id)
 		}
 	})
+	$: ({ stall, user, zones } = data)
+
+	let isMyStall = false
+
+	$: {
+		const userId = $ndkStore.activeUser?.pubkey
+		isMyStall = userId === stall.userId
+	}
 </script>
 
 {#if stallResponse}
@@ -133,22 +144,23 @@
 									{#each zones as zone}
 										<Badge variant="secondary">{zone.region}</Badge>
 									{/each}
-								</section> -->
-								</div>
-							</Accordion.Content>
-						</Accordion.Item>
-					</Accordion.Root>
-				</div>
-				<div class="px-4 py-20 lg:px-12">
-					<div class="container">
-						<h2>Products</h2>
-						<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-							{#if toDisplayProducts}
-								{#each toDisplayProducts as item}
-									<ProductItem product={item} />
-								{/each}
-							{/if}
-						</div>
+								</section>
+							</div>
+						</Accordion.Content>
+					</Accordion.Item>
+				</Accordion.Root>
+
+				{#if isMyStall}
+					<Button class="mt-4" on:click={() => openDrawerForProduct(stall.id)}>Edit stall</Button>
+				{/if}
+			</div>
+			<div class="px-4 py-20 lg:px-12">
+				<div class="container">
+					<h2>Products</h2>
+					<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+						{#each stall.products as item}
+							<ProductItem product={item} />
+						{/each}
 					</div>
 				</div>
 			</main>
