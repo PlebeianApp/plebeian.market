@@ -58,13 +58,10 @@ CREATE TABLE `bids` (
 );
 --> statement-breakpoint
 CREATE TABLE `categories` (
-	`id` text PRIMARY KEY NOT NULL,
-	`name` text NOT NULL,
-	`user_id` text NOT NULL,
+	`name` text PRIMARY KEY NOT NULL,
 	`description` text NOT NULL,
-	`parent_id` text,
-	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE cascade ON DELETE cascade,
-	FOREIGN KEY (`parent_id`) REFERENCES `categories`(`id`) ON UPDATE cascade ON DELETE cascade
+	`parent` text,
+	FOREIGN KEY (`parent`) REFERENCES `categories`(`name`) ON UPDATE cascade ON DELETE cascade
 );
 --> statement-breakpoint
 CREATE TABLE `events` (
@@ -141,11 +138,13 @@ CREATE TABLE `payment_details` (
 );
 --> statement-breakpoint
 CREATE TABLE `product_categories` (
-	`product_id` text,
-	`cat_id` text,
-	PRIMARY KEY(`cat_id`, `product_id`),
+	`product_id` text NOT NULL,
+	`category` text NOT NULL,
+	`user_id` text NOT NULL,
+	PRIMARY KEY(`category`, `product_id`),
 	FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON UPDATE cascade ON DELETE cascade,
-	FOREIGN KEY (`cat_id`) REFERENCES `categories`(`id`) ON UPDATE cascade ON DELETE cascade
+	FOREIGN KEY (`category`) REFERENCES `categories`(`name`) ON UPDATE cascade ON DELETE cascade,
+	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE cascade ON DELETE cascade
 );
 --> statement-breakpoint
 CREATE TABLE `product_images` (
@@ -261,5 +260,3 @@ CREATE TABLE `users` (
 	`zap_Service` text,
 	`last_login` integer DEFAULT (unixepoch()) NOT NULL
 );
---> statement-breakpoint
-CREATE UNIQUE INDEX `categories_name_unique` ON `categories` (`name`);

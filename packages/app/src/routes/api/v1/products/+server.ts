@@ -5,7 +5,6 @@ import { verifyAndPersistRawEvent } from '$lib/server/nostrEvents.service'
 import {
 	createProduct,
 	getAllProducts,
-	getProductsByCatId,
 	getProductsByCatName,
 	getProductsByStallId,
 	getProductsByUserId,
@@ -16,9 +15,7 @@ export async function GET({ url: { searchParams } }) {
 	const filter = productsFilterSchema.safeParse(spObj)
 	if (!filter.success) {
 		error(400, `Invalid request: ${JSON.stringify(filter.error)}`)
-	} else if (filter.data.catId) {
-		return json(await getProductsByCatId(filter.data))
-	} else if (filter.data.catName) {
+	} else if (filter.data.category) {
 		return json(await getProductsByCatName(filter.data))
 	} else if (filter.data.userId) {
 		return json(await getProductsByUserId(filter.data))

@@ -250,27 +250,23 @@ export const productImages = sqliteTable(
 
 // Categories
 export const categories = sqliteTable('categories', {
-	id: text('id')
-		.primaryKey()
-		.$defaultFn(() => createId()),
-	name: text('name').notNull().unique(),
-	userId: text('user_id')
-		.notNull()
-		.references(() => users.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
+	name: text('name').primaryKey(),
 	description: text('description').notNull(),
-	parentId: text('parent_id').references((): AnySQLiteColumn => categories.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
+	parent: text('parent').references((): AnySQLiteColumn => categories.name, { onDelete: 'cascade', onUpdate: 'cascade' }),
 })
 
 // Product categories
 export const productCategories = sqliteTable(
 	'product_categories',
 	{
-		productId: text('product_id').references(() => products.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
-		catId: text('cat_id').references(() => categories.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
+		productId: text('product_id').references(() => products.id, { onDelete: 'cascade', onUpdate: 'cascade' }).notNull(),
+		category: text('category').references(() => categories.name, { onDelete: 'cascade', onUpdate: 'cascade' }).notNull(),
+		userId: text('user_id')
+			.references(() => users.id, { onDelete: 'cascade', onUpdate: 'cascade' }).notNull(),
 	},
 	(table) => {
 		return {
-			pk: primaryKey({ columns: [table.productId, table.catId] }),
+			pk: primaryKey({ columns: [table.productId, table.category] }),
 		}
 	},
 )
