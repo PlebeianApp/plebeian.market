@@ -2,10 +2,9 @@ import type { CatsFilter } from '$lib/schema'
 import { error } from '@sveltejs/kit'
 import { catsFilterSchema } from '$lib/schema'
 
-import type { Category } from '@plebeian/database'
-import { and, categories, db, eq, productCategories, sql } from '@plebeian/database'
+import { and, categories, Category, db, eq, getTableColumns, or, productCategories, ProductCategory, sql } from '@plebeian/database'
 
-export type RichCat = Pick<Category, 'id' | 'name' | 'description' | 'parentId' | 'userId'> & {
+export type RichCat = Pick<Category, 'name' | 'description' | 'parent'> & {
 	productCount?: number
 	stallCount?: number
 	userCount?: number
@@ -18,29 +17,36 @@ const resolveCategory = async (cat: Category): Promise<RichCat> => {
 				count: sql<number>`cast(count(${productCategories.productId}) as int)`,
 			})
 			.from(productCategories)
-			.where(eq(productCategories.catId, cat.id))
+			.where(eq(productCategories.category, cat.name))
 			.execute()
 	).map((product) => product.count)
 
 	return {
-		id: cat.id,
 		name: cat.name,
 		description: cat.description,
-		parentId: cat.parentId,
-		userId: cat.userId,
+		parent: cat.parent,
 		productCount: productCount,
 	}
 }
 
 export const getAllCategories = async (filter: CatsFilter = catsFilterSchema.parse({})): Promise<RichCat[]> => {
+	let userCategories: { category: string }[] = []
+	if (filter.userId) {
+		userCategories = await db
+			.selectDistinct({ category: categories.name })
+			.from(productCategories)
+			.orderBy(productCategories.category)
+			.innerJoin(categories, eq(productCategories.category, categories.name))
+			.where(eq(productCategories.userId, filter.userId))
+	}
+
 	const categoriesResult = await db
 		.select()
 		.from(categories)
 		.where(
 			and(
-				filter.catName ? eq(categories.name, filter.catName) : undefined,
-				filter.catId ? eq(categories.id, filter.catId) : undefined,
-				filter.userId ? eq(categories.userId, filter.userId) : undefined,
+				filter.category ? eq(categories.name, filter.category) : undefined,
+				or(...userCategories.map(({ category }) => eq(categories.name, category))),
 			),
 		)
 		.groupBy(categories.name)
@@ -63,7 +69,7 @@ export const getAllCategories = async (filter: CatsFilter = catsFilterSchema.par
 const preparedCatByProductId = db
 	.select()
 	.from(categories)
-	.innerJoin(productCategories, eq(productCategories.catId, categories.id))
+	.innerJoin(productCategories, eq(productCategories.category, categories.name))
 	.where(eq(productCategories.productId, sql.placeholder('productId')))
 	.prepare()
 

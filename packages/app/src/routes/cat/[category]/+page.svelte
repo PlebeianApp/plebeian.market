@@ -11,11 +11,11 @@
 	export let data: PageData
 	$: ({ stalls } = data)
 
-	$: categoriesQuery = createCategoriesByFilterQuery({ catName: $page.params.catName })
+	$: categoriesQuery = createCategoriesByFilterQuery({ category: $page.params.category })
 	$: categoryData = $categoriesQuery.data?.[0]
 
 	$: productsQuery = createProductsByFilterQuery({
-		catName: $page.params.catName,
+		category: $page.params.catName,
 		pageSize: 15,
 	})
 </script>

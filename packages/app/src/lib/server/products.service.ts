@@ -247,7 +247,7 @@ export const createProduct = async (productEvent: NostrEvent) => {
 	insertSpecs?.length && (await db.insert(productMeta).values(insertSpecs).returning())
 	insertProductImages?.length && (await db.insert(productImages).values(insertProductImages).returning())
 
-	const tags = productEvent.tags.filter(([kind]) => kind === 't').map(([_, tag]) => tag)
+	const tags = customTagValue(productEvent.tags, 't')
 	if (tags.length) {
 		await db
 			.insert(categories)
@@ -264,7 +264,7 @@ export const createProduct = async (productEvent: NostrEvent) => {
 
 		await db
 			.insert(productCategories)
-			.values(insertedCategories.map(({ id }) => ({ productId: insertProduct.id, catId: id })))
+			.values(insertedCategories.map(({ name }) => ({ productId: insertProduct.id, userId: productEvent.pubkey, category: name })))
 			.execute()
 	}
 
@@ -434,12 +434,25 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 		.where(eq(products.id, productId))
 		.returning()
 
-	for (const tag of productEvent.tags) {
-		if (tag[0] === 't') {
-			db.insert(categories).values({ name: tag[1], description: '', userId: productEvent.pubkey }).onConflictDoNothing({
+	const tags = customTagValue(productEvent.tags, 't')
+	if (tags.length) {
+		await db
+			.insert(categories)
+			.values(tags.map((tag) => ({ id: createId(), name: tag, description: '', userId: productEvent.pubkey })))
+			.onConflictDoNothing({
 				target: categories.name,
 			})
-		}
+			.execute()
+
+		const insertedCategories = await Promise.all(
+			tags.map(async (tag) => (await db.query.categories.findFirst({ where: eq(categories.name, tag) }).execute())!),
+		)
+
+		await db.delete(productCategories).where(eq(productCategories.productId, productId)).execute()
+		await db
+			.insert(productCategories)
+			.values(insertedCategories.map(({ name }) => ({ productId: insertProduct.id, userId: productEvent.pubkey, category: name })))
+			.execute()
 	}
 
 	if (productResult.length > 0) {
@@ -468,4 +481,32 @@ export const deleteProduct = async (productId: string, userId: string): Promise<
 	} catch (e) {
 		error(500, `Failed to delete product: ${e}`)
 	}
+}
+
+const preparedProductsByCatName = db
+	.select({ ...getTableColumns(products) })
+	.from(products)
+	.innerJoin(productCategories, eq(products.id, productCategories.productId))
+	.innerJoin(categories, eq(productCategories.category, categories.name))
+	.where(and(eq(categories.name, sql.placeholder('category')), eq(products.userId, sql.placeholder('userId'))))
+	.limit(sql.placeholder('limit'))
+	.offset(sql.placeholder('offset'))
+	.prepare()
+
+export const getProductsByCatName = async (filter: ProductsFilter): Promise<DisplayProduct[]> => {
+	if (!filter.category) {
+		throw new Error('Category Name must be provided')
+	}
+
+	const productRes = await preparedProductsByCatName.execute({
+		userId: filter.userId,
+		category: filter.category,
+		limit: filter.pageSize,
+		offset: (filter.page - 1) * filter.pageSize,
+	})
+
+	if (productRes) {
+		return await Promise.all(productRes.map(toDisplayProduct))
+	}
+	throw error(404, 'not found')
 }

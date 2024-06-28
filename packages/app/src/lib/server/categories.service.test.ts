@@ -36,7 +36,7 @@ describe('categories service', () => {
 	})
 
 	it('returns empty array when no categories found', async () => {
-		const filter: CatsFilter = catsFilterSchema.parse({ catName: 'Non-Existing Category' })
+		const filter: CatsFilter = catsFilterSchema.parse({ category: 'Non-Existing Category' })
 		const categories = await getAllCategories(filter)
 
 		expect(categories).toEqual([])

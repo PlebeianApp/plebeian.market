@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "545be210-7aab-4dd0-b6d9-7f1f7241df41",
+  "id": "df97b6d9-e157-4602-8661-ba932ee118f9",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "app_settings": {
@@ -427,24 +427,10 @@
     "categories": {
       "name": "categories",
       "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": false
-        },
         "name": {
           "name": "name",
           "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "text",
-          "primaryKey": false,
+          "primaryKey": true,
           "notNull": true,
           "autoincrement": false
         },
@@ -455,46 +441,25 @@
           "notNull": true,
           "autoincrement": false
         },
-        "parent_id": {
-          "name": "parent_id",
+        "parent": {
+          "name": "parent",
           "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         }
       },
-      "indexes": {
-        "categories_name_unique": {
-          "name": "categories_name_unique",
-          "columns": [
-            "name"
-          ],
-          "isUnique": true
-        }
-      },
+      "indexes": {},
       "foreignKeys": {
-        "categories_user_id_users_id_fk": {
-          "name": "categories_user_id_users_id_fk",
-          "tableFrom": "categories",
-          "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "cascade"
-        },
-        "categories_parent_id_categories_id_fk": {
-          "name": "categories_parent_id_categories_id_fk",
+        "categories_parent_categories_name_fk": {
+          "name": "categories_parent_categories_name_fk",
           "tableFrom": "categories",
           "tableTo": "categories",
           "columnsFrom": [
-            "parent_id"
+            "parent"
           ],
           "columnsTo": [
-            "id"
+            "name"
           ],
           "onDelete": "cascade",
           "onUpdate": "cascade"
@@ -1032,14 +997,21 @@
           "name": "product_id",
           "type": "text",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false
         },
-        "cat_id": {
-          "name": "cat_id",
+        "category": {
+          "name": "category",
           "type": "text",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
           "autoincrement": false
         }
       },
@@ -1058,12 +1030,25 @@
           "onDelete": "cascade",
           "onUpdate": "cascade"
         },
-        "product_categories_cat_id_categories_id_fk": {
-          "name": "product_categories_cat_id_categories_id_fk",
+        "product_categories_category_categories_name_fk": {
+          "name": "product_categories_category_categories_name_fk",
           "tableFrom": "product_categories",
           "tableTo": "categories",
           "columnsFrom": [
-            "cat_id"
+            "category"
+          ],
+          "columnsTo": [
+            "name"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        },
+        "product_categories_user_id_users_id_fk": {
+          "name": "product_categories_user_id_users_id_fk",
+          "tableFrom": "product_categories",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
           ],
           "columnsTo": [
             "id"
@@ -1073,12 +1058,12 @@
         }
       },
       "compositePrimaryKeys": {
-        "product_categories_product_id_cat_id_pk": {
+        "product_categories_product_id_category_pk": {
           "columns": [
-            "cat_id",
+            "category",
             "product_id"
           ],
-          "name": "product_categories_product_id_cat_id_pk"
+          "name": "product_categories_product_id_category_pk"
         }
       },
       "uniqueConstraints": {}

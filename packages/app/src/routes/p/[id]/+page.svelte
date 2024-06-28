@@ -16,7 +16,6 @@
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
 	import { normalizeStallData } from '$lib/nostrSubs/subs'
 	import { openDrawerForNewProduct, openDrawerForNewStall } from '$lib/stores/drawer-ui'
-	import ndkStore from '$lib/stores/ndk'
 	import { copyToClipboard } from '$lib/utils'
 	import { npubEncode } from 'nostr-tools/nip19'
 	import { onMount } from 'svelte'
@@ -77,6 +76,8 @@
 	$: userProfileQuery = exist
 		? createUserByIdQuery($ndkStore.activeUser?.pubkey ? $ndkStore.activeUser?.pubkey : (id as string))
 		: undefined
+  
+  // $: categoriesQuery = createCategoriesByFilterQuery({ userId: pubkey })
 
 	$: {
 		if (exist && $userProfileQuery?.data) {
@@ -150,7 +151,7 @@
 						<h2>Categories</h2>
 						<div class=" grid grid-cols-4 gap-2">
 							{#each $categoriesQuery.data.filter((cat) => (cat.productCount ?? 0) > 0) as cat}
-								<CatCompactItem {cat} isGlobal={false} />
+								<CatCompactItem {cat} userId={pubkey} />
 							{/each}
 						</div>
 					</div>
