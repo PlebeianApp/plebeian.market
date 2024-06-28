@@ -37,7 +37,8 @@ export const stallFromNostrEvent = createMutation(
 		onSuccess: (data: DisplayStall | null) => {
 			if (data) {
 				console.log('Stall inserted in db successfully', data)
-				queryClient.invalidateQueries({ queryKey: ['stalls'] })
+				queryClient.invalidateQueries({ queryKey: ['stalls', data.id] })
+				queryClient.invalidateQueries({ queryKey: ['shipping', data.id] })
 			}
 		},
 	},
@@ -58,7 +59,7 @@ export const deleteStallMutation = createMutation(
 			}
 			return null
 		},
-		onSuccess: (stallId: string) => {
+		onSuccess: (stallId: string | null) => {
 			const $ndkStore = get(ndkStore)
 
 			console.log('deleted stall', stallId)

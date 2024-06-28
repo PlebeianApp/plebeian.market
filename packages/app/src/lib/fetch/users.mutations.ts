@@ -74,7 +74,6 @@ export const userFromNostrMutation = createMutation(
 	{
 		mutationKey: [],
 		mutationFn: async ({ profile, pubkey }: { profile: NDKUserProfile; pubkey: string }) => {
-			console.log(profile, pubkey)
 			const user = await createRequest(`POST /api/v1/users/${pubkey}`, {
 				body: profile,
 			})

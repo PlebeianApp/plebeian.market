@@ -1,23 +1,20 @@
 <script lang="ts">
 	import type { NDKEvent, NDKUserProfile } from '@nostr-dev-kit/ndk'
 	import type { DisplayProduct } from '$lib/server/products.service'
-	import { NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk'
+	import { beforeNavigate } from '$app/navigation'
 	import Spinner from '$lib/components/assets/spinner.svelte'
 	import ImgPlaceHolder from '$lib/components/product/imgPlaceHolder.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
-	import Badge from '$lib/components/ui/badge/badge.svelte'
 	import Button from '$lib/components/ui/button/button.svelte'
 	import Input from '$lib/components/ui/input/input.svelte'
-	import { KindProducts, KindStalls } from '$lib/constants'
+	import { KindStalls } from '$lib/constants'
 	import { createProductsFromNostrMutation } from '$lib/fetch/products.mutations'
 	import { createProductPriceQuery, createProductQuery, createProductsByFilterQuery } from '$lib/fetch/products.queries'
 	import { stallFromNostrEvent } from '$lib/fetch/stalls.mutations'
-	import { createStallExistsQuery } from '$lib/fetch/stalls.queries'
 	import { userFromNostrMutation } from '$lib/fetch/users.mutations'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
-	import { stallsSub } from '$lib/nostrSubs/subs'
+	import { fetchProductData, fetchStallData, fetchUserData } from '$lib/nostrSubs/utils'
 	import { openDrawerForProduct } from '$lib/stores/drawer-ui'
-	import ndkStore from '$lib/stores/ndk'
 	import { cn } from '$lib/utils'
 	import { onMount } from 'svelte'
 
@@ -27,62 +24,13 @@
 	import { productEventSchema } from '../../../schema/nostr-events'
 
 	export let data: PageData
-	const { user, product } = data
-	console.log(user, product)
+	const { user, productRes } = data
 	let isMyProduct = false
 	let toDisplayProduct: Partial<DisplayProduct>
 	let userProfile: NDKUserProfile | null
 	let userProducts: DisplayProduct[]
 
-	async function fetchProductData(
-		productIdentifier: string,
-		userId: string,
-	): Promise<{
-		userProfile: NDKUserProfile | null
-		productRes: NDKEvent | null
-		stallNostrRes: NDKEvent | null
-	}> {
-		let stallExists: boolean = false
-		let stallId: string = ''
-		let stallNostrRes: NDKEvent | null = null
-		const productsFilter = {
-			kinds: [KindProducts],
-			authors: [userId],
-			'#d': [productIdentifier],
-		}
-		const productsNostrRes = await $ndkStore.fetchEvent(productsFilter, { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST })
-
-		if (productsNostrRes) {
-			const { content } = productsNostrRes
-			stallId = JSON.parse(content).stall_id
-			if (!stallId.startsWith(KindStalls.toString())) stallId = `${KindStalls}:${userId}:${stallId}`
-			createStallExistsQuery(stallId).subscribe((query) => {
-				stallExists = query.data as boolean
-			})
-		}
-
-		if (!stallExists) {
-			const fetchedStall = $stallsSub.find((nostrStall) => stallId.split(':')[2] == nostrStall.dTag)
-			const stallFilter = {
-				kinds: [KindStalls],
-				authors: [userId],
-				'#d': [stallId.split(':')[2]],
-			}
-
-			stallNostrRes = fetchedStall ? fetchedStall : await $ndkStore.fetchEvent(stallFilter)
-		}
-
-		const ndkUser = $ndkStore.getUser({
-			pubkey: userId,
-		})
-
-		userProfile = await ndkUser.fetchProfile()
-		userProfile && (userProfile.id = data.user.id)
-
-		return { stallNostrRes, userProfile, productRes: productsNostrRes }
-	}
-
-	$: productsQuery = product.exist ? createProductQuery(product.id) : undefined
+	$: productsQuery = productRes.exist ? createProductQuery(productRes.id) : undefined
 
 	$: userProfileQuery = user.exist ? createUserByIdQuery(user.id as string) : undefined
 
@@ -91,10 +39,10 @@
 	$: otherProducts = user.exist ? createProductsByFilterQuery({ userId: user.id }) : undefined
 
 	$: {
-		if (product.exist && $productsQuery?.data) {
+		if ($productsQuery?.data) {
 			toDisplayProduct = $productsQuery?.data
 		}
-		if (user.exist && $userProfileQuery?.data) {
+		if ($userProfileQuery?.data) {
 			userProfile = $userProfileQuery?.data
 		}
 		if ($otherProducts?.data) {
@@ -104,23 +52,35 @@
 
 	let selectedImage = 0
 
-	onMount(async () => {
-		if (!product.exist) {
-			const { stallNostrRes, productRes, userProfile } = await fetchProductData(product.identifier, user.id as string)
-			if (userProfile && !user.exist) await $userFromNostrMutation.mutateAsync({ profile: userProfile, pubkey: user.id as string })
-			if (stallNostrRes) {
-				const stallEvent = await stallNostrRes.toNostrEvent()
-				await $stallFromNostrEvent.mutateAsync(stallEvent)
+	async function setNostrData(
+		stallData: NDKEvent | null,
+		userData: NDKUserProfile | null,
+		productsData: NDKEvent | null,
+	): Promise<{ userInserted: boolean; stallInserted: boolean; productsInserted: boolean } | undefined> {
+		let userInserted: boolean = false
+		let stallInserted: boolean = false
+		let productsInserted: boolean = false
+		try {
+			if (userData) {
+				userData && (userData.id = user.id)
+				const userMutation = await $userFromNostrMutation.mutateAsync({ profile: userData, pubkey: user.id as string })
+				userMutation && (userInserted = true)
 			}
-			if (productRes) {
-				const parsedProduct = productEventSchema.parse(JSON.parse(productRes.content))
-				console.log('Reading parsed product', parsedProduct)
+
+			if (stallData) {
+				const stallEvent = await stallData.toNostrEvent()
+				const stallMutation = await $stallFromNostrEvent.mutateAsync(stallEvent)
+				stallMutation && (stallInserted = true)
+			}
+
+			if (productsData) {
+				const parsedProduct = productEventSchema.parse(JSON.parse(productsData.content))
 				toDisplayProduct = {
 					...parsedProduct,
 					quantity: parsedProduct.quantity as number,
 					images: parsedProduct.images?.map((image) => ({
 						createdAt: new Date(),
-						productId: product.id,
+						productId: productRes.id,
 						auctionId: null,
 						imageUrl: image,
 						imageType: 'gallery' as ProductImagesType,
@@ -128,9 +88,28 @@
 					})),
 					userId: user.id,
 				}
-				await $createProductsFromNostrMutation.mutateAsync(new Set<NDKEvent>([productRes]))
+				const productsMutation = await $createProductsFromNostrMutation.mutateAsync(new Set<NDKEvent>([productsData]))
+				productsMutation && (productsInserted = true)
 			}
+			return { userInserted, stallInserted, productsInserted }
+		} catch (e) {
+			console.error(e)
+			return undefined
 		}
+	}
+
+	onMount(async () => {
+		if (!productRes.exist && productRes.id) {
+			const { userProfile } = await fetchUserData(user.id as string)
+			const { nostrProduct } = await fetchProductData(productRes.id as string)
+			const productStallId = JSON.parse(nostrProduct?.content as string).stall_id
+			const { stallNostrRes } = await fetchStallData(`${KindStalls}:${user.id}:${productStallId}`)
+
+			await setNostrData(stallNostrRes, userProfile, nostrProduct)
+		}
+	})
+	beforeNavigate(() => {
+		toDisplayProduct.images = []
 	})
 </script>
 
@@ -157,7 +136,7 @@
 			</div>
 			<div class="flex flex-col">
 				{#if isMyProduct}
-					<Button class="w-1/4" on:click={() => openDrawerForProduct(product.id)}>Edit product</Button>
+					<Button class="w-1/4" on:click={() => openDrawerForProduct(productRes.id)}>Edit product</Button>
 				{/if}
 				<h1>{toDisplayProduct.name}</h1>
 				<h2 class=" inline-flex items-center">

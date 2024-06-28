@@ -8,7 +8,6 @@ declare module './client' {
 		[k: `GET /api/v1/shipping/${string}`]: Operation<string, 'GET', never, never, RichShippingInfo[], never>
 	}
 }
-// TODO keep working on this to make it reactive
 export const createShippingQuery = (stallId: string) =>
 	createQuery<RichShippingInfo[]>(
 		{

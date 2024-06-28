@@ -2,13 +2,13 @@
 	import type { NDKUserProfile } from '@nostr-dev-kit/ndk'
 	import type { DisplayProduct } from '$lib/server/products.service'
 	import type { RichStall } from '$lib/server/stalls.service'
-	import { NDKEvent, NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk'
+	import { NDKEvent } from '@nostr-dev-kit/ndk'
 	import ProductItem from '$lib/components/product/product-item.svelte'
 	import * as Accordion from '$lib/components/ui/accordion'
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar'
 	import Badge from '$lib/components/ui/badge/badge.svelte'
 	import { Button } from '$lib/components/ui/button'
-	import { KindProducts, KindStalls } from '$lib/constants'
+	import Skeleton from '$lib/components/ui/skeleton/skeleton.svelte'
 	import { createProductsFromNostrMutation } from '$lib/fetch/products.mutations'
 	import { createProductsByFilterQuery } from '$lib/fetch/products.queries'
 	import { createShippingQuery } from '$lib/fetch/shipping.queries'
@@ -16,9 +16,10 @@
 	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
 	import { userFromNostrMutation } from '$lib/fetch/users.mutations'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
-	import { stallsSub } from '$lib/nostrSubs/subs'
+	import { fetchProductData, fetchStallData, fetchUserData, fetchUserProductData } from '$lib/nostrSubs/utils'
 	import { openDrawerForProduct } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
+	import { getEventCoordinates } from '$lib/utils'
 	import { onMount } from 'svelte'
 
 	import type { ProductImagesType } from '@plebeian/database'
@@ -27,46 +28,10 @@
 	import { productEventSchema } from '../../../schema/nostr-events'
 
 	export let data: PageData
-	const { stall, user } = data
+	const { stall, user, appSettings } = data
 	let stallResponse: Partial<RichStall>
 	let toDisplayProducts: Partial<DisplayProduct>[]
 	let userProfile: NDKUserProfile | null
-
-	async function fetchStallData(
-		stallId: string,
-		userId: string,
-	): Promise<{
-		stallNostrRes: NDKEvent | null
-		userProfile: NDKUserProfile | null
-		products: Set<NDKEvent> | null
-	}> {
-		const fetchedStall = $stallsSub.find((nostrStall) => stallId.split(':')[2] == nostrStall.dTag)
-		const stallFilter = {
-			kinds: [KindStalls],
-			authors: [userId],
-			'#d': [stallId.split(':')[2]],
-		}
-
-		let stallNostrRes: NDKEvent | null = fetchedStall ? fetchedStall : await $ndkStore.fetchEvent(stallFilter)
-		stallResponse = JSON.parse(stallNostrRes?.content ?? '{}')
-		const ndkUser = $ndkStore.getUser({
-			pubkey: userId,
-		})
-
-		userProfile = await ndkUser.fetchProfile()
-		userProfile && (userProfile.id = data.user.id)
-		stallResponse.userId = userId
-		stallResponse.userName = userProfile?.name || userProfile?.displayName
-		stallResponse.userNip05 = userProfile?.nip05
-
-		const productsFilter = {
-			kinds: [KindProducts],
-			authors: [userId],
-		}
-		const productsNostrRes = await $ndkStore.fetchEvents(productsFilter, { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST })
-
-		return { stallNostrRes, userProfile, products: productsNostrRes }
-	}
 
 	$: stallsQuery = stall.exist
 		? createStallsByFilterQuery({
@@ -88,46 +53,97 @@
 	$: {
 		if (stall.exist) {
 			if ($productsQuery?.data) toDisplayProducts = $productsQuery?.data
-			if ($stallsQuery?.data) stallResponse = $stallsQuery?.data[0]
+			if ($stallsQuery?.data) {
+				stallResponse = $stallsQuery?.data[0]
+			}
 		}
 		if (user.exist && $userProfileQuery?.data) {
 			userProfile = $userProfileQuery?.data
 		}
 	}
 
-	onMount(async () => {
-		if (!stall.exist) {
-			const { stallNostrRes, userProfile, products } = await fetchStallData(stall.id, user.id as string)
-			if (userProfile && !user.exist) await $userFromNostrMutation.mutateAsync({ profile: userProfile, pubkey: user.id as string })
-			if (stallNostrRes) {
-				const stallEvent = await stallNostrRes.toNostrEvent()
-				await $stallFromNostrEvent.mutateAsync(stallEvent)
-				if (products?.size) {
-					const stallProducts = new Set<NDKEvent>()
-					toDisplayProducts = []
+	async function setNostrData(
+		stallData: NDKEvent | null,
+		userData: NDKUserProfile | null,
+		productsData: Set<NDKEvent> | null,
+	): Promise<{ userInserted: boolean; stallInserted: boolean; productsInserted: boolean } | undefined> {
+		let userInserted: boolean = false
+		let stallInserted: boolean = false
+		let productsInserted: boolean = false
+		try {
+			if (userData) {
+				userData && (userData.id = user.id)
+				const userMutation = await $userFromNostrMutation.mutateAsync({ profile: userData, pubkey: user.id as string })
+				userMutation && (userInserted = true)
+			}
 
-					for (const event of products) {
-						const product = productEventSchema.parse(JSON.parse(event.content))
-						if (product.stall_id === stall.id.split(':')[2]) {
-							stallProducts.add(event)
-							toDisplayProducts.push({
-								...product,
-								quantity: product.quantity as number,
-								images: product.images?.map((image) => ({
-									createdAt: new Date(),
-									productId: product.id,
-									auctionId: null,
-									imageUrl: image,
-									imageType: 'gallery' as ProductImagesType,
-									imageOrder: 0,
-								})),
-								userId: user.id,
-							})
-						}
-					}
-
-					await $createProductsFromNostrMutation.mutateAsync(stallProducts)
+			if (stallData) {
+				stallResponse = JSON.parse(stallData?.content ?? '{}')
+				stallResponse.userId = user.id
+				stallResponse.userName = userData?.name || userData?.displayName
+				stallResponse.userNip05 = userData?.nip05
+				const stallEvent = await stallData.toNostrEvent()
+				const stallMutation = await $stallFromNostrEvent.mutateAsync(stallEvent)
+				if (stallMutation) {
+					shippingQuery = createShippingQuery(stall.id)
+					stallInserted = true
 				}
+			}
+			if (productsData?.size) {
+				const stallProducts = new Set<NDKEvent>()
+				toDisplayProducts = []
+				for (const event of productsData) {
+					const product = productEventSchema.parse(JSON.parse(event.content))
+					if (product.stall_id == stall.id.split(':')[2]) {
+						stallProducts.add(event)
+						toDisplayProducts.push({
+							...product,
+							quantity: product.quantity as number,
+							images: product.images?.map((image) => ({
+								createdAt: new Date(),
+								productId: product.id,
+								auctionId: null,
+								imageUrl: image,
+								imageType: 'gallery' as ProductImagesType,
+								imageOrder: 0,
+							})),
+							userId: user.id,
+						})
+					}
+				}
+				const productsMutation = await $createProductsFromNostrMutation.mutateAsync(stallProducts)
+				productsMutation && (productsInserted = true)
+			}
+			return { userInserted, stallInserted, productsInserted }
+		} catch (e) {
+			console.error(e)
+			return undefined
+		}
+	}
+
+	onMount(async () => {
+		if (appSettings.allowRegister) {
+			if (!stall.exist) {
+				const { stallNostrRes } = await fetchStallData(stall.id)
+				const { userProfile } = await fetchUserData(user.id as string)
+				const { products } = await fetchUserProductData(user.id as string)
+				if (products?.size) await setNostrData(stallNostrRes, userProfile, products)
+			} else {
+				fetchUserProductData(user.id as string).then((data) => {
+					const { products } = data
+					const newProducts = new Set(
+						[...(products as Set<NDKEvent>)].filter((product) => {
+							const stallId = JSON.parse(product.content).stall_id
+							if (stallId == stall.id.split(':')[2]) {
+								const productId = getEventCoordinates(product).coordinates
+								return !toDisplayProducts.some((displayProduct) => displayProduct.id?.includes(productId))
+							}
+						}),
+					)
+					setNostrData(null, null, newProducts).then((data) => {
+						data?.productsInserted && $productsQuery?.refetch()
+					})
+				})
 			}
 		}
 	})
@@ -141,11 +157,11 @@
 	}
 </script>
 
-{#if stallResponse}
-	<div class="flex min-h-screen w-full flex-col bg-muted/40">
-		<div class="flex flex-col">
-			<main class="text-black">
-				<div class="flex w-full flex-col items-center bg-black py-20 text-center text-white">
+<div class="flex min-h-screen w-full flex-col bg-muted/40">
+	<div class="flex flex-col">
+		<main class="text-black">
+			<div class="flex w-full flex-col items-center bg-black py-20 text-center text-white">
+				{#if stallResponse}
 					<section class="w-fit">
 						<a href={`/p/${stallResponse.userNip05 ? stallResponse.userNip05 : stallResponse.userId}`} class="flex flex-col items-center">
 							<Avatar>
@@ -184,9 +200,14 @@
 					{#if isMyStall}
 						<Button class="mt-4" on:click={() => openDrawerForProduct(stall.id)}>Edit stall</Button>
 					{/if}
-				</div>
-				<div class="px-4 py-20 lg:px-12">
-					<div class="container">
+				{:else}
+					<Skeleton class=" h-32" />
+				{/if}
+			</div>
+
+			<div class="px-4 py-20 lg:px-12">
+				<div class="container">
+					{#if stallResponse}
 						<h2>Products</h2>
 						<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
 							{#if toDisplayProducts}
@@ -195,9 +216,16 @@
 								{/each}
 							{/if}
 						</div>
-					</div>
+					{:else}
+						<div class=" flex gap-2">
+							<Skeleton class=" h-64 w-full" />
+							<Skeleton class=" h-64 w-full" />
+							<Skeleton class=" h-64 w-full" />
+							<Skeleton class=" h-64 w-full" />
+						</div>
+					{/if}
 				</div>
-			</main>
-		</div>
+			</div>
+		</main>
 	</div>
-{/if}
+</div>

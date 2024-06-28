@@ -1,13 +1,10 @@
 import { error } from '@sveltejs/kit'
 import { KindProducts } from '$lib/constants'
 import { productExists } from '$lib/server/products.service'
-import { stallExists } from '$lib/server/stalls.service'
 import { getUserIdByNip05, userExists } from '$lib/server/users.service.js'
 import ndkStore from '$lib/stores/ndk'
 import { NIP05_REGEX } from 'nostr-tools/nip05'
 import { get } from 'svelte/store'
-
-import { exists } from '@plebeian/database'
 
 import type { PageServerLoad } from './$types'
 
@@ -70,7 +67,7 @@ export const load: PageServerLoad = async ({ params }) => {
 		console.warn(JSON.stringify(e))
 	}
 	return {
-		product: { id: _productId, identifier: _productIdentifier, exist: _productExists },
+		productRes: { id: _productId, identifier: _productIdentifier, exist: _productExists },
 		user: { id: userId, exist: _userExists },
 	}
 }
