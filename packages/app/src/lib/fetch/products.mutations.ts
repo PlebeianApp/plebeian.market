@@ -145,6 +145,10 @@ export const createProductsFromNostrMutation = createMutation(
 		onSuccess: (data: DisplayProduct[] | undefined | null) => {
 			console.log('Products inserted in db successfully: ', data?.length)
 			queryClient.invalidateQueries({ queryKey: ['products'] })
+			if (data) {
+				console.log('stallID', data[0].stallId)
+				queryClient.invalidateQueries({ queryKey: ['shipping', data[0].stallId] })
+			}
 		},
 	},
 	queryClient,

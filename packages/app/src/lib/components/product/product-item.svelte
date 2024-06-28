@@ -41,6 +41,7 @@
 	{:else}
 		<ImgPlaceHolder imageType={'thumbnail'} />
 	{/if}
+	<!-- TODO Improve this, sometimes the product id of some nostr events its illformed -->
 	<a href={userNip05 ? `/products/${userNip05}/${identifier}` : `/products/${id}`}>
 		<Card.Footer class="cursor-pointer flex flex-col gap-2 justify-end p-4 pb-2">
 			<div>

@@ -50,10 +50,7 @@ export const load: PageServerLoad = async ({ params }) => {
 	} else {
 		userId = root.split(':')[1]
 		_stallIdentifier = root.split(':')[2]
-		const userRes = await userExists(userId)
-		if (userRes) {
-			_userExists = true
-		}
+		_userExists = await userExists(userId)
 		stallId = root
 	}
 

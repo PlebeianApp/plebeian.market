@@ -42,6 +42,12 @@ export const stallsFilterSchema = generalFilterSchema.extend({
 
 export type StallsFilter = z.infer<typeof stallsFilterSchema>
 
+export const shippingFilterSchema = generalFilterSchema.extend({
+	stallId: z.string().optional(),
+})
+
+export type ShippingFilter = z.infer<typeof shippingFilterSchema>
+
 export const catsFilterSchema = generalFilterSchema.extend({
 	userId: z.string().optional(),
 	catId: z.string().optional(),

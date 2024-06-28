@@ -15,7 +15,6 @@
 	import { userFromNostrMutation } from '$lib/fetch/users.mutations'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
 	import { normalizeStallData } from '$lib/nostrSubs/subs'
-	import { productsFilterSchema, stallsFilterSchema } from '$lib/schema'
 	import { openDrawerForNewProduct, openDrawerForNewStall } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
 	import { copyToClipboard } from '$lib/utils'
@@ -30,8 +29,9 @@
 	let toDisplayProducts: Partial<DisplayProduct>[]
 	export let data: PageData
 	const { id, exist } = data
+
 	// TODO keep working on this
-	async function fetchStallData(userId: string): Promise<{
+	async function fetchUserData(userId: string): Promise<{
 		stallNostrRes: Set<NDKEvent> | null
 		userProfile: NDKUserProfile | null
 		products: Set<NDKEvent> | null
@@ -48,7 +48,7 @@
 		})
 
 		userProfile = await ndkUser.fetchProfile()
-
+		userProfile && (userProfile.id = id as string)
 		const productsFilter = {
 			kinds: [KindProducts],
 			authors: [userId],
@@ -58,28 +58,38 @@
 		return { stallNostrRes, userProfile, products: productsNostrRes }
 	}
 
-	async function fetchStallDataFromDb() {
-		createUserByIdQuery(id as string).subscribe((userRes) => {
-			if (userRes.data) {
-				userProfile = userRes.data
-			}
-		})
-		createStallsByFilterQuery(stallsFilterSchema.parse({ userId: id })).subscribe((stallRes) => {
-			if (stallRes.data) {
-				stalls = stallRes.data
-			}
-		})
-		createProductsByFilterQuery(productsFilterSchema.parse({ userId: id })).subscribe((productsRes) => {
-			if (productsRes.data?.length) {
-				toDisplayProducts = productsRes.data
-			}
-		})
+	let isMe = false
+
+	// $: categoriesQuery = createCategoriesByFilterQuery({ userId: $ndkStore.activeUser?.pubkey ? $ndkStore.activeUser?.pubkey : pubkey })
+
+	$: stallsQuery = exist
+		? createStallsByFilterQuery({
+				userId: $ndkStore.activeUser?.pubkey ? $ndkStore.activeUser?.pubkey : (id as string),
+			})
+		: undefined
+
+	$: productsQuery = exist
+		? createProductsByFilterQuery({
+				userId: $ndkStore.activeUser?.pubkey ? $ndkStore.activeUser?.pubkey : (id as string),
+			})
+		: undefined
+
+	$: userProfileQuery = exist
+		? createUserByIdQuery($ndkStore.activeUser?.pubkey ? $ndkStore.activeUser?.pubkey : (id as string))
+		: undefined
+
+	$: {
+		if (exist && $userProfileQuery?.data) {
+			userProfile = $userProfileQuery?.data
+		}
+		if ($ndkStore.activeUser?.pubkey) {
+			isMe = $ndkStore.activeUser.pubkey === (id as string)
+		}
 	}
 
 	onMount(async () => {
 		if (!exist) {
-			const { stallNostrRes, userProfile, products } = await fetchStallData(id as string)
-			console.log(stallNostrRes, userProfile, products)
+			const { stallNostrRes, userProfile, products } = await fetchUserData(id as string)
 			if (userProfile) await $userFromNostrMutation.mutateAsync({ profile: userProfile, pubkey: id as string })
 			if (stallNostrRes) stalls = [...stallNostrRes].map(normalizeStallData).filter((stall): stall is Partial<RichStall> => stall !== null)
 			if (products?.size) {
@@ -98,28 +108,8 @@
 					}
 				})
 			}
-		} else {
-			await fetchStallDataFromDb()
 		}
 	})
-
-	let isMe = false
-
-	// $: categoriesQuery = createCategoriesByFilterQuery({ userId: $ndkStore.activeUser?.pubkey ? $ndkStore.activeUser?.pubkey : pubkey })
-
-	$: stallsQuery = createStallsByFilterQuery({
-		userId: $ndkStore.activeUser?.pubkey ? $ndkStore.activeUser?.pubkey : (id as string),
-	})
-
-	$: productsQuery = createProductsByFilterQuery({
-		userId: $ndkStore.activeUser?.pubkey ? $ndkStore.activeUser?.pubkey : (id as string),
-	})
-
-	$: {
-		if ($ndkStore.activeUser?.pubkey) {
-			isMe = $ndkStore.activeUser.pubkey === (id as string)
-		}
-	}
 </script>
 
 {#if userProfile}
@@ -166,7 +156,7 @@
 					</div>
 				</div>
 			{/if} -->
-				{#if $stallsQuery.data}
+				{#if $stallsQuery?.data}
 					<div class="px-4 py-20 lg:px-12">
 						<div class="container">
 							<h2>Stalls</h2>
@@ -179,7 +169,7 @@
 					</div>
 				{/if}
 
-				{#if $productsQuery.data}
+				{#if $productsQuery?.data}
 					<div class="px-4 py-20 lg:px-12">
 						<div class="container">
 							<h2>Products</h2>

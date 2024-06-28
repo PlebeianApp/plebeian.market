@@ -6,18 +6,22 @@
 	import ProductItem from '$lib/components/product/product-item.svelte'
 	import * as Accordion from '$lib/components/ui/accordion'
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar'
+	import Badge from '$lib/components/ui/badge/badge.svelte'
 	import { Button } from '$lib/components/ui/button'
 	import { KindProducts, KindStalls } from '$lib/constants'
 	import { createProductsFromNostrMutation } from '$lib/fetch/products.mutations'
 	import { createProductsByFilterQuery } from '$lib/fetch/products.queries'
+	import { createShippingQuery } from '$lib/fetch/shipping.queries'
 	import { stallFromNostrEvent } from '$lib/fetch/stalls.mutations'
 	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
 	import { userFromNostrMutation } from '$lib/fetch/users.mutations'
+	import { createUserByIdQuery } from '$lib/fetch/users.queries'
 	import { stallsSub } from '$lib/nostrSubs/subs'
-	import { productsFilterSchema, stallsFilterSchema } from '$lib/schema'
 	import { openDrawerForProduct } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
 	import { onMount } from 'svelte'
+
+	import type { ProductImagesType } from '@plebeian/database'
 
 	import type { PageData } from './$types'
 	import { productEventSchema } from '../../../schema/nostr-events'
@@ -64,17 +68,31 @@
 		return { stallNostrRes, userProfile, products: productsNostrRes }
 	}
 
-	async function fetchStallDataFromDb(stallId: string) {
-		createStallsByFilterQuery(stallsFilterSchema.parse({ stallId: stallId })).subscribe((stallRes) => {
-			if (stallRes.data) {
-				stallResponse = stallRes.data[0]
-			}
-		})
-		createProductsByFilterQuery(productsFilterSchema.parse({ stallId: stallId })).subscribe((productsRes) => {
-			if (productsRes.data?.length) {
-				toDisplayProducts = productsRes.data
-			}
-		})
+	$: stallsQuery = stall.exist
+		? createStallsByFilterQuery({
+				userId: user.id,
+				stallId: stall.id,
+			})
+		: undefined
+
+	$: productsQuery = stall.exist
+		? createProductsByFilterQuery({
+				stallId: stall.id,
+			})
+		: undefined
+
+	$: userProfileQuery = stall.exist ? createUserByIdQuery(user.id as string) : undefined
+
+	$: shippingQuery = stall.exist ? createShippingQuery(stall.id) : undefined
+
+	$: {
+		if (stall.exist) {
+			if ($productsQuery?.data) toDisplayProducts = $productsQuery?.data
+			if ($stallsQuery?.data) stallResponse = $stallsQuery?.data[0]
+		}
+		if (user.exist && $userProfileQuery?.data) {
+			userProfile = $userProfileQuery?.data
+		}
 	}
 
 	onMount(async () => {
@@ -85,26 +103,31 @@
 				const stallEvent = await stallNostrRes.toNostrEvent()
 				await $stallFromNostrEvent.mutateAsync(stallEvent)
 				if (products?.size) {
-					toDisplayProducts = [...products].map((event) => {
+					const stallProducts = new Set<NDKEvent>()
+					toDisplayProducts = []
+
+					for (const event of products) {
 						const product = productEventSchema.parse(JSON.parse(event.content))
-						return {
-							...product,
-							images: product.images?.map((image) => ({
-								createdAt: new Date(),
-								productId: product.id,
-								auctionId: null,
-								imageUrl: image,
-								imageType: 'gallery',
-								imageOrder: 0,
-							})),
-							userId: user.id,
+						if (product.stall_id === stall.id.split(':')[2]) {
+							stallProducts.add(event)
+							toDisplayProducts.push({
+								...product,
+								images: product.images?.map((image) => ({
+									createdAt: new Date(),
+									productId: product.id,
+									auctionId: null,
+									imageUrl: image,
+									imageType: 'gallery' as ProductImagesType,
+									imageOrder: 0,
+								})),
+								userId: user.id,
+							})
 						}
-					})
-					await $createProductsFromNostrMutation.mutateAsync(products)
+					}
+
+					await $createProductsFromNostrMutation.mutateAsync(stallProducts)
 				}
 			}
-		} else {
-			await fetchStallDataFromDb(stall.id)
 		}
 	})
 
@@ -139,12 +162,19 @@
 							<Accordion.Trigger>More info</Accordion.Trigger>
 							<Accordion.Content>
 								<div class=" flex flex-col gap-2 items-start">
-									<span>Shipping zones</span>
-									<!-- <section class=" flex gap-2 flex-wrap">
-									{#each zones as zone}
-										<Badge variant="secondary">{zone.region}</Badge>
-									{/each}
-									</section>-->
+									{#if $shippingQuery?.data}
+										<span class=" font-bold">Shipping zones</span>
+										<section class=" flex gap-2 flex-wrap">
+											{#each $shippingQuery.data as shipping}
+												{#if shipping.name}
+													<span>{shipping.name}</span>
+												{/if}
+												{#each shipping.zones as zone}
+													<Badge variant="secondary">{zone.country ? zone.country : zone.region}</Badge>
+												{/each}
+											{/each}
+										</section>
+									{/if}
 								</div>
 							</Accordion.Content>
 						</Accordion.Item>

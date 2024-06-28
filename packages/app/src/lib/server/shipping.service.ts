@@ -23,7 +23,7 @@ export const getShippingByStallId = async (stallId: string): Promise<RichShippin
 
 	const shippingInfos: RichShippingInfo[] = shippingResult.map((shipping) => ({
 		id: shipping.id,
-		name: shipping.name,
+		name: shipping.name as string,
 		cost: shipping.cost,
 		isDefault: shipping.isDefault,
 		zones: shipping.shippingZones.map((zone) => ({
@@ -31,7 +31,6 @@ export const getShippingByStallId = async (stallId: string): Promise<RichShippin
 			country: zone.countryCode,
 		})),
 	}))
-
 	return shippingInfos
 }
 

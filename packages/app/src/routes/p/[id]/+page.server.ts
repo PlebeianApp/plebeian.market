@@ -1,4 +1,4 @@
-import { getUserIdByNip05 } from '$lib/server/users.service.js'
+import { getUserIdByNip05, userExists } from '$lib/server/users.service.js'
 import ndkStore from '$lib/stores/ndk'
 import { NIP05_REGEX } from 'nostr-tools/nip05'
 import { get } from 'svelte/store'
@@ -23,8 +23,10 @@ export const load: PageServerLoad = async ({ params }) => {
 				_userExists = false
 			}
 		}
+	} else {
+		userId = id
+		_userExists = await userExists(userId)
 	}
-
 	return {
 		id: userId,
 		exist: _userExists,

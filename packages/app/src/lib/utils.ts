@@ -1,7 +1,7 @@
-import type { NDKEvent, NDKKind, NDKTag, NDKUserProfile, NostrEvent } from '@nostr-dev-kit/ndk'
 import type { ClassValue } from 'clsx'
 import type { VerifiedEvent } from 'nostr-tools'
 import type { TransitionConfig } from 'svelte/transition'
+import { type NDKEvent, type NDKKind, type NDKTag, type NDKUserProfile, type NostrEvent } from '@nostr-dev-kit/ndk'
 import ndkStore from '$lib/stores/ndk'
 import { clsx } from 'clsx'
 import { toast } from 'svelte-sonner'
