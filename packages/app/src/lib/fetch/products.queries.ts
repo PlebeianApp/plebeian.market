@@ -19,7 +19,7 @@ export const createProductQuery = (productId: string) =>
 			queryKey: ['products', productId],
 			queryFn: async () => {
 				return await createRequest(`GET /api/v1/products/${productId}`, {
-					auth: true,
+					auth: false,
 				})
 			},
 		},

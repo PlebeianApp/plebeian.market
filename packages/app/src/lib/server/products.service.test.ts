@@ -31,7 +31,7 @@ describe('products service', () => {
 			description: 'testDescription',
 			price: 'testPrice',
 			currency: 'testCurrency',
-			stockQty: 1,
+			quantity: 1,
 			extraCost: '0',
 			productType: 'simple',
 			parentId: 'testParentId',
@@ -49,7 +49,7 @@ describe('products service', () => {
 			description: 'testDescription',
 			price: NaN,
 			currency: 'testCurrency',
-			stockQty: 1,
+			quantity: 1,
 			images: [],
 			stallId: 'testStallId',
 		})
@@ -137,7 +137,7 @@ describe('products service', () => {
 			images: expect.any(Array),
 			name: 'Hello Product',
 			price: 133,
-			stockQty: 6,
+			quantity: 6,
 		})
 	})
 
@@ -171,7 +171,7 @@ describe('products service', () => {
 			userId: devUser1.pk,
 			userNip05: expect.any(String),
 			price: targetProduct.price,
-			stockQty: targetProduct.stockQty,
+			quantity: targetProduct.quantity,
 		})
 	})
 })

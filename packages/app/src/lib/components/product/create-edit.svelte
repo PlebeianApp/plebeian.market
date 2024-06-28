@@ -218,7 +218,7 @@
 					<div class="grid w-full items-center gap-1.5">
 						<Label for="quantity" class="font-bold">Quantity</Label>
 						<Input
-							value={product?.stockQty ?? ''}
+							value={product?.quantity ?? ''}
 							required
 							class="border-2 border-black"
 							type="number"

@@ -14,7 +14,7 @@ import { getStallById } from './stalls.service'
 
 export type DisplayAuction = Pick<
 	Auction,
-	'id' | 'description' | 'productName' | 'currency' | 'stockQty' | 'startingBidAmount' | 'identifier' | 'userId' | 'status'
+	'id' | 'description' | 'productName' | 'currency' | 'quantity' | 'startingBidAmount' | 'identifier' | 'userId' | 'status'
 > & {
 	createdAt: string
 	startDate: Date | null
@@ -107,7 +107,7 @@ export const createAuction = async (auctionEvent: NostrEvent, auctionStatus: Auc
 		endDate: startDate ? add(startDate, { seconds: parsedAuction.duration }) : null,
 		currency: stall.currency,
 		extraCost: extraCost.toString(),
-		stockQty: 1,
+		quantity: 1,
 	}
 
 	const insertSpecs: ProductMeta[] | undefined = parsedAuction.specs?.map((spec) => ({
@@ -172,7 +172,7 @@ export const updateAuction = async (auctionId: string, auctionEvent: NostrEvent)
 		endDate: add(startDate, { seconds: parsedAuction.duration }),
 		currency: stall.currency,
 		extraCost: extraCost.toString(),
-		stockQty: 1,
+		quantity: 1,
 	}
 
 	const [auctionResult] = await db

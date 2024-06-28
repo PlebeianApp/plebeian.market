@@ -16,6 +16,7 @@
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
 	import { normalizeStallData } from '$lib/nostrSubs/subs'
 	import { openDrawerForNewProduct, openDrawerForNewStall } from '$lib/stores/drawer-ui'
+	import ndkStore from '$lib/stores/ndk'
 	import { copyToClipboard } from '$lib/utils'
 	import { npubEncode } from 'nostr-tools/nip19'
 	import { onMount } from 'svelte'
@@ -41,7 +42,6 @@
 		}
 
 		let stallNostrRes = await $ndkStore.fetchEvents(stallFilter, { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST })
-
 		const ndkUser = $ndkStore.getUser({
 			pubkey: userId,
 		})
@@ -53,13 +53,10 @@
 			authors: [userId],
 		}
 		const productsNostrRes = await $ndkStore.fetchEvents(productsFilter, { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST })
-
 		return { stallNostrRes, userProfile, products: productsNostrRes }
 	}
 
 	let isMe = false
-
-	// $: categoriesQuery = createCategoriesByFilterQuery({ userId: $ndkStore.activeUser?.pubkey ? $ndkStore.activeUser?.pubkey : pubkey })
 
 	$: stallsQuery = exist
 		? createStallsByFilterQuery({
@@ -76,12 +73,14 @@
 	$: userProfileQuery = exist
 		? createUserByIdQuery($ndkStore.activeUser?.pubkey ? $ndkStore.activeUser?.pubkey : (id as string))
 		: undefined
-  
-  // $: categoriesQuery = createCategoriesByFilterQuery({ userId: pubkey })
+
+	// $: categoriesQuery = createCategoriesByFilterQuery({ userId: pubkey })
 
 	$: {
-		if (exist && $userProfileQuery?.data) {
-			userProfile = $userProfileQuery?.data
+		if (exist) {
+			if ($userProfileQuery?.data) userProfile = $userProfileQuery?.data
+			if ($stallsQuery?.data) stalls = $stallsQuery.data
+			if ($productsQuery?.data) toDisplayProducts = $productsQuery?.data
 		}
 		if ($ndkStore.activeUser?.pubkey) {
 			isMe = $ndkStore.activeUser.pubkey === (id as string)
@@ -157,12 +156,12 @@
 					</div>
 				</div>
 			{/if} -->
-				{#if $stallsQuery?.data}
+				{#if stalls}
 					<div class="px-4 py-20 lg:px-12">
 						<div class="container">
 							<h2>Stalls</h2>
 							<div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-								{#each $stallsQuery.data as item}
+								{#each stalls as item}
 									<StallItem stall={item} />
 								{/each}
 							</div>
@@ -170,12 +169,12 @@
 					</div>
 				{/if}
 
-				{#if $productsQuery?.data}
+				{#if toDisplayProducts}
 					<div class="px-4 py-20 lg:px-12">
 						<div class="container">
 							<h2>Products</h2>
 							<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-								{#each $productsQuery.data as item}
+								{#each toDisplayProducts as item}
 									<ProductItem product={item} />
 								{/each}
 							</div>

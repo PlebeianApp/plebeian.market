@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "df97b6d9-e157-4602-8661-ba932ee118f9",
+  "id": "e820ddf5-4553-4211-b5d4-72c4228de028",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "app_settings": {
@@ -259,8 +259,8 @@
           "notNull": true,
           "autoincrement": false
         },
-        "stock_qty": {
-          "name": "stock_qty",
+        "quantity": {
+          "name": "quantity",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
@@ -1347,8 +1347,8 @@
           "notNull": true,
           "autoincrement": false
         },
-        "stock_qty": {
-          "name": "stock_qty",
+        "quantity": {
+          "name": "quantity",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,

@@ -54,7 +54,7 @@ export const createUserByIdQuery = (id: string) =>
 export const createUserExistsQuery = (id: string) =>
 	createQuery<boolean>(
 		{
-			queryKey: ['users', id],
+			queryKey: ['users', 'exists', id],
 			queryFn: async () => {
 				const user = await createRequest(`GET /api/v1/users/${id}?exists`, {})
 				return user

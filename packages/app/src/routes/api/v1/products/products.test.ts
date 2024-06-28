@@ -82,7 +82,7 @@ describe('/products', () => {
 	// 		images: ['http://example.com/image1.jpg', 'http://example.com/image2.jpg'],
 	// 		name: 'Hello Product',
 	// 		price: 133,
-	// 		stockQty: 6,
+	// 		quantity: 6,
 	// 	})
 	// })
 

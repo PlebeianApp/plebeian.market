@@ -27,7 +27,7 @@ import { productEventSchema } from '../../schema/nostr-events'
 import { getStallById } from './stalls.service'
 import { getNip05ByUserId } from './users.service'
 
-export type DisplayProduct = Pick<Product, 'id' | 'description' | 'currency' | 'stockQty' | 'userId' | 'identifier' | 'stallId'> & {
+export type DisplayProduct = Pick<Product, 'id' | 'description' | 'currency' | 'quantity' | 'userId' | 'identifier' | 'stallId'> & {
 	name: Product['productName']
 	userNip05: string | null
 	createdAt: string
@@ -48,7 +48,7 @@ export const toDisplayProduct = async (product: Product): Promise<DisplayProduct
 		description: product.description,
 		price: parseFloat(product.price),
 		currency: product.currency,
-		stockQty: product.stockQty,
+		quantity: product.quantity,
 		images: images,
 		stallId: product.stallId,
 	}
@@ -125,7 +125,7 @@ export const getProductById = async (productId: string): Promise<DisplayProduct>
 		description: productResult.description,
 		price: parseFloat(productResult.price),
 		currency: productResult.currency,
-		stockQty: productResult.stockQty,
+		quantity: productResult.quantity,
 		images: images,
 		stallId: productResult.stallId,
 	}
@@ -135,18 +135,18 @@ const preparedProductsByCatId = db
 	.select({ ...getTableColumns(products) })
 	.from(products)
 	.innerJoin(productCategories, eq(products.id, productCategories.productId))
-	.where(eq(productCategories.catId, sql.placeholder('catId')))
+	.where(eq(productCategories.category, sql.placeholder('catId')))
 	.limit(sql.placeholder('limit'))
 	.offset(sql.placeholder('offset'))
 	.prepare()
 
 export const getProductsByCatId = async (filter: ProductsFilter): Promise<DisplayProduct[]> => {
-	if (!filter.catId) {
+	if (!filter.category) {
 		throw new Error('Category ID must be provided')
 	}
 
 	const productRes = await preparedProductsByCatId.execute({
-		catId: filter.catId,
+		catId: filter.category,
 		limit: filter.pageSize,
 		offset: (filter.page - 1) * filter.pageSize,
 	})
@@ -155,33 +155,6 @@ export const getProductsByCatId = async (filter: ProductsFilter): Promise<Displa
 		return await Promise.all(productRes.map(toDisplayProduct))
 	}
 	error(404, 'not found')
-}
-
-const preparedProductsByCatName = db
-	.select({ ...getTableColumns(products) })
-	.from(products)
-	.innerJoin(productCategories, eq(products.id, productCategories.productId))
-	.innerJoin(categories, eq(productCategories.catId, categories.id))
-	.where(eq(categories.name, sql.placeholder('catName')))
-	.limit(sql.placeholder('limit'))
-	.offset(sql.placeholder('offset'))
-	.prepare()
-
-export const getProductsByCatName = async (filter: ProductsFilter): Promise<DisplayProduct[]> => {
-	if (!filter.catName) {
-		throw new Error('Category Name must be provided')
-	}
-
-	const productRes = await preparedProductsByCatName.execute({
-		catName: filter.catName,
-		limit: filter.pageSize,
-		offset: (filter.page - 1) * filter.pageSize,
-	})
-
-	if (productRes) {
-		return await Promise.all(productRes.map(toDisplayProduct))
-	}
-	throw error(404, 'not found')
 }
 
 export const createProduct = async (productEvent: NostrEvent) => {
@@ -217,7 +190,7 @@ export const createProduct = async (productEvent: NostrEvent) => {
 		parentId: parentId,
 		userId: productEvent.pubkey,
 		stallId: parsedProduct.data.stall_id,
-		stockQty: parsedProduct.data.quantity ?? 0,
+		quantity: parsedProduct.data.quantity ?? 0,
 	}
 	const insertSpecs: ProductMeta[] | undefined = parsedProduct.data.specs?.map((spec) => ({
 		id: createId(),
@@ -314,7 +287,7 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 				parentId: parentId,
 				userId: productEvent.pubkey,
 				stallId: stall.id,
-				stockQty: parsedProduct.quantity ?? 0,
+				quantity: parsedProduct.quantity ?? 0,
 			}
 
 			const insertSpecs: ProductMeta[] | undefined = parsedProduct.specs?.map((spec) => ({
@@ -384,7 +357,7 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 		extraCost: parsedProductData?.shipping?.length ? parsedProductData?.shipping[0].cost?.toString() : String(0),
 		stallId: parsedProductData?.stall_id,
 		productName: parsedProductData?.name,
-		stockQty: parsedProductData?.quantity !== null ? parsedProductData?.quantity : undefined,
+		quantity: parsedProductData?.quantity !== null ? parsedProductData?.quantity : undefined,
 	}
 
 	const existingImages = await getImagesByProductId(productId)
@@ -451,7 +424,9 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 		await db.delete(productCategories).where(eq(productCategories.productId, productId)).execute()
 		await db
 			.insert(productCategories)
-			.values(insertedCategories.map(({ name }) => ({ productId: insertProduct.id, userId: productEvent.pubkey, category: name })))
+			.values(
+				insertedCategories.map(({ name }) => ({ productId: insertProduct.id as string, userId: productEvent.pubkey, category: name })),
+			)
 			.execute()
 	}
 
@@ -509,4 +484,13 @@ export const getProductsByCatName = async (filter: ProductsFilter): Promise<Disp
 		return await Promise.all(productRes.map(toDisplayProduct))
 	}
 	throw error(404, 'not found')
+}
+
+export const productExists = async (productId: string): Promise<boolean> => {
+	const result = await db
+		.select({ id: sql`1` })
+		.from(products)
+		.where(eq(products.id, productId))
+		.limit(1)
+	return result.length > 0
 }

@@ -144,9 +144,8 @@ export const createProductsFromNostrMutation = createMutation(
 		},
 		onSuccess: (data: DisplayProduct[] | undefined | null) => {
 			console.log('Products inserted in db successfully: ', data?.length)
-			queryClient.invalidateQueries({ queryKey: ['products'] })
 			if (data) {
-				console.log('stallID', data[0].stallId)
+				queryClient.invalidateQueries({ queryKey: ['products', data[0].userId] })
 				queryClient.invalidateQueries({ queryKey: ['shipping', data[0].stallId] })
 			}
 		},
@@ -168,7 +167,7 @@ export const deleteProductMutation = createMutation(
 			}
 			return null
 		},
-		onSuccess: (productId: string) => {
+		onSuccess: (productId: string | null) => {
 			const $ndkStore = get(ndkStore)
 			queryClient.invalidateQueries({ queryKey: ['products', $ndkStore.activeUser?.pubkey] })
 			queryClient.invalidateQueries({ queryKey: ['categories', $ndkStore.activeUser?.pubkey] })

@@ -184,7 +184,7 @@ const main = async () => {
 					isDigital: faker.datatype.boolean({ probability: 0.8 }),
 					parentId: null,
 					extraCost: faker.finance.amount(),
-					stockQty: faker.number.int({ min: 0, max: 100 }),
+					quantity: faker.number.int({ min: 0, max: 100 }),
 				} as Product
 			})
 		})
@@ -250,7 +250,7 @@ const main = async () => {
 				description: faker.commerce.productDescription(),
 				productType: faker.helpers.arrayElement(Object.values(PRODUCT_TYPES)),
 				currency: faker.helpers.arrayElement(CURRENCIES),
-				stockQty: faker.number.int(),
+				quantity: faker.number.int(),
 				parentId: null,
 				startingBidAmount: faker.finance.amount(),
 				startDate: faker.date.recent(),

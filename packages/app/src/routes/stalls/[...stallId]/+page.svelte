@@ -112,6 +112,7 @@
 							stallProducts.add(event)
 							toDisplayProducts.push({
 								...product,
+								quantity: product.quantity as number,
 								images: product.images?.map((image) => ({
 									createdAt: new Date(),
 									productId: product.id,

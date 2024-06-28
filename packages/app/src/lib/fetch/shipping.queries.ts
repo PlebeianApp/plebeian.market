@@ -14,7 +14,6 @@ export const createShippingQuery = (stallId: string) =>
 		{
 			queryKey: ['shipping', stallId],
 			queryFn: async () => {
-				console.log('stallID', stallId)
 				const response = await createRequest(`GET /api/v1/shipping/${stallId}`, {})
 				return response
 			},

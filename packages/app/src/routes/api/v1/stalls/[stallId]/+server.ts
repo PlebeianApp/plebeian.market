@@ -8,7 +8,7 @@ import { createStall, deleteStall, getStallById, stallExists, updateStall } from
 import type { RequestHandler } from './$types'
 
 export const GET: RequestHandler = async ({ params, url: { searchParams } }) => {
-	if (!searchParams.has('exists')) {
+	if (searchParams.has('exists')) {
 		return json(await stallExists(params.stallId))
 	}
 	return json(await getStallById(params.stallId))

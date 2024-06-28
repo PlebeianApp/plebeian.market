@@ -96,7 +96,7 @@ describe('auctions service', () => {
 			startDate: expect.any(Date),
 			startingBidAmount: 100,
 			status: 'inactive',
-			stockQty: 1,
+			quantity: 1,
 			updatedAt: expect.any(Date),
 			userId: devUser1.pk,
 		})
@@ -134,7 +134,7 @@ describe('auctions service', () => {
 			startDate: expect.any(Date),
 			startingBidAmount: '',
 			status: 'inactive',
-			stockQty: 1,
+			quantity: 1,
 			updatedAt: expect.any(Date),
 			userId: stall.userId,
 		})

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { DisplayProduct } from '$lib/server/products.service'
 	import * as Card from '$lib/components/ui/card/index.js'
+	import { KindProducts } from '$lib/constants'
 	import { createProductPriceQuery } from '$lib/fetch/products.queries'
 	import { openDrawerForProduct } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
@@ -10,7 +11,7 @@
 	import ImgPlaceHolder from './imgPlaceHolder.svelte'
 
 	export let product: Partial<DisplayProduct>
-	const { images, name, currency, price, userNip05, identifier, id, userId } = product
+	let { images, name, currency, price, userNip05, identifier, id, userId } = product
 
 	let isMyProduct = false
 
@@ -18,8 +19,10 @@
 		if ($ndkStore.activeUser?.pubkey) {
 			isMyProduct = $ndkStore.activeUser.pubkey === userId
 		}
+		if (!id?.startsWith(KindProducts.toString())) {
+			id = `${KindProducts}:${userId}:${id}`
+		}
 	}
-
 	$: priceQuery = createProductPriceQuery(product as DisplayProduct)
 </script>
 
@@ -31,7 +34,7 @@
 			<img class="h-[329px] object-cover transition-opacity duration-300 group-hover:opacity-70" src={mainImage?.imageUrl} alt="" />
 			{#if isMyProduct}
 				<Button
-					on:click={() => openDrawerForProduct(id)}
+					on:click={() => openDrawerForProduct(id ? id : '')}
 					class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white text-black font-bold opacity-0 transition-opacity duration-300 group-hover:opacity-100"
 				>
 					Edit product
@@ -41,7 +44,6 @@
 	{:else}
 		<ImgPlaceHolder imageType={'thumbnail'} />
 	{/if}
-	<!-- TODO Improve this, sometimes the product id of some nostr events its illformed -->
 	<a href={userNip05 ? `/products/${userNip05}/${identifier}` : `/products/${id}`}>
 		<Card.Footer class="cursor-pointer flex flex-col gap-2 justify-end p-4 pb-2">
 			<div>

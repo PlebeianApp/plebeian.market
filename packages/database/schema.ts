@@ -47,7 +47,7 @@ const standardProductColumns = {
 	productName: text('product_name').notNull(),
 	description: text('description').notNull(),
 	currency: text('currency').notNull(),
-	stockQty: integer('stock_qty').notNull(),
+	quantity: integer('quantity').notNull(),
 	extraCost: numeric('extra_cost').notNull().default('0'),
 }
 
