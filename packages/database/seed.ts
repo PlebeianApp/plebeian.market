@@ -329,39 +329,32 @@ const main = async () => {
 	const categoryArray = randomLengthArrayFromTo(10, 10) 
 	const uniqueCategories = faker.helpers.uniqueArray(faker.commerce.department, categoryArray.length)
 	const categoryData = categoryArray.slice(0, 5).map((_, i) => {
-		const user = faker.helpers.arrayElement(userIds);
+		
 		const category: Category = {
-		  id: createId(),
 		  name: uniqueCategories[i],
 		  description: faker.commerce.productDescription(),
-		  userId: user.id,
-		  parentId: null,
+		  parent: null,
 		}
 		return category
 	  }) as Category[]
 
 	const subCategoryData = categoryArray.slice(5).map((_, i) => {
 		const parentCategory = faker.helpers.arrayElement(categoryData)
-		const userId = parentCategory.userId;
 		const category: Category = {
-			id: createId(),
 			name: uniqueCategories[i + 5],
 			description: faker.commerce.productDescription(),
-			userId: userId,
-			parentId: parentCategory.id,
+			parent: parentCategory.name,
 		}
 		return category
 	}) as Category[]
 	
 	const productCategoryData = productData.flat(2).map((product) => {
-		const userCategories = categoryData.filter((category) => category.userId === product.userId);
-		if (!userCategories.length) {
-			return null	
-		}
-		const category = faker.helpers.arrayElement(userCategories);
+		const user = faker.helpers.arrayElement(userIds);
+		const category = faker.helpers.arrayElement(categoryData);
 		return {
 		  productId: product.id,
-		  catId: category.id,
+			userId: user.id,
+		  category: category.name,
 		} as ProductCategory;
 	  }).filter(Boolean);
 	  

@@ -7,15 +7,16 @@
 	import { createProductsByFilterQuery } from '$lib/fetch/products.queries'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
 
-	$: categoriesQuery = createCategoriesByFilterQuery({ catId: $page.params.catId })
+	$: categoriesQuery = createCategoriesByFilterQuery({ category: $page.params.category, userId: $page.params.userId })
 	$: categoryData = $categoriesQuery.data?.[0]
 
 	$: productsQuery = createProductsByFilterQuery({
-		catId: $page.params.catId,
+		userId: $page.params.userId,
+		category: $page.params.category,
 		pageSize: 15,
 	})
 
-	$: userQuery = categoryData?.userId ? createUserByIdQuery(categoryData.userId) : null
+	$: userQuery = createUserByIdQuery($page.params.userId)
 </script>
 
 <div class="flex min-h-screen w-full flex-col bg-muted/40">

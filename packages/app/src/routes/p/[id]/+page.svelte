@@ -10,7 +10,6 @@
 	import { createProductsByFilterQuery } from '$lib/fetch/products.queries'
 	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
 	import { openDrawerForNewProduct, openDrawerForNewStall } from '$lib/stores/drawer-ui'
-	import ndkStore from '$lib/stores/ndk'
 	import { copyToClipboard } from '$lib/utils'
 
 	import type { PageData } from './$types'
@@ -18,22 +17,15 @@
 	export let data: PageData
 	$: ({ npub, pubkey, name, image } = data)
 
-	let isMe = false
-
-	$: categoriesQuery = createCategoriesByFilterQuery({ userId: $ndkStore.activeUser?.pubkey ? $ndkStore.activeUser?.pubkey : pubkey })
+	$: categoriesQuery = createCategoriesByFilterQuery({ userId: pubkey })
 
 	$: stallsQuery = createStallsByFilterQuery({
-		userId: $ndkStore.activeUser?.pubkey ? $ndkStore.activeUser?.pubkey : pubkey,
+		userId: pubkey,
 	})
 
 	$: productsQuery = createProductsByFilterQuery({
-		userId: $ndkStore.activeUser?.pubkey ? $ndkStore.activeUser?.pubkey : pubkey,
+		userId: pubkey,
 	})
-
-	$: {
-		const userId = $ndkStore.activeUser?.pubkey
-		isMe = userId === pubkey
-	}
 </script>
 
 <div class="flex min-h-screen w-full flex-col bg-muted/40">
@@ -72,7 +64,7 @@
 						<h2>Categories</h2>
 						<div class=" grid grid-cols-4 gap-2">
 							{#each $categoriesQuery.data.filter((cat) => (cat.productCount ?? 0) > 0) as cat}
-								<CatCompactItem {cat} isGlobal={false} />
+								<CatCompactItem {cat} userId={pubkey} />
 							{/each}
 						</div>
 					</div>
