@@ -189,7 +189,7 @@ export const createProduct = async (productEvent: NostrEvent) => {
 	insertSpecs?.length && (await db.insert(productMeta).values(insertSpecs).returning())
 	insertProductImages?.length && (await db.insert(productImages).values(insertProductImages).returning())
 
-	const tags = customTagValue(productEvent.tags, "t")
+	const tags = customTagValue(productEvent.tags, 't')
 	if (tags.length) {
 		await db
 			.insert(categories)
@@ -286,7 +286,7 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 		.where(eq(products.id, productId))
 		.returning()
 
-	const tags = customTagValue(productEvent.tags, "t")
+	const tags = customTagValue(productEvent.tags, 't')
 	if (tags.length) {
 		await db
 			.insert(categories)
@@ -340,7 +340,7 @@ const preparedProductsByCatName = db
 	.from(products)
 	.innerJoin(productCategories, eq(products.id, productCategories.productId))
 	.innerJoin(categories, eq(productCategories.category, categories.name))
-	.where(eq(categories.name, sql.placeholder('catName')))
+	.where(and(eq(categories.name, sql.placeholder('category')), eq(products.userId, sql.placeholder('userId'))))
 	.limit(sql.placeholder('limit'))
 	.offset(sql.placeholder('offset'))
 	.prepare()
@@ -351,7 +351,8 @@ export const getProductsByCatName = async (filter: ProductsFilter): Promise<Disp
 	}
 
 	const productRes = await preparedProductsByCatName.execute({
-		catName: filter.category,
+		userId: filter.userId,
+		category: filter.category,
 		limit: filter.pageSize,
 		offset: (filter.page - 1) * filter.pageSize,
 	})

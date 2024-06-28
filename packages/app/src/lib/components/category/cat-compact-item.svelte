@@ -4,12 +4,13 @@
 	import Button from '../ui/button/button.svelte'
 
 	export let cat: RichCat
+	export let userId: string | null = null
 </script>
 
 <Button
 	class="cursor-pointer border border-gray flex justify-start items-center p-4 font-bold"
 	variant="outline"
-	href={`/cat/n/${cat.name}`}
+	href={userId ? `/cat/${cat.name}/${userId}` : `/cat/${cat.name}`}
 >
 	<div class="flex items-center gap-2 w-full justify-between">
 		<section class=" inline-flex items-center gap-2">

@@ -2,8 +2,7 @@ import type { CatsFilter } from '$lib/schema'
 import { error } from '@sveltejs/kit'
 import { catsFilterSchema } from '$lib/schema'
 
-import { Category, getTableColumns, or, ProductCategory } from '@plebeian/database'
-import { and, categories, db, eq, productCategories, sql } from '@plebeian/database'
+import { and, categories, Category, db, eq, getTableColumns, or, productCategories, ProductCategory, sql } from '@plebeian/database'
 
 export type RichCat = Pick<Category, 'name' | 'description' | 'parent'> & {
 	productCount?: number
@@ -31,9 +30,14 @@ const resolveCategory = async (cat: Category): Promise<RichCat> => {
 }
 
 export const getAllCategories = async (filter: CatsFilter = catsFilterSchema.parse({})): Promise<RichCat[]> => {
-	let userCategories: {category: string}[] = []
+	let userCategories: { category: string }[] = []
 	if (filter.userId) {
-		userCategories = (await db.selectDistinct({ category: categories.name }).from(productCategories).orderBy(productCategories.category).innerJoin(categories, eq(productCategories.category, categories.name)).where(eq(productCategories.userId, filter.userId)))
+		userCategories = await db
+			.selectDistinct({ category: categories.name })
+			.from(productCategories)
+			.orderBy(productCategories.category)
+			.innerJoin(categories, eq(productCategories.category, categories.name))
+			.where(eq(productCategories.userId, filter.userId))
 	}
 
 	const categoriesResult = await db
@@ -42,7 +46,7 @@ export const getAllCategories = async (filter: CatsFilter = catsFilterSchema.par
 		.where(
 			and(
 				filter.category ? eq(categories.name, filter.category) : undefined,
-				or(...userCategories.map(({category}) => eq(categories.name, category)))
+				or(...userCategories.map(({ category }) => eq(categories.name, category))),
 			),
 		)
 		.groupBy(categories.name)

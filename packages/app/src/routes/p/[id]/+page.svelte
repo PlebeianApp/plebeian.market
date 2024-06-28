@@ -64,7 +64,7 @@
 						<h2>Categories</h2>
 						<div class=" grid grid-cols-4 gap-2">
 							{#each $categoriesQuery.data.filter((cat) => (cat.productCount ?? 0) > 0) as cat}
-								<CatCompactItem {cat} />
+								<CatCompactItem {cat} userId={pubkey} />
 							{/each}
 						</div>
 					</div>
