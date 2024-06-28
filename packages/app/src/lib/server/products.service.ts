@@ -290,7 +290,7 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 	if (tags.length) {
 		await db
 			.insert(categories)
-			.values(tags.map((tag) => ({ id: createId(), name: tag, description: 'here', userId: productEvent.pubkey })))
+			.values(tags.map((tag) => ({ id: createId(), name: tag, description: '', userId: productEvent.pubkey })))
 			.onConflictDoNothing({
 				target: categories.name,
 			})

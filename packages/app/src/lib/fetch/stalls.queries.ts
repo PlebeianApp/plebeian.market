@@ -30,7 +30,6 @@ export const createStallsByFilterQuery = (filter: Partial<StallsFilter>) =>
 		{
 			queryKey: ['stalls', ...Object.values(filter)],
 			queryFn: async () => {
-				console.log(stallsFilterSchema.parse(filter))
 				const stalls = await createRequest('GET /api/v1/stalls', {
 					params: stallsFilterSchema.parse(filter),
 				})
