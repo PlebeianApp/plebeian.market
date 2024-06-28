@@ -259,10 +259,15 @@ export const categories = sqliteTable('categories', {
 export const productCategories = sqliteTable(
 	'product_categories',
 	{
-		productId: text('product_id').references(() => products.id, { onDelete: 'cascade', onUpdate: 'cascade' }).notNull(),
-		category: text('category').references(() => categories.name, { onDelete: 'cascade', onUpdate: 'cascade' }).notNull(),
+		productId: text('product_id')
+			.references(() => products.id, { onDelete: 'cascade', onUpdate: 'cascade' })
+			.notNull(),
+		category: text('category')
+			.references(() => categories.name, { onDelete: 'cascade', onUpdate: 'cascade' })
+			.notNull(),
 		userId: text('user_id')
-			.references(() => users.id, { onDelete: 'cascade', onUpdate: 'cascade' }).notNull(),
+			.references(() => users.id, { onDelete: 'cascade', onUpdate: 'cascade' })
+			.notNull(),
 	},
 	(table) => {
 		return {
