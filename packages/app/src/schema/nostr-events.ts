@@ -30,7 +30,7 @@ export const productEventSchema = z.object({
 	images: z.array(z.string()).optional(),
 	currency: z.string(),
 	price: z.number(),
-	quantity: z.number().int().nullable(),
+	quantity: z.number().int(),
 	specs: z.array(z.tuple([z.string(), z.string()])).optional(),
 	shipping: z.array(shippingObjectSchema),
 })

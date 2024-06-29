@@ -1,7 +1,9 @@
 import type { NostrEvent } from '@nostr-dev-kit/ndk'
+import type { StallsFilter } from '$lib/schema'
 import type { DisplayStall } from '$lib/server/stalls.service'
 import { error } from '@sveltejs/kit'
 import { createMutation } from '@tanstack/svelte-query'
+import { stallsFilterSchema } from '$lib/schema'
 import ndkStore from '$lib/stores/ndk'
 import { getEventCoordinates } from '$lib/utils'
 import { get } from 'svelte/store'
@@ -37,7 +39,9 @@ export const stallFromNostrEvent = createMutation(
 		onSuccess: (data: DisplayStall | null) => {
 			if (data) {
 				console.log('Stall inserted in db successfully', data)
-				queryClient.invalidateQueries({ queryKey: ['stalls', data.id] })
+				queryClient.invalidateQueries({
+					queryKey: ['stalls', ...Object.values(stallsFilterSchema.safeParse({ userId: data.userId }).data as Partial<StallsFilter>)],
+				})
 				queryClient.invalidateQueries({ queryKey: ['shipping', data.id] })
 			}
 		},

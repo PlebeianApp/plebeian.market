@@ -1,3 +1,4 @@
+import type { NDKUserProfile } from '@nostr-dev-kit/ndk'
 import type { UsersFilter } from '$lib/schema'
 import { error } from '@sveltejs/kit'
 import { usersFilterSchema } from '$lib/schema'
@@ -217,7 +218,7 @@ export const updateUser = async (userId: string, userProfile: RichUser): Promise
 		.returning()
 
 	if (userProfile.role || userProfile.trustLevel) {
-		await updateUserMeta(userId, userProfile.role, userProfile.trustLevel)
+		await updateUserMeta(userId, userProfile.role as UserRoles, userProfile.trustLevel as UserTrustLevel)
 	}
 
 	if (userResult.length > 0) {
@@ -225,6 +226,36 @@ export const updateUser = async (userId: string, userProfile: RichUser): Promise
 	}
 
 	error(500, 'Failed to update user')
+}
+
+export const updateUserFromNostr = async (userId: string, userProfile: NDKUserProfile): Promise<User> => {
+	const insertUser: Partial<User> = {
+		updatedAt: new Date(),
+		name: userProfile.name,
+		nip05: userProfile.nip05?.toLowerCase(),
+		banner: userProfile.banner,
+		about: userProfile.about,
+		lud06: userProfile.lud06,
+		lud16: userProfile.lud16,
+		displayName: userProfile.displayName,
+		image: userProfile.image,
+		website: userProfile.website,
+		zapService: userProfile.zapService,
+	}
+
+	const userResult = await db
+		.update(users)
+		.set({
+			...insertUser,
+		})
+		.where(eq(users.id, userId))
+		.returning()
+
+	if (userResult.length > 0) {
+		return userResult[0]
+	}
+
+	error(500, { message: 'Failed to update user from nostr' })
 }
 
 export const updateUserMeta = async (userId: string, role?: UserRoles, trustLevel?: UserTrustLevel): Promise<UserMeta[]> => {

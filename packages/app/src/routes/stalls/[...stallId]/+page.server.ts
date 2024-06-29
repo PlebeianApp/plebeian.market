@@ -53,7 +53,6 @@ export const load: PageServerLoad = async ({ params }) => {
 		_userExists = await userExists(userId)
 		stallId = root
 	}
-
 	try {
 		const stallRes = await stallExists(stallId)
 		if (stallRes) {

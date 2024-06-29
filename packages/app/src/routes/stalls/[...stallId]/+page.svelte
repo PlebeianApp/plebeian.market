@@ -14,9 +14,9 @@
 	import { createShippingQuery } from '$lib/fetch/shipping.queries'
 	import { stallFromNostrEvent } from '$lib/fetch/stalls.mutations'
 	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
-	import { userFromNostrMutation } from '$lib/fetch/users.mutations'
+	import { userFromNostr } from '$lib/fetch/users.mutations'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
-	import { fetchProductData, fetchStallData, fetchUserData, fetchUserProductData } from '$lib/nostrSubs/utils'
+	import { fetchStallData, fetchUserData, fetchUserProductData } from '$lib/nostrSubs/utils'
 	import { openDrawerForProduct } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
 	import { getEventCoordinates } from '$lib/utils'
@@ -46,21 +46,23 @@
 			})
 		: undefined
 
-	$: userProfileQuery = stall.exist ? createUserByIdQuery(user.id as string) : undefined
+	$: userProfileQuery = user.exist ? createUserByIdQuery(user.id as string) : undefined
 
 	$: shippingQuery = stall.exist ? createShippingQuery(stall.id) : undefined
 
 	$: {
-		if (stall.exist) {
-			if ($productsQuery?.data) toDisplayProducts = $productsQuery?.data
-			if ($stallsQuery?.data) {
-				stallResponse = $stallsQuery?.data[0]
-			}
-		}
-		if (user.exist && $userProfileQuery?.data) {
+		if ($userProfileQuery?.data) {
 			userProfile = $userProfileQuery?.data
 		}
 	}
+
+	$: {
+		if ($stallsQuery?.data) {
+			stallResponse = $stallsQuery?.data[0]
+		}
+	}
+
+	$: if ($productsQuery?.data) toDisplayProducts = $productsQuery?.data
 
 	async function setNostrData(
 		stallData: NDKEvent | null,
@@ -73,8 +75,9 @@
 		try {
 			if (userData) {
 				userData && (userData.id = user.id)
-				const userMutation = await $userFromNostrMutation.mutateAsync({ profile: userData, pubkey: user.id as string })
+				const userMutation = await $userFromNostr.mutateAsync({ profile: userData, pubkey: user.id as string })
 				userMutation && (userInserted = true)
+				userProfile = userData
 			}
 
 			if (stallData) {
@@ -125,7 +128,7 @@
 		if (appSettings.allowRegister) {
 			if (!stall.exist) {
 				const { stallNostrRes } = await fetchStallData(stall.id)
-				const { userProfile } = await fetchUserData(user.id as string)
+				const { userProfile } = user.exist ? { userProfile: null } : await fetchUserData(user.id as string)
 				const { products } = await fetchUserProductData(user.id as string)
 				if (products?.size) await setNostrData(stallNostrRes, userProfile, products)
 			} else {
@@ -160,17 +163,21 @@
 <div class="flex min-h-screen w-full flex-col bg-muted/40">
 	<div class="flex flex-col">
 		<main class="text-black">
-			<div class="flex w-full flex-col items-center bg-black py-20 text-center text-white">
-				{#if stallResponse}
-					<section class="w-fit">
-						<a href={`/p/${stallResponse.userNip05 ? stallResponse.userNip05 : stallResponse.userId}`} class="flex flex-col items-center">
+			<div class="flex w-full flex-col items-center bg-black py-20 gap-2 text-center text-white">
+				<section class="w-fit">
+					{#if userProfile}
+						<a href={`/p/${userProfile?.nip05 ? userProfile?.nip05 : user.id}`} class="flex flex-col items-center">
 							<Avatar>
 								<AvatarImage src={userProfile?.image} alt="@shadcn" />
 								<AvatarFallback>{userProfile?.name?.substring(0, 2)}</AvatarFallback>
 							</Avatar>
-							<span>{stallResponse.userName}</span>
+							<span>{userProfile?.name ? userProfile?.name : userProfile?.displayName}</span>
 						</a>
-					</section>
+					{:else}
+						<Skeleton class="h-24 w-24 rounded-full" />
+					{/if}
+				</section>
+				{#if stallResponse}
 					<h1>{stallResponse.name}</h1>
 					<p class="text-2xl">{stallResponse.description}</p>
 
@@ -201,7 +208,11 @@
 						<Button class="mt-4" on:click={() => openDrawerForProduct(stall.id)}>Edit stall</Button>
 					{/if}
 				{:else}
-					<Skeleton class=" h-32" />
+					<section class=" flex flex-col gap-2">
+						<Skeleton class="h-8 w-[250px]" />
+						<Skeleton class="h-8 w-[250px]" />
+						<Skeleton class="h-8 w-[250px]" />
+					</section>
 				{/if}
 			</div>
 
@@ -217,11 +228,11 @@
 							{/if}
 						</div>
 					{:else}
-						<div class=" flex gap-2">
-							<Skeleton class=" h-64 w-full" />
-							<Skeleton class=" h-64 w-full" />
-							<Skeleton class=" h-64 w-full" />
-							<Skeleton class=" h-64 w-full" />
+						<div class=" flex gap-4">
+							<Skeleton class=" h-80 w-full border-4 border-black text-black group" />
+							<Skeleton class=" h-80 w-full border-4 border-black text-black group" />
+							<Skeleton class=" h-80 w-full border-4 border-black text-black group" />
+							<Skeleton class=" h-80 w-full border-4 border-black text-black group" />
 						</div>
 					{/if}
 				</div>

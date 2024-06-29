@@ -4,6 +4,7 @@ import type { TransitionConfig } from 'svelte/transition'
 import { type NDKEvent, type NDKKind, type NDKTag, type NDKUserProfile, type NostrEvent } from '@nostr-dev-kit/ndk'
 import ndkStore from '$lib/stores/ndk'
 import { clsx } from 'clsx'
+import { differenceInDays } from 'date-fns'
 import { toast } from 'svelte-sonner'
 import { cubicOut } from 'svelte/easing'
 import { get } from 'svelte/store'
@@ -212,4 +213,13 @@ export function nav_back() {
 
 export function truncateString(str: string): string {
 	return str.substring(0, 12) + ':' + str.substring(str.length - 6)
+}
+
+export const getElapsedTimeInDays = (unixTimestamp: number): number => {
+	const now = new Date()
+	const targetDate = new Date(unixTimestamp * 1000)
+
+	const elapsedDays = differenceInDays(now, targetDate)
+
+	return elapsedDays
 }

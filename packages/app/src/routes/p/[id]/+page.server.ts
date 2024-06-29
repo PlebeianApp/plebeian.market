@@ -28,7 +28,7 @@ export const load: PageServerLoad = async ({ params }) => {
 		_userExists = await userExists(userId)
 	}
 	return {
-		id: userId,
+		id: userId as string,
 		exist: _userExists,
 	}
 }

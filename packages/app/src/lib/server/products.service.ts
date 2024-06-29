@@ -251,89 +251,98 @@ export const createProduct = async (productEvent: NostrEvent) => {
 export const createProducts = async (productEvents: NostrEvent[]) => {
 	try {
 		const productPromises = productEvents.map(async (productEvent) => {
-			const eventCoordinates = getEventCoordinates(productEvent)
-			const productEventContent = JSON.parse(productEvent.content)
-			const parsedProduct = productEventSchema.parse({ id: productEventContent.id, ...productEventContent })
+			try {
+				const eventCoordinates = getEventCoordinates(productEvent)
+				const productEventContent = JSON.parse(productEvent.content)
+				const {
+					data: parsedProduct,
+					success,
+					error: parseError,
+				} = productEventSchema.safeParse({ id: productEventContent.id, ...productEventContent })
 
-			if (!parsedProduct) {
-				error(500, { message: 'Bad product schema' })
-			}
+				if (!success) error(500, { message: `${parseError}` })
 
-			const stall = parsedProduct.stall_id.startsWith(`${KindStalls}`)
-				? await getStallById(parsedProduct.stall_id)
-				: await getStallById(`${KindStalls}:${productEvent.pubkey}:${parsedProduct.stall_id}`)
+				if (!parsedProduct) {
+					throw 'Bad product schema'
+				}
 
-			const parentId = customTagValue(productEvent.tags, 'a')[0] || null
-			const extraCost = parsedProduct.shipping.length ? parsedProduct.shipping[0].cost : 0
-			if (!stall) {
-				error(400, { message: 'Stall not found' })
-			}
+				const stall = parsedProduct.stall_id.startsWith(`${KindStalls}`)
+					? await getStallById(parsedProduct.stall_id)
+					: await getStallById(`${KindStalls}:${productEvent.pubkey}:${parsedProduct.stall_id}`)
 
-			if (!parsedProduct.type) {
-				parsedProduct.type = 'simple'
-			}
+				const parentId = customTagValue(productEvent.tags, 'a')[0] || null
+				const extraCost = parsedProduct.shipping.length ? parsedProduct.shipping[0].cost : 0
+				if (!stall) {
+					throw 'Stall not found'
+				}
 
-			const insertProduct: Product = {
-				id: eventCoordinates.coordinates,
-				createdAt: new Date(productEvent.created_at * 1000),
-				updatedAt: new Date(productEvent.created_at * 1000),
-				identifier: eventCoordinates.tagD,
-				productName: parsedProduct.name,
-				description: parsedProduct.description as string,
-				currency: parsedProduct.currency,
-				price: parsedProduct.price.toString(),
-				extraCost: extraCost?.toString() as string,
-				productType: parsedProduct.type as ProductTypes,
-				parentId: parentId,
-				userId: productEvent.pubkey,
-				stallId: stall.id,
-				quantity: parsedProduct.quantity ?? 0,
-			}
+				if (!parsedProduct.type) {
+					parsedProduct.type = 'simple'
+				}
 
-			const insertSpecs: ProductMeta[] | undefined = parsedProduct.specs?.map((spec) => ({
-				id: createId(),
-				createdAt: new Date(productEvent.created_at * 1000),
-				updatedAt: new Date(productEvent.created_at * 1000),
-				productId: eventCoordinates.coordinates,
-				auctionId: null,
-				metaName: PRODUCT_META.SPEC.value,
-				key: spec[0],
-				valueText: spec[1],
-				valueBoolean: null,
-				valueInteger: null,
-				valueNumeric: null,
-			}))
+				const insertProduct: Product = {
+					id: eventCoordinates.coordinates,
+					createdAt: new Date(productEvent.created_at * 1000),
+					updatedAt: new Date(productEvent.created_at * 1000),
+					identifier: eventCoordinates.tagD,
+					productName: parsedProduct.name,
+					description: parsedProduct.description as string,
+					currency: parsedProduct.currency,
+					price: parsedProduct.price.toString(),
+					extraCost: extraCost?.toString() as string,
+					productType: parsedProduct.type as ProductTypes,
+					parentId: parentId,
+					userId: productEvent.pubkey,
+					stallId: stall.id,
+					quantity: parsedProduct.quantity ?? 0,
+				}
 
-			const insertProductImages: ProductImage[] | undefined = parsedProduct.images?.map((imageUrl, index) => ({
-				createdAt: new Date(productEvent.created_at * 1000),
-				productId: eventCoordinates.coordinates,
-				auctionId: null,
-				imageUrl,
-				imageType: 'gallery',
-				imageOrder: index + 1,
-			}))
+				const insertSpecs: ProductMeta[] | undefined = parsedProduct.specs?.map((spec) => ({
+					id: createId(),
+					createdAt: new Date(productEvent.created_at * 1000),
+					updatedAt: new Date(productEvent.created_at * 1000),
+					productId: eventCoordinates.coordinates,
+					auctionId: null,
+					metaName: PRODUCT_META.SPEC.value,
+					key: spec[0],
+					valueText: spec[1],
+					valueBoolean: null,
+					valueInteger: null,
+					valueNumeric: null,
+				}))
 
-			const productResult = await db.insert(products).values(insertProduct).returning()
+				const insertProductImages: ProductImage[] | undefined = parsedProduct.images?.map((imageUrl, index) => ({
+					createdAt: new Date(productEvent.created_at * 1000),
+					productId: eventCoordinates.coordinates,
+					auctionId: null,
+					imageUrl,
+					imageType: 'gallery',
+					imageOrder: index + 1,
+				}))
 
-			if (insertSpecs?.length) {
-				await db.insert(productMeta).values(insertSpecs).returning()
-			}
+				const productResult = await db.insert(products).values(insertProduct).returning()
 
-			if (insertProductImages?.length) {
-				await db.insert(productImages).values(insertProductImages).returning()
-			}
+				if (insertSpecs?.length) {
+					await db.insert(productMeta).values(insertSpecs).returning()
+				}
 
-			if (productResult[0]) {
-				return toDisplayProduct(productResult[0])
-			} else {
-				error(500, { message: 'Failed to create product' })
+				if (insertProductImages?.length) {
+					await db.insert(productImages).values(insertProductImages).returning()
+				}
+
+				if (productResult[0]) {
+					return toDisplayProduct(productResult[0])
+				} else {
+					throw 'Failed to create product'
+				}
+			} catch (e) {
+				console.error('Error creating product:', e)
+				error(500, { message: `${e}` })
 			}
 		})
-
 		const results = await Promise.all(productPromises)
 		return results
 	} catch (e) {
-		console.error('Error creating products:', e)
 		error(500, { message: `Failed to create products: ${e}` })
 	}
 }

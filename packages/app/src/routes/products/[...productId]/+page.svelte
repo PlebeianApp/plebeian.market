@@ -11,7 +11,7 @@
 	import { createProductsFromNostrMutation } from '$lib/fetch/products.mutations'
 	import { createProductPriceQuery, createProductQuery, createProductsByFilterQuery } from '$lib/fetch/products.queries'
 	import { stallFromNostrEvent } from '$lib/fetch/stalls.mutations'
-	import { userFromNostrMutation } from '$lib/fetch/users.mutations'
+	import { userFromNostr } from '$lib/fetch/users.mutations'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
 	import { fetchProductData, fetchStallData, fetchUserData } from '$lib/nostrSubs/utils'
 	import { openDrawerForProduct } from '$lib/stores/drawer-ui'
@@ -63,7 +63,7 @@
 		try {
 			if (userData) {
 				userData && (userData.id = user.id)
-				const userMutation = await $userFromNostrMutation.mutateAsync({ profile: userData, pubkey: user.id as string })
+				const userMutation = await $userFromNostr.mutateAsync({ profile: userData, pubkey: user.id as string })
 				userMutation && (userInserted = true)
 			}
 

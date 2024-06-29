@@ -26,6 +26,22 @@ export async function fetchStallData(stallId: string): Promise<{
 	return { stallNostrRes }
 }
 
+export async function fetchUserStallsData(userId: string): Promise<{
+	stallNostrRes: Set<NDKEvent> | null
+}> {
+	const $ndkStore = get(ndkStore)
+	const stallFilter = {
+		kinds: [KindStalls],
+		authors: [userId],
+	}
+
+	const stallNostrRes: Set<NDKEvent> | null = await $ndkStore.fetchEvents(stallFilter, {
+		cacheUsage: NDKSubscriptionCacheUsage.PARALLEL,
+	})
+
+	return { stallNostrRes }
+}
+
 export async function fetchUserData(userId: string): Promise<{
 	userProfile: NDKUserProfile | null
 }> {
@@ -34,8 +50,7 @@ export async function fetchUserData(userId: string): Promise<{
 		pubkey: userId,
 	})
 
-	const userProfile = await ndkUser.fetchProfile({ cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST })
-
+	const userProfile = await ndkUser.fetchProfile({ cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY })
 	return { userProfile }
 }
 
@@ -47,7 +62,7 @@ export async function fetchUserProductData(userId: string): Promise<{
 		kinds: [KindProducts],
 		authors: [userId],
 	}
-	const productsNostrRes = await $ndkStore.fetchEvents(productsFilter, { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST })
+	const productsNostrRes = await $ndkStore.fetchEvents(productsFilter, { cacheUsage: NDKSubscriptionCacheUsage.PARALLEL })
 
 	return { products: productsNostrRes }
 }
@@ -62,7 +77,7 @@ export async function fetchProductData(productId: string): Promise<{
 		authors: [userId],
 		'#d': [identifier],
 	}
-	const productsNostrRes = await $ndkStore.fetchEvent(productsFilter, { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST })
+	const productsNostrRes = await $ndkStore.fetchEvent(productsFilter, { cacheUsage: NDKSubscriptionCacheUsage.PARALLEL })
 
 	return { nostrProduct: productsNostrRes }
 }

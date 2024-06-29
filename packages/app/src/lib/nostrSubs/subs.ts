@@ -43,7 +43,8 @@ export function normalizeStallData(nostrStall: NDKEvent): Partial<RichStall> | n
 	const { tagD: identifier, coordinates: id } = getEventCoordinates(nostrStall)
 
 	try {
-		const data = stallEventSchema.parse(JSON.parse(nostrStall.content))
+		const { data, success } = stallEventSchema.safeParse(JSON.parse(nostrStall.content))
+		if (!success) return null
 		return {
 			...data,
 			createDate: format(nostrStall.created_at ? nostrStall.created_at * 1000 : '', standardDisplayDateFormat),
