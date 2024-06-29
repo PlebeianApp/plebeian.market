@@ -135,7 +135,7 @@
 
 		await newEvent.sign(ndk.signer)
 		const nostrEvent = await newEvent.toNostrEvent()
-
+		// TODO refactor this to mutation
 		await fetch(new URL(stall ? `/api/v1/stalls/${stall.id}` : '/api/v1/stalls', window.location.origin), {
 			method: stall ? 'PUT' : 'POST',
 

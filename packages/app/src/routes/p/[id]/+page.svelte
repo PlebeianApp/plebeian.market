@@ -153,15 +153,17 @@
 								<code class="truncate">{npubEncode(id)}</code>
 							</Button>
 							<Button on:click={() => copyToClipboard(npubEncode(id))}>Copy</Button>
-							<DropdownMenu.Root>
-								<DropdownMenu.Trigger><Button>Create...</Button></DropdownMenu.Trigger>
-								<DropdownMenu.Content>
-									<DropdownMenu.Group>
-										<DropdownMenu.Item on:click={openDrawerForNewStall}>Create stall</DropdownMenu.Item>
-										<DropdownMenu.Item on:click={openDrawerForNewProduct}>Create product</DropdownMenu.Item>
-									</DropdownMenu.Group>
-								</DropdownMenu.Content>
-							</DropdownMenu.Root>
+							{#if isMe}
+								<DropdownMenu.Root>
+									<DropdownMenu.Trigger><Button>Create...</Button></DropdownMenu.Trigger>
+									<DropdownMenu.Content>
+										<DropdownMenu.Group>
+											<DropdownMenu.Item on:click={openDrawerForNewStall}>Create stall</DropdownMenu.Item>
+											<DropdownMenu.Item on:click={openDrawerForNewProduct}>Create product</DropdownMenu.Item>
+										</DropdownMenu.Group>
+									</DropdownMenu.Content>
+								</DropdownMenu.Root>
+							{/if}
 						</div>
 					</div>
 				</div>

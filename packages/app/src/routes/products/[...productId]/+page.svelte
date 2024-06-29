@@ -65,6 +65,7 @@
 				userData && (userData.id = user.id)
 				const userMutation = await $userFromNostr.mutateAsync({ profile: userData, pubkey: user.id as string })
 				userMutation && (userInserted = true)
+				userProfile = userData
 			}
 
 			if (stallData) {
