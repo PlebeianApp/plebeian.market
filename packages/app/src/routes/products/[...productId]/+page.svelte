@@ -24,7 +24,7 @@
 	import { productEventSchema } from '../../../schema/nostr-events'
 
 	export let data: PageData
-	const { user, productRes } = data
+	$: ({ user, productRes } = data)
 	let isMyProduct = false
 	let toDisplayProduct: Partial<DisplayProduct>
 	let userProfile: NDKUserProfile | null
