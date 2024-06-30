@@ -54,7 +54,7 @@ describe('stalls service', () => {
 				{
 					id: createId(),
 					name: 'USPS',
-					baseCost: '21.21',
+					cost: '21.21',
 					regions: ['USA', 'CAN'],
 				},
 			],

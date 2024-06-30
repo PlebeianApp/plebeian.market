@@ -18,7 +18,7 @@
 	import type { LayoutData } from './$types'
 
 	export let data: LayoutData
-	$: ({ appSettings } = data)
+	const { appSettings } = data
 
 	onMount(async () => {
 		if (appSettings.isFirstTimeRunning) {
@@ -49,8 +49,6 @@
 		queryFn: async () => {
 			const query = get(createCategoriesByFilterQuery({ pageSize: 30 }))
 			const { data: categories } = await query.refetch()
-			console.log(categories)
-
 			return categories ?? null
 		},
 	})

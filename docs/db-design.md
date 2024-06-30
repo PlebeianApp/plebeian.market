@@ -75,7 +75,7 @@ Regions jslib: https://github.com/wp-blocks/isotolanguage
 | product_type | VARCHAR | Type of the product, "simple" \| "variable" \| "variation" |
 | Images | VARCHAR | Array of image URLs, optional |
 | currency | DECIMAL | Currency used |
-| stock_qty | INT | Quantity of products in stock |
+| quantity | INT | Quantity of products in stock |
 | specs | VARCHAR | Optional array of key pair values of product specifications |
 | shipping_cost | DECIMAL | Extra costs to be used per shipping zone |
 | featured | BOOLEAN | Indicates if the product its featured |

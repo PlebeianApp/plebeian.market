@@ -1,3 +1,4 @@
+import type { NDKUserProfile } from '@nostr-dev-kit/ndk'
 import type { UsersFilter } from '$lib/schema'
 import type { RichUser } from '$lib/server/users.service'
 import { createQuery } from '@tanstack/svelte-query'
@@ -6,13 +7,13 @@ import { usersFilterSchema } from '$lib/schema'
 import ndkStore from '$lib/stores/ndk'
 import { derived } from 'svelte/store'
 
-import type { User, UserMeta } from '@plebeian/database'
+import type { UserMeta } from '@plebeian/database'
 
 import { createRequest, queryClient } from './client'
 
 declare module './client' {
 	interface Endpoints {
-		[k: `GET /api/v1/users/${string}`]: Operation<string, 'GET', never, never, RichUser | User, never>
+		[k: `GET /api/v1/users/${string}`]: Operation<string, 'GET', never, never, RichUser | NDKUserProfile, never>
 		[k: `GET /api/v1/users/${string}?exists`]: Operation<string, 'GET', never, never, boolean, never>
 		'GET /api/v1/users': Operation<'/api/v1/users', 'GET', never, never, UserMeta[], UsersFilter>
 	}
@@ -38,11 +39,11 @@ export const activeUserQuery = createQuery(
 )
 
 export const createUserByIdQuery = (id: string) =>
-	createQuery<User>(
+	createQuery<NDKUserProfile>(
 		{
 			queryKey: ['users', id],
 			queryFn: async () => {
-				const user = (await createRequest(`GET /api/v1/users/${id}`, {})) as User
+				const user = (await createRequest(`GET /api/v1/users/${id}`, {})) as NDKUserProfile
 				return user
 			},
 			enabled: !!id,
@@ -53,7 +54,7 @@ export const createUserByIdQuery = (id: string) =>
 export const createUserExistsQuery = (id: string) =>
 	createQuery<boolean>(
 		{
-			queryKey: ['users', id],
+			queryKey: ['users', 'exists', id],
 			queryFn: async () => {
 				const user = await createRequest(`GET /api/v1/users/${id}?exists`, {})
 				return user

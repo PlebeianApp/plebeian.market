@@ -5,26 +5,42 @@
 	import ndkStore from '$lib/stores/ndk'
 	import { truncateString } from '$lib/utils'
 	import { npubEncode } from 'nostr-tools/nip19'
+	import { onMount } from 'svelte'
 
 	import { Button } from '../ui/button'
 
-	export let stall: RichStall
-	const { name, createDate, description, userName, currency, productCount, orderCount, userNip05, identifier, id } = stall
+	export let stall: Partial<RichStall>
+
+	const { name, createDate, description, currency, productCount, identifier, id } = stall
+	let { userName, userNip05 } = stall
 
 	let isMyStall = false
 
 	$: {
-		const userId = $ndkStore.activeUser?.pubkey
-		isMyStall = userId === stall.userId
+		if ($ndkStore.activeUser?.pubkey) {
+			isMyStall = $ndkStore.activeUser.pubkey === id?.split(':')[1]
+		}
 	}
+
+	onMount(async () => {
+		if (!userName || !userNip05) {
+			const user = $ndkStore.getUser({
+				pubkey: id?.split(':')[1],
+			})
+			const userProfile = await user.fetchProfile()
+			if (userProfile) {
+				userName = userProfile?.name ?? userProfile.displayName
+				userNip05 = userProfile.nip05
+			}
+		}
+	})
 </script>
 
 <Card.Root class="relative grid grid-rows-[auto_1fr_auto] h-[34vh] gap-4 border-4 border-black bg-transparent text-black group">
 	<a href={userNip05 ? `/stalls/${userNip05.toLocaleLowerCase()}/${identifier}` : `/stalls/${id?.replace(/^30017:/, '')}`}>
 		<Card.Header class="flex flex-col justify-between py-2 pb-0">
-			<span class="truncate text-2xl font-bold">{name}</span>
-			<span class="font-red font-bold">Since: {createDate}</span>
-			{isMyStall}
+			<span class="truncate text-2xl font-bold whitespace-normal">{name}</span>
+			<span class="font-bold whitespace-normal">Since: {createDate}</span>
 		</Card.Header>
 	</a>
 	<Card.Content class="relative flex-grow truncate whitespace-normal">

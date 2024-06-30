@@ -48,7 +48,7 @@ describe('/products', () => {
 	// 			{
 	// 				id: createId(),
 	// 				name: 'USPS',
-	// 				baseCost: '21.21',
+	// 				cost: '21.21',
 	// 				regions: ['USA', 'CAN'],
 	// 			},
 	// 		],
@@ -79,10 +79,10 @@ describe('/products', () => {
 	// 		identifier: identifier,
 	// 		userId: devUser1.pk,
 	// 		userNip05: expect.any(String),
-	// 		galleryImages: ['http://example.com/image1.jpg', 'http://example.com/image2.jpg'],
+	// 		images: ['http://example.com/image1.jpg', 'http://example.com/image2.jpg'],
 	// 		name: 'Hello Product',
 	// 		price: 133,
-	// 		stockQty: 6,
+	// 		quantity: 6,
 	// 	})
 	// })
 

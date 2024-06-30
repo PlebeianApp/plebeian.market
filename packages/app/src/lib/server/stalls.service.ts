@@ -8,10 +8,11 @@ import { getProductsByStallId } from '$lib/server/products.service'
 import { getEventCoordinates } from '$lib/utils'
 import { format } from 'date-fns'
 
-import type { PaymentDetail, Stall } from '@plebeian/database'
+import type { ISO3, PaymentDetail, Shipping, ShippingZone, Stall } from '@plebeian/database'
 import {
 	and,
 	categories,
+	createId,
 	db,
 	eq,
 	getTableColumns,
@@ -37,9 +38,9 @@ export type RichStall = {
 	userId: string
 	userNip05: string | null
 	userName: string | null
-	productCount: number
-	orderCount: number
-	paymentMethods: PaymentDetail[]
+	productCount?: number
+	orderCount?: number
+	paymentMethods?: PaymentDetail[]
 	identifier: string
 }
 
@@ -133,7 +134,7 @@ export const getAllStalls = async (filter: StallsFilter = stallsFilterSchema.par
 	error(404, 'Not found')
 }
 
-type StallInfo = {
+export type StallInfo = {
 	id: string
 	name: string
 	description: string
@@ -145,11 +146,9 @@ type StallInfo = {
 
 export const getStallById = async (id: string): Promise<StallInfo> => {
 	const [uniqueStall] = await db.select().from(stalls).where(eq(stalls.id, id)).execute()
-
 	if (!uniqueStall) {
-		error(404, 'Not found')
+		error(404, 'Stall not found')
 	}
-
 	const [ownerRes] = await db
 		.select({
 			userId: users.id,
@@ -221,62 +220,102 @@ export const getStallsByUserId = async (userId: string): Promise<RichStall[]> =>
 	error(404, 'Not found')
 }
 
-export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall> => {
-	const eventCoordinates = getEventCoordinates(stallEvent)
-	const productEventContent = JSON.parse(stallEvent.content)
-	const parsedProduct = stallEventSchema.parse({
-		id: productEventContent.id,
-		...productEventContent,
-	})
+export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall | undefined> => {
+	try {
+		const { coordinates, tagD } = getEventCoordinates(stallEvent)
+		const stallEventContent = JSON.parse(stallEvent.content)
+		if (!stallEventContent) {
+			error(500, { message: `Error parsing stall event content` })
+		}
 
-	const insertStall: Stall = {
-		id: eventCoordinates.coordinates,
-		createdAt: new Date(stallEvent.created_at! * 1000),
-		updatedAt: new Date(stallEvent.created_at! * 1000),
-		name: parsedProduct.name,
-		identifier: eventCoordinates.tagD,
-		description: parsedProduct.description as string,
-		currency: parsedProduct.currency,
-		userId: stallEvent.pubkey,
-	}
-	const [stallResult] = await db.insert(stalls).values(insertStall).returning()
-	if (!stallResult) {
-		error(404, 'Not found')
-	}
+		const { data, error: zodError } = stallEventSchema.safeParse({
+			id: stallEventContent.id,
+			...stallEventContent,
+		})
 
-	for (const method of parsedProduct.shipping) {
-		const [shippingResult] = await db
-			.insert(shipping)
-			.values({
-				id: method.id,
-				name: method.name,
-				baseCost: String(method.baseCost),
-				userId: stallResult.userId,
-				stallId: stallResult.id,
-			})
-			.returning()
+		if (zodError) {
+			error(500, { message: `Invalid stall event data ${zodError}` })
+		}
 
-		if (method.regions.length) {
-			await db.insert(shippingZones).values(
-				method.regions.map((region) => ({
-					countryCode: region,
-					regionCode: region,
-					shippingId: shippingResult.id,
-					stallId: stallResult.id,
-				})),
+		const insertStall: Stall = {
+			id: coordinates,
+			createdAt: new Date(stallEvent.created_at * 1000),
+			updatedAt: new Date(stallEvent.created_at * 1000),
+			name: data.name,
+			identifier: tagD,
+			description: data.description as string,
+			currency: data.currency,
+			userId: stallEvent.pubkey,
+		}
+
+		const promises: Promise<unknown>[] = []
+
+		promises.push(
+			db
+				.insert(stalls)
+				.values(insertStall)
+				.returning()
+				.then(([stallResult]) => {
+					if (!stallResult) {
+						error(500, 'Error when creating stall')
+					}
+					return stallResult
+				}),
+		)
+
+		for (const method of data.shipping) {
+			if (!method) {
+				continue
+			}
+			promises.push(
+				db
+					.insert(shipping)
+					.values({
+						id: method?.id as string,
+						name: method?.name as string,
+						cost: String(method?.cost),
+						userId: insertStall.userId,
+						stallId: insertStall.id,
+					})
+					.onConflictDoNothing({ target: [shipping.id, shipping.userId] })
+					.returning()
+					.then(([shippingResult]) => {
+						if (!shippingResult) {
+							error(500, `Error when creating shipping method ${shippingResult}`)
+						}
+						return shippingResult
+					})
+					.then((shippingResult) => {
+						if (method.regions) {
+							return db.insert(shippingZones).values(
+								method.regions.map((region) => ({
+									countryCode: region,
+									regionCode: region,
+									shippingId: shippingResult?.id as string,
+									shippingUserId: shippingResult.userId,
+									stallId: insertStall.id,
+								})),
+							)
+						}
+					}),
 			)
 		}
-	}
 
-	const stall = stallResult
+		const results = await Promise.all(promises)
 
-	return {
-		id: stall.id,
-		name: stall.name,
-		description: stall.description,
-		currency: stall.currency,
-		createDate: format(stall.createdAt, standardDisplayDateFormat),
-		userId: stall.userId,
+		const stallResult = results[0] as Stall
+
+		return {
+			id: stallResult.id,
+			name: stallResult.name,
+			description: stallResult.description,
+			currency: stallResult.currency,
+			createDate: format(stallResult.createdAt, standardDisplayDateFormat),
+			userId: stallResult.userId,
+		}
+	} catch (e) {
+		console.error(e)
+		error(500, `Failed to create stall ${e}`)
 	}
 }
 
@@ -300,30 +339,33 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
 
 	if (stallResult) {
 		await db.delete(shippingZones).where(eq(shippingZones.stallId, stallId)).execute()
-		for (const method of parsedStall.shipping ?? []) {
-			await db.delete(shipping).where(eq(shipping.id, method.id)).execute()
-		}
-		for (const method of parsedStall.shipping ?? []) {
-			const [shippingResult] = await db
-				.insert(shipping)
-				.values({
-					id: method.id,
-					name: method.name,
-					baseCost: String(method.baseCost),
-					userId: stallResult.userId,
-					stallId: stallResult.id,
-				})
-				.returning()
+		if (parsedStall.shipping) {
+			for (const method of parsedStall.shipping) {
+				const [shippingResult] = await db
+					.insert(shipping)
+					.values({
+						id: method.id as string,
+						name: method.name as string,
+						cost: String(method.cost),
+						userId: stallResult.userId as string,
+						stallId: stallResult.id as string,
+					})
+					.returning()
 
-			await db.insert(shippingZones).values(
-				method.regions.map((region) => ({
-					countryCode: region,
-					regionCode: region,
-					shippingId: shippingResult.id,
-					stallId: stallResult.id,
-				})),
-			)
+				if (method.regions) {
+					await db.insert(shippingZones).values(
+						method.regions.map((region) => ({
+							countryCode: region,
+							regionCode: region,
+							shippingId: shippingResult.id,
+							shippingUserId: shippingResult.userId,
+							stallId: stallResult.id,
+						})),
+					)
+				}
+			}
 		}
+
 		return {
 			id: stallResult.id,
 			name: stallResult.name,
@@ -357,4 +399,13 @@ export const deleteStall = async (stallId: string, userId: string): Promise<stri
 	}
 
 	error(500, 'Failed to delete stall')
+}
+
+export const stallExists = async (stallId: string): Promise<boolean> => {
+	const result = await db
+		.select({ id: sql`1` })
+		.from(stalls)
+		.where(eq(stalls.id, stallId))
+		.limit(1)
+	return result.length > 0
 }

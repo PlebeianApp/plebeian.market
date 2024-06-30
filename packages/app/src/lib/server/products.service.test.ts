@@ -31,7 +31,7 @@ describe('products service', () => {
 			description: 'testDescription',
 			price: 'testPrice',
 			currency: 'testCurrency',
-			stockQty: 1,
+			quantity: 1,
 			extraCost: '0',
 			productType: 'simple',
 			parentId: 'testParentId',
@@ -49,8 +49,8 @@ describe('products service', () => {
 			description: 'testDescription',
 			price: NaN,
 			currency: 'testCurrency',
-			stockQty: 1,
-			galleryImages: [],
+			quantity: 1,
+			images: [],
 			stallId: 'testStallId',
 		})
 	})
@@ -111,7 +111,7 @@ describe('products service', () => {
 				{
 					id: createId(),
 					name: 'USPS',
-					baseCost: '21.21',
+					cost: '21.21',
 					regions: ['USA', 'CAN'],
 				},
 			],
@@ -134,10 +134,10 @@ describe('products service', () => {
 			identifier: identifier,
 			userId: devUser1.pk,
 			userNip05: expect.any(String),
-			galleryImages: expect.any(Array),
+			images: expect.any(Array),
 			name: 'Hello Product',
 			price: 133,
-			stockQty: 6,
+			quantity: 6,
 		})
 	})
 
@@ -165,13 +165,13 @@ describe('products service', () => {
 			currency: targetProduct.currency,
 			stallId: stall.id,
 			description: targetProduct.description,
-			galleryImages: expect.any(Array),
+			images: expect.any(Array),
 			identifier: product.identifier,
 			name: 'Hello Product changed',
 			userId: devUser1.pk,
 			userNip05: expect.any(String),
 			price: targetProduct.price,
-			stockQty: targetProduct.stockQty,
+			quantity: targetProduct.quantity,
 		})
 	})
 })

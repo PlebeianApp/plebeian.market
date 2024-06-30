@@ -184,7 +184,7 @@ const main = async () => {
 					isDigital: faker.datatype.boolean({ probability: 0.8 }),
 					parentId: null,
 					extraCost: faker.finance.amount(),
-					stockQty: faker.number.int({ min: 0, max: 100 }),
+					quantity: faker.number.int({ min: 0, max: 100 }),
 				} as Product
 			})
 		})
@@ -210,7 +210,7 @@ const main = async () => {
 			stallId: stall.id,
 			userId: stall.userId,
 			name: faker.commerce.productName(),
-			baseCost: faker.finance.amount(),
+			cost: faker.finance.amount(),
 			isDefault: faker.datatype.boolean(),
 			createdAt: faker.date.recent(),
 			updatedAt: faker.date.future(),
@@ -226,6 +226,7 @@ const main = async () => {
 			return {
 			id: createId(),
 			shippingId: shipping.id,
+			shippingUserId: shipping.userId,
 			stallId: shipping.stallId,
 			regionCode: faker.location.countryCode(),
 			countryCode: faker.location.countryCode(),
@@ -249,7 +250,7 @@ const main = async () => {
 				description: faker.commerce.productDescription(),
 				productType: faker.helpers.arrayElement(Object.values(PRODUCT_TYPES)),
 				currency: faker.helpers.arrayElement(CURRENCIES),
-				stockQty: faker.number.int(),
+				quantity: faker.number.int(),
 				parentId: null,
 				startingBidAmount: faker.finance.amount(),
 				startDate: faker.date.recent(),
@@ -389,7 +390,7 @@ const main = async () => {
 	})
 
 	const productImagesData = productData.flat(2).map((product) => {
-		const galleryImages = randomLengthArrayFromTo(0, 4).map((_, index) => {
+		const images = randomLengthArrayFromTo(0, 4).map((_, index) => {
 			return {
 				productId: product.id,
 				auctionId: null,
@@ -402,7 +403,7 @@ const main = async () => {
 				updatedAt: faker.date.future(),
 			} as ProductImage
 		})
-		return galleryImages
+		return images
 	})
 
 	const userStallsEvents = userStalls.flatMap((stallList) =>

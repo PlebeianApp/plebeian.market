@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Category } from '$lib/fetch/products.mutations'
 	import type { DisplayProduct } from '$lib/server/products.service'
+	import type { RichStall } from '$lib/server/stalls.service'
 	import type { StallIdType } from '$lib/stores/drawer-ui'
 	import Button from '$lib/components/ui/button/button.svelte'
 	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte'
@@ -37,11 +38,11 @@
 		'w-full font-bold border-b-2 border-black text-black data-[state=active]:border-b-primary data-[state=active]:text-primary'
 
 	let categories: Category[] = []
-	let images: Partial<ProductImage>[] = product?.galleryImages ?? []
+	let images: Partial<ProductImage>[] = product?.images ?? []
 
 	function updateProductImages(updatedProduct: DisplayProduct | null) {
 		if (updatedProduct) {
-			images = updatedProduct.galleryImages ?? []
+			images = updatedProduct.images ?? []
 		}
 	}
 
@@ -52,13 +53,13 @@
 	class ShippingMethod implements Shipping {
 		id: string
 		name: string
-		baseCost: string
+		cost: string
 		regions: ISO3[]
 
-		constructor(id: string, name: string, baseCost: string, regions: ISO3[] = []) {
+		constructor(id: string, name: string, cost: string, regions: ISO3[] = []) {
 			this.id = id
 			this.name = name
-			this.baseCost = baseCost
+			this.cost = cost
 			this.regions = regions
 		}
 
@@ -76,7 +77,7 @@
 			return {
 				id: this.id,
 				name: this.name,
-				baseCost: this.baseCost,
+				cost: this.cost,
 				regions: this.regions,
 			} as Shipping
 		}
@@ -88,7 +89,7 @@
 		if (id) {
 			const existingMethod = shippingMethods.find((method) => method.id === id)
 			if (existingMethod) {
-				const duplicatedMethod = new ShippingMethod(createId(), existingMethod.name!, existingMethod.baseCost, existingMethod.regions)
+				const duplicatedMethod = new ShippingMethod(createId(), existingMethod.name!, existingMethod.cost, existingMethod.regions)
 				shippingMethods = [...shippingMethods, duplicatedMethod]
 			} else {
 				console.error(`No shipping method found with id ${id}`)
@@ -131,7 +132,7 @@
 	}
 
 	$: stallsQuery = createStallsByFilterQuery(stallsFilterSchema.parse({ userId: $ndkStore.activeUser?.pubkey }))
-	$: currentStall = $stallsQuery.data?.find(({ id }) => id === currentStallId)
+	$: currentStall = $stallsQuery.data?.find(({ id }) => id === currentStallId) as RichStall
 </script>
 
 {#if $stallsQuery.isLoading}
@@ -144,8 +145,8 @@
 				const res = await $createProductMutation.mutateAsync([
 					sEvent,
 					currentStall,
-					images.map((image) => image.imageUrl),
-					shippingMethods.map((s) => s.json),
+					images.map((image) => ({ imageUrl: image.imageUrl })),
+					shippingMethods.map((s) => ({ id: s.id, name: s.name ?? '', cost: s.cost ?? '', regions: s.regions ?? [] })),
 					categories,
 				])
 
@@ -158,8 +159,8 @@
 				const res = await $editProductMutation.mutateAsync([
 					sEvent,
 					product,
-					images.map((image) => image.imageUrl),
-					shippingMethods.map((s) => s.json),
+					images.map((image) => ({ imageUrl: image.imageUrl })),
+					shippingMethods.map((s) => ({ id: s.id, name: s.name ?? '', cost: s.cost ?? '', regions: s.regions ?? [] })),
 					categories,
 				])
 
@@ -170,7 +171,7 @@
 				}
 			}
 
-			queryClient.invalidateQueries({ queryKey: ['products', $ndkStore.activeUser.pubkey] })
+			queryClient.invalidateQueries({ queryKey: ['products', $ndkStore.activeUser?.pubkey] })
 		}}
 		class="flex flex-col gap-4 grow h-full"
 	>
@@ -217,7 +218,7 @@
 					<div class="grid w-full items-center gap-1.5">
 						<Label for="quantity" class="font-bold">Quantity</Label>
 						<Input
-							value={product?.stockQty ?? ''}
+							value={product?.quantity ?? ''}
 							required
 							class="border-2 border-black"
 							type="number"
@@ -307,7 +308,7 @@
 						<div>
 							<Label for="cost" class="font-bold">Base Cost</Label>
 							<Input
-								bind:value={item.baseCost}
+								bind:value={item.cost}
 								class="border-2 border-black"
 								min={0}
 								type="text"

@@ -1,4 +1,6 @@
+import { ensureAuthorsExists } from '$lib/server/nostrEvents.service'
 import { toDisplayProduct } from '$lib/server/products.service'
+import { usersExists } from '$lib/server/users.service'
 
 import { and, db, eq, getTableColumns, productMeta, products } from '@plebeian/database'
 

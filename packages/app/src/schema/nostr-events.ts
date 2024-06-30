@@ -14,6 +14,13 @@ const productTypeValidator = (value: unknown) => {
 	return value
 }
 
+const shippingObjectSchema = z.object({
+	id: z.string(),
+	name: z.string().optional(),
+	cost: z.preprocess((value) => (typeof value === 'number' ? value.toString() : value), z.string().optional()),
+	regions: z.array(z.string()).optional(),
+})
+
 export const productEventSchema = z.object({
 	id: z.string(),
 	stall_id: z.string(),
@@ -23,16 +30,9 @@ export const productEventSchema = z.object({
 	images: z.array(z.string()).optional(),
 	currency: z.string(),
 	price: z.number(),
-	quantity: z.number().int().nullable(),
+	quantity: z.number().int(),
 	specs: z.array(z.tuple([z.string(), z.string()])).optional(),
-	shipping: z.array(
-		z.object({
-			id: z.string(),
-			name: z.string(),
-			baseCost: z.string(),
-			regions: z.array(z.enum(Object.values(COUNTRIES_ISO).map((c) => c.iso3) as NonEmptyArray<ISO3>)),
-		}),
-	),
+	shipping: z.array(shippingObjectSchema),
 })
 
 export const auctionEventSchema = z.object({
@@ -45,12 +45,7 @@ export const auctionEventSchema = z.object({
 	start_date: z.number().int().optional(),
 	duration: z.number().int(),
 	specs: z.array(z.tuple([z.string(), z.string()])),
-	shipping: z.array(
-		z.object({
-			id: z.string(),
-			cost: z.number(),
-		}),
-	),
+	shipping: z.array(shippingObjectSchema),
 })
 
 export const bidEventSchema = z.number().int()
@@ -59,15 +54,8 @@ export const stallEventSchema = z.object({
 	id: z.string(),
 	name: z.string(),
 	description: z.string().optional(),
-	currency: z.enum(CURRENCIES),
-	shipping: z.array(
-		z.object({
-			id: z.string(),
-			name: z.string(),
-			baseCost: z.string(),
-			regions: z.array(z.enum(Object.values(COUNTRIES_ISO).map((c) => c.iso3) as NonEmptyArray<ISO3>)),
-		}),
-	),
+	currency: z.string(),
+	shipping: z.array(shippingObjectSchema),
 })
 
 export const userEventSchema = z.object({

@@ -1,9 +1,10 @@
-import type { NDKKind, NDKTag, NDKUserProfile, NostrEvent } from '@nostr-dev-kit/ndk'
 import type { ClassValue } from 'clsx'
 import type { VerifiedEvent } from 'nostr-tools'
 import type { TransitionConfig } from 'svelte/transition'
+import { type NDKEvent, type NDKKind, type NDKTag, type NDKUserProfile, type NostrEvent } from '@nostr-dev-kit/ndk'
 import ndkStore from '$lib/stores/ndk'
 import { clsx } from 'clsx'
+import { differenceInDays } from 'date-fns'
 import { toast } from 'svelte-sonner'
 import { cubicOut } from 'svelte/easing'
 import { get } from 'svelte/store'
@@ -78,7 +79,7 @@ export const bitcoinToSatoshis = (amountInBtc: string) => {
 	return Math.floor(btc * numSatsInBtc)
 }
 
-export function getEventCoordinates(event: NostrEvent | VerifiedEvent): EventCoordinates {
+export function getEventCoordinates(event: NostrEvent | VerifiedEvent | NDKEvent): EventCoordinates {
 	const { kind, pubkey, tags } = event
 
 	const [_, tagD] = tags.find(([key]) => key === 'd') ?? []
@@ -212,4 +213,13 @@ export function nav_back() {
 
 export function truncateString(str: string): string {
 	return str.substring(0, 12) + ':' + str.substring(str.length - 6)
+}
+
+export const getElapsedTimeInDays = (unixTimestamp: number): number => {
+	const now = new Date()
+	const targetDate = new Date(unixTimestamp * 1000)
+
+	const elapsedDays = differenceInDays(now, targetDate)
+
+	return elapsedDays
 }
