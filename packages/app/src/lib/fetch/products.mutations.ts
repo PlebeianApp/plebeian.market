@@ -16,6 +16,7 @@ import { createRequest, queryClient } from './client'
 declare module './client' {
 	interface Endpoints {
 		'POST /api/v1/products': Operation<string, 'POST', never, NostrEvent[], DisplayProduct[], never>
+		[k: `PUT /api/v1/products/${string}`]: Operation<string, 'PUT', never, NostrEvent, DisplayProduct, never>
 		[k: `DELETE /api/v1/products/${string}`]: Operation<string, 'DELETE', never, string, string, never>
 	}
 }
@@ -60,15 +61,7 @@ export const createProductMutation = createMutation(
 			})
 
 			await newEvent.sign(ndk.signer)
-			const nostrEvent = await newEvent.toNostrEvent()
-			const result = await fetch(new URL('/api/v1/products', window.location.origin), {
-				method: 'POST',
-				body: JSON.stringify(nostrEvent),
-				headers: {
-					'Content-Type': 'application/json',
-				},
-			}).then((response) => response.json())
-			return result
+			get(createProductsFromNostrMutation).mutateAsync(new Set([newEvent]))
 		},
 	},
 	queryClient,
@@ -113,14 +106,9 @@ export const editProductMutation = createMutation(
 
 			await newEvent.sign(ndk.signer)
 			const nostrEvent = await newEvent.toNostrEvent()
-			const result = await fetch(new URL(`/api/v1/products/${product.id}`, window.location.origin), {
-				method: 'PUT',
-				body: JSON.stringify(nostrEvent),
-				headers: {
-					'Content-Type': 'application/json',
-				},
-			}).then((response) => response.json())
-			return result
+			await createRequest(`PUT /api/v1/products/${product.id}`, {
+				body: nostrEvent
+			})
 		},
 	},
 	queryClient,

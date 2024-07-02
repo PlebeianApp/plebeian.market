@@ -142,32 +142,31 @@
 	<form
 		on:submit|preventDefault={async (sEvent) => {
 			if (!product) {
-				const res = await $createProductMutation.mutateAsync([
-					sEvent,
-					currentStall,
-					images.map((image) => ({ imageUrl: image.imageUrl })),
-					shippingMethods.map((s) => ({ id: s.id, name: s.name ?? '', cost: s.cost ?? '', regions: s.regions ?? [] })),
-					categories,
-				])
+				try {
+					await $createProductMutation.mutateAsync([
+						sEvent,
+						currentStall,
+						images.map((image) => ({ imageUrl: image.imageUrl })),
+						shippingMethods.map((s) => ({ id: s.id, name: s.name ?? '', cost: s.cost ?? '', regions: s.regions ?? [] })),
+						categories,
+					])
 
-				if (res.error) {
-					toast.error(`Failed to create product: ${res.error}`)
-				} else {
 					toast.success('Product created!')
+				} catch (e) {
+					toast.error(`Failed to create product: ${e}`)
 				}
 			} else {
-				const res = await $editProductMutation.mutateAsync([
-					sEvent,
-					product,
-					images.map((image) => ({ imageUrl: image.imageUrl })),
-					shippingMethods.map((s) => ({ id: s.id, name: s.name ?? '', cost: s.cost ?? '', regions: s.regions ?? [] })),
-					categories,
-				])
-
-				if (res.error) {
-					toast.error(`Failed to update product: ${res.error}`)
-				} else {
+				try {
+					await $editProductMutation.mutateAsync([
+						sEvent,
+						product,
+						images.map((image) => ({ imageUrl: image.imageUrl })),
+						shippingMethods.map((s) => ({ id: s.id, name: s.name ?? '', cost: s.cost ?? '', regions: s.regions ?? [] })),
+						categories,
+					])
 					toast.success('Product updated!')
+				} catch (e) {
+					toast.error(`Failed to update product: ${e}`)
 				}
 			}
 

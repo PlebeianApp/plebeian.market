@@ -14,6 +14,7 @@
 	import { copyToClipboard } from '$lib/utils'
 	import { generateSecretKey, getPublicKey, nip19 } from 'nostr-tools'
 	import { npubEncode } from 'nostr-tools/nip19'
+	import { ofetch } from 'ofetch'
 	import { onMount, tick } from 'svelte'
 	import { toast } from 'svelte-sonner'
 
@@ -53,28 +54,15 @@
 		formObject.logoUrl = logoUrl
 		const filteredFormObject = Object.fromEntries(Object.entries(formObject).filter(([_, value]) => value !== ''))
 
-		const response = await fetch('/setup', {
-			method: 'POST',
-			body: JSON.stringify(filteredFormObject),
-		})
+		try {
+			await ofetch('/setup', {
+				method: 'POST',
+				body: filteredFormObject,
+			})
 
-		if (!response.ok) {
-			const error = (await response.json()) as ZodError
-			console.log('error', error)
-			if (error.issues.length > 0) {
-				error.issues.forEach((issue) => {
-					toast.error(issue.message)
-				})
-			} else {
-				console.error('Failed to submit form', error)
-			}
-			return
-		}
-
-		const result = await response.json()
-
-		if (result) {
 			goto('/', { invalidateAll: true })
+		} catch (e) {
+			console.error('Failed to submit form', e)
 		}
 	}
 	function closeAndFocusTrigger(triggerId: string) {

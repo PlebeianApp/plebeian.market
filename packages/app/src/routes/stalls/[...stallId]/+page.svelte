@@ -12,7 +12,7 @@
 	import { createProductsFromNostrMutation } from '$lib/fetch/products.mutations'
 	import { createProductsByFilterQuery } from '$lib/fetch/products.queries'
 	import { createShippingQuery } from '$lib/fetch/shipping.queries'
-	import { stallFromNostrEvent } from '$lib/fetch/stalls.mutations'
+	import { createStallFromNostrEvent } from '$lib/fetch/stalls.mutations'
 	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
 	import { userFromNostr } from '$lib/fetch/users.mutations'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
@@ -86,7 +86,7 @@
 				stallResponse.userName = userData?.name || userData?.displayName
 				stallResponse.userNip05 = userData?.nip05
 				const stallEvent = await stallData.toNostrEvent()
-				const stallMutation = await $stallFromNostrEvent.mutateAsync(stallEvent)
+				const stallMutation = await $createStallFromNostrEvent.mutateAsync(stallEvent)
 				if (stallMutation) {
 					shippingQuery = createShippingQuery(stall.id)
 					stallInserted = true

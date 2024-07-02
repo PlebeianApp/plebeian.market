@@ -17,6 +17,7 @@
 	import { availabeLogos } from '$lib/constants'
 	import { copyToClipboard, nav_back } from '$lib/utils'
 	import { npubEncode } from 'nostr-tools/nip19'
+	import { ofetch } from 'ofetch'
 	import { onMount, tick } from 'svelte'
 	import { toast } from 'svelte-sonner'
 
@@ -39,29 +40,15 @@
 		formObject.instancePk = npubEncode(appSettings.instancePk)
 		const filteredFormObject = Object.fromEntries(Object.entries(formObject).filter(([_, value]) => value !== ''))
 
-		const response = await fetch($page.url.pathname, {
-			method: 'PUT',
-			body: JSON.stringify(filteredFormObject),
-		})
-
-		if (!response.ok) {
-			const error = (await response.json()) as ZodError
-			console.log('error', error)
-			if (error.issues.length > 0) {
-				error.issues.forEach((issue) => {
-					toast.error(issue.message)
-				})
-			} else {
-				console.error('Failed to submit form', error)
-			}
-			return
-		}
-
-		const result = await response.json()
-
-		if (result) {
+		try {
+			await ofetch($page.url.pathname, {
+				method: 'PUT',
+				body: filteredFormObject,
+			})
 			toast.success('App settings successfully updated!')
 			invalidateAll()
+		} catch (e) {
+			console.error('Failed to submit form', error)
 		}
 	}
 	function closeAndFocusTrigger(triggerId: string) {

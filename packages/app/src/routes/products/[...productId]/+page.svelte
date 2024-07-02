@@ -10,7 +10,7 @@
 	import { KindStalls } from '$lib/constants'
 	import { createProductsFromNostrMutation } from '$lib/fetch/products.mutations'
 	import { createProductPriceQuery, createProductQuery, createProductsByFilterQuery } from '$lib/fetch/products.queries'
-	import { stallFromNostrEvent } from '$lib/fetch/stalls.mutations'
+	import { createStallFromNostrEvent } from '$lib/fetch/stalls.mutations'
 	import { userFromNostr } from '$lib/fetch/users.mutations'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
 	import { fetchProductData, fetchStallData, fetchUserData } from '$lib/nostrSubs/utils'
@@ -70,7 +70,7 @@
 
 			if (stallData) {
 				const stallEvent = await stallData.toNostrEvent()
-				const stallMutation = await $stallFromNostrEvent.mutateAsync(stallEvent)
+				const stallMutation = await $createStallFromNostrEvent.mutateAsync(stallEvent)
 				stallMutation && (stallInserted = true)
 			}
 
