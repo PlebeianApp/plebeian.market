@@ -107,7 +107,7 @@ export const editProductMutation = createMutation(
 			await newEvent.sign(ndk.signer)
 			const nostrEvent = await newEvent.toNostrEvent()
 			await createRequest(`PUT /api/v1/products/${product.id}`, {
-				body: nostrEvent
+				body: nostrEvent,
 			})
 		},
 	},

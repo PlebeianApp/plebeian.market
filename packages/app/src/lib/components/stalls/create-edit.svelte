@@ -11,8 +11,11 @@
 	import * as Popover from '$lib/components/ui/popover/index.js'
 	import { Textarea } from '$lib/components/ui/textarea'
 	import { KindProducts, KindStalls } from '$lib/constants'
+	import { createShippingQuery } from '$lib/fetch/shipping.queries'
+	import { createStallFromNostrEvent, updateStallFromNostrEvent } from '$lib/fetch/stalls.mutations'
 	import ndkStore, { ndk } from '$lib/stores/ndk'
 	import { createEventDispatcher, onMount, tick } from 'svelte'
+	import { get } from 'svelte/store'
 
 	import type { ISO3 } from '@plebeian/database/constants'
 	import { COUNTRIES_ISO, CURRENCIES } from '@plebeian/database/constants'
@@ -21,9 +24,6 @@
 	import type { PageData } from '../../../routes/$types'
 	import { stallEventSchema } from '../../../schema/nostr-events'
 	import PaymentMethodsStall from './payment-methods-stall.svelte'
-	import { createShippingQuery } from '$lib/fetch/shipping.queries'
-	import { get } from 'svelte/store'
-	import { createStallFromNostrEvent, updateStallFromNostrEvent } from '$lib/fetch/stalls.mutations'
 
 	const { appSettings, paymentDetailsMethod } = $page.data as PageData
 
@@ -92,15 +92,16 @@
 		if (stall) {
 			const { data: initialShippings } = await get(createShippingQuery(stall.id)).refetch()
 
-			shippingMethods = initialShippings?.map(
-				(s) =>
-					new ShippingMethod(
-						s.id,
-						s.name,
-						s.cost,
-						s.zones.map((z) => z.region as ISO3),
-					),
-			) ?? []
+			shippingMethods =
+				initialShippings?.map(
+					(s) =>
+						new ShippingMethod(
+							s.id,
+							s.name,
+							s.cost,
+							s.zones.map((z) => z.region as ISO3),
+						),
+				) ?? []
 		}
 	})
 

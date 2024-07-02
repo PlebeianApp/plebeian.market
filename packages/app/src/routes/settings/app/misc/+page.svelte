@@ -48,7 +48,7 @@
 			toast.success('App settings successfully updated!')
 			invalidateAll()
 		} catch (e) {
-			console.error('Failed to submit form', error)
+			console.error('Failed to submit form', e)
 		}
 	}
 	function closeAndFocusTrigger(triggerId: string) {
