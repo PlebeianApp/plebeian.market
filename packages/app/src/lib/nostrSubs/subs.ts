@@ -13,13 +13,6 @@ import type { AppSettings, Stall } from '@plebeian/database'
 
 import { stallEventSchema } from '../../schema/nostr-events'
 
-declare module '$lib/fetch/client' {
-	interface Endpoints {
-		[k: `GET /api/v1/stalls/${string}?exists`]: Operation<string, 'GET', never, never, boolean, never>
-		[k: `POST /api/v1/stalls/${string}`]: Operation<string, 'POST', never, VerifiedEvent, Stall, never>
-	}
-}
-
 const ndk = get(ndkStore)
 
 let appSettings: AppSettings

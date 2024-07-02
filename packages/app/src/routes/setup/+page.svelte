@@ -11,11 +11,14 @@
 	import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '$lib/components/ui/select'
 	import Separator from '$lib/components/ui/separator/separator.svelte'
 	import { availabeLogos } from '$lib/constants'
+	import { createRequest } from '$lib/fetch/client'
 	import { copyToClipboard } from '$lib/utils'
 	import { generateSecretKey, getPublicKey, nip19 } from 'nostr-tools'
 	import { npubEncode } from 'nostr-tools/nip19'
 	import { onMount, tick } from 'svelte'
 	import { toast } from 'svelte-sonner'
+
+	import type { AppSettings } from '@plebeian/database'
 
 	import type { PageData } from './$types'
 
@@ -47,31 +50,24 @@
 
 	async function handleSubmit(event: SubmitEvent) {
 		const formData = new FormData(event.currentTarget as HTMLFormElement)
-		const formObject = Object.fromEntries(formData.entries())
-		formObject.allowRegister = checked.toString()
+		const formObject = Object.fromEntries(formData.entries()) as AppSettings
+		formObject.allowRegister = checked
 		formObject.defaultCurrency = selectedCurrency.value
 		formObject.logoUrl = logoUrl
 		const filteredFormObject = Object.fromEntries(Object.entries(formObject).filter(([_, value]) => value !== ''))
 
-		const response = await fetch('/setup', {
-			method: 'POST',
-			body: JSON.stringify(filteredFormObject),
+		const response = await createRequest(`POST /setup`, {
+			body: filteredFormObject as AppSettings,
 		})
 
-		if (!response.ok) {
-			const error = (await response.json()) as ZodError
-			console.log('error', error)
-			if (error.issues.length > 0) {
-				error.issues.forEach((issue) => {
-					toast.error(issue.message)
-				})
-			} else {
-				console.error('Failed to submit form', error)
-			}
+		if (!response) {
+			const error = response
+			toast.error(error)
+			console.error('Failed to submit form', error)
 			return
 		}
 
-		const result = await response.json()
+		const result = response
 
 		if (result) {
 			goto('/', { invalidateAll: true })

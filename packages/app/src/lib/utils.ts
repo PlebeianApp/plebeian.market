@@ -5,6 +5,7 @@ import { type NDKEvent, type NDKKind, type NDKTag, type NDKUserProfile, type Nos
 import ndkStore from '$lib/stores/ndk'
 import { clsx } from 'clsx'
 import { differenceInDays } from 'date-fns'
+import { decode } from 'nostr-tools/nip19'
 import { toast } from 'svelte-sonner'
 import { cubicOut } from 'svelte/easing'
 import { get } from 'svelte/store'
@@ -222,4 +223,9 @@ export const getElapsedTimeInDays = (unixTimestamp: number): number => {
 	const elapsedDays = differenceInDays(now, targetDate)
 
 	return elapsedDays
+}
+
+export const decodePk = (pk: string | null | undefined) => {
+	if (!pk) return null
+	return pk.startsWith('npub') ? decode(pk).data.toString() : pk
 }

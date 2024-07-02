@@ -18,7 +18,7 @@
 	import type { LayoutData } from './$types'
 
 	export let data: LayoutData
-	const { appSettings } = data
+	$: ({ appSettings } = data)
 
 	onMount(async () => {
 		if (appSettings.isFirstTimeRunning) {
