@@ -36,7 +36,11 @@
 						</div>
 					</div>
 				{/if}
-				<CatMenu />
+				<div class="py-5 lg:px-12">
+					<div class="container">
+						<CatMenu />
+					</div>
+				</div>
 				{#if products.length}
 					<div class=" px-4 py-20 lg:px-12">
 						<div class="container">

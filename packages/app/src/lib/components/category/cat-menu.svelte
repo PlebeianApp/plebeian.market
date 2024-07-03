@@ -20,35 +20,31 @@
 	<Skeleton class=" h-96 w-full" />
 	<Skeleton class=" h-96 w-full" />
 {:else if filteredCategories.length}
-	<div class="py-5 lg:px-12">
-		<div class="container">
-			<h2>Categories</h2>
-			<div class="flex flex-col">
-				<div class="flex flex-col">
-					<main class="text-black">
-						<div class="lg:px-12">
-							<div class="container">
-								<div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-									{#each filteredCategories.slice(0, showMore ? filteredCategories.length : pageSize) as cat}
-										<CatCompactItem {cat} />
-									{/each}
-								</div>
-								{#if filteredCategories.length > pageSize}
-									<div class=" text-center py-1">
-										<Button on:click={() => (showMore = !showMore)} size="icon" class="cursor-pointer border-0" variant="ghost">
-											{#if showMore}
-												<span class=" i-tdesign-minus"></span>
-											{:else}
-												<span class=" i-tdesign-plus"></span>
-											{/if}
-										</Button>
-									</div>
-								{/if}
-							</div>
+	<h3>Categories</h3>
+	<div class="flex flex-col">
+		<div class="flex flex-col">
+			<main class="text-black">
+				<div class="lg:px-12">
+					<div class="container">
+						<div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+							{#each filteredCategories.slice(0, showMore ? filteredCategories.length : pageSize) as cat}
+								<CatCompactItem {cat} />
+							{/each}
 						</div>
-					</main>
+						{#if filteredCategories.length > pageSize}
+							<div class=" text-center py-1">
+								<Button on:click={() => (showMore = !showMore)} size="icon" class="cursor-pointer border-0" variant="ghost">
+									{#if showMore}
+										<span class=" i-tdesign-minus"></span>
+									{:else}
+										<span class=" i-tdesign-plus"></span>
+									{/if}
+								</Button>
+							</div>
+						{/if}
+					</div>
 				</div>
-			</div>
+			</main>
 		</div>
 	</div>
 {/if}
