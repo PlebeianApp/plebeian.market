@@ -14,6 +14,7 @@
 	import { userFromNostr } from '$lib/fetch/users.mutations'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
 	import { fetchProductData, fetchStallData, fetchUserData } from '$lib/nostrSubs/utils'
+	import { addProduct } from '$lib/stores/cart'
 	import { openDrawerForProduct } from '$lib/stores/drawer-ui'
 	import { cn } from '$lib/utils'
 	import { onMount } from 'svelte'
@@ -29,6 +30,7 @@
 	let toDisplayProduct: Partial<DisplayProduct>
 	let userProfile: NDKUserProfile | null
 	let userProducts: DisplayProduct[]
+	let qtyToCart = 1
 
 	$: productsQuery = productRes.exist ? createProductQuery(productRes.id) : undefined
 
@@ -152,8 +154,23 @@
 
 				<h3 class="my-8 font-bold">Stock: {toDisplayProduct.quantity}</h3>
 				<div class="flex w-1/2 flex-row gap-4">
-					<Input class="border-2 border-black" type="number" value="1" min="1" max="5" />
-					<Button>Add to cart</Button>
+					<Input
+						on:change={(e) => (qtyToCart = parseInt(e.target.value))}
+						class="border-2 border-black"
+						type="number"
+						value="1"
+						min="1"
+						max="5"
+					/>
+					<Button
+						on:click={() =>
+							addProduct(
+								toDisplayProduct.userId,
+								toDisplayProduct.stallId,
+								{ id: toDisplayProduct.id, name: toDisplayProduct.name, amount: qtyToCart, price: toDisplayProduct.price },
+								toDisplayProduct.currency,
+							)}>Add to cart</Button
+					>
 				</div>
 				<span class="my-8 font-bold"
 					>Sold by <a href={`/p/${userProfile?.nip05 ? userProfile.nip05 : userProfile?.id}`}
