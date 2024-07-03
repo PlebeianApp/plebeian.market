@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "fee6d21d-d660-463d-8f58-a6f4085022b4",
+  "id": "3f7e1e21-9519-4175-a03b-d4e1c4e1f1d1",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "app_settings": {
@@ -11,6 +11,13 @@
           "name": "instance_pk",
           "type": "text",
           "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "instance_sk": {
+          "name": "instance_sk",
+          "type": "text",
+          "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
@@ -1895,9 +1902,8 @@
           "name": "last_login",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "(unixepoch())"
+          "notNull": false,
+          "autoincrement": false
         }
       },
       "indexes": {},

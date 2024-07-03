@@ -1,5 +1,6 @@
 CREATE TABLE `app_settings` (
 	`instance_pk` text PRIMARY KEY NOT NULL,
+	`instance_sk` text NOT NULL,
 	`is_first_time_running` integer DEFAULT true NOT NULL,
 	`instance_name` text DEFAULT 'Plebeian Market' NOT NULL,
 	`logo_url` text DEFAULT '/logo.svg' NOT NULL,
@@ -260,5 +261,5 @@ CREATE TABLE `users` (
 	`lud16` text,
 	`website` text,
 	`zap_Service` text,
-	`last_login` integer DEFAULT (unixepoch()) NOT NULL
+	`last_login` integer
 );

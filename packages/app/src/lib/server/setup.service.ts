@@ -1,18 +1,18 @@
 import { error } from '@sveltejs/kit'
 import { usersFilterSchema } from '$lib/schema'
-import { decode } from 'nostr-tools/nip19'
+import { decodePk } from '$lib/utils'
 
 import type { NewAppSettings, UserRoles } from '@plebeian/database'
-import { appSettings, db, eq, USER_META, USER_ROLES, userMeta, users } from '@plebeian/database'
+import { appSettings, db, eq, sql, USER_META, USER_ROLES, userMeta, users } from '@plebeian/database'
 
 import { getUsersByRole } from './users.service'
 
 export type ExtendedAppSettings = NewAppSettings & {
-	adminsList: string[]
+	adminsList?: string[]
 }
 
 export const isInitialSetup = async (): Promise<boolean> => {
-	const [appSettingsRes] = await db.select().from(appSettings).execute()
+	const [appSettingsRes] = await db.select({ isFirstTimeRunning: appSettings.isFirstTimeRunning }).from(appSettings).execute()
 	return appSettingsRes.isFirstTimeRunning
 }
 
@@ -21,115 +21,101 @@ export const getAppSettings = async () => {
 	return appSettingsRes
 }
 
-export const doSetup = async (setupData: ExtendedAppSettings) => {
-	if (!setupData.instancePk) {
-		error(400, 'Invalid request')
+const adminsToSync = async (appSettingsData: ExtendedAppSettings) => {
+	try {
+		const decodedOwnerPk = decodePk(appSettingsData.ownerPk)
+		const desiredAdmins = [
+			...(decodedOwnerPk ? [{ id: decodedOwnerPk }] : []),
+			...(appSettingsData.adminsList?.map((adminPk) => ({
+				id: decodePk(adminPk),
+			})) ?? []),
+		].filter((admin) => admin?.id !== null)
+
+		const currentAdminUsers = await getUsersByRole(usersFilterSchema.parse({ role: USER_ROLES.ADMIN }))
+
+		const newAdmins = desiredAdmins.filter((admin) => !currentAdminUsers.includes(admin.id))
+		const removedAdmins = currentAdminUsers.filter((user) => !desiredAdmins.some((admin) => admin.id === user))
+
+		await Promise.all([
+			newAdmins.length ? insertUsers(newAdmins) : Promise.resolve(),
+			removedAdmins.length ? revokeAdmins(removedAdmins) : Promise.resolve(),
+		])
+	} catch (e) {
+		error(500, { message: `Error in adminsToSync: ${e}` })
 	}
-
-	const decodedInstancePk = setupData.instancePk.startsWith('npub') ? decode(setupData.instancePk).data.toString() : setupData.instancePk
-	const decodedOwnerPk = setupData.ownerPk ? decode(setupData.ownerPk).data.toString() : null
-
-	const updatedAppSettings = await updateAppSettings({
-		...setupData,
-		isFirstTimeRunning: true,
-		instancePk: decodedInstancePk,
-		defaultCurrency: setupData.defaultCurrency,
-		ownerPk: decodedOwnerPk,
-		allowRegister: JSON.parse(setupData.allowRegister as unknown as string),
-	})
-
-	const insertedUsers = adminsToInsert(setupData)
-
-	return { updatedAppSettings, insertedUsers }
 }
 
-const adminsToInsert = async (appSettingsData: ExtendedAppSettings) => {
-	const decodedInstancePk = appSettingsData.instancePk.startsWith('npub')
-		? decode(appSettingsData.instancePk).data.toString()
-		: appSettingsData.instancePk
-	const decodedOwnerPk = appSettingsData.ownerPk ? decode(appSettingsData.ownerPk).data.toString() : null
-
-	const adminsToInsert = [
-		...(decodedInstancePk ? [{ id: decodedInstancePk, role: USER_ROLES.ADMIN }] : []),
-		...(decodedOwnerPk ? [{ id: decodedOwnerPk, role: USER_ROLES.ADMIN }] : []),
-		...(appSettingsData.adminsList?.map((adminPk) => ({
-			id: decode(adminPk).data.toString(),
-			role: USER_ROLES.ADMIN,
-		})) ?? []),
-	].filter((admin) => admin?.id !== null)
-
-	const currentAdminUsers = await getUsersByRole(usersFilterSchema.parse({ role: USER_ROLES.ADMIN }))
-
-	const usersToInsert = adminsToInsert.filter((admin) => !currentAdminUsers.includes(admin.id))
-
-	const insertedUsers = await insertUsers(usersToInsert)
-
-	await revokeAdmins(adminsToInsert, currentAdminUsers)
-
-	return insertedUsers
-}
-
-const revokeAdmins = async (adminsToInsert: { id: string; role: UserRoles }[], currentAdminUsers: string[]) => {
-	const revokedAdminUsers = currentAdminUsers.filter((user) => !adminsToInsert.some((admin) => admin.id === user))
-	await Promise.all(
-		revokedAdminUsers.map(async (user) => {
-			await db.update(userMeta).set({ valueText: USER_ROLES.PLEB }).where(eq(userMeta.userId, user)).execute()
-		}),
-	)
+const revokeAdmins = async (users: string[]) => {
+	try {
+		await Promise.allSettled(
+			users.map(async (user) => {
+				await db.update(userMeta).set({ valueText: USER_ROLES.PLEB }).where(eq(userMeta.userId, user)).execute()
+			}),
+		)
+	} catch (e) {
+		error(500, { message: `Error in revokeAdmins: ${e}` })
+	}
 }
 
 export type UpdateAppSettingsReturnType = Awaited<ReturnType<typeof updateAppSettings>>
 
 export const updateAppSettings = async (appSettingsData: ExtendedAppSettings) => {
-	const decodedInstancePk = appSettingsData.instancePk.startsWith('npub')
-		? decode(appSettingsData.instancePk).data.toString()
-		: appSettingsData.instancePk
-	const decodedOwnerPk = appSettingsData.ownerPk ? decode(appSettingsData.ownerPk).data.toString() : null
+	try {
+		const decodedInstancePk = decodePk(appSettingsData.instancePk)
+		const decodedOwnerPk = decodePk(appSettingsData?.ownerPk)
 
-	const [appSettingsRes] = await db
-		.update(appSettings)
-		.set({
-			...appSettingsData,
-			isFirstTimeRunning: false,
-			instancePk: decodedInstancePk,
-			ownerPk: decodedOwnerPk,
-			allowRegister: JSON.parse(appSettingsData.allowRegister as unknown as string),
-		})
-		.where(appSettingsData.isFirstTimeRunning ? eq(appSettings.isFirstTimeRunning, true) : eq(appSettings.instancePk, decodedInstancePk))
-		.returning()
-		.execute()
+		const [appSettingsRes] = await db
+			.update(appSettings)
+			.set({
+				...appSettingsData,
+				instancePk: decodedInstancePk,
+				ownerPk: decodedOwnerPk,
+				isFirstTimeRunning: false,
+				allowRegister: JSON.parse(appSettingsData.allowRegister as unknown as string),
+			})
+			.where(appSettingsData.isFirstTimeRunning ? eq(appSettings.isFirstTimeRunning, true) : eq(appSettings.instancePk, decodedInstancePk))
+			.returning()
+			.execute()
 
-	if (!appSettingsRes) {
-		error(500, 'Failed to update app settings')
+		if (!appSettingsRes) {
+			error(500, { message: `Failed to update app settings` })
+		}
+
+		if (appSettingsData.adminsList || appSettingsData.ownerPk) {
+			const insertedUsers = await adminsToSync(appSettingsData)
+			return { appSettingsRes, insertedUsers }
+		}
+
+		return { appSettingsRes }
+	} catch (e) {
+		error(500, { message: `${e}` })
 	}
-
-	if (appSettingsData.adminsList) {
-		const insertedUsers = await adminsToInsert(appSettingsData)
-		return { appSettingsRes, insertedUsers }
-	}
-
-	return { appSettingsRes }
 }
 
-const insertUsers = async (usersToInsert: { id: string; role: UserRoles }[]): Promise<ReturnType<(typeof db)['insert']>[]> => {
-	const results = await Promise.all(
-		usersToInsert.map(async ({ id, role }) => {
-			try {
-				await db.transaction(async (trx) => {
-					const insertedUser = await trx.insert(users).values({ id }).onConflictDoNothing({ target: users.id }).returning().execute()
+const insertUsers = async (usersToInsert: { id: string }[]): Promise<ReturnType<(typeof db)['insert']>[]> => {
+	db.run(sql`PRAGMA foreign_keys = OFF;`)
+	const result = await db.transaction(async (trx) => {
+		try {
+			const insertedUsers = await trx.insert(users).values(usersToInsert).returning({ id: users.id })
 
-					if (insertedUser) {
-						await trx.insert(userMeta).values({ userId: id, metaName: USER_META.ROLE.value, valueText: role }).returning().execute()
-					}
-
-					return insertedUser
-				})
-			} catch (error) {
-				console.error('Error inserting user:', { id, role }, error)
-				return null
+			if (!insertedUsers.length) {
+				throw 'Failed to insert user or get user ID'
 			}
-		}),
-	)
+			const userMetaValues = insertedUsers.map((user) => ({
+				userId: user.id,
+				metaName: USER_META.ROLE.value,
+				valueText: 'admin' as UserRoles,
+			}))
 
-	return results.filter(Boolean) as unknown as ReturnType<(typeof db)['insert']>[]
+			await trx.insert(userMeta).values(userMetaValues).execute()
+
+			return insertedUsers
+		} catch (e) {
+			trx.rollback()
+			error(500, { message: `Error in transaction: ${e}` })
+		} finally {
+			db.run(sql`PRAGMA foreign_keys = ON;`)
+		}
+	})
+	return result.filter(Boolean) as unknown as ReturnType<(typeof db)['insert']>[]
 }

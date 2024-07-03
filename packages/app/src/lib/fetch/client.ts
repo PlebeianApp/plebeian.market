@@ -6,8 +6,16 @@ import { QueryClient } from '@tanstack/svelte-query'
 import { $fetch } from 'ofetch'
 import { get } from 'svelte/store'
 
+import type { AppSettings } from '@plebeian/database'
+
 import { KindHttpAuth } from '../constants'
 import ndkStore from '../stores/ndk'
+
+declare module './client' {
+	interface Endpoints {
+		'POST /setup': Operation<'/setup', 'POST', never, AppSettings, AppSettings, never>
+	}
+}
 
 const createToken = async (url: string, method: HttpMethod): Promise<`Nostr ${string}`> => {
 	const ndk = get(ndkStore)

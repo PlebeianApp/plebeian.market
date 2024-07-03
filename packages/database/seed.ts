@@ -65,6 +65,7 @@ const main = async () => {
 
 	const appSettings = {
 		instancePk: devInstance.pk,
+		instanceSk: devInstance.sk,
 		instanceName: 'Dev Instance',
 		isFirstTimeRunning: false,
 	} as AppSettings
