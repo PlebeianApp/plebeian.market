@@ -80,6 +80,10 @@ export const bitcoinToSatoshis = (amountInBtc: string) => {
 	return Math.floor(btc * numSatsInBtc)
 }
 
+export function formatPrice(price: number): string {
+	return Number(price.toFixed(2)).toString()
+}
+
 export function getEventCoordinates(event: NostrEvent | VerifiedEvent | NDKEvent): EventCoordinates {
 	const { kind, pubkey, tags } = event
 

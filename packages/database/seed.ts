@@ -97,15 +97,15 @@ const main = async () => {
 
 		if (Object.values(PRODUCT_META).map((meta) => meta.value).includes(metaName as ProductMetaName['value']) || Object.values(DIGITAL_PRODUCT_META).map((meta) => meta.value).includes(metaName as DigitalProductMetaName['value'])) {
 			scope = 'products'
-		  } else if (Object.values(APP_SETTINGS_META).map((meta) => meta.value).includes(metaName as AppSettingsMetaName['value'])) {
+		} else if (Object.values(APP_SETTINGS_META).map((meta) => meta.value).includes(metaName as AppSettingsMetaName['value'])) {
 			scope = 'app_settings'
-		  } else if (Object.values(USER_META).map((meta) => meta.value).includes(metaName as UserMetaName['value'])) {
+		} else if (Object.values(USER_META).map((meta) => meta.value).includes(metaName as UserMetaName['value'])) {
 			scope = 'users'
-		  } else {
+		} else {
 			scope = 'products'
-		  }
+		}
 
-		const metaTypes = [...Object.entries(PRODUCT_META), ...Object.entries(DIGITAL_PRODUCT_META), ...Object.entries(APP_SETTINGS_META),...Object.entries(USER_META),...Object.entries(GENERAL_META)].map(
+		const metaTypes = [...Object.entries(PRODUCT_META), ...Object.entries(DIGITAL_PRODUCT_META), ...Object.entries(APP_SETTINGS_META), ...Object.entries(USER_META), ...Object.entries(GENERAL_META)].map(
 			([_, { value, dataType }]) => ({ value, dataType }),
 		)
 		const findMetaType = metaTypes.find((meta) => meta.value === metaName)
@@ -122,31 +122,31 @@ const main = async () => {
 	})
 
 	const userMetaData = userIds.flatMap((userId) => {
-	  return metaTypeData.flat(2).filter((metaType) => metaType.scope === 'users').map((metaType) => {
-		const { name } = metaType
-		let valueText: string | null = null
-		let valueBoolean: boolean | null = null
-		let valueNumeric: number | null = null
-	
-		if (name == USER_META.TRUST_LVL.value) {
-		  valueText = faker.helpers.arrayElement(Object.values(USER_TRUST_LEVEL))
-		} else if (name == USER_META.ROLE.value) {
-		  valueText = faker.helpers.arrayElement(Object.values(USER_ROLES))
-		}
-	
-		const userMeta = {
-		  id: createId(),
-		  userId: userId.id,
-		  metaName: name,
-		  valueText: valueText,
-		  valueBoolean: valueBoolean,
-		  valueNumeric: valueNumeric,
-		  createdAt: faker.date.recent(),
-		  updatedAt: faker.date.future(),
-		} as UserMeta
-	
-		return userMeta
-	  })
+		return metaTypeData.flat(2).filter((metaType) => metaType.scope === 'users').map((metaType) => {
+			const { name } = metaType
+			let valueText: string | null = null
+			let valueBoolean: boolean | null = null
+			let valueNumeric: number | null = null
+
+			if (name == USER_META.TRUST_LVL.value) {
+				valueText = faker.helpers.arrayElement(Object.values(USER_TRUST_LEVEL))
+			} else if (name == USER_META.ROLE.value) {
+				valueText = faker.helpers.arrayElement(Object.values(USER_ROLES))
+			}
+
+			const userMeta = {
+				id: createId(),
+				userId: userId.id,
+				metaName: name,
+				valueText: valueText,
+				valueBoolean: valueBoolean,
+				valueNumeric: valueNumeric,
+				createdAt: faker.date.recent(),
+				updatedAt: faker.date.future(),
+			} as UserMeta
+
+			return userMeta
+		})
 	})
 
 	const userStalls = userIds.map((user) => {
@@ -180,7 +180,7 @@ const main = async () => {
 					description: faker.commerce.productDescription(),
 					price: faker.finance.amount(),
 					productType: PRODUCT_TYPES.SIMPLE,
-					currency: faker.helpers.arrayElement(CURRENCIES),
+					currency: stall.currency,
 					isFeatured: i % 2 === 0,
 					isDigital: faker.datatype.boolean({ probability: 0.8 }),
 					parentId: null,
@@ -205,38 +205,38 @@ const main = async () => {
 
 	const shippingData = userStalls.flatMap((stallsByUser) => {
 		return stallsByUser.map((stall) => {
-		const shippingMethods = randomLengthArrayFromTo(1, 3).map(() => {
-			return {
-			id: createId(),
-			stallId: stall.id,
-			userId: stall.userId,
-			name: faker.commerce.productName(),
-			cost: faker.finance.amount(),
-			isDefault: faker.datatype.boolean(),
-			createdAt: faker.date.recent(),
-			updatedAt: faker.date.future(),
-			} as Shipping
-		})
-		return shippingMethods
+			const shippingMethods = randomLengthArrayFromTo(1, 3).map(() => {
+				return {
+					id: createId(),
+					stallId: stall.id,
+					userId: stall.userId,
+					name: 'shp mthd' + faker.commerce.productName(),
+					cost: faker.finance.amount(),
+					isDefault: faker.datatype.boolean(),
+					createdAt: faker.date.recent(),
+					updatedAt: faker.date.future(),
+				} as Shipping
+			})
+			return shippingMethods
 		})
 	})
-	
+
 	const shippingZonesData = shippingData.flatMap((shippingMethods) => {
 		return shippingMethods.map((shipping) => {
-		const shippingZones = randomLengthArrayFromTo(2, 4).map(() => {
-			return {
-			id: createId(),
-			shippingId: shipping.id,
-			shippingUserId: shipping.userId,
-			stallId: shipping.stallId,
-			regionCode: faker.location.countryCode(),
-			countryCode: faker.location.countryCode(),
-			} as ShippingZone
-		})
-		return shippingZones
+			const shippingZones = randomLengthArrayFromTo(2, 4).map(() => {
+				return {
+					id: createId(),
+					shippingId: shipping.id,
+					shippingUserId: shipping.userId,
+					stallId: shipping.stallId,
+					regionCode: faker.location.countryCode(),
+					countryCode: faker.location.countryCode(),
+				} as ShippingZone
+			})
+			return shippingZones
 		})
 	})
-	
+
 	const auctionsData = userStalls.map((stallByUser) => {
 		return stallByUser.map((stall) => {
 			const identifier = createId()
@@ -328,17 +328,17 @@ const main = async () => {
 		})
 	})
 
-	const categoryArray = randomLengthArrayFromTo(10, 10) 
+	const categoryArray = randomLengthArrayFromTo(10, 10)
 	const uniqueCategories = faker.helpers.uniqueArray(faker.commerce.department, categoryArray.length)
 	const categoryData = categoryArray.slice(0, 5).map((_, i) => {
-		
+
 		const category: Category = {
-		  name: uniqueCategories[i],
-		  description: faker.commerce.productDescription(),
-		  parent: null,
+			name: uniqueCategories[i],
+			description: faker.commerce.productDescription(),
+			parent: null,
 		}
 		return category
-	  }) as Category[]
+	}) as Category[]
 
 	const subCategoryData = categoryArray.slice(5).map((_, i) => {
 		const parentCategory = faker.helpers.arrayElement(categoryData)
@@ -349,17 +349,17 @@ const main = async () => {
 		}
 		return category
 	}) as Category[]
-	
+
 	const productCategoryData = productData.flat(2).map((product) => {
 		const user = faker.helpers.arrayElement(userIds);
 		const category = faker.helpers.arrayElement(categoryData);
 		return {
-		  productId: product.id,
+			productId: product.id,
 			userId: user.id,
-		  category: category.name,
+			category: category.name,
 		} as ProductCategory;
-	  }).filter(Boolean);
-	  
+	}).filter(Boolean);
+
 	const productMetaData = metaTypeData.flat(2).map((metaType) => {
 		const { dataType, name } = metaType
 		let valueText: string | null = null
@@ -497,7 +497,7 @@ const main = async () => {
 	console.log('Seed start')
 	await db.transaction(async (tx) => {
 		for (const { table, data } of [
-			{ table: dbSchema.appSettings, data: appSettings},
+			{ table: dbSchema.appSettings, data: appSettings },
 			{ table: dbSchema.users, data: fullUsers },
 			{ table: dbSchema.userMeta, data: userMetaData.flat(1) },
 			{ table: dbSchema.stalls, data: userStalls.flat(1) },
