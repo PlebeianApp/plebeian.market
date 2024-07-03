@@ -1,5 +1,5 @@
 import type { RequestHandler } from '@sveltejs/kit'
-import { json } from '@sveltejs/kit'
+import { error, json } from '@sveltejs/kit'
 import { initialSetupDataSchema } from '$lib/schema'
 import { updateAppSettings } from '$lib/server/setup.service'
 
@@ -10,9 +10,8 @@ export const POST: RequestHandler = async ({ request }) => {
 	}
 	bodyRes.isFirstTimeRunning = true
 	const { data: parsedSetupData, success, error: zodError } = initialSetupDataSchema.safeParse(bodyRes)
-	if (!success) throw Error(`${zodError}`)
+	if (!success) error(400, { message: `${zodError}` })
 
-	parsedSetupData.isFirstTimeRunning = true
 	const setupRes = await updateAppSettings(parsedSetupData)
 	return json(setupRes)
 }
