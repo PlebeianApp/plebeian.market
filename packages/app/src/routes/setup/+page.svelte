@@ -50,8 +50,8 @@
 		formObject.logoUrl = logoUrl
 		const filteredFormObject = Object.fromEntries(Object.entries(formObject).filter(([_, value]) => value !== ''))
 
-		const ncryptedSk = createNcryptSec(filteredFormObject.instanceSk, instancePass)
-		if (ncryptedSk) filteredFormObject.instanceSk = ncryptedSk
+		const { ncryptsec } = createNcryptSec(filteredFormObject.instanceSk, instancePass)
+		if (ncryptsec) filteredFormObject.instanceSk = ncryptsec
 		const response = await createRequest(`POST /setup`, {
 			body: filteredFormObject as AppSettings,
 		})

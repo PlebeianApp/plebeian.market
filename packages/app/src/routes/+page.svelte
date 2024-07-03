@@ -11,47 +11,45 @@
 
 	$: ({
 		homeProducts: { featured, products },
+		appSettings: { isFirstTimeRunning },
 	} = data)
 </script>
 
-<div class="flex min-h-screen w-full flex-col bg-muted/40">
-	<div class="flex flex-col">
-		<main class="text-black">
-			<div class="relative w-full bg-black py-20 text-center text-white">
-				<Pattern />
-				<h1 class="relative z-10">Sell stuff for sats</h1>
-				<Button class="relative z-10 p-6 text-xl font-bold" on:click={openDrawerForNewStall}>List my stuff</Button>
-			</div>
-			{#if featured.length}
-				<div class=" bg-primary px-4 py-20 lg:px-12">
-					<div class="container">
-						<h2>Featured Collections</h2>
-						<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-							{#each featured as item}
-								<ProductItem product={item} />
-							{/each}
+{#if !isFirstTimeRunning}
+	<div class="flex min-h-screen w-full flex-col bg-muted/40">
+		<div class="flex flex-col">
+			<main class="text-black">
+				<div class="relative w-full bg-black py-20 text-center text-white">
+					<Pattern />
+					<h1 class="relative z-10">Sell stuff for sats</h1>
+					<Button class="relative z-10 p-6 text-xl font-bold" on:click={openDrawerForNewStall}>List my stuff</Button>
+				</div>
+				{#if featured.length}
+					<div class=" bg-primary px-4 py-20 lg:px-12">
+						<div class="container">
+							<h2>Featured Collections</h2>
+							<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+								{#each featured as item}
+									<ProductItem product={item} />
+								{/each}
+							</div>
 						</div>
 					</div>
-				</div>
-			{/if}
-			<div class="py-5 lg:px-12">
-				<div class="container">
-					<h2>Categories</h2>
-					<CatMenu />
-				</div>
-			</div>
-			{#if products.length}
-				<div class=" px-4 py-20 lg:px-12">
-					<div class="container">
-						<h2>Products</h2>
-						<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-							{#each products as item}
-								<ProductItem product={item} />
-							{/each}
+				{/if}
+				<CatMenu />
+				{#if products.length}
+					<div class=" px-4 py-20 lg:px-12">
+						<div class="container">
+							<h2>Products</h2>
+							<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+								{#each products as item}
+									<ProductItem product={item} />
+								{/each}
+							</div>
 						</div>
 					</div>
-				</div>
-			{/if}
-		</main>
+				{/if}
+			</main>
+		</div>
 	</div>
-</div>
+{/if}
