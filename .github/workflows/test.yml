@@ -24,3 +24,4 @@ jobs:
         env:
           APP_HOST: localhost
           APP_PORT: 5173
+          INSTANCE_PASS: ${{ secrets.INSTANCE_PASS }}
