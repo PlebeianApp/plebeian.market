@@ -223,7 +223,6 @@ export const createUser = async (
 		if (!parsedUserProfile.success) {
 			throw Error(JSON.stringify(parsedUserProfile.error))
 		}
-
 		const userMetaData = parsedUserProfile.data
 
 		const insertUser: NewUser = {
@@ -240,24 +239,13 @@ export const createUser = async (
 			image: userMetaData.image ? userMetaData.image : userMetaData.picture,
 			website: userMetaData.website,
 			zapService: userMetaData.zapService,
-			lastLogin: new Date(),
 		}
+		if (!fromNostr) insertUser.lastLogin = new Date()
 
 		const [userResult] = await db.insert(users).values(insertUser).returning()
 
 		if (!userResult) {
 			throw Error('Failed to create user')
-		}
-
-		if (!fromNostr) {
-			await Promise.all([
-				db.insert(userMeta).values({ userId: userResult.id, metaName: USER_META.ROLE.value, valueText: role }).returning().execute(),
-				db
-					.insert(userMeta)
-					.values({ userId: userResult.id, metaName: USER_META.TRUST_LVL.value, valueText: trustLevel })
-					.returning()
-					.execute(),
-			])
 		}
 
 		return userResult
@@ -268,7 +256,7 @@ export const createUser = async (
 			} else if (e.message.includes('safeParse')) {
 				error(400, { message: 'Invalid user data' })
 			} else {
-				error(500, { message: 'Internal Server Error' })
+				error(500, { message: `Internal Server Error: ${e}` })
 			}
 		} else {
 			error(500, { message: 'Internal Server Error' })
@@ -289,6 +277,7 @@ export const updateUser = async (userId: string, userProfile: RichUser): Promise
 			image: userProfile.image,
 			website: userProfile.website,
 			zapService: userProfile.zapService,
+			lastLogin: new Date(),
 		}
 
 		const userResult = await db

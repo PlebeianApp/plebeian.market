@@ -6,6 +6,7 @@ import { AppSettings } from './types'
 const main = async () => {
 	const appSettings = {
 		instancePk: '0000000000000000000000000000000000000000000000000000000000000000',
+		instanceSk: '0000000000000000000000000000000000000000000000000000000000000000',
 		isFirstTimeRunning: true,
 	} as AppSettings
 

@@ -12,7 +12,7 @@
 	import Separator from '$lib/components/ui/separator/separator.svelte'
 	import { availabeLogos } from '$lib/constants'
 	import { createRequest } from '$lib/fetch/client'
-	import { copyToClipboard } from '$lib/utils'
+	import { copyToClipboard, createNcryptSec } from '$lib/utils'
 	import { generateSecretKey, getPublicKey, nip19 } from 'nostr-tools'
 	import { npubEncode } from 'nostr-tools/nip19'
 	import { onMount, tick } from 'svelte'
@@ -23,7 +23,7 @@
 	import type { PageData } from './$types'
 
 	export let data: PageData
-	const { currencies, appSettings, adminUsers } = data
+	const { currencies, appSettings, adminUsers, instancePass } = data
 	let checked = true
 	let selectedCurrency: Selected<string> = { value: 'BTC', label: 'BTC' }
 	let newInstanceNsec = ''
@@ -33,12 +33,6 @@
 
 	let logoUrl: string = ''
 	let open = false
-
-	onMount(async () => {
-		if (!appSettings.isFirstTimeRunning) {
-			goto('/', { invalidateAll: true })
-		}
-	})
 
 	function setGeneratedSk() {
 		const sk = generateSecretKey()
@@ -56,6 +50,8 @@
 		formObject.logoUrl = logoUrl
 		const filteredFormObject = Object.fromEntries(Object.entries(formObject).filter(([_, value]) => value !== ''))
 
+		const ncryptedSk = createNcryptSec(filteredFormObject.instanceSk, instancePass)
+		if (ncryptedSk) filteredFormObject.instanceSk = ncryptedSk
 		const response = await createRequest(`POST /setup`, {
 			body: filteredFormObject as AppSettings,
 		})
@@ -79,6 +75,12 @@
 			document.getElementById(triggerId)?.focus()
 		})
 	}
+
+	onMount(() => {
+		if (!appSettings.isFirstTimeRunning) {
+			goto('/', { invalidateAll: true })
+		}
+	})
 </script>
 
 <div class="px-4 py-10 lg:px-12">
@@ -110,7 +112,7 @@
 						{#if newInstanceNsec}
 							<Label class="truncate font-bold">New nsec</Label>
 							<div class="flex flex-row gap-2">
-								<Input class="border-black border-2" value={newInstanceNsec} readonly />
+								<Input class="border-black border-2" value={newInstanceNsec} readonly name="instanceSk" />
 								<Button
 									on:click={() => {
 										copyToClipboard(newInstanceNsec)

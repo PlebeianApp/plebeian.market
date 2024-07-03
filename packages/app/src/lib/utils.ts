@@ -6,6 +6,7 @@ import ndkStore from '$lib/stores/ndk'
 import { clsx } from 'clsx'
 import { differenceInDays } from 'date-fns'
 import { decode } from 'nostr-tools/nip19'
+import { encrypt } from 'nostr-tools/nip49'
 import { toast } from 'svelte-sonner'
 import { cubicOut } from 'svelte/easing'
 import { get } from 'svelte/store'
@@ -228,4 +229,11 @@ export const getElapsedTimeInDays = (unixTimestamp: number): number => {
 export const decodePk = (pk: string | null | undefined) => {
 	if (!pk) return null
 	return pk.startsWith('npub') ? decode(pk).data.toString() : pk
+}
+
+export const createNcryptSec = (sk: string, pass: string): { decodedSk: Uint8Array; ncryptsec: string } => {
+	const decoded = decode(sk)
+	if (decoded.type !== 'nsec') throw new Error('Not nsec')
+	const ncryptsec = encrypt(decoded.data, pass)
+	return { decodedSk: decoded.data, ncryptsec }
 }

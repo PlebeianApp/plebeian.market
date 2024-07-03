@@ -1,14 +1,15 @@
-import type { NDKUser } from '@nostr-dev-kit/ndk'
+import type { NDKUser, NDKUserProfile } from '@nostr-dev-kit/ndk'
 import type { BaseAccount } from '$lib/stores/session'
 import { NDKNip07Signer, NDKPrivateKeySigner, NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk'
+import { error } from '@sveltejs/kit'
 import { invalidateAll } from '$app/navigation'
 import { page } from '$app/stores'
 import { HEX_KEYS_REGEX } from '$lib/constants'
 import ndkStore, { ndk } from '$lib/stores/ndk'
 import { addAccount, getAccount, updateAccount } from '$lib/stores/session'
-import { bytesToHex, hexToBytes } from '$lib/utils'
-import { decode, nsecEncode } from 'nostr-tools/nip19'
-import { decrypt, encrypt } from 'nostr-tools/nip49'
+import { bytesToHex, createNcryptSec, hexToBytes } from '$lib/utils'
+import { nsecEncode } from 'nostr-tools/nip19'
+import { decrypt } from 'nostr-tools/nip49'
 import { FetchError } from 'ofetch'
 
 import type { PageData } from '../routes/$types'
@@ -76,37 +77,38 @@ export async function loginWithExtension(): Promise<boolean> {
 }
 
 export async function loginWithPrivateKey(key: string, password: string): Promise<boolean> {
-	if (key.startsWith('ncryptsec')) {
-		try {
-			const decryptedKey = decrypt(key, password)
-			const signer = new NDKPrivateKeySigner(bytesToHex(decryptedKey))
-			console.log('Waiting for PrivateKey signer')
-			await signer.blockUntilReady()
-			ndk.signer = signer
-			ndkStore.set(ndk)
-			fetchActiveUserData(key)
-			return true
-		} catch (e) {
-			console.error(e)
-			return false
-		}
-	} else if (key.startsWith('nsec')) {
-		try {
-			const decoded = decode(key)
-			if (decoded.type !== 'nsec') throw new Error('Not nsec')
-			const cSK = encrypt(decoded.data, password)
-			const signer = new NDKPrivateKeySigner(bytesToHex(decoded.data))
-			console.log('Waiting for PrivateKey signer')
-			await signer.blockUntilReady()
-			ndk.signer = signer
-			ndkStore.set(ndk)
-			fetchActiveUserData(cSK)
-			return true
-		} catch (e) {
-			console.error(e)
-			return false
-		}
-	} else throw new Error('Unknown private format')
+	try {
+		if (key.startsWith('ncryptsec')) {
+			try {
+				const decryptedKey = decrypt(key, password)
+				const signer = new NDKPrivateKeySigner(bytesToHex(decryptedKey))
+				console.log('Waiting for PrivateKey signer')
+				await signer.blockUntilReady()
+				ndk.signer = signer
+				ndkStore.set(ndk)
+				fetchActiveUserData(key)
+				return true
+			} catch (e) {
+				throw new Error(`Error during loging with private key: ${e}`)
+			}
+		} else if (key.startsWith('nsec')) {
+			try {
+				const { decodedSk, ncryptsec } = createNcryptSec(key, password)
+				key = bytesToHex(decodedSk)
+				const signer = new NDKPrivateKeySigner(key)
+				console.log('Waiting for PrivateKey signer')
+				await signer.blockUntilReady()
+				ndk.signer = signer
+				ndkStore.set(ndk)
+				fetchActiveUserData(ncryptsec)
+				return true
+			} catch (e) {
+				throw new Error(`Error during loging with private key: ${e}`)
+			}
+		} else throw new Error('Unknown private format')
+	} catch (e) {
+		error(400, { message: `${e}` })
+	}
 }
 
 export async function logout() {
@@ -157,10 +159,10 @@ export async function loginDb(user: NDKUser) {
 		if (e instanceof FetchError) {
 			if (e.status === 404) {
 				console.log('creating user')
-				const body = userEventSchema.parse(unNullify({ id: user.pubkey, ...user.profile }))
-				await createRequest('POST /api/v1/users', {
+				const body: { id: string } & NDKUserProfile = userEventSchema.parse(unNullify({ id: user.pubkey, ...user.profile }))
+				await createRequest(`POST /api/v1/users/`, {
 					auth: true,
-					body,
+					body: body,
 				})
 			}
 		}

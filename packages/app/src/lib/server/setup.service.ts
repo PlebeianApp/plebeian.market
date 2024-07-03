@@ -8,7 +8,7 @@ import { appSettings, db, eq, sql, USER_META, USER_ROLES, userMeta, users } from
 import { getUsersByRole } from './users.service'
 
 export type ExtendedAppSettings = NewAppSettings & {
-	adminsList: string[]
+	adminsList?: string[]
 }
 
 export const isInitialSetup = async (): Promise<boolean> => {
@@ -60,7 +60,7 @@ const revokeAdmins = async (users: string[]) => {
 export const updateAppSettings = async (appSettingsData: ExtendedAppSettings) => {
 	try {
 		const decodedInstancePk = decodePk(appSettingsData.instancePk)
-		const decodedOwnerPk = decodePk(appSettingsData.ownerPk)
+		const decodedOwnerPk = decodePk(appSettingsData?.ownerPk)
 
 		const [appSettingsRes] = await db
 			.update(appSettings)
@@ -79,7 +79,7 @@ export const updateAppSettings = async (appSettingsData: ExtendedAppSettings) =>
 			error(500, { message: `Failed to update app settings` })
 		}
 
-		if (appSettingsData.adminsList) {
+		if (appSettingsData.adminsList || appSettingsData.ownerPk) {
 			const insertedUsers = await adminsToSync(appSettingsData)
 			return { appSettingsRes, insertedUsers }
 		}

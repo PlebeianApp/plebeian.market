@@ -56,6 +56,7 @@ export type CatsFilter = z.infer<typeof catsFilterSchema>
 
 export const initialSetupDataSchema = z.object({
 	instancePk: z.string().startsWith('npub'),
+	instanceSk: z.string().startsWith('ncryptsec'),
 	ownerPk: z.string().startsWith('npub').optional(),
 	adminsList: z.array(z.string().startsWith('npub')).optional(),
 	instanceName: z.string(),
@@ -63,6 +64,7 @@ export const initialSetupDataSchema = z.object({
 	contactEmail: z.string().email().optional(),
 	defaultCurrency: z.string(),
 	allowRegister: z.coerce.boolean(),
+	isFirstTimeRunning: z.coerce.boolean().optional(),
 })
 
 export const postProductImageSchema = z.object({

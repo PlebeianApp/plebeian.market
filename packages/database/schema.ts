@@ -129,9 +129,7 @@ export const users = sqliteTable('users', {
 	lud16: text('lud16'),
 	website: text('website'),
 	zapService: text('zap_Service'),
-	lastLogin: integer('last_login', { mode: 'timestamp' })
-		.notNull()
-		.default(sql`(unixepoch())`),
+	lastLogin: integer('last_login', { mode: 'timestamp' }),
 })
 
 // Users meta table
@@ -416,6 +414,7 @@ export const invoices = sqliteTable('invoices', {
 // App Settings
 export const appSettings = sqliteTable('app_settings', {
 	instancePk: text('instance_pk').primaryKey(),
+	instanceSk: text('instance_sk').notNull(),
 	isFirstTimeRunning: integer('is_first_time_running', { mode: 'boolean' }).notNull().default(true),
 	instanceName: text('instance_name').notNull().default('Plebeian Market'),
 	logoUrl: text('logo_url').notNull().default('/logo.svg'),

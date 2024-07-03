@@ -1,6 +1,6 @@
 import type { NDKUserProfile } from '@nostr-dev-kit/ndk'
 import { error, json } from '@sveltejs/kit'
-import { authorize } from '$lib/auth'
+import { authorize, authorizeUserless } from '$lib/auth'
 import { usersFilterSchema } from '$lib/schema'
 import { createUser, deleteUser, getRichUsers, getUserById, updateUser, updateUserFromNostr, userExists } from '$lib/server/users.service'
 
@@ -60,12 +60,17 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 	}
 }
 
-export const POST: RequestHandler = async ({ request }) => {
+export const POST: RequestHandler = async ({ request, params: { userId } }) => {
 	try {
+		if (!userId) throw Error('Invalid request')
+		await authorizeUserless(request, userId)
 		const body = await request.json()
-		return json(await createUser(body, true))
+		return json(await createUser(body))
 	} catch (e) {
-		if (e.status) {
+		if (e.status === 401) {
+			const body = await request.json()
+			return json(await createUser(body, true))
+		} else if (e.status) {
 			return error(e.status, e.message)
 		}
 		return error(500, JSON.stringify(e))
