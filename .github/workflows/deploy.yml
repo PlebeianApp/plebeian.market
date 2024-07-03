@@ -32,7 +32,7 @@ jobs:
           # Install dependencies and build the project
           pnpm i --frozen-lockfile
           rm ./sqlite.db || true
-          pnpm db:setup
+          pnpm db:init
           pnpm build
           # Run pnpm preview in the background and log output to a file
           nohup pnpm preview > preview.log 2>&1 &
