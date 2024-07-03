@@ -160,7 +160,7 @@ export async function loginDb(user: NDKUser) {
 			if (e.status === 404) {
 				console.log('creating user')
 				const body: { id: string } & NDKUserProfile = userEventSchema.parse(unNullify({ id: user.pubkey, ...user.profile }))
-				await createRequest(`POST /api/v1/users/`, {
+				await createRequest('POST /api/v1/users/', {
 					auth: true,
 					body: body,
 				})
