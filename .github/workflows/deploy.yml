@@ -27,6 +27,7 @@ jobs:
         script: |
           bash
           cd plebeian.market
+          mv .env.sample .env
           # Kill any process running on port 4173
           fuser -k 4173/tcp || true
           # Install dependencies and build the project
