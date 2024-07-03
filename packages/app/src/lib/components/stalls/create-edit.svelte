@@ -11,8 +11,11 @@
 	import * as Popover from '$lib/components/ui/popover/index.js'
 	import { Textarea } from '$lib/components/ui/textarea'
 	import { KindProducts, KindStalls } from '$lib/constants'
+	import { createShippingQuery } from '$lib/fetch/shipping.queries'
+	import { createStallFromNostrEvent, updateStallFromNostrEvent } from '$lib/fetch/stalls.mutations'
 	import ndkStore, { ndk } from '$lib/stores/ndk'
 	import { createEventDispatcher, onMount, tick } from 'svelte'
+	import { get } from 'svelte/store'
 
 	import type { ISO3 } from '@plebeian/database/constants'
 	import { COUNTRIES_ISO, CURRENCIES } from '@plebeian/database/constants'
@@ -87,19 +90,18 @@
 
 	onMount(async () => {
 		if (stall) {
-			const response = await fetch(new URL(`/api/v1/shipping/${stall.id}`, window.location.origin), {
-				method: 'GET',
-			})
-			const richShippingInfo: RichShippingInfo[] = await response.json()
-			shippingMethods = richShippingInfo.map(
-				(s) =>
-					new ShippingMethod(
-						s.id,
-						s.name,
-						s.cost,
-						s.zones.map((z) => z.region as ISO3),
-					),
-			)
+			const { data: initialShippings } = await get(createShippingQuery(stall.id)).refetch()
+
+			shippingMethods =
+				initialShippings?.map(
+					(s) =>
+						new ShippingMethod(
+							s.id,
+							s.name,
+							s.cost,
+							s.zones.map((z) => z.region as ISO3),
+						),
+				) ?? []
 		}
 	})
 
@@ -117,9 +119,10 @@
 		if (!$ndkStore.activeUser?.pubkey) return
 		const formData = new FormData(sEvent.currentTarget as HTMLFormElement, sEvent.submitter)
 		const identifier = stall?.identifier ? stall.identifier : createId()
+		const id = stall?.id ?? `${KindProducts}:${$ndkStore.activeUser.pubkey}:${identifier}`
 
 		const evContent = {
-			id: stall?.id ?? `${KindProducts}:${$ndkStore.activeUser.pubkey}:${identifier}`,
+			id,
 			name: formData.get('title'),
 			description: formData.get('description'),
 			currency: currency,
@@ -136,14 +139,11 @@
 		await newEvent.sign(ndk.signer)
 		const nostrEvent = await newEvent.toNostrEvent()
 		// TODO refactor this to mutation
-		await fetch(new URL(stall ? `/api/v1/stalls/${stall.id}` : '/api/v1/stalls', window.location.origin), {
-			method: stall ? 'PUT' : 'POST',
-
-			body: JSON.stringify(nostrEvent),
-			headers: {
-				'Content-Type': 'application/json',
-			},
-		})
+		if (stall) {
+			await get(updateStallFromNostrEvent).mutateAsync([id, nostrEvent])
+		} else {
+			await get(createStallFromNostrEvent).mutateAsync(nostrEvent)
+		}
 		dispatch('success', null)
 	}
 </script>

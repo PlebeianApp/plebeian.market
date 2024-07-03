@@ -5,6 +5,7 @@ import { type NDKEvent, type NDKKind, type NDKTag, type NDKUserProfile, type Nos
 import ndkStore from '$lib/stores/ndk'
 import { clsx } from 'clsx'
 import { differenceInDays } from 'date-fns'
+import { ofetch } from 'ofetch'
 import { toast } from 'svelte-sonner'
 import { cubicOut } from 'svelte/easing'
 import { get } from 'svelte/store'
@@ -63,11 +64,9 @@ export const flyAndScale = (node: Element, params: FlyAndScaleParams = { y: -8, 
 }
 
 export async function currencyToBtc(currency: string, amount: number, inSats?: boolean): Promise<number | null> {
-	const apiUrl = `https://api.yadio.io/convert/${amount}/${currency}/btc`
 	try {
-		const response = await fetch(apiUrl)
-		const data = await response.json()
-		return inSats ? bitcoinToSatoshis(data.result) : data.result
+		const { result } = await ofetch(`https://api.yadio.io/convert/${amount}/${currency}/btc`)
+		return inSats ? bitcoinToSatoshis(result) : result
 	} catch (error) {
 		console.error(`Error converting ${amount} ${currency} to BTC: ${error}`)
 		return null
