@@ -57,6 +57,8 @@ const revokeAdmins = async (users: string[]) => {
 	}
 }
 
+export type UpdateAppSettingsReturnType = Awaited<ReturnType<typeof updateAppSettings>>
+
 export const updateAppSettings = async (appSettingsData: ExtendedAppSettings) => {
 	try {
 		const decodedInstancePk = decodePk(appSettingsData.instancePk)

@@ -13,13 +13,13 @@ import { createRequest, queryClient } from './client'
 declare module './client' {
 	interface Endpoints {
 		[k: `POST /api/v1/stalls/${string}`]: Operation<string, 'POST', never, NostrEvent, DisplayStall, never>
+		[k: `PUT /api/v1/stalls/${string}`]: Operation<string, 'POST', never, NostrEvent, DisplayStall, never>
 		[k: `DELETE /api/v1/stalls/${string}`]: Operation<string, 'DELETE', never, string, string, never>
 	}
 }
 
-export const stallFromNostrEvent = createMutation(
+export const createStallFromNostrEvent = createMutation(
 	{
-		mutationKey: [],
 		mutationFn: async (stallEvent: NostrEvent) => {
 			const { coordinates } = getEventCoordinates(stallEvent)
 			try {
@@ -49,9 +49,38 @@ export const stallFromNostrEvent = createMutation(
 	queryClient,
 )
 
+export const updateStallFromNostrEvent = createMutation(
+	{
+		mutationFn: async ([stallId, stallEvent]: [string, NostrEvent]) => {
+			try {
+				const response = await createRequest(`PUT /api/v1/stalls/${stallId}`, {
+					body: stallEvent,
+				})
+				if (!response) {
+					return null
+				}
+				return response
+			} catch (e) {
+				console.error(e)
+				throw error(500, `Failed to mutate stall, ${e}`)
+			}
+		},
+
+		onSuccess: (data: DisplayStall | null) => {
+			if (data) {
+				console.log('Stall inserted in db successfully', data)
+				queryClient.invalidateQueries({
+					queryKey: ['stalls', ...Object.values(stallsFilterSchema.safeParse({ userId: data.userId }).data as Partial<StallsFilter>)],
+				})
+				queryClient.invalidateQueries({ queryKey: ['shipping', data.id] })
+			}
+		},
+	},
+	queryClient,
+)
+
 export const deleteStallMutation = createMutation(
 	{
-		mutationKey: [],
 		mutationFn: async (stallId: string) => {
 			const $ndkStore = get(ndkStore)
 

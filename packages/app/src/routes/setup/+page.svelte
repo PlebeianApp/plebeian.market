@@ -15,6 +15,7 @@
 	import { copyToClipboard, createNcryptSec } from '$lib/utils'
 	import { generateSecretKey, getPublicKey, nip19 } from 'nostr-tools'
 	import { npubEncode } from 'nostr-tools/nip19'
+	import { ofetch } from 'ofetch'
 	import { onMount, tick } from 'svelte'
 	import { toast } from 'svelte-sonner'
 
@@ -52,21 +53,15 @@
 
 		const { ncryptsec } = createNcryptSec(filteredFormObject.instanceSk, instancePass)
 		if (ncryptsec) filteredFormObject.instanceSk = ncryptsec
-		const response = await createRequest(`POST /setup`, {
-			body: filteredFormObject as AppSettings,
-		})
+		try {
+			await ofetch('/setup', {
+				method: 'POST',
+				body: filteredFormObject,
+			})
 
-		if (!response) {
-			const error = response
-			toast.error(error)
-			console.error('Failed to submit form', error)
-			return
-		}
-
-		const result = response
-
-		if (result) {
 			goto('/', { invalidateAll: true })
+		} catch (e) {
+			console.error('Failed to submit form', e)
 		}
 	}
 	function closeAndFocusTrigger(triggerId: string) {

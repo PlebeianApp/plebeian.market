@@ -15,8 +15,10 @@
 	import SelectTrigger from '$lib/components/ui/select/select-trigger.svelte'
 	import Separator from '$lib/components/ui/separator/separator.svelte'
 	import { availabeLogos } from '$lib/constants'
+	import { createRequest } from '$lib/fetch/client'
 	import { copyToClipboard, nav_back } from '$lib/utils'
 	import { npubEncode } from 'nostr-tools/nip19'
+	import { ofetch } from 'ofetch'
 	import { onMount, tick } from 'svelte'
 	import { toast } from 'svelte-sonner'
 
@@ -39,29 +41,14 @@
 		formObject.instancePk = npubEncode(appSettings.instancePk)
 		const filteredFormObject = Object.fromEntries(Object.entries(formObject).filter(([_, value]) => value !== ''))
 
-		const response = await fetch($page.url.pathname, {
-			method: 'PUT',
-			body: JSON.stringify(filteredFormObject),
-		})
-
-		if (!response.ok) {
-			const error = (await response.json()) as ZodError
-			console.log('error', error)
-			if (error.issues.length > 0) {
-				error.issues.forEach((issue) => {
-					toast.error(issue.message)
-				})
-			} else {
-				console.error('Failed to submit form', error)
-			}
-			return
-		}
-
-		const result = await response.json()
-
-		if (result) {
+		try {
+			await createRequest('PUT /settings/app/misc', {
+				body: filteredFormObject,
+			})
 			toast.success('App settings successfully updated!')
 			invalidateAll()
+		} catch (e) {
+			console.error('Failed to submit form', e)
 		}
 	}
 	function closeAndFocusTrigger(triggerId: string) {
