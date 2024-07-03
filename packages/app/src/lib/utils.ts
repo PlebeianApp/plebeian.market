@@ -5,6 +5,7 @@ import { type NDKEvent, type NDKKind, type NDKTag, type NDKUserProfile, type Nos
 import ndkStore from '$lib/stores/ndk'
 import { clsx } from 'clsx'
 import { differenceInDays } from 'date-fns'
+import { ofetch } from 'ofetch'
 import { toast } from 'svelte-sonner'
 import { cubicOut } from 'svelte/easing'
 import { get } from 'svelte/store'
@@ -12,7 +13,6 @@ import { twMerge } from 'tailwind-merge'
 
 import type { EventCoordinates } from './interfaces'
 import { numSatsInBtc } from './constants'
-import { ofetch } from 'ofetch'
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs))

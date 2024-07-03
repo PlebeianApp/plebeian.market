@@ -1,5 +1,6 @@
 import type { NDKTag } from '@nostr-dev-kit/ndk'
 import type { HttpMethod } from '@sveltejs/kit'
+import type { UpdateAppSettingsReturnType } from '$lib/server/setup.service'
 import { NDKEvent } from '@nostr-dev-kit/ndk'
 import { QueryClient } from '@tanstack/svelte-query'
 import { $fetch } from 'ofetch'
@@ -31,7 +32,9 @@ export type Operation<U extends string, M extends HttpMethod, H extends Record<s
 	params: P
 }
 
-export interface Endpoints {}
+export interface Endpoints {
+	'PUT /settings/app/misc': Operation<'/settings/app/misc', 'PUT', never, Record<string, unknown>, UpdateAppSettingsReturnType, never>
+}
 
 export async function createRequest<K extends keyof Endpoints, RequestOperation extends Endpoints[K]>(
 	endpoint: K,

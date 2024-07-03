@@ -78,6 +78,8 @@ const revokeAdmins = async (adminsToInsert: { id: string; role: UserRoles }[], c
 	)
 }
 
+export type UpdateAppSettingsReturnType = Awaited<ReturnType<typeof updateAppSettings>>
+
 export const updateAppSettings = async (appSettingsData: ExtendedAppSettings) => {
 	const decodedInstancePk = appSettingsData.instancePk.startsWith('npub')
 		? decode(appSettingsData.instancePk).data.toString()

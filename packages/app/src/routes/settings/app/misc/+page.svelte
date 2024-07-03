@@ -15,6 +15,7 @@
 	import SelectTrigger from '$lib/components/ui/select/select-trigger.svelte'
 	import Separator from '$lib/components/ui/separator/separator.svelte'
 	import { availabeLogos } from '$lib/constants'
+	import { createRequest } from '$lib/fetch/client'
 	import { copyToClipboard, nav_back } from '$lib/utils'
 	import { npubEncode } from 'nostr-tools/nip19'
 	import { ofetch } from 'ofetch'
@@ -41,8 +42,7 @@
 		const filteredFormObject = Object.fromEntries(Object.entries(formObject).filter(([_, value]) => value !== ''))
 
 		try {
-			await ofetch($page.url.pathname, {
-				method: 'PUT',
+			await createRequest('PUT /settings/app/misc', {
 				body: filteredFormObject,
 			})
 			toast.success('App settings successfully updated!')
