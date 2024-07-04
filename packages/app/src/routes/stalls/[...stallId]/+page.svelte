@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { NDKUserProfile } from '@nostr-dev-kit/ndk'
 	import type { DisplayProduct } from '$lib/server/products.service'
+	import type { RichShippingInfo } from '$lib/server/shipping.service'
 	import type { RichStall } from '$lib/server/stalls.service'
 	import { NDKEvent } from '@nostr-dev-kit/ndk'
 	import ProductItem from '$lib/components/product/product-item.svelte'
@@ -25,13 +26,14 @@
 	import type { ProductImagesType } from '@plebeian/database'
 
 	import type { PageData } from './$types'
-	import { productEventSchema } from '../../../schema/nostr-events'
+	import { productEventSchema, shippingObjectSchema } from '../../../schema/nostr-events'
 
 	export let data: PageData
 	const { stall, user, appSettings } = data
 	let stallResponse: Partial<RichStall>
 	let toDisplayProducts: Partial<DisplayProduct>[]
 	let userProfile: NDKUserProfile | null
+	let shippingResponse: Partial<RichShippingInfo>[]
 
 	$: stallsQuery = stall.exist
 		? createStallsByFilterQuery({
@@ -64,10 +66,13 @@
 
 	$: if ($productsQuery?.data) toDisplayProducts = $productsQuery?.data
 
+	$: if ($shippingQuery?.data) shippingResponse = $shippingQuery.data
+
 	async function setNostrData(
 		stallData: NDKEvent | null,
 		userData: NDKUserProfile | null,
 		productsData: Set<NDKEvent> | null,
+		allowRegister: boolean = false,
 	): Promise<{ userInserted: boolean; stallInserted: boolean; productsInserted: boolean } | undefined> {
 		let userInserted: boolean = false
 		let stallInserted: boolean = false
@@ -75,21 +80,39 @@
 		try {
 			if (userData) {
 				userData && (userData.id = user.id)
-				const userMutation = await $userFromNostr.mutateAsync({ profile: userData, pubkey: user.id as string })
-				userMutation && (userInserted = true)
 				userProfile = userData
+				if (allowRegister) {
+					const userMutation = await $userFromNostr.mutateAsync({ profile: userData, pubkey: user.id as string })
+					userMutation && (userInserted = true)
+				}
 			}
 
 			if (stallData) {
 				stallResponse = JSON.parse(stallData?.content ?? '{}')
+				const parsedShipping =
+					stallResponse.shipping?.map((shipping) => {
+						const { data: shippingData } = shippingObjectSchema.safeParse(shipping)
+						if (shippingData) return shippingData
+					}) ?? []
+				shippingResponse = parsedShipping.map((shipping) => ({
+					id: shipping?.id,
+					name: shipping?.name as string,
+					cost: shipping?.cost,
+					zones: shipping?.regions?.map((zone) => ({
+						region: zone,
+						country: zone,
+					})),
+				}))
 				stallResponse.userId = user.id
 				stallResponse.userName = userData?.name || userData?.displayName
 				stallResponse.userNip05 = userData?.nip05
-				const stallEvent = await stallData.toNostrEvent()
-				const stallMutation = await $createStallFromNostrEvent.mutateAsync(stallEvent)
-				if (stallMutation) {
-					shippingQuery = createShippingQuery(stall.id)
-					stallInserted = true
+				if (allowRegister) {
+					const stallEvent = await stallData.toNostrEvent()
+					const stallMutation = await $createStallFromNostrEvent.mutateAsync(stallEvent)
+					if (stallMutation) {
+						shippingQuery = createShippingQuery(stall.id)
+						stallInserted = true
+					}
 				}
 			}
 			if (productsData?.size) {
@@ -114,8 +137,10 @@
 						})
 					}
 				}
-				const productsMutation = await $createProductsFromNostrMutation.mutateAsync(stallProducts)
-				productsMutation && (productsInserted = true)
+				if (allowRegister) {
+					const productsMutation = await $createProductsFromNostrMutation.mutateAsync(stallProducts)
+					productsMutation && (productsInserted = true)
+				}
 			}
 			return { userInserted, stallInserted, productsInserted }
 		} catch (e) {
@@ -125,29 +150,27 @@
 	}
 
 	onMount(async () => {
-		if (appSettings.allowRegister) {
-			if (!stall.exist) {
-				const { stallNostrRes } = await fetchStallData(stall.id)
-				const { userProfile } = user.exist ? { userProfile: null } : await fetchUserData(user.id as string)
-				const { products } = await fetchUserProductData(user.id as string)
-				if (products?.size) await setNostrData(stallNostrRes, userProfile, products)
-			} else {
-				fetchUserProductData(user.id as string).then((data) => {
-					const { products } = data
-					const newProducts = new Set(
-						[...(products as Set<NDKEvent>)].filter((product) => {
-							const stallId = JSON.parse(product.content).stall_id
-							if (stallId == stall.id.split(':')[2]) {
-								const productId = getEventCoordinates(product).coordinates
-								return !toDisplayProducts.some((displayProduct) => displayProduct.id?.includes(productId))
-							}
-						}),
-					)
-					setNostrData(null, null, newProducts).then((data) => {
-						data?.productsInserted && $productsQuery?.refetch()
-					})
+		if (!stall.exist) {
+			const { stallNostrRes } = await fetchStallData(stall.id)
+			const { userProfile } = user.exist ? { userProfile: null } : await fetchUserData(user.id as string)
+			const { products } = await fetchUserProductData(user.id as string)
+			if (products?.size) await setNostrData(stallNostrRes, userProfile, products, appSettings.allowRegister)
+		} else {
+			fetchUserProductData(user.id as string).then((data) => {
+				const { products } = data
+				const newProducts = new Set(
+					[...(products as Set<NDKEvent>)].filter((product) => {
+						const stallId = JSON.parse(product.content).stall_id
+						if (stallId == stall.id.split(':')[2]) {
+							const productId = getEventCoordinates(product).coordinates
+							return !toDisplayProducts.some((displayProduct) => displayProduct.id?.includes(productId))
+						}
+					}),
+				)
+				setNostrData(null, null, newProducts, appSettings.allowRegister).then((data) => {
+					data?.productsInserted && $productsQuery?.refetch()
 				})
-			}
+			})
 		}
 	})
 
@@ -186,16 +209,18 @@
 							<Accordion.Trigger>More info</Accordion.Trigger>
 							<Accordion.Content>
 								<div class=" flex flex-col gap-2 items-start">
-									{#if $shippingQuery?.data}
+									{#if shippingResponse}
 										<span class=" font-bold">Shipping zones</span>
 										<section class=" flex gap-2 flex-wrap">
-											{#each $shippingQuery.data as shipping}
-												{#if shipping.name}
-													<span>{shipping.name}</span>
+											{#each shippingResponse as shipping}
+												{#if shipping.name || shipping.id}
+													<span>{shipping.name || shipping.id}</span>
 												{/if}
-												{#each shipping.zones as zone}
-													<Badge variant="secondary">{zone.country ? zone.country : zone.region}</Badge>
-												{/each}
+												{#if shipping.zones}
+													{#each shipping.zones as zone}
+														<Badge variant="secondary">{zone.country ? zone.country : zone.region}</Badge>
+													{/each}
+												{/if}
 											{/each}
 										</section>
 									{/if}

@@ -27,7 +27,9 @@ import {
 	users,
 } from '@plebeian/database'
 
+import type { RichShippingInfo } from './shipping.service'
 import { stallEventSchema } from '../../schema/nostr-events'
+import { getShippingByStallId } from './shipping.service'
 
 export type RichStall = {
 	id: string
@@ -39,9 +41,10 @@ export type RichStall = {
 	userNip05: string | null
 	userName: string | null
 	productCount?: number
-	orderCount?: number
+	// orderCount?: number
 	paymentMethods?: PaymentDetail[]
 	identifier: string
+	shipping: Partial<RichShippingInfo>[]
 }
 
 export type DisplayStall = {
@@ -51,6 +54,7 @@ export type DisplayStall = {
 	currency: string
 	createDate: string
 	userId: string
+	shipping: Partial<RichShippingInfo>[]
 }
 
 const resolveStalls = async (stall: Stall): Promise<RichStall> => {
@@ -74,18 +78,24 @@ const resolveStalls = async (stall: Stall): Promise<RichStall> => {
 			.execute()
 	).map((product) => product.count)
 
-	const [orderCount] = (
-		await db
-			.select({
-				count: sql<number>`cast(count(${orders.id}) as int)`,
-			})
-			.from(orders)
-			.where(eq(orders.stallId, stall.id))
-			.execute()
-	).map((order) => order.count)
+	// const [orderCount] = (
+	// 	await db
+	// 		.select({
+	// 			count: sql<number>`cast(count(${orders.id}) as int)`,
+	// 		})
+	// 		.from(orders)
+	// 		.where(eq(orders.stallId, stall.id))
+	// 		.execute()
+	// ).map((order) => order.count)
 
 	if (!ownerRes.userId) {
 		error(404, 'Not found')
+	}
+
+	const shippingInfo = await getShippingByStallId(stall.id)
+
+	if (!shippingInfo) {
+		error(404, 'not found')
 	}
 
 	const paymentMethods = await db.select().from(paymentDetails).where(eq(paymentDetails.stallId, stall.id)).execute()
@@ -100,9 +110,10 @@ const resolveStalls = async (stall: Stall): Promise<RichStall> => {
 		userName: ownerRes.userName,
 		userNip05: ownerRes.userNip05,
 		productCount,
-		orderCount,
+		// orderCount,
 		paymentMethods,
 		identifier: stall.id.split(':')[2],
+		shipping: shippingInfo,
 	}
 }
 
@@ -312,6 +323,7 @@ export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall 
 			currency: stallResult.currency,
 			createDate: format(stallResult.createdAt, standardDisplayDateFormat),
 			userId: stallResult.userId,
+			shipping: data.shipping,
 		}
 	} catch (e) {
 		console.error(e)
@@ -373,6 +385,7 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
 			currency: stallResult.currency,
 			createDate: format(stallResult.createdAt, standardDisplayDateFormat),
 			userId: stallResult.userId,
+			shipping: parsedStall.shipping ?? [],
 		}
 	}
 

@@ -14,7 +14,7 @@ const productTypeValidator = (value: unknown) => {
 	return value
 }
 
-const shippingObjectSchema = z.object({
+export const shippingObjectSchema = z.object({
 	id: z.string(),
 	name: z.string().optional(),
 	cost: z.preprocess((value) => (typeof value === 'number' ? value.toString() : value), z.string().optional()),
