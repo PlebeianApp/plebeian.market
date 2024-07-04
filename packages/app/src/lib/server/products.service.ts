@@ -260,10 +260,10 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 					error: parseError,
 				} = productEventSchema.safeParse({ id: productEventContent.id, ...productEventContent })
 
-				if (!success) error(500, { message: `${parseError}` })
+				if (!success) throw Error(`${parseError}`)
 
 				if (!parsedProduct) {
-					throw 'Bad product schema'
+					throw Error('Bad product schema')
 				}
 
 				const stall = parsedProduct.stall_id.startsWith(`${KindStalls}`)
@@ -272,9 +272,8 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 
 				const parentId = customTagValue(productEvent.tags, 'a')[0] || null
 				const extraCost = parsedProduct.shipping.length ? parsedProduct.shipping[0].cost : 0
-				if (!stall) {
-					throw 'Stall not found'
-				}
+
+				if (!stall) throw Error('Stall not found')
 
 				if (!parsedProduct.type) {
 					parsedProduct.type = 'simple'
@@ -322,22 +321,17 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 
 				const productResult = await db.insert(products).values(insertProduct).returning()
 
-				if (insertSpecs?.length) {
-					await db.insert(productMeta).values(insertSpecs).returning()
-				}
+				if (insertSpecs?.length) await db.insert(productMeta).values(insertSpecs).returning()
 
-				if (insertProductImages?.length) {
-					await db.insert(productImages).values(insertProductImages).returning()
-				}
+				if (insertProductImages?.length) await db.insert(productImages).values(insertProductImages).returning()
 
 				if (productResult[0]) {
 					return toDisplayProduct(productResult[0])
 				} else {
-					throw 'Failed to create product'
+					throw Error('Failed to create product')
 				}
 			} catch (e) {
-				console.error('Error creating product:', e)
-				error(500, { message: `${e}` })
+				throw Error(`${e}`)
 			}
 		})
 		const results = await Promise.all(productPromises)

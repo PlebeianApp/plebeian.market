@@ -1,6 +1,6 @@
 import { error } from '@sveltejs/kit'
 import { KindStalls } from '$lib/constants'
-import { getStallById, stallExists } from '$lib/server/stalls.service'
+import { stallExists } from '$lib/server/stalls.service'
 import { getUserIdByNip05, userExists } from '$lib/server/users.service.js'
 import ndkStore from '$lib/stores/ndk'
 import { NIP05_REGEX } from 'nostr-tools/nip05'
@@ -35,6 +35,9 @@ export const load: PageServerLoad = async ({ params }) => {
 			const userNostrRes = await $ndk.getUserFromNip05(lowerNip05)
 			if (userNostrRes) {
 				userId = userNostrRes.pubkey
+				_userExists = false
+			} else {
+				userId = undefined
 				_userExists = false
 			}
 		}

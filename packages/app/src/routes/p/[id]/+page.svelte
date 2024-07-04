@@ -11,10 +11,15 @@
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
 	import { createProductsByFilterQuery } from '$lib/fetch/products.queries'
 	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
-	import { userFromNostr, userFromNostrMutation } from '$lib/fetch/users.mutations'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
-	import { normalizeStallData } from '$lib/nostrSubs/subs'
-	import { fetchUserData, fetchUserProductData, fetchUserStallsData } from '$lib/nostrSubs/utils'
+	import {
+		fetchUserData,
+		fetchUserProductData,
+		fetchUserStallsData,
+		handleUserNostrData,
+		normalizeProductsFromNostr,
+		normalizeStallData,
+	} from '$lib/nostrSubs/utils'
 	import { openDrawerForNewProduct, openDrawerForNewStall } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
 	import { copyToClipboard, getElapsedTimeInDays } from '$lib/utils'
@@ -23,7 +28,6 @@
 	import { get } from 'svelte/store'
 
 	import type { PageData } from './$types'
-	import { productEventSchema } from '../../../schema/nostr-events'
 
 	let userProfile: NDKUserProfile | null
 	let stalls: Partial<RichStall>[] | null
@@ -73,12 +77,8 @@
 		let productsInserted: boolean = false
 		try {
 			if (userData) {
-				userData && (userData.id = id)
-				if (allowRegister) {
-					const userMutation = await $userFromNostr.mutateAsync({ profile: userData, pubkey: id as string })
-					userMutation && (userInserted = true)
-				}
 				userProfile = userData
+				allowRegister && (userInserted = await handleUserNostrData(userData, id as string))
 			}
 
 			if (stallData) {
@@ -92,20 +92,11 @@
 			}
 
 			if (productsData?.size) {
-				toDisplayProducts = [...productsData].map((event) => {
-					const product = productEventSchema.parse(JSON.parse(event.content))
-					return {
-						...product,
-						images: product.images?.map((image) => ({
-							createdAt: new Date(),
-							productId: product.id,
-							auctionId: null,
-							imageUrl: image,
-							imageType: 'gallery',
-							imageOrder: 0,
-						})),
-					}
-				})
+				const result = normalizeProductsFromNostr(productsData, id as string)
+				if (result) {
+					const { toDisplayProducts: _toDisplay } = result
+					toDisplayProducts = _toDisplay
+				}
 				return { userInserted, stallInserted, productsInserted }
 			}
 		} catch (e) {
@@ -128,7 +119,8 @@
 				const elapsedTime = getElapsedTimeInDays(userProfileUpdatedAt as number)
 				if (elapsedTime > 5 && userProfile) {
 					const { userProfile } = await fetchUserData(id)
-					await $userFromNostrMutation.mutateAsync({ profile: userProfile, pubkey: id as string })
+					if (!userProfile) return
+					await handleUserNostrData(userProfile, id)
 					console.log('User profile updated from nostr')
 				}
 			}
