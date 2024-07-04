@@ -4,7 +4,7 @@ import { KindProducts, KindStalls } from '$lib/constants'
 import { createStall, getAllStalls, getStallById, getStallsByUserId, updateStall } from '$lib/server/stalls.service'
 import { describe, expect, it } from 'vitest'
 
-import { createId, devUser1 } from '@plebeian/database'
+import { createId, devUser1, shipping } from '@plebeian/database'
 
 describe('stalls service', () => {
 	it('gets stalls by user id', async () => {
@@ -75,6 +75,7 @@ describe('stalls service', () => {
 			description: 'Hello Stall Description',
 			name: 'Hello Stall',
 			userId: devUser1.pk,
+			shipping: expect.any(Array),
 		})
 	})
 
@@ -102,6 +103,7 @@ describe('stalls service', () => {
 			currency: targetStall.currency,
 			description: targetStall.description,
 			name: 'Hello Stall changed',
+			shipping: expect.any(Array),
 		})
 	})
 })

@@ -2,7 +2,7 @@ import NDK, { NDKEvent, NDKKind, NDKPrivateKeySigner } from '@nostr-dev-kit/ndk'
 import { KindProducts } from '$lib/constants'
 import { describe, expect, it } from 'vitest'
 
-import { createId, devUser1 } from '@plebeian/database'
+import { createId, devUser1, shipping } from '@plebeian/database'
 
 describe('/stalls', () => {
 	it('GET', async () => {
@@ -70,6 +70,7 @@ describe('/stalls', () => {
 			description: 'Hello Stall Description from api',
 			name: 'Hello Stall',
 			userId: '86a82cab18b293f53cbaaae8cdcbee3f7ec427fdf9f9c933db77800bb5ef38a0',
+			shipping: expect.any(Array),
 		})
 	})
 
