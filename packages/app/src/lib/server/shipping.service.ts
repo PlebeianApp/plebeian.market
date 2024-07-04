@@ -13,6 +13,27 @@ export type ShippingZonesInfo = {
 	country: string
 }
 
+export const getShippingMethodById = async (methodId: string): Promise<RichShippingInfo[]> => {
+	const shippingResult = await db.query.shipping.findMany({
+		where: eq(shipping.id, methodId),
+		with: {
+			shippingZones: true,
+		},
+	})
+
+	const shippingInfos: RichShippingInfo[] = shippingResult.map((shipping) => ({
+		id: shipping.id,
+		name: shipping.name as string,
+		cost: shipping.cost,
+		isDefault: shipping.isDefault,
+		zones: shipping.shippingZones.map((zone) => ({
+			region: zone.regionCode,
+			country: zone.countryCode,
+		})),
+	}))
+	return shippingInfos
+}
+
 export const getShippingByStallId = async (stallId: string): Promise<RichShippingInfo[]> => {
 	const shippingResult = await db.query.shipping.findMany({
 		where: eq(shipping.stallId, stallId),

@@ -19,7 +19,7 @@ export const createStallQuery = (stallId: string) =>
 			queryKey: ['stalls', stallId],
 			queryFn: async () => {
 				return await createRequest(`GET /api/v1/stalls/${stallId}`, {
-					auth: true,
+					auth: false,
 				})
 			},
 		},

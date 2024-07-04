@@ -3,6 +3,7 @@
 	import * as Card from '$lib/components/ui/card/index.js'
 	import { KindProducts } from '$lib/constants'
 	import { createProductPriceQuery } from '$lib/fetch/products.queries'
+	import { addProduct } from '$lib/stores/cart'
 	import { openDrawerForProduct } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
 
@@ -11,7 +12,7 @@
 	import ImgPlaceHolder from './imgPlaceHolder.svelte'
 
 	export let product: Partial<DisplayProduct>
-	let { images, name, currency, price, userNip05, identifier, id, userId } = product
+	let { images, name, currency, price, userNip05, identifier, id, userId, quantity } = product
 
 	let isMyProduct = false
 
@@ -38,6 +39,14 @@
 					class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white text-black font-bold opacity-0 transition-opacity duration-300 group-hover:opacity-100"
 				>
 					Edit product
+				</Button>
+			{:else}
+				<Button
+					on:click={() =>
+						addProduct(userId, product.stallId, { id: id, name: name, amount: 1, price: price, stockQuantity: quantity }, currency)}
+					class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white text-black font-bold opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+				>
+					Add to cart
 				</Button>
 			{/if}
 		</div>

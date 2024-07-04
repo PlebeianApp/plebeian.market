@@ -80,6 +80,10 @@ export const bitcoinToSatoshis = (amountInBtc: string) => {
 	return Math.floor(btc * numSatsInBtc)
 }
 
+export function formatPrice(price: number): string {
+	return Number(price.toFixed(2)).toString()
+}
+
 export function getEventCoordinates(event: NostrEvent | VerifiedEvent | NDKEvent): EventCoordinates {
 	const { kind, pubkey, tags } = event
 
@@ -212,8 +216,9 @@ export function nav_back() {
 	if (typeof window !== 'undefined') window.history.back()
 }
 
-export function truncateString(str: string): string {
-	return str.substring(0, 12) + ':' + str.substring(str.length - 6)
+export function truncateString(str: string, maxLenght: number = 18): string {
+	if (str.length > maxLenght) return str.substring(0, 12) + ':' + str.substring(str.length - 6)
+	return str
 }
 
 export const getElapsedTimeInDays = (unixTimestamp: number): number => {
