@@ -66,6 +66,7 @@
 		stallData: Set<NDKEvent> | null,
 		userData: NDKUserProfile | null,
 		productsData: Set<NDKEvent> | null,
+		allowRegister: boolean = false,
 	): Promise<{ userInserted: boolean; stallInserted: boolean; productsInserted: boolean } | undefined> {
 		let userInserted: boolean = false
 		let stallInserted: boolean = false
@@ -73,8 +74,10 @@
 		try {
 			if (userData) {
 				userData && (userData.id = id)
-				const userMutation = await $userFromNostr.mutateAsync({ profile: userData, pubkey: id as string })
-				userMutation && (userInserted = true)
+				if (allowRegister) {
+					const userMutation = await $userFromNostr.mutateAsync({ profile: userData, pubkey: id as string })
+					userMutation && (userInserted = true)
+				}
 				userProfile = userData
 			}
 

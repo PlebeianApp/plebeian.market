@@ -56,6 +56,7 @@
 		stallData: NDKEvent | null,
 		userData: NDKUserProfile | null,
 		productsData: NDKEvent | null,
+		allowRegister: boolean = false,
 	): Promise<{ userInserted: boolean; stallInserted: boolean; productsInserted: boolean } | undefined> {
 		let userInserted: boolean = false
 		let stallInserted: boolean = false
@@ -63,15 +64,19 @@
 		try {
 			if (userData) {
 				userData && (userData.id = user.id)
-				const userMutation = await $userFromNostr.mutateAsync({ profile: userData, pubkey: user.id as string })
-				userMutation && (userInserted = true)
+				if (allowRegister) {
+					const userMutation = await $userFromNostr.mutateAsync({ profile: userData, pubkey: user.id as string })
+					userMutation && (userInserted = true)
+				}
 				userProfile = userData
 			}
 
 			if (stallData) {
-				const stallEvent = await stallData.toNostrEvent()
-				const stallMutation = await $createStallFromNostrEvent.mutateAsync(stallEvent)
-				stallMutation && (stallInserted = true)
+				if (allowRegister) {
+					const stallEvent = await stallData.toNostrEvent()
+					const stallMutation = await $createStallFromNostrEvent.mutateAsync(stallEvent)
+					stallMutation && (stallInserted = true)
+				}
 			}
 
 			if (productsData) {
@@ -89,8 +94,10 @@
 					})),
 					userId: user.id,
 				}
-				const productsMutation = await $createProductsFromNostrMutation.mutateAsync(new Set<NDKEvent>([productsData]))
-				productsMutation && (productsInserted = true)
+				if (allowRegister) {
+					const productsMutation = await $createProductsFromNostrMutation.mutateAsync(new Set<NDKEvent>([productsData]))
+					productsMutation && (productsInserted = true)
+				}
 			}
 			return { userInserted, stallInserted, productsInserted }
 		} catch (e) {
