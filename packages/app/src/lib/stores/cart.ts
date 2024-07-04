@@ -277,12 +277,11 @@ export const getTotalAmounts = derived<typeof cart, TotalAmounts>(
 	($cart, set) => {
 		let totalAmountItems = 0
 		let totalInSats = 0
-		let totalShippingCost = 0
+		let totalShippingCostInSats = 0
 		let pendingConversions = 0
 
 		for (const user of $cart) {
 			for (const stall of user.stalls) {
-				totalShippingCost += stall.shippingCost
 				for (const product of stall.products) {
 					totalAmountItems += product.amount
 					const productTotal = product.price * product.amount
@@ -308,7 +307,7 @@ export const getTotalAmounts = derived<typeof cart, TotalAmounts>(
 				pendingConversions++
 				currencyToBtc(stall.currency, stall.shippingCost, true)
 					.then((satsAmount) => {
-						totalInSats += satsAmount
+						totalShippingCostInSats += satsAmount
 						pendingConversions--
 						if (pendingConversions === 0) {
 							finalizeTotals()
@@ -325,7 +324,11 @@ export const getTotalAmounts = derived<typeof cart, TotalAmounts>(
 		}
 
 		function finalizeTotals() {
-			set({ totalAmountItems, totalInSats, totalShippingCost })
+			set({
+				totalAmountItems,
+				totalInSats: totalInSats + totalShippingCostInSats,
+				totalShippingCost: totalShippingCostInSats,
+			})
 		}
 
 		if (pendingConversions === 0) {
