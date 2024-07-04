@@ -47,7 +47,6 @@ export default defineConfig(({ mode }) => ({
 			},
 			registerType: "autoUpdate",
 			disable: mode === 'development',
-			// disable: true,
 		}),
 	],
 	envDir: '../../',
