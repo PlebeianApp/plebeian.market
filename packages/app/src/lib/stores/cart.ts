@@ -10,6 +10,7 @@ interface Product {
 	name: string
 	amount: number
 	price: number
+	stockQuantity: number
 }
 
 interface Stall {
@@ -146,9 +147,12 @@ export function addProduct(userPubkey: string, stallId: string, product: Product
 		const existingProduct = c[userIndex].stalls[stallIndex].products.find((p) => p.id === product.id)
 
 		if (existingProduct) {
-			existingProduct.amount += product.amount
+			existingProduct.amount = Math.min(existingProduct.amount + product.amount, product.stockQuantity)
 		} else {
-			c[userIndex].stalls[stallIndex].products.push(product)
+			c[userIndex].stalls[stallIndex].products.push({
+				...product,
+				amount: Math.min(product.amount, product.stockQuantity),
+			})
 		}
 		return c
 	})
@@ -177,7 +181,9 @@ export function incrementProduct(productId: string) {
 			for (let j = 0; j < c[i].stalls.length; j++) {
 				const product = c[i].stalls[j].products.find((p) => p.id === productId)
 				if (product) {
-					product.amount++
+					if (product.amount < product.stockQuantity) {
+						product.amount++
+					}
 					return c
 				}
 			}
@@ -222,8 +228,9 @@ export function setAmountForProduct(productId: string, amount: number) {
 			for (let j = 0; j < c[i].stalls.length; j++) {
 				const productIndex = c[i].stalls[j].products.findIndex((p) => p.id === productId)
 				if (productIndex !== -1) {
+					const product = c[i].stalls[j].products[productIndex]
 					if (amount > 0) {
-						c[i].stalls[j].products[productIndex].amount = amount
+						product.amount = Math.min(amount, product.stockQuantity)
 					} else {
 						c[i].stalls[j].products.splice(productIndex, 1)
 					}
@@ -280,6 +287,16 @@ export const getTotalAmounts = derived<typeof cart, TotalAmounts>(
 		let totalShippingCostInSats = 0
 		let pendingConversions = 0
 
+		function attemptToFinalize() {
+			if (pendingConversions === 0) {
+				set({
+					totalAmountItems,
+					totalInSats: totalInSats + totalShippingCostInSats,
+					totalShippingCost: totalShippingCostInSats,
+				})
+			}
+		}
+
 		for (const user of $cart) {
 			for (const stall of user.stalls) {
 				for (const product of stall.products) {
@@ -291,16 +308,12 @@ export const getTotalAmounts = derived<typeof cart, TotalAmounts>(
 						.then((satsAmount) => {
 							totalInSats += satsAmount
 							pendingConversions--
-							if (pendingConversions === 0) {
-								finalizeTotals()
-							}
+							attemptToFinalize()
 						})
 						.catch((error) => {
 							console.error('Error converting currency to BTC:', error)
 							pendingConversions--
-							if (pendingConversions === 0) {
-								finalizeTotals()
-							}
+							attemptToFinalize()
 						})
 				}
 
@@ -309,30 +322,22 @@ export const getTotalAmounts = derived<typeof cart, TotalAmounts>(
 					.then((satsAmount) => {
 						totalShippingCostInSats += satsAmount
 						pendingConversions--
-						if (pendingConversions === 0) {
-							finalizeTotals()
-						}
+						attemptToFinalize()
 					})
 					.catch((error) => {
 						console.error('Error converting shipping cost to BTC:', error)
 						pendingConversions--
-						if (pendingConversions === 0) {
-							finalizeTotals()
-						}
+						attemptToFinalize()
 					})
 			}
 		}
 
-		function finalizeTotals() {
+		if (pendingConversions === 0) {
 			set({
 				totalAmountItems,
-				totalInSats: totalInSats + totalShippingCostInSats,
-				totalShippingCost: totalShippingCostInSats,
+				totalInSats: 0,
+				totalShippingCost: 0,
 			})
-		}
-
-		if (pendingConversions === 0) {
-			finalizeTotals()
 		}
 
 		return initialTotalAmounts
@@ -353,9 +358,16 @@ export async function updatePrices() {
 						const productQuery = createProductQuery(product.id)
 						let unsubscribe = () => {}
 						unsubscribe = productQuery.subscribe((queryResult) => {
-							if (queryResult.data && queryResult.data.price !== product.price) {
-								product.price = queryResult.data.price
-								hasChanges = true
+							if (queryResult.data) {
+								if (queryResult.data.price !== product.price) {
+									product.price = queryResult.data.price
+									hasChanges = true
+								}
+								if (queryResult.data.quantity !== product.stockQuantity) {
+									product.stockQuantity = queryResult.data.quantity
+									product.amount = Math.min(product.amount, product.stockQuantity)
+									hasChanges = true
+								}
 							}
 							unsubscribe()
 							resolve()

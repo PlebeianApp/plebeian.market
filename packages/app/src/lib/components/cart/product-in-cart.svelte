@@ -15,19 +15,23 @@
 	const dispatch = createEventDispatcher()
 
 	$: product = createProductQuery(productId)
-
 	$: currentAmount = getProductAmount(productId)
 
 	const handleIncrement = () => {
-		dispatch('increment')
+		if ($currentAmount < $product.data.quantity) {
+			dispatch('increment')
+		}
 	}
 
 	const handleDecrement = () => {
-		dispatch('decrement')
+		if ($currentAmount > 1) {
+			dispatch('decrement')
+		}
 	}
 
 	const handleSetAmount = (e) => {
-		dispatch('setAmount', e.target.value)
+		const newAmount = Math.min(Math.max(1, parseInt(e.target.value) || 1), $product.data.quantity)
+		dispatch('setAmount', newAmount)
 	}
 
 	const handleRemove = () => {
@@ -49,18 +53,27 @@
 				<div class="font-bold">{$product.data.name}</div>
 
 				<div class="flex flex-row">
-					<Button class="border-2 border-black" size="icon" variant="outline" on:click={handleDecrement}>
+					<Button class="border-2 border-black" size="icon" variant="outline" on:click={handleDecrement} disabled={$currentAmount <= 1}>
 						<span class="i-mdi-minus w-4 h-4"></span>
 					</Button>
-					<Input class="border-2 border-black w-16" type="number" value={$currentAmount} on:input={handleSetAmount} readonly />
-
-					<Button class="border-2 border-black" size="icon" variant="outline" on:click={handleIncrement}>
-						<span
-							class="i-mdi-plus
-                        w-4 h-4"
-						></span>
+					<Input
+						class="border-2 border-black w-16"
+						type="number"
+						value={$currentAmount}
+						on:input={handleSetAmount}
+						min="1"
+						max={$product.data.quantity}
+						readonly
+					/>
+					<Button
+						class="border-2 border-black"
+						size="icon"
+						variant="outline"
+						on:click={handleIncrement}
+						disabled={$currentAmount >= $product.data.quantity}
+					>
+						<span class="i-mdi-plus w-4 h-4"></span>
 					</Button>
-
 					<Button on:click={handleRemove} size="icon" variant="ghost">
 						<span class="i-mdi-delete w-4 h-4"></span>
 					</Button>

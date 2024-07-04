@@ -160,14 +160,20 @@
 						type="number"
 						value="1"
 						min="1"
-						max="5"
+						max={toDisplayProduct.quantity}
 					/>
 					<Button
 						on:click={() =>
 							addProduct(
 								toDisplayProduct.userId,
 								toDisplayProduct.stallId,
-								{ id: toDisplayProduct.id, name: toDisplayProduct.name, amount: qtyToCart, price: toDisplayProduct.price },
+								{
+									id: toDisplayProduct.id,
+									name: toDisplayProduct.name,
+									amount: qtyToCart,
+									price: toDisplayProduct.price,
+									stockQuantity: toDisplayProduct.quantity,
+								},
 								toDisplayProduct.currency,
 							)}>Add to cart</Button
 					>
