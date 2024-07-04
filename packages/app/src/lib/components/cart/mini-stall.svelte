@@ -3,6 +3,7 @@
 	import { createShippingQuery } from '$lib/fetch/shipping.queries'
 	import { createStallQuery } from '$lib/fetch/stalls.queries'
 	import { getShippingMethod, setShippingMethod } from '$lib/stores/cart'
+	import { truncateString } from '$lib/utils'
 
 	import { Button } from '../ui/button'
 
@@ -17,7 +18,7 @@
 	}
 </script>
 
-<div class="flex items-center justify-between gap-2">
+<div class="flex flex-col justify-between gap-2">
 	<div class="flex flex-row gap-1">
 		<span class="i-tdesign-store w-6 h-6" />
 		<span>{$stall.data?.name}</span>
@@ -28,7 +29,7 @@
 			<Button variant="secondary" class="border-2 border-black h-8" builders={[builder]}>
 				{#if $currentShippingMethodId && $shippingMethods.data}
 					{@const method = $shippingMethods.data.find((m) => m.id === $currentShippingMethodId)}
-					{method ? method.name : 'Select shipping method'}
+					{truncateString(method ? method.name || method.id : 'Select shipping method')}
 				{:else}
 					Select shipping method
 				{/if}
@@ -44,7 +45,10 @@
 							checked={$currentShippingMethodId === method.id}
 							on:click={() => handleShippingMethodSelect(method.id)}
 						>
-							{method.name}
+							<section class=" flex items-center w-full justify-between">
+								<span>{truncateString(method.name || method.id)}</span>
+								<span>{method.cost}</span>
+							</section>
 						</DropdownMenu.CheckboxItem>
 					{/each}
 				{:else}

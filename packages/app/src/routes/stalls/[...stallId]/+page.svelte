@@ -9,6 +9,7 @@
 	import Badge from '$lib/components/ui/badge/badge.svelte'
 	import { Button } from '$lib/components/ui/button'
 	import Skeleton from '$lib/components/ui/skeleton/skeleton.svelte'
+	import { KindStalls } from '$lib/constants'
 	import { createProductsFromNostrMutation } from '$lib/fetch/products.mutations'
 	import { createProductsByFilterQuery } from '$lib/fetch/products.queries'
 	import { createShippingQuery } from '$lib/fetch/shipping.queries'
@@ -97,21 +98,43 @@
 				toDisplayProducts = []
 				for (const event of productsData) {
 					const product = productEventSchema.parse(JSON.parse(event.content))
-					if (product.stall_id == stall.id.split(':')[2]) {
-						stallProducts.add(event)
-						toDisplayProducts.push({
-							...product,
-							quantity: product.quantity as number,
-							images: product.images?.map((image) => ({
-								createdAt: new Date(),
-								productId: product.id,
-								auctionId: null,
-								imageUrl: image,
-								imageType: 'gallery' as ProductImagesType,
-								imageOrder: 0,
-							})),
-							userId: user.id,
-						})
+					const stallIdSegments = product.stall_id.split(':')
+					if (stallIdSegments.length == 1) {
+						if (product.stall_id == stall.id.split(':')[2]) {
+							stallProducts.add(event)
+							toDisplayProducts.push({
+								...product,
+								quantity: product.quantity as number,
+								stallId: `${KindStalls}:${user.id}:${product.stall_id}`,
+								images: product.images?.map((image) => ({
+									createdAt: new Date(),
+									productId: product.id,
+									auctionId: null,
+									imageUrl: image,
+									imageType: 'gallery' as ProductImagesType,
+									imageOrder: 0,
+								})),
+								userId: user.id,
+							})
+						}
+					} else {
+						if (product.stall_id == stall.id) {
+							stallProducts.add(event)
+							toDisplayProducts.push({
+								...product,
+								quantity: product.quantity as number,
+								stallId: product.stall_id,
+								images: product.images?.map((image) => ({
+									createdAt: new Date(),
+									productId: product.id,
+									auctionId: null,
+									imageUrl: image,
+									imageType: 'gallery' as ProductImagesType,
+									imageOrder: 0,
+								})),
+								userId: user.id,
+							})
+						}
 					}
 				}
 				const productsMutation = await $createProductsFromNostrMutation.mutateAsync(stallProducts)

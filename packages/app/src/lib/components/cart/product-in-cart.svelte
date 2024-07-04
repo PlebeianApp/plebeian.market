@@ -50,14 +50,14 @@
 
 				<div class="flex flex-row">
 					<Button class="border-2 border-black" size="icon" variant="outline" on:click={handleDecrement}>
-						<span class="i-mdi-minus w-2 h-2"></span>
+						<span class="i-mdi-minus w-4 h-4"></span>
 					</Button>
-					<Input class="border-2 border-black w-16" type="number" value={$currentAmount} on:input={handleSetAmount} />
+					<Input class="border-2 border-black w-16" type="number" value={$currentAmount} on:input={handleSetAmount} readonly />
 
 					<Button class="border-2 border-black" size="icon" variant="outline" on:click={handleIncrement}>
 						<span
 							class="i-mdi-plus
-                        w-2 h-2"
+                        w-4 h-4"
 						></span>
 					</Button>
 

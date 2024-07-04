@@ -68,7 +68,7 @@ function findUser(pubkey: string): User {
 	let user = currentCart.find((u) => u.pubkey === pubkey)
 	if (!user) {
 		user = { pubkey, stalls: [] }
-		cart.update((c) => [...c, user])
+		cart.update((c) => [...c, user as User])
 	}
 	return user
 }
@@ -80,7 +80,7 @@ function findStall(user: User, stallId: string, currency: string): Stall {
 		cart.update((c) => {
 			const userIndex = c.findIndex((u) => u.pubkey === user.pubkey)
 			if (userIndex !== -1) {
-				c[userIndex].stalls.push(stall)
+				c[userIndex].stalls.push(stall as Stall)
 			}
 			return c
 		})
@@ -102,7 +102,7 @@ async function updateShippingCost(stall: Stall) {
 			let unsubscribe = () => {}
 			unsubscribe = shippingQuery.subscribe((queryResult) => {
 				if (queryResult.data && queryResult.data.length > 0) {
-					stall.shippingCost = queryResult.data[0].cost
+					stall.shippingCost = +queryResult.data[0].cost
 					cart.update((c) => c) // Trigger an update to the cart
 				}
 				unsubscribe()
