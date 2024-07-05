@@ -23,10 +23,6 @@ const config = {
 		serviceWorker: {
 			register: false
 		},
-		// files: {
-		// 	// you don't need to do this if you're using generateSW strategy in your app
-		// 	serviceWorker: 'src/service-worker.js',
-		// },
 		paths: {
 			relative: false
 		}

@@ -28,10 +28,5 @@ const getHomeProducts = async () => {
 export const load: PageServerLoad = async () => {
 	const homeProducts = await getHomeProducts()
 	const appSettings = (await getAppSettings()) as AppSettings
-	console.log("appSettings", appSettings)
-	return { homeProducts,  
-		appSettings,
-	}
+	return { homeProducts, appSettings }
 }
-
-// export const prerender = "auto"
