@@ -1,3 +1,4 @@
+import type { CreateQueryResult } from '@tanstack/svelte-query'
 import type { ClassValue } from 'clsx'
 import type { VerifiedEvent } from 'nostr-tools'
 import type { TransitionConfig } from 'svelte/transition'
@@ -235,4 +236,20 @@ export const createNcryptSec = (sk: string, pass: string): { decodedSk: Uint8Arr
 	if (decoded.type !== 'nsec') throw new Error('Not nsec')
 	const ncryptsec = encrypt(decoded.data, pass)
 	return { decodedSk: decoded.data, ncryptsec }
+}
+
+export async function resolveQuery<T>(queryFn: () => CreateQueryResult<T, Error>): Promise<T> {
+	const queryPromise = queryFn()
+	return new Promise((resolve) => {
+		const check = async () => {
+			console.log('Hello')
+			const currentQuery = get(queryPromise)
+			if (currentQuery.isFetched && currentQuery.data !== undefined) {
+				resolve(currentQuery.data)
+			} else {
+				setTimeout(check, 20)
+			}
+		}
+		check()
+	})
 }
