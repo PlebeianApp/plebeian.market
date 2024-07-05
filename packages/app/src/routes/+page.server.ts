@@ -1,7 +1,7 @@
-import { ensureAuthorsExists } from '$lib/server/nostrEvents.service'
 import { toDisplayProduct } from '$lib/server/products.service'
-import { usersExists } from '$lib/server/users.service'
+import { getAppSettings } from '$lib/server/setup.service'
 
+import type { AppSettings } from '@plebeian/database'
 import { and, db, eq, getTableColumns, productMeta, products } from '@plebeian/database'
 
 import type { PageServerLoad } from './$types'
@@ -27,7 +27,11 @@ const getHomeProducts = async () => {
 
 export const load: PageServerLoad = async () => {
 	const homeProducts = await getHomeProducts()
-	return { homeProducts }
+	const appSettings = (await getAppSettings()) as AppSettings
+	console.log("appSettings", appSettings)
+	return { homeProducts,  
+		appSettings,
+	}
 }
 
-export const prerender = true
+// export const prerender = "auto"

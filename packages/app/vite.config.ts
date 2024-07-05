@@ -16,6 +16,13 @@ export default defineConfig(({ mode }) => ({
 		tsconfigPaths(),
 		sveltekit(),
 		SvelteKitPWA({
+			strategies: "injectManifest",
+			// srcDir: "./src",
+			// filename: "service-worker.js",
+			injectManifest: {
+				// swSrc: "static/sw.js",
+				injectionPoint: undefined
+			},
 			manifest: {
 				name: 'Plebeian Market',
 				short_name: 'Plebeian Market',
@@ -46,7 +53,8 @@ export default defineConfig(({ mode }) => ({
 				],
 			},
 			registerType: "autoUpdate",
-			disable: mode === 'development',
+			disable: false,
+			// disable: mode === 'development',
 		}),
 	],
 	envDir: '../../',

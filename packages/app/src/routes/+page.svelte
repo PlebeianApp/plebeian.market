@@ -13,6 +13,7 @@
 		homeProducts: { featured, products },
 		appSettings: { isFirstTimeRunning },
 	} = data)
+	console.log("isFirstTimeRunning", data.appSettings.isFirstTimeRunning)
 </script>
 
 {#if !isFirstTimeRunning}
