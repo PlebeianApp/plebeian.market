@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { NDKEvent, NDKUserProfile } from '@nostr-dev-kit/ndk'
+	import type { NDKUserProfile } from '@nostr-dev-kit/ndk'
 	import type { DisplayProduct } from '$lib/server/products.service'
 	import { beforeNavigate } from '$app/navigation'
 	import Spinner from '$lib/components/assets/spinner.svelte'
@@ -9,18 +9,11 @@
 	import Input from '$lib/components/ui/input/input.svelte'
 	import { KindStalls } from '$lib/constants'
 	import { createProductPriceQuery, createProductQuery, createProductsByFilterQuery } from '$lib/fetch/products.queries'
+	import { createStallExistsQuery } from '$lib/fetch/stalls.queries'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
-	import {
-		fetchProductData,
-		fetchStallData,
-		fetchUserData,
-		handleProductNostrData,
-		handleStallNostrData,
-		handleUserNostrData,
-		normalizeProductsFromNostr,
-	} from '$lib/nostrSubs/utils'
+	import { fetchProductData, fetchStallData, fetchUserData, normalizeProductsFromNostr, setNostrData } from '$lib/nostrSubs/utils'
 	import { openDrawerForProduct } from '$lib/stores/drawer-ui'
-	import { cn, shouldRegister } from '$lib/utils'
+	import { cn, resolveQuery } from '$lib/utils'
 	import { onMount } from 'svelte'
 
 	import type { PageData } from './$types'
@@ -58,50 +51,30 @@
 
 	let selectedImage = 0
 
-	async function setNostrData(
-		stallData: NDKEvent | null,
-		userData: NDKUserProfile | null,
-		productsData: Set<NDKEvent> | null,
-		allowRegister: boolean = false,
-	): Promise<{ userInserted: boolean; stallInserted: boolean; productsInserted: boolean } | undefined> {
-		let userInserted: boolean = false
-		let stallInserted: boolean = false
-		let productsInserted: boolean = false
-		const _shouldRegister = await shouldRegister(allowRegister, user.exist)
-		try {
-			if (userData) {
-				userProfile = userData
-				_shouldRegister && (userInserted = await handleUserNostrData(userData, user.id as string))
-			}
-
-			if (stallData) {
-				_shouldRegister && (stallInserted = await handleStallNostrData(stallData))
-			}
-
-			if (productsData?.size) {
-				const result = normalizeProductsFromNostr(productsData, user.id as string)
-				if (result) {
-					const { toDisplayProducts: _toDisplay, stallProducts } = result
-					toDisplayProducts = _toDisplay
-					_shouldRegister && (productsInserted = await handleProductNostrData(stallProducts))
-				}
-			}
-			return { userInserted, stallInserted, productsInserted }
-		} catch (e) {
-			console.error(e)
-			return undefined
-		}
-	}
-
 	onMount(async () => {
 		if (!productRes.exist && productRes.id) {
-			const { userProfile } = await fetchUserData(user.id as string)
-			const { nostrProduct } = await fetchProductData(productRes.id as string)
-			if (!nostrProduct?.size) return
-			const productStallId = JSON.parse(Array.from(nostrProduct)[0]?.content as string).stall_id
+			const { userProfile: userData } = await fetchUserData(user.id as string)
+			userData && (userProfile = userData)
+			const { nostrProduct: productsData } = await fetchProductData(productRes.id as string)
+			if (!productsData?.size) return
+			if (productsData) {
+				const result = normalizeProductsFromNostr(productsData, user.id as string)
+				if (result) {
+					const { toDisplayProducts: _toDisplay } = result
+					toDisplayProducts = _toDisplay
+				}
+			}
+			const productStallId = JSON.parse(Array.from(productsData)[0]?.content as string).stall_id
 			const { stallNostrRes } = await fetchStallData(`${KindStalls}:${user.id}:${productStallId}`)
-
-			await setNostrData(stallNostrRes, userProfile, nostrProduct, allowRegister)
+			const stallExist = await resolveQuery(() => createStallExistsQuery(`${KindStalls}:${user.id}:${productStallId}`))
+			await setNostrData(
+				stallExist ? null : stallNostrRes,
+				user.exist ? null : userData,
+				productsData,
+				allowRegister,
+				user.id as string,
+				user.exist,
+			)
 		}
 	})
 	beforeNavigate(() => {

@@ -48,6 +48,7 @@ export const createStallExistsQuery = (id: string) =>
 				const stallExists = await createRequest(`GET /api/v1/stalls/${id}?exists`, {})
 				return stallExists
 			},
+			staleTime: Infinity,
 		},
 		queryClient,
 	)

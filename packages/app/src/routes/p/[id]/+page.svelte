@@ -2,7 +2,6 @@
 	import type { NDKUserProfile } from '@nostr-dev-kit/ndk'
 	import type { DisplayProduct } from '$lib/server/products.service'
 	import type { RichStall } from '$lib/server/stalls.service'
-	import { NDKEvent } from '@nostr-dev-kit/ndk'
 	import Pattern from '$lib/components/Pattern.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
 	import StallItem from '$lib/components/stalls/stall-item.svelte'
@@ -19,10 +18,11 @@
 		handleUserNostrData,
 		normalizeProductsFromNostr,
 		normalizeStallData,
+		setNostrData,
 	} from '$lib/nostrSubs/utils'
 	import { openDrawerForNewProduct, openDrawerForNewStall } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
-	import { copyToClipboard, getElapsedTimeInDays, shouldRegister } from '$lib/utils'
+	import { copyToClipboard, getElapsedTimeInDays } from '$lib/utils'
 	import { npubEncode } from 'nostr-tools/nip19'
 	import { onMount } from 'svelte'
 	import { get } from 'svelte/store'
@@ -34,7 +34,11 @@
 	let toDisplayProducts: Partial<DisplayProduct>[]
 
 	export let data: PageData
-	const { id, exist } = data
+	const {
+		id,
+		exist,
+		appSettings: { allowRegister },
+	} = data
 
 	let isMe = false
 
@@ -66,55 +70,34 @@
 		}
 	}
 
-	async function setNostrData(
-		stallData: Set<NDKEvent> | null,
-		userData: NDKUserProfile | null,
-		productsData: Set<NDKEvent> | null,
-		allowRegister: boolean = false,
-	): Promise<{ userInserted: boolean; stallInserted: boolean; productsInserted: boolean } | undefined> {
-		let userInserted: boolean = false
-		let stallInserted: boolean = false
-		let productsInserted: boolean = false
-		const _shouldRegister = await shouldRegister(allowRegister, exist)
-		try {
-			if (userData) {
-				userProfile = userData
-				_shouldRegister && (userInserted = await handleUserNostrData(userData, id as string))
-			}
+	onMount(async () => {
+		const { stallNostrRes } = await fetchUserStallsData(id)
 
-			if (stallData) {
-				const normalizedStallData = [...stallData].map(normalizeStallData).filter((stall): stall is Partial<RichStall> => stall !== null)
-				if (stalls?.length) {
-					const newStalls = normalizedStallData.filter((stall) => !stalls?.some((existingStall) => stall.id === existingStall.id))
-					stalls = [...stalls, ...newStalls]
-				} else {
-					stalls = normalizedStallData
-				}
+		if (stallNostrRes) {
+			const normalizedStallData = [...stallNostrRes].map(normalizeStallData).filter((stall): stall is Partial<RichStall> => stall !== null)
+			if (stalls?.length) {
+				const newStalls = normalizedStallData.filter((stall) => !stalls?.some((existingStall) => stall.id === existingStall.id))
+				stalls = [...stalls, ...newStalls]
+			} else {
+				stalls = normalizedStallData
 			}
+		}
 
-			if (productsData?.size) {
+		if (!exist) {
+			const { userProfile: userData } = await fetchUserData(id)
+			userData && (userProfile = userData)
+
+			const { products: productsData } = await fetchUserProductData(id)
+			if (productsData) {
 				const result = normalizeProductsFromNostr(productsData, id as string)
 				if (result) {
 					const { toDisplayProducts: _toDisplay } = result
 					toDisplayProducts = _toDisplay
 				}
-				return { userInserted, stallInserted, productsInserted }
 			}
-		} catch (e) {
-			console.error(e)
-			return undefined
-		}
-	}
 
-	onMount(async () => {
-		if (!exist) {
-			const { stallNostrRes } = await fetchUserStallsData(id)
-			const { userProfile } = await fetchUserData(id)
-			const { products } = await fetchUserProductData(id)
-			await setNostrData(stallNostrRes, userProfile, products)
+			await setNostrData(null, userProfile, null, allowRegister, id, exist)
 		} else {
-			const { stallNostrRes } = await fetchUserStallsData(id)
-			await setNostrData(stallNostrRes, null, null)
 			if (userProfileQuery) {
 				const userProfileUpdatedAt = get(userProfileQuery).data?.updated_at
 				const elapsedTime = getElapsedTimeInDays(userProfileUpdatedAt as number)
@@ -123,6 +106,14 @@
 					if (!userProfile) return
 					await handleUserNostrData(userProfile, id)
 					console.log('User profile updated from nostr')
+				}
+			}
+			const { products: productsData } = await fetchUserProductData(id)
+			if (productsData) {
+				const result = normalizeProductsFromNostr(productsData, id as string)
+				if (result) {
+					const { toDisplayProducts: _toDisplay } = result
+					toDisplayProducts = _toDisplay
 				}
 			}
 		}

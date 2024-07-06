@@ -21,6 +21,7 @@
 		handleUserNostrData,
 		normalizeProductsFromNostr,
 		normalizeStallData,
+		setNostrData,
 	} from '$lib/nostrSubs/utils'
 	import { openDrawerForProduct } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
@@ -66,55 +67,35 @@
 
 	$: if ($productsQuery?.data) toDisplayProducts = $productsQuery?.data
 
-	async function setNostrData(
-		stallData: NDKEvent | null,
-		userData: NDKUserProfile | null,
-		productsData: Set<NDKEvent> | null,
-		allowRegister: boolean = false,
-	): Promise<{ userInserted: boolean; stallInserted: boolean; productsInserted: boolean } | undefined> {
-		let userInserted: boolean = false
-		let stallInserted: boolean = false
-		let productsInserted: boolean = false
-		const _shouldRegister = await shouldRegister(allowRegister, user.exist)
-		try {
-			if (userData) {
-				userProfile = userData
-				_shouldRegister && (userInserted = await handleUserNostrData(userData, user.id as string))
-			}
+	onMount(async () => {
+		if (user.id) {
+			if (!stall.exist) {
+				const { stallNostrRes: stallData } = await fetchStallData(stall.id)
 
-			if (stallData) {
-				const normalizedStall = normalizeStallData(stallData)
-				if (normalizedStall) {
-					stallResponse = normalizedStall
+				if (stallData) {
+					const normalizedStall = normalizeStallData(stallData)
+					if (normalizedStall) {
+						stallResponse = normalizedStall
+					}
+				}
+
+				const { userProfile: userData } = await fetchUserData(user.id as string)
+				if (userData) {
+					userProfile = userData
 					stallResponse.userName = userData?.name || userData?.displayName
 					stallResponse.userNip05 = userData?.nip05
 				}
 
-				_shouldRegister && (stallInserted = await handleStallNostrData(stallData))
-			}
-			if (productsData?.size) {
-				const result = normalizeProductsFromNostr(productsData, user.id as string, stall.id)
-				if (result) {
-					const { toDisplayProducts: _toDisplay, stallProducts } = result
-					toDisplayProducts = _toDisplay
-					_shouldRegister && (productsInserted = await handleProductNostrData(stallProducts))
+				const { products: productsData } = await fetchUserProductData(user.id)
+				if (productsData?.size) {
+					const result = normalizeProductsFromNostr(productsData, user.id as string, stall.id)
+					if (result) {
+						const { toDisplayProducts: _toDisplay } = result
+						toDisplayProducts = _toDisplay
+					}
 				}
-			}
 
-			return { userInserted, stallInserted, productsInserted }
-		} catch (e) {
-			console.error(e)
-			return undefined
-		}
-	}
-
-	onMount(async () => {
-		if (user.id) {
-			if (!stall.exist) {
-				const { stallNostrRes } = await fetchStallData(stall.id)
-				const { userProfile } = user.exist ? { userProfile: null } : await fetchUserData(user.id as string)
-				const { products } = await fetchUserProductData(user.id as string)
-				await setNostrData(stallNostrRes, userProfile, products, appSettings.allowRegister)
+				await setNostrData(stallData, user.exist ? null : userData, productsData, appSettings.allowRegister, user.id, user.exist)
 			} else {
 				fetchUserProductData(user.id as string).then((data) => {
 					const { products } = data
@@ -127,7 +108,7 @@
 							}
 						}),
 					)
-					setNostrData(null, null, newProducts, appSettings.allowRegister).then((data) => {
+					setNostrData(null, null, newProducts, appSettings.allowRegister, user.id as string, user.exist).then((data) => {
 						data?.productsInserted && $productsQuery?.refetch()
 					})
 				})

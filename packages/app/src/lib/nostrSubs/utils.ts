@@ -8,7 +8,7 @@ import { createProductsFromNostrMutation } from '$lib/fetch/products.mutations'
 import { createStallFromNostrEvent } from '$lib/fetch/stalls.mutations'
 import { userFromNostr } from '$lib/fetch/users.mutations'
 import ndkStore from '$lib/stores/ndk'
-import { getEventCoordinates } from '$lib/utils'
+import { getEventCoordinates, shouldRegister } from '$lib/utils'
 import { format } from 'date-fns'
 import { get } from 'svelte/store'
 
@@ -191,4 +191,44 @@ export function normalizeProductsFromNostr(
 		}
 	}
 	return { toDisplayProducts, stallProducts }
+}
+
+export async function setNostrData(
+	stallData: NDKEvent | null,
+	userData: NDKUserProfile | null,
+	productsData: Set<NDKEvent> | null,
+	allowRegister: boolean = false,
+	userId: string,
+	userExists: boolean = false,
+): Promise<{ userInserted: boolean; stallInserted: boolean; productsInserted: boolean } | undefined> {
+	let userInserted: boolean = false
+	let stallInserted: boolean = false
+	let productsInserted: boolean = false
+	const _shouldRegister = await shouldRegister(allowRegister, userExists, userId)
+	try {
+		if (userData) {
+			_shouldRegister && (userInserted = await handleUserNostrData(userData, userId))
+		}
+
+		if (stallData) {
+			_shouldRegister && (stallInserted = await handleStallNostrData(stallData))
+		}
+
+		if (productsData?.size) {
+			if (stallData) {
+				const { coordinates: stallCoordinates } = getEventCoordinates(stallData)
+				const result = normalizeProductsFromNostr(productsData, userId, stallCoordinates)
+				if (result) {
+					const { stallProducts } = result
+					_shouldRegister && (productsInserted = await handleProductNostrData(stallProducts))
+				}
+			} else {
+				_shouldRegister && (productsInserted = await handleProductNostrData(productsData))
+			}
+		}
+		return { userInserted, stallInserted, productsInserted }
+	} catch (e) {
+		console.error(e)
+		return undefined
+	}
 }
