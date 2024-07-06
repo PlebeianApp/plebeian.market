@@ -215,8 +215,8 @@ CREATE TABLE `shipping_zones` (
 	`shipping_id` text NOT NULL,
 	`shipping_user_id` text NOT NULL,
 	`stall_id` text,
-	`region_code` text NOT NULL,
-	`country_code` text NOT NULL,
+	`region_code` text,
+	`country_code` text,
 	FOREIGN KEY (`stall_id`) REFERENCES `stalls`(`id`) ON UPDATE cascade ON DELETE no action,
 	FOREIGN KEY (`shipping_id`,`shipping_user_id`) REFERENCES `shipping`(`id`,`user_id`) ON UPDATE no action ON DELETE no action
 );

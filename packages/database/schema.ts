@@ -215,8 +215,8 @@ export const shippingZones = sqliteTable(
 		shippingId: text('shipping_id').notNull(),
 		shippingUserId: text('shipping_user_id').notNull(),
 		stallId: text('stall_id').references(() => stalls.id, { onUpdate: 'cascade' }),
-		regionCode: text('region_code').notNull(),
-		countryCode: text('country_code').notNull(),
+		regionCode: text('region_code'),
+		countryCode: text('country_code'),
 	},
 	(table) => {
 		return {

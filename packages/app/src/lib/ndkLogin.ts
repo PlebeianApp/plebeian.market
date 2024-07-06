@@ -7,7 +7,7 @@ import { page } from '$app/stores'
 import { HEX_KEYS_REGEX } from '$lib/constants'
 import ndkStore, { ndk } from '$lib/stores/ndk'
 import { addAccount, getAccount, updateAccount } from '$lib/stores/session'
-import { bytesToHex, createNcryptSec, hexToBytes, resolveQuery } from '$lib/utils'
+import { bytesToHex, checkIfUserExists, createNcryptSec, hexToBytes } from '$lib/utils'
 import { nsecEncode } from 'nostr-tools/nip19'
 import { decrypt } from 'nostr-tools/nip49'
 import { FetchError } from 'ofetch'
@@ -15,16 +15,9 @@ import { get } from 'svelte/store'
 
 import { userEventSchema } from '../schema/nostr-events'
 import { createRequest } from './fetch/client'
-import { createUserExistsQuery } from './fetch/users.queries'
 
 function unNullify<T extends object>(obj: T): T {
 	return Object.fromEntries(Object.entries(obj).filter(([_, v]) => v != null)) as unknown as T
-}
-
-async function checkIfUserExists(userId: string): Promise<boolean> {
-	const data = await resolveQuery(() => createUserExistsQuery(userId))
-	console.log('datind', data)
-	return data
 }
 
 async function getAppSettings(): Promise<boolean> {

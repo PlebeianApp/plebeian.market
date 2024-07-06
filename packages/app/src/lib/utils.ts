@@ -16,6 +16,7 @@ import { twMerge } from 'tailwind-merge'
 
 import type { EventCoordinates } from './interfaces'
 import { numSatsInBtc } from './constants'
+import { createUserExistsQuery } from './fetch/users.queries'
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs))
@@ -240,16 +241,32 @@ export const createNcryptSec = (sk: string, pass: string): { decodedSk: Uint8Arr
 
 export async function resolveQuery<T>(queryFn: () => CreateQueryResult<T, Error>): Promise<T> {
 	const queryPromise = queryFn()
-	return new Promise((resolve) => {
+	let retryCount = 0
+	const maxRetries = 10
+
+	return new Promise((resolve, reject) => {
 		const check = async () => {
-			console.log('Hello')
 			const currentQuery = get(queryPromise)
 			if (currentQuery.isFetched && currentQuery.data !== undefined) {
 				resolve(currentQuery.data)
+			} else if (retryCount < maxRetries) {
+				retryCount++
+				setTimeout(check, 10)
 			} else {
-				setTimeout(check, 20)
+				reject(new Error('Max retries exceeded'))
 			}
 		}
 		check()
 	})
+}
+
+export async function checkIfUserExists(userId: string): Promise<boolean> {
+	return await resolveQuery(() => createUserExistsQuery(userId))
+}
+
+export async function shouldRegister(allowRegister: boolean, userExists?: boolean, userId?: string): Promise<boolean> {
+	if (allowRegister || userExists) {
+		return true
+	}
+	return userId ? await checkIfUserExists(userId) : false
 }

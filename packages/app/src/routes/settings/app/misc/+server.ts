@@ -10,7 +10,7 @@ export const PUT: RequestHandler = async ({ request }) => {
 		bodyRes.adminsList = bodyRes.adminsList.toString().split(',')
 	}
 	bodyRes.allowRegister = JSON.parse(bodyRes.allowRegister)
-	const parsedSetupData = initialSetupDataSchema.safeParse(bodyRes)
+	const parsedSetupData = initialSetupDataSchema.partial().safeParse(bodyRes)
 	if (!parsedSetupData.success) {
 		error(400, parsedSetupData.error)
 	}

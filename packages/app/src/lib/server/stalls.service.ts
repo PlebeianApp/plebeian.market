@@ -236,7 +236,7 @@ export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall 
 		const { coordinates, tagD } = getEventCoordinates(stallEvent)
 		const stallEventContent = JSON.parse(stallEvent.content)
 		if (!stallEventContent) {
-			error(500, { message: `Error parsing stall event content` })
+			throw Error(`Error parsing stall event content`)
 		}
 
 		const { data, error: zodError } = stallEventSchema.safeParse({
@@ -245,7 +245,7 @@ export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall 
 		})
 
 		if (zodError) {
-			error(500, { message: `Invalid stall event data ${zodError}` })
+			throw Error(`Invalid stall event data: ${zodError}`)
 		}
 
 		const insertStall: Stall = {
@@ -268,7 +268,7 @@ export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall 
 				.returning()
 				.then(([stallResult]) => {
 					if (!stallResult) {
-						error(500, 'Error when creating stall')
+						throw Error('Error when inserting stall')
 					}
 					return stallResult
 				}),
@@ -291,22 +291,31 @@ export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall 
 					.onConflictDoNothing({ target: [shipping.id, shipping.userId] })
 					.returning()
 					.then(([shippingResult]) => {
-						if (!shippingResult) {
-							error(500, `Error when creating shipping method ${shippingResult}`)
+						if (!shippingResult) return
+						const createZone = (country: string | null, region: string | null) => ({
+							countryCode: country,
+							regionCode: region,
+							shippingId: shippingResult?.id as string,
+							shippingUserId: shippingResult.userId,
+							stallId: insertStall.id,
+						})
+
+						const getZonesToInsert = (method: { regions?: string[]; countries?: string[] }) => {
+							if (method.regions && method.countries) {
+								return method.regions.flatMap((region: string) =>
+									(method.countries ?? []).map((country: string) => createZone(country, region)),
+								)
+							} else if (method.regions) {
+								return method.regions.map((region: string) => createZone(null, region))
+							} else if (method.countries) {
+								return (method.countries ?? []).map((country: string) => createZone(country, null))
+							} else {
+								return []
+							}
 						}
-						return shippingResult
-					})
-					.then((shippingResult) => {
-						if (method.regions) {
-							return db.insert(shippingZones).values(
-								method.regions.map((region) => ({
-									countryCode: region,
-									regionCode: region,
-									shippingId: shippingResult?.id as string,
-									shippingUserId: shippingResult.userId,
-									stallId: insertStall.id,
-								})),
-							)
+						const zonesToInsert = getZonesToInsert(method)
+						if (zonesToInsert.length > 0) {
+							return db.insert(shippingZones).values(zonesToInsert)
 						}
 					}),
 			)
@@ -326,7 +335,6 @@ export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall 
 			shipping: data.shipping,
 		}
 	} catch (e) {
-		console.error(e)
 		error(500, `Failed to create stall ${e}`)
 	}
 }

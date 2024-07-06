@@ -20,7 +20,7 @@
 		normalizeProductsFromNostr,
 	} from '$lib/nostrSubs/utils'
 	import { openDrawerForProduct } from '$lib/stores/drawer-ui'
-	import { cn } from '$lib/utils'
+	import { cn, shouldRegister } from '$lib/utils'
 	import { onMount } from 'svelte'
 
 	import type { PageData } from './$types'
@@ -67,14 +67,15 @@
 		let userInserted: boolean = false
 		let stallInserted: boolean = false
 		let productsInserted: boolean = false
+		const _shouldRegister = await shouldRegister(allowRegister, user.exist)
 		try {
 			if (userData) {
 				userProfile = userData
-				allowRegister && (userInserted = await handleUserNostrData(userData, user.id as string))
+				_shouldRegister && (userInserted = await handleUserNostrData(userData, user.id as string))
 			}
 
 			if (stallData) {
-				allowRegister && (stallInserted = await handleStallNostrData(stallData))
+				_shouldRegister && (stallInserted = await handleStallNostrData(stallData))
 			}
 
 			if (productsData?.size) {
@@ -82,7 +83,7 @@
 				if (result) {
 					const { toDisplayProducts: _toDisplay, stallProducts } = result
 					toDisplayProducts = _toDisplay
-					allowRegister && (productsInserted = await handleProductNostrData(stallProducts))
+					_shouldRegister && (productsInserted = await handleProductNostrData(stallProducts))
 				}
 			}
 			return { userInserted, stallInserted, productsInserted }

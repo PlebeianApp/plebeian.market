@@ -22,7 +22,7 @@
 	} from '$lib/nostrSubs/utils'
 	import { openDrawerForNewProduct, openDrawerForNewStall } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
-	import { copyToClipboard, getElapsedTimeInDays } from '$lib/utils'
+	import { copyToClipboard, getElapsedTimeInDays, shouldRegister } from '$lib/utils'
 	import { npubEncode } from 'nostr-tools/nip19'
 	import { onMount } from 'svelte'
 	import { get } from 'svelte/store'
@@ -75,10 +75,11 @@
 		let userInserted: boolean = false
 		let stallInserted: boolean = false
 		let productsInserted: boolean = false
+		const _shouldRegister = await shouldRegister(allowRegister, exist)
 		try {
 			if (userData) {
 				userProfile = userData
-				allowRegister && (userInserted = await handleUserNostrData(userData, id as string))
+				_shouldRegister && (userInserted = await handleUserNostrData(userData, id as string))
 			}
 
 			if (stallData) {
