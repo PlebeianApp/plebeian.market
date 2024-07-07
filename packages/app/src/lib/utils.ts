@@ -260,8 +260,9 @@ export async function resolveQuery<T>(queryFn: () => CreateQueryResult<T, Error>
 	})
 }
 
-export async function checkIfUserExists(userId: string): Promise<boolean> {
-	return await resolveQuery(() => createUserExistsQuery(userId))
+export async function checkIfUserExists(userId?: string): Promise<boolean> {
+	if (userId) return await resolveQuery(() => createUserExistsQuery(userId))
+	return false
 }
 
 export async function shouldRegister(allowRegister: boolean, userExists?: boolean, userId?: string): Promise<boolean> {

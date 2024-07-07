@@ -4,11 +4,12 @@
 	import type { PageData } from './$types'
 
 	export let data: PageData
-	$: ({ menuItems, activeUser } = data)
+	$: ({ menuItems, activeUser, userExist } = data)
+	// TODO Keep working on settings, some sections don't work for unregistered users
 </script>
 
 {#each menuItems as item}
-	{#if activeUser?.data?.role === 'admin' || item.value !== 'app-settings'}
+	{#if activeUser?.role === 'admin' || item.value !== 'app-settings'}
 		<div class="pb-4 space-y-2">
 			<section>
 				<a href={item.root}>
@@ -18,12 +19,14 @@
 			</section>
 			<ul>
 				{#each item.links as link}
-					<li>
-						<a href={link.href}>
-							<p class={link.title == 'Delete account' ? 'text-[hsl(var(--destructive))]' : ''}>{link.title}</p>
-							<span class="opacity-50 text-sm">{link.description}</span>
-						</a>
-					</li>
+					{#if link.public || userExist}
+						<li>
+							<a href={link.href}>
+								<p class={link.title == 'Delete account' ? 'text-[hsl(var(--destructive))]' : ''}>{link.title}</p>
+								<span class="opacity-50 text-sm">{link.description}</span>
+							</a>
+						</li>
+					{/if}
 				{/each}
 			</ul>
 		</div>

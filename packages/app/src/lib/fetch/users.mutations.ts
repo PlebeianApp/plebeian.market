@@ -12,7 +12,7 @@ import { createRequest, queryClient } from './client'
 
 declare module './client' {
 	interface Endpoints {
-		[k: `PUT /api/v1/users/${string}`]: Operation<string, 'PUT', never, RichUser | NDKUserProfile, User, never>
+		[k: `PUT /api/v1/users/${string}`]: Operation<string, 'PUT', never, Partial<RichUser> | NDKUserProfile, User, never>
 		'POST /api/v1/users': Operation<string, 'POST', never, { id: string } & NDKUser['profile'], User, never>
 		[k: `DELETE /api/v1/users/${string}`]: Operation<string, 'DELETE', never, never, boolean, never>
 		[k: `POST /api/v1/users/${string}`]: Operation<string, 'POST', never, NDKUserProfile, User, never>
@@ -22,7 +22,7 @@ declare module './client' {
 export const userDataMutation = createMutation(
 	{
 		mutationKey: [],
-		mutationFn: async (profile: RichUser) => {
+		mutationFn: async (profile: Partial<RichUser>) => {
 			const $ndkStore = get(ndkStore)
 
 			if ($ndkStore.activeUser?.pubkey) {

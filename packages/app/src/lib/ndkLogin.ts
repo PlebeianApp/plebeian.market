@@ -7,7 +7,7 @@ import { page } from '$app/stores'
 import { HEX_KEYS_REGEX } from '$lib/constants'
 import ndkStore, { ndk } from '$lib/stores/ndk'
 import { addAccount, getAccount, updateAccount } from '$lib/stores/session'
-import { bytesToHex, checkIfUserExists, createNcryptSec, hexToBytes } from '$lib/utils'
+import { bytesToHex, checkIfUserExists, createNcryptSec, hexToBytes, shouldRegister } from '$lib/utils'
 import { nsecEncode } from 'nostr-tools/nip19'
 import { decrypt } from 'nostr-tools/nip49'
 import { FetchError } from 'ofetch'
@@ -24,9 +24,11 @@ async function getAppSettings(): Promise<boolean> {
 	return new Promise((resolve) => {
 		async function check() {
 			const {
-				data: { appSettings },
+				data: {
+					appSettings: { allowRegister },
+				},
 			} = get(page)
-			appSettings?.allowRegister ? resolve(appSettings.allowRegister) : setTimeout(check, 20)
+			allowRegister !== undefined ? resolve(allowRegister) : setTimeout(check, 250)
 		}
 		check()
 	})
@@ -38,14 +40,18 @@ export async function fetchActiveUserData(keyToLocalDb?: string): Promise<NDKUse
 	const user = await ndk.signer.user()
 	await user.fetchProfile({ cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY })
 	ndkStore.set(ndk)
+
 	if (keyToLocalDb) {
 		await loginLocalDb(user.pubkey, 'NSEC', keyToLocalDb)
 	} else {
 		await loginLocalDb(user.pubkey, 'NIP07')
 	}
+
 	const userExists = await checkIfUserExists(user.pubkey)
 	const allowRegister = await getAppSettings()
-	if (userExists || (!userExists && allowRegister)) {
+	const _shouldRegister = await shouldRegister(allowRegister, userExists)
+
+	if (_shouldRegister) {
 		console.log('Registering user in db')
 		await loginDb(user)
 	}

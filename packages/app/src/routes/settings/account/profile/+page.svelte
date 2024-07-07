@@ -1,57 +1,50 @@
 <script lang="ts">
 	import type { NDKUserProfile } from '@nostr-dev-kit/ndk'
 	import type { RichUser } from '$lib/server/users.service'
-	import type { Selected } from 'bits-ui'
 	import { page } from '$app/stores'
 	import SingleImage from '$lib/components/settings/editable-image.svelte'
 	import { Button } from '$lib/components/ui/button/index.js'
 	import { Input } from '$lib/components/ui/input/index.js'
 	import { Label } from '$lib/components/ui/label/index.js'
-	import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '$lib/components/ui/select'
 	import Textarea from '$lib/components/ui/textarea/textarea.svelte'
 	import { userDataMutation } from '$lib/fetch/users.mutations'
 	import ndkStore from '$lib/stores/ndk'
 	import { nav_back } from '$lib/utils'
-	import { onMount } from 'svelte'
 
 	import type { PageData } from './$types'
 	import { userEventSchema } from '../../../../schema/nostr-events'
 
 	export let data: PageData
-	$: ({ userTrustLevels, activeUser } = data)
+	$: ({ activeUser, userExist } = data)
 
-	let userTrustLevel: Selected<string> = { label: '', value: '' }
+	$: editingActiveUser = activeUser ?? ({} as RichUser)
 
-	$: editingActiveUser = activeUser?.data ?? ({} as RichUser)
+	interface FormDataWithEntries extends FormData {
+		entries(): IterableIterator<[string, string]>
+	}
 
 	const handleSubmit = async (event: SubmitEvent) => {
-		const formData = new FormData(event.currentTarget as HTMLFormElement)
+		const formData = new FormData(event.currentTarget as HTMLFormElement) as FormDataWithEntries
 		const formObject = Object.fromEntries(formData.entries())
 
-		formObject.trustLevel = userTrustLevel.value
-			? userTrustLevel.value
-			: activeUser?.data?.trustLevel
-				? activeUser?.data.trustLevel
-				: userTrustLevels[0]
-		const filteredFormObject = Object.fromEntries(Object.entries(formObject).filter(([_, value]) => value !== '')) as unknown as RichUser
-		filteredFormObject.banner = editingActiveUser.banner
-		filteredFormObject.image = editingActiveUser.image
+		activeUser?.id && (formObject.id = activeUser.id)
+		formObject.banner = editingActiveUser.banner ?? ''
+		formObject.image = editingActiveUser.image ?? ''
+
 		const ndkUser = $ndkStore.getUser({
-			hexpubkey: $ndkStore.activeUser?.pubkey,
+			pubkey: $ndkStore.activeUser?.pubkey,
 		})
-		ndkUser.profile = userEventSchema.strip().safeParse(activeUser?.data).data as NDKUserProfile
-		await $userDataMutation.mutateAsync(filteredFormObject)
-		await ndkUser.publish()
+		const { data: filtered } = userEventSchema.strip().safeParse(formObject)
+		filtered?.id && delete (filtered as NDKUserProfile).id
+		ndkUser.profile = filtered as NDKUserProfile
+		console.log(ndkUser.profile)
+		if (userExist && filtered) await $userDataMutation.mutateAsync(filtered)
+		// await ndkUser.publish()
 	}
+
 	const linkDetails = data.menuItems
 		.find((item) => item.value === 'account-settings')
 		?.links.find((item) => item.href === $page.url.pathname)
-
-	onMount(() => {
-		if (!activeUser?.data?.id) {
-			activeUser?.refetch()
-		}
-	})
 
 	const handleSaveBannerImage = (event: CustomEvent) => {
 		editingActiveUser.banner = event.detail
@@ -62,7 +55,7 @@
 	}
 </script>
 
-{#if activeUser?.data?.id}
+{#if activeUser}
 	<form on:submit|preventDefault={handleSubmit}>
 		<div class="pb-4 space-y-2">
 			<div class="flex items-center gap-1">
@@ -77,17 +70,17 @@
 
 			<div class="grid w-full items-center gap-1.5">
 				<Label for="userImage" class="font-bold">Banner image</Label>
-				<SingleImage src={editingActiveUser?.banner} on:save={handleSaveBannerImage} />
+				<SingleImage src={editingActiveUser?.banner ?? null} on:save={handleSaveBannerImage} />
 			</div>
 
 			<div class="grid items-center gap-1.5 w-28">
 				<Label for="userImage" class="font-bold">Profile image</Label>
-				<SingleImage src={editingActiveUser?.image} on:save={handleSaveProfileImage} />
+				<SingleImage src={editingActiveUser?.image ?? null} on:save={handleSaveProfileImage} />
 			</div>
 
 			<div class="grid w-full items-center gap-1.5">
 				<Label for="name" class="font-bold">Name</Label>
-				<Input value={activeUser?.data.name} type="text" id="name" name="name" placeholder={editingActiveUser?.name} />
+				<Input value={activeUser?.name} type="text" id="name" name="name" placeholder={editingActiveUser?.name} />
 			</div>
 
 			<div class="grid w-full items-center gap-1.5">
@@ -108,24 +101,9 @@
 
 			<div class="grid w-full items-center gap-1.5">
 				<Label for="nip05" class="font-bold">Nostr address</Label>
-				<Input value={activeUser?.data.nip05} type="text" id="nip05" name="nip05" placeholder={editingActiveUser?.nip05} />
+				<Input value={activeUser?.nip05} type="text" id="nip05" name="nip05" placeholder={editingActiveUser?.nip05} />
 			</div>
 
-			{#if editingActiveUser?.trustLevel}
-				<div class="flex-grow">
-					<Label class="truncate font-bold">Trust level</Label>
-					<Select bind:selected={userTrustLevel} name="trustLevel">
-						<SelectTrigger class="border-black border-2">
-							<SelectValue placeholder={editingActiveUser?.trustLevel} />
-						</SelectTrigger>
-						<SelectContent class="border-black border-2 max-h-[350px] overflow-y-auto">
-							{#each userTrustLevels as trustLevel}
-								<SelectItem value={trustLevel}>{trustLevel}</SelectItem>
-							{/each}
-						</SelectContent>
-					</Select>
-				</div>
-			{/if}
 			<Button id="userDataSubmit" class="w-full font-bold" type="submit">Save</Button>
 		</div>
 	</form>
