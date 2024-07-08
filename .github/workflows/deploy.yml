@@ -26,7 +26,7 @@ jobs:
 
       
     - run: pnpm install
-    - run: pnpm db:setup
+    - run: pnpm db:init
     - run: pnpm build
 
     - name: rsync
