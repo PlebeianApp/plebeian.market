@@ -26,11 +26,11 @@ jobs:
 
       
     - run: pnpm install
-    - run: pnpm db:setup
+    - run: pnpm db:init
     - run: pnpm build
 
     - name: rsync
-      run: rsync --rsh="/usr/bin/sshpass -p \"${{ secrets.REMOTE_PASSWORD }}\" ssh -o StrictHostKeyChecking=no -l deployer" -avz --delete . ${{ secrets.REMOTE_USER }}@${{ vars.REMOTE_HOST }}:plebeian.market --exclude ./sqlite.db
+      run: rsync --rsh="/usr/bin/sshpass -p \"${{ secrets.REMOTE_PASSWORD }}\" ssh -o StrictHostKeyChecking=no -l deployer" -avz --delete . ${{ secrets.REMOTE_USER }}@${{ vars.REMOTE_HOST }}:plebeian.market --exclude
 
     - name: Deploy final assets to server
       uses: appleboy/ssh-action@master
@@ -46,7 +46,6 @@ jobs:
           fuser -k 4173/tcp || true
           # Install dependencies and build the project
           pnpm i --frozen-lockfile
-          rm ./sqlite.db || true
           pnpm db:init
           # Run pnpm preview in the background and log output to a file
           nohup pnpm preview > preview.log 2>&1 &
