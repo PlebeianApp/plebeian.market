@@ -60,7 +60,9 @@ export const createProductMutation = createMutation(
 				tags: [['d', identifier], ...categories.map((c) => ['t', c.name])],
 			})
 
-			await newEvent.sign(ndk.signer)
+			await newEvent.sign()
+			// await newEvent.publish()
+
 			get(createProductsFromNostrMutation).mutateAsync(new Set([newEvent]))
 		},
 	},

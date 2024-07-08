@@ -271,3 +271,7 @@ export async function shouldRegister(allowRegister: boolean, userExists?: boolea
 	}
 	return userId ? await checkIfUserExists(userId) : false
 }
+
+export function unixTimeNow() {
+	return Math.floor(new Date().getTime() / 1000)
+}

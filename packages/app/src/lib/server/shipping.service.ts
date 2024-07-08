@@ -5,12 +5,8 @@ export type RichShippingInfo = {
 	name: string
 	cost: string
 	isDefault: boolean
-	zones: ShippingZonesInfo[]
-}
-
-export type ShippingZonesInfo = {
-	region: string
-	country: string
+	regions: string[] | null
+	countries: string[] | null
 }
 
 export const getShippingByStallId = async (stallId: string): Promise<RichShippingInfo[]> => {
@@ -26,23 +22,20 @@ export const getShippingByStallId = async (stallId: string): Promise<RichShippin
 		name: shipping.name as string,
 		cost: shipping.cost,
 		isDefault: shipping.isDefault,
-		zones: shipping.shippingZones.map((zone) => ({
-			region: zone.regionCode,
-			country: zone.countryCode,
-		})),
+		regions: shipping.shippingZones.map((zone) => zone.regionCode).filter((region) => region !== null) as string[],
+		countries: shipping.shippingZones.map((zone) => zone.countryCode).filter((country) => country !== null) as string[],
 	}))
+
 	return shippingInfos
 }
 
-export const getShippingZonesByStallId = async (stallId: string): Promise<ShippingZonesInfo[]> => {
+export const getShippingZonesByStallId = async (stallId: string): Promise<{ regions: string[]; countries: string[] }> => {
 	const shippingZonesResult = await db.query.shippingZones.findMany({
 		where: eq(shippingZones.stallId, stallId),
 	})
 
-	const zones: ShippingZonesInfo[] = shippingZonesResult.map((zone) => ({
-		region: zone.regionCode,
-		country: zone.countryCode,
-	}))
+	const regions = shippingZonesResult.flatMap((zone) => (zone.regionCode ? [zone.regionCode] : []))
+	const countries = shippingZonesResult.flatMap((zone) => (zone.countryCode ? [zone.countryCode] : []))
 
-	return zones
+	return { regions, countries }
 }

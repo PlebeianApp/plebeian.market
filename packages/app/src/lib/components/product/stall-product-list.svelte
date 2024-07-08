@@ -7,7 +7,7 @@
 	import ImgPlaceHolder from './imgPlaceHolder.svelte'
 	import SatPriceLoader from './sat-price-loader.svelte'
 
-	export let stall: RichStall
+	export let stall: Partial<RichStall>
 
 	$: productsByStall = createProductsByFilterQuery({
 		stallId: stall.id,

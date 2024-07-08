@@ -47,7 +47,7 @@ export async function fetchUserStallsData(userId: string): Promise<{
 	}
 
 	const stallNostrRes: Set<NDKEvent> | null = await $ndkStore.fetchEvents(stallFilter, {
-		cacheUsage: NDKSubscriptionCacheUsage.PARALLEL,
+		cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY,
 	})
 
 	return { stallNostrRes }
@@ -120,16 +120,13 @@ export function normalizeStallData(nostrStall: NDKEvent): Partial<RichStall> | n
 		parsedStallContent.shipping?.map((shipping: unknown) => {
 			const { data: shippingData, success } = shippingObjectSchema.safeParse(shipping)
 			if (!success) return null
-			if (shippingData)
-				return {
-					id: shippingData?.id,
-					name: shippingData?.name as string,
-					cost: shippingData?.cost,
-					zones: shippingData?.regions?.map((zone) => ({
-						region: zone,
-						country: zone,
-					})),
-				}
+			return {
+				id: shippingData?.id,
+				name: shippingData?.name as string,
+				cost: shippingData?.cost,
+				regions: shippingData.regions,
+				countries: shippingData.countries,
+			} as RichShippingInfo
 		}) ?? []
 
 	try {

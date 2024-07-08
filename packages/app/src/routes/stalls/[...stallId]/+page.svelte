@@ -154,9 +154,14 @@
 												{#if shipping.name || shipping.id}
 													<span>{shipping.name || shipping.id}</span>
 												{/if}
-												{#if shipping.zones}
-													{#each shipping.zones as zone}
-														<Badge variant="secondary">{zone.country ? zone.country : zone.region}</Badge>
+												{#if shipping.regions}
+													{#each shipping.regions as region}
+														<Badge variant="secondary">{region}</Badge>
+													{/each}
+												{/if}
+												{#if shipping.countries}
+													{#each shipping.countries as country}
+														<Badge variant="secondary">{country}</Badge>
 													{/each}
 												{/if}
 											{/each}

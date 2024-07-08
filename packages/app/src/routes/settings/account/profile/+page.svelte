@@ -34,11 +34,10 @@
 		const ndkUser = $ndkStore.getUser({
 			pubkey: $ndkStore.activeUser?.pubkey,
 		})
-		const { data: filtered } = userEventSchema.strip().safeParse(formObject)
-		filtered?.id && delete (filtered as NDKUserProfile).id
-		ndkUser.profile = filtered as NDKUserProfile
-		console.log(ndkUser.profile)
-		if (userExist && filtered) await $userDataMutation.mutateAsync(filtered)
+		const { data: filteredProfile } = userEventSchema.strip().safeParse(formObject)
+		filteredProfile?.id && delete (filteredProfile as NDKUserProfile).id
+		ndkUser.profile = filteredProfile as NDKUserProfile
+		if (userExist && filteredProfile) await $userDataMutation.mutateAsync(filteredProfile)
 		// await ndkUser.publish()
 	}
 
