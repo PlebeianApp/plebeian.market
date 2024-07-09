@@ -7,17 +7,23 @@ import { getImagesByProductId } from '$lib/server/productImages.service'
 import { customTagValue, getEventCoordinates } from '$lib/utils'
 import { format } from 'date-fns'
 
-import { events, eventTags, eventTagsPrimaryKey, Product, ProductImage, ProductMeta, ProductTypes } from '@plebeian/database'
 import {
 	and,
 	createId,
 	db,
 	eq,
+	events,
+	eventTags,
+	eventTagsPrimaryKey,
 	getTableColumns,
+	Product,
 	PRODUCT_META,
+	ProductImage,
 	productImages,
+	ProductMeta,
 	productMeta,
 	products,
+	ProductTypes,
 	sql,
 } from '@plebeian/database'
 
@@ -206,7 +212,7 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 					id: productEvent.id!,
 					author: productEvent.pubkey,
 					event: productEvent.content,
-					kind: productEvent.kind!
+					kind: productEvent.kind!,
 				})
 
 				const productResult = await db.insert(products).values(insertProduct).returning()
@@ -222,7 +228,17 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 				if (productEvent.tags.length) {
 					await db
 						.insert(eventTags)
-						.values(productEvent.tags.map((tag) => ({ tagName: tag[0], tagValue: tag[1], secondTagValue: tag[2], thirdTagValue: tag[3], userId: productEvent.pubkey,eventId: productEvent.id!, eventKind: productEvent.kind! })))
+						.values(
+							productEvent.tags.map((tag) => ({
+								tagName: tag[0],
+								tagValue: tag[1],
+								secondTagValue: tag[2],
+								thirdTagValue: tag[3],
+								userId: productEvent.pubkey,
+								eventId: productEvent.id!,
+								eventKind: productEvent.kind!,
+							})),
+						)
 						.execute()
 				}
 
@@ -315,7 +331,17 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 	if (productEvent.tags.length) {
 		await db
 			.insert(eventTags)
-			.values(productEvent.tags.map((tag) => ({ tagName: tag[0], tagValue: tag[1], secondTagValue: tag[2], thirdTagValue: tag[3], userId: productEvent.pubkey,eventId: productEvent.id!, eventKind: productEvent.kind! })))
+			.values(
+				productEvent.tags.map((tag) => ({
+					tagName: tag[0],
+					tagValue: tag[1],
+					secondTagValue: tag[2],
+					thirdTagValue: tag[3],
+					userId: productEvent.pubkey,
+					eventId: productEvent.id!,
+					eventKind: productEvent.kind!,
+				})),
+			)
 			.execute()
 	}
 
@@ -351,7 +377,7 @@ const preparedProductsByCatName = db
 	.select({ ...getTableColumns(products) })
 	.from(products)
 	.leftJoin(eventTags, eq(products.eventId, eventTags.eventId))
-	.where(and(eq(eventTags.tagValue, sql.placeholder('category')), eq(eventTags.tagName, "t")))
+	.where(and(eq(eventTags.tagValue, sql.placeholder('category')), eq(eventTags.tagName, 't')))
 	.limit(sql.placeholder('limit'))
 	.offset(sql.placeholder('offset'))
 	.prepare()

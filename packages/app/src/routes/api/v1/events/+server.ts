@@ -1,5 +1,5 @@
 import { error, json } from '@sveltejs/kit'
-import { eventsExists} from '$lib/server/nostrEvents.service.js'
+import { eventsExists } from '$lib/server/nostrEvents.service.js'
 
 export async function POST({ request }) {
 	try {

@@ -239,17 +239,21 @@ export const shippingZoneRelations = relations(shippingZones, ({ one }) => ({
 }))
 
 // Events
-export const eventTags = sqliteTable("event_tags", {
-	tagName: text("tag_name").notNull(),
-	tagValue: text("tag_value").notNull(),
-	secondTagValue: text("second_tag_value"),
-	thirdTagValue: text("third_tag_value"),
-	eventId: text("event_id").references(() => events.id).notNull(),
-	userId: text('user_id')
+export const eventTags = sqliteTable(
+	'event_tags',
+	{
+		tagName: text('tag_name').notNull(),
+		tagValue: text('tag_value').notNull(),
+		secondTagValue: text('second_tag_value'),
+		thirdTagValue: text('third_tag_value'),
+		eventId: text('event_id')
+			.references(() => events.id)
+			.notNull(),
+		userId: text('user_id')
 			.references(() => users.id, { onDelete: 'cascade', onUpdate: 'cascade' })
 			.notNull(),
-	eventKind: integer("event_kind").notNull()
-},
+		eventKind: integer('event_kind').notNull(),
+	},
 	() => {
 		return {
 			pk: eventTagsPrimaryKey,
@@ -263,7 +267,9 @@ export const eventTagsPrimaryKey: PrimaryKeyBuilder = primaryKey({ columns: [eve
 export const products = sqliteTable('products', {
 	...standardColumns,
 	...standardProductColumns,
-	eventId: text("event_id").references(() => events.id).notNull(),
+	eventId: text('event_id')
+		.references(() => events.id)
+		.notNull(),
 	productType: text('product_type', { enum: Object.values(PRODUCT_TYPES) as NonEmptyArray<ProductTypes> })
 		.notNull()
 		.default('simple'),
@@ -275,12 +281,12 @@ export const productToEventsRelations = relations(products, ({ many }) => ({
 	categories: many(eventTags),
 }))
 
-export const eventToProductRelations = relations(eventTags, (({one}) => ({
+export const eventToProductRelations = relations(eventTags, ({ one }) => ({
 	product: one(products, {
 		fields: [eventTags.eventId],
-		references: [products.eventId]
-	})
-}))) 
+		references: [products.eventId],
+	}),
+}))
 
 export const productImages = sqliteTable(
 	'product_images',
