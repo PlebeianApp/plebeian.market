@@ -329,6 +329,7 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 		.returning()
 
 	if (productEvent.tags.length) {
+		console.error(productResult)
 		await db
 			.insert(eventTags)
 			.values(

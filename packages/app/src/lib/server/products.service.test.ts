@@ -9,6 +9,7 @@ import type { Product } from '@plebeian/database'
 import { createId, devUser1 } from '@plebeian/database'
 
 import {
+    createProducts,
 	getAllProducts,
 	getProductById,
 	getProductsByStallId,
@@ -89,57 +90,57 @@ describe('products service', () => {
 		expect(product).toBeDefined()
 	})
 
-	// it('creates a product', async () => {
-	// 	const stall = await getStallsByUserId(devUser1.pk).then((stalls) => stalls[0])
-	// 	const skSigner = new NDKPrivateKeySigner(devUser1.sk)
-	// 	const identifier = createId()
-	// 	const evContent = {
-	// 		stall_id: stall.id,
-	// 		name: 'Hello Product',
-	// 		id: `${KindProducts}:${stall.userId}:${identifier}`,
-	// 		type: 'simple',
-	// 		description: 'Hello Description',
-	// 		images: ['http://example.com/image1.jpg', 'http://example.com/image2.jpg'],
-	// 		currency: 'USD',
-	// 		price: 133,
-	// 		quantity: 6,
-	// 		specs: [
-	// 			['color', 'red'],
-	// 			['size', 'medium'],
-	// 		],
-	// 		shipping: [
-	// 			{
-	// 				id: createId(),
-	// 				name: 'USPS',
-	// 				cost: '21.21',
-	// 				regions: ['USA', 'CAN'],
-	// 			},
-	// 		],
-	// 	}
-	// 	const newEvent = new NDKEvent(new NDK({ signer: skSigner }), {
-	// 		kind: KindProducts,
-	// 		pubkey: devUser1.pk,
-	// 		content: JSON.stringify(evContent),
-	// 		created_at: Math.floor(Date.now()) / 1000,
-	// 		tags: [['d', identifier]],
-	// 	})
-	// 	await newEvent.sign(skSigner)
-	// 	const product = await createProduct(newEvent as NostrEvent)
-	// 	expect(product).toStrictEqual({
-	// 		id: expect.any(String),
-	// 		createdAt: expect.any(String),
-	// 		currency: 'USD',
-	// 		description: 'Hello Description',
-	// 		stallId: stall.id,
-	// 		identifier: identifier,
-	// 		userId: devUser1.pk,
-	// 		userNip05: expect.any(String),
-	// 		images: expect.any(Array),
-	// 		name: 'Hello Product',
-	// 		price: 133,
-	// 		quantity: 6,
-	// 	})
-	// })
+	it('creates a product', async () => {
+		const stall = await getStallsByUserId(devUser1.pk).then((stalls) => stalls[0])
+		const skSigner = new NDKPrivateKeySigner(devUser1.sk)
+		const identifier = createId()
+		const evContent = {
+			stall_id: stall.id,
+			name: 'Hello Product',
+			id: `${KindProducts}:${stall.userId}:${identifier}`,
+			type: 'simple',
+			description: 'Hello Description',
+			images: ['http://example.com/image1.jpg', 'http://example.com/image2.jpg'],
+			currency: 'USD',
+			price: 133,
+			quantity: 6,
+			specs: [
+				['color', 'red'],
+				['size', 'medium'],
+			],
+			shipping: [
+				{
+					id: createId(),
+					name: 'USPS',
+					cost: '21.21',
+					regions: ['USA', 'CAN'],
+				},
+			],
+		}
+		const newEvent = new NDKEvent(new NDK({ signer: skSigner }), {
+			kind: KindProducts,
+			pubkey: devUser1.pk,
+			content: JSON.stringify(evContent),
+			created_at: Math.floor(Date.now()) / 1000,
+			tags: [['d', identifier]],
+		})
+		await newEvent.sign(skSigner)
+		const product = await createProducts([newEvent as NostrEvent])
+		expect(product).toStrictEqual({
+			id: expect.any(String),
+			createdAt: expect.any(String),
+			currency: 'USD',
+			description: 'Hello Description',
+			stallId: stall.id,
+			identifier: identifier,
+			userId: devUser1.pk,
+			userNip05: expect.any(String),
+			images: expect.any(Array),
+			name: 'Hello Product',
+			price: 133,
+			quantity: 6,
+		})
+	})
 
 	it('updates a product', async () => {
 		const stall = await getStallsByUserId(devUser1.pk).then((stalls) => stalls[0])
