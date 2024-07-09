@@ -9,7 +9,7 @@ import type { Product } from '@plebeian/database'
 import { createId, devUser1 } from '@plebeian/database'
 
 import {
-    createProducts,
+	createProducts,
 	getAllProducts,
 	getProductById,
 	getProductsByStallId,
