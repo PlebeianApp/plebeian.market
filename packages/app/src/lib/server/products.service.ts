@@ -61,7 +61,6 @@ export const getProductsByUserId = async (filter: ProductsFilter = productsFilte
 		.where(filter.userId ? eq(products.userId, filter.userId) : undefined)
 		.limit(filter.pageSize)
 		.execute()
-
 	const displayProducts: DisplayProduct[] = await Promise.all(productsResult.map(toDisplayProduct))
 
 	if (displayProducts) {
@@ -164,7 +163,7 @@ export const createProduct = async (productEvent: NostrEvent) => {
 	const parsedProduct = productEventSchema.safeParse({ id: productEventContent.id, ...productEventContent })
 	if (!parsedProduct.success) error(500, 'Bad product schema' + parsedProduct.error)
 
-	const stall = await getStallById(parsedProduct.data.stall_id)
+	const stall = await getStallById(parsedProduct.data.stallId)
 	const parentId = customTagValue(productEvent.tags, 'a')[0] || null
 	const extraCost = parsedProduct.data.shipping.length ? parsedProduct.data.shipping[0].cost : 0
 
@@ -189,7 +188,7 @@ export const createProduct = async (productEvent: NostrEvent) => {
 		productType: parsedProduct.data.type as ProductTypes,
 		parentId: parentId,
 		userId: productEvent.pubkey,
-		stallId: parsedProduct.data.stall_id,
+		stallId: parsedProduct.data.stallId,
 		quantity: parsedProduct.data.quantity ?? 0,
 	}
 	const insertSpecs: ProductMeta[] | undefined = parsedProduct.data.specs?.map((spec) => ({
@@ -266,9 +265,9 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 					throw Error('Bad product schema')
 				}
 
-				const stall = parsedProduct.stall_id.startsWith(`${KindStalls}`)
-					? await getStallById(parsedProduct.stall_id)
-					: await getStallById(`${KindStalls}:${productEvent.pubkey}:${parsedProduct.stall_id}`)
+				const stall = parsedProduct.stallId.startsWith(`${KindStalls}`)
+					? await getStallById(parsedProduct.stallId)
+					: await getStallById(`${KindStalls}:${productEvent.pubkey}:${parsedProduct.stallId}`)
 
 				const parentId = customTagValue(productEvent.tags, 'a')[0] || null
 				const extraCost = parsedProduct.shipping.length ? parsedProduct.shipping[0].cost : 0
@@ -343,7 +342,7 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 
 export const updateProduct = async (productId: string, productEvent: NostrEvent): Promise<DisplayProduct> => {
 	const productEventContent = JSON.parse(productEvent.content)
-	const parsedProduct = productEventSchema.partial().safeParse({ id: productId, ...productEventContent })
+	const parsedProduct = productEventSchema.safeParse({ id: productId, ...productEventContent })
 
 	if (!parsedProduct.success) {
 		error(500, 'Bad product schema')
@@ -358,7 +357,7 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 		currency: parsedProductData?.currency,
 		price: parsedProductData?.price?.toString(),
 		extraCost: parsedProductData?.shipping?.length ? parsedProductData?.shipping[0].cost?.toString() : String(0),
-		stallId: parsedProductData?.stall_id,
+		stallId: parsedProductData?.stallId,
 		productName: parsedProductData?.name,
 		quantity: parsedProductData?.quantity !== null ? parsedProductData?.quantity : undefined,
 	}

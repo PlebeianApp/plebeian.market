@@ -35,7 +35,7 @@
 			const file = target.files?.[0]
 			if (file) {
 				const uploader = new NostrBuildUploader({
-					signer: ndkStore.activeUser?.signer,
+					signer: $ndkStore.signer,
 				})
 				const [[_, url], ...tags] = await uploader.upload(file)
 				console.log(url, tags)
@@ -119,7 +119,7 @@
 	{#if src}
 		<img {src} alt="nip 96" class="w-full h-full object-cover" />
 	{:else}
-		<div class="w-full h-full min-h-[200px] flex items-center justify-center">
+		<div class="w-full h-full min-h-[250px] flex items-center justify-center">
 			<Button on:click={() => imageChoiceDialogOpen.set(true)} variant="ghost"><span class="i-mdi-upload w-9 h-9" /></Button>
 		</div>
 	{/if}

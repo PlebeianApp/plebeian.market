@@ -1,5 +1,6 @@
 import NDK, { NDKEvent, NDKKind, NDKPrivateKeySigner } from '@nostr-dev-kit/ndk'
 import { KindProducts } from '$lib/constants'
+import { unixTimeNow } from '$lib/utils'
 import { describe, expect, it } from 'vitest'
 
 import { createId, devUser1, shipping } from '@plebeian/database'
@@ -48,7 +49,7 @@ describe('/stalls', () => {
 			kind: 30017 as NDKKind,
 			pubkey: devUser1.pk,
 			content: JSON.stringify(evContent),
-			created_at: Math.floor(Date.now() / 1000),
+			created_at: unixTimeNow(),
 			tags: [['d', identifier]],
 		})
 

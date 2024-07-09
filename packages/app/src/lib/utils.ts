@@ -3,6 +3,7 @@ import type { ClassValue } from 'clsx'
 import type { VerifiedEvent } from 'nostr-tools'
 import type { TransitionConfig } from 'svelte/transition'
 import { type NDKEvent, type NDKKind, type NDKTag, type NDKUserProfile, type NostrEvent } from '@nostr-dev-kit/ndk'
+import { page } from '$app/stores'
 import ndkStore from '$lib/stores/ndk'
 import { clsx } from 'clsx'
 import { differenceInDays } from 'date-fns'
@@ -265,7 +266,8 @@ export async function checkIfUserExists(userId?: string): Promise<boolean> {
 	return false
 }
 
-export async function shouldRegister(allowRegister: boolean, userExists?: boolean, userId?: string): Promise<boolean> {
+export async function shouldRegister(allowRegister?: boolean, userExists?: boolean, userId?: string): Promise<boolean> {
+	if (allowRegister == undefined) allowRegister = get(page).data.appSettings.allowRegister
 	if (allowRegister || userExists) {
 		return true
 	}

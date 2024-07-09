@@ -11,8 +11,7 @@
 	import { Textarea } from '$lib/components/ui/textarea'
 	import { KindStalls } from '$lib/constants'
 	import { createStallFromNostrEvent, updateStallFromNostrEvent } from '$lib/fetch/stalls.mutations'
-	import ndkStore, { ndk } from '$lib/stores/ndk'
-	// import PaymentMethodsStall from './payment-methods-stall.svelte'
+	import ndkStore from '$lib/stores/ndk'
 	import { checkIfUserExists, shouldRegister, unixTimeNow } from '$lib/utils'
 	import { createEventDispatcher, onMount, tick } from 'svelte'
 	import { get } from 'svelte/store'
@@ -20,17 +19,18 @@
 	import { COUNTRIES_ISO, CURRENCIES } from '@plebeian/database/constants'
 	import { createId } from '@plebeian/database/utils'
 
-	import type { PageData } from '../../../routes/$types'
 	import { stallEventSchema } from '../../../schema/nostr-events'
 
-	const { appSettings, paymentDetailsMethod } = $page.data as PageData
+	const {
+		appSettings: { allowRegister, defaultCurrency },
+	} = $page.data
 
 	export let stall: Partial<RichStall> | null = null
 
 	type Currency = (typeof CURRENCIES)[number]
 	type Shipping = (typeof stallEventSchema._type)['shipping'][0]
 
-	let currency: Currency = (stall?.currency as Currency) ?? appSettings.defaultCurrency ?? 'BTC'
+	let currency: Currency = (stall?.currency as Currency) ?? defaultCurrency ?? 'BTC'
 
 	class ShippingMethod implements Shipping {
 		id: string
@@ -117,12 +117,12 @@
 
 	async function create(sEvent: SubmitEvent) {
 		if (!$ndkStore.activeUser?.pubkey) return
+		const userId = $ndkStore.activeUser.pubkey
 		const formData = new FormData(sEvent.currentTarget as HTMLFormElement, sEvent.submitter)
 		const identifier = stall?.identifier ? stall.identifier : createId()
-		const id = identifier
 
 		const evContent = {
-			id,
+			id: identifier,
 			name: formData.get('title'),
 			description: formData.get('description'),
 			currency: currency,
@@ -130,25 +130,20 @@
 		}
 		const newEvent = new NDKEvent($ndkStore, {
 			kind: KindStalls,
-			pubkey: $ndkStore.activeUser.pubkey,
+			pubkey: userId,
 			content: JSON.stringify(evContent),
 			created_at: unixTimeNow(),
 			tags: [['d', identifier]],
 		})
 
 		// await newEvent.publish().then((data) => console.log(data))
-
-		const {
-			data: {
-				appSettings: { allowRegister },
-			},
-		} = get(page)
-		const userExist = await checkIfUserExists($ndkStore.activeUser.pubkey)
+		await newEvent.sign()
+		const userExist = await checkIfUserExists()
 		const _shouldRegister = await shouldRegister(allowRegister, userExist)
 		if (_shouldRegister) {
 			const nostrEvent = await newEvent.toNostrEvent()
 			if (stall) {
-				await get(updateStallFromNostrEvent).mutateAsync([id, nostrEvent])
+				await get(updateStallFromNostrEvent).mutateAsync([`${KindStalls}:${userId}:${identifier}`, nostrEvent])
 			} else {
 				await get(createStallFromNostrEvent).mutateAsync(nostrEvent)
 			}

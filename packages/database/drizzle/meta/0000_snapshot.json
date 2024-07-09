@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "1ea67b8e-5254-41f2-aad2-a163aac75613",
+  "id": "052ef9c5-0cd4-4de8-b028-d9be08f9c266",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "app_settings": {
@@ -784,7 +784,7 @@
           "name": "shipping_id",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "stall_id": {
@@ -899,19 +899,19 @@
           "onDelete": "cascade",
           "onUpdate": "cascade"
         },
-        "shipping_fk": {
-          "name": "shipping_fk",
+        "orders_shipping_id_seller_user_id_shipping_id_user_id_fk": {
+          "name": "orders_shipping_id_seller_user_id_shipping_id_user_id_fk",
           "tableFrom": "orders",
           "tableTo": "shipping",
           "columnsFrom": [
             "shipping_id",
-            "buyer_user_id"
+            "seller_user_id"
           ],
           "columnsTo": [
             "id",
             "user_id"
           ],
-          "onDelete": "no action",
+          "onDelete": "set null",
           "onUpdate": "no action"
         }
       },
@@ -1586,7 +1586,17 @@
           "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "shipping_zones_shipping_id_region_code_country_code_unique": {
+          "name": "shipping_zones_shipping_id_region_code_country_code_unique",
+          "columns": [
+            "shipping_id",
+            "region_code",
+            "country_code"
+          ],
+          "isUnique": true
+        }
+      },
       "foreignKeys": {
         "shipping_zones_stall_id_stalls_id_fk": {
           "name": "shipping_zones_stall_id_stalls_id_fk",
@@ -1598,7 +1608,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "cascade"
         },
         "shipping_fk": {

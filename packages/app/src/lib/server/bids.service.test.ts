@@ -1,6 +1,7 @@
 import type { NostrEvent } from 'nostr-tools'
 import NDK, { NDKEvent, NDKPrivateKeySigner } from '@nostr-dev-kit/ndk'
 import { KindBids } from '$lib/constants'
+import { unixTimeNow } from '$lib/utils'
 import { describe, expect, it } from 'vitest'
 
 import { devUser1 } from '@plebeian/database'
@@ -41,7 +42,7 @@ describe('bids service', () => {
 			kind: KindBids,
 			pubkey: devUser1.pk,
 			content: JSON.stringify(evContent),
-			created_at: Math.floor(Date.now() / 1000),
+			created_at: unixTimeNow(),
 			tags: [['e', `${auction.id}`]],
 		})
 		await newEvent.sign(skSigner)

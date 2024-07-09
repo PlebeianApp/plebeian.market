@@ -1,6 +1,6 @@
 import type { AnySQLiteColumn } from 'drizzle-orm/sqlite-core'
 import { relations, sql } from 'drizzle-orm'
-import { foreignKey, integer, numeric, primaryKey, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+import { foreignKey, integer, numeric, primaryKey, sqliteTable, text, unique } from 'drizzle-orm/sqlite-core'
 
 import {
 	AUCTION_STATUS,
@@ -205,7 +205,6 @@ export const shipping = sqliteTable(
 	},
 )
 
-// Shipping zones
 export const shippingZones = sqliteTable(
 	'shipping_zones',
 	{
@@ -214,7 +213,7 @@ export const shippingZones = sqliteTable(
 			.$defaultFn(() => createId()),
 		shippingId: text('shipping_id').notNull(),
 		shippingUserId: text('shipping_user_id').notNull(),
-		stallId: text('stall_id').references(() => stalls.id, { onUpdate: 'cascade' }),
+		stallId: text('stall_id').references(() => stalls.id, { onUpdate: 'cascade', onDelete: 'cascade' }),
 		regionCode: text('region_code'),
 		countryCode: text('country_code'),
 	},
@@ -225,6 +224,7 @@ export const shippingZones = sqliteTable(
 				foreignColumns: [shipping.id, shipping.userId],
 				name: 'shipping_fk',
 			}),
+			uniqueConstraint: unique().on(table.shippingId, table.regionCode, table.countryCode),
 		}
 	},
 )
@@ -345,7 +345,7 @@ export const orders = sqliteTable(
 		status: text('status', { enum: Object.values(ORDER_STATUS) as NonEmptyArray<OrderStatus> })
 			.notNull()
 			.default('pending'),
-		shippingId: text('shipping_id').notNull(),
+		shippingId: text('shipping_id'),
 		stallId: text('stall_id')
 			.notNull()
 			.references(() => stalls.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
@@ -361,11 +361,10 @@ export const orders = sqliteTable(
 	},
 	(table) => {
 		return {
-			fk: foreignKey({
-				columns: [table.shippingId, table.buyerUserId],
+			shippingFk: foreignKey({
+				columns: [table.shippingId, table.sellerUserId],
 				foreignColumns: [shipping.id, shipping.userId],
-				name: 'shipping_fk',
-			}),
+			}).onDelete('set null'),
 		}
 	},
 )

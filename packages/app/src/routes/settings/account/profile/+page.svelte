@@ -38,7 +38,7 @@
 		filteredProfile?.id && delete (filteredProfile as NDKUserProfile).id
 		ndkUser.profile = filteredProfile as NDKUserProfile
 		if (userExist && filteredProfile) await $userDataMutation.mutateAsync(filteredProfile)
-		// await ndkUser.publish()
+		// await ndkUser.publish().then((data) => console.log(data))
 	}
 
 	const linkDetails = data.menuItems

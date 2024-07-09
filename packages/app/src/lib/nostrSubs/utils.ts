@@ -153,10 +153,10 @@ export function normalizeProductsFromNostr(
 	const toDisplayProducts: Partial<DisplayProduct>[] = []
 	const stallProducts = new Set<NDKEvent>()
 	for (const event of productsData) {
-		const { data: product, success } = productEventSchema.safeParse(JSON.parse(event.content))
+		const { data: product, success, error: parseError } = productEventSchema.safeParse(JSON.parse(event.content))
 		if (!success) return null
 
-		if (product.stall_id == stallId?.split(':')[2]) {
+		if (product.stallId == stallId?.split(':')[2]) {
 			stallProducts.add(event)
 			toDisplayProducts.push({
 				...product,

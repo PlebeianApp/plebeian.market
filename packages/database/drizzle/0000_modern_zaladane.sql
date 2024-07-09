@@ -110,7 +110,7 @@ CREATE TABLE `orders` (
 	`seller_user_id` text NOT NULL,
 	`buyer_user_id` text NOT NULL,
 	`status` text DEFAULT 'pending' NOT NULL,
-	`shipping_id` text NOT NULL,
+	`shipping_id` text,
 	`stall_id` text NOT NULL,
 	`address` text NOT NULL,
 	`zip` text NOT NULL,
@@ -124,7 +124,7 @@ CREATE TABLE `orders` (
 	FOREIGN KEY (`seller_user_id`) REFERENCES `users`(`id`) ON UPDATE cascade ON DELETE cascade,
 	FOREIGN KEY (`buyer_user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`stall_id`) REFERENCES `stalls`(`id`) ON UPDATE cascade ON DELETE cascade,
-	FOREIGN KEY (`shipping_id`,`buyer_user_id`) REFERENCES `shipping`(`id`,`user_id`) ON UPDATE no action ON DELETE no action
+	FOREIGN KEY (`shipping_id`,`seller_user_id`) REFERENCES `shipping`(`id`,`user_id`) ON UPDATE no action ON DELETE set null
 );
 --> statement-breakpoint
 CREATE TABLE `payment_details` (
@@ -217,7 +217,7 @@ CREATE TABLE `shipping_zones` (
 	`stall_id` text,
 	`region_code` text,
 	`country_code` text,
-	FOREIGN KEY (`stall_id`) REFERENCES `stalls`(`id`) ON UPDATE cascade ON DELETE no action,
+	FOREIGN KEY (`stall_id`) REFERENCES `stalls`(`id`) ON UPDATE cascade ON DELETE cascade,
 	FOREIGN KEY (`shipping_id`,`shipping_user_id`) REFERENCES `shipping`(`id`,`user_id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
@@ -263,3 +263,5 @@ CREATE TABLE `users` (
 	`zap_Service` text,
 	`last_login` integer
 );
+--> statement-breakpoint
+CREATE UNIQUE INDEX `shipping_zones_shipping_id_region_code_country_code_unique` ON `shipping_zones` (`shipping_id`,`region_code`,`country_code`);

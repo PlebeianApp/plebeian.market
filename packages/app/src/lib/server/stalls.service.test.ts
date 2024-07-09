@@ -2,6 +2,7 @@ import type { NostrEvent } from '@nostr-dev-kit/ndk'
 import NDK, { NDKEvent, NDKPrivateKeySigner } from '@nostr-dev-kit/ndk'
 import { KindProducts, KindStalls } from '$lib/constants'
 import { createStall, getAllStalls, getStallById, getStallsByUserId, updateStall } from '$lib/server/stalls.service'
+import { unixTimeNow } from '$lib/utils'
 import { describe, expect, it } from 'vitest'
 
 import { createId, devUser1, shipping } from '@plebeian/database'
@@ -63,7 +64,7 @@ describe('stalls service', () => {
 			kind: KindStalls,
 			pubkey: devUser1.pk,
 			content: JSON.stringify(evContent),
-			created_at: Math.floor(Date.now()) / 1000,
+			created_at: unixTimeNow(),
 			tags: [['d', identifier]],
 		})
 		await newEvent.sign(skSigner)
@@ -90,7 +91,7 @@ describe('stalls service', () => {
 			kind: KindStalls,
 			pubkey: devUser1.pk,
 			content: JSON.stringify(evContent),
-			created_at: Math.floor(Date.now()) / 1000,
+			created_at: unixTimeNow(),
 			tags: [['d', targetStall.identifier]],
 		}) as NostrEvent
 

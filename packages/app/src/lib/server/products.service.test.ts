@@ -3,6 +3,7 @@ import NDK, { NDKEvent, NDKPrivateKeySigner } from '@nostr-dev-kit/ndk'
 import { KindProducts } from '$lib/constants'
 import { productsFilterSchema } from '$lib/schema'
 import { getStallsByUserId } from '$lib/server/stalls.service'
+import { unixTimeNow } from '$lib/utils'
 import { describe, expect, it } from 'vitest'
 
 import type { Product } from '@plebeian/database'
@@ -120,7 +121,7 @@ describe('products service', () => {
 			kind: KindProducts,
 			pubkey: devUser1.pk,
 			content: JSON.stringify(evContent),
-			created_at: Math.floor(Date.now()) / 1000,
+			created_at: unixTimeNow(),
 			tags: [['d', identifier]],
 		})
 		await newEvent.sign(skSigner)
@@ -153,7 +154,7 @@ describe('products service', () => {
 			kind: KindProducts,
 			pubkey: devUser1.pk,
 			content: JSON.stringify(evContent),
-			created_at: Math.floor(Date.now()) / 1000,
+			created_at: unixTimeNow(),
 			tags: [['d', targetProduct.id.split(':')[2]]],
 		})
 

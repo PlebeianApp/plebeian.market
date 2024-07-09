@@ -2,6 +2,7 @@ import { error, json } from '@sveltejs/kit'
 import { usersFilterSchema } from '$lib/schema'
 import { decodeJwtToEvent } from '$lib/server/nostrAuth.service.js'
 import { createUser, getAllUsers, getRichUsers, getUsersByRole } from '$lib/server/users.service'
+import { unixTimeNow } from '$lib/utils.js'
 
 import type { RequestHandler } from './$types.js'
 
@@ -26,7 +27,7 @@ export const GET: RequestHandler = async ({ request, url: { searchParams } }) =>
 
 	const users = await getAllUsers(filter.data)
 	const usersUnAuthResponse = users.map((user) => ({
-		created_at: user.createdAt.getTime() / 1000,
+		created_at: unixTimeNow(),
 		name: user.name,
 		displayName: user.displayName,
 		about: user.about,
