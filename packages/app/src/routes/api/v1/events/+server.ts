@@ -1,8 +1,5 @@
 import { error, json } from '@sveltejs/kit'
-import { KindProducts, KindStalls } from '$lib/constants.js'
-import { eventsExists, persistEvent, verifyAndPersistRawEvent } from '$lib/server/nostrEvents.service.js'
-import { createProduct } from '$lib/server/products.service.js'
-import { createStall } from '$lib/server/stalls.service.js'
+import { eventsExists} from '$lib/server/nostrEvents.service.js'
 
 export async function POST({ request }) {
 	try {

@@ -1,4 +1,4 @@
-import type { AnySQLiteColumn } from 'drizzle-orm/sqlite-core'
+import type { AnySQLiteColumn, PrimaryKeyBuilder } from 'drizzle-orm/sqlite-core'
 import { relations, sql } from 'drizzle-orm'
 import { foreignKey, integer, numeric, primaryKey, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 
@@ -250,12 +250,14 @@ export const eventTags = sqliteTable("event_tags", {
 			.notNull(),
 	eventKind: integer("event_kind").notNull()
 },
-	(table) => {
+	() => {
 		return {
-			pk: primaryKey({ columns: [table.tagName, table.tagValue, table.eventId] }),
+			pk: eventTagsPrimaryKey,
 		}
 	},
 )
+
+export const eventTagsPrimaryKey: PrimaryKeyBuilder = primaryKey({ columns: [eventTags.tagName, eventTags.tagValue, eventTags.eventId] })
 
 // Products
 export const products = sqliteTable('products', {

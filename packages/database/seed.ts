@@ -328,10 +328,10 @@ const main = async () => {
 		})
 	})
 
-	const uniqueCategories = faker.helpers.uniqueArray(faker.commerce.department, productData.flat(2).length)
 	const flatProductData = productData.flat(2)
+	const uniqueCategories = faker.helpers.uniqueArray(faker.commerce.department, Math.floor(flatProductData.length / 2))
 
-	const eventTagsData: NewEventTag[] = uniqueCategories.map((v, i) => ({
+	const eventTagsData: NewEventTag[] = [...uniqueCategories, ...uniqueCategories].map((v, i) => ({
 		userId: flatProductData[i].userId,
 		eventId: flatProductData[i].eventId,
 		eventKind: KindProducts,
@@ -454,8 +454,6 @@ const main = async () => {
 		db.delete(dbSchema.appSettings),
 		db.delete(dbSchema.stalls),
 		db.delete(dbSchema.products),
-		// db.delete(dbSchema.categories),
-		// db.delete(dbSchema.productCategories),
 		db.delete(dbSchema.productImages),
 		db.delete(dbSchema.auctions),
 		db.delete(dbSchema.metaTypes),
