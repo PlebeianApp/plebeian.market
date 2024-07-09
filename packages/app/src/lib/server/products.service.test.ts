@@ -20,6 +20,7 @@ import {
 describe('products service', () => {
 	it('converts product to display product', async () => {
 		const product: Product = {
+			eventId: 'testEventId',
 			id: 'testProductId',
 			updatedAt: new Date(),
 			createdAt: new Date(),
@@ -149,6 +150,7 @@ describe('products service', () => {
 			name: 'Hello Product changed',
 		}
 		const newEvent = new NDKEvent(new NDK({ signer: skSigner }), {
+			id: createId(),
 			kind: KindProducts,
 			pubkey: devUser1.pk,
 			content: JSON.stringify(evContent),

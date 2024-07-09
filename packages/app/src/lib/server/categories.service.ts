@@ -54,18 +54,3 @@ export const getAllCategories = async (filter: CatsFilter = catsFilterSchema.par
 
 	error(404, { message: `No categories found` })
 }
-
-export const getCategoriesByProductId = async (productId: string): Promise<Category[]> => {
-	const preparedCatByProductId = db
-		.select()
-		.from(categories)
-		.innerJoin(productCategories, eq(productCategories.category, categories.name))
-		.where(eq(productCategories.productId, sql.placeholder('productId')))
-		.prepare()
-	const categoriesResult = await preparedCatByProductId.execute({ productId })
-
-	if (categoriesResult) {
-		return categoriesResult.map((data) => data.categories)
-	}
-	error(404, 'Not found')
-}

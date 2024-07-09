@@ -338,7 +338,7 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 					secondTagValue: tag[2],
 					thirdTagValue: tag[3],
 					userId: productEvent.pubkey,
-					eventId: productEvent.id!,
+					eventId: productResult[0].eventId!,
 					eventKind: productEvent.kind!,
 				})),
 			)
