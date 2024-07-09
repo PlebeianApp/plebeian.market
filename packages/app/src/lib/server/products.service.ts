@@ -342,6 +342,7 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 					eventKind: productEvent.kind!,
 				})),
 			)
+			.onConflictDoNothing()
 			.execute()
 	}
 
