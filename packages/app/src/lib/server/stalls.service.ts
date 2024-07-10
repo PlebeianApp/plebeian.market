@@ -354,7 +354,7 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
 			description: parsedStall.description,
 			currency: parsedStall.currency,
 		}
-		console.log('parsed stall', parsedStall)
+
 		const [stallResult] = await db
 			.update(stalls)
 			.set({
@@ -364,86 +364,98 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
 			.returning()
 
 		if (!stallResult) {
-			throw new Error(`Stall not found: ${stallId}`)
+			throw new Error(`Stall not updated: ${stallId}`)
 		}
-		// TODO this is not working, it updated shippingZones of other shippings that are not beign updated or deleted
-		if (parsedStall.shipping?.length) {
-			const existingShippingMethods = await db.query.shipping.findMany({
-				where: and(eq(shipping.stallId, stallId), eq(shipping.userId, stallResult.userId)),
-			})
-			const existingShippingMethodIds = existingShippingMethods.map((method) => method.id)
-			console.log('Existing shipping methods:', existingShippingMethods)
-			for (const method of parsedStall.shipping) {
-				const [shippingResult] = await db
-					.update(shipping)
-					.set({
-						name: method.name as string,
-						cost: String(method.cost),
-						stallId: stallResult.id as string,
+
+		if (parsedStall.shipping && parsedStall.shipping.length > 0) {
+			try {
+				await db.transaction(async (tx) => {
+					const existingShippingMethods = await tx.query.shipping.findMany({
+						where: and(eq(shipping.stallId, stallId), eq(shipping.userId, stallResult.userId)),
 					})
-					.where(and(eq(shipping.id, method.id), eq(shipping.userId, stallResult.userId)))
-					.returning()
 
-				console.log(shippingResult)
+					const newShippingMethodsMap = new Map(parsedStall.shipping?.map((method) => [method.id, method]))
+					const existingShippingMethodsMap = new Map(existingShippingMethods.map((method) => [method.id, method]))
 
-				if (shippingResult) {
-					await db
-						.delete(shippingZones)
-						.where(
+					const methodsToInsert = parsedStall.shipping?.filter((method) => !existingShippingMethodsMap.has(method.id)) ?? []
+					const methodsToUpdate = parsedStall.shipping?.filter((method) => existingShippingMethodsMap.has(method.id)) ?? []
+					const methodsToDelete = existingShippingMethods.filter((method) => !newShippingMethodsMap.has(method.id))
+
+					if (methodsToInsert.length > 0) {
+						await tx
+							.insert(shipping)
+							.values(
+								methodsToInsert.map((method) => ({
+									id: method.id,
+									stallId: stallId,
+									userId: stallResult.userId,
+									name: method.name,
+									cost: String(method.cost),
+								})),
+							)
+							.returning()
+					}
+
+					if (methodsToUpdate.length > 0) {
+						const updatePromises = methodsToUpdate.map((method) =>
+							tx
+								.update(shipping)
+								.set({
+									name: method.name,
+									cost: method.cost,
+									updatedAt: new Date(),
+								})
+								.where(and(eq(shipping.id, method.id), eq(shipping.stallId, stallId), eq(shipping.userId, stallResult.userId))),
+						)
+						await Promise.all(updatePromises)
+					}
+
+					if (methodsToDelete.length > 0) {
+						await tx.delete(shipping).where(
 							and(
-								eq(shippingZones.shippingId, shippingResult.id),
-								eq(shippingZones.shippingUserId, shippingResult.userId),
-								eq(shippingZones.stallId, stallId),
+								inArray(
+									shipping.id,
+									methodsToDelete.map((method) => method.id),
+								),
+								eq(shipping.stallId, stallId),
+								eq(shipping.userId, stallResult.userId),
 							),
 						)
+					}
 
-					const zonesToInsert = getZonesToInsert(shippingResult, method.regions, method.countries)
+					// Handle shipping zones
+					const shippingMethodIds = parsedStall.shipping?.map((method) => method.id) ?? []
+
+					// Delete existing zones only for the shipping methods we're updating
+					await tx
+						.delete(shippingZones)
+						.where(and(eq(shippingZones.stallId, stallId), inArray(shippingZones.shippingId, shippingMethodIds)))
+
+					// Insert new zones
+					const zonesToInsert =
+						parsedStall.shipping?.flatMap((method) => [
+							...(method.regions ?? []).map((region) => ({
+								shippingId: method.id,
+								shippingUserId: stallResult.userId,
+								stallId: stallId,
+								regionCode: region,
+							})),
+							...(method.countries ?? []).map((country) => ({
+								shippingId: method.id,
+								shippingUserId: stallResult.userId,
+								stallId: stallId,
+								countryCode: country,
+							})),
+						]) ?? []
 
 					if (zonesToInsert.length > 0) {
-						const zonesResult = await db
-							.insert(shippingZones)
-							.values(zonesToInsert)
-							.onConflictDoNothing({
-								target: [shippingZones.shippingId, shippingZones.regionCode, shippingZones.countryCode],
-							})
-							.returning()
-
-						console.log('Upserted shipping zones:', zonesResult)
+						await tx.insert(shippingZones).values(zonesToInsert)
 					}
-				}
-			}
 
-			const shippingMethodsToDelete = existingShippingMethodIds.filter((id) => !parsedStall?.shipping?.some((method) => method.id === id))
-			console.log('Shipping methods to delete:', shippingMethodsToDelete)
-
-			if (shippingMethodsToDelete.length > 0) {
-				console.log('Attempting to delete shipping methods')
-				try {
-					await db.transaction(async (tx) => {
-						console.log('Starting transaction')
-
-						for (const shippingMethodId of shippingMethodsToDelete) {
-							await tx
-								.update(orders)
-								.set({ shippingId: null })
-								.where(and(eq(orders.shippingId, shippingMethodId), eq(orders.sellerUserId, stallResult.userId)))
-
-							await tx
-								.delete(shippingZones)
-								.where(and(eq(shippingZones.shippingId, shippingMethodId), eq(shippingZones.shippingUserId, stallResult.userId)))
-
-							const deleteResult = await tx
-								.delete(shipping)
-								.where(and(eq(shipping.id, shippingMethodId), eq(shipping.userId, stallResult.userId), eq(shipping.stallId, stallId)))
-								.returning()
-							console.log('Deleted shipping method:', deleteResult)
-						}
-					})
-					console.log('Transaction completed successfully')
-				} catch (txError) {
-					console.error('Transaction failed:', txError)
-					throw txError
-				}
+					console.log('Shipping method sync completed')
+				})
+			} catch (e) {
+				error(500, { message: `Error updating stall: ${e}` })
 			}
 		}
 		return {

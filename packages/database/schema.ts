@@ -180,30 +180,22 @@ export const paymentDetails = sqliteTable('payment_details', {
 })
 
 // Shipping
-export const shipping = sqliteTable(
-	'shipping',
-	{
-		id: text('id').notNull(),
-		createdAt: integer('created_at', { mode: 'timestamp' })
-			.notNull()
-			.default(sql`(unixepoch())`),
-		updatedAt: integer('updated_at', { mode: 'timestamp' })
-			.notNull()
-			.default(sql`(unixepoch())`),
-		stallId: text('stall_id').references(() => stalls.id, { onUpdate: 'cascade' }),
-		userId: text('user_id')
-			.notNull()
-			.references(() => users.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
-		name: text('name'),
-		cost: numeric('base_cost').notNull(),
-		isDefault: integer('default', { mode: 'boolean' }).notNull().default(false),
-	},
-	(table) => {
-		return {
-			pk: primaryKey({ columns: [table.id, table.userId] }),
-		}
-	},
-)
+export const shipping = sqliteTable('shipping', {
+	id: text('id').primaryKey(),
+	createdAt: integer('created_at', { mode: 'timestamp' })
+		.notNull()
+		.default(sql`(unixepoch())`),
+	updatedAt: integer('updated_at', { mode: 'timestamp' })
+		.notNull()
+		.default(sql`(unixepoch())`),
+	stallId: text('stall_id').references(() => stalls.id, { onUpdate: 'cascade' }),
+	userId: text('user_id')
+		.notNull()
+		.references(() => users.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
+	name: text('name'),
+	cost: numeric('base_cost').notNull(),
+	isDefault: integer('default', { mode: 'boolean' }).notNull().default(false),
+})
 
 export const shippingZones = sqliteTable(
 	'shipping_zones',
@@ -211,7 +203,9 @@ export const shippingZones = sqliteTable(
 		id: text('id')
 			.primaryKey()
 			.$defaultFn(() => createId()),
-		shippingId: text('shipping_id').notNull(),
+		shippingId: text('shipping_id')
+			.notNull()
+			.references(() => shipping.id, { onDelete: 'cascade' }),
 		shippingUserId: text('shipping_user_id').notNull(),
 		stallId: text('stall_id').references(() => stalls.id, { onUpdate: 'cascade', onDelete: 'cascade' }),
 		regionCode: text('region_code'),
@@ -219,11 +213,6 @@ export const shippingZones = sqliteTable(
 	},
 	(table) => {
 		return {
-			fk: foreignKey({
-				columns: [table.shippingId, table.shippingUserId],
-				foreignColumns: [shipping.id, shipping.userId],
-				name: 'shipping_fk',
-			}),
 			uniqueConstraint: unique().on(table.shippingId, table.regionCode, table.countryCode),
 		}
 	},
@@ -324,50 +313,39 @@ export const bids = sqliteTable('bids', {
 })
 
 //Orders
-export const orders = sqliteTable(
-	'orders',
-	{
-		id: text('id')
-			.primaryKey()
-			.$defaultFn(() => createId()),
-		createdAt: integer('created_at', { mode: 'timestamp' })
-			.notNull()
-			.default(sql`(unixepoch())`),
-		updatedAt: integer('updated_at', { mode: 'timestamp' })
-			.notNull()
-			.default(sql`(unixepoch())`),
-		sellerUserId: text('seller_user_id')
-			.notNull()
-			.references(() => users.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
-		buyerUserId: text('buyer_user_id')
-			.notNull()
-			.references(() => users.id),
-		status: text('status', { enum: Object.values(ORDER_STATUS) as NonEmptyArray<OrderStatus> })
-			.notNull()
-			.default('pending'),
-		shippingId: text('shipping_id'),
-		stallId: text('stall_id')
-			.notNull()
-			.references(() => stalls.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
-		address: text('address').notNull(), // Can be encrypted
-		zip: text('zip').notNull(), // Can be encrypted
-		city: text('city').notNull(), // Can be encrypted
-		country: text('country').notNull(), // Can be encrypted
-		region: text('region'), // Can be encrypted
-		contactName: text('contact_name').notNull(), // Can be encrypted
-		contactPhone: text('contact_phone'), // Can be encrypted
-		contactEmail: text('contact_email'), // Can be encrypted
-		observations: text('observations'), // Can be encrypted
-	},
-	(table) => {
-		return {
-			shippingFk: foreignKey({
-				columns: [table.shippingId, table.sellerUserId],
-				foreignColumns: [shipping.id, shipping.userId],
-			}).onDelete('set null'),
-		}
-	},
-)
+export const orders = sqliteTable('orders', {
+	id: text('id')
+		.primaryKey()
+		.$defaultFn(() => createId()),
+	createdAt: integer('created_at', { mode: 'timestamp' })
+		.notNull()
+		.default(sql`(unixepoch())`),
+	updatedAt: integer('updated_at', { mode: 'timestamp' })
+		.notNull()
+		.default(sql`(unixepoch())`),
+	sellerUserId: text('seller_user_id')
+		.notNull()
+		.references(() => users.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
+	buyerUserId: text('buyer_user_id')
+		.notNull()
+		.references(() => users.id),
+	status: text('status', { enum: Object.values(ORDER_STATUS) as NonEmptyArray<OrderStatus> })
+		.notNull()
+		.default('pending'),
+	shippingId: text('shipping_id').references(() => shipping.id, { onDelete: 'set null' }),
+	stallId: text('stall_id')
+		.notNull()
+		.references(() => stalls.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
+	address: text('address').notNull(), // Can be encrypted
+	zip: text('zip').notNull(), // Can be encrypted
+	city: text('city').notNull(), // Can be encrypted
+	country: text('country').notNull(), // Can be encrypted
+	region: text('region'), // Can be encrypted
+	contactName: text('contact_name').notNull(), // Can be encrypted
+	contactPhone: text('contact_phone'), // Can be encrypted
+	contactEmail: text('contact_email'), // Can be encrypted
+	observations: text('observations'), // Can be encrypted
+})
 // Order items
 export const orderItems = sqliteTable(
 	'order_items',

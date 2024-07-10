@@ -342,30 +342,28 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 
 export const updateProduct = async (productId: string, productEvent: NostrEvent): Promise<DisplayProduct> => {
 	const productEventContent = JSON.parse(productEvent.content)
-	const parsedProduct = productEventSchema.safeParse({ id: productId, ...productEventContent })
+	const { data: parsedProduct, success, error: parseError } = productEventSchema.safeParse({ id: productId, ...productEventContent })
 
-	if (!parsedProduct.success) {
-		error(500, 'Bad product schema')
+	if (!success) {
+		error(500, `Bad product schema ${parseError}`)
 	}
-
-	const parsedProductData = parsedProduct.data
 
 	const insertProduct: Partial<Product> = {
 		id: productId,
-		description: parsedProductData?.description as string,
+		description: parsedProduct?.description as string,
 		updatedAt: new Date(),
-		currency: parsedProductData?.currency,
-		price: parsedProductData?.price?.toString(),
-		extraCost: parsedProductData?.shipping?.length ? parsedProductData?.shipping[0].cost?.toString() : String(0),
-		stallId: parsedProductData?.stallId,
-		productName: parsedProductData?.name,
-		quantity: parsedProductData?.quantity !== null ? parsedProductData?.quantity : undefined,
+		currency: parsedProduct?.currency,
+		price: parsedProduct?.price?.toString(),
+		extraCost: parsedProduct?.shipping?.length ? parsedProduct?.shipping[0].cost?.toString() : String(0),
+		stallId: parsedProduct?.stallId,
+		productName: parsedProduct?.name,
+		quantity: parsedProduct?.quantity !== null ? parsedProduct?.quantity : undefined,
 	}
 
 	const existingImages = await getImagesByProductId(productId)
 
-	const newImages = parsedProductData?.images?.filter((img) => !existingImages.find((eImg) => eImg.imageUrl === img))
-	const removedImages = existingImages.map((img) => img.imageUrl).filter((img) => (img ? !parsedProductData?.images?.includes(img) : img))
+	const newImages = parsedProduct?.images?.filter((img) => !existingImages.find((eImg) => eImg.imageUrl === img))
+	const removedImages = existingImages.map((img) => img.imageUrl).filter((img) => (img ? !parsedProduct?.images?.includes(img) : img))
 
 	const removeProductImages = removedImages.map((imageUrl) => ({
 		productId,

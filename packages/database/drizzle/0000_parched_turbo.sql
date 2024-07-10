@@ -123,8 +123,8 @@ CREATE TABLE `orders` (
 	`observations` text,
 	FOREIGN KEY (`seller_user_id`) REFERENCES `users`(`id`) ON UPDATE cascade ON DELETE cascade,
 	FOREIGN KEY (`buyer_user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action,
-	FOREIGN KEY (`stall_id`) REFERENCES `stalls`(`id`) ON UPDATE cascade ON DELETE cascade,
-	FOREIGN KEY (`shipping_id`,`seller_user_id`) REFERENCES `shipping`(`id`,`user_id`) ON UPDATE no action ON DELETE set null
+	FOREIGN KEY (`shipping_id`) REFERENCES `shipping`(`id`) ON UPDATE no action ON DELETE set null,
+	FOREIGN KEY (`stall_id`) REFERENCES `stalls`(`id`) ON UPDATE cascade ON DELETE cascade
 );
 --> statement-breakpoint
 CREATE TABLE `payment_details` (
@@ -197,7 +197,7 @@ CREATE TABLE `products` (
 );
 --> statement-breakpoint
 CREATE TABLE `shipping` (
-	`id` text NOT NULL,
+	`id` text PRIMARY KEY NOT NULL,
 	`created_at` integer DEFAULT (unixepoch()) NOT NULL,
 	`updated_at` integer DEFAULT (unixepoch()) NOT NULL,
 	`stall_id` text,
@@ -205,7 +205,6 @@ CREATE TABLE `shipping` (
 	`name` text,
 	`base_cost` numeric NOT NULL,
 	`default` integer DEFAULT false NOT NULL,
-	PRIMARY KEY(`id`, `user_id`),
 	FOREIGN KEY (`stall_id`) REFERENCES `stalls`(`id`) ON UPDATE cascade ON DELETE no action,
 	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE cascade ON DELETE cascade
 );
@@ -217,8 +216,8 @@ CREATE TABLE `shipping_zones` (
 	`stall_id` text,
 	`region_code` text,
 	`country_code` text,
-	FOREIGN KEY (`stall_id`) REFERENCES `stalls`(`id`) ON UPDATE cascade ON DELETE cascade,
-	FOREIGN KEY (`shipping_id`,`shipping_user_id`) REFERENCES `shipping`(`id`,`user_id`) ON UPDATE no action ON DELETE no action
+	FOREIGN KEY (`shipping_id`) REFERENCES `shipping`(`id`) ON UPDATE no action ON DELETE cascade,
+	FOREIGN KEY (`stall_id`) REFERENCES `stalls`(`id`) ON UPDATE cascade ON DELETE cascade
 );
 --> statement-breakpoint
 CREATE TABLE `stalls` (
