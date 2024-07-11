@@ -42,11 +42,11 @@ describe('stalls service', () => {
 		expect(product).toBeDefined()
 	})
 
-	it('creates a stalls', async () => {
+	it('creates a stall', async () => {
 		const skSigner = new NDKPrivateKeySigner(devUser1.sk)
 		const identifier = createId()
 		const evContent = {
-			id: `${KindProducts}:${devUser1.pk}:${identifier}`,
+			id: `${identifier}`,
 			name: 'Hello Stall',
 			description: 'Hello Stall Description',
 			currency: 'USD',
@@ -70,7 +70,7 @@ describe('stalls service', () => {
 		await newEvent.sign(skSigner)
 		const stall = await createStall(newEvent as NostrEvent)
 		expect(stall).toStrictEqual({
-			id: expect.any(String),
+			id: `${KindStalls}:${devUser1.pk}:${identifier}`,
 			createDate: expect.any(String),
 			currency: 'USD',
 			description: 'Hello Stall Description',

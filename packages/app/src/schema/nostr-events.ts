@@ -35,6 +35,7 @@ export const productEventSchema = z
 		specs: z.array(z.tuple([z.string(), z.string()])).optional(),
 		shipping: z.array(shippingObjectSchema),
 	})
+	.partial()
 	.transform((data) => {
 		const { stall_id, ...rest } = data
 		return {

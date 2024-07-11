@@ -3,7 +3,7 @@ import type { DisplayProduct } from '$lib/server/products.service'
 import type { RichStall } from '$lib/server/stalls.service'
 import { NDKEvent } from '@nostr-dev-kit/ndk'
 import { createMutation } from '@tanstack/svelte-query'
-import { KindProducts } from '$lib/constants'
+import { KindProducts, KindStalls } from '$lib/constants'
 import ndkStore from '$lib/stores/ndk'
 import { shouldRegister, unixTimeNow } from '$lib/utils'
 import { get } from 'svelte/store'
@@ -88,7 +88,9 @@ export const editProductMutation = createMutation(
 			const $ndkStore = get(ndkStore)
 			if (!$ndkStore.activeUser?.pubkey) return
 			const formData = new FormData(sEvent.currentTarget as HTMLFormElement)
-			const identifier = product?.identifier ? product.identifier : createId()
+			const identifier = product?.id ? product.id : createId()
+			const stallCoordinates =
+				product?.stallId.split(':').length == 3 ? product?.stallId : `${KindStalls}:${product.userId}:${product?.stallId}`
 			const evContent = {
 				id: identifier,
 				stall_id: product?.stallId.split(':').length == 3 ? product?.stallId.split(':')[2] : product?.stallId,
@@ -105,15 +107,18 @@ export const editProductMutation = createMutation(
 				pubkey: $ndkStore.activeUser.pubkey,
 				content: JSON.stringify(evContent),
 				created_at: unixTimeNow(),
-				tags: [['d', identifier], ...categories.map((c) => ['t', c.name]), ...(product?.stallId ? [['a', product.stallId]] : [])],
+				tags: [['d', identifier], ...categories.map((c) => ['t', c.name]), ...(product?.stallId ? [['a', stallCoordinates]] : [])],
 			})
 
 			await newEvent.sign()
 			// await newEvent.publish().then((d) => console.log(d))
 			const nostrEvent = await newEvent.toNostrEvent()
-			await createRequest(`PUT /api/v1/products/${product.id}`, {
-				body: nostrEvent,
-			})
+			const _shouldRegister = await shouldRegister(undefined, undefined, $ndkStore.activeUser.pubkey)
+			if (_shouldRegister) {
+				await createRequest(`PUT /api/v1/products/${product.id}`, {
+					body: nostrEvent,
+				})
+			}
 		},
 	},
 	queryClient,

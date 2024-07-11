@@ -16,7 +16,6 @@ import {
 	eq,
 	getTableColumns,
 	inArray,
-	orders,
 	paymentDetails,
 	productCategories,
 	products,
@@ -309,7 +308,7 @@ export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall 
 						userId: insertStall.userId,
 						stallId: insertStall.id,
 					})
-					.onConflictDoNothing({ target: [shipping.id, shipping.userId] })
+					.onConflictDoNothing({ target: shipping.id })
 					.returning()
 					.then(([shippingResult]) => {
 						if (!shippingResult) return
@@ -381,33 +380,30 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
 					const methodsToUpdate = parsedStall.shipping?.filter((method) => existingShippingMethodsMap.has(method.id)) ?? []
 					const methodsToDelete = existingShippingMethods.filter((method) => !newShippingMethodsMap.has(method.id))
 
+					// Handle shipping methods
 					if (methodsToInsert.length > 0) {
-						await tx
-							.insert(shipping)
-							.values(
-								methodsToInsert.map((method) => ({
-									id: method.id,
-									stallId: stallId,
-									userId: stallResult.userId,
-									name: method.name,
-									cost: String(method.cost),
-								})),
-							)
-							.returning()
+						await tx.insert(shipping).values(
+							methodsToInsert.map((method) => ({
+								id: method.id,
+								stallId: stallId,
+								userId: stallResult.userId,
+								name: method.name,
+								cost: String(method.cost),
+							})),
+						)
 					}
 
 					if (methodsToUpdate.length > 0) {
-						const updatePromises = methodsToUpdate.map((method) =>
-							tx
+						for (const method of methodsToUpdate) {
+							await tx
 								.update(shipping)
 								.set({
 									name: method.name,
 									cost: method.cost,
 									updatedAt: new Date(),
 								})
-								.where(and(eq(shipping.id, method.id), eq(shipping.stallId, stallId), eq(shipping.userId, stallResult.userId))),
-						)
-						await Promise.all(updatePromises)
+								.where(and(eq(shipping.id, method.id), eq(shipping.stallId, stallId), eq(shipping.userId, stallResult.userId)))
+						}
 					}
 
 					if (methodsToDelete.length > 0) {
@@ -426,36 +422,75 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
 					// Handle shipping zones
 					const shippingMethodIds = parsedStall.shipping?.map((method) => method.id) ?? []
 
-					// Delete existing zones only for the shipping methods we're updating
-					await tx
-						.delete(shippingZones)
+					// Fetch existing zones for the current stall and shipping methods
+					const existingZones = await tx
+						.select()
+						.from(shippingZones)
 						.where(and(eq(shippingZones.stallId, stallId), inArray(shippingZones.shippingId, shippingMethodIds)))
 
-					// Insert new zones
-					const zonesToInsert =
+					// Prepare new zones
+					const newZones =
 						parsedStall.shipping?.flatMap((method) => [
 							...(method.regions ?? []).map((region) => ({
 								shippingId: method.id,
 								shippingUserId: stallResult.userId,
 								stallId: stallId,
 								regionCode: region,
+								countryCode: null,
 							})),
 							...(method.countries ?? []).map((country) => ({
 								shippingId: method.id,
 								shippingUserId: stallResult.userId,
 								stallId: stallId,
+								regionCode: null,
 								countryCode: country,
 							})),
 						]) ?? []
 
+					// Identify zones to delete (existing zones not in new zones)
+					const zonesToDelete = existingZones.filter(
+						(existingZone) =>
+							!newZones.some(
+								(newZone) =>
+									newZone.shippingId === existingZone.shippingId &&
+									newZone.stallId === existingZone.stallId &&
+									newZone.regionCode === existingZone.regionCode &&
+									newZone.countryCode === existingZone.countryCode,
+							),
+					)
+
+					// Identify zones to insert (new zones not in existing zones)
+					const zonesToInsert = newZones.filter(
+						(newZone) =>
+							!existingZones.some(
+								(existingZone) =>
+									newZone.shippingId === existingZone.shippingId &&
+									newZone.stallId === existingZone.stallId &&
+									newZone.regionCode === existingZone.regionCode &&
+									newZone.countryCode === existingZone.countryCode,
+							),
+					)
+
+					// Delete zones that are no longer present
+					if (zonesToDelete.length > 0) {
+						await tx.delete(shippingZones).where(
+							inArray(
+								shippingZones.id,
+								zonesToDelete.map((zone) => zone.id),
+							),
+						)
+					}
+
+					// Insert new zones
 					if (zonesToInsert.length > 0) {
 						await tx.insert(shippingZones).values(zonesToInsert)
 					}
 
-					console.log('Shipping method sync completed')
+					console.log('Shipping method and zones sync completed')
 				})
 			} catch (e) {
-				error(500, { message: `Error updating stall: ${e}` })
+				console.error(`Error updating stall: ${e}`)
+				throw error(500, { message: `Error updating stall: ${e}` })
 			}
 		}
 		return {

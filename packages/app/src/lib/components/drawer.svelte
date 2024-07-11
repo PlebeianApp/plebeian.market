@@ -5,31 +5,79 @@
 	import CreateEditProduct from '$lib/components/product/create-edit.svelte'
 	import CreateEditStall from '$lib/components/stalls/create-edit.svelte'
 	import * as Sheet from '$lib/components/ui/sheet/index.js'
+	import { KindProducts, KindStalls } from '$lib/constants'
 	import { deleteProductMutation } from '$lib/fetch/products.mutations'
 	import { createProductQuery } from '$lib/fetch/products.queries'
 	import { deleteStallMutation } from '$lib/fetch/stalls.mutations'
 	import { createStallQuery } from '$lib/fetch/stalls.queries'
+	import { fetchProductData, fetchStallData, normalizeProductsFromNostr, normalizeStallData } from '$lib/nostrSubs/utils'
 	import { closeDrawer, drawerUI } from '$lib/stores/drawer-ui'
+	import ndkStore from '$lib/stores/ndk'
+	import { checkIfUserExists } from '$lib/utils'
 
 	import Spinner from './assets/spinner.svelte'
 	import { Button } from './ui/button'
 
-	let isOpen = false
+	let isOpen: boolean = false
 	$: isOpen = $drawerUI.id !== null
 
-	let currentProduct: CreateQueryResult<DisplayProduct, Error> | null = null
-	let currentStall: CreateQueryResult<RichStall, Error> | null = null
+	let currentProduct: Partial<DisplayProduct> | null = null
+	let currentStall: Partial<RichStall> | null = null
+
+	let productQuery: ReturnType<typeof createProductQuery> | undefined
+	let stallQuery: ReturnType<typeof createStallQuery> | undefined
+
+	let userExist: boolean | undefined = undefined
 
 	$: if ($drawerUI.id) {
+		check()
 		if ($drawerUI.id === 'new:product') {
 			currentProduct = null
+			productQuery = undefined
 		} else if ($drawerUI.id === 'new:stall') {
 			currentStall = null
+			stallQuery = undefined
 		} else {
-			if ($drawerUI.id.includes('30018')) {
-				currentProduct = createProductQuery($drawerUI.id)
-			} else if ($drawerUI.id.includes('30017')) {
-				currentStall = createStallQuery($drawerUI.id)
+			if ($drawerUI.id.includes(`${KindProducts}`)) {
+				productQuery = userExist !== undefined && userExist ? createProductQuery($drawerUI.id) : undefined
+			} else if ($drawerUI.id.includes(`${KindStalls}`)) {
+				stallQuery = userExist !== undefined && userExist ? createStallQuery($drawerUI.id) : undefined
+			}
+		}
+	}
+
+	$: {
+		if ($productQuery?.data) {
+			currentProduct = $productQuery.data
+		}
+		if ($stallQuery?.data) {
+			currentStall = $stallQuery.data
+		}
+	}
+
+	const check = async () => {
+		userExist = await checkIfUserExists($ndkStore.activeUser?.pubkey)
+		if (userExist == undefined) return
+		if (!userExist && $drawerUI?.id?.includes(`${KindProducts}`)) {
+			const { nostrProduct: productsData } = await fetchProductData($drawerUI.id as string)
+			if (!productsData?.size) return
+			if (productsData) {
+				console.log(productsData)
+				const result = normalizeProductsFromNostr(productsData, $ndkStore.activeUser?.pubkey as string)
+				if (result) {
+					const { toDisplayProducts: _toDisplay } = result
+					currentProduct = _toDisplay[0]
+				}
+			}
+		}
+		if (!userExist && $drawerUI.id?.includes(`${KindStalls}`)) {
+			const { stallNostrRes: stallData } = await fetchStallData($drawerUI.id as string)
+			if (!stallData) return
+			if (stallData) {
+				const result = normalizeStallData(stallData)
+				if (result) {
+					currentStall = result
+				}
 			}
 		}
 	}
@@ -39,12 +87,12 @@
 	}
 
 	const handleDeleteStall = async () => {
-		await $deleteStallMutation.mutateAsync($currentStall.data.id)
+		await $deleteStallMutation.mutateAsync(currentStall?.id as string)
 		closeDrawer()
 	}
 
 	const handleDeleteProduct = async () => {
-		await $deleteProductMutation.mutateAsync($currentProduct.data.id)
+		await $deleteProductMutation.mutateAsync(currentProduct?.id as string)
 		closeDrawer()
 	}
 </script>
@@ -61,7 +109,7 @@
 						Create new product
 					{:else if $drawerUI.id === 'new:stall'}
 						Create new stall
-					{:else if $drawerUI.id.includes('30018')}<span>Edit product</span><Button
+					{:else if $drawerUI.id.includes(`${KindProducts}`)}<span>Edit product</span><Button
 							on:click={handleDeleteProduct}
 							size="icon"
 							variant="ghost"
@@ -82,24 +130,20 @@
 					<CreateEditProduct product={null} on:success={handleSuccess} forStall={$drawerUI.forStall} />
 				{:else if $drawerUI.id === 'new:stall'}
 					<CreateEditStall stall={null} on:success={handleSuccess} />
-				{:else if $drawerUI.id.includes('30018')}
-					{#if $currentProduct !== null}
-						{#if $currentProduct.isLoading}
+				{:else if $drawerUI.id.includes(`${KindProducts}`)}
+					{#if currentProduct !== null}
+						{#if !currentProduct}
 							<Spinner />
-						{:else if $currentProduct.error}
-							<div>{$currentProduct.error.message}</div>
 						{:else}
-							<CreateEditProduct product={$currentProduct.data} on:success={handleSuccess} />
+							<CreateEditProduct product={currentProduct} on:success={handleSuccess} />
 						{/if}
 					{/if}
-				{:else if $drawerUI.id.includes('30017')}
-					{#if $currentStall !== null}
-						{#if $currentStall.isLoading}
+				{:else if $drawerUI.id.includes(`${KindStalls}`)}
+					{#if currentStall !== null}
+						{#if !currentStall}
 							<Spinner />
-						{:else if $currentStall.error}
-							<div>{$currentStall.error.message}</div>
 						{:else}
-							<CreateEditStall stall={$currentStall.data} on:success={handleSuccess} />
+							<CreateEditStall stall={currentStall} on:success={handleSuccess} />
 						{/if}
 					{/if}
 				{/if}

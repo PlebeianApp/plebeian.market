@@ -163,9 +163,9 @@ export const createProduct = async (productEvent: NostrEvent) => {
 	const parsedProduct = productEventSchema.safeParse({ id: productEventContent.id, ...productEventContent })
 	if (!parsedProduct.success) error(500, 'Bad product schema' + parsedProduct.error)
 
-	const stall = await getStallById(parsedProduct.data.stallId)
+	const stall = await getStallById(`${parsedProduct.data.stallId}`)
 	const parentId = customTagValue(productEvent.tags, 'a')[0] || null
-	const extraCost = parsedProduct.data.shipping.length ? parsedProduct.data.shipping[0].cost : 0
+	const extraCost = parsedProduct.data.shipping?.length ? parsedProduct.data.shipping[0].cost : 0
 
 	if (!stall) {
 		error(400, 'Stall not found')
@@ -180,15 +180,15 @@ export const createProduct = async (productEvent: NostrEvent) => {
 		createdAt: new Date(productEvent.created_at! * 1000),
 		updatedAt: new Date(productEvent.created_at! * 1000),
 		identifier: eventCoordinates.tagD,
-		productName: parsedProduct.data.name,
+		productName: parsedProduct.data?.name as string,
 		description: parsedProduct.data.description as string,
-		currency: parsedProduct.data.currency,
-		price: parsedProduct.data.price.toString(),
+		currency: parsedProduct.data.currency as string,
+		price: String(parsedProduct.data.price),
 		extraCost: extraCost?.toString() || '0',
 		productType: parsedProduct.data.type as ProductTypes,
 		parentId: parentId,
 		userId: productEvent.pubkey,
-		stallId: parsedProduct.data.stallId,
+		stallId: parsedProduct.data.stallId as string,
 		quantity: parsedProduct.data.quantity ?? 0,
 	}
 	const insertSpecs: ProductMeta[] | undefined = parsedProduct.data.specs?.map((spec) => ({
@@ -342,7 +342,7 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 
 export const updateProduct = async (productId: string, productEvent: NostrEvent): Promise<DisplayProduct> => {
 	const productEventContent = JSON.parse(productEvent.content)
-	const { data: parsedProduct, success, error: parseError } = productEventSchema.safeParse({ id: productId, ...productEventContent })
+	const { data: parsedProduct, success, error: parseError } = productEventSchema.safeParse(productEventContent)
 
 	if (!success) {
 		error(500, `Bad product schema ${parseError}`)

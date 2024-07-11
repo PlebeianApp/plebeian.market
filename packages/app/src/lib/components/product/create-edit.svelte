@@ -173,6 +173,51 @@
 			}
 		}
 	})
+
+	const submit = async (sEvent: SubmitEvent, stall: RichStall) => {
+		if (!product) {
+			try {
+				await $createProductMutation.mutateAsync([
+					sEvent,
+					stall,
+					images.map((image) => ({ imageUrl: image.imageUrl })),
+					shippingMethods.map((s) => ({
+						id: s.id,
+						name: s.name ?? '',
+						cost: s.cost ?? '',
+						regions: s.regions ?? [],
+						countries: s.countries ?? [],
+					})),
+					categories,
+				])
+
+				toast.success('Product created!')
+			} catch (e) {
+				toast.error(`Failed to create product: ${e}`)
+			}
+		} else {
+			try {
+				await $editProductMutation.mutateAsync([
+					sEvent,
+					product,
+					images.map((image) => ({ imageUrl: image.imageUrl })),
+					shippingMethods.map((s) => ({
+						id: s.id,
+						name: s.name ?? '',
+						cost: s.cost ?? '',
+						regions: s.regions ?? [],
+						countries: s.countries ?? [],
+					})),
+					categories,
+				])
+				toast.success('Product updated!')
+			} catch (e) {
+				toast.error(`Failed to update product: ${e}`)
+			}
+		}
+
+		queryClient.invalidateQueries({ queryKey: ['products', $ndkStore.activeUser?.pubkey] })
+	}
 </script>
 
 {#if !stalls || !stalls.length}
@@ -181,53 +226,7 @@
 	{@const [stall] = stalls.filter(
 		(pStall) => pStall.identifier === (product.stallId.split(':').length == 1 ? product?.stallId : product?.stallId.split(':')[2]),
 	)}
-	<form
-		on:submit|preventDefault={async (sEvent) => {
-			if (!product) {
-				try {
-					await $createProductMutation.mutateAsync([
-						sEvent,
-						stall,
-						images.map((image) => ({ imageUrl: image.imageUrl })),
-						shippingMethods.map((s) => ({
-							id: s.id,
-							name: s.name ?? '',
-							cost: s.cost ?? '',
-							regions: s.regions ?? [],
-							countries: s.countries ?? [],
-						})),
-						categories,
-					])
-
-					toast.success('Product created!')
-				} catch (e) {
-					toast.error(`Failed to create product: ${e}`)
-				}
-			} else {
-				try {
-					await $editProductMutation.mutateAsync([
-						sEvent,
-						product,
-						images.map((image) => ({ imageUrl: image.imageUrl })),
-						shippingMethods.map((s) => ({
-							id: s.id,
-							name: s.name ?? '',
-							cost: s.cost ?? '',
-							regions: s.regions ?? [],
-							countries: s.countries ?? [],
-						})),
-						categories,
-					])
-					toast.success('Product updated!')
-				} catch (e) {
-					toast.error(`Failed to update product: ${e}`)
-				}
-			}
-
-			queryClient.invalidateQueries({ queryKey: ['products', $ndkStore.activeUser?.pubkey] })
-		}}
-		class="flex flex-col gap-4 grow h-full"
-	>
+	<form on:submit|preventDefault={(sEvent) => submit(sEvent, stall)} class="flex flex-col gap-4 grow h-full">
 		<Tabs.Root value="basic" class="p-4">
 			<Tabs.List class="w-full justify-around bg-transparent">
 				<Tabs.Trigger value="basic" class={activeTab}>Basic</Tabs.Trigger>
