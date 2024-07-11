@@ -26,19 +26,18 @@ import {
 import { db } from './database'
 import { devInstance, devUser1, devUser2, devUser3, devUser4, devUser5 } from './fixtures'
 import {
-	AppMeta,
 	AppSettings,
 	Auction,
 	Bid,
-	Category,
 	Event,
+	EventTag,
 	Invoice,
 	MetaType,
+	NewEventTag,
 	Order,
 	OrderItem,
 	PaymentDetail,
 	Product,
-	ProductCategory,
 	ProductImage,
 	ProductMeta,
 	Shipping,
@@ -97,15 +96,15 @@ const main = async () => {
 
 		if (Object.values(PRODUCT_META).map((meta) => meta.value).includes(metaName as ProductMetaName['value']) || Object.values(DIGITAL_PRODUCT_META).map((meta) => meta.value).includes(metaName as DigitalProductMetaName['value'])) {
 			scope = 'products'
-		  } else if (Object.values(APP_SETTINGS_META).map((meta) => meta.value).includes(metaName as AppSettingsMetaName['value'])) {
+		} else if (Object.values(APP_SETTINGS_META).map((meta) => meta.value).includes(metaName as AppSettingsMetaName['value'])) {
 			scope = 'app_settings'
-		  } else if (Object.values(USER_META).map((meta) => meta.value).includes(metaName as UserMetaName['value'])) {
+		} else if (Object.values(USER_META).map((meta) => meta.value).includes(metaName as UserMetaName['value'])) {
 			scope = 'users'
-		  } else {
+		} else {
 			scope = 'products'
-		  }
+		}
 
-		const metaTypes = [...Object.entries(PRODUCT_META), ...Object.entries(DIGITAL_PRODUCT_META), ...Object.entries(APP_SETTINGS_META),...Object.entries(USER_META),...Object.entries(GENERAL_META)].map(
+		const metaTypes = [...Object.entries(PRODUCT_META), ...Object.entries(DIGITAL_PRODUCT_META), ...Object.entries(APP_SETTINGS_META), ...Object.entries(USER_META), ...Object.entries(GENERAL_META)].map(
 			([_, { value, dataType }]) => ({ value, dataType }),
 		)
 		const findMetaType = metaTypes.find((meta) => meta.value === metaName)
@@ -122,31 +121,31 @@ const main = async () => {
 	})
 
 	const userMetaData = userIds.flatMap((userId) => {
-	  return metaTypeData.flat(2).filter((metaType) => metaType.scope === 'users').map((metaType) => {
-		const { name } = metaType
-		let valueText: string | null = null
-		let valueBoolean: boolean | null = null
-		let valueNumeric: number | null = null
-	
-		if (name == USER_META.TRUST_LVL.value) {
-		  valueText = faker.helpers.arrayElement(Object.values(USER_TRUST_LEVEL))
-		} else if (name == USER_META.ROLE.value) {
-		  valueText = faker.helpers.arrayElement(Object.values(USER_ROLES))
-		}
-	
-		const userMeta = {
-		  id: createId(),
-		  userId: userId.id,
-		  metaName: name,
-		  valueText: valueText,
-		  valueBoolean: valueBoolean,
-		  valueNumeric: valueNumeric,
-		  createdAt: faker.date.recent(),
-		  updatedAt: faker.date.future(),
-		} as UserMeta
-	
-		return userMeta
-	  })
+		return metaTypeData.flat(2).filter((metaType) => metaType.scope === 'users').map((metaType) => {
+			const { name } = metaType
+			let valueText: string | null = null
+			let valueBoolean: boolean | null = null
+			let valueNumeric: number | null = null
+
+			if (name == USER_META.TRUST_LVL.value) {
+				valueText = faker.helpers.arrayElement(Object.values(USER_TRUST_LEVEL))
+			} else if (name == USER_META.ROLE.value) {
+				valueText = faker.helpers.arrayElement(Object.values(USER_ROLES))
+			}
+
+			const userMeta = {
+				id: createId(),
+				userId: userId.id,
+				metaName: name,
+				valueText: valueText,
+				valueBoolean: valueBoolean,
+				valueNumeric: valueNumeric,
+				createdAt: faker.date.recent(),
+				updatedAt: faker.date.future(),
+			} as UserMeta
+
+			return userMeta
+		})
 	})
 
 	const userStalls = userIds.map((user) => {
@@ -180,7 +179,7 @@ const main = async () => {
 					description: faker.commerce.productDescription(),
 					price: faker.finance.amount(),
 					productType: PRODUCT_TYPES.SIMPLE,
-					currency: faker.helpers.arrayElement(CURRENCIES),
+					currency: stall.currency,
 					isFeatured: i % 2 === 0,
 					isDigital: faker.datatype.boolean({ probability: 0.8 }),
 					parentId: null,
@@ -205,22 +204,22 @@ const main = async () => {
 
 	const shippingData = userStalls.flatMap((stallsByUser) => {
 		return stallsByUser.map((stall) => {
-		const shippingMethods = randomLengthArrayFromTo(1, 3).map(() => {
-			return {
-			id: createId(),
-			stallId: stall.id,
-			userId: stall.userId,
-			name: faker.commerce.productName(),
-			cost: faker.finance.amount(),
-			isDefault: faker.datatype.boolean(),
-			createdAt: faker.date.recent(),
-			updatedAt: faker.date.future(),
-			} as Shipping
-		})
-		return shippingMethods
+			const shippingMethods = randomLengthArrayFromTo(1, 3).map(() => {
+				return {
+					id: createId(),
+					stallId: stall.id,
+					userId: stall.userId,
+					name: 'shp mthd' + faker.commerce.productName(),
+					cost: faker.finance.amount(),
+					isDefault: faker.datatype.boolean(),
+					createdAt: faker.date.recent(),
+					updatedAt: faker.date.future(),
+				} as Shipping
+			})
+			return shippingMethods
 		})
 	})
-	
+
 	const shippingZonesData = shippingData.flatMap((shippingMethods) => {
 		return shippingMethods.flatMap((shipping) => {
 		  const uniqueCombinations = new Set();
@@ -252,6 +251,7 @@ const main = async () => {
 		  [`${zone.shippingId}-${zone.regionCode}-${zone.countryCode}`, zone]
 		)).values()
 	  );
+
 	const auctionsData = userStalls.map((stallByUser) => {
 		return stallByUser.map((stall) => {
 			const identifier = createId()
@@ -343,37 +343,16 @@ const main = async () => {
 		})
 	})
 
-	const categoryArray = randomLengthArrayFromTo(10, 10) 
-	const uniqueCategories = faker.helpers.uniqueArray(faker.commerce.department, categoryArray.length)
-	const categoryData = categoryArray.slice(0, 5).map((_, i) => {
-		
-		const category: Category = {
-		  name: uniqueCategories[i],
-		  description: faker.commerce.productDescription(),
-		  parent: null,
-		}
-		return category
-	  }) as Category[]
+	const flatProductData = productData.flat(2)
+	const uniqueCategories = faker.helpers.uniqueArray(faker.commerce.department, Math.floor(flatProductData.length / 2))
 
-	const subCategoryData = categoryArray.slice(5).map((_, i) => {
-		const parentCategory = faker.helpers.arrayElement(categoryData)
-		const category: Category = {
-			name: uniqueCategories[i + 5],
-			description: faker.commerce.productDescription(),
-			parent: parentCategory.name,
-		}
-		return category
-	}) as Category[]
-	
-	const productCategoryData = productData.flat(2).map((product) => {
-		const user = faker.helpers.arrayElement(userIds);
-		const category = faker.helpers.arrayElement(categoryData);
-		return {
-		  productId: product.id,
-			userId: user.id,
-		  category: category.name,
-		} as ProductCategory;
-	  }).filter(Boolean);
+	const eventTagsData: NewEventTag[] = [...uniqueCategories, ...uniqueCategories].map((v, i) => ({
+		userId: flatProductData[i].userId,
+		eventId: flatProductData[i].id,
+		eventKind: KindProducts,
+		tagName: "t",
+		tagValue: v,
+	}))
 	  
 	const productMetaData = metaTypeData.flat(2).map((metaType) => {
 		const { dataType, name } = metaType
@@ -446,7 +425,7 @@ const main = async () => {
 						updatedAt: product.updatedAt,
 						author: product.userId,
 						kind: KindProducts,
-						event: faker.string.uuid(),
+						event: product.id,
 					}) as Event,
 			),
 		),
@@ -490,8 +469,6 @@ const main = async () => {
 		db.delete(dbSchema.appSettings),
 		db.delete(dbSchema.stalls),
 		db.delete(dbSchema.products),
-		db.delete(dbSchema.categories),
-		db.delete(dbSchema.productCategories),
 		db.delete(dbSchema.productImages),
 		db.delete(dbSchema.auctions),
 		db.delete(dbSchema.metaTypes),
@@ -512,19 +489,17 @@ const main = async () => {
 	console.log('Seed start')
 	await db.transaction(async (tx) => {
 		for (const { table, data } of [
-			{ table: dbSchema.appSettings, data: appSettings},
+			{ table: dbSchema.appSettings, data: appSettings },
 			{ table: dbSchema.users, data: fullUsers },
 			{ table: dbSchema.userMeta, data: userMetaData.flat(1) },
 			{ table: dbSchema.stalls, data: userStalls.flat(1) },
 			{ table: dbSchema.auctions, data: auctionsData.flat(2) },
 			{ table: dbSchema.bids, data: bidsData.flat(2) },
-			{ table: dbSchema.categories, data: categoryData },
-			{ table: dbSchema.categories, data: subCategoryData },
+			{ table: dbSchema.eventTags, data: eventTagsData },
 			{ table: dbSchema.products, data: productData.flat(2) },
 			{ table: dbSchema.metaTypes, data: metaTypeData.flat(1) },
 			{ table: dbSchema.productMeta, data: productMetaData.flat(1) },
 			{ table: dbSchema.productImages, data: productImagesData.flat(1) },
-			{ table: dbSchema.productCategories, data: productCategoryData },
 			{ table: dbSchema.paymentDetails, data: paymentDetailsData.flat(1) },
 			{ table: dbSchema.shipping, data: shippingData.flat(1) },
 			{ table: dbSchema.shippingZones, data: uniqueShippingZonesData },

@@ -1,4 +1,4 @@
-import type { AnySQLiteColumn } from 'drizzle-orm/sqlite-core'
+import type { AnySQLiteColumn, PrimaryKeyBuilder } from 'drizzle-orm/sqlite-core'
 import { relations, sql } from 'drizzle-orm'
 import { foreignKey, integer, numeric, primaryKey, sqliteTable, text, unique } from 'drizzle-orm/sqlite-core'
 
@@ -227,6 +227,31 @@ export const shippingZoneRelations = relations(shippingZones, ({ one }) => ({
 	shipping: one(shipping, { fields: [shippingZones.shippingId, shippingZones.shippingUserId], references: [shipping.id, shipping.userId] }),
 }))
 
+// Events
+export const eventTags = sqliteTable(
+	'event_tags',
+	{
+		tagName: text('tag_name').notNull(),
+		tagValue: text('tag_value').notNull(),
+		secondTagValue: text('second_tag_value'),
+		thirdTagValue: text('third_tag_value'),
+		eventId: text('event_id')
+			.references(() => events.id)
+			.notNull(),
+		userId: text('user_id')
+			.references(() => users.id, { onDelete: 'cascade', onUpdate: 'cascade' })
+			.notNull(),
+		eventKind: integer('event_kind').notNull(),
+	},
+	() => {
+		return {
+			pk: eventTagsPrimaryKey,
+		}
+	},
+)
+
+export const eventTagsPrimaryKey: PrimaryKeyBuilder = primaryKey({ columns: [eventTags.tagName, eventTags.tagValue, eventTags.eventId] })
+
 // Products
 export const products = sqliteTable('products', {
 	...standardColumns,
@@ -237,6 +262,10 @@ export const products = sqliteTable('products', {
 	parentId: text('parent_id').references((): AnySQLiteColumn => products.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
 	price: numeric('price').notNull(),
 })
+
+export const productToEventsRelations = relations(products, ({ many }) => ({
+	categories: many(eventTags),
+}))
 
 export const productImages = sqliteTable(
 	'product_images',
@@ -260,32 +289,32 @@ export const productImages = sqliteTable(
 )
 
 // Categories
-export const categories = sqliteTable('categories', {
-	name: text('name').primaryKey(),
-	description: text('description').notNull(),
-	parent: text('parent').references((): AnySQLiteColumn => categories.name, { onDelete: 'cascade', onUpdate: 'cascade' }),
-})
+// export const categories = sqliteTable('categories', {
+// 	name: text('name').primaryKey(),
+// 	description: text('description').notNull(),
+// 	parent: text('parent').references((): AnySQLiteColumn => categories.name, { onDelete: 'cascade', onUpdate: 'cascade' }),
+// })
 
-// Product categories
-export const productCategories = sqliteTable(
-	'product_categories',
-	{
-		productId: text('product_id')
-			.references(() => products.id, { onDelete: 'cascade', onUpdate: 'cascade' })
-			.notNull(),
-		category: text('category')
-			.references(() => categories.name, { onDelete: 'cascade', onUpdate: 'cascade' })
-			.notNull(),
-		userId: text('user_id')
-			.references(() => users.id, { onDelete: 'cascade', onUpdate: 'cascade' })
-			.notNull(),
-	},
-	(table) => {
-		return {
-			pk: primaryKey({ columns: [table.productId, table.category] }),
-		}
-	},
-)
+// // Product categories
+// export const productCategories = sqliteTable(
+// 	'product_categories',
+// 	{
+// 		productId: text('product_id')
+// 			.references(() => products.id, { onDelete: 'cascade', onUpdate: 'cascade' })
+// 			.notNull(),
+// 		category: text('category')
+// 			.references(() => categories.name, { onDelete: 'cascade', onUpdate: 'cascade' })
+// 			.notNull(),
+// 		userId: text('user_id')
+// 			.references(() => users.id, { onDelete: 'cascade', onUpdate: 'cascade' })
+// 			.notNull(),
+// 	},
+// 	(table) => {
+// 		return {
+// 			pk: primaryKey({ columns: [table.productId, table.category] }),
+// 		}
+// 	},
+// )
 
 // Auctions
 export const auctions = sqliteTable('auctions', {

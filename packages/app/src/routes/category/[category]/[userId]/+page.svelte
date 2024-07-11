@@ -29,7 +29,6 @@
 				{#if $userQuery?.data}
 					<UserCardCompact user={$userQuery.data} />
 				{/if}
-				<p>{categoryData?.description}</p>
 			</div>
 			{#if $productsQuery.data}
 				<div class=" px-4 py-20 lg:px-12">

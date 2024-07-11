@@ -10,8 +10,8 @@ export type NewAuction = InferInsertModel<typeof dbSchema.auctions>
 export type Bid = InferSelectModel<typeof dbSchema.bids>
 export type NewBid = InferInsertModel<typeof dbSchema.bids>
 
-export type Category = InferSelectModel<typeof dbSchema.categories>
-export type NewCategory = InferInsertModel<typeof dbSchema.categories>
+export type EventTag = InferSelectModel<typeof dbSchema.eventTags>
+export type NewEventTag = InferInsertModel<typeof dbSchema.eventTags>
 
 export type Event = InferSelectModel<typeof dbSchema.events>
 export type NewEvent = InferInsertModel<typeof dbSchema.events>
@@ -27,9 +27,6 @@ export type NewOrder = InferInsertModel<typeof dbSchema.orders>
 
 export type PaymentDetail = InferSelectModel<typeof dbSchema.paymentDetails>
 export type NewPaymentDetail = InferInsertModel<typeof dbSchema.paymentDetails>
-
-export type ProductCategory = InferSelectModel<typeof dbSchema.productCategories>
-export type NewProductCategory = InferInsertModel<typeof dbSchema.productCategories>
 
 export type Product = InferSelectModel<typeof dbSchema.products>
 export type NewProduct = InferInsertModel<typeof dbSchema.products>

@@ -1,23 +1,12 @@
-import type { NostrEvent } from 'nostr-tools'
-import NDK, { NDKEvent, NDKPrivateKeySigner } from '@nostr-dev-kit/ndk'
-import { KindProducts } from '$lib/constants'
 import { productsFilterSchema } from '$lib/schema'
 import { getStallsByUserId } from '$lib/server/stalls.service'
 import { unixTimeNow } from '$lib/utils'
 import { describe, expect, it } from 'vitest'
 
 import type { Product } from '@plebeian/database'
-import { createId, devUser1 } from '@plebeian/database'
+import { devUser1 } from '@plebeian/database'
 
-import {
-	createProduct,
-	getAllProducts,
-	getProductById,
-	getProductsByStallId,
-	getProductsByUserId,
-	toDisplayProduct,
-	updateProduct,
-} from './products.service'
+import { getAllProducts, getProductById, getProductsByStallId, getProductsByUserId, toDisplayProduct } from './products.service'
 
 describe('products service', () => {
 	it('converts product to display product', async () => {

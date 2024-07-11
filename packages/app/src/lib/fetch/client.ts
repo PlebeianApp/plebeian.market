@@ -58,7 +58,9 @@ export async function createRequest<K extends keyof Endpoints, RequestOperation 
 	const headers = new Headers(options.headers)
 
 	if (options.auth) {
-		const authToken = await createToken(url, method)
+		const tokenKey = `TOKEN ${endpoint}`
+		const authToken = sessionStorage.getItem(tokenKey) ?? (await createToken(url, method))
+		sessionStorage.setItem(tokenKey, authToken)
 		headers.append('Authorization', authToken)
 	}
 

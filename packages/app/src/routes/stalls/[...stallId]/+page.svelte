@@ -9,6 +9,8 @@
 	import Badge from '$lib/components/ui/badge/badge.svelte'
 	import { Button } from '$lib/components/ui/button'
 	import Skeleton from '$lib/components/ui/skeleton/skeleton.svelte'
+	import { KindStalls } from '$lib/constants'
+	import { createProductsFromNostrMutation } from '$lib/fetch/products.mutations'
 	import { createProductsByFilterQuery } from '$lib/fetch/products.queries'
 	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
@@ -75,7 +77,6 @@
 						stallResponse = normalizedStall
 					}
 				}
-
 				const { userProfile: userData } = await fetchUserData(user.id as string)
 				if (userData) {
 					userProfile = userData

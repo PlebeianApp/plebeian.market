@@ -15,12 +15,12 @@
 	import ndkStore from '$lib/stores/ndk'
 	import { checkIfUserExists } from '$lib/utils'
 
-	import Spinner from './assets/spinner.svelte'
+	import ShoppingCart from './cart/shopping-cart.svelte'
 	import { Button } from './ui/button'
 
 	let isOpen: boolean = false
 	$: isOpen = $drawerUI.id !== null
-
+  
 	let currentProduct: Partial<DisplayProduct> | null = null
 	let currentStall: Partial<RichStall> | null = null
 
@@ -98,11 +98,29 @@
 
 <Sheet.Root bind:open={isOpen} onOutsideClick={closeDrawer}>
 	<Sheet.Content side="right" class="min-w-[30vw] flex flex-col border-l-black border-2">
-		<Sheet.Header>
-			{#if $drawerUI.id}
-				<Sheet.Title class="flex flex-row justify-between items-center content-center">
-					<Button size="icon" variant="outline" class=" border-none" on:click={closeDrawer}>
-						<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
+		<Sheet.Title class="flex flex-row justify-between items-center content-center">
+			<Button size="icon" variant="outline" class=" border-none" on:click={closeDrawer}>
+				<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
+			</Button>
+			{#if $drawerUI.drawerType === 'cart'}
+				Your cart
+			{:else if $drawerUI.drawerType === 'product'}
+				{#if $drawerUI.id}<span>Edit product</span><Button
+						on:click={handleDeleteProduct}
+						size="icon"
+						variant="ghost"
+						class=" text-destructive border-0"><span class="i-tdesign-delete-1 w-4 h-4"></span></Button
+					>
+				{:else}
+					<span>Create new product</span>
+				{/if}
+			{:else if $drawerUI.drawerType === 'stall'}
+				{#if $drawerUI.id}<span>Edit stall</span><Button
+						on:click={handleDeleteStall}
+						size="icon"
+						variant="ghost"
+						class=" text-destructive border-0"
+						><span class="i-tdesign-delete-1 w-4 h-4"></span>
 					</Button>
 					{#if $drawerUI.id === 'new:product'}
 						Create new product
@@ -147,6 +165,21 @@
 					{/if}
 				{/if}
 			{/if}
-		</div>
+		</Sheet.Title>
+		{#if $drawerUI.drawerType === 'cart'}
+			<ShoppingCart />
+		{:else if $drawerUI.drawerType === 'product'}
+			{#if $currentProduct?.data}
+				<CreateEditProduct product={$currentProduct.data} on:success={handleSuccess} forStall={$drawerUI.forStall} />
+			{:else}
+				<CreateEditProduct product={null} on:success={handleSuccess} forStall={$drawerUI.forStall} />
+			{/if}
+		{:else if $drawerUI.drawerType === 'stall'}
+			{#if $currentStall?.data}
+				<CreateEditStall stall={$currentStall.data} on:success={handleSuccess} />
+			{:else}
+				<CreateEditStall stall={null} on:success={handleSuccess} />
+			{/if}
+		{/if}
 	</Sheet.Content>
 </Sheet.Root>

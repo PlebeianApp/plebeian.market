@@ -15,7 +15,7 @@
 	$: categoryData = $categoriesQuery.data?.[0]
 
 	$: productsQuery = createProductsByFilterQuery({
-		category: $page.params.catName,
+		category: $page.params.category,
 		pageSize: 15,
 	})
 </script>
@@ -27,7 +27,6 @@
 				<Pattern />
 				<h2 class="relative z-10 flex gap-2 items-center justify-center"><span class=" i-mdi-category-outline w-6 h-6" />Category</h2>
 				<h1 class="relative z-10">{categoryData?.name}</h1>
-				<p>{categoryData?.description}</p>
 			</div>
 			{#if stalls.length}
 				<div class=" px-4 py-20 lg:px-12">

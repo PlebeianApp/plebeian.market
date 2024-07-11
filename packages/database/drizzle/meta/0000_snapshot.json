@@ -431,48 +431,98 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "categories": {
-      "name": "categories",
+    "event_tags": {
+      "name": "event_tags",
       "columns": {
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "description": {
-          "name": "description",
+        "tag_name": {
+          "name": "tag_name",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "parent": {
-          "name": "parent",
+        "tag_value": {
+          "name": "tag_value",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "second_tag_value": {
+          "name": "second_tag_value",
           "type": "text",
           "primaryKey": false,
           "notNull": false,
+          "autoincrement": false
+        },
+        "third_tag_value": {
+          "name": "third_tag_value",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "event_id": {
+          "name": "event_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "event_kind": {
+          "name": "event_kind",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
           "autoincrement": false
         }
       },
       "indexes": {},
       "foreignKeys": {
-        "categories_parent_categories_name_fk": {
-          "name": "categories_parent_categories_name_fk",
-          "tableFrom": "categories",
-          "tableTo": "categories",
+        "event_tags_event_id_events_id_fk": {
+          "name": "event_tags_event_id_events_id_fk",
+          "tableFrom": "event_tags",
+          "tableTo": "events",
           "columnsFrom": [
-            "parent"
+            "event_id"
           ],
           "columnsTo": [
-            "name"
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "event_tags_user_id_users_id_fk": {
+          "name": "event_tags_user_id_users_id_fk",
+          "tableFrom": "event_tags",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
           ],
           "onDelete": "cascade",
           "onUpdate": "cascade"
         }
       },
-      "compositePrimaryKeys": {},
+      "compositePrimaryKeys": {
+        "event_tags_tag_name_tag_value_event_id_pk": {
+          "columns": [
+            "event_id",
+            "tag_name",
+            "tag_value"
+          ],
+          "name": "event_tags_tag_name_tag_value_event_id_pk"
+        }
+      },
       "uniqueConstraints": {}
     },
     "events": {
@@ -993,84 +1043,6 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
-    },
-    "product_categories": {
-      "name": "product_categories",
-      "columns": {
-        "product_id": {
-          "name": "product_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "category": {
-          "name": "category",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "product_categories_product_id_products_id_fk": {
-          "name": "product_categories_product_id_products_id_fk",
-          "tableFrom": "product_categories",
-          "tableTo": "products",
-          "columnsFrom": [
-            "product_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "cascade"
-        },
-        "product_categories_category_categories_name_fk": {
-          "name": "product_categories_category_categories_name_fk",
-          "tableFrom": "product_categories",
-          "tableTo": "categories",
-          "columnsFrom": [
-            "category"
-          ],
-          "columnsTo": [
-            "name"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "cascade"
-        },
-        "product_categories_user_id_users_id_fk": {
-          "name": "product_categories_user_id_users_id_fk",
-          "tableFrom": "product_categories",
-          "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "cascade"
-        }
-      },
-      "compositePrimaryKeys": {
-        "product_categories_product_id_category_pk": {
-          "columns": [
-            "category",
-            "product_id"
-          ],
-          "name": "product_categories_product_id_category_pk"
-        }
-      },
       "uniqueConstraints": {}
     },
     "product_images": {
