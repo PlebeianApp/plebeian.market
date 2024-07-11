@@ -5,7 +5,6 @@
 
 	export let data: PageData
 	$: ({ menuItems, activeUser, userExist } = data)
-	// TODO Keep working on settings, some sections don't work for unregistered users
 </script>
 
 {#each menuItems as item}

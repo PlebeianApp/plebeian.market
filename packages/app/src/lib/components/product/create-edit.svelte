@@ -33,6 +33,7 @@
 	export let forStall: StallIdType | null = null
 
 	let stalls: RichStall[] | null
+	let stall: RichStall | null = null
 
 	$: userExistQuery = createUserExistsQuery($ndkStore.activeUser?.pubkey as string)
 
@@ -47,6 +48,16 @@
 	}
 
 	let currentStallId = product?.stallId
+
+	$: {
+		if (stalls?.length) {
+			if (currentStallId) {
+				;[stall] = stalls.filter((pStall) => pStall.id === currentStallId)
+			} else {
+				stall = stalls[0]
+			}
+		}
+	}
 
 	const activeTab =
 		'w-full font-bold border-b-2 border-black text-black data-[state=active]:border-b-primary data-[state=active]:text-primary'
@@ -174,7 +185,8 @@
 		}
 	})
 
-	const submit = async (sEvent: SubmitEvent, stall: RichStall) => {
+	const submit = async (sEvent: SubmitEvent, stall: RichStall | null) => {
+		if (stall == null) return
 		if (!product) {
 			try {
 				await $createProductMutation.mutateAsync([
@@ -222,10 +234,7 @@
 
 {#if !stalls || !stalls.length}
 	<Spinner />
-{:else if product?.stallId}
-	{@const [stall] = stalls.filter(
-		(pStall) => pStall.identifier === (product.stallId.split(':').length == 1 ? product?.stallId : product?.stallId.split(':')[2]),
-	)}
+{:else}
 	<form on:submit|preventDefault={(sEvent) => submit(sEvent, stall)} class="flex flex-col gap-4 grow h-full">
 		<Tabs.Root value="basic" class="p-4">
 			<Tabs.List class="w-full justify-around bg-transparent">
@@ -287,7 +296,7 @@
 						<DropdownMenu.Root>
 							<DropdownMenu.Trigger asChild let:builder>
 								<Button variant="outline" class="border-2 border-black" builders={[builder]}>
-									{#if forStall && stalls}
+									{#if forStall}
 										{@const defaultStall = stalls.find((stall) => stall.id === forStall)}
 										{defaultStall ? defaultStall.name : 'Select a stall'}
 									{:else}
@@ -371,6 +380,7 @@
 						</div>
 
 						<div>
+							<!-- FIXME: not working -->
 							<Label class="font-bold">Zones</Label>
 							<section>
 								<Popover.Root let:ids>
