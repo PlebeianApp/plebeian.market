@@ -15,6 +15,7 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 		const verifiedEvent = await verifyAndPersistRawEvent(request, KindProducts)
 		return json(await updateProduct(params.productId, verifiedEvent))
 	} catch (e) {
+		console.error(e)
 		error(500, JSON.stringify(e))
 	}
 }

@@ -8,21 +8,26 @@ import { getProductsByStallId } from '$lib/server/products.service'
 import { getEventCoordinates } from '$lib/utils'
 import { format } from 'date-fns'
 
-import type { ISO3, PaymentDetail, Shipping, ShippingZone, Stall } from '@plebeian/database'
 import {
 	and,
 	categories,
 	createId,
 	db,
 	eq,
+	eventTags,
 	getTableColumns,
+	ISO3,
 	orders,
+	PaymentDetail,
 	paymentDetails,
 	productCategories,
 	products,
+	Shipping,
 	shipping,
+	ShippingZone,
 	shippingZones,
 	sql,
+	Stall,
 	stalls,
 	users,
 } from '@plebeian/database'
@@ -183,9 +188,8 @@ const stallsByCatNamePrepared = db
 	.select({ ...getTableColumns(stalls) })
 	.from(stalls)
 	.leftJoin(products, eq(stalls.id, products.stallId))
-	.leftJoin(productCategories, eq(products.id, productCategories.productId))
-	.leftJoin(categories, eq(productCategories.category, categories.name))
-	.where(eq(categories.name, sql.placeholder('catName')))
+	.leftJoin(eventTags, eq(products.id, eventTags.eventId))
+	.where(and(eq(eventTags.tagValue, sql.placeholder('catName')), eq(eventTags.tagName, 't')))
 	.groupBy(stalls.id)
 	.prepare()
 

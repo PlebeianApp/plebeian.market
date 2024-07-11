@@ -7,19 +7,23 @@ import { getImagesByProductId } from '$lib/server/productImages.service'
 import { customTagValue, getEventCoordinates } from '$lib/utils'
 import { format } from 'date-fns'
 
-import type { Product, ProductImage, ProductMeta, ProductTypes } from '@plebeian/database'
 import {
 	and,
-	categories,
 	createId,
 	db,
 	eq,
+	events,
+	eventTags,
+	eventTagsPrimaryKey,
 	getTableColumns,
+	Product,
 	PRODUCT_META,
-	productCategories,
+	ProductImage,
 	productImages,
+	ProductMeta,
 	productMeta,
 	products,
+	ProductTypes,
 	sql,
 } from '@plebeian/database'
 
@@ -131,123 +135,6 @@ export const getProductById = async (productId: string): Promise<DisplayProduct>
 	}
 }
 
-const preparedProductsByCatId = db
-	.select({ ...getTableColumns(products) })
-	.from(products)
-	.innerJoin(productCategories, eq(products.id, productCategories.productId))
-	.where(eq(productCategories.category, sql.placeholder('catId')))
-	.limit(sql.placeholder('limit'))
-	.offset(sql.placeholder('offset'))
-	.prepare()
-
-export const getProductsByCatId = async (filter: ProductsFilter): Promise<DisplayProduct[]> => {
-	if (!filter.category) {
-		throw new Error('Category ID must be provided')
-	}
-
-	const productRes = await preparedProductsByCatId.execute({
-		catId: filter.category,
-		limit: filter.pageSize,
-		offset: (filter.page - 1) * filter.pageSize,
-	})
-
-	if (productRes) {
-		return await Promise.all(productRes.map(toDisplayProduct))
-	}
-	error(404, 'not found')
-}
-
-export const createProduct = async (productEvent: NostrEvent) => {
-	const eventCoordinates = getEventCoordinates(productEvent)
-	const productEventContent = JSON.parse(productEvent.content)
-
-	const parsedProduct = productEventSchema.safeParse({ id: productEventContent.id, ...productEventContent })
-	if (!parsedProduct.success) error(500, 'Bad product schema' + parsedProduct.error)
-
-	const stall = await getStallById(parsedProduct.data.stall_id)
-	const parentId = customTagValue(productEvent.tags, 'a')[0] || null
-	const extraCost = parsedProduct.data.shipping.length ? parsedProduct.data.shipping[0].cost : 0
-
-	if (!stall) {
-		error(400, 'Stall not found')
-	}
-
-	if (!parsedProduct.data.type) {
-		parsedProduct.data.type = 'simple'
-	}
-
-	const insertProduct: Product = {
-		id: eventCoordinates.coordinates,
-		createdAt: new Date(productEvent.created_at! * 1000),
-		updatedAt: new Date(productEvent.created_at! * 1000),
-		identifier: eventCoordinates.tagD,
-		productName: parsedProduct.data.name,
-		description: parsedProduct.data.description as string,
-		currency: parsedProduct.data.currency,
-		price: parsedProduct.data.price.toString(),
-		extraCost: extraCost?.toString() || '0',
-		productType: parsedProduct.data.type as ProductTypes,
-		parentId: parentId,
-		userId: productEvent.pubkey,
-		stallId: parsedProduct.data.stall_id,
-		quantity: parsedProduct.data.quantity ?? 0,
-	}
-	const insertSpecs: ProductMeta[] | undefined = parsedProduct.data.specs?.map((spec) => ({
-		id: createId(),
-		createdAt: new Date(productEvent.created_at! * 1000),
-		updatedAt: new Date(productEvent.created_at! * 1000),
-		productId: eventCoordinates.coordinates,
-		auctionId: null,
-		metaName: PRODUCT_META.SPEC.value,
-		key: spec[0],
-		valueText: spec[1],
-		valueBoolean: null,
-		valueInteger: null,
-		valueNumeric: null,
-	}))
-
-	const insertProductImages: ProductImage[] | undefined = parsedProduct.data.images?.map((imageUrl, index) => ({
-		createdAt: new Date(productEvent.created_at! * 1000),
-		productId: eventCoordinates.coordinates,
-		auctionId: null,
-		imageUrl,
-		imageType: 'gallery',
-		imageOrder: index + 1,
-	}))
-
-	const productResult = await db.insert(products).values(insertProduct).returning()
-
-	insertSpecs?.length && (await db.insert(productMeta).values(insertSpecs).returning())
-	insertProductImages?.length && (await db.insert(productImages).values(insertProductImages).returning())
-
-	const tags = customTagValue(productEvent.tags, 't')
-	if (tags.length) {
-		await db
-			.insert(categories)
-			.values(tags.map((tag) => ({ id: createId(), name: tag, description: '', userId: productEvent.pubkey })))
-			.onConflictDoNothing({
-				target: categories.name,
-			})
-			.returning()
-			.execute()
-
-		const insertedCategories = await Promise.all(
-			tags.map(async (tag) => (await db.query.categories.findFirst({ where: eq(categories.name, tag) }).execute())!),
-		)
-
-		await db
-			.insert(productCategories)
-			.values(insertedCategories.map(({ name }) => ({ productId: insertProduct.id, userId: productEvent.pubkey, category: name })))
-			.execute()
-	}
-
-	if (productResult[0]) {
-		return toDisplayProduct(productResult[0])
-	}
-
-	error(500, 'Failed to create product')
-}
-
 export const createProducts = async (productEvents: NostrEvent[]) => {
 	try {
 		const productPromises = productEvents.map(async (productEvent) => {
@@ -320,6 +207,13 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 					imageOrder: index + 1,
 				}))
 
+				await db.insert(events).values({
+					id: eventCoordinates.coordinates,
+					author: productEvent.pubkey,
+					event: productEvent.content,
+					kind: productEvent.kind!,
+				})
+
 				const productResult = await db.insert(products).values(insertProduct).returning()
 
 				if (insertSpecs?.length) {
@@ -328,6 +222,23 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 
 				if (insertProductImages?.length) {
 					await db.insert(productImages).values(insertProductImages).returning()
+				}
+
+				if (productEvent.tags.length) {
+					await db
+						.insert(eventTags)
+						.values(
+							productEvent.tags.map((tag) => ({
+								tagName: tag[0],
+								tagValue: tag[1],
+								secondTagValue: tag[2],
+								thirdTagValue: tag[3],
+								userId: productEvent.pubkey,
+								eventId: eventCoordinates.coordinates,
+								eventKind: productEvent.kind!,
+							})),
+						)
+						.execute()
 				}
 
 				if (productResult[0]) {
@@ -348,6 +259,7 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 }
 
 export const updateProduct = async (productId: string, productEvent: NostrEvent): Promise<DisplayProduct> => {
+	const eventCoordinates = getEventCoordinates(productEvent)
 	const productEventContent = JSON.parse(productEvent.content)
 	const parsedProduct = productEventSchema.partial().safeParse({ id: productId, ...productEventContent })
 
@@ -416,26 +328,21 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 		.where(eq(products.id, productId))
 		.returning()
 
-	const tags = customTagValue(productEvent.tags, 't')
-	if (tags.length) {
+	if (productEvent.tags.length) {
 		await db
-			.insert(categories)
-			.values(tags.map((tag) => ({ id: createId(), name: tag, description: '', userId: productEvent.pubkey })))
-			.onConflictDoNothing({
-				target: categories.name,
-			})
-			.execute()
-
-		const insertedCategories = await Promise.all(
-			tags.map(async (tag) => (await db.query.categories.findFirst({ where: eq(categories.name, tag) }).execute())!),
-		)
-
-		await db.delete(productCategories).where(eq(productCategories.productId, productId)).execute()
-		await db
-			.insert(productCategories)
+			.insert(eventTags)
 			.values(
-				insertedCategories.map(({ name }) => ({ productId: insertProduct.id as string, userId: productEvent.pubkey, category: name })),
+				productEvent.tags.map((tag) => ({
+					tagName: tag[0],
+					tagValue: tag[1],
+					secondTagValue: tag[2],
+					thirdTagValue: tag[3],
+					userId: productEvent.pubkey,
+					eventId: eventCoordinates.coordinates,
+					eventKind: productEvent.kind!,
+				})),
 			)
+			.onConflictDoNothing()
 			.execute()
 	}
 
@@ -470,9 +377,8 @@ export const deleteProduct = async (productId: string, userId: string): Promise<
 const preparedProductsByCatName = db
 	.select({ ...getTableColumns(products) })
 	.from(products)
-	.innerJoin(productCategories, eq(products.id, productCategories.productId))
-	.innerJoin(categories, eq(productCategories.category, categories.name))
-	.where(and(eq(categories.name, sql.placeholder('category')), eq(products.userId, sql.placeholder('userId'))))
+	.leftJoin(eventTags, eq(products.id, eventTags.eventId))
+	.where(and(eq(eventTags.tagValue, sql.placeholder('category')), eq(eventTags.tagName, 't')))
 	.limit(sql.placeholder('limit'))
 	.offset(sql.placeholder('offset'))
 	.prepare()
@@ -481,7 +387,6 @@ export const getProductsByCatName = async (filter: ProductsFilter): Promise<Disp
 	if (!filter.category) {
 		throw new Error('Category Name must be provided')
 	}
-
 	const productRes = await preparedProductsByCatName.execute({
 		userId: filter.userId,
 		category: filter.category,
