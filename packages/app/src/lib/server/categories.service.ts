@@ -17,7 +17,7 @@ const resolveCategory = async (tag: EventTag): Promise<RichCat> => {
 			})
 			.from(eventTags)
 			.where(and(eq(eventTags.tagValue, tag.tagValue), eq(eventTags.tagName, 't')))
-			.innerJoin(products, eq(products.eventId, eventTags.eventId))
+			.innerJoin(products, eq(products.id, eventTags.eventId))
 			.execute()
 	).map((product) => product.count)
 

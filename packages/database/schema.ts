@@ -267,9 +267,6 @@ export const eventTagsPrimaryKey: PrimaryKeyBuilder = primaryKey({ columns: [eve
 export const products = sqliteTable('products', {
 	...standardColumns,
 	...standardProductColumns,
-	eventId: text('event_id')
-		.references(() => events.id)
-		.notNull(),
 	productType: text('product_type', { enum: Object.values(PRODUCT_TYPES) as NonEmptyArray<ProductTypes> })
 		.notNull()
 		.default('simple'),
@@ -279,13 +276,6 @@ export const products = sqliteTable('products', {
 
 export const productToEventsRelations = relations(products, ({ many }) => ({
 	categories: many(eventTags),
-}))
-
-export const eventToProductRelations = relations(eventTags, ({ one }) => ({
-	product: one(products, {
-		fields: [eventTags.eventId],
-		references: [products.eventId],
-	}),
 }))
 
 export const productImages = sqliteTable(

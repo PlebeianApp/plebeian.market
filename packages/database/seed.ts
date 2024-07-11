@@ -170,7 +170,6 @@ const main = async () => {
 				const identifier = createId()
 				return {
 					id: `${KindProducts}:${stall.userId}:${identifier}`,
-					eventId: faker.string.uuid(),
 					createdAt: faker.date.recent(),
 					updatedAt: faker.date.future(),
 					identifier: identifier,
@@ -333,7 +332,7 @@ const main = async () => {
 
 	const eventTagsData: NewEventTag[] = [...uniqueCategories, ...uniqueCategories].map((v, i) => ({
 		userId: flatProductData[i].userId,
-		eventId: flatProductData[i].eventId,
+		eventId: flatProductData[i].id,
 		eventKind: KindProducts,
 		tagName: "t",
 		tagValue: v,
@@ -410,7 +409,7 @@ const main = async () => {
 						updatedAt: product.updatedAt,
 						author: product.userId,
 						kind: KindProducts,
-						event: product.eventId,
+						event: product.id,
 					}) as Event,
 			),
 		),

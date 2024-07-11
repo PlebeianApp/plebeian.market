@@ -188,7 +188,7 @@ const stallsByCatNamePrepared = db
 	.select({ ...getTableColumns(stalls) })
 	.from(stalls)
 	.leftJoin(products, eq(stalls.id, products.stallId))
-	.leftJoin(eventTags, eq(products.eventId, eventTags.eventId))
+	.leftJoin(eventTags, eq(products.id, eventTags.eventId))
 	.where(and(eq(eventTags.tagValue, sql.placeholder('catName')), eq(eventTags.tagName, 't')))
 	.groupBy(stalls.id)
 	.prepare()

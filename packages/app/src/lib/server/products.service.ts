@@ -168,7 +168,6 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 				}
 
 				const insertProduct: Product = {
-					eventId: productEvent.id!,
 					id: eventCoordinates.coordinates,
 					createdAt: new Date(productEvent.created_at * 1000),
 					updatedAt: new Date(productEvent.created_at * 1000),
@@ -209,7 +208,7 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 				}))
 
 				await db.insert(events).values({
-					id: productEvent.id!,
+					id: eventCoordinates.coordinates,
 					author: productEvent.pubkey,
 					event: productEvent.content,
 					kind: productEvent.kind!,
@@ -235,7 +234,7 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 								secondTagValue: tag[2],
 								thirdTagValue: tag[3],
 								userId: productEvent.pubkey,
-								eventId: productEvent.id!,
+								eventId: eventCoordinates.coordinates,
 								eventKind: productEvent.kind!,
 							})),
 						)
@@ -260,6 +259,7 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 }
 
 export const updateProduct = async (productId: string, productEvent: NostrEvent): Promise<DisplayProduct> => {
+	const eventCoordinates = getEventCoordinates(productEvent)
 	const productEventContent = JSON.parse(productEvent.content)
 	const parsedProduct = productEventSchema.partial().safeParse({ id: productId, ...productEventContent })
 
@@ -338,7 +338,7 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 					secondTagValue: tag[2],
 					thirdTagValue: tag[3],
 					userId: productEvent.pubkey,
-					eventId: productResult[0].eventId!,
+					eventId: eventCoordinates.coordinates,
 					eventKind: productEvent.kind!,
 				})),
 			)
@@ -377,7 +377,7 @@ export const deleteProduct = async (productId: string, userId: string): Promise<
 const preparedProductsByCatName = db
 	.select({ ...getTableColumns(products) })
 	.from(products)
-	.leftJoin(eventTags, eq(products.eventId, eventTags.eventId))
+	.leftJoin(eventTags, eq(products.id, eventTags.eventId))
 	.where(and(eq(eventTags.tagValue, sql.placeholder('category')), eq(eventTags.tagName, 't')))
 	.limit(sql.placeholder('limit'))
 	.offset(sql.placeholder('offset'))

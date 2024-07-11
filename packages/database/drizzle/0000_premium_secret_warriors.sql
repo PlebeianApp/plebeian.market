@@ -184,13 +184,11 @@ CREATE TABLE `products` (
 	`currency` text NOT NULL,
 	`quantity` integer NOT NULL,
 	`extra_cost` numeric DEFAULT '0' NOT NULL,
-	`event_id` text NOT NULL,
 	`product_type` text DEFAULT 'simple' NOT NULL,
 	`parent_id` text,
 	`price` numeric NOT NULL,
 	FOREIGN KEY (`stall_id`) REFERENCES `stalls`(`id`) ON UPDATE cascade ON DELETE cascade,
 	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE cascade ON DELETE cascade,
-	FOREIGN KEY (`event_id`) REFERENCES `events`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`parent_id`) REFERENCES `products`(`id`) ON UPDATE cascade ON DELETE cascade
 );
 --> statement-breakpoint

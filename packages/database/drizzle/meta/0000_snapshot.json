@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "8345a67c-68a0-4c4c-be68-2961480a95ba",
+  "id": "0a79b166-ad92-4a44-855f-f8f695b1b5d4",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "app_settings": {
@@ -1341,13 +1341,6 @@
           "autoincrement": false,
           "default": "'0'"
         },
-        "event_id": {
-          "name": "event_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
         "product_type": {
           "name": "product_type",
           "type": "text",
@@ -1398,19 +1391,6 @@
           ],
           "onDelete": "cascade",
           "onUpdate": "cascade"
-        },
-        "products_event_id_events_id_fk": {
-          "name": "products_event_id_events_id_fk",
-          "tableFrom": "products",
-          "tableTo": "events",
-          "columnsFrom": [
-            "event_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
         },
         "products_parent_id_products_id_fk": {
           "name": "products_parent_id_products_id_fk",
