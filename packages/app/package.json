@@ -52,6 +52,7 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@fontsource/ibm-plex-mono": "^5.0.13",
 		"@internationalized/date": "^3.5.4",
 		"@nostr-dev-kit/ndk": "^2.8.2",
 		"@nostr-dev-kit/ndk-cache-dexie": "^2.4.2",

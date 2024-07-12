@@ -23,6 +23,9 @@ importers:
 
   packages/app:
     dependencies:
+      '@fontsource/ibm-plex-mono':
+        specifier: ^5.0.13
+        version: 5.0.13
       '@internationalized/date':
         specifier: ^3.5.4
         version: 3.5.4
@@ -1576,6 +1579,9 @@ packages:
 
   '@floating-ui/utils@0.2.2':
     resolution: {integrity: sha512-J4yDIIthosAsRZ5CPYP/jQvUAQtlZTTD/4suA08/FEnlxqW3sKS9iAhgsa9VYLZ6vDHn/ixJgIqRQPotoBjxIw==}
+
+  '@fontsource/ibm-plex-mono@5.0.13':
+    resolution: {integrity: sha512-gtlMmvk//2AgDEZDFsoL5z9mgW3ZZg/9SC7pIfDwNKp5DtZpApgqd1Fua3HhPwYRIHrT76IQ1tMTzQKLEGtJGQ==}
 
   '@gcornut/valibot-json-schema@0.0.27':
     resolution: {integrity: sha512-xcMaUStVgQzPrK3d7PuLFbQ+3qSp6LzaLExAm52E3FKmUfjQa7Sw5cDK6Hfu/8WT0yfGsuSCuJ5uT1sosjR9Qg==}
@@ -6360,6 +6366,8 @@ snapshots:
       '@floating-ui/utils': 0.2.2
 
   '@floating-ui/utils@0.2.2': {}
+
+  '@fontsource/ibm-plex-mono@5.0.13': {}
 
   '@gcornut/valibot-json-schema@0.0.27(@types/json-schema@7.0.15)(esbuild-runner@2.2.2(esbuild@0.21.4))(esbuild@0.21.4)(valibot@0.30.0)':
     dependencies:
