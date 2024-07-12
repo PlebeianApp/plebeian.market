@@ -7,6 +7,8 @@
 	import ProductItem from '$lib/components/product/product-item.svelte'
 	import Button from '$lib/components/ui/button/button.svelte'
 	import Input from '$lib/components/ui/input/input.svelte'
+	import Separator from '$lib/components/ui/separator/separator.svelte'
+	import * as Tabs from '$lib/components/ui/tabs/index.js'
 	import { KindStalls } from '$lib/constants'
 	import { createProductPriceQuery, createProductQuery, createProductsByFilterQuery } from '$lib/fetch/products.queries'
 	import { createStallExistsQuery } from '$lib/fetch/stalls.queries'
@@ -30,6 +32,9 @@
 	let userProfile: NDKUserProfile | null
 	let userProducts: DisplayProduct[]
 	let qtyToCart = 1
+
+	const activeTab =
+		'w-full font-bold border-b-2 border-black text-black data-[state=active]:border-b-primary data-[state=active]:text-primary'
 
 	$: productsQuery = productRes.exist ? createProductQuery(productRes.id) : undefined
 
@@ -82,25 +87,37 @@
 	beforeNavigate(() => {
 		toDisplayProducts[0].images = []
 	})
+
+	const handleIncrement = () => {
+		if (qtyToCart < toDisplayProduct.quantity) {
+			qtyToCart++
+		}
+	}
+
+	const handleDecrement = () => {
+		if (qtyToCart > 1) {
+			qtyToCart--
+		}
+	}
 </script>
 
 {#if toDisplayProducts}
 	<div class="container py-16">
 		<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-			<div class="grid grid-cols-3 gap-6">
-				{#if toDisplayProducts[0]?.images?.length}
-					{@const sortedImages = toDisplayProducts[0].images.slice().sort((a, b) => a.imageOrder - b.imageOrder)}
-					<ul class="grid gap-4 md:col-span-1">
+			<div class="flex flex-col gap-4">
+				{#if toDisplayProduct?.images?.length}
+					{@const sortedImages = toDisplayProduct.images.slice().sort((a, b) => a.imageOrder - b.imageOrder)}
+					<img class="col-span-2 border-2 border-black p-1" src={sortedImages[selectedImage].imageUrl} alt="" />
+					<div class="flex flex-row gap-4">
 						{#each sortedImages as item, i}
 							<button
-								class={cn('cursor-pointer p-1', i === selectedImage ? 'border border-primary' : null)}
+								class={cn('w-40 aspect-square cursor-pointer p-1', i === selectedImage ? 'border border-primary' : null)}
 								on:click={() => (selectedImage = i)}
 							>
 								<img src={item.imageUrl} alt="" />
 							</button>
 						{/each}
-					</ul>
-					<img class="col-span-2 border-2 border-black p-1" src={sortedImages[selectedImage].imageUrl} alt="" />
+					</div>
 				{:else}
 					<ImgPlaceHolder imageType={'main'} />
 				{/if}
@@ -122,15 +139,32 @@
 
 				<h3 class="my-8 font-bold">Stock: {toDisplayProducts[0].quantity}</h3>
 				<div class="flex w-1/2 flex-row gap-4">
+				<h3 class="my-8 font-bold">Stock: {toDisplayProduct.quantity}</h3>
+				<div class="flex w-1/2 flex-row">
+					<Button class="border-2 border-black" size="icon" variant="outline" on:click={handleDecrement} disabled={qtyToCart <= 1}>
+						<span class="i-mdi-minus w-4 h-4"></span>
+					</Button>
 					<Input
-						on:change={(e) => (qtyToCart = parseInt(e.target.value))}
-						class="border-2 border-black"
+						class="border-2 border-black w-16"
 						type="number"
-						value="1"
+						value={qtyToCart}
+						on:input={(e) => (qtyToCart = parseInt(e.target.value))}
 						min="1"
 						max={toDisplayProducts[0].quantity}
+						max={toDisplayProduct.quantity}
+						readonly
 					/>
 					<Button
+						class="border-2 border-black"
+						size="icon"
+						variant="outline"
+						on:click={handleIncrement}
+						disabled={qtyToCart >= toDisplayProduct.quantity}
+					>
+						<span class="i-mdi-plus w-4 h-4"></span>
+					</Button>
+					<Button
+						class="ml-2"
 						on:click={() =>
 							addProduct(
 								toDisplayProducts[0].userId,
@@ -165,8 +199,19 @@
 			</div>
 		</div>
 	</div>
-	<div class="container">
-		<hr />
+	<div class="container bg-gray-50 flex flex-col items-center p-10">
+		<Tabs.Root class="w-[45%]">
+			<Tabs.List class="w-full justify-around bg-transparent">
+				<Tabs.Trigger value="description" class={activeTab}>Description</Tabs.Trigger>
+				<Tabs.Trigger disabled value="comments" class={activeTab}>Comments</Tabs.Trigger>
+				<Tabs.Trigger disabled value="reviews" class={activeTab}>Reviews</Tabs.Trigger>
+			</Tabs.List>
+			<Tabs.Content value="description" class="flex flex-col gap-2">
+				<p>{toDisplayProduct.description}</p>
+			</Tabs.Content>
+			<Tabs.Content value="comments" class="flex flex-col gap-2"></Tabs.Content>
+			<Tabs.Content value="reviews" class="flex flex-col gap-2"></Tabs.Content>
+		</Tabs.Root>
 	</div>
 
 	{#if userProducts}

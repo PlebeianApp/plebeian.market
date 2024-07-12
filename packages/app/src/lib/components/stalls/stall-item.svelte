@@ -7,6 +7,7 @@
 	import { npubEncode } from 'nostr-tools/nip19'
 	import { onMount } from 'svelte'
 
+	import ImgPlaceHolder from '../product/imgPlaceHolder.svelte'
 	import { Button } from '../ui/button'
 
 	export let stall: Partial<RichStall>
@@ -36,15 +37,17 @@
 	})
 </script>
 
-<Card.Root class="relative grid grid-rows-[auto_1fr_auto] h-[34vh] gap-4 border-4 border-black bg-transparent text-black group">
-	<a href={userNip05 ? `/stalls/${userNip05.toLocaleLowerCase()}/${identifier}` : `/stalls/${id?.replace(/^30017:/, '')}`}>
-		<Card.Header class="flex flex-col justify-between py-2 pb-0">
-			<span class="truncate text-2xl font-bold whitespace-normal">{name}</span>
-			<span class="font-bold whitespace-normal">Since: {createDate}</span>
-		</Card.Header>
-	</a>
-	<Card.Content class="relative flex-grow truncate whitespace-normal">
-		<p>{description}</p>
+<Card.Root class="relative grid grid-rows-[auto_1fr_auto] h-[40vh] gap-4 border-4 border-black bg-transparent text-black group">
+	<Card.Content class="relative p-0 flex-grow truncate whitespace-normal">
+		<div class="h-[28vh]">
+			{#if stall.headerImage}
+				<img src={stall.headerImage} alt="stall" class="object-cover w-full h-full" />
+			{:else}
+				<div class="object-cover w-full h-full">
+					<ImgPlaceHolder width={500} height={300} imageType={'manual'} />
+				</div>
+			{/if}
+		</div>
 		{#if isMyStall}
 			<div
 				class="flex flex-col gap-2 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-black font-bold opacity-0 transition-opacity duration-300 group-hover:opacity-100"
@@ -56,22 +59,30 @@
 	</Card.Content>
 	<a href={userNip05 ? `/stalls/${userNip05.toLocaleLowerCase()}/${identifier}` : `/stalls/${id?.replace(/^30017:/, '')}`}>
 		<Card.Footer class="flex flex-col items-start font-bold">
-			<div class="flex items-center gap-1">
-				<div class="flex flex-col">
-					{#if userName}
-						<span class="whitespace-normal">Owner: {userName}</span>
-					{/if}
-					{#if userNip05}
-						<small class="truncate font-light whitespace-normal">{userNip05}</small>
-					{:else}
-						<small class="font-light truncate whitespace-normal">@{truncateString(npubEncode(stall.userId))}</small>
-					{/if}
-				</div>
+			<span class="truncate text-2xl font-bold whitespace-normal">{name}</span>
+			<p class="h-20 overflow-hidden">
+				{#if description.length > 100}
+					{description.slice(0, 100)}...
+				{:else}
+					{description}
+				{/if}
+			</p>
+
+			<div class="flex flex-row justify-between w-full">
+				<span class="font-bold whitespace-normal">Since: {createDate}</span>
+				<span class="whitespace-normal">Currency: {currency}</span>
 			</div>
-			<span class="whitespace-normal">Currency: {currency}</span>
-			{#if productCount}
-				<span class="whitespace-normal">{productCount} products</span>
-			{/if}
+
+			<div class="flex flex-row justify-between w-full">
+				{#if userName}
+					<span class="whitespace-normal">Owner: {userName}</span>
+				{/if}
+				{#if userNip05}
+					<small class="truncate font-light whitespace-normal">{userNip05}</small>
+				{:else}
+					<small class="font-light truncate whitespace-normal">@{truncateString(npubEncode(stall.userId))}</small>
+				{/if}
+			</div>
 		</Card.Footer>
 	</a>
 </Card.Root>

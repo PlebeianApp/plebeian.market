@@ -123,10 +123,16 @@
 	}
 </script>
 
-<div class="flex min-h-screen w-full flex-col bg-muted/40">
-	<div class="flex flex-col">
-		<main class="text-black">
-			<div class="flex w-full flex-col items-center bg-black py-20 gap-2 text-center text-white">
+<main class="flex flex-col container text-black my-20">
+	<div class="flex w-full flex-col h-[65vh] gap-8">
+		{#if stallResponse}
+			<img src={stallResponse.headerImage} alt="profile" class="border-black border-2 object-cover w-full h-[25vh]" />
+
+			<h1>{stallResponse.name}</h1>
+
+			<p class="text-2xl">{stallResponse.description}</p>
+
+			<div class="flex flex-row gap-12">
 				<section class="w-fit">
 					{#if userProfile}
 						<a href={`/p/${userProfile?.nip05 ? userProfile?.nip05 : user.id}`} class="flex flex-col items-center">
@@ -173,39 +179,31 @@
 						</Accordion.Item>
 					</Accordion.Root>
 
-					{#if isMyStall}
-						<Button class="mt-4" on:click={() => openDrawerForProduct(stall.id)}>Edit stall</Button>
-					{/if}
-				{:else}
-					<section class=" flex flex-col gap-2">
-						<Skeleton class="h-8 w-[250px]" />
-						<Skeleton class="h-8 w-[250px]" />
-						<Skeleton class="h-8 w-[250px]" />
-					</section>
-				{/if}
-			</div>
-
-			<div class="px-4 py-20 lg:px-12">
-				<div class="container">
-					{#if stallResponse}
-						<h2>Products</h2>
-						<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-							{#if toDisplayProducts}
-								{#each toDisplayProducts as item}
-									<ProductItem product={item} />
-								{/each}
-							{/if}
-						</div>
-					{:else}
-						<div class=" flex gap-4">
-							<Skeleton class=" h-80 w-full border-4 border-black text-black group" />
-							<Skeleton class=" h-80 w-full border-4 border-black text-black group" />
-							<Skeleton class=" h-80 w-full border-4 border-black text-black group" />
-							<Skeleton class=" h-80 w-full border-4 border-black text-black group" />
-						</div>
-					{/if}
-				</div>
-			</div>
-		</main>
+			{#if isMyStall}
+				<Button class="mt-4" on:click={() => openDrawerForProduct(stall.id)}>Edit stall</Button>
+			{/if}
+		{:else}
+			<section class=" flex flex-col gap-2">
+				{#each [...Array(6)] as _, i}
+					<Skeleton class="h-8 w-[250px]" />
+				{/each}
+			</section>
+		{/if}
 	</div>
-</div>
+	{#if stallResponse}
+		<h2>Products</h2>
+		<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+			{#if toDisplayProducts}
+				{#each toDisplayProducts as item}
+					<ProductItem product={item} />
+				{/each}
+			{/if}
+		</div>
+	{:else}
+		<div class=" flex gap-4">
+			{#each [...Array(6)] as _, i}
+				<Skeleton class=" h-80 w-full border-4 border-black text-black group" />
+			{/each}
+		</div>
+	{/if}
+</main>
