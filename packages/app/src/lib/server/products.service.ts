@@ -7,6 +7,7 @@ import { getImagesByProductId } from '$lib/server/productImages.service'
 import { customTagValue, getEventCoordinates } from '$lib/utils'
 import { format } from 'date-fns'
 
+import type { Product, ProductImage, ProductMeta, ProductTypes } from '@plebeian/database'
 import {
 	and,
 	createId,
@@ -16,14 +17,10 @@ import {
 	eventTags,
 	eventTagsPrimaryKey,
 	getTableColumns,
-	Product,
 	PRODUCT_META,
-	ProductImage,
 	productImages,
-	ProductMeta,
 	productMeta,
 	products,
-	ProductTypes,
 	sql,
 } from '@plebeian/database'
 
@@ -65,6 +62,7 @@ export const getProductsByUserId = async (filter: ProductsFilter = productsFilte
 		.where(filter.userId ? eq(products.userId, filter.userId) : undefined)
 		.limit(filter.pageSize)
 		.execute()
+
 	const displayProducts: DisplayProduct[] = await Promise.all(productsResult.map(toDisplayProduct))
 
 	if (displayProducts) {
@@ -134,97 +132,6 @@ export const getProductById = async (productId: string): Promise<DisplayProduct>
 	}
 }
 
-export const createProduct = async (productEvent: NostrEvent) => {
-	const eventCoordinates = getEventCoordinates(productEvent)
-	const productEventContent = JSON.parse(productEvent.content)
-
-	const parsedProduct = productEventSchema.safeParse({ id: productEventContent.id, ...productEventContent })
-	if (!parsedProduct.success) error(500, 'Bad product schema' + parsedProduct.error)
-
-	const stall = await getStallById(`${parsedProduct.data.stallId}`)
-	const parentId = customTagValue(productEvent.tags, 'a')[0] || null
-	const extraCost = parsedProduct.data.shipping?.length ? parsedProduct.data.shipping[0].cost : 0
-
-	if (!stall) {
-		error(400, 'Stall not found')
-	}
-
-	if (!parsedProduct.data.type) {
-		parsedProduct.data.type = 'simple'
-	}
-
-	const insertProduct: Product = {
-		id: eventCoordinates.coordinates,
-		createdAt: new Date(productEvent.created_at! * 1000),
-		updatedAt: new Date(productEvent.created_at! * 1000),
-		identifier: eventCoordinates.tagD,
-		productName: parsedProduct.data?.name as string,
-		description: parsedProduct.data.description as string,
-		currency: parsedProduct.data.currency as string,
-		price: String(parsedProduct.data.price),
-		extraCost: extraCost?.toString() || '0',
-		productType: parsedProduct.data.type as ProductTypes,
-		parentId: parentId,
-		userId: productEvent.pubkey,
-		stallId: parsedProduct.data.stallId as string,
-		quantity: parsedProduct.data.quantity ?? 0,
-	}
-	const insertSpecs: ProductMeta[] | undefined = parsedProduct.data.specs?.map((spec) => ({
-		id: createId(),
-		createdAt: new Date(productEvent.created_at! * 1000),
-		updatedAt: new Date(productEvent.created_at! * 1000),
-		productId: eventCoordinates.coordinates,
-		auctionId: null,
-		metaName: PRODUCT_META.SPEC.value,
-		key: spec[0],
-		valueText: spec[1],
-		valueBoolean: null,
-		valueInteger: null,
-		valueNumeric: null,
-	}))
-
-	const insertProductImages: ProductImage[] | undefined = parsedProduct.data.images?.map((imageUrl, index) => ({
-		createdAt: new Date(productEvent.created_at! * 1000),
-		productId: eventCoordinates.coordinates,
-		auctionId: null,
-		imageUrl,
-		imageType: 'gallery',
-		imageOrder: index + 1,
-	}))
-
-	const productResult = await db.insert(products).values(insertProduct).returning()
-
-	insertSpecs?.length && (await db.insert(productMeta).values(insertSpecs).returning())
-	insertProductImages?.length && (await db.insert(productImages).values(insertProductImages).returning())
-
-	const tags = customTagValue(productEvent.tags, 't')
-	if (tags.length) {
-		await db
-			.insert(categories)
-			.values(tags.map((tag) => ({ id: createId(), name: tag, description: '', userId: productEvent.pubkey })))
-			.onConflictDoNothing({
-				target: categories.name,
-			})
-			.returning()
-			.execute()
-
-		const insertedCategories = await Promise.all(
-			tags.map(async (tag) => (await db.query.categories.findFirst({ where: eq(categories.name, tag) }).execute())!),
-		)
-
-		await db
-			.insert(productCategories)
-			.values(insertedCategories.map(({ name }) => ({ productId: insertProduct.id, userId: productEvent.pubkey, category: name })))
-			.execute()
-	}
-
-	if (productResult[0]) {
-		return toDisplayProduct(productResult[0])
-	}
-
-	error(500, 'Failed to create product')
-}
-
 export const createProducts = async (productEvents: NostrEvent[]) => {
 	try {
 		const productPromises = productEvents.map(async (productEvent) => {
@@ -237,20 +144,21 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 					error: parseError,
 				} = productEventSchema.safeParse({ id: productEventContent.id, ...productEventContent })
 
-				if (!success) throw Error(`${parseError}`)
+				if (!success) error(500, { message: `${parseError}` })
 
 				if (!parsedProduct) {
-					throw Error('Bad product schema')
+					throw 'Bad product schema'
 				}
 
-				const stall = parsedProduct.stallId.startsWith(`${KindStalls}`)
+				const stall = parsedProduct.stallId?.startsWith(`${KindStalls}`)
 					? await getStallById(parsedProduct.stallId)
 					: await getStallById(`${KindStalls}:${productEvent.pubkey}:${parsedProduct.stallId}`)
 
 				const parentId = customTagValue(productEvent.tags, 'a')[0] || null
-				const extraCost = parsedProduct.shipping.length ? parsedProduct.shipping[0].cost : 0
-
-				if (!stall) throw Error('Stall not found')
+				const extraCost = parsedProduct.shipping?.length ? parsedProduct.shipping[0].cost : 0
+				if (!stall) {
+					throw 'Stall not found'
+				}
 
 				if (!parsedProduct.type) {
 					parsedProduct.type = 'simple'
@@ -261,10 +169,10 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 					createdAt: new Date(productEvent.created_at * 1000),
 					updatedAt: new Date(productEvent.created_at * 1000),
 					identifier: eventCoordinates.tagD,
-					productName: parsedProduct.name,
+					productName: parsedProduct.name as string,
 					description: parsedProduct.description as string,
-					currency: parsedProduct.currency,
-					price: parsedProduct.price.toString(),
+					currency: parsedProduct.currency as string,
+					price: String(parsedProduct.price),
 					extraCost: extraCost?.toString() as string,
 					productType: parsedProduct.type as ProductTypes,
 					parentId: parentId,
@@ -305,9 +213,13 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 
 				const productResult = await db.insert(products).values(insertProduct).returning()
 
-				if (insertSpecs?.length) await db.insert(productMeta).values(insertSpecs).returning()
+				if (insertSpecs?.length) {
+					await db.insert(productMeta).values(insertSpecs).returning()
+				}
 
-				if (insertProductImages?.length) await db.insert(productImages).values(insertProductImages).returning()
+				if (insertProductImages?.length) {
+					await db.insert(productImages).values(insertProductImages).returning()
+				}
 
 				if (productEvent.tags.length) {
 					await db
@@ -329,10 +241,11 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 				if (productResult[0]) {
 					return toDisplayProduct(productResult[0])
 				} else {
-					throw Error('Failed to create product')
+					throw 'Failed to create product'
 				}
 			} catch (e) {
-				throw Error(`${e}`)
+				console.error('Error creating product:', e)
+				error(500, { message: `${e}` })
 			}
 		})
 		const results = await Promise.all(productPromises)
@@ -345,28 +258,30 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 export const updateProduct = async (productId: string, productEvent: NostrEvent): Promise<DisplayProduct> => {
 	const eventCoordinates = getEventCoordinates(productEvent)
 	const productEventContent = JSON.parse(productEvent.content)
-	const { data: parsedProduct, success, error: parseError } = productEventSchema.safeParse(productEventContent)
+	const parsedProduct = productEventSchema.safeParse({ id: productId, ...productEventContent })
 
-	if (!success) {
-		error(500, `Bad product schema ${parseError}`)
+	if (!parsedProduct.success) {
+		error(500, 'Bad product schema')
 	}
+
+	const parsedProductData = parsedProduct.data
 
 	const insertProduct: Partial<Product> = {
 		id: productId,
-		description: parsedProduct?.description as string,
+		description: parsedProductData?.description as string,
 		updatedAt: new Date(),
-		currency: parsedProduct?.currency,
-		price: parsedProduct?.price?.toString(),
-		extraCost: parsedProduct?.shipping?.length ? parsedProduct?.shipping[0].cost?.toString() : String(0),
-		stallId: parsedProduct?.stallId,
-		productName: parsedProduct?.name,
-		quantity: parsedProduct?.quantity !== null ? parsedProduct?.quantity : undefined,
+		currency: parsedProductData?.currency,
+		price: parsedProductData?.price?.toString(),
+		extraCost: parsedProductData?.shipping?.length ? parsedProductData?.shipping[0].cost?.toString() : String(0),
+		stallId: parsedProductData?.stallId,
+		productName: parsedProductData?.name,
+		quantity: parsedProductData?.quantity !== null ? parsedProductData?.quantity : undefined,
 	}
 
 	const existingImages = await getImagesByProductId(productId)
 
-	const newImages = parsedProduct?.images?.filter((img) => !existingImages.find((eImg) => eImg.imageUrl === img))
-	const removedImages = existingImages.map((img) => img.imageUrl).filter((img) => (img ? !parsedProduct?.images?.includes(img) : img))
+	const newImages = parsedProductData?.images?.filter((img) => !existingImages.find((eImg) => eImg.imageUrl === img))
+	const removedImages = existingImages.map((img) => img.imageUrl).filter((img) => (img ? !parsedProductData?.images?.includes(img) : img))
 
 	const removeProductImages = removedImages.map((imageUrl) => ({
 		productId,

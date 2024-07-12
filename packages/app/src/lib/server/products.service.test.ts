@@ -1,12 +1,22 @@
+import type { NostrEvent } from '@nostr-dev-kit/ndk'
+import NDK, { NDKEvent, NDKPrivateKeySigner } from '@nostr-dev-kit/ndk'
+import { KindProducts } from '$lib/constants'
 import { productsFilterSchema } from '$lib/schema'
 import { getStallsByUserId } from '$lib/server/stalls.service'
-import { unixTimeNow } from '$lib/utils'
 import { describe, expect, it } from 'vitest'
 
 import type { Product } from '@plebeian/database'
-import { devUser1 } from '@plebeian/database'
+import { createId, devUser1 } from '@plebeian/database'
 
-import { getAllProducts, getProductById, getProductsByStallId, getProductsByUserId, toDisplayProduct } from './products.service'
+import {
+	createProducts,
+	getAllProducts,
+	getProductById,
+	getProductsByStallId,
+	getProductsByUserId,
+	toDisplayProduct,
+	updateProduct,
+} from './products.service'
 
 describe('products service', () => {
 	it('converts product to display product', async () => {
@@ -110,11 +120,11 @@ describe('products service', () => {
 			kind: KindProducts,
 			pubkey: devUser1.pk,
 			content: JSON.stringify(evContent),
-			created_at: unixTimeNow(),
+			created_at: Math.floor(Date.now()) / 1000,
 			tags: [['d', identifier]],
 		})
 		await newEvent.sign(skSigner)
-		const product = await createProduct(newEvent as NostrEvent)
+		const [product] = await createProducts([newEvent as NostrEvent])
 		expect(product).toStrictEqual({
 			id: expect.any(String),
 			createdAt: expect.any(String),
@@ -140,10 +150,11 @@ describe('products service', () => {
 			name: 'Hello Product changed',
 		}
 		const newEvent = new NDKEvent(new NDK({ signer: skSigner }), {
+			id: createId(),
 			kind: KindProducts,
 			pubkey: devUser1.pk,
 			content: JSON.stringify(evContent),
-			created_at: unixTimeNow(),
+			created_at: Math.floor(Date.now()) / 1000,
 			tags: [['d', targetProduct.id.split(':')[2]]],
 		})
 

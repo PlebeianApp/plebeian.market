@@ -52,7 +52,7 @@
 	$: {
 		if (stalls?.length) {
 			if (currentStallId) {
-				;[stall] = stalls.filter((pStall) => pStall.id === currentStallId)
+				;[stall] = stalls.filter((pStall) => pStall.identifier === currentStallId)
 			} else {
 				stall = stalls[0]
 			}

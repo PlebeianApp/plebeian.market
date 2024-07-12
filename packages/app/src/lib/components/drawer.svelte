@@ -19,30 +19,26 @@
 	import { Button } from './ui/button'
 
 	let isOpen: boolean = false
-	$: isOpen = $drawerUI.id !== null
-  
-	let currentProduct: Partial<DisplayProduct> | null = null
-	let currentStall: Partial<RichStall> | null = null
 
 	let productQuery: ReturnType<typeof createProductQuery> | undefined
 	let stallQuery: ReturnType<typeof createStallQuery> | undefined
 
 	let userExist: boolean | undefined = undefined
 
-	$: if ($drawerUI.id) {
+	$: isOpen = $drawerUI.drawerType !== null
+
+	let currentProduct: Partial<DisplayProduct> | null = null
+	let currentStall: Partial<RichStall> | null = null
+
+	$: if ($drawerUI.drawerType === 'product') {
 		check()
-		if ($drawerUI.id === 'new:product') {
-			currentProduct = null
-			productQuery = undefined
-		} else if ($drawerUI.id === 'new:stall') {
-			currentStall = null
-			stallQuery = undefined
-		} else {
-			if ($drawerUI.id.includes(`${KindProducts}`)) {
-				productQuery = userExist !== undefined && userExist ? createProductQuery($drawerUI.id) : undefined
-			} else if ($drawerUI.id.includes(`${KindStalls}`)) {
-				stallQuery = userExist !== undefined && userExist ? createStallQuery($drawerUI.id) : undefined
-			}
+		if ($drawerUI.id) {
+			productQuery = userExist !== undefined && userExist ? createProductQuery($drawerUI.id) : undefined
+		}
+	} else if ($drawerUI.drawerType === 'stall') {
+		check()
+		if ($drawerUI.id) {
+			stallQuery = userExist !== undefined && userExist ? createStallQuery($drawerUI.id) : undefined
 		}
 	}
 
@@ -56,9 +52,10 @@
 	}
 
 	const check = async () => {
+		console.log('hello')
 		userExist = await checkIfUserExists($ndkStore.activeUser?.pubkey)
 		if (userExist == undefined) return
-		if (!userExist && $drawerUI?.id?.includes(`${KindProducts}`)) {
+		if (!userExist && $drawerUI.drawerType === 'product') {
 			const { nostrProduct: productsData } = await fetchProductData($drawerUI.id as string)
 			if (!productsData?.size) return
 			if (productsData) {
@@ -69,12 +66,13 @@
 				}
 			}
 		}
-		if (!userExist && $drawerUI.id?.includes(`${KindStalls}`)) {
+		if (!userExist && $drawerUI.drawerType === 'stall') {
 			const { stallNostrRes: stallData } = await fetchStallData($drawerUI.id as string)
 			if (!stallData) return
 			if (stallData) {
 				const result = normalizeStallData(stallData)
 				if (result) {
+					console.log(result)
 					currentStall = result
 				}
 			}
@@ -122,61 +120,22 @@
 						class=" text-destructive border-0"
 						><span class="i-tdesign-delete-1 w-4 h-4"></span>
 					</Button>
-					{#if $drawerUI.id === 'new:product'}
-						Create new product
-					{:else if $drawerUI.id === 'new:stall'}
-						Create new stall
-					{:else if $drawerUI.id.includes(`${KindProducts}`)}<span>Edit product</span><Button
-							on:click={handleDeleteProduct}
-							size="icon"
-							variant="ghost"
-							class=" text-destructive border-0"><span class="i-tdesign-delete-1 w-4 h-4"></span></Button
-						>
-					{:else}
-						<span>Edit stall</span>
-						<Button on:click={handleDeleteStall} size="icon" variant="ghost" class=" text-destructive border-0"
-							><span class="i-tdesign-delete-1 w-4 h-4"></span>
-						</Button>
-					{/if}
-				</Sheet.Title>
-			{/if}
-		</Sheet.Header>
-		<div class="grow">
-			{#if $drawerUI.id}
-				{#if $drawerUI.id === 'new:product'}
-					<CreateEditProduct product={null} on:success={handleSuccess} forStall={$drawerUI.forStall} />
-				{:else if $drawerUI.id === 'new:stall'}
-					<CreateEditStall stall={null} on:success={handleSuccess} />
-				{:else if $drawerUI.id.includes(`${KindProducts}`)}
-					{#if currentProduct !== null}
-						{#if !currentProduct}
-							<Spinner />
-						{:else}
-							<CreateEditProduct product={currentProduct} on:success={handleSuccess} />
-						{/if}
-					{/if}
-				{:else if $drawerUI.id.includes(`${KindStalls}`)}
-					{#if currentStall !== null}
-						{#if !currentStall}
-							<Spinner />
-						{:else}
-							<CreateEditStall stall={currentStall} on:success={handleSuccess} />
-						{/if}
-					{/if}
+				{:else}
+					<span>Create new stall</span>
 				{/if}
 			{/if}
 		</Sheet.Title>
 		{#if $drawerUI.drawerType === 'cart'}
 			<ShoppingCart />
 		{:else if $drawerUI.drawerType === 'product'}
-			{#if $currentProduct?.data}
-				<CreateEditProduct product={$currentProduct.data} on:success={handleSuccess} forStall={$drawerUI.forStall} />
+			{#if currentProduct}
+				<CreateEditProduct product={currentProduct} on:success={handleSuccess} forStall={$drawerUI.forStall} />
 			{:else}
-				<CreateEditProduct product={null} on:success={handleSuccess} forStall={$drawerUI.forStall} />
+				<CreateEditProduct product={null} on:success={handleSuccess} />
 			{/if}
 		{:else if $drawerUI.drawerType === 'stall'}
-			{#if $currentStall?.data}
-				<CreateEditStall stall={$currentStall.data} on:success={handleSuccess} />
+			{#if currentStall}
+				<CreateEditStall stall={currentStall} on:success={handleSuccess} />
 			{:else}
 				<CreateEditStall stall={null} on:success={handleSuccess} />
 			{/if}

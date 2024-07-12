@@ -9,22 +9,16 @@ import { getEventCoordinates } from '$lib/utils'
 import { format } from 'date-fns'
 
 import type { PaymentDetail, Shipping, Stall } from '@plebeian/database'
-
 import {
 	and,
-	categories,
 	db,
 	eq,
 	eventTags,
 	getTableColumns,
 	inArray,
-	ISO3,
-	orders,
 	paymentDetails,
-	productCategories,
 	products,
 	shipping,
-	ShippingZone,
 	shippingZones,
 	sql,
 	stalls,

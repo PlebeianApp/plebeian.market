@@ -58,11 +58,17 @@ CREATE TABLE `bids` (
 	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
-CREATE TABLE `categories` (
-	`name` text PRIMARY KEY NOT NULL,
-	`description` text NOT NULL,
-	`parent` text,
-	FOREIGN KEY (`parent`) REFERENCES `categories`(`name`) ON UPDATE cascade ON DELETE cascade
+CREATE TABLE `event_tags` (
+	`tag_name` text NOT NULL,
+	`tag_value` text NOT NULL,
+	`second_tag_value` text,
+	`third_tag_value` text,
+	`event_id` text NOT NULL,
+	`user_id` text NOT NULL,
+	`event_kind` integer NOT NULL,
+	PRIMARY KEY(`event_id`, `tag_name`, `tag_value`),
+	FOREIGN KEY (`event_id`) REFERENCES `events`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE cascade ON DELETE cascade
 );
 --> statement-breakpoint
 CREATE TABLE `events` (
@@ -136,16 +142,6 @@ CREATE TABLE `payment_details` (
 	`default` integer DEFAULT false NOT NULL,
 	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE cascade ON DELETE cascade,
 	FOREIGN KEY (`stall_id`) REFERENCES `stalls`(`id`) ON UPDATE cascade ON DELETE no action
-);
---> statement-breakpoint
-CREATE TABLE `product_categories` (
-	`product_id` text NOT NULL,
-	`category` text NOT NULL,
-	`user_id` text NOT NULL,
-	PRIMARY KEY(`category`, `product_id`),
-	FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON UPDATE cascade ON DELETE cascade,
-	FOREIGN KEY (`category`) REFERENCES `categories`(`name`) ON UPDATE cascade ON DELETE cascade,
-	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE cascade ON DELETE cascade
 );
 --> statement-breakpoint
 CREATE TABLE `product_images` (

@@ -2,12 +2,11 @@
 	import type { DisplayProduct } from '$lib/server/products.service'
 	import { createProductPriceQuery } from '$lib/fetch/products.queries'
 	import { formatPrice } from '$lib/utils'
-  
+
 	export let product: Partial<DisplayProduct>
 	$: priceQuery = createProductPriceQuery(product as DisplayProduct)
 	export let factor = 1
 	$: priceQuery = createProductPriceQuery(product)
-
 </script>
 
 {#if $priceQuery.isLoading}
