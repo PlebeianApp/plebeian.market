@@ -34,7 +34,6 @@
 			if (productsData) {
 				const result = normalizeProductsFromNostr(productsData, activeUser.id as string, stall.id)
 				if (result) {
-					console.log(result)
 					const { toDisplayProducts: _toDisplay } = result
 					toDisplayProducts = _toDisplay
 				}

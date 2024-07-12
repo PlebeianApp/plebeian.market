@@ -42,19 +42,11 @@
 		}
 	}
 
-	$: {
-		if ($productQuery?.data) {
-			currentProduct = $productQuery.data
-		}
-		if ($stallQuery?.data) {
-			currentStall = $stallQuery.data
-		}
-	}
+	$: $productQuery?.data && (currentProduct = $productQuery.data)
+	$: $stallQuery?.data && (currentStall = $stallQuery.data)
 
 	const check = async () => {
-		console.log('hello')
 		userExist = await checkIfUserExists($ndkStore.activeUser?.pubkey)
-		if (userExist == undefined) return
 		if (!userExist && $drawerUI.drawerType === 'product') {
 			const { nostrProduct: productsData } = await fetchProductData($drawerUI.id as string)
 			if (!productsData?.size) return
@@ -68,11 +60,9 @@
 		}
 		if (!userExist && $drawerUI.drawerType === 'stall') {
 			const { stallNostrRes: stallData } = await fetchStallData($drawerUI.id as string)
-			if (!stallData) return
 			if (stallData) {
 				const result = normalizeStallData(stallData)
 				if (result) {
-					console.log(result)
 					currentStall = result
 				}
 			}
@@ -84,12 +74,14 @@
 	}
 
 	const handleDeleteStall = async () => {
-		await $deleteStallMutation.mutateAsync(currentStall?.id as string)
+		if (!currentStall?.id) return
+		await $deleteStallMutation.mutateAsync(currentStall.id)
 		closeDrawer()
 	}
 
 	const handleDeleteProduct = async () => {
-		await $deleteProductMutation.mutateAsync(currentProduct?.id as string)
+		if (!currentProduct?.id) return
+		await $deleteProductMutation.mutateAsync(currentProduct.id)
 		closeDrawer()
 	}
 </script>

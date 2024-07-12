@@ -462,6 +462,4 @@
 			<Button type="submit" class="w-full font-bold my-4">Save</Button>
 		</Tabs.Root>
 	</form>
-	<!-- {:else if !$stallsQuery.data?.length}
-	<p>There should be stalls defined first</p> -->
 {/if}

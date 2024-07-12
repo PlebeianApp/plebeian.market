@@ -25,7 +25,7 @@
 		appSettings: { allowRegister, defaultCurrency },
 	} = $page.data
 
-	export let stall: Partial<RichStall> | null = null
+	export let stall: RichStall | null = null
 
 	type Currency = (typeof CURRENCIES)[number]
 	type Shipping = (typeof stallEventSchema._type)['shipping'][0]
