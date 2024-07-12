@@ -2,7 +2,7 @@ import type { NostrEvent } from '@nostr-dev-kit/ndk'
 import type { StallsFilter } from '$lib/schema'
 import type { DisplayProduct } from '$lib/server/products.service'
 import { error } from '@sveltejs/kit'
-import { standardDisplayDateFormat } from '$lib/constants'
+import { KindStalls, standardDisplayDateFormat } from '$lib/constants'
 import { stallsFilterSchema } from '$lib/schema'
 import { getProductsByStallId } from '$lib/server/products.service'
 import { getEventCoordinates } from '$lib/utils'
@@ -16,6 +16,7 @@ import {
 	eventTags,
 	getTableColumns,
 	inArray,
+	orders,
 	paymentDetails,
 	products,
 	shipping,
@@ -41,6 +42,7 @@ export type RichStall = {
 	productCount?: number
 	// orderCount?: number
 	paymentMethods?: PaymentDetail[]
+	headerImage?: string
 	identifier: string
 	shipping: Partial<RichShippingInfo>[]
 }
@@ -51,6 +53,7 @@ export type DisplayStall = {
 	description: string
 	currency: string
 	createDate: string
+	headerImage?: string
 	userId: string
 	shipping: Partial<RichShippingInfo>[]
 }
@@ -107,6 +110,8 @@ const resolveStalls = async (stall: Stall): Promise<RichStall> => {
 	// 		.execute()
 	// ).map((order) => order.count)
 
+	const [headerImage] = await db.select().from(eventTags).where(eq(eventTags.eventId, stall.id)).execute()
+
 	if (!ownerRes.userId) {
 		error(404, 'Not found')
 	}
@@ -131,6 +136,7 @@ const resolveStalls = async (stall: Stall): Promise<RichStall> => {
 		productCount,
 		// orderCount,
 		paymentMethods,
+		headerImage: headerImage?.tagValue ?? undefined,
 		identifier: stall.id.split(':')[2],
 		shipping: shippingInfo,
 	}
@@ -266,6 +272,8 @@ export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall 
 			throw Error(`Invalid stall event data: ${zodError}`)
 		}
 
+		const headerImage = stallEvent.tags.find((tag) => tag[0] === 'image')?.[1]
+
 		const insertStall: Stall = {
 			id: coordinates,
 			createdAt: new Date(stallEvent.created_at * 1000),
@@ -323,6 +331,19 @@ export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall 
 
 		const stallResult = results[0] as Stall
 
+		if (headerImage) {
+			await db
+				.insert(eventTags)
+				.values({
+					userId: stallResult.userId,
+					eventId: stallResult.id,
+					tagName: 'image',
+					tagValue: headerImage,
+					eventKind: KindStalls,
+				})
+				.returning()
+		}
+
 		return {
 			id: stallResult.id,
 			name: stallResult.name,
@@ -359,6 +380,23 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
 			})
 			.where(eq(stalls.id, stallId))
 			.returning()
+
+        const [headerImage] = await db.select().from(eventTags).where(eq(eventTags.eventId, stallEvent.id)).execute()
+
+        const imageTag = stallEvent?.tags
+            ?.filter((tag) => tag[0] === 'image')
+            .map((tag) => tag[1])
+            .pop()
+
+        if (imageTag && headerImage.tagValue !== imageTag) {
+            await db
+                .update(eventTags)
+                .set({
+                    tagValue: imageTag,
+                })
+                .where(and(eq(eventTags.eventId, stallId), eq(eventTags.tagName, 'image')))
+                .execute()
+        }
 
 		if (!stallResult) {
 			throw new Error(`Stall not updated: ${stallId}`)
@@ -497,6 +535,7 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
 			description: stallResult.description,
 			currency: stallResult.currency,
 			createDate: format(stallResult.createdAt, standardDisplayDateFormat),
+			headerImage: headerImage?.tagValue ?? undefined,
 			userId: stallResult.userId,
 			shipping: parsedStall.shipping ?? [],
 		} as DisplayStall

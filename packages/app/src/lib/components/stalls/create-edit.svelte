@@ -1,7 +1,10 @@
 <script lang="ts">
+	import type { NDKTag } from '@nostr-dev-kit/ndk'
+	import type { RichShippingInfo } from '$lib/server/shipping.service'
 	import type { RichStall } from '$lib/server/stalls.service'
 	import { NDKEvent } from '@nostr-dev-kit/ndk'
 	import { page } from '$app/stores'
+	import SingleImage from '$lib/components/settings/editable-image.svelte'
 	import { Button } from '$lib/components/ui/button/index.js'
 	import * as Command from '$lib/components/ui/command/index.js'
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js'
@@ -31,6 +34,7 @@
 	type Shipping = (typeof stallEventSchema._type)['shipping'][0]
 
 	let currency: Currency = (stall?.currency as Currency) ?? defaultCurrency ?? 'BTC'
+    let headerImage = stall?.headerImage
 
 	class ShippingMethod implements Shipping {
 		id: string
@@ -121,6 +125,8 @@
 		const formData = new FormData(sEvent.currentTarget as HTMLFormElement, sEvent.submitter)
 		const identifier = stall?.identifier ? stall.identifier : createId()
 
+		const imageTag = headerImage ? ['image', headerImage] : null
+
 		const evContent = {
 			id: identifier,
 			name: formData.get('title'),
@@ -128,12 +134,18 @@
 			currency: currency,
 			shipping: shippingMethods.map((s) => s.json),
 		}
+
+		const tags: NDKTag[] = [['d', identifier]]
+		if (imageTag) tags.push(imageTag)
+
 		const newEvent = new NDKEvent($ndkStore, {
 			kind: KindStalls,
 			pubkey: userId,
 			content: JSON.stringify(evContent),
 			created_at: unixTimeNow(),
 			tags: [['d', identifier]],
+			created_at: Math.floor(Date.now() / 1000),
+			tags: tags,
 		})
 
 		// await newEvent.publish().then((data) => console.log(data))
@@ -160,9 +172,18 @@
 				) ?? []
 		}
 	})
+
+	const handleSaveBannerImage = (event: CustomEvent) => {
+		headerImage = event.detail
+	}
 </script>
 
 <form class="flex flex-col gap-4 grow" on:submit|preventDefault={create}>
+	<div class="grid w-full items-center gap-1.5">
+		<Label for="userImage" class="font-bold">Header image</Label>
+		<SingleImage src={headerImage ?? stall?.headerImage} on:save={handleSaveBannerImage} />
+	</div>
+
 	<div class="grid w-full items-center gap-1.5">
 		<Label for="title" class="font-bold">Title</Label>
 		<Input value={stall?.name} required class="border-2 border-black" type="text" name="title" placeholder="e.g. Fancy Wears" />
