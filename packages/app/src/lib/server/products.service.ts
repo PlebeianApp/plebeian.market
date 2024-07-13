@@ -7,6 +7,7 @@ import { getImagesByProductId } from '$lib/server/productImages.service'
 import { customTagValue, getEventCoordinates } from '$lib/utils'
 import { format } from 'date-fns'
 
+import type { Product, ProductImage, ProductMeta, ProductTypes } from '@plebeian/database'
 import {
 	and,
 	createId,
@@ -16,14 +17,10 @@ import {
 	eventTags,
 	eventTagsPrimaryKey,
 	getTableColumns,
-	Product,
 	PRODUCT_META,
-	ProductImage,
 	productImages,
-	ProductMeta,
 	productMeta,
 	products,
-	ProductTypes,
 	sql,
 } from '@plebeian/database'
 
@@ -153,12 +150,12 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 					throw 'Bad product schema'
 				}
 
-				const stall = parsedProduct.stall_id.startsWith(`${KindStalls}`)
-					? await getStallById(parsedProduct.stall_id)
-					: await getStallById(`${KindStalls}:${productEvent.pubkey}:${parsedProduct.stall_id}`)
+				const stall = parsedProduct.stallId?.startsWith(`${KindStalls}`)
+					? await getStallById(parsedProduct.stallId)
+					: await getStallById(`${KindStalls}:${productEvent.pubkey}:${parsedProduct.stallId}`)
 
 				const parentId = customTagValue(productEvent.tags, 'a')[0] || null
-				const extraCost = parsedProduct.shipping.length ? parsedProduct.shipping[0].cost : 0
+				const extraCost = parsedProduct.shipping?.length ? parsedProduct.shipping[0].cost : 0
 				if (!stall) {
 					throw 'Stall not found'
 				}
@@ -172,10 +169,10 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 					createdAt: new Date(productEvent.created_at * 1000),
 					updatedAt: new Date(productEvent.created_at * 1000),
 					identifier: eventCoordinates.tagD,
-					productName: parsedProduct.name,
+					productName: parsedProduct.name as string,
 					description: parsedProduct.description as string,
-					currency: parsedProduct.currency,
-					price: parsedProduct.price.toString(),
+					currency: parsedProduct.currency as string,
+					price: String(parsedProduct.price),
 					extraCost: extraCost?.toString() as string,
 					productType: parsedProduct.type as ProductTypes,
 					parentId: parentId,
@@ -261,7 +258,7 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 export const updateProduct = async (productId: string, productEvent: NostrEvent): Promise<DisplayProduct> => {
 	const eventCoordinates = getEventCoordinates(productEvent)
 	const productEventContent = JSON.parse(productEvent.content)
-	const parsedProduct = productEventSchema.partial().safeParse({ id: productId, ...productEventContent })
+	const parsedProduct = productEventSchema.safeParse({ id: productId, ...productEventContent })
 
 	if (!parsedProduct.success) {
 		error(500, 'Bad product schema')
@@ -276,7 +273,7 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 		currency: parsedProductData?.currency,
 		price: parsedProductData?.price?.toString(),
 		extraCost: parsedProductData?.shipping?.length ? parsedProductData?.shipping[0].cost?.toString() : String(0),
-		stallId: parsedProductData?.stall_id,
+		stallId: parsedProductData?.stallId,
 		productName: parsedProductData?.name,
 		quantity: parsedProductData?.quantity !== null ? parsedProductData?.quantity : undefined,
 	}

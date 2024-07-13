@@ -5,32 +5,67 @@
 	import CreateEditProduct from '$lib/components/product/create-edit.svelte'
 	import CreateEditStall from '$lib/components/stalls/create-edit.svelte'
 	import * as Sheet from '$lib/components/ui/sheet/index.js'
+	import { KindProducts, KindStalls } from '$lib/constants'
 	import { deleteProductMutation } from '$lib/fetch/products.mutations'
 	import { createProductQuery } from '$lib/fetch/products.queries'
 	import { deleteStallMutation } from '$lib/fetch/stalls.mutations'
 	import { createStallQuery } from '$lib/fetch/stalls.queries'
+	import { fetchProductData, fetchStallData, normalizeProductsFromNostr, normalizeStallData } from '$lib/nostrSubs/utils'
 	import { closeDrawer, drawerUI } from '$lib/stores/drawer-ui'
+	import ndkStore from '$lib/stores/ndk'
+	import { checkIfUserExists } from '$lib/utils'
 
 	import ShoppingCart from './cart/shopping-cart.svelte'
 	import { Button } from './ui/button'
 
-	let isOpen = false
+	let isOpen: boolean = false
+
+	let productQuery: ReturnType<typeof createProductQuery> | undefined
+	let stallQuery: ReturnType<typeof createStallQuery> | undefined
+
+	let userExist: boolean | undefined = undefined
+
 	$: isOpen = $drawerUI.drawerType !== null
 
-	let currentProduct: CreateQueryResult<DisplayProduct, Error> | null = null
-	let currentStall: CreateQueryResult<RichStall, Error> | null = null
+	let currentProduct: Partial<DisplayProduct> | null = null
+	let currentStall: Partial<RichStall> | null = null
 
 	$: if ($drawerUI.drawerType === 'product') {
+		check()
 		if ($drawerUI.id) {
-			currentProduct = createProductQuery($drawerUI.id)
-		} else {
-			currentProduct = null
+			productQuery = userExist !== undefined && userExist ? createProductQuery($drawerUI.id) : undefined
 		}
 	} else if ($drawerUI.drawerType === 'stall') {
+		check()
 		if ($drawerUI.id) {
-			currentStall = createStallQuery($drawerUI.id)
-		} else {
-			currentStall = null
+			stallQuery = userExist !== undefined && userExist ? createStallQuery($drawerUI.id) : undefined
+		}
+	}
+
+	$: $productQuery?.data && (currentProduct = $productQuery.data)
+	$: $stallQuery?.data && (currentStall = $stallQuery.data)
+
+	const check = async () => {
+		userExist = await checkIfUserExists($ndkStore.activeUser?.pubkey)
+		if (!userExist && $drawerUI.drawerType === 'product') {
+			const { nostrProduct: productsData } = await fetchProductData($drawerUI.id as string)
+			if (!productsData?.size) return
+			if (productsData) {
+				const result = normalizeProductsFromNostr(productsData, $ndkStore.activeUser?.pubkey as string)
+				if (result) {
+					const { toDisplayProducts: _toDisplay } = result
+					currentProduct = _toDisplay[0]
+				}
+			}
+		}
+		if (!userExist && $drawerUI.drawerType === 'stall') {
+			const { stallNostrRes: stallData } = await fetchStallData($drawerUI.id as string)
+			if (stallData) {
+				const result = normalizeStallData(stallData)
+				if (result) {
+					currentStall = result
+				}
+			}
 		}
 	}
 
@@ -39,12 +74,14 @@
 	}
 
 	const handleDeleteStall = async () => {
-		await $deleteStallMutation.mutateAsync($currentStall.data.id)
+		if (!currentStall?.id) return
+		await $deleteStallMutation.mutateAsync(currentStall.id)
 		closeDrawer()
 	}
 
 	const handleDeleteProduct = async () => {
-		await $deleteProductMutation.mutateAsync($currentProduct.data.id)
+		if (!currentProduct?.id) return
+		await $deleteProductMutation.mutateAsync(currentProduct.id)
 		closeDrawer()
 	}
 </script>
@@ -83,14 +120,14 @@
 		{#if $drawerUI.drawerType === 'cart'}
 			<ShoppingCart />
 		{:else if $drawerUI.drawerType === 'product'}
-			{#if $currentProduct?.data}
-				<CreateEditProduct product={$currentProduct.data} on:success={handleSuccess} forStall={$drawerUI.forStall} />
+			{#if currentProduct}
+				<CreateEditProduct product={currentProduct} on:success={handleSuccess} forStall={$drawerUI.forStall} />
 			{:else}
-				<CreateEditProduct product={null} on:success={handleSuccess} forStall={$drawerUI.forStall} />
+				<CreateEditProduct product={null} on:success={handleSuccess} />
 			{/if}
 		{:else if $drawerUI.drawerType === 'stall'}
-			{#if $currentStall?.data}
-				<CreateEditStall stall={$currentStall.data} on:success={handleSuccess} />
+			{#if currentStall}
+				<CreateEditStall stall={currentStall} on:success={handleSuccess} />
 			{:else}
 				<CreateEditStall stall={null} on:success={handleSuccess} />
 			{/if}

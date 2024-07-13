@@ -2,6 +2,7 @@ import type { NostrEvent } from 'nostr-tools'
 import NDK, { NDKEvent, NDKPrivateKeySigner } from '@nostr-dev-kit/ndk'
 import { KindAuctionProduct } from '$lib/constants'
 import { getStallsByUserId } from '$lib/server/stalls.service'
+import { unixTimeNow } from '$lib/utils'
 import { describe, expect, it } from 'vitest'
 
 import { createId, devUser1 } from '@plebeian/database'
@@ -77,7 +78,7 @@ describe('auctions service', () => {
 			kind: KindAuctionProduct,
 			pubkey: devUser1.pk,
 			content: JSON.stringify(evContent),
-			created_at: Math.floor(Date.now() / 1000),
+			created_at: unixTimeNow(),
 			tags: [['d', identifier]],
 		})
 
@@ -115,7 +116,7 @@ describe('auctions service', () => {
 			kind: KindAuctionProduct,
 			pubkey: devUser1.pk,
 			content: JSON.stringify(evContent),
-			created_at: Math.floor(Date.now()),
+			created_at: unixTimeNow(),
 			tags: [['d', targetAuction.id.split(':')[2]]],
 		})
 

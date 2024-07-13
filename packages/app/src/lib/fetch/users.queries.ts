@@ -59,6 +59,7 @@ export const createUserExistsQuery = (id: string) =>
 				const user = await createRequest(`GET /api/v1/users/${id}?exists`, {})
 				return user
 			},
+			staleTime: Infinity,
 		},
 		queryClient,
 	)

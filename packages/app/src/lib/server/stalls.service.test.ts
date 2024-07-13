@@ -2,9 +2,10 @@ import type { NostrEvent } from '@nostr-dev-kit/ndk'
 import NDK, { NDKEvent, NDKPrivateKeySigner } from '@nostr-dev-kit/ndk'
 import { KindProducts, KindStalls } from '$lib/constants'
 import { createStall, getAllStalls, getStallById, getStallsByUserId, updateStall } from '$lib/server/stalls.service'
+import { unixTimeNow } from '$lib/utils'
 import { describe, expect, it } from 'vitest'
 
-import { createId, devUser1 } from '@plebeian/database'
+import { createId, devUser1, shipping } from '@plebeian/database'
 
 describe('stalls service', () => {
 	it('gets stalls by user id', async () => {
@@ -41,11 +42,11 @@ describe('stalls service', () => {
 		expect(product).toBeDefined()
 	})
 
-	it('creates a stalls', async () => {
+	it('creates a stall', async () => {
 		const skSigner = new NDKPrivateKeySigner(devUser1.sk)
 		const identifier = createId()
 		const evContent = {
-			id: `${KindProducts}:${devUser1.pk}:${identifier}`,
+			id: `${identifier}`,
 			name: 'Hello Stall',
 			description: 'Hello Stall Description',
 			currency: 'USD',
@@ -63,18 +64,19 @@ describe('stalls service', () => {
 			kind: KindStalls,
 			pubkey: devUser1.pk,
 			content: JSON.stringify(evContent),
-			created_at: Math.floor(Date.now()) / 1000,
+			created_at: unixTimeNow(),
 			tags: [['d', identifier]],
 		})
 		await newEvent.sign(skSigner)
 		const stall = await createStall(newEvent as NostrEvent)
 		expect(stall).toStrictEqual({
-			id: expect.any(String),
+			id: `${KindStalls}:${devUser1.pk}:${identifier}`,
 			createDate: expect.any(String),
 			currency: 'USD',
 			description: 'Hello Stall Description',
 			name: 'Hello Stall',
 			userId: devUser1.pk,
+			shipping: expect.any(Array),
 		})
 	})
 
@@ -89,7 +91,7 @@ describe('stalls service', () => {
 			kind: KindStalls,
 			pubkey: devUser1.pk,
 			content: JSON.stringify(evContent),
-			created_at: Math.floor(Date.now()) / 1000,
+			created_at: unixTimeNow(),
 			tags: [['d', targetStall.identifier]],
 		}) as NostrEvent
 
@@ -102,6 +104,7 @@ describe('stalls service', () => {
 			currency: targetStall.currency,
 			description: targetStall.description,
 			name: 'Hello Stall changed',
+			shipping: expect.any(Array),
 		})
 	})
 })

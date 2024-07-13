@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { NDKEvent, NDKUserProfile } from '@nostr-dev-kit/ndk'
+	import type { NDKUserProfile } from '@nostr-dev-kit/ndk'
 	import type { DisplayProduct } from '$lib/server/products.service'
 	import { beforeNavigate } from '$app/navigation'
 	import Spinner from '$lib/components/assets/spinner.svelte'
@@ -8,26 +8,25 @@
 	import Button from '$lib/components/ui/button/button.svelte'
 	import Input from '$lib/components/ui/input/input.svelte'
 	import { KindStalls } from '$lib/constants'
-	import { createProductsFromNostrMutation } from '$lib/fetch/products.mutations'
 	import { createProductPriceQuery, createProductQuery, createProductsByFilterQuery } from '$lib/fetch/products.queries'
-	import { createStallFromNostrEvent } from '$lib/fetch/stalls.mutations'
-	import { userFromNostr } from '$lib/fetch/users.mutations'
+	import { createStallExistsQuery } from '$lib/fetch/stalls.queries'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
-	import { fetchProductData, fetchStallData, fetchUserData } from '$lib/nostrSubs/utils'
+	import { fetchProductData, fetchStallData, fetchUserData, normalizeProductsFromNostr, setNostrData } from '$lib/nostrSubs/utils'
 	import { addProduct } from '$lib/stores/cart'
 	import { openDrawerForProduct } from '$lib/stores/drawer-ui'
-	import { cn } from '$lib/utils'
+	import { cn, resolveQuery } from '$lib/utils'
 	import { onMount } from 'svelte'
 
-	import type { ProductImagesType } from '@plebeian/database'
-
 	import type { PageData } from './$types'
-	import { productEventSchema } from '../../../schema/nostr-events'
 
 	export let data: PageData
-	$: ({ user, productRes } = data)
+	$: ({
+		user,
+		productRes,
+		appSettings: { allowRegister },
+	} = data)
 	let isMyProduct = false
-	let toDisplayProduct: Partial<DisplayProduct>
+	let toDisplayProducts: Partial<DisplayProduct>[]
 	let userProfile: NDKUserProfile | null
 	let userProducts: DisplayProduct[]
 	let qtyToCart = 1
@@ -36,13 +35,13 @@
 
 	$: userProfileQuery = user.exist ? createUserByIdQuery(user.id as string) : undefined
 
-	$: priceQuery = toDisplayProduct ? createProductPriceQuery(toDisplayProduct as DisplayProduct) : undefined
+	$: priceQuery = toDisplayProducts ? createProductPriceQuery(toDisplayProducts[0] as DisplayProduct) : undefined
 
 	$: otherProducts = user.exist ? createProductsByFilterQuery({ userId: user.id }) : undefined
 
 	$: {
 		if ($productsQuery?.data) {
-			toDisplayProduct = $productsQuery?.data
+			toDisplayProducts = [$productsQuery?.data]
 		}
 		if ($userProfileQuery?.data) {
 			userProfile = $userProfileQuery?.data
@@ -54,74 +53,43 @@
 
 	let selectedImage = 0
 
-	async function setNostrData(
-		stallData: NDKEvent | null,
-		userData: NDKUserProfile | null,
-		productsData: NDKEvent | null,
-	): Promise<{ userInserted: boolean; stallInserted: boolean; productsInserted: boolean } | undefined> {
-		let userInserted: boolean = false
-		let stallInserted: boolean = false
-		let productsInserted: boolean = false
-		try {
-			if (userData) {
-				userData && (userData.id = user.id)
-				const userMutation = await $userFromNostr.mutateAsync({ profile: userData, pubkey: user.id as string })
-				userMutation && (userInserted = true)
-				userProfile = userData
-			}
-
-			if (stallData) {
-				const stallEvent = await stallData.toNostrEvent()
-				const stallMutation = await $createStallFromNostrEvent.mutateAsync(stallEvent)
-				stallMutation && (stallInserted = true)
-			}
-
-			if (productsData) {
-				const parsedProduct = productEventSchema.parse(JSON.parse(productsData.content))
-				toDisplayProduct = {
-					...parsedProduct,
-					quantity: parsedProduct.quantity as number,
-					images: parsedProduct.images?.map((image) => ({
-						createdAt: new Date(),
-						productId: productRes.id,
-						auctionId: null,
-						imageUrl: image,
-						imageType: 'gallery' as ProductImagesType,
-						imageOrder: 0,
-					})),
-					userId: user.id,
-				}
-				const productsMutation = await $createProductsFromNostrMutation.mutateAsync(new Set<NDKEvent>([productsData]))
-				productsMutation && (productsInserted = true)
-			}
-			return { userInserted, stallInserted, productsInserted }
-		} catch (e) {
-			console.error(e)
-			return undefined
-		}
-	}
-
 	onMount(async () => {
 		if (!productRes.exist && productRes.id) {
-			const { userProfile } = await fetchUserData(user.id as string)
-			const { nostrProduct } = await fetchProductData(productRes.id as string)
-			const productStallId = JSON.parse(nostrProduct?.content as string).stall_id
+			const { userProfile: userData } = await fetchUserData(user.id as string)
+			userData && (userProfile = userData)
+			const { nostrProduct: productsData } = await fetchProductData(productRes.id as string)
+			if (!productsData?.size) return
+			if (productsData) {
+				const result = normalizeProductsFromNostr(productsData, user.id as string)
+				if (result) {
+					const { toDisplayProducts: _toDisplay } = result
+					toDisplayProducts = _toDisplay
+				}
+			}
+			const productStallId = JSON.parse(Array.from(productsData)[0]?.content as string).stall_id
 			const { stallNostrRes } = await fetchStallData(`${KindStalls}:${user.id}:${productStallId}`)
-
-			await setNostrData(stallNostrRes, userProfile, nostrProduct)
+			const stallExist = await resolveQuery(() => createStallExistsQuery(`${KindStalls}:${user.id}:${productStallId}`))
+			await setNostrData(
+				stallExist ? null : stallNostrRes,
+				user.exist ? null : userData,
+				productsData,
+				allowRegister,
+				user.id as string,
+				user.exist,
+			)
 		}
 	})
 	beforeNavigate(() => {
-		toDisplayProduct.images = []
+		toDisplayProducts[0].images = []
 	})
 </script>
 
-{#if toDisplayProduct}
+{#if toDisplayProducts}
 	<div class="container py-16">
 		<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
 			<div class="grid grid-cols-3 gap-6">
-				{#if toDisplayProduct?.images?.length}
-					{@const sortedImages = toDisplayProduct.images.slice().sort((a, b) => a.imageOrder - b.imageOrder)}
+				{#if toDisplayProducts[0]?.images?.length}
+					{@const sortedImages = toDisplayProducts[0].images.slice().sort((a, b) => a.imageOrder - b.imageOrder)}
 					<ul class="grid gap-4 md:col-span-1">
 						{#each sortedImages as item, i}
 							<button
@@ -141,7 +109,7 @@
 				{#if isMyProduct}
 					<Button class="w-1/4" on:click={() => openDrawerForProduct(productRes.id)}>Edit product</Button>
 				{/if}
-				<h1>{toDisplayProduct.name}</h1>
+				<h1>{toDisplayProducts[0].name}</h1>
 				<h2 class=" inline-flex items-center">
 					{#if $priceQuery?.isLoading}
 						<Spinner />
@@ -150,9 +118,9 @@
 					{/if}
 					sats
 				</h2>
-				<h3>${toDisplayProduct.price} {toDisplayProduct.currency}</h3>
+				<h3>${toDisplayProducts[0].price} {toDisplayProducts[0].currency}</h3>
 
-				<h3 class="my-8 font-bold">Stock: {toDisplayProduct.quantity}</h3>
+				<h3 class="my-8 font-bold">Stock: {toDisplayProducts[0].quantity}</h3>
 				<div class="flex w-1/2 flex-row gap-4">
 					<Input
 						on:change={(e) => (qtyToCart = parseInt(e.target.value))}
@@ -160,33 +128,33 @@
 						type="number"
 						value="1"
 						min="1"
-						max={toDisplayProduct.quantity}
+						max={toDisplayProducts[0].quantity}
 					/>
 					<Button
 						on:click={() =>
 							addProduct(
-								toDisplayProduct.userId,
-								toDisplayProduct.stallId,
+								toDisplayProducts[0].userId,
+								toDisplayProducts[0].stallId,
 								{
-									id: toDisplayProduct.id,
-									name: toDisplayProduct.name,
+									id: toDisplayProducts[0].id,
+									name: toDisplayProducts[0].name,
 									amount: qtyToCart,
-									price: toDisplayProduct.price,
-									stockQuantity: toDisplayProduct.quantity,
+									price: toDisplayProducts[0].price,
+									stockQuantity: toDisplayProducts[0].quantity,
 								},
-								toDisplayProduct.currency,
+								toDisplayProducts[0].currency,
 							)}>Add to cart</Button
 					>
 				</div>
 				<span class="my-8 font-bold"
-					>Sold by <a href={`/p/${userProfile?.nip05 ? userProfile.nip05 : userProfile?.id}`}
+					>Sold by <a href={`/p/${userProfile?.nip05 ? userProfile.nip05 : userProfile?.id ? userProfile?.id : user.id}`}
 						><span class="underline">{userProfile?.name ? userProfile?.name : userProfile?.displayName}<span /></span></a
 					>
 				</span>
 				<article>
 					<h4 class="text-2xl font-bold">Details</h4>
 					<p>
-						{toDisplayProduct.description}
+						{toDisplayProducts[0].description}
 					</p>
 					<!-- {#each productCats as cat}
 					<a href={`/cat/${cat.id}`}>

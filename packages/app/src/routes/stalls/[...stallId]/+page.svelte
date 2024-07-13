@@ -12,21 +12,22 @@
 	import { KindStalls } from '$lib/constants'
 	import { createProductsFromNostrMutation } from '$lib/fetch/products.mutations'
 	import { createProductsByFilterQuery } from '$lib/fetch/products.queries'
-	import { createShippingQuery } from '$lib/fetch/shipping.queries'
-	import { createStallFromNostrEvent } from '$lib/fetch/stalls.mutations'
 	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
-	import { userFromNostr } from '$lib/fetch/users.mutations'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
-	import { fetchStallData, fetchUserData, fetchUserProductData } from '$lib/nostrSubs/utils'
+	import {
+		fetchStallData,
+		fetchUserData,
+		fetchUserProductData,
+		normalizeProductsFromNostr,
+		normalizeStallData,
+		setNostrData,
+	} from '$lib/nostrSubs/utils'
 	import { openDrawerForProduct } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
-	import { getEventCoordinates } from '$lib/utils'
+	import { getEventCoordinates, shouldRegister } from '$lib/utils'
 	import { onMount } from 'svelte'
 
-	import type { ProductImagesType } from '@plebeian/database'
-
 	import type { PageData } from './$types'
-	import { productEventSchema } from '../../../schema/nostr-events'
 
 	export let data: PageData
 	const { stall, user, appSettings } = data
@@ -34,22 +35,22 @@
 	let toDisplayProducts: Partial<DisplayProduct>[]
 	let userProfile: NDKUserProfile | null
 
-	$: stallsQuery = stall.exist
-		? createStallsByFilterQuery({
-				userId: user.id,
-				stallId: stall.id,
-			})
-		: undefined
+	$: stallsQuery =
+		stall.exist && user.id
+			? createStallsByFilterQuery({
+					userId: user.id,
+					stallId: stall.id,
+				})
+			: undefined
 
-	$: productsQuery = stall.exist
-		? createProductsByFilterQuery({
-				stallId: stall.id,
-			})
-		: undefined
+	$: productsQuery =
+		stall.exist && user.id
+			? createProductsByFilterQuery({
+					stallId: stall.id,
+				})
+			: undefined
 
 	$: userProfileQuery = user.exist ? createUserByIdQuery(user.id as string) : undefined
-
-	$: shippingQuery = stall.exist ? createShippingQuery(stall.id) : undefined
 
 	$: {
 		if ($userProfileQuery?.data) {
@@ -65,95 +66,34 @@
 
 	$: if ($productsQuery?.data) toDisplayProducts = $productsQuery?.data
 
-	async function setNostrData(
-		stallData: NDKEvent | null,
-		userData: NDKUserProfile | null,
-		productsData: Set<NDKEvent> | null,
-	): Promise<{ userInserted: boolean; stallInserted: boolean; productsInserted: boolean } | undefined> {
-		let userInserted: boolean = false
-		let stallInserted: boolean = false
-		let productsInserted: boolean = false
-		try {
-			if (userData) {
-				userData && (userData.id = user.id)
-				const userMutation = await $userFromNostr.mutateAsync({ profile: userData, pubkey: user.id as string })
-				userMutation && (userInserted = true)
-				userProfile = userData
-			}
+	onMount(async () => {
+		if (user.id) {
+			if (!stall.exist) {
+				const { stallNostrRes: stallData } = await fetchStallData(stall.id)
 
-			if (stallData) {
-				stallResponse = JSON.parse(stallData?.content ?? '{}')
-				stallResponse.userId = user.id
-				stallResponse.userName = userData?.name || userData?.displayName
-				stallResponse.userNip05 = userData?.nip05
-				const stallEvent = await stallData.toNostrEvent()
-				const stallMutation = await $createStallFromNostrEvent.mutateAsync(stallEvent)
-				if (stallMutation) {
-					shippingQuery = createShippingQuery(stall.id)
-					stallInserted = true
-				}
-			}
-			if (productsData?.size) {
-				const stallProducts = new Set<NDKEvent>()
-				toDisplayProducts = []
-				for (const event of productsData) {
-					const product = productEventSchema.parse(JSON.parse(event.content))
-					const stallIdSegments = product.stall_id.split(':')
-					if (stallIdSegments.length == 1) {
-						if (product.stall_id == stall.id.split(':')[2]) {
-							stallProducts.add(event)
-							toDisplayProducts.push({
-								...product,
-								quantity: product.quantity as number,
-								stallId: `${KindStalls}:${user.id}:${product.stall_id}`,
-								images: product.images?.map((image) => ({
-									createdAt: new Date(),
-									productId: product.id,
-									auctionId: null,
-									imageUrl: image,
-									imageType: 'gallery' as ProductImagesType,
-									imageOrder: 0,
-								})),
-								userId: user.id,
-							})
-						}
-					} else {
-						if (product.stall_id == stall.id) {
-							stallProducts.add(event)
-							toDisplayProducts.push({
-								...product,
-								quantity: product.quantity as number,
-								stallId: product.stall_id,
-								images: product.images?.map((image) => ({
-									createdAt: new Date(),
-									productId: product.id,
-									auctionId: null,
-									imageUrl: image,
-									imageType: 'gallery' as ProductImagesType,
-									imageOrder: 0,
-								})),
-								userId: user.id,
-							})
-						}
+				if (stallData) {
+					const normalizedStall = normalizeStallData(stallData)
+					if (normalizedStall) {
+						stallResponse = normalizedStall
 					}
 				}
-				const productsMutation = await $createProductsFromNostrMutation.mutateAsync(stallProducts)
-				productsMutation && (productsInserted = true)
-			}
-			return { userInserted, stallInserted, productsInserted }
-		} catch (e) {
-			console.error(e)
-			return undefined
-		}
-	}
+				const { userProfile: userData } = await fetchUserData(user.id as string)
+				if (userData) {
+					userProfile = userData
+					stallResponse.userName = userData?.name || userData?.displayName
+					stallResponse.userNip05 = userData?.nip05
+				}
 
-	onMount(async () => {
-		if (appSettings.allowRegister) {
-			if (!stall.exist) {
-				const { stallNostrRes } = await fetchStallData(stall.id)
-				const { userProfile } = user.exist ? { userProfile: null } : await fetchUserData(user.id as string)
-				const { products } = await fetchUserProductData(user.id as string)
-				if (products?.size) await setNostrData(stallNostrRes, userProfile, products)
+				const { products: productsData } = await fetchUserProductData(user.id)
+				if (productsData?.size) {
+					const result = normalizeProductsFromNostr(productsData, user.id as string, stall.id)
+					if (result) {
+						const { toDisplayProducts: _toDisplay } = result
+						toDisplayProducts = _toDisplay
+					}
+				}
+
+				await setNostrData(stallData, user.exist ? null : userData, productsData, appSettings.allowRegister, user.id, user.exist)
 			} else {
 				fetchUserProductData(user.id as string).then((data) => {
 					const { products } = data
@@ -166,7 +106,7 @@
 							}
 						}),
 					)
-					setNostrData(null, null, newProducts).then((data) => {
+					setNostrData(null, null, newProducts, appSettings.allowRegister, user.id as string, user.exist).then((data) => {
 						data?.productsInserted && $productsQuery?.refetch()
 					})
 				})
@@ -203,22 +143,28 @@
 				{#if stallResponse}
 					<h1>{stallResponse.name}</h1>
 					<p class="text-2xl">{stallResponse.description}</p>
-
 					<Accordion.Root class="w-full sm:max-w-sm">
 						<Accordion.Item value="item-1">
 							<Accordion.Trigger>More info</Accordion.Trigger>
 							<Accordion.Content>
 								<div class=" flex flex-col gap-2 items-start">
-									{#if $shippingQuery?.data}
+									{#if stallResponse.shipping?.length}
 										<span class=" font-bold">Shipping zones</span>
 										<section class=" flex gap-2 flex-wrap">
-											{#each $shippingQuery.data as shipping}
-												{#if shipping.name}
-													<span>{shipping.name}</span>
+											{#each stallResponse.shipping as shipping}
+												{#if shipping.name || shipping.id}
+													<span>{shipping.name || shipping.id}</span>
 												{/if}
-												{#each shipping.zones as zone}
-													<Badge variant="secondary">{zone.country ? zone.country : zone.region}</Badge>
-												{/each}
+												{#if shipping.regions}
+													{#each shipping.regions as region}
+														<Badge variant="secondary">{region}</Badge>
+													{/each}
+												{/if}
+												{#if shipping.countries}
+													{#each shipping.countries as country}
+														<Badge variant="secondary">{country}</Badge>
+													{/each}
+												{/if}
 											{/each}
 										</section>
 									{/if}

@@ -1,5 +1,4 @@
 <script lang="ts">
-	import type { RichShippingInfo } from '$lib/server/shipping.service'
 	import type { RichStall } from '$lib/server/stalls.service'
 	import { NDKEvent } from '@nostr-dev-kit/ndk'
 	import { page } from '$app/stores'
@@ -10,50 +9,61 @@
 	import { Label } from '$lib/components/ui/label/index.js'
 	import * as Popover from '$lib/components/ui/popover/index.js'
 	import { Textarea } from '$lib/components/ui/textarea'
-	import { KindProducts, KindStalls } from '$lib/constants'
-	import { createShippingQuery } from '$lib/fetch/shipping.queries'
+	import { KindStalls } from '$lib/constants'
 	import { createStallFromNostrEvent, updateStallFromNostrEvent } from '$lib/fetch/stalls.mutations'
-	import ndkStore, { ndk } from '$lib/stores/ndk'
+	import ndkStore from '$lib/stores/ndk'
+	import { checkIfUserExists, shouldRegister, unixTimeNow } from '$lib/utils'
 	import { createEventDispatcher, onMount, tick } from 'svelte'
 	import { get } from 'svelte/store'
 
-	import type { ISO3 } from '@plebeian/database/constants'
 	import { COUNTRIES_ISO, CURRENCIES } from '@plebeian/database/constants'
 	import { createId } from '@plebeian/database/utils'
 
-	import type { PageData } from '../../../routes/$types'
 	import { stallEventSchema } from '../../../schema/nostr-events'
-	import PaymentMethodsStall from './payment-methods-stall.svelte'
 
-	const { appSettings, paymentDetailsMethod } = $page.data as PageData
+	const {
+		appSettings: { allowRegister, defaultCurrency },
+	} = $page.data
 
 	export let stall: RichStall | null = null
 
 	type Currency = (typeof CURRENCIES)[number]
 	type Shipping = (typeof stallEventSchema._type)['shipping'][0]
 
-	let currency: Currency = (stall?.currency as Currency) ?? appSettings.defaultCurrency ?? 'BTC'
+	let currency: Currency = (stall?.currency as Currency) ?? defaultCurrency ?? 'BTC'
 
 	class ShippingMethod implements Shipping {
 		id: string
 		name: string
 		cost: string
-		regions: ISO3[]
+		regions: string[]
+		countries: string[]
 
-		constructor(id: string, name: string, cost: string, regions: ISO3[] = []) {
+		constructor(id: string, name: string, cost: string, regions: string[] = [], countries: string[] = []) {
 			this.id = id
 			this.name = name
 			this.cost = cost
 			this.regions = regions
+			this.countries = countries
 		}
 
-		addZone(zone: string) {
-			this.regions.push(zone as ISO3)
+		addRegion(region: string) {
+			this.regions.push(region)
 			shippingMethods = shippingMethods
 		}
 
-		removeZone(zone: string) {
-			this.regions = this.regions.filter((z) => z !== zone)
+		removeRegion(region: string) {
+			this.regions = this.regions.filter((z) => z !== region)
+			shippingMethods = shippingMethods
+		}
+
+		addCountry(country: string) {
+			this.countries.push(country)
+			shippingMethods = shippingMethods
+		}
+
+		removeCountry(country: string) {
+			this.countries = this.countries.filter((z) => z !== country)
 			shippingMethods = shippingMethods
 		}
 
@@ -63,6 +73,7 @@
 				name: this.name,
 				cost: this.cost,
 				regions: this.regions,
+				countries: this.countries,
 			} as Shipping
 		}
 	}
@@ -73,7 +84,13 @@
 		if (id) {
 			const existingMethod = shippingMethods.find((method) => method.id === id)
 			if (existingMethod) {
-				const duplicatedMethod = new ShippingMethod(createId(), existingMethod.name!, existingMethod.cost, existingMethod.regions)
+				const duplicatedMethod = new ShippingMethod(
+					createId(),
+					existingMethod.name!,
+					existingMethod.cost,
+					existingMethod.regions,
+					existingMethod.countries,
+				)
 				shippingMethods = [...shippingMethods, duplicatedMethod]
 			} else {
 				console.error(`No shipping method found with id ${id}`)
@@ -88,23 +105,6 @@
 		shippingMethods = shippingMethods.filter((s) => s.id !== id)
 	}
 
-	onMount(async () => {
-		if (stall) {
-			const { data: initialShippings } = await get(createShippingQuery(stall.id)).refetch()
-
-			shippingMethods =
-				initialShippings?.map(
-					(s) =>
-						new ShippingMethod(
-							s.id,
-							s.name,
-							s.cost,
-							s.zones.map((z) => z.region as ISO3),
-						),
-				) ?? []
-		}
-	})
-
 	function closeAndFocusTrigger(triggerId: string) {
 		tick().then(() => {
 			document.getElementById(triggerId)?.focus()
@@ -117,12 +117,12 @@
 
 	async function create(sEvent: SubmitEvent) {
 		if (!$ndkStore.activeUser?.pubkey) return
+		const userId = $ndkStore.activeUser.pubkey
 		const formData = new FormData(sEvent.currentTarget as HTMLFormElement, sEvent.submitter)
 		const identifier = stall?.identifier ? stall.identifier : createId()
-		const id = stall?.id ?? `${KindProducts}:${$ndkStore.activeUser.pubkey}:${identifier}`
 
 		const evContent = {
-			id,
+			id: identifier,
 			name: formData.get('title'),
 			description: formData.get('description'),
 			currency: currency,
@@ -130,22 +130,36 @@
 		}
 		const newEvent = new NDKEvent($ndkStore, {
 			kind: KindStalls,
-			pubkey: $ndkStore.activeUser.pubkey,
+			pubkey: userId,
 			content: JSON.stringify(evContent),
-			created_at: Math.floor(Date.now()),
+			created_at: unixTimeNow(),
 			tags: [['d', identifier]],
 		})
 
-		await newEvent.sign(ndk.signer)
-		const nostrEvent = await newEvent.toNostrEvent()
-		// TODO refactor this to mutation
-		if (stall) {
-			await get(updateStallFromNostrEvent).mutateAsync([id, nostrEvent])
-		} else {
-			await get(createStallFromNostrEvent).mutateAsync(nostrEvent)
+		// await newEvent.publish().then((data) => console.log(data))
+		await newEvent.sign()
+		const userExist = await checkIfUserExists()
+		const _shouldRegister = await shouldRegister(allowRegister, userExist)
+		if (_shouldRegister) {
+			const nostrEvent = await newEvent.toNostrEvent()
+			if (stall) {
+				await get(updateStallFromNostrEvent).mutateAsync([`${KindStalls}:${userId}:${identifier}`, nostrEvent])
+			} else {
+				await get(createStallFromNostrEvent).mutateAsync(nostrEvent)
+			}
 		}
+
 		dispatch('success', null)
 	}
+
+	onMount(async () => {
+		if (stall?.shipping) {
+			shippingMethods =
+				stall?.shipping?.map(
+					(s) => new ShippingMethod(s?.id as string, s?.name as string, s?.cost as string, s?.regions ?? [], s?.countries ?? []),
+				) ?? []
+		}
+	})
 </script>
 
 <form class="flex flex-col gap-4 grow" on:submit|preventDefault={create}>
@@ -202,7 +216,7 @@
 			</div>
 
 			<div>
-				<Label for="from" class="font-bold">Zones</Label>
+				<Label for="from" class="font-bold">Countries</Label>
 				<section>
 					<Popover.Root let:ids>
 						<Popover.Trigger asChild let:builder>
@@ -212,7 +226,7 @@
 								role="combobox"
 								aria-expanded="true"
 								class="w-full max-w-full border-2 border-black justify-between truncate"
-								>{item.regions.length ? item.regions.join(', ') : 'Select'}</Button
+								>{item.countries.length ? item.countries.join(', ') : 'Select'}</Button
 							>
 						</Popover.Trigger>
 						<Popover.Content class="w-[200px] max-h-[350px] overflow-y-auto p-0">
@@ -221,11 +235,11 @@
 								<Command.Empty>No country found.</Command.Empty>
 								<Command.Group>
 									{#each Object.values(COUNTRIES_ISO).sort((a, b) => {
-										if (item.regions.includes(a.iso3) && item.regions.includes(b.iso3)) {
+										if (item.countries.includes(a.iso3) && item.countries.includes(b.iso3)) {
 											return 0
-										} else if (item.regions.includes(a.iso3)) {
+										} else if (item.countries.includes(a.iso3)) {
 											return -1
-										} else if (item.regions.includes(b.iso3)) {
+										} else if (item.countries.includes(b.iso3)) {
 											return 1
 										}
 										return 0
@@ -233,10 +247,10 @@
 										<Command.Item
 											value={country.iso3}
 											onSelect={(currentValue) => {
-												if (item.regions.includes(country.iso3)) {
-													item.removeZone(currentValue)
+												if (item.countries.includes(country.iso3)) {
+													item.removeCountry(currentValue)
 												} else {
-													item.addZone(currentValue)
+													item.addCountry(currentValue)
 												}
 
 												closeAndFocusTrigger(ids.trigger)
@@ -244,7 +258,7 @@
 										>
 											<section class="flex flex-col">
 												<div class="flex gap-2">
-													{#if item.regions.includes(country.iso3)}
+													{#if item.countries.includes(country.iso3)}
 														<span class="i-tdesign-check"> </span>
 													{/if}
 
@@ -278,8 +292,8 @@
 	<div class="grid gap-1.5">
 		<Button on:click={() => addShipping()} variant="outline" class="font-bold ml-auto">Add Shipping Method</Button>
 	</div>
-	{#if stall}
+	<!-- {#if stall}
 		<PaymentMethodsStall {stall} {paymentDetailsMethod} />
-	{/if}
+	{/if} -->
 	<Button type="submit" class="w-full font-bold">Save</Button>
 </form>

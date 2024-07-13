@@ -1,6 +1,5 @@
 <script lang="ts">
 	import type { Selected } from 'bits-ui'
-	import type { ZodError } from 'zod'
 	import { goto } from '$app/navigation'
 	import Button from '$lib/components/ui/button/button.svelte'
 	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte'
@@ -11,13 +10,11 @@
 	import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '$lib/components/ui/select'
 	import Separator from '$lib/components/ui/separator/separator.svelte'
 	import { availabeLogos } from '$lib/constants'
-	import { createRequest } from '$lib/fetch/client'
 	import { copyToClipboard, createNcryptSec } from '$lib/utils'
 	import { generateSecretKey, getPublicKey, nip19 } from 'nostr-tools'
 	import { npubEncode } from 'nostr-tools/nip19'
 	import { ofetch } from 'ofetch'
 	import { onMount, tick } from 'svelte'
-	import { toast } from 'svelte-sonner'
 
 	import type { AppSettings } from '@plebeian/database'
 
@@ -51,7 +48,7 @@
 		formObject.logoUrl = logoUrl
 		const filteredFormObject = Object.fromEntries(Object.entries(formObject).filter(([_, value]) => value !== ''))
 
-		const { ncryptsec } = createNcryptSec(filteredFormObject.instanceSk, instancePass)
+		const { ncryptsec } = createNcryptSec(filteredFormObject.instanceSk as string, instancePass as string)
 		if (ncryptsec) filteredFormObject.instanceSk = ncryptsec
 		try {
 			await ofetch('/setup', {

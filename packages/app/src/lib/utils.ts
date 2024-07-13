@@ -1,7 +1,9 @@
+import type { CreateQueryResult } from '@tanstack/svelte-query'
 import type { ClassValue } from 'clsx'
 import type { VerifiedEvent } from 'nostr-tools'
 import type { TransitionConfig } from 'svelte/transition'
 import { type NDKEvent, type NDKKind, type NDKTag, type NDKUserProfile, type NostrEvent } from '@nostr-dev-kit/ndk'
+import { page } from '$app/stores'
 import ndkStore from '$lib/stores/ndk'
 import { clsx } from 'clsx'
 import { differenceInDays } from 'date-fns'
@@ -15,6 +17,7 @@ import { twMerge } from 'tailwind-merge'
 
 import type { EventCoordinates } from './interfaces'
 import { numSatsInBtc } from './constants'
+import { createUserExistsQuery } from './fetch/users.queries'
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs))
@@ -240,4 +243,42 @@ export const createNcryptSec = (sk: string, pass: string): { decodedSk: Uint8Arr
 	if (decoded.type !== 'nsec') throw new Error('Not nsec')
 	const ncryptsec = encrypt(decoded.data, pass)
 	return { decodedSk: decoded.data, ncryptsec }
+}
+
+export async function resolveQuery<T>(queryFn: () => CreateQueryResult<T, Error>): Promise<T> {
+	const queryPromise = queryFn()
+	let retryCount = 0
+	const maxRetries = 10
+
+	return new Promise((resolve, reject) => {
+		const check = async () => {
+			const currentQuery = get(queryPromise)
+			if (currentQuery.isFetched && currentQuery.data !== undefined) {
+				resolve(currentQuery.data)
+			} else if (retryCount < maxRetries) {
+				retryCount++
+				setTimeout(check, 10)
+			} else {
+				reject(new Error('Max retries exceeded'))
+			}
+		}
+		check()
+	})
+}
+
+export async function checkIfUserExists(userId?: string): Promise<boolean> {
+	if (userId) return await resolveQuery(() => createUserExistsQuery(userId))
+	return false
+}
+
+export async function shouldRegister(allowRegister?: boolean, userExists?: boolean, userId?: string): Promise<boolean> {
+	if (allowRegister == undefined) allowRegister = get(page).data.appSettings.allowRegister
+	if (allowRegister || userExists) {
+		return true
+	}
+	return userId ? await checkIfUserExists(userId) : false
+}
+
+export function unixTimeNow() {
+	return Math.floor(new Date().getTime() / 1000)
 }

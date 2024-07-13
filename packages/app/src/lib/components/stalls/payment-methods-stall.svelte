@@ -9,15 +9,15 @@
 	import { Button } from '../ui/button'
 	import { Label } from '../ui/label'
 
-	export let stall: RichStall
+	export let stall: Partial<RichStall>
 	export let paymentDetailsMethod: PaymentDetailsMethod
 
-	$: paymentsForStall = paymentsForStallQuery(stall?.id)
+	$: paymentsForStall = paymentsForStallQuery(stall?.id as string)
 
 	const handleSetDefaultPaymentMethod = async (paymentDetailId: string) => {
 		$setDefaultPaymentMethodForStallMutation.mutateAsync({
 			paymentDetailId,
-			stallId: stall.id,
+			stallId: stall?.id as string,
 		})
 	}
 </script>

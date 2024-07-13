@@ -3,12 +3,12 @@ import type { DisplayProduct } from '$lib/server/products.service'
 import type { RichStall } from '$lib/server/stalls.service'
 import { NDKEvent } from '@nostr-dev-kit/ndk'
 import { createMutation } from '@tanstack/svelte-query'
-import { KindProducts } from '$lib/constants'
-import ndkStore, { ndk } from '$lib/stores/ndk'
-import { getEventCoordinates } from '$lib/utils'
+import { KindProducts, KindStalls } from '$lib/constants'
+import ndkStore from '$lib/stores/ndk'
+import { shouldRegister, unixTimeNow } from '$lib/utils'
 import { get } from 'svelte/store'
 
-import type { ISO3, ProductImage } from '@plebeian/database'
+import type { ProductImage } from '@plebeian/database'
 import { createId } from '@plebeian/database/utils'
 
 import { createRequest, queryClient } from './client'
@@ -33,7 +33,8 @@ export const createProductMutation = createMutation(
 				id: string
 				name: string
 				cost: string
-				regions: ISO3[]
+				regions: string[]
+				countries: string[]
 			}[],
 			Category[],
 		]) => {
@@ -43,7 +44,7 @@ export const createProductMutation = createMutation(
 			const identifier = createId()
 			const evContent = {
 				id: identifier,
-				stall_id: stall.id,
+				stall_id: stall.id.split(':').length == 3 ? stall.id.split(':')[2] : stall.id,
 				name: formData.get('title'),
 				description: formData.get('description'),
 				images: images,
@@ -56,12 +57,14 @@ export const createProductMutation = createMutation(
 				kind: KindProducts,
 				pubkey: $ndkStore.activeUser.pubkey,
 				content: JSON.stringify(evContent),
-				created_at: Math.floor(Date.now()),
+				created_at: unixTimeNow(),
 				tags: [['d', identifier], ...categories.map((c) => ['t', c.name])],
 			})
 
-			await newEvent.sign(ndk.signer)
-			get(createProductsFromNostrMutation).mutateAsync(new Set([newEvent]))
+			await newEvent.sign()
+			// await newEvent.publish().then((d) => console.log(d))
+			const _shouldRegister = await shouldRegister(undefined, undefined, $ndkStore.activeUser.pubkey)
+			if (_shouldRegister) get(createProductsFromNostrMutation).mutateAsync(new Set([newEvent]))
 		},
 	},
 	queryClient,
@@ -77,17 +80,20 @@ export const editProductMutation = createMutation(
 				id: string
 				name: string
 				cost: string
-				regions: ISO3[]
+				regions: string[]
+				countries: string[]
 			}[],
 			Category[],
 		]) => {
 			const $ndkStore = get(ndkStore)
 			if (!$ndkStore.activeUser?.pubkey) return
 			const formData = new FormData(sEvent.currentTarget as HTMLFormElement)
-			const identifier = product?.identifier ? product.identifier : createId()
+			const identifier = product?.id ? product.id : createId()
+			const stallCoordinates =
+				product?.stallId.split(':').length == 3 ? product?.stallId : `${KindStalls}:${product.userId}:${product?.stallId}`
 			const evContent = {
 				id: identifier,
-				stall_id: product?.stallId,
+				stall_id: product?.stallId.split(':').length == 3 ? product?.stallId.split(':')[2] : product?.stallId,
 				name: formData.get('title'),
 				description: formData.get('description'),
 				images: images,
@@ -100,15 +106,19 @@ export const editProductMutation = createMutation(
 				kind: KindProducts,
 				pubkey: $ndkStore.activeUser.pubkey,
 				content: JSON.stringify(evContent),
-				created_at: Math.floor(Date.now()),
-				tags: [['d', identifier], ...categories.map((c) => ['t', c.name]), ...(product?.stallId ? [['a', product.stallId]] : [])],
+				created_at: unixTimeNow(),
+				tags: [['d', identifier], ...categories.map((c) => ['t', c.name]), ...(product?.stallId ? [['a', stallCoordinates]] : [])],
 			})
 
-			await newEvent.sign(ndk.signer)
+			await newEvent.sign()
+			// await newEvent.publish().then((d) => console.log(d))
 			const nostrEvent = await newEvent.toNostrEvent()
-			await createRequest(`PUT /api/v1/products/${product.id}`, {
-				body: nostrEvent,
-			})
+			const _shouldRegister = await shouldRegister(undefined, undefined, $ndkStore.activeUser.pubkey)
+			if (_shouldRegister) {
+				await createRequest(`PUT /api/v1/products/${product.id}`, {
+					body: nostrEvent,
+				})
+			}
 		},
 	},
 	queryClient,

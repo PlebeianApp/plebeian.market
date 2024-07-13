@@ -7,35 +7,30 @@ import { page } from '$app/stores'
 import { HEX_KEYS_REGEX } from '$lib/constants'
 import ndkStore, { ndk } from '$lib/stores/ndk'
 import { addAccount, getAccount, updateAccount } from '$lib/stores/session'
-import { bytesToHex, createNcryptSec, hexToBytes } from '$lib/utils'
+import { bytesToHex, checkIfUserExists, createNcryptSec, hexToBytes, shouldRegister } from '$lib/utils'
 import { nsecEncode } from 'nostr-tools/nip19'
 import { decrypt } from 'nostr-tools/nip49'
 import { FetchError } from 'ofetch'
+import { get } from 'svelte/store'
 
-import type { PageData } from '../routes/$types'
 import { userEventSchema } from '../schema/nostr-events'
 import { createRequest } from './fetch/client'
-import { createUserExistsQuery } from './fetch/users.queries'
 
 function unNullify<T extends object>(obj: T): T {
 	return Object.fromEntries(Object.entries(obj).filter(([_, v]) => v != null)) as unknown as T
 }
 
-async function checkIfUserExists(userId: string): Promise<boolean> {
-	return new Promise((resolve) => {
-		createUserExistsQuery(userId).subscribe((exists) => {
-			if (exists.isFetched) {
-				resolve(exists.data ?? false)
-			}
-		})
-	})
-}
-
 async function getAppSettings(): Promise<boolean> {
 	return new Promise((resolve) => {
-		page.subscribe((settings) => {
-			resolve((settings.data as PageData).appSettings.allowRegister)
-		})
+		async function check() {
+			const {
+				data: {
+					appSettings: { allowRegister },
+				},
+			} = get(page)
+			allowRegister !== undefined ? resolve(allowRegister) : setTimeout(check, 250)
+		}
+		check()
 	})
 }
 
@@ -45,15 +40,18 @@ export async function fetchActiveUserData(keyToLocalDb?: string): Promise<NDKUse
 	const user = await ndk.signer.user()
 	await user.fetchProfile({ cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY })
 	ndkStore.set(ndk)
+
 	if (keyToLocalDb) {
 		await loginLocalDb(user.pubkey, 'NSEC', keyToLocalDb)
 	} else {
 		await loginLocalDb(user.pubkey, 'NIP07')
 	}
 
-	const [userExists, allowRegister] = await Promise.all([checkIfUserExists(user.pubkey), getAppSettings()])
+	const userExists = await checkIfUserExists(user.pubkey)
+	const allowRegister = await getAppSettings()
+	const _shouldRegister = await shouldRegister(allowRegister, userExists)
 
-	if (userExists || (!userExists && allowRegister)) {
+	if (_shouldRegister) {
 		console.log('Registering user in db')
 		await loginDb(user)
 	}

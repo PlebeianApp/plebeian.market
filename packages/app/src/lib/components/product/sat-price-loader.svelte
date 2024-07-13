@@ -3,7 +3,8 @@
 	import { createProductPriceQuery } from '$lib/fetch/products.queries'
 	import { formatPrice } from '$lib/utils'
 
-	export let product: DisplayProduct
+	export let product: Partial<DisplayProduct>
+	$: priceQuery = createProductPriceQuery(product as DisplayProduct)
 	export let factor = 1
 	$: priceQuery = createProductPriceQuery(product)
 </script>

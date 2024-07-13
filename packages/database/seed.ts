@@ -221,20 +221,36 @@ const main = async () => {
 	})
 
 	const shippingZonesData = shippingData.flatMap((shippingMethods) => {
-		return shippingMethods.map((shipping) => {
-			const shippingZones = randomLengthArrayFromTo(2, 4).map(() => {
-				return {
-					id: createId(),
-					shippingId: shipping.id,
-					shippingUserId: shipping.userId,
-					stallId: shipping.stallId,
-					regionCode: faker.location.countryCode(),
-					countryCode: faker.location.countryCode(),
-				} as ShippingZone
-			})
-			return shippingZones
+		return shippingMethods.flatMap((shipping) => {
+		  const uniqueCombinations = new Set();
+		  
+		  return randomLengthArrayFromTo(2, 4).map(() => {
+			let regionCode, countryCode;
+			
+			do {
+			  regionCode = faker.location.countryCode();
+			  countryCode = faker.location.countryCode();
+			} while (uniqueCombinations.has(`${regionCode}-${countryCode}`));
+			
+			uniqueCombinations.add(`${regionCode}-${countryCode}`);
+			
+			return {
+			  id: createId(),
+			  shippingId: shipping.id,
+			  shippingUserId: shipping.userId,
+			  stallId: shipping.stallId,
+			  regionCode,
+			  countryCode,
+			} as ShippingZone
+		  })
 		})
-	})
+	  })
+	  
+	  const uniqueShippingZonesData = Array.from(
+		new Map(shippingZonesData.flat().map(zone => 
+		  [`${zone.shippingId}-${zone.regionCode}-${zone.countryCode}`, zone]
+		)).values()
+	  );
 
 	const auctionsData = userStalls.map((stallByUser) => {
 		return stallByUser.map((stall) => {
@@ -486,7 +502,7 @@ const main = async () => {
 			{ table: dbSchema.productImages, data: productImagesData.flat(1) },
 			{ table: dbSchema.paymentDetails, data: paymentDetailsData.flat(1) },
 			{ table: dbSchema.shipping, data: shippingData.flat(1) },
-			{ table: dbSchema.shippingZones, data: shippingZonesData.flat(1) },
+			{ table: dbSchema.shippingZones, data: uniqueShippingZonesData },
 			{ table: dbSchema.orders, data: ordersData.flat(2) },
 			{ table: dbSchema.invoices, data: invoicesData.flat(1) },
 			{ table: dbSchema.orderItems, data: orderItemsData.flat(1) },

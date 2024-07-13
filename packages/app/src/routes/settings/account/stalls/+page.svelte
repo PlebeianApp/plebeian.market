@@ -7,25 +7,55 @@
 	import * as Collapsible from '$lib/components/ui/collapsible'
 	import { Skeleton } from '$lib/components/ui/skeleton'
 	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
+	import { fetchUserStallsData, normalizeStallData } from '$lib/nostrSubs/utils'
 	import ndkStore from '$lib/stores/ndk'
 	import { nav_back } from '$lib/utils'
+	import { onMount } from 'svelte'
 
 	import type { PageData } from './$types'
 
 	export let data: PageData
-
+	const { userExist, activeUser } = data
+	let stalls: Partial<RichStall>[] | null
 	let stallsMode: 'list' | 'create' | 'edit' = 'list'
 
-	$: stallsQuery = createStallsByFilterQuery({
-		userId: $ndkStore.activeUser?.pubkey,
-	})
+	$: stallsQuery = userExist
+		? createStallsByFilterQuery({
+				userId: $ndkStore.activeUser?.pubkey,
+			})
+		: undefined
 
-	$: stallsMode === 'list' ? $stallsQuery.refetch() : null
+	$: {
+		if ($stallsQuery?.data) {
+			stalls = $stallsQuery?.data
+		}
+	}
 
-	let currentStall: RichStall | null = null
+	$: stallsMode === 'list' ? ($stallsQuery?.data ? $stallsQuery?.refetch() : null) : null
+
+	let currentStall: Partial<RichStall> | null = null
 	const linkDetails = data.menuItems
 		.find((item) => item.value === 'account-settings')
 		?.links.find((item) => item.href === $page.url.pathname)
+
+	onMount(async () => {
+		if (!activeUser?.id) return
+		if (!userExist) {
+			const { stallNostrRes } = await fetchUserStallsData(activeUser?.id)
+			if (stallNostrRes) {
+				console.log(stallNostrRes)
+				const normalizedStallData = [...stallNostrRes]
+					.map(normalizeStallData)
+					.filter((stall): stall is Partial<RichStall> => stall !== null)
+				if (stalls?.length) {
+					const newStalls = normalizedStallData.filter((stall) => !stalls?.some((existingStall) => stall.id === existingStall.id))
+					stalls = [...stalls, ...newStalls]
+				} else {
+					stalls = normalizedStallData
+				}
+			}
+		}
+	})
 </script>
 
 <div class="pb-4 space-y-2">
@@ -56,12 +86,12 @@
 	{/if}
 	<div class="flex flex-col gap-2">
 		{#if stallsMode === 'list'}
-			{#if $stallsQuery && $stallsQuery.isLoading}
+			{#if !stalls?.length}
 				<Skeleton class="h-12 w-full" />
 				<Skeleton class="h-12 w-full" />
 				<Skeleton class="h-12 w-full" />
-			{:else if $stallsQuery && $stallsQuery.data}
-				{#each [...($stallsQuery.data ?? [])] as stall}
+			{:else}
+				{#each stalls as stall}
 					<Collapsible.Root class="border-black border p-2">
 						<div class="flex flex-row">
 							<Collapsible.Trigger class="flex flex-row w-full items-center justify-between gap-2">

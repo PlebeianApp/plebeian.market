@@ -1,8 +1,7 @@
 import { z } from 'zod'
 
-import type { NonEmptyArray, ProductTypes } from '@plebeian/database'
-import type { ISO3 } from '@plebeian/database/constants'
-import { COUNTRIES_ISO, CURRENCIES, PRODUCT_TYPES } from '@plebeian/database/constants'
+import type { ProductTypes } from '@plebeian/database'
+import { PRODUCT_TYPES } from '@plebeian/database/constants'
 
 const productTypeValidator = (value: unknown) => {
 	if (typeof value !== 'string') {
@@ -14,26 +13,36 @@ const productTypeValidator = (value: unknown) => {
 	return value
 }
 
-const shippingObjectSchema = z.object({
+export const shippingObjectSchema = z.object({
 	id: z.string(),
 	name: z.string().optional(),
 	cost: z.preprocess((value) => (typeof value === 'number' ? value.toString() : value), z.string().optional()),
 	regions: z.array(z.string()).optional(),
+	countries: z.array(z.string()).optional(),
 })
 
-export const productEventSchema = z.object({
-	id: z.string(),
-	stall_id: z.string(),
-	name: z.string(),
-	type: z.custom(productTypeValidator).optional(),
-	description: z.string().optional(),
-	images: z.array(z.string()).optional(),
-	currency: z.string(),
-	price: z.number(),
-	quantity: z.number().int(),
-	specs: z.array(z.tuple([z.string(), z.string()])).optional(),
-	shipping: z.array(shippingObjectSchema),
-})
+export const productEventSchema = z
+	.object({
+		id: z.string(),
+		stall_id: z.string(),
+		name: z.string(),
+		type: z.custom(productTypeValidator).optional(),
+		description: z.string().optional(),
+		images: z.array(z.string()).optional(),
+		currency: z.string(),
+		price: z.number(),
+		quantity: z.number().int(),
+		specs: z.array(z.tuple([z.string(), z.string()])).optional(),
+		shipping: z.array(shippingObjectSchema),
+	})
+	.partial()
+	.transform((data) => {
+		const { stall_id, ...rest } = data
+		return {
+			...rest,
+			stallId: data.stall_id,
+		}
+	})
 
 export const auctionEventSchema = z.object({
 	id: z.string(),

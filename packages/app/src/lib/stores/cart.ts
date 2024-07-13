@@ -5,6 +5,7 @@ import { currencyToBtc } from '$lib/utils'
 import { toast } from 'svelte-sonner'
 import { derived, get, writable } from 'svelte/store'
 
+// TODO Adapt cart to non registered users
 interface Product {
 	id: string
 	name: string

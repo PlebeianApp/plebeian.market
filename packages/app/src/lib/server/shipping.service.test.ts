@@ -17,6 +17,6 @@ describe('Shipping service', () => {
 
 		const zonesForEachStall = await Promise.all(stalls.map((stall) => getShippingZonesByStallId(stall.id)))
 
-		expect(zonesForEachStall.some((stall) => !!stall.length)).toBeTruthy()
+		expect(zonesForEachStall.some((stall) => stall.regions.length > 0 || stall.countries.length > 0)).toBeTruthy()
 	})
 })

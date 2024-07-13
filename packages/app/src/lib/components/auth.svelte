@@ -9,6 +9,7 @@
 	import { login } from '$lib/ndkLogin'
 	import ndkStore from '$lib/stores/ndk'
 	import { type BaseAccount } from '$lib/stores/session'
+	import { copyToClipboard } from '$lib/utils'
 	import { generateSecretKey } from 'nostr-tools'
 	import * as nip19 from 'nostr-tools/nip19'
 	import { toast } from 'svelte-sonner'
@@ -155,7 +156,7 @@
 				>
 			</Dialog.Description>
 		</Dialog.Header>
-		<Button variant="secondary" class="relative overflow-auto flex flex-row gap-2 bg-transparent">
+		<Button variant="secondary" class="relative overflow-auto flex flex-row gap-2 bg-transparent" on:click={() => copyToClipboard(nsec)}>
 			<code class="truncate w-3/4">{nsec}</code>
 			<span class="i-tdesign-copy" style="width: 1rem; height: 1rem; color: black;"></span>
 		</Button>

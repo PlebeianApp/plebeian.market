@@ -15,13 +15,13 @@
 	import { queryClient } from '$lib/fetch/client'
 	import { createProductMutation, editProductMutation } from '$lib/fetch/products.mutations'
 	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
-	import { stallsFilterSchema } from '$lib/schema'
+	import { createUserExistsQuery } from '$lib/fetch/users.queries'
+	import { fetchUserStallsData, normalizeStallData } from '$lib/nostrSubs/utils'
 	import ndkStore from '$lib/stores/ndk'
-	import { tick } from 'svelte'
+	import { onMount, tick } from 'svelte'
 	import { toast } from 'svelte-sonner'
 
 	import type { ProductImage } from '@plebeian/database'
-	import type { ISO3 } from '@plebeian/database/constants'
 	import { COUNTRIES_ISO } from '@plebeian/database/constants'
 	import { createId } from '@plebeian/database/utils'
 
@@ -32,7 +32,32 @@
 	export let product: DisplayProduct | null = null
 	export let forStall: StallIdType | null = null
 
+	let stalls: RichStall[] | null
+	let stall: RichStall | null = null
+
+	$: userExistQuery = createUserExistsQuery($ndkStore.activeUser?.pubkey as string)
+
+	$: stallsQuery = $userExistQuery.data
+		? createStallsByFilterQuery({
+				userId: $ndkStore.activeUser?.pubkey,
+			})
+		: undefined
+
+	$: {
+		if ($stallsQuery?.data) stalls = $stallsQuery.data
+	}
+
 	let currentStallId = product?.stallId
+
+	$: {
+		if (stalls?.length) {
+			if (currentStallId) {
+				;[stall] = stalls.filter((pStall) => pStall.identifier === currentStallId)
+			} else {
+				stall = stalls[0]
+			}
+		}
+	}
 
 	const activeTab =
 		'w-full font-bold border-b-2 border-black text-black data-[state=active]:border-b-primary data-[state=active]:text-primary'
@@ -49,27 +74,38 @@
 	$: updateProductImages(product)
 
 	type Shipping = (typeof stallEventSchema._type)['shipping'][0]
-
 	class ShippingMethod implements Shipping {
 		id: string
 		name: string
 		cost: string
-		regions: ISO3[]
+		regions: string[]
+		countries: string[]
 
-		constructor(id: string, name: string, cost: string, regions: ISO3[] = []) {
+		constructor(id: string, name: string, cost: string, regions: string[] = [], countries: string[] = []) {
 			this.id = id
 			this.name = name
 			this.cost = cost
 			this.regions = regions
+			this.countries = countries
 		}
 
-		addZone(zone: string) {
-			this.regions.push(zone as ISO3)
+		addRegion(region: string) {
+			this.regions.push(region)
 			shippingMethods = shippingMethods
 		}
 
-		removeZone(zone: string) {
-			this.regions = this.regions.filter((z) => z !== zone)
+		removeRegion(region: string) {
+			this.regions = this.regions.filter((z) => z !== region)
+			shippingMethods = shippingMethods
+		}
+
+		addCountry(country: string) {
+			this.countries.push(country)
+			shippingMethods = shippingMethods
+		}
+
+		removeCountry(country: string) {
+			this.countries = this.countries.filter((z) => z !== country)
 			shippingMethods = shippingMethods
 		}
 
@@ -79,6 +115,7 @@
 				name: this.name,
 				cost: this.cost,
 				regions: this.regions,
+				countries: this.countries,
 			} as Shipping
 		}
 	}
@@ -131,49 +168,74 @@
 		images = images.filter((image) => image.imageUrl !== e.detail)
 	}
 
-	$: stallsQuery = createStallsByFilterQuery(stallsFilterSchema.parse({ userId: $ndkStore.activeUser?.pubkey }))
-	$: currentStall = $stallsQuery.data?.find(({ id }) => id === currentStallId) as RichStall
-</script>
-
-{#if $stallsQuery.isLoading}
-	<Spinner />
-{:else if $stallsQuery.data?.length}
-	{@const [stall] = $stallsQuery.data.filter((pStall) => pStall.id === product?.stallId)}
-	<form
-		on:submit|preventDefault={async (sEvent) => {
-			if (!product) {
-				try {
-					await $createProductMutation.mutateAsync([
-						sEvent,
-						currentStall,
-						images.map((image) => ({ imageUrl: image.imageUrl })),
-						shippingMethods.map((s) => ({ id: s.id, name: s.name ?? '', cost: s.cost ?? '', regions: s.regions ?? [] })),
-						categories,
-					])
-
-					toast.success('Product created!')
-				} catch (e) {
-					toast.error(`Failed to create product: ${e}`)
-				}
-			} else {
-				try {
-					await $editProductMutation.mutateAsync([
-						sEvent,
-						product,
-						images.map((image) => ({ imageUrl: image.imageUrl })),
-						shippingMethods.map((s) => ({ id: s.id, name: s.name ?? '', cost: s.cost ?? '', regions: s.regions ?? [] })),
-						categories,
-					])
-					toast.success('Product updated!')
-				} catch (e) {
-					toast.error(`Failed to update product: ${e}`)
+	onMount(async () => {
+		if ($userExistQuery.isFetched && !$userExistQuery.data) {
+			const { stallNostrRes } = await fetchUserStallsData($ndkStore.activeUser?.pubkey as string)
+			if (stallNostrRes) {
+				const normalizedStallData = [...stallNostrRes]
+					.map(normalizeStallData)
+					.filter((stall): stall is Partial<RichStall> => stall !== null)
+				if (stalls?.length) {
+					const newStalls = normalizedStallData.filter((stall) => !stalls?.some((existingStall) => stall.id === existingStall.id))
+					stalls = [...stalls, ...newStalls] as RichStall[]
+				} else {
+					stalls = normalizedStallData as RichStall[]
 				}
 			}
+		}
+	})
 
-			queryClient.invalidateQueries({ queryKey: ['products', $ndkStore.activeUser?.pubkey] })
-		}}
-		class="flex flex-col gap-4 grow h-full"
-	>
+	const submit = async (sEvent: SubmitEvent, stall: RichStall | null) => {
+		if (stall == null) return
+		if (!product) {
+			try {
+				await $createProductMutation.mutateAsync([
+					sEvent,
+					stall,
+					images.map((image) => ({ imageUrl: image.imageUrl })),
+					shippingMethods.map((s) => ({
+						id: s.id,
+						name: s.name ?? '',
+						cost: s.cost ?? '',
+						regions: s.regions ?? [],
+						countries: s.countries ?? [],
+					})),
+					categories,
+				])
+
+				toast.success('Product created!')
+			} catch (e) {
+				toast.error(`Failed to create product: ${e}`)
+			}
+		} else {
+			try {
+				await $editProductMutation.mutateAsync([
+					sEvent,
+					product,
+					images.map((image) => ({ imageUrl: image.imageUrl })),
+					shippingMethods.map((s) => ({
+						id: s.id,
+						name: s.name ?? '',
+						cost: s.cost ?? '',
+						regions: s.regions ?? [],
+						countries: s.countries ?? [],
+					})),
+					categories,
+				])
+				toast.success('Product updated!')
+			} catch (e) {
+				toast.error(`Failed to update product: ${e}`)
+			}
+		}
+
+		queryClient.invalidateQueries({ queryKey: ['products', $ndkStore.activeUser?.pubkey] })
+	}
+</script>
+
+{#if !stalls || !stalls.length}
+	<Spinner />
+{:else}
+	<form on:submit|preventDefault={(sEvent) => submit(sEvent, stall)} class="flex flex-col gap-4 grow h-full">
 		<Tabs.Root value="basic" class="p-4">
 			<Tabs.List class="w-full justify-around bg-transparent">
 				<Tabs.Trigger value="basic" class={activeTab}>Basic</Tabs.Trigger>
@@ -234,8 +296,8 @@
 						<DropdownMenu.Root>
 							<DropdownMenu.Trigger asChild let:builder>
 								<Button variant="outline" class="border-2 border-black" builders={[builder]}>
-									{#if forStall && $stallsQuery.data}
-										{@const defaultStall = $stallsQuery.data.find((stall) => stall.id === forStall)}
+									{#if forStall}
+										{@const defaultStall = stalls.find((stall) => stall.id === forStall)}
 										{defaultStall ? defaultStall.name : 'Select a stall'}
 									{:else}
 										{stall?.name}
@@ -246,7 +308,7 @@
 								<DropdownMenu.Label>Stall</DropdownMenu.Label>
 								<DropdownMenu.Separator />
 								<section class=" max-h-[350px] overflow-y-auto">
-									{#each $stallsQuery.data as item}
+									{#each stalls as item}
 										<DropdownMenu.CheckboxItem
 											checked={currentStallId === item.id}
 											on:click={() => {
@@ -262,7 +324,7 @@
 					</div>
 					<div class="grid w-full items-center gap-1.5">
 						<Label for="from" class="font-bold">Currency</Label>
-						<Input value={currentStall?.currency} required class="border-2 border-black" type="text" name="currency" disabled />
+						<Input value={stall?.currency} required class="border-2 border-black" type="text" name="currency" disabled />
 					</div>
 				</div>
 			</Tabs.Content>
@@ -318,6 +380,7 @@
 						</div>
 
 						<div>
+							<!-- FIXME: not working -->
 							<Label class="font-bold">Zones</Label>
 							<section>
 								<Popover.Root let:ids>
@@ -350,9 +413,9 @@
 														value={country.iso3}
 														onSelect={(currentValue) => {
 															if (item.regions.includes(country.iso3)) {
-																item.removeZone(currentValue)
+																item.removeCountry(currentValue)
 															} else {
-																item.addZone(currentValue)
+																item.addCountry(currentValue)
 															}
 
 															closeAndFocusTrigger(ids.trigger)
@@ -399,6 +462,4 @@
 			<Button type="submit" class="w-full font-bold my-4">Save</Button>
 		</Tabs.Root>
 	</form>
-{:else if !$stallsQuery.data?.length}
-	<p>There should be stalls defined first</p>
 {/if}

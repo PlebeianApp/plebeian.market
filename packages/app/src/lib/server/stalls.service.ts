@@ -8,31 +8,26 @@ import { getProductsByStallId } from '$lib/server/products.service'
 import { getEventCoordinates } from '$lib/utils'
 import { format } from 'date-fns'
 
+import type { PaymentDetail, Shipping, Stall } from '@plebeian/database'
 import {
 	and,
-	categories,
-	createId,
 	db,
 	eq,
 	eventTags,
 	getTableColumns,
-	ISO3,
-	orders,
-	PaymentDetail,
+	inArray,
 	paymentDetails,
-	productCategories,
 	products,
-	Shipping,
 	shipping,
-	ShippingZone,
 	shippingZones,
 	sql,
-	Stall,
 	stalls,
 	users,
 } from '@plebeian/database'
 
+import type { RichShippingInfo } from './shipping.service'
 import { stallEventSchema } from '../../schema/nostr-events'
+import { getShippingByStallId } from './shipping.service'
 
 export type RichStall = {
 	id: string
@@ -44,9 +39,10 @@ export type RichStall = {
 	userNip05: string | null
 	userName: string | null
 	productCount?: number
-	orderCount?: number
+	// orderCount?: number
 	paymentMethods?: PaymentDetail[]
 	identifier: string
+	shipping: Partial<RichShippingInfo>[]
 }
 
 export type DisplayStall = {
@@ -56,6 +52,28 @@ export type DisplayStall = {
 	currency: string
 	createDate: string
 	userId: string
+	shipping: Partial<RichShippingInfo>[]
+}
+
+const createZone = (country: string | null, region: string | null, shippingResult: Shipping) => ({
+	countryCode: country,
+	regionCode: region,
+	shippingId: shippingResult?.id as string,
+	shippingUserId: shippingResult.userId,
+	stallId: shippingResult.stallId,
+})
+
+const getZonesToInsert = (shippingResult: Shipping, regions?: string[], countries?: string[]) => {
+	if (regions?.length && countries?.length) {
+		return regions.flatMap((region: string) => (countries ?? []).map((country: string) => createZone(country, region, shippingResult)))
+	} else if (regions?.length) {
+		return regions.map((region: string) => createZone(null, region, shippingResult))
+	} else if (countries?.length) {
+		const z = (countries ?? []).map((country: string) => createZone(country, null, shippingResult))
+		return z
+	} else {
+		return []
+	}
 }
 
 const resolveStalls = async (stall: Stall): Promise<RichStall> => {
@@ -79,18 +97,24 @@ const resolveStalls = async (stall: Stall): Promise<RichStall> => {
 			.execute()
 	).map((product) => product.count)
 
-	const [orderCount] = (
-		await db
-			.select({
-				count: sql<number>`cast(count(${orders.id}) as int)`,
-			})
-			.from(orders)
-			.where(eq(orders.stallId, stall.id))
-			.execute()
-	).map((order) => order.count)
+	// const [orderCount] = (
+	// 	await db
+	// 		.select({
+	// 			count: sql<number>`cast(count(${orders.id}) as int)`,
+	// 		})
+	// 		.from(orders)
+	// 		.where(eq(orders.stallId, stall.id))
+	// 		.execute()
+	// ).map((order) => order.count)
 
 	if (!ownerRes.userId) {
 		error(404, 'Not found')
+	}
+
+	const shippingInfo = await getShippingByStallId(stall.id)
+
+	if (!shippingInfo) {
+		error(404, 'not found')
 	}
 
 	const paymentMethods = await db.select().from(paymentDetails).where(eq(paymentDetails.stallId, stall.id)).execute()
@@ -105,9 +129,10 @@ const resolveStalls = async (stall: Stall): Promise<RichStall> => {
 		userName: ownerRes.userName,
 		userNip05: ownerRes.userNip05,
 		productCount,
-		orderCount,
+		// orderCount,
 		paymentMethods,
 		identifier: stall.id.split(':')[2],
+		shipping: shippingInfo,
 	}
 }
 
@@ -229,7 +254,7 @@ export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall 
 		const { coordinates, tagD } = getEventCoordinates(stallEvent)
 		const stallEventContent = JSON.parse(stallEvent.content)
 		if (!stallEventContent) {
-			error(500, { message: `Error parsing stall event content` })
+			throw Error(`Error parsing stall event content`)
 		}
 
 		const { data, error: zodError } = stallEventSchema.safeParse({
@@ -238,7 +263,7 @@ export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall 
 		})
 
 		if (zodError) {
-			error(500, { message: `Invalid stall event data ${zodError}` })
+			throw Error(`Invalid stall event data: ${zodError}`)
 		}
 
 		const insertStall: Stall = {
@@ -261,7 +286,7 @@ export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall 
 				.returning()
 				.then(([stallResult]) => {
 					if (!stallResult) {
-						error(500, 'Error when creating stall')
+						throw Error('Error when inserting stall')
 					}
 					return stallResult
 				}),
@@ -281,25 +306,14 @@ export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall 
 						userId: insertStall.userId,
 						stallId: insertStall.id,
 					})
-					.onConflictDoNothing({ target: [shipping.id, shipping.userId] })
+					.onConflictDoNothing({ target: shipping.id })
 					.returning()
 					.then(([shippingResult]) => {
-						if (!shippingResult) {
-							error(500, `Error when creating shipping method ${shippingResult}`)
-						}
-						return shippingResult
-					})
-					.then((shippingResult) => {
-						if (method.regions) {
-							return db.insert(shippingZones).values(
-								method.regions.map((region) => ({
-									countryCode: region,
-									regionCode: region,
-									shippingId: shippingResult?.id as string,
-									shippingUserId: shippingResult.userId,
-									stallId: insertStall.id,
-								})),
-							)
+						if (!shippingResult) return
+
+						const zonesToInsert = getZonesToInsert(shippingResult, method.regions, method.countries)
+						if (zonesToInsert.length > 0) {
+							return db.insert(shippingZones).values(zonesToInsert)
 						}
 					}),
 			)
@@ -316,60 +330,167 @@ export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall 
 			currency: stallResult.currency,
 			createDate: format(stallResult.createdAt, standardDisplayDateFormat),
 			userId: stallResult.userId,
+			shipping: data.shipping,
 		}
 	} catch (e) {
-		console.error(e)
 		error(500, `Failed to create stall ${e}`)
 	}
 }
 
-export const updateStall = async (stallId: string, stallEvent: NostrEvent): Promise<DisplayStall> => {
-	const stallEventContent = JSON.parse(stallEvent.content)
-	const parsedStall = stallEventSchema.partial().parse({ id: stallId, ...stallEventContent })
-	const insertStall: Partial<Stall> = {
-		updatedAt: new Date(),
-		name: parsedStall.name,
-		description: parsedStall.description,
-		currency: parsedStall.currency,
-	}
-
-	const [stallResult] = await db
-		.update(stalls)
-		.set({
-			...insertStall,
-		})
-		.where(eq(stalls.id, stallId))
-		.returning()
-
-	if (stallResult) {
-		await db.delete(shippingZones).where(eq(shippingZones.stallId, stallId)).execute()
-		if (parsedStall.shipping) {
-			for (const method of parsedStall.shipping) {
-				const [shippingResult] = await db
-					.insert(shipping)
-					.values({
-						id: method.id as string,
-						name: method.name as string,
-						cost: String(method.cost),
-						userId: stallResult.userId as string,
-						stallId: stallResult.id as string,
-					})
-					.returning()
-
-				if (method.regions) {
-					await db.insert(shippingZones).values(
-						method.regions.map((region) => ({
-							countryCode: region,
-							regionCode: region,
-							shippingId: shippingResult.id,
-							shippingUserId: shippingResult.userId,
-							stallId: stallResult.id,
-						})),
-					)
-				}
-			}
+export const updateStall = async (stallId: string, stallEvent: NostrEvent): Promise<DisplayStall | null> => {
+	try {
+		const stallEventContent = JSON.parse(stallEvent.content)
+		const { data: parsedStall, success, error: parseError } = stallEventSchema.partial().safeParse({ id: stallId, ...stallEventContent })
+		if (!success) {
+			throw new Error(`Failed to parse stall event: ${parseError}`)
 		}
 
+		const insertStall: Partial<Stall> = {
+			updatedAt: new Date(),
+			name: parsedStall.name,
+			description: parsedStall.description,
+			currency: parsedStall.currency,
+		}
+
+		const [stallResult] = await db
+			.update(stalls)
+			.set({
+				...insertStall,
+			})
+			.where(eq(stalls.id, stallId))
+			.returning()
+
+		if (!stallResult) {
+			throw new Error(`Stall not updated: ${stallId}`)
+		}
+
+		if (parsedStall.shipping && parsedStall.shipping.length > 0) {
+			try {
+				await db.transaction(async (tx) => {
+					const existingShippingMethods = await tx.query.shipping.findMany({
+						where: and(eq(shipping.stallId, stallId), eq(shipping.userId, stallResult.userId)),
+					})
+
+					const newShippingMethodsMap = new Map(parsedStall.shipping?.map((method) => [method.id, method]))
+					const existingShippingMethodsMap = new Map(existingShippingMethods.map((method) => [method.id, method]))
+
+					const methodsToInsert = parsedStall.shipping?.filter((method) => !existingShippingMethodsMap.has(method.id)) ?? []
+					const methodsToUpdate = parsedStall.shipping?.filter((method) => existingShippingMethodsMap.has(method.id)) ?? []
+					const methodsToDelete = existingShippingMethods.filter((method) => !newShippingMethodsMap.has(method.id))
+
+					// Handle shipping methods
+					if (methodsToInsert.length > 0) {
+						await tx.insert(shipping).values(
+							methodsToInsert.map((method) => ({
+								id: method.id,
+								stallId: stallId,
+								userId: stallResult.userId,
+								name: method.name,
+								cost: String(method.cost),
+							})),
+						)
+					}
+
+					if (methodsToUpdate.length > 0) {
+						for (const method of methodsToUpdate) {
+							await tx
+								.update(shipping)
+								.set({
+									name: method.name,
+									cost: method.cost,
+									updatedAt: new Date(),
+								})
+								.where(and(eq(shipping.id, method.id), eq(shipping.stallId, stallId), eq(shipping.userId, stallResult.userId)))
+						}
+					}
+
+					if (methodsToDelete.length > 0) {
+						await tx.delete(shipping).where(
+							and(
+								inArray(
+									shipping.id,
+									methodsToDelete.map((method) => method.id),
+								),
+								eq(shipping.stallId, stallId),
+								eq(shipping.userId, stallResult.userId),
+							),
+						)
+					}
+
+					// Handle shipping zones
+					const shippingMethodIds = parsedStall.shipping?.map((method) => method.id) ?? []
+
+					// Fetch existing zones for the current stall and shipping methods
+					const existingZones = await tx
+						.select()
+						.from(shippingZones)
+						.where(and(eq(shippingZones.stallId, stallId), inArray(shippingZones.shippingId, shippingMethodIds)))
+
+					// Prepare new zones
+					const newZones =
+						parsedStall.shipping?.flatMap((method) => [
+							...(method.regions ?? []).map((region) => ({
+								shippingId: method.id,
+								shippingUserId: stallResult.userId,
+								stallId: stallId,
+								regionCode: region,
+								countryCode: null,
+							})),
+							...(method.countries ?? []).map((country) => ({
+								shippingId: method.id,
+								shippingUserId: stallResult.userId,
+								stallId: stallId,
+								regionCode: null,
+								countryCode: country,
+							})),
+						]) ?? []
+
+					// Identify zones to delete (existing zones not in new zones)
+					const zonesToDelete = existingZones.filter(
+						(existingZone) =>
+							!newZones.some(
+								(newZone) =>
+									newZone.shippingId === existingZone.shippingId &&
+									newZone.stallId === existingZone.stallId &&
+									newZone.regionCode === existingZone.regionCode &&
+									newZone.countryCode === existingZone.countryCode,
+							),
+					)
+
+					// Identify zones to insert (new zones not in existing zones)
+					const zonesToInsert = newZones.filter(
+						(newZone) =>
+							!existingZones.some(
+								(existingZone) =>
+									newZone.shippingId === existingZone.shippingId &&
+									newZone.stallId === existingZone.stallId &&
+									newZone.regionCode === existingZone.regionCode &&
+									newZone.countryCode === existingZone.countryCode,
+							),
+					)
+
+					// Delete zones that are no longer present
+					if (zonesToDelete.length > 0) {
+						await tx.delete(shippingZones).where(
+							inArray(
+								shippingZones.id,
+								zonesToDelete.map((zone) => zone.id),
+							),
+						)
+					}
+
+					// Insert new zones
+					if (zonesToInsert.length > 0) {
+						await tx.insert(shippingZones).values(zonesToInsert)
+					}
+
+					console.log('Shipping method and zones sync completed')
+				})
+			} catch (e) {
+				console.error(`Error updating stall: ${e}`)
+				throw error(500, { message: `Error updating stall: ${e}` })
+			}
+		}
 		return {
 			id: stallResult.id,
 			name: stallResult.name,
@@ -377,12 +498,13 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
 			currency: stallResult.currency,
 			createDate: format(stallResult.createdAt, standardDisplayDateFormat),
 			userId: stallResult.userId,
-		}
+			shipping: parsedStall.shipping ?? [],
+		} as DisplayStall
+	} catch (e) {
+		console.error(e)
+		return null
 	}
-
-	error(500, 'Failed to update stall')
 }
-
 export const deleteStall = async (stallId: string, userId: string): Promise<string> => {
 	const stallResult = await db.query.stalls.findFirst({
 		where: and(eq(stalls.id, stallId), eq(stalls.userId, userId)),

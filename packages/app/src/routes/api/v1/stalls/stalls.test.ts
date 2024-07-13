@@ -1,8 +1,9 @@
 import NDK, { NDKEvent, NDKKind, NDKPrivateKeySigner } from '@nostr-dev-kit/ndk'
 import { KindProducts } from '$lib/constants'
+import { unixTimeNow } from '$lib/utils'
 import { describe, expect, it } from 'vitest'
 
-import { createId, devUser1 } from '@plebeian/database'
+import { createId, devUser1, shipping } from '@plebeian/database'
 
 describe('/stalls', () => {
 	it('GET', async () => {
@@ -48,7 +49,7 @@ describe('/stalls', () => {
 			kind: 30017 as NDKKind,
 			pubkey: devUser1.pk,
 			content: JSON.stringify(evContent),
-			created_at: Math.floor(Date.now() / 1000),
+			created_at: unixTimeNow(),
 			tags: [['d', identifier]],
 		})
 
@@ -70,6 +71,7 @@ describe('/stalls', () => {
 			description: 'Hello Stall Description from api',
 			name: 'Hello Stall',
 			userId: '86a82cab18b293f53cbaaae8cdcbee3f7ec427fdf9f9c933db77800bb5ef38a0',
+			shipping: expect.any(Array),
 		})
 	})
 

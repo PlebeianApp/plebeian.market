@@ -1,27 +1,55 @@
 <script lang="ts">
+	import type { DisplayProduct } from '$lib/server/products.service'
 	import type { RichStall } from '$lib/server/stalls.service'
+	import { page } from '$app/stores'
 	import { createProductsByFilterQuery } from '$lib/fetch/products.queries'
+	import { fetchUserProductData, normalizeProductsFromNostr } from '$lib/nostrSubs/utils'
+	import { onMount } from 'svelte'
 
 	import Spinner from '../assets/spinner.svelte'
 	import Separator from '../ui/separator/separator.svelte'
 	import ImgPlaceHolder from './imgPlaceHolder.svelte'
 	import SatPriceLoader from './sat-price-loader.svelte'
 
-	export let stall: RichStall
+	const { activeUser, userExist } = $page.data
 
-	$: productsByStall = createProductsByFilterQuery({
-		stallId: stall.id,
+	export let stall: Partial<RichStall>
+	let toDisplayProducts: Partial<DisplayProduct>[]
+
+	$: productsByStall = userExist
+		? createProductsByFilterQuery({
+				stallId: stall.id,
+			})
+		: undefined
+
+	$: {
+		if ($productsByStall?.data) {
+			toDisplayProducts = $productsByStall.data
+		}
+	}
+	onMount(async () => {
+		if (!activeUser?.id) return
+		if (!userExist) {
+			const { products: productsData } = await fetchUserProductData(activeUser.id)
+			if (productsData) {
+				const result = normalizeProductsFromNostr(productsData, activeUser.id as string, stall.id)
+				if (result) {
+					const { toDisplayProducts: _toDisplay } = result
+					toDisplayProducts = _toDisplay
+				}
+			}
+		}
 	})
 </script>
 
 <div>
-	{#if $productsByStall.isLoading}
+	{#if !toDisplayProducts?.length}
 		<Spinner />
-	{:else if $productsByStall.data}
-		{#each $productsByStall.data as product}
+	{:else if toDisplayProducts.length}
+		{#each toDisplayProducts as product}
 			<a class="flex flex-row justify-between my-4 gap-2" href="/products/{product.id}">
-				{#if product.images[0]}
-					<img class="contain h-[80px] aspect-square object-cover" src={product.images[0].imageUrl} alt="" />
+				{#if product?.images?.length}
+					<img class="contain h-[60px] aspect-square object-cover" src={product.images[0].imageUrl} alt="" />
 				{:else}
 					<ImgPlaceHolder imageType={'mini'} />
 				{/if}
