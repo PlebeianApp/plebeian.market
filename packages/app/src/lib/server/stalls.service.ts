@@ -5,7 +5,7 @@ import { error } from '@sveltejs/kit'
 import { KindStalls, standardDisplayDateFormat } from '$lib/constants'
 import { stallsFilterSchema } from '$lib/schema'
 import { getProductsByStallId } from '$lib/server/products.service'
-import { getEventCoordinates } from '$lib/utils'
+import { customTagValue, getEventCoordinates } from '$lib/utils'
 import { format } from 'date-fns'
 
 import type { PaymentDetail, Shipping, Stall } from '@plebeian/database'
@@ -110,7 +110,11 @@ const resolveStalls = async (stall: Stall): Promise<RichStall> => {
 	// 		.execute()
 	// ).map((order) => order.count)
 
-	const [headerImage] = await db.select().from(eventTags).where(eq(eventTags.eventId, stall.id)).execute()
+	const [headerImage] = await db
+		.select()
+		.from(eventTags)
+		.where(and(eq(eventTags.eventId, stall.id), eq(eventTags.tagName, 'image')))
+		.execute()
 
 	if (!ownerRes.userId) {
 		error(404, 'Not found')
@@ -272,7 +276,7 @@ export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall 
 			throw Error(`Invalid stall event data: ${zodError}`)
 		}
 
-		const headerImage = stallEvent.tags.find((tag) => tag[0] === 'image')?.[1]
+		const imageTag = customTagValue(stallEvent.tags, 'image')[0]
 
 		const insertStall: Stall = {
 			id: coordinates,
@@ -331,14 +335,14 @@ export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall 
 
 		const stallResult = results[0] as Stall
 
-		if (headerImage) {
+		if (imageTag) {
 			await db
 				.insert(eventTags)
 				.values({
 					userId: stallResult.userId,
 					eventId: stallResult.id,
 					tagName: 'image',
-					tagValue: headerImage,
+					tagValue: imageTag,
 					eventKind: KindStalls,
 				})
 				.returning()
@@ -381,22 +385,23 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
 			.where(eq(stalls.id, stallId))
 			.returning()
 
-        const [headerImage] = await db.select().from(eventTags).where(eq(eventTags.eventId, stallEvent.id)).execute()
+		const [headerImage] = await db
+			.select()
+			.from(eventTags)
+			.where(and(eq(eventTags.eventId, stallEvent.id), eq(eventTags.tagName, 'image')))
+			.execute()
 
-        const imageTag = stallEvent?.tags
-            ?.filter((tag) => tag[0] === 'image')
-            .map((tag) => tag[1])
-            .pop()
+		const imageTag = customTagValue(stallEvent.tags, 'image')[0]
 
-        if (imageTag && headerImage.tagValue !== imageTag) {
-            await db
-                .update(eventTags)
-                .set({
-                    tagValue: imageTag,
-                })
-                .where(and(eq(eventTags.eventId, stallId), eq(eventTags.tagName, 'image')))
-                .execute()
-        }
+		if (imageTag && headerImage.tagValue !== imageTag) {
+			await db
+				.update(eventTags)
+				.set({
+					tagValue: imageTag,
+				})
+				.where(and(eq(eventTags.eventId, stallId), eq(eventTags.tagName, 'image')))
+				.execute()
+		}
 
 		if (!stallResult) {
 			throw new Error(`Stall not updated: ${stallId}`)

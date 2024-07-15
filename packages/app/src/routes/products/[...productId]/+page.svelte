@@ -89,7 +89,7 @@
 	})
 
 	const handleIncrement = () => {
-		if (qtyToCart < toDisplayProduct.quantity) {
+		if (qtyToCart < toDisplayProducts[0].quantity) {
 			qtyToCart++
 		}
 	}
@@ -105,8 +105,8 @@
 	<div class="container py-16">
 		<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
 			<div class="flex flex-col gap-4">
-				{#if toDisplayProduct?.images?.length}
-					{@const sortedImages = toDisplayProduct.images.slice().sort((a, b) => a.imageOrder - b.imageOrder)}
+				{#if toDisplayProducts[0]?.images?.length}
+					{@const sortedImages = toDisplayProducts[0].images.slice().sort((a, b) => a.imageOrder - b.imageOrder)}
 					<img class="col-span-2 border-2 border-black p-1" src={sortedImages[selectedImage].imageUrl} alt="" />
 					<div class="flex flex-row gap-4">
 						{#each sortedImages as item, i}
@@ -139,8 +139,6 @@
 
 				<h3 class="my-8 font-bold">Stock: {toDisplayProducts[0].quantity}</h3>
 				<div class="flex w-1/2 flex-row gap-4">
-				<h3 class="my-8 font-bold">Stock: {toDisplayProduct.quantity}</h3>
-				<div class="flex w-1/2 flex-row">
 					<Button class="border-2 border-black" size="icon" variant="outline" on:click={handleDecrement} disabled={qtyToCart <= 1}>
 						<span class="i-mdi-minus w-4 h-4"></span>
 					</Button>
@@ -151,7 +149,6 @@
 						on:input={(e) => (qtyToCart = parseInt(e.target.value))}
 						min="1"
 						max={toDisplayProducts[0].quantity}
-						max={toDisplayProduct.quantity}
 						readonly
 					/>
 					<Button
@@ -159,7 +156,7 @@
 						size="icon"
 						variant="outline"
 						on:click={handleIncrement}
-						disabled={qtyToCart >= toDisplayProduct.quantity}
+						disabled={qtyToCart >= toDisplayProducts[0].quantity}
 					>
 						<span class="i-mdi-plus w-4 h-4"></span>
 					</Button>
@@ -207,7 +204,7 @@
 				<Tabs.Trigger disabled value="reviews" class={activeTab}>Reviews</Tabs.Trigger>
 			</Tabs.List>
 			<Tabs.Content value="description" class="flex flex-col gap-2">
-				<p>{toDisplayProduct.description}</p>
+				<p>{toDisplayProducts[0].description}</p>
 			</Tabs.Content>
 			<Tabs.Content value="comments" class="flex flex-col gap-2"></Tabs.Content>
 			<Tabs.Content value="reviews" class="flex flex-col gap-2"></Tabs.Content>

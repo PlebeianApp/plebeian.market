@@ -3,6 +3,7 @@
 	import type { DisplayProduct } from '$lib/server/products.service'
 	import type { RichStall } from '$lib/server/stalls.service'
 	import { NDKEvent } from '@nostr-dev-kit/ndk'
+	import ImgPlaceHolder from '$lib/components/product/imgPlaceHolder.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
 	import * as Accordion from '$lib/components/ui/accordion'
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar'
@@ -24,7 +25,7 @@
 	} from '$lib/nostrSubs/utils'
 	import { openDrawerForProduct } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
-	import { getEventCoordinates, shouldRegister } from '$lib/utils'
+	import { getEventCoordinates, shouldRegister, stringToHexColor } from '$lib/utils'
 	import { onMount } from 'svelte'
 
 	import type { PageData } from './$types'
@@ -124,9 +125,13 @@
 </script>
 
 <main class="flex flex-col container text-black my-20">
-	<div class="flex w-full flex-col h-[65vh] gap-8">
+	<div class="flex w-full flex-col min-h-[65vh] gap-12 mb-12">
 		{#if stallResponse}
-			<img src={stallResponse.headerImage} alt="profile" class="border-black border-2 object-cover w-full h-[25vh]" />
+			{#if stallResponse.headerImage}
+				<img src={stallResponse.headerImage} alt="profile" class="border-black border-2 object-cover w-full min-h-[25vh]" />
+			{:else}
+				<ImgPlaceHolder width={1600} height={300} imageType="manual" fillColor={stringToHexColor(stall.id)} />
+			{/if}
 
 			<h1>{stallResponse.name}</h1>
 
@@ -146,38 +151,40 @@
 						<Skeleton class="h-24 w-24 rounded-full" />
 					{/if}
 				</section>
-				{#if stallResponse}
-					<h1>{stallResponse.name}</h1>
-					<p class="text-2xl">{stallResponse.description}</p>
-					<Accordion.Root class="w-full sm:max-w-sm">
-						<Accordion.Item value="item-1">
-							<Accordion.Trigger>More info</Accordion.Trigger>
-							<Accordion.Content>
-								<div class=" flex flex-col gap-2 items-start">
-									{#if stallResponse.shipping?.length}
-										<span class=" font-bold">Shipping zones</span>
-										<section class=" flex gap-2 flex-wrap">
-											{#each stallResponse.shipping as shipping}
-												{#if shipping.name || shipping.id}
-													<span>{shipping.name || shipping.id}</span>
-												{/if}
-												{#if shipping.regions}
-													{#each shipping.regions as region}
-														<Badge variant="secondary">{region}</Badge>
-													{/each}
-												{/if}
-												{#if shipping.countries}
-													{#each shipping.countries as country}
-														<Badge variant="secondary">{country}</Badge>
-													{/each}
-												{/if}
-											{/each}
-										</section>
-									{/if}
-								</div>
-							</Accordion.Content>
-						</Accordion.Item>
-					</Accordion.Root>
+				<Accordion.Root class="w-full sm:max-w-sm">
+					<Accordion.Item value="item-1">
+						<Accordion.Trigger>More info</Accordion.Trigger>
+						<Accordion.Content>
+							<div class=" flex flex-col gap-2 items-start">
+								{#if stallResponse.shipping?.length}
+									<span class=" font-bold">Shipping zones</span>
+									<section class=" flex gap-2 flex-wrap">
+										{#each stallResponse.shipping as shipping}
+											{#if shipping.name || shipping.id}
+												<span>{shipping.name || shipping.id}</span>
+											{/if}
+											{#if shipping.regions}
+												{#each shipping.regions as region}
+													<Badge variant="secondary">{region}</Badge>
+												{/each}
+											{/if}
+											{#if shipping.countries}
+												{#each shipping.countries as country}
+													<Badge variant="secondary">{country}</Badge>
+												{/each}
+											{/if}
+										{/each}
+									</section>
+								{/if}
+							</div>
+						</Accordion.Content>
+					</Accordion.Item>
+				</Accordion.Root>
+				<div class="flex flex-col">
+					<span>currency: {stallResponse.currency}</span>
+					<span>created: {stallResponse.createDate}</span>
+				</div>
+			</div>
 
 			{#if isMyStall}
 				<Button class="mt-4" on:click={() => openDrawerForProduct(stall.id)}>Edit stall</Button>

@@ -2,10 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-	@apply font-sans;
-}
-
 :root {
 	--background: 323 0% 100%;
 	--foreground: 323 0% 10%;

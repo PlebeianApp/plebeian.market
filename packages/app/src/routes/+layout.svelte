@@ -113,3 +113,9 @@
 		</div>
 	{/if}
 </QueryClientProvider>
+
+<style>
+	:global(body) {
+		font-family: 'IBM Plex Mono', monospace;
+	}
+</style>

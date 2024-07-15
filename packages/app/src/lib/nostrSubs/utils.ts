@@ -139,6 +139,7 @@ export function normalizeStallData(nostrStall: NDKEvent): Partial<RichStall> | n
 			id,
 			userId: nostrStall.pubkey,
 			shipping: parsedShipping,
+			headerImage: nostrStall.tagValue('image'),
 		}
 	} catch (e) {
 		return null

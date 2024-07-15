@@ -34,7 +34,7 @@
 	type Shipping = (typeof stallEventSchema._type)['shipping'][0]
 
 	let currency: Currency = (stall?.currency as Currency) ?? defaultCurrency ?? 'BTC'
-    let headerImage = stall?.headerImage
+	let headerImage = stall?.headerImage
 
 	class ShippingMethod implements Shipping {
 		id: string
@@ -143,8 +143,6 @@
 			pubkey: userId,
 			content: JSON.stringify(evContent),
 			created_at: unixTimeNow(),
-			tags: [['d', identifier]],
-			created_at: Math.floor(Date.now() / 1000),
 			tags: tags,
 		})
 

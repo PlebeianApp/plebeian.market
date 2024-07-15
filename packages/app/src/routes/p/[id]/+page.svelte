@@ -3,6 +3,7 @@
 	import type { DisplayProduct } from '$lib/server/products.service'
 	import type { RichStall } from '$lib/server/stalls.service'
 	import Pattern from '$lib/components/Pattern.svelte'
+	import ImgPlaceHolder from '$lib/components/product/imgPlaceHolder.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
 	import StallItem from '$lib/components/stalls/stall-item.svelte'
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar'
@@ -22,7 +23,7 @@
 	} from '$lib/nostrSubs/utils'
 	import { openDrawerForNewProduct, openDrawerForNewStall } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
-	import { copyToClipboard, getElapsedTimeInDays } from '$lib/utils'
+	import { copyToClipboard, getElapsedTimeInDays, stringToHexColor } from '$lib/utils'
 	import { npubEncode } from 'nostr-tools/nip19'
 	import { onMount } from 'svelte'
 	import { get } from 'svelte/store'
@@ -156,11 +157,15 @@
 			<main class="text-black">
 				<div class="px-4 py-20 lg:px-12">
 					<div class="container relative h-[45vh]">
-						<img src={$userProfileQuery?.data?.banner} alt="profile" class="border-black border-2 object-cover w-full h-[25vh]" />
+						{#if $userProfileQuery?.data?.banner}
+							<img src={$userProfileQuery?.data?.banner} alt="profile" class="border-black border-2 object-cover w-full h-[25vh]" />
+						{:else}
+							<ImgPlaceHolder width={1600} height={300} imageType="manual" fillColor={stringToHexColor($userProfileQuery?.data?.name)} />
+						{/if}
 
-						<Avatar class="border-black border-2 h-50 w-50 absolute top-5/6 left-[10vw] transform -translate-x-1/2 -translate-y-1/2">
+						<Avatar class="border-black border-2 h-24 w-24 absolute top-5/6 left-[10vw] transform -translate-x-1/2 -translate-y-1/2">
 							<AvatarImage src={image} alt="profile" />
-							<AvatarFallback>{$userProfileQuery?.data?.image}</AvatarFallback>
+							<AvatarFallback>{name}</AvatarFallback>
 						</Avatar>
 
 						<div class="flex flex-row ml-[12vw] mt-8 justify-between">
