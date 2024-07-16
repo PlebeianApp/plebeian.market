@@ -1,5 +1,5 @@
-import ndkStore from '$lib/stores/ndk'
 import type NDKSvelte from '@nostr-dev-kit/ndk-svelte'
+import ndkStore from '$lib/stores/ndk'
 import { toast } from 'svelte-sonner'
 import { get, writable } from 'svelte/store'
 
@@ -9,7 +9,6 @@ export type StallIdType = `30017:${string}:${string}`
 export type ProductIdType = `30018:${string}:${string}`
 
 type IdType = StallIdType | ProductIdType | null
-
 
 export const drawerUI = writable<{
 	drawerType: DraweUiType
@@ -27,11 +26,7 @@ const handleUserNotLoggedIn = (action: string) => {
 	toast.error(`You need to be logged in to ${action}`)
 }
 
-const setDrawerState = (state: {
-	drawerType: DraweUiType
-	id: IdType
-	forStall: StallIdType | null
-}) => {
+const setDrawerState = (state: { drawerType: DraweUiType; id: IdType; forStall: StallIdType | null }) => {
 	drawerUI.set(state)
 }
 
