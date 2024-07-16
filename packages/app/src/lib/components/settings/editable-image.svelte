@@ -35,7 +35,7 @@
 			const file = target.files?.[0]
 			if (file) {
 				const uploader = new NostrBuildUploader({
-					signer: $ndkStore.signer,
+					signer: window.nostr,
 				})
 				const [[_, url], ...tags] = await uploader.upload(file)
 				console.log(url, tags)
