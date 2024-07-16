@@ -79,6 +79,9 @@
 								<a href="/settings" class="inline-flex items-center gap-2 w-full"><span class="i-tdesign-user-setting" />Settings</a>
 							</DropdownMenu.Item>
 							<DropdownMenu.Item>
+								<a href="/dash" class="inline-flex items-center gap-2 w-full"><span class=" i-tdesign-dashboard" />Dashboard</a>
+							</DropdownMenu.Item>
+							<DropdownMenu.Item>
 								<Button variant="destructive" class="inline-flex items-center gap-2" on:click={() => logout()}
 									><span class="i-tdesign-user-arrow-right"></span>Log out</Button
 								>
