@@ -1,7 +1,6 @@
 <script lang="ts">
-	import type { GeoJSON, Map, TileLayer } from 'leaflet'
+	import type { GeoJSON, Map } from 'leaflet'
 	import { browser } from '$app/environment'
-	import L from 'leaflet'
 	import { onDestroy, onMount } from 'svelte'
 
 	interface GeoJSONWithBoundingBox extends GeoJSON.Feature<GeoJSON.Point> {
@@ -11,21 +10,21 @@
 	export let geoJSON: GeoJSONWithBoundingBox | null = null
 
 	let mapContainer: HTMLDivElement
-	let map: Map
-	let geoJSONLayer: GeoJSON
-	let updateGeoJSON: () => void
+	let map: Map | undefined
+	let geoJSONLayer: GeoJSON.Layer | undefined
+	let updateGeoJSON: (() => void) | undefined
 
 	onMount(async () => {
 		if (browser) {
-			const L = await import('leaflet')
+			const leaflet = await import('leaflet')
 			await import('leaflet/dist/leaflet.css')
 
 			updateGeoJSON = () => {
-				if (geoJSONLayer) {
+				if (geoJSONLayer && map) {
 					map.removeLayer(geoJSONLayer)
 				}
-				if (geoJSON) {
-					geoJSONLayer = L.geoJSON(geoJSON).addTo(map)
+				if (geoJSON && map) {
+					geoJSONLayer = leaflet.geoJSON(geoJSON).addTo(map)
 					map.flyToBounds(
 						[
 							[geoJSON.boundingbox[0], geoJSON.boundingbox[2]],
@@ -36,11 +35,13 @@
 				}
 			}
 
-			map = L.map(mapContainer).setView([0, 0], 2)
+			map = leaflet.map(mapContainer).setView([0, 0], 2)
 
-			L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-				attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-			} as L.TileLayerOptions).addTo(map)
+			leaflet
+				.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+					attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+				})
+				.addTo(map)
 
 			if (geoJSON) {
 				updateGeoJSON()
@@ -48,20 +49,22 @@
 		}
 	})
 
-	$: if (map && geoJSON) {
+	$: if (browser && map && geoJSON && updateGeoJSON) {
 		updateGeoJSON()
 	}
 
 	onDestroy(() => {
-		if (map) {
+		if (browser && map) {
 			map.remove()
 		}
 	})
 </script>
 
-<main>
-	<div class="border-2 border-black" bind:this={mapContainer}></div>
-</main>
+{#if browser}
+	<main>
+		<div class="border-2 border-black" bind:this={mapContainer}></div>
+	</main>
+{/if}
 
 <style>
 	div {
