@@ -17,8 +17,8 @@ export const load = async () => {
 			value: 'orders',
 			root: '/dash/orders',
 			links: [
-				{ title: '💰 Sales', href: '/dash/orders/sales', description: 'Manage your sales', public: true },
-				{ title: '🛍️ Purchases', href: '/dash/orders/purchases', description: 'View your purchases', public: true },
+				{ title: '💰 Sales', href: '/dash/orders/sales', description: 'Manage your sales' },
+				{ title: '🛍️ Purchases', href: '/dash/orders/purchases', description: 'View your purchases' },
 			],
 		},
 		// {
@@ -27,8 +27,8 @@ export const load = async () => {
 		//   value: 'address-book',
 		//   root: '/dash/address-book',
 		//   links: [
-		// 	{ title: '📍 All Addresses', href: '/dash/address-book/all', description: 'View all your addresses', public: true },
-		// 	{ title: '📍 Add New Address', href: '/dash/address-book/add', description: 'Add a new address', public: true },
+		// 	{ title: '📍 All Addresses', href: '/dash/address-book/all', description: 'View all your addresses'},
+		// 	{ title: '📍 Add New Address', href: '/dash/address-book/add', description: 'Add a new address'},
 		//   ],
 		// },
 		// {
@@ -37,8 +37,8 @@ export const load = async () => {
 		//   value: 'wishlist',
 		//   root: '/dash/wishlist',
 		//   links: [
-		// 	{ title: '❤️ All Wishlist Items', href: '/dash/wishlist/all', description: 'View all your wishlist items', public: true },
-		// 	{ title: '❤️ Add to Wishlist', href: '/dash/wishlist/add', description: 'Add a new item to your wishlist', public: true },
+		// 	{ title: '❤️ All Wishlist Items', href: '/dash/wishlist/all', description: 'View all your wishlist items'},
+		// 	{ title: '❤️ Add to Wishlist', href: '/dash/wishlist/add', description: 'Add a new item to your wishlist'},
 		//   ],
 		// },
 	]
