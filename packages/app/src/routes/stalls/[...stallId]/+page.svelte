@@ -128,7 +128,7 @@
 	<div class="flex w-full flex-col min-h-[65vh] gap-12 mb-12">
 		{#if stallResponse}
 			{#if stallResponse.headerImage}
-				<img src={stallResponse.headerImage} alt="profile" class="border-black border-2 object-cover w-full min-h-[25vh]" />
+				<img src={stallResponse.headerImage} alt="profile" class="border-black border-2 object-cover w-full max-h-[25vh]" />
 			{:else}
 				<ImgPlaceHolder width={1600} height={300} imageType="manual" fillColor={stringToHexColor(stall.id)} />
 			{/if}
