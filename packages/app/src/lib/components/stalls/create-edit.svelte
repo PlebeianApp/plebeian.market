@@ -2,7 +2,9 @@
 	import type { NDKTag } from '@nostr-dev-kit/ndk'
 	import type { RichShippingInfo } from '$lib/server/shipping.service'
 	import type { RichStall } from '$lib/server/stalls.service'
+	import type { GeoJSON } from 'geojson'
 	import { NDKEvent } from '@nostr-dev-kit/ndk'
+	import { browser } from '$app/environment'
 	import { page } from '$app/stores'
 	import SingleImage from '$lib/components/settings/editable-image.svelte'
 	import { Button } from '$lib/components/ui/button/index.js'
@@ -16,6 +18,7 @@
 	import { createStallFromNostrEvent, updateStallFromNostrEvent } from '$lib/fetch/stalls.mutations'
 	import ndkStore from '$lib/stores/ndk'
 	import { checkIfUserExists, shouldRegister, unixTimeNow } from '$lib/utils'
+	import geohash from 'ngeohash'
 	import { createEventDispatcher, onMount, tick } from 'svelte'
 	import { get } from 'svelte/store'
 
@@ -23,12 +26,103 @@
 	import { createId } from '@plebeian/database/utils'
 
 	import { stallEventSchema } from '../../../schema/nostr-events'
+	import Leaflet from '../leaflet.svelte'
+
+	interface GeoJSONWithBoundingBox extends GeoJSON.Feature<GeoJSON.Point> {
+		boundingbox: [number, number, number, number]
+	}
 
 	const {
 		appSettings: { allowRegister, defaultCurrency },
 	} = $page.data
 
 	export let stall: RichStall | null = null
+
+	let locationSearchOpen = false
+	let shippingFromInput = ''
+	let selectedLocation: Location | null = null
+
+	let geohashOfSelectedGeometry: string | null = null
+
+	let locationResults: Location[] = []
+	let mapGeoJSON: GeoJSONWithBoundingBox | null = null
+
+	interface Location {
+		id: string
+		display_name: string
+		lat: string
+		lon: string
+		boundingbox: [number, number, number, number]
+	}
+
+	const calculateGeohashAccuracy = (boundingbox: [number, number, number, number]): number => {
+		const [minLat, maxLat, minLon, maxLon] = boundingbox.map(Number)
+		const latDiff = maxLat - minLat
+		const lonDiff = maxLon - minLon
+		const maxDiff = Math.max(latDiff, lonDiff)
+
+		if (maxDiff < 0.0001) return 9 // ~5m
+		if (maxDiff < 0.001) return 8 // ~40m
+		if (maxDiff < 0.01) return 7 // ~150m
+		if (maxDiff < 0.1) return 6 // ~1km
+		if (maxDiff < 1) return 5 // ~5km
+		return 4 // ~20km
+	}
+
+	const debounce = (func: (...args: unknown[]) => void, delay: number) => {
+		let timeoutId: ReturnType<typeof setTimeout>
+		return (...args: unknown[]) => {
+			clearTimeout(timeoutId)
+			timeoutId = setTimeout(() => func(...args), delay)
+		}
+	}
+
+	const searchLocation = async (query: string) => {
+		if (query.length < 3) return
+		const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
+		const data = await response.json()
+
+		locationResults = data.map((item: Location) => ({
+			id: item.place_id,
+			display_name: item.display_name,
+			lat: item.lat,
+			lon: item.lon,
+			boundingbox: item.boundingbox,
+		}))
+	}
+
+	const debouncedSearch = debounce(searchLocation, 300)
+
+	const handleLocationSelect = (locationId: string) => {
+		const location = locationResults.find((loc) => loc.id === locationId)
+
+		if (location) {
+			shippingFromInput = location.display_name
+			mapGeoJSON = {
+				type: 'Point',
+				coordinates: [parseFloat(location.lon), parseFloat(location.lat)],
+				boundingbox: location.boundingbox,
+			}
+
+			const [minLat, maxLat, minLon, maxLon] = location.boundingbox.map(Number)
+			const centerLat = (minLat + maxLat) / 2
+			const centerLon = (minLon + maxLon) / 2
+			const accuracy = calculateGeohashAccuracy(mapGeoJSON.boundingbox)
+
+			geohashOfSelectedGeometry = geohash.encode(centerLat, centerLon, accuracy)
+		}
+	}
+
+	function closeAndFocusTrigger(triggerId: string) {
+		locationSearchOpen = false
+		tick().then(() => {
+			document.getElementById(triggerId)?.focus()
+		})
+	}
+
+	$: if (browser && shippingFromInput) {
+		debouncedSearch(shippingFromInput)
+	}
 
 	type Currency = (typeof CURRENCIES)[number]
 	type Shipping = (typeof stallEventSchema._type)['shipping'][0]
@@ -109,12 +203,6 @@
 		shippingMethods = shippingMethods.filter((s) => s.id !== id)
 	}
 
-	function closeAndFocusTrigger(triggerId: string) {
-		tick().then(() => {
-			document.getElementById(triggerId)?.focus()
-		})
-	}
-
 	const dispatch = createEventDispatcher<{
 		success: unknown
 	}>()
@@ -137,6 +225,9 @@
 
 		const tags: NDKTag[] = [['d', identifier]]
 		if (imageTag) tags.push(imageTag)
+        if (geohashOfSelectedGeometry) {
+            tags.push(['g', geohashOfSelectedGeometry])
+        }
 
 		const newEvent = new NDKEvent($ndkStore, {
 			kind: KindStalls,
@@ -191,8 +282,47 @@
 		<Textarea value={stall?.description} class="border-2 border-black" placeholder="Description" name="description" />
 	</div>
 	<div class="grid w-full items-center gap-1.5">
-		<Label for="from" class="font-bold">Shipping From (Optional)</Label>
-		<Input class="border-2 border-black" type="text" name="from" placeholder="e.g. London" />
+		<div class="flex flex-row justify-between">
+			<Label for="from" class="font-bold">Shipping From (Optional)</Label>
+			{#if geohashOfSelectedGeometry}
+				<small class="ml-2 text-gray-500">Geohash: {geohashOfSelectedGeometry}</small>
+			{:else}
+				<small class="ml-2 text-gray-500">No geohash available</small>
+			{/if}
+		</div>
+		<Leaflet geoJSON={mapGeoJSON} />
+		<Popover.Root bind:open={locationSearchOpen} let:ids>
+			<Popover.Trigger asChild let:builder>
+				<Button
+					builders={[builder]}
+					variant="outline"
+					role="combobox"
+					aria-expanded={locationSearchOpen}
+					class="w-full justify-between border-2 border-black"
+				>
+					{selectedLocation?.display_name ?? 'Select a location...'}
+				</Button>
+			</Popover.Trigger>
+			<Popover.Content class="w-2/4 p-0">
+				<Command.Root>
+					<Command.Input placeholder="Search location..." bind:value={shippingFromInput} />
+					<Command.Empty>No location found.</Command.Empty>
+					<Command.Group>
+						{#each locationResults as location}
+							<Command.Item
+								value={location.display_name}
+								onSelect={() => {
+									handleLocationSelect(location.id)
+									closeAndFocusTrigger(ids.trigger)
+								}}
+							>
+								{location.display_name}
+							</Command.Item>
+						{/each}
+					</Command.Group>
+				</Command.Root>
+			</Popover.Content>
+		</Popover.Root>
 	</div>
 
 	<div class="grid w-full items-center gap-1.5">
