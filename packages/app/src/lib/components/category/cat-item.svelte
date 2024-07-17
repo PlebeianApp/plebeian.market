@@ -8,7 +8,7 @@
 	const { name, productCount } = category
 </script>
 
-<a href={`/cat/${name}`}>
+<a href={`/category/${name}`}>
 	<Card.Root class="cursor-pointer border-4 border-black bg-transparent text-black">
 		<ImgPlaceHolder imageType={'thumbnail'} />
 		<Card.Footer class="flex items-start justify-between p-4">

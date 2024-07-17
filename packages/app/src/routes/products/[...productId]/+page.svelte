@@ -157,7 +157,7 @@
 						{toDisplayProducts[0].description}
 					</p>
 					<!-- {#each productCats as cat}
-					<a href={`/cat/${cat.id}`}>
+					<a href={`/category/${cat.id}`}>
 						<Badge>{cat.name}</Badge>
 					</a>
 				{/each} -->

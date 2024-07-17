@@ -10,7 +10,7 @@
 <Button
 	class="cursor-pointer border border-gray flex justify-start items-center p-4 font-bold"
 	variant="outline"
-	href={userId ? `/cat/${cat.name}/${userId}` : `/cat/${cat.name}`}
+	href={userId ? `/category/${cat.name}/${userId}` : `/category/${cat.name}`}
 >
 	<div class="flex items-center gap-2 w-full justify-between">
 		<section class=" inline-flex items-center gap-2">
