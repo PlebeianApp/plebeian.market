@@ -25,5 +25,5 @@ export const stallsSub: NDKEventStore<ExtendedBaseType<NDKEvent>> = ndk.storeSub
 	{ kinds: [KindStalls], limit: 25 },
 	{ closeOnEose: true, autoStart: false },
 )
-
+// FIXME problem of missing "d" tag is here
 export const validStalls = derived(stallsSub, ($stallsSub) => $stallsSub.map(normalizeStallData).filter((stall) => stall !== null))
