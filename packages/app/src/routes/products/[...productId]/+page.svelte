@@ -129,10 +129,18 @@
 						</Carousel.Content>
 						<Carousel.Previous class="ml-14" />
 						<Carousel.Next class="mr-14" />
-						<div class="py-2 text-center text-sm text-muted-foreground">
-							Image {current} of {count}
-						</div>
 					</Carousel.Root>
+					<div class="py-2 text-center text-sm text-muted-foreground overflow-auto flex">
+						<!-- Image {current} of {count} -->
+						{#each sortedImages as item, i}
+							<button
+								class={cn('w-32 object-cover aspect-square cursor-pointer p-1', i === current - 1 ? 'border border-primary' : null)}
+								on:click={() => api?.scrollTo(i)}
+							>
+								<img src={item.imageUrl} alt="" />
+							</button>
+						{/each}
+					</div>
 				{:else}
 					<ImgPlaceHolder imageType={'main'} />
 				{/if}

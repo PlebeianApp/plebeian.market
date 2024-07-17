@@ -128,14 +128,13 @@
 		{#if stallResponse}
 			{#if stallResponse.image}
 				<div class="border-black border-2 w-full h-[25vh] relative overflow-hidden">
-					<img src={stallResponse.image} alt="profile" class="absolute top-0 left-0 w-full h-full object-cover" />
+					<img src={stallResponse.image} alt="profile" class="absolute top-0 left-0 w-full h-full object-cover object-top" />
 				</div>
 			{:else}
-				<div class="border-black border-2 w-full h-[25vh] relative overflow-hidden">
-					<div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0;">
-						<ImgPlaceHolder imageType="big" fillColor={stringToHexColor(stall.id)} />
-					</div>
-				</div>
+				<div
+					style={`background-color: ${stringToHexColor(stall.id)}`}
+					class={`border-black w-full border-2 h-[15vh] relative overflow-hidden`}
+				/>
 			{/if}
 
 			<h1>{stallResponse.name}</h1>
