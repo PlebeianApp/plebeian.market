@@ -3,7 +3,6 @@
 	import type { DisplayProduct } from '$lib/server/products.service'
 	import type { RichStall } from '$lib/server/stalls.service'
 	import { NDKEvent } from '@nostr-dev-kit/ndk'
-	import ImgPlaceHolder from '$lib/components/product/imgPlaceHolder.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
 	import * as Accordion from '$lib/components/ui/accordion'
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar'
@@ -21,7 +20,7 @@
 		normalizeStallData,
 		setNostrData,
 	} from '$lib/nostrSubs/utils'
-	import { openDrawerForProduct } from '$lib/stores/drawer-ui'
+	import { openDrawerForStall } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
 	import { getEventCoordinates, stringToHexColor } from '$lib/utils'
 	import { onMount } from 'svelte'
@@ -191,7 +190,7 @@
 			</div>
 
 			{#if isMyStall}
-				<Button class="mt-4" on:click={() => openDrawerForProduct(stall.id)}>Edit stall</Button>
+				<Button class="mt-4" on:click={() => openDrawerForStall(stall.id)}>Edit stall</Button>
 			{/if}
 		{:else}
 			<section class=" flex flex-col gap-2">

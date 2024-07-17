@@ -235,6 +235,9 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 								eventKind: productEvent.kind!,
 							})),
 						)
+						.onConflictDoNothing({
+						target: [eventTags.tagName, eventTags.tagValue, eventTags.eventId]
+					})
 						.execute()
 				}
 
@@ -339,7 +342,9 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 					eventKind: productEvent.kind!,
 				})),
 			)
-			.onConflictDoNothing()
+			.onConflictDoNothing({
+				target: [eventTags.tagName, eventTags.tagValue, eventTags.eventId]
+			})
 			.execute()
 	}
 

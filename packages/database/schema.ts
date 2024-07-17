@@ -243,14 +243,12 @@ export const eventTags = sqliteTable(
 			.notNull(),
 		eventKind: integer('event_kind').notNull(),
 	},
-	() => {
+	(t) => {
 		return {
-			pk: eventTagsPrimaryKey,
+			pk: primaryKey({ columns: [t.tagName, t.tagValue, t.eventId] }),
 		}
 	},
 )
-
-export const eventTagsPrimaryKey: PrimaryKeyBuilder = primaryKey({ columns: [eventTags.tagName, eventTags.tagValue, eventTags.eventId] })
 
 // Products
 export const products = sqliteTable('products', {
