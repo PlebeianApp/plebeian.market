@@ -34,7 +34,7 @@
 	type Shipping = (typeof stallEventSchema._type)['shipping'][0]
 
 	let currency: Currency = (stall?.currency as Currency) ?? defaultCurrency ?? 'BTC'
-	let headerImage = stall?.headerImage
+	let headerImage = stall?.image
 
 	class ShippingMethod implements Shipping {
 		id: string
@@ -153,7 +153,7 @@
 		if (_shouldRegister) {
 			const nostrEvent = await newEvent.toNostrEvent()
 			if (stall) {
-				await get(updateStallFromNostrEvent).mutateAsync([`${KindStalls}:${userId}:${identifier}`, nostrEvent])
+				await get(updateStallFromNostrEvent).mutateAsync([stall.id, nostrEvent])
 			} else {
 				await get(createStallFromNostrEvent).mutateAsync(nostrEvent)
 			}
@@ -179,7 +179,7 @@
 <form class="flex flex-col gap-4 grow" on:submit|preventDefault={create}>
 	<div class="grid w-full items-center gap-1.5">
 		<Label for="userImage" class="font-bold">Header image</Label>
-		<SingleImage src={headerImage ?? stall?.headerImage} on:save={handleSaveBannerImage} />
+		<SingleImage src={headerImage ?? stall?.image} on:save={handleSaveBannerImage} />
 	</div>
 
 	<div class="grid w-full items-center gap-1.5">

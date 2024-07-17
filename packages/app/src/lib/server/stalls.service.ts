@@ -42,7 +42,7 @@ export type RichStall = {
 	productCount?: number
 	// orderCount?: number
 	paymentMethods?: PaymentDetail[]
-	headerImage?: string
+	image?: string
 	identifier: string
 	shipping: Partial<RichShippingInfo>[]
 }
@@ -53,7 +53,7 @@ export type DisplayStall = {
 	description: string
 	currency: string
 	createDate: string
-	headerImage?: string
+	image?: string
 	userId: string
 	shipping: Partial<RichShippingInfo>[]
 }
@@ -110,7 +110,7 @@ const resolveStalls = async (stall: Stall): Promise<RichStall> => {
 	// 		.execute()
 	// ).map((order) => order.count)
 
-	const [headerImage] = await db
+	const [image] = await db
 		.select()
 		.from(eventTags)
 		.where(and(eq(eventTags.eventId, stall.id), eq(eventTags.tagName, 'image')))
@@ -140,7 +140,7 @@ const resolveStalls = async (stall: Stall): Promise<RichStall> => {
 		productCount,
 		// orderCount,
 		paymentMethods,
-		headerImage: headerImage?.tagValue ?? undefined,
+		image: image?.tagValue ?? undefined,
 		identifier: stall.id.split(':')[2],
 		shipping: shippingInfo,
 	}
@@ -182,6 +182,7 @@ export type StallInfo = {
 	createDate: string
 	userId: string
 	products: DisplayProduct[]
+	image?: string
 }
 
 export const getStallById = async (id: string): Promise<StallInfo> => {
@@ -202,6 +203,12 @@ export const getStallById = async (id: string): Promise<StallInfo> => {
 	}
 	const stallProducts = await getProductsByStallId(uniqueStall.id)
 
+	const [image] = await db
+		.select()
+		.from(eventTags)
+		.where(and(eq(eventTags.eventId, id), eq(eventTags.tagName, 'image')))
+		.execute()
+
 	const stallInfo = {
 		id: uniqueStall.id,
 		name: uniqueStall.name,
@@ -209,6 +216,7 @@ export const getStallById = async (id: string): Promise<StallInfo> => {
 		currency: uniqueStall.currency,
 		createDate: format(uniqueStall.createdAt, standardDisplayDateFormat),
 		userId: ownerRes.userId,
+		image: image?.tagValue ?? undefined,
 		products: stallProducts,
 	}
 
@@ -385,15 +393,15 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
 			.where(eq(stalls.id, stallId))
 			.returning()
 
-		const [headerImage] = await db
+		const [image] = await db
 			.select()
 			.from(eventTags)
-			.where(and(eq(eventTags.eventId, stallEvent.id), eq(eventTags.tagName, 'image')))
+			.where(and(eq(eventTags.eventId, stallId), eq(eventTags.tagName, 'image')))
 			.execute()
 
 		const imageTag = customTagValue(stallEvent.tags, 'image')[0]
 
-		if (imageTag && headerImage.tagValue !== imageTag) {
+		if (imageTag && image.tagValue !== imageTag) {
 			await db
 				.update(eventTags)
 				.set({
@@ -540,7 +548,7 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
 			description: stallResult.description,
 			currency: stallResult.currency,
 			createDate: format(stallResult.createdAt, standardDisplayDateFormat),
-			headerImage: headerImage?.tagValue ?? undefined,
+			image: image?.tagValue ?? undefined,
 			userId: stallResult.userId,
 			shipping: parsedStall.shipping ?? [],
 		} as DisplayStall
@@ -549,6 +557,7 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
 		return null
 	}
 }
+
 export const deleteStall = async (stallId: string, userId: string): Promise<string> => {
 	const stallResult = await db.query.stalls.findFirst({
 		where: and(eq(stalls.id, stallId), eq(stalls.userId, userId)),

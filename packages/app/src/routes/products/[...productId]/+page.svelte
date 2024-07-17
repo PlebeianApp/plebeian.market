@@ -1,11 +1,13 @@
 <script lang="ts">
 	import type { NDKUserProfile } from '@nostr-dev-kit/ndk'
+	import type { CarouselAPI } from '$lib/components/ui/carousel/context'
 	import type { DisplayProduct } from '$lib/server/products.service'
 	import { beforeNavigate } from '$app/navigation'
 	import Spinner from '$lib/components/assets/spinner.svelte'
 	import ImgPlaceHolder from '$lib/components/product/imgPlaceHolder.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
 	import Button from '$lib/components/ui/button/button.svelte'
+	import * as Carousel from '$lib/components/ui/carousel'
 	import Input from '$lib/components/ui/input/input.svelte'
 	import Separator from '$lib/components/ui/separator/separator.svelte'
 	import * as Tabs from '$lib/components/ui/tabs/index.js'
@@ -20,6 +22,10 @@
 	import { onMount } from 'svelte'
 
 	import type { PageData } from './$types'
+
+	let api: CarouselAPI
+	let count = 0
+	let current = 0
 
 	export let data: PageData
 	$: ({
@@ -56,7 +62,13 @@
 		}
 	}
 
-	let selectedImage = 0
+	$: if (api) {
+		count = api.scrollSnapList().length
+		current = api.selectedScrollSnap() + 1
+		api.on('select', () => {
+			current = api.selectedScrollSnap() + 1
+		})
+	}
 
 	onMount(async () => {
 		if (!productRes.exist && productRes.id) {
@@ -107,17 +119,20 @@
 			<div class="flex flex-col gap-4">
 				{#if toDisplayProducts[0]?.images?.length}
 					{@const sortedImages = toDisplayProducts[0].images.slice().sort((a, b) => a.imageOrder - b.imageOrder)}
-					<img class="col-span-2 border-2 border-black p-1" src={sortedImages[selectedImage].imageUrl} alt="" />
-					<div class="flex flex-row gap-4">
-						{#each sortedImages as item, i}
-							<button
-								class={cn('w-40 aspect-square cursor-pointer p-1', i === selectedImage ? 'border border-primary' : null)}
-								on:click={() => (selectedImage = i)}
-							>
-								<img src={item.imageUrl} alt="" />
-							</button>
-						{/each}
-					</div>
+					<Carousel.Root bind:api>
+						<Carousel.Content>
+							{#each sortedImages as item, i}
+								<Carousel.Item>
+									<img class="w-full h-auto" src={item.imageUrl} alt="" />
+								</Carousel.Item>
+							{/each}
+						</Carousel.Content>
+						<Carousel.Previous class="ml-14" />
+						<Carousel.Next class="mr-14" />
+						<div class="py-2 text-center text-sm text-muted-foreground">
+							Image {current} of {count}
+						</div>
+					</Carousel.Root>
 				{:else}
 					<ImgPlaceHolder imageType={'main'} />
 				{/if}

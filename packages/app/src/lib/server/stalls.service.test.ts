@@ -103,7 +103,7 @@ describe('stalls service', () => {
 			userId: targetStall.userId,
 			currency: targetStall.currency,
 			description: targetStall.description,
-			headerImage: undefined,
+			image: expect.any(String),
 			name: 'Hello Stall changed',
 			shipping: expect.any(Array),
 		})

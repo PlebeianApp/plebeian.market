@@ -10,8 +10,6 @@
 	import Badge from '$lib/components/ui/badge/badge.svelte'
 	import { Button } from '$lib/components/ui/button'
 	import Skeleton from '$lib/components/ui/skeleton/skeleton.svelte'
-	import { KindStalls } from '$lib/constants'
-	import { createProductsFromNostrMutation } from '$lib/fetch/products.mutations'
 	import { createProductsByFilterQuery } from '$lib/fetch/products.queries'
 	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
@@ -25,7 +23,7 @@
 	} from '$lib/nostrSubs/utils'
 	import { openDrawerForProduct } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
-	import { getEventCoordinates, shouldRegister, stringToHexColor } from '$lib/utils'
+	import { getEventCoordinates, stringToHexColor } from '$lib/utils'
 	import { onMount } from 'svelte'
 
 	import type { PageData } from './$types'
@@ -62,6 +60,7 @@
 	$: {
 		if ($stallsQuery?.data) {
 			stallResponse = $stallsQuery?.data[0]
+			console.log(stallResponse)
 		}
 	}
 
@@ -127,10 +126,16 @@
 <main class="flex flex-col container text-black my-20">
 	<div class="flex w-full flex-col min-h-[65vh] gap-12 mb-12">
 		{#if stallResponse}
-			{#if stallResponse.headerImage}
-				<img src={stallResponse.headerImage} alt="profile" class="border-black border-2 object-cover w-full max-h-[25vh]" />
+			{#if stallResponse.image}
+				<div class="border-black border-2 w-full h-[25vh] relative overflow-hidden">
+					<img src={stallResponse.image} alt="profile" class="absolute top-0 left-0 w-full h-full object-cover" />
+				</div>
 			{:else}
-				<ImgPlaceHolder width={1600} height={300} imageType="manual" fillColor={stringToHexColor(stall.id)} />
+				<div class="border-black border-2 w-full h-[25vh] relative overflow-hidden">
+					<div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0;">
+						<ImgPlaceHolder imageType="big" fillColor={stringToHexColor(stall.id)} />
+					</div>
+				</div>
 			{/if}
 
 			<h1>{stallResponse.name}</h1>

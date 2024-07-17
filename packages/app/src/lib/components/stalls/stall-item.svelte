@@ -41,8 +41,8 @@
 	<Card.Content class="relative p-0 flex-grow truncate whitespace-normal">
 		{#if stall && stall.id}
 			<div class="h-[28vh]">
-				{#if stall.headerImage}
-					<img src={stall.headerImage} alt="stall" class="object-cover w-full h-full" />
+				{#if stall.image}
+					<img src={stall.image} alt="stall" class="object-cover w-full h-full" />
 				{:else}
 					<div class="object-cover w-full h-full">
 						<ImgPlaceHolder width={500} height={300} imageType={'manual'} fillColor={stringToHexColor(stall.id)} />
@@ -61,8 +61,8 @@
 	</Card.Content>
 	<a href={userNip05 ? `/stalls/${userNip05.toLocaleLowerCase()}/${identifier}` : `/stalls/${id?.replace(/^30017:/, '')}`}>
 		<Card.Footer class="flex flex-col items-start font-bold">
-			<span class="truncate text-2xl font-bold whitespace-normal">{name}</span>
-			<p class="h-20 overflow-hidden">
+			<span class="truncate text-xl font-bold whitespace-normal">{name}</span>
+			<p class="h-20 overflow-hidden text-sm font-light">
 				{#if description.length > 100}
 					{description.slice(0, 100)}...
 				{:else}
@@ -70,12 +70,12 @@
 				{/if}
 			</p>
 
-			<div class="flex flex-row justify-between w-full">
+			<div class="flex flex-row justify-between w-full text-sm">
 				<span class="font-bold whitespace-normal">Since: {createDate}</span>
 				<span class="whitespace-normal">Currency: {currency}</span>
 			</div>
 
-			<div class="flex flex-row justify-between w-full">
+			<div class="flex flex-row justify-between w-full text-sm">
 				{#if userName}
 					<span class="whitespace-normal">Owner: {userName}</span>
 				{/if}
