@@ -2,7 +2,7 @@
 	import { NostrBuildUploader } from '@nostrify/nostrify/uploaders'
 	import * as Collapsible from '$lib/components/ui/collapsible'
 	import * as Dialog from '$lib/components/ui/dialog/index.js'
-	import ndkStore from '$lib/stores/ndk'
+	import ndkStore, { nostrifySigner } from '$lib/stores/ndk'
 	import { createEventDispatcher } from 'svelte'
 	import { writable } from 'svelte/store'
 
@@ -34,8 +34,9 @@
 			const target = e.target as HTMLInputElement
 			const file = target.files?.[0]
 			if (file) {
+				console.log('uploading', $ndkStore.signer)
 				const uploader = new NostrBuildUploader({
-					signer: window.nostr,
+					signer: $nostrifySigner,
 				})
 				const [[_, url], ...tags] = await uploader.upload(file)
 				console.log(url, tags)

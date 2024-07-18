@@ -1,6 +1,7 @@
 import type { NDKCacheAdapter } from '@nostr-dev-kit/ndk'
 import NDKCacheAdapterDexie from '@nostr-dev-kit/ndk-cache-dexie'
 import NDKSvelte from '@nostr-dev-kit/ndk-svelte'
+import { NSecSigner } from '@nostrify/nostrify'
 import { writable } from 'svelte/store'
 
 let cacheAdapter: NDKCacheAdapter | undefined = undefined
@@ -31,5 +32,11 @@ export const ndk: NDKSvelte = new NDKSvelte({
 ndk.connect().then(() => console.log('ndk connected successfully'))
 
 const ndkStore = writable(ndk)
+
+export const nostrifySigner = writable(ndk.signer)
+
+ndkStore.subscribe(($ndk) => {
+	nostrifySigner.set(new NSecSigner($ndk.signer?.privateKey))
+})
 
 export default ndkStore

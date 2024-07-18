@@ -70,5 +70,6 @@
 	div {
 		height: 300px;
 		width: 100%;
+		z-index: 0;
 	}
 </style>
