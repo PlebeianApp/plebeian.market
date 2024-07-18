@@ -128,7 +128,6 @@
 						}
 
 						if (sEvent?.value && sEvent?.label) {
-							console.log('sEvent.label', sEvent.label)
 							paymentDetailEdit.stallId = sEvent.value
 							paymentDetailEdit.stallName = sEvent.label
 							paymentDetailEdit.isDefault = false
