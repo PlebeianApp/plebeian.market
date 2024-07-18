@@ -26,6 +26,7 @@
 	import { createId } from '@plebeian/database/utils'
 
 	import { stallEventSchema } from '../../../schema/nostr-events'
+	import Spinner from '../assets/spinner.svelte'
 	import Leaflet from '../leaflet.svelte'
 
 	interface GeoJSONWithBoundingBox extends GeoJSON.Feature<GeoJSON.Point> {
@@ -46,9 +47,11 @@
 
 	let locationResults: Location[] = []
 	let mapGeoJSON: GeoJSONWithBoundingBox | null = null
-
+	let isLoading = false
 	const debouncedSearch = debounce(async () => {
+		isLoading = true
 		locationResults = await searchLocation(shippingFromInput)
+		isLoading = false
 	}, 300)
 
 	const handleLocationSelect = (locationId: string) => {
@@ -259,6 +262,9 @@
 					class="w-full justify-between border-2 border-black"
 				>
 					{selectedLocation?.display_name ?? 'Select a location...'}
+					{#if isLoading}
+						<Spinner />
+					{/if}
 				</Button>
 			</Popover.Trigger>
 			<Popover.Content class="w-2/4 p-0">
@@ -272,6 +278,7 @@
 								onSelect={() => {
 									handleLocationSelect(location.id)
 									closeAndFocusTrigger(ids.trigger)
+									selectedLocation = location
 								}}
 							>
 								{location.display_name}

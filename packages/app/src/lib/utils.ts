@@ -337,7 +337,7 @@ export const searchLocation = async (query: string): Promise<Location[]> => {
 	if (!response || !Array.isArray(response)) return []
 	return response.map(
 		(item: Location): Location => ({
-			id: item.place_id,
+			id: item.id,
 			display_name: item.display_name,
 			lat: item.lat,
 			lon: item.lon,
