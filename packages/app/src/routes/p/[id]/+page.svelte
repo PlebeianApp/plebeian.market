@@ -171,9 +171,9 @@
 				</Avatar>
 
 				<div class="flex flex-row ml-[12vw] mt-8 justify-between">
-					<div class="flex flex-col">
+					<div class="flex flex-col max-w-[70%]">
 						<h2>{name}</h2>
-						<p>{userProfile.about}</p>
+						<p class="break-words overflow-hidden">{userProfile.about}</p>
 					</div>
 					<div class="flex flex-col">
 						<div class="flex flex-row gap-2">
