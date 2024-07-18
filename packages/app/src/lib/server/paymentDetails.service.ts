@@ -33,14 +33,19 @@ const unsetDefaultsForStall = async (stallId: string): Promise<void> => {
 }
 
 const enrichWithStallName = async (detail: PaymentDetail): Promise<RichPaymentDetail> => {
-	const stall = detail.stallId
-		? await db.query.stalls.findFirst({
-				where: (stalls) => eq(stalls.id, detail.stallId!),
-			})
-		: null
-	return {
-		...detail,
-		stallName: stall?.name || 'General',
+	if (detail.stallId) {
+		const stall = await db.query.stalls.findFirst({
+			where: (stalls) => (detail.stallId ? eq(stalls.id, detail.stallId) : undefined),
+		})
+		return {
+			...detail,
+			stallName: stall?.name || '',
+		}
+	} else {
+		return {
+			...detail,
+			stallName: 'General',
+		}
 	}
 }
 
@@ -48,7 +53,6 @@ export const getPaymentDetailsByUserId = async (userId: string): Promise<RichPay
 	const details = await db.query.paymentDetails.findMany({
 		where: eq(paymentDetails.userId, userId),
 	})
-
 	return await Promise.all(details.map(enrichWithStallName))
 }
 

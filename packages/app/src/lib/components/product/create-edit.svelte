@@ -47,12 +47,12 @@
 		if ($stallsQuery?.data) stalls = $stallsQuery.data
 	}
 
-	let currentStallId = product?.stallId
+	let currentStallId = forStall ?? product?.stallId
 
 	$: {
 		if (stalls?.length) {
 			if (currentStallId) {
-				;[stall] = stalls.filter((pStall) => pStall.identifier === currentStallId)
+				;[stall] = stalls.filter((pStall) => pStall.id === currentStallId)
 			} else {
 				stall = stalls[0]
 			}
@@ -296,8 +296,8 @@
 						<DropdownMenu.Root>
 							<DropdownMenu.Trigger asChild let:builder>
 								<Button variant="outline" class="border-2 border-black" builders={[builder]}>
-									{#if forStall}
-										{@const defaultStall = stalls.find((stall) => stall.id === forStall)}
+									{#if currentStallId}
+										{@const defaultStall = stalls.find((stall) => stall.id === currentStallId)}
 										{defaultStall ? defaultStall.name : 'Select a stall'}
 									{:else}
 										{stall?.name}

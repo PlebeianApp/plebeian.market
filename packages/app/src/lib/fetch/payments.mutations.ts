@@ -1,6 +1,7 @@
 import type { RichPaymentDetail } from '$lib/server/paymentDetails.service'
 import { createMutation } from '@tanstack/svelte-query'
 import ndkStore from '$lib/stores/ndk'
+import { toast } from 'svelte-sonner'
 import { get } from 'svelte/store'
 
 import { createRequest, queryClient } from './client'
@@ -69,8 +70,10 @@ export const updatePaymentMethodMutation = createMutation(
 						isDefault,
 					},
 				})
+				toast.success('Payment updated')
 				return pd
 			}
+			toast.error(`Payment not updated`)
 			return null
 		},
 		onSuccess: () => {

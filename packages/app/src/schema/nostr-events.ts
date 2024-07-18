@@ -1,3 +1,4 @@
+import { KindStalls } from '$lib/constants'
 import { z } from 'zod'
 
 import type { ProductTypes } from '@plebeian/database'
@@ -24,7 +25,9 @@ export const shippingObjectSchema = z.object({
 export const productEventSchema = z
 	.object({
 		id: z.string(),
-		stall_id: z.string(),
+		stall_id: z.string().refine((value) => !value.startsWith(KindStalls.toString()), {
+			message: `stallId must be and identifier ("d" tag)`,
+		}),
 		name: z.string(),
 		type: z.custom(productTypeValidator).optional(),
 		description: z.string().optional(),
