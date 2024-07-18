@@ -51,7 +51,7 @@ export const toDisplayProduct = async (product: Product): Promise<DisplayProduct
 		currency: product.currency,
 		quantity: product.quantity,
 		images: images,
-		stallId: product.stallId,
+		stallId: product.stallId.startsWith(KindStalls.toString()) ? product.stallId.split(':')[2] : product.stallId,
 	}
 }
 
