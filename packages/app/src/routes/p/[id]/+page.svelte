@@ -3,6 +3,7 @@
 	import type { DisplayProduct } from '$lib/server/products.service'
 	import type { RichStall } from '$lib/server/stalls.service'
 	import Pattern from '$lib/components/Pattern.svelte'
+	import ImgPlaceHolder from '$lib/components/product/imgPlaceHolder.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
 	import StallItem from '$lib/components/stalls/stall-item.svelte'
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar'
@@ -22,7 +23,7 @@
 	} from '$lib/nostrSubs/utils'
 	import { openDrawerForNewProduct, openDrawerForNewStall } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
-	import { copyToClipboard, getElapsedTimeInDays } from '$lib/utils'
+	import { copyToClipboard, getElapsedTimeInDays, stringToHexColor } from '$lib/utils'
 	import { npubEncode } from 'nostr-tools/nip19'
 	import { onMount } from 'svelte'
 	import { get } from 'svelte/store'
@@ -32,6 +33,7 @@
 	let userProfile: NDKUserProfile | null
 	let stalls: Partial<RichStall>[] | null
 	let toDisplayProducts: Partial<DisplayProduct>[]
+	let following = false
 
 	export let data: PageData
 	const {
@@ -118,6 +120,34 @@
 			}
 		}
 	})
+
+	const handleFollow = async () => {
+		const user = $ndkStore.getUser({ pubkey: id as string })
+		// await user.follow()
+	}
+
+	const handleUnfollow = async () => {
+		const user = $ndkStore.getUser({ pubkey: id as string })
+		// await user.unfollow()
+	}
+
+	const handleZap = async () => {
+		const user = $ndkStore.getUser({ pubkey: id as string })
+		// await user.zap()
+	}
+
+	const handleSendMessage = async () => {
+		const user = $ndkStore.getUser({ pubkey: id as string })
+		// await user.sendMessage()
+	}
+
+	const handleCreateStall = async () => {
+		openDrawerForNewStall()
+	}
+
+	const handleCreateProduct = async () => {
+		openDrawerForNewProduct()
+	}
 </script>
 
 {#if userProfile}
@@ -125,60 +155,81 @@
 	<div class="flex min-h-screen w-full flex-col bg-muted/40">
 		<div class="flex flex-col">
 			<main class="text-black">
-				<div class="relative flex w-full flex-col items-center bg-black py-20 text-center text-white">
-					<Pattern />
-					<div class="w-fit z-10 justify-center">
-						<div class="flex justify-center">
-							<Avatar class="h-20 w-20">
-								<AvatarImage src={image} alt="@shadcn" />
-								<AvatarFallback>{name}</AvatarFallback>
-							</Avatar>
-						</div>
-						<h2>{name}</h2>
-						<div class="flex items-center">
-							<Button variant="secondary" class="w-1/2 lg:w-auto">
-								<code class="truncate">{npubEncode(id)}</code>
-							</Button>
-							<Button on:click={() => copyToClipboard(npubEncode(id))}>Copy</Button>
-							{#if isMe}
-								<DropdownMenu.Root>
-									<DropdownMenu.Trigger><Button>Create...</Button></DropdownMenu.Trigger>
-									<DropdownMenu.Content>
-										<DropdownMenu.Group>
-											<DropdownMenu.Item on:click={openDrawerForNewStall}>Create stall</DropdownMenu.Item>
-											<DropdownMenu.Item on:click={openDrawerForNewProduct}>Create product</DropdownMenu.Item>
-										</DropdownMenu.Group>
-									</DropdownMenu.Content>
-								</DropdownMenu.Root>
-							{/if}
-						</div>
-					</div>
-				</div>
-				{#if stalls}
-					<div class="px-4 py-20 lg:px-12">
-						<div class="container">
-							<h2>Stalls</h2>
-							<div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-								{#each stalls as item}
-									<StallItem stall={item} />
-								{/each}
-							</div>
-						</div>
-					</div>
-				{/if}
+				<div class="px-4 py-20 lg:px-12">
+					<div class="container relative h-[45vh]">
+						{#if $userProfileQuery?.data?.banner}
+							<img src={$userProfileQuery?.data?.banner} alt="profile" class="border-black border-2 object-cover w-full h-[25vh]" />
+						{:else}
+							<ImgPlaceHolder width={1600} height={300} imageType="manual" fillColor={stringToHexColor($userProfileQuery?.data?.name)} />
+						{/if}
 
-				{#if toDisplayProducts}
-					<div class="px-4 py-20 lg:px-12">
-						<div class="container">
-							<h2>Products</h2>
-							<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-								{#each toDisplayProducts as item}
-									<ProductItem product={item} />
-								{/each}
+						<Avatar class="border-black border-2 h-24 w-24 absolute top-5/6 left-[10vw] transform -translate-x-1/2 -translate-y-1/2">
+							<AvatarImage src={image} alt="profile" />
+							<AvatarFallback>{name}</AvatarFallback>
+						</Avatar>
+
+						<div class="flex flex-row ml-[12vw] mt-8 justify-between">
+							<div class="flex flex-col">
+								<h2>{name}</h2>
+								<p>{$userProfileQuery?.data?.about}</p>
+							</div>
+							<div class="flex flex-col">
+								<div class="flex flex-row gap-2">
+									{#if isMe}
+										<DropdownMenu.Root>
+											<DropdownMenu.Trigger><Button>Create...</Button></DropdownMenu.Trigger>
+											<DropdownMenu.Content>
+												<DropdownMenu.Group>
+													<DropdownMenu.Item on:click={openDrawerForNewStall}>Create stall</DropdownMenu.Item>
+													<DropdownMenu.Item on:click={openDrawerForNewProduct}>Create product</DropdownMenu.Item>
+												</DropdownMenu.Group>
+											</DropdownMenu.Content>
+										</DropdownMenu.Root>
+									{/if}
+									<Button size="icon" variant="secondary" on:click={handleZap}>
+										<span class="i-mdi-dots-horizontal w-6 h-6" />
+									</Button>
+									<Button size="icon" variant="secondary" on:click={handleZap}>
+										<span class="i-mingcute-lightning-line w-6 h-6" />
+									</Button>
+									<Button size="icon" variant="secondary" on:click={handleSendMessage}>
+										<span class="i-mdi-message-bubble w-6 h-6" />
+									</Button>
+									{#if following}
+										<Button class="w-1/2 lg:w-auto" on:click={handleUnfollow}>Unfollow</Button>
+									{:else}
+										<Button class="w-1/2 lg:w-auto" on:click={handleFollow}>Follow</Button>
+									{/if}
+								</div>
 							</div>
 						</div>
 					</div>
-				{/if}
+					{#if stalls}
+						<div class="px-4 py-20 lg:px-12">
+							<div class="container">
+								<h2>Stalls</h2>
+								<div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+									{#each stalls as item}
+										<StallItem stall={item} />
+									{/each}
+								</div>
+							</div>
+						</div>
+					{/if}
+
+					{#if toDisplayProducts}
+						<div class="px-4 py-20 lg:px-12">
+							<div class="container">
+								<h2>Products</h2>
+								<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+									{#each toDisplayProducts as item}
+										<ProductItem product={item} />
+									{/each}
+								</div>
+							</div>
+						</div>
+					{/if}
+				</div>
 			</main>
 		</div>
 	</div>
