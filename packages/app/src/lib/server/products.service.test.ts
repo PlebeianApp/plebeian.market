@@ -94,7 +94,7 @@ describe('products service', () => {
 		const skSigner = new NDKPrivateKeySigner(devUser1.sk)
 		const identifier = createId()
 		const evContent = {
-			stall_id: stall.id,
+			stall_id: stall.id.split(':')[2],
 			name: 'Hello Product',
 			id: `${KindProducts}:${stall.userId}:${identifier}`,
 			type: 'simple',
@@ -130,7 +130,7 @@ describe('products service', () => {
 			createdAt: expect.any(String),
 			currency: 'USD',
 			description: 'Hello Description',
-			stallId: stall.id,
+			stallId: stall.id.split(':')[2],
 			identifier: identifier,
 			userId: devUser1.pk,
 			userNip05: expect.any(String),
@@ -146,7 +146,7 @@ describe('products service', () => {
 		const targetProduct = await getProductsByStallId(stall.id).then((products) => products[0])
 		const skSigner = new NDKPrivateKeySigner(devUser1.sk)
 		const evContent = {
-			stall_id: stall.id,
+			stall_id: stall.id.split(':')[2],
 			name: 'Hello Product changed',
 		}
 		const newEvent = new NDKEvent(new NDK({ signer: skSigner }), {
@@ -157,14 +157,13 @@ describe('products service', () => {
 			created_at: Math.floor(Date.now()) / 1000,
 			tags: [['d', targetProduct.id.split(':')[2]]],
 		})
-
 		const product = await updateProduct(targetProduct.id, newEvent as NostrEvent)
 
 		expect(product).toStrictEqual({
 			id: targetProduct.id,
 			createdAt: expect.any(String),
 			currency: targetProduct.currency,
-			stallId: stall.id,
+			stallId: stall.id.split(':')[2],
 			description: targetProduct.description,
 			images: expect.any(Array),
 			identifier: product.identifier,

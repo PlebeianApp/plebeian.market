@@ -10,6 +10,7 @@
 	import { userDataMutation } from '$lib/fetch/users.mutations'
 	import ndkStore from '$lib/stores/ndk'
 	import { nav_back } from '$lib/utils'
+	import { toast } from 'svelte-sonner'
 
 	import type { PageData } from './$types'
 	import { userEventSchema } from '../../../../schema/nostr-events'
@@ -37,8 +38,16 @@
 		const { data: filteredProfile } = userEventSchema.strip().safeParse(formObject)
 		filteredProfile?.id && delete (filteredProfile as NDKUserProfile).id
 		ndkUser.profile = filteredProfile as NDKUserProfile
-		if (userExist && filteredProfile) await $userDataMutation.mutateAsync(filteredProfile)
-		// await ndkUser.publish().then((data) => console.log(data))
+		if (userExist && filteredProfile) {
+			try {
+				const res = await $userDataMutation.mutateAsync(filteredProfile)
+				// await ndkUser.publish().then((data) => console.log(data))
+				toast.success('User data updated')
+			} catch (error) {
+				console.error(error)
+				toast.error('Failed to update user data')
+			}
+		}
 	}
 
 	const linkDetails = data.menuItems
