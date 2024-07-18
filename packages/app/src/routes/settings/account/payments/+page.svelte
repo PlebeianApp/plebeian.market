@@ -42,6 +42,7 @@
 	}
 
 	const handlePersistNewPaymentMethod = async () => {
+		console.log('selectedStall', selectedStall)
 		const res = await $persistPaymentMethodMutation.mutateAsync({
 			paymentDetails: newPaymentDetails as string,
 			paymentMethod: newPaymentMethodOpen as string,

@@ -33,12 +33,14 @@ const unsetDefaultsForStall = async (stallId: string): Promise<void> => {
 }
 
 const enrichWithStallName = async (detail: PaymentDetail): Promise<RichPaymentDetail> => {
-	const stall = await db.query.stalls.findFirst({
-		where: (stalls) => (detail.stallId ? eq(stalls.id, detail.stallId) : undefined),
-	})
+	const stall = detail.stallId
+		? await db.query.stalls.findFirst({
+				where: (stalls) => eq(stalls.id, detail.stallId!),
+			})
+		: null
 	return {
 		...detail,
-		stallName: stall?.name || '',
+		stallName: stall?.name || 'General',
 	}
 }
 

@@ -74,15 +74,15 @@
 				{/if}
 			</div>
 			<div class="flex flex-row gap-2 items-center mr-2">
-				{#if paymentDetail.stallName}
-					{#if paymentDetail.isDefault}
+				{#if paymentDetailEdit.stallId}
+					{#if paymentDetailEdit.isDefault}
 						<span
 							class="i-mdi-star
 							text-primary w-6 h-6"
 						/>
 					{/if}
 
-					<span class=" font-bold">{paymentDetail.stallName}</span>
+					<span class=" font-bold">{paymentDetailEdit.stallName}</span>
 					<span class="i-tdesign-store w-6 h-6" />
 				{:else}
 					<span class=" font-bold">General</span>
@@ -128,6 +128,7 @@
 						}
 
 						if (sEvent?.value && sEvent?.label) {
+							console.log('sEvent.label', sEvent.label)
 							paymentDetailEdit.stallId = sEvent.value
 							paymentDetailEdit.stallName = sEvent.label
 							paymentDetailEdit.isDefault = false
