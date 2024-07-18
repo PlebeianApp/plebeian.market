@@ -74,12 +74,16 @@
 		const { stallNostrRes } = await fetchUserStallsData(id)
 
 		if (stallNostrRes) {
-			const normalizedStallData = [...stallNostrRes].map(normalizeStallData).filter((stall): stall is Partial<RichStall> => stall !== null)
+			const normalizedStallData = [...stallNostrRes]
+				.map(normalizeStallData)
+				.filter((result) => result.data !== null)
+				.map((result) => result.data)
+
 			if (stalls?.length) {
-				const newStalls = normalizedStallData.filter((stall) => !stalls?.some((existingStall) => stall.id === existingStall.id))
-				stalls = [...stalls, ...newStalls]
+				const newStalls = normalizedStallData.filter((stall) => !stalls?.some((existingStall) => stall?.id === existingStall.id))
+				stalls = [...stalls, ...newStalls] as Partial<RichStall>[]
 			} else {
-				stalls = normalizedStallData
+				stalls = normalizedStallData as Partial<RichStall>[]
 			}
 		}
 
@@ -160,7 +164,7 @@
 							<h2>Stalls</h2>
 							<div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
 								{#each stalls as item}
-									<StallItem stall={item} />
+									<StallItem stallData={item} />
 								{/each}
 							</div>
 						</div>

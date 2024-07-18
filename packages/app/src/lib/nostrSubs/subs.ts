@@ -22,8 +22,6 @@ if (typeof window !== 'undefined') {
 }
 
 export const stallsSub: NDKEventStore<ExtendedBaseType<NDKEvent>> = ndk.storeSubscribe(
-	{ kinds: [KindStalls], limit: 25 },
+	{ kinds: [KindStalls] },
 	{ closeOnEose: true, autoStart: false },
 )
-// FIXME problem of missing "d" tag is here
-export const validStalls = derived(stallsSub, ($stallsSub) => $stallsSub.map(normalizeStallData).filter((stall) => stall !== null))

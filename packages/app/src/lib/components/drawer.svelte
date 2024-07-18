@@ -61,7 +61,7 @@
 		if (!userExist && $drawerUI.drawerType === 'stall') {
 			const { stallNostrRes: stallData } = await fetchStallData($drawerUI.id as string)
 			if (stallData) {
-				const result = normalizeStallData(stallData)
+				const result = normalizeStallData(stallData).data
 				if (result) {
 					currentStall = result
 				}

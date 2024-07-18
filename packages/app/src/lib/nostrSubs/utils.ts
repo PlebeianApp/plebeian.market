@@ -2,6 +2,7 @@ import type { NDKEvent, NDKUserProfile } from '@nostr-dev-kit/ndk'
 import type { DisplayProduct } from '$lib/server/products.service'
 import type { RichShippingInfo } from '$lib/server/shipping.service'
 import type { RichStall } from '$lib/server/stalls.service'
+import type { ZodError } from 'zod'
 import { NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk'
 import { KindProducts, KindStalls, standardDisplayDateFormat } from '$lib/constants'
 import { createProductsFromNostrMutation } from '$lib/fetch/products.mutations'
@@ -113,13 +114,13 @@ export async function handleProductNostrData(productsData: Set<NDKEvent>): Promi
 	return productsMutation ? true : false
 }
 
-export function normalizeStallData(nostrStall: NDKEvent): Partial<RichStall> | null {
-	const { tagD: identifier, coordinates: id } = getEventCoordinates(nostrStall)
+export function normalizeStallData(nostrStall: NDKEvent): { data: Partial<RichStall> | null; error: ZodError | null } {
+	if (!nostrStall.content) return { data: null, error: null }
 	const parsedStallContent = JSON.parse(nostrStall.content)
 	const parsedShipping: Partial<RichShippingInfo>[] =
 		parsedStallContent.shipping?.map((shipping: unknown) => {
-			const { data: shippingData, success } = shippingObjectSchema.safeParse(shipping)
-			if (!success) return null
+			const { data: shippingData, success, error: parseError } = shippingObjectSchema.safeParse(shipping)
+			if (!success) return { data: null, error: parseError }
 			return {
 				id: shippingData?.id,
 				name: shippingData?.name as string,
@@ -129,19 +130,19 @@ export function normalizeStallData(nostrStall: NDKEvent): Partial<RichStall> | n
 			} as RichShippingInfo
 		}) ?? []
 
-	try {
-		const { data, success } = stallEventSchema.safeParse(parsedStallContent)
-		if (!success) return null
-		return {
+	const { data, success, error: parseError } = stallEventSchema.passthrough().safeParse(parsedStallContent)
+	if (!success && data) return { data, error: parseError }
+	const { tagD: identifier, coordinates: id } = getEventCoordinates(nostrStall)
+	return {
+		data: {
 			...data,
 			createDate: format(nostrStall.created_at ? nostrStall.created_at * 1000 : '', standardDisplayDateFormat),
 			identifier,
 			id,
 			userId: nostrStall.pubkey,
 			shipping: parsedShipping,
-		}
-	} catch (e) {
-		return null
+		},
+		error: null,
 	}
 }
 

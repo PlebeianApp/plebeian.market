@@ -46,12 +46,13 @@
 				console.log(stallNostrRes)
 				const normalizedStallData = [...stallNostrRes]
 					.map(normalizeStallData)
-					.filter((stall): stall is Partial<RichStall> => stall !== null)
+					.filter((result) => result.data !== null)
+					.map((result) => result.data)
 				if (stalls?.length) {
 					const newStalls = normalizedStallData.filter((stall) => !stalls?.some((existingStall) => stall.id === existingStall.id))
-					stalls = [...stalls, ...newStalls]
+					stalls = [...stalls, ...newStalls] as Partial<RichStall>[]
 				} else {
-					stalls = normalizedStallData
+					stalls = normalizedStallData as Partial<RichStall>[]
 				}
 			}
 		}

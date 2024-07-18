@@ -34,7 +34,7 @@
 						<h2 class="relative z-10 flex gap-2 items-center justify-center">Stalls</h2>
 						<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
 							{#each stalls as stall}
-								<StallItem {stall} />
+								<StallItem stallData={stall} />
 							{/each}
 						</div>
 					</div>

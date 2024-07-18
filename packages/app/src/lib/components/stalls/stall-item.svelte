@@ -1,6 +1,9 @@
 <script lang="ts">
+	import type { NDKEvent } from '@nostr-dev-kit/ndk'
 	import type { RichStall } from '$lib/server/stalls.service'
+	import type { ZodError } from 'zod'
 	import * as Card from '$lib/components/ui/card/index'
+	import { normalizeStallData } from '$lib/nostrSubs/utils'
 	import { openDrawerForNewProductForStall, openDrawerForStall } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
 	import { truncateString } from '$lib/utils'
@@ -9,69 +12,92 @@
 
 	import { Button } from '../ui/button'
 
-	export let stall: Partial<RichStall>
+	export let stallData: Partial<RichStall> | NDKEvent
 
-	const { name, createDate, description, currency, productCount, identifier, id } = stall
-	let { userName, userNip05 } = stall
+	let stall: Partial<RichStall>
+	let parseError: ZodError | null
+	let isMyStall: boolean
 
-	let isMyStall = false
+	async function handleNDKEvent(event: NDKEvent) {
+		const authorPk = event.author.pubkey
+		const { data: parsedStall, error: _parseError } = normalizeStallData(event)
+		parseError = _parseError
 
-	$: {
-		if ($ndkStore.activeUser?.pubkey) {
-			isMyStall = $ndkStore.activeUser.pubkey === id?.split(':')[1]
+		if (!parsedStall || !parsedStall.shipping || !parsedStall.name) return
+
+		isMyStall = $ndkStore.activeUser?.pubkey === authorPk
+		const user = $ndkStore.getUser({ pubkey: authorPk })
+		const userProfile = await user.fetchProfile()
+
+		if (userProfile) {
+			parsedStall.userName = userProfile.name || userProfile.displayName || ''
+			parsedStall.userNip05 = userProfile.nip05
 		}
+
+		stall = parsedStall
 	}
 
 	onMount(async () => {
-		if (!userName || !userNip05) {
-			const user = $ndkStore.getUser({
-				pubkey: id?.split(':')[1],
-			})
-			const userProfile = await user.fetchProfile()
-			if (userProfile) {
-				userName = userProfile?.name ?? userProfile.displayName
-				userNip05 = userProfile.nip05
-			}
+		if ('kind' in stallData) {
+			await handleNDKEvent(stallData as NDKEvent)
+		} else {
+			isMyStall = $ndkStore.activeUser?.pubkey === stall.userId
+			stall = stall
 		}
 	})
 </script>
 
-<Card.Root class="relative grid grid-rows-[auto_1fr_auto] h-[34vh] gap-4 border-4 border-black bg-transparent text-black group">
-	<a href={userNip05 ? `/stalls/${userNip05.toLocaleLowerCase()}/${identifier}` : `/stalls/${id?.replace(/^30017:/, '')}`}>
-		<Card.Header class="flex flex-col justify-between py-2 pb-0">
-			<span class="truncate text-2xl font-bold whitespace-normal">{name}</span>
-			<span class="font-bold whitespace-normal">Since: {createDate}</span>
-		</Card.Header>
-	</a>
-	<Card.Content class="relative flex-grow truncate whitespace-normal">
-		<p>{description}</p>
-		{#if isMyStall}
-			<div
-				class="flex flex-col gap-2 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-black font-bold opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-			>
-				<Button class="bg-white" on:click={() => openDrawerForStall(id)}>Edit stall</Button>
-				<Button class="bg-white" on:click={() => openDrawerForNewProductForStall(id)}>Add product</Button>
-			</div>
-		{/if}
-	</Card.Content>
-	<a href={userNip05 ? `/stalls/${userNip05.toLocaleLowerCase()}/${identifier}` : `/stalls/${id?.replace(/^30017:/, '')}`}>
-		<Card.Footer class="flex flex-col items-start font-bold">
-			<div class="flex items-center gap-1">
-				<div class="flex flex-col">
-					{#if userName}
-						<span class="whitespace-normal">Owner: {userName}</span>
-					{/if}
-					{#if userNip05}
-						<small class="truncate font-light whitespace-normal">{userNip05}</small>
-					{:else}
-						<small class="font-light truncate whitespace-normal">@{truncateString(npubEncode(stall.userId))}</small>
-					{/if}
+{#if stall}
+	<Card.Root class="relative grid grid-rows-[auto_1fr_auto] h-[34vh] gap-4 border-4 border-black bg-transparent text-black group">
+		<a
+			href={stall.userNip05
+				? `/stalls/${stall.userNip05.toLocaleLowerCase()}/${stall.identifier}`
+				: `/stalls/${stall.id?.replace(/^30017:/, '')}`}
+		>
+			<Card.Header class="flex flex-col justify-between py-2 pb-0">
+				{#if parseError}
+					{JSON.stringify(parseError)}
+				{/if}
+				{#if stall.name}
+					<span class="truncate text-2xl font-bold whitespace-normal">{stall.name}</span>
+				{/if}
+				<span class="font-bold whitespace-normal">Since: {stall.createDate}</span>
+			</Card.Header>
+		</a>
+		<Card.Content class="relative flex-grow truncate whitespace-normal">
+			<p>{stall.description}</p>
+			{#if isMyStall && stall.id}
+				<div
+					class="flex flex-col gap-2 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-black font-bold opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+				>
+					<Button class="bg-white" on:click={() => openDrawerForStall(String(stall.id))}>Edit stall</Button>
+					<Button class="bg-white" on:click={() => openDrawerForNewProductForStall(String(stall.id))}>Add product</Button>
 				</div>
-			</div>
-			<span class="whitespace-normal">Currency: {currency}</span>
-			{#if productCount}
-				<span class="whitespace-normal">{productCount} products</span>
 			{/if}
-		</Card.Footer>
-	</a>
-</Card.Root>
+		</Card.Content>
+		<a
+			href={stall.userNip05
+				? `/stalls/${stall.userNip05.toLocaleLowerCase()}/${stall.identifier}`
+				: `/stalls/${stall.id?.replace(/^30017:/, '')}`}
+		>
+			<Card.Footer class="flex flex-col items-start font-bold">
+				<div class="flex items-center gap-1">
+					<div class="flex flex-col">
+						{#if stall.userName}
+							<span class="whitespace-normal">Owner: {stall.userName}</span>
+						{/if}
+						{#if stall.userNip05}
+							<small class="truncate font-light whitespace-normal">{stall.userNip05}</small>
+						{:else}
+							<small class="font-light truncate whitespace-normal">@{truncateString(npubEncode(stall.id?.split(':')[1]))}</small>
+						{/if}
+					</div>
+				</div>
+				<span class="whitespace-normal">Currency: {stall.currency}</span>
+				{#if stall.productCount}
+					<span class="whitespace-normal">{stall.productCount} products</span>
+				{/if}
+			</Card.Footer>
+		</a>
+	</Card.Root>
+{/if}

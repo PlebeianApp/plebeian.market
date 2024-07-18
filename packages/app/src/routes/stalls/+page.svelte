@@ -17,7 +17,7 @@
 					<h2>Stalls</h2>
 					<div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
 						{#each stalls as item}
-							<StallItem stall={item} />
+							<StallItem stallData={item} />
 						{/each}
 					</div>
 				</div>
