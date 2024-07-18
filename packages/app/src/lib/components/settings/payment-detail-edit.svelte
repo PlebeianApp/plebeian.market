@@ -14,7 +14,6 @@
 	import { Label } from '../ui/label'
 
 	export let paymentDetail: RichPaymentDetail
-
 	export let paymentDetailsMethod: PaymentDetailsMethod
 
 	let paymentDetailEdit = paymentDetail
@@ -47,6 +46,7 @@
 			paymentDetailId: paymentDetailEdit.id,
 			isDefault: paymentDetailEdit.isDefault,
 		})
+
 		inEdit = false
 	}
 </script>
@@ -178,7 +178,7 @@
 		</Button>
 
 		{#if inEdit}
-			<Button id="signInSubmit" type="submit" class="border-none" variant="ghost" size="sm" on:click={() => handleUpdatePaymentMethod()}>
+			<Button id="signInSubmit" type="submit" size="sm" on:click={() => handleUpdatePaymentMethod()}>
 				<span class="i-mdi-content-save-outline w-6 h-6 mr-1" /><span>Save</span>
 			</Button>
 		{/if}
