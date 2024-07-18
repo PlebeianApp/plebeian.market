@@ -59,7 +59,6 @@
 	$: {
 		if ($stallsQuery?.data) {
 			stallResponse = $stallsQuery?.data[0]
-			console.log(stallResponse)
 		}
 	}
 

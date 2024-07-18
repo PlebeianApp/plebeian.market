@@ -41,7 +41,7 @@
 {#if !$ndkStore.activeUser}
 	<Dialog.Root bind:open={authDialogOpen}>
 		<Dialog.Trigger class="flex items-center cursor-pointer gap-2 w-full">
-			<span class="i-tdesign-user-1" />Log in
+			<Button><span class="i-tdesign-user-1" />Log in</Button>
 		</Dialog.Trigger>
 		<Dialog.Content class="max-w-[425px] gap-0 p-0 text-black">
 			<Dialog.Header class="relative w-full bg-black text-center text-white py-8 flex items-center">

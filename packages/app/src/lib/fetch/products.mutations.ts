@@ -9,7 +9,7 @@ import { shouldRegister, unixTimeNow } from '$lib/utils'
 import { get } from 'svelte/store'
 
 import type { ProductImage } from '@plebeian/database'
-import { createId } from '@plebeian/database/utils'
+import { createSlugId } from '@plebeian/database/utils'
 
 import { createRequest, queryClient } from './client'
 
@@ -41,15 +41,19 @@ export const createProductMutation = createMutation(
 			const $ndkStore = get(ndkStore)
 			if (!$ndkStore.activeUser?.pubkey) return
 			const formData = new FormData(sEvent.currentTarget as HTMLFormElement)
-			const identifier = createId()
+			const productTile = String(formData.get('title'))
+			const productDescription = String(formData.get('description'))
+			const productPrice = Number(formData.get('price'))
+			const productQty = Number(formData.get('quantity'))
+			const identifier = createSlugId(productTile)
 			const evContent = {
 				id: identifier,
 				stall_id: stall.id.split(':').length == 3 ? stall.id.split(':')[2] : stall.id,
-				name: formData.get('title'),
-				description: formData.get('description'),
+				name: productTile,
+				description: productDescription,
 				images: images,
-				price: Number(formData.get('price')),
-				quantity: Number(formData.get('quantity')),
+				price: productPrice,
+				quantity: productQty,
 				shipping: shippingMethods,
 				currency: stall.currency,
 			}
@@ -88,17 +92,21 @@ export const editProductMutation = createMutation(
 			const $ndkStore = get(ndkStore)
 			if (!$ndkStore.activeUser?.pubkey) return
 			const formData = new FormData(sEvent.currentTarget as HTMLFormElement)
-			const identifier = product?.id ? product.id : createId()
+			const productTile = String(formData.get('title'))
+			const productDescription = String(formData.get('description'))
+			const productPrice = Number(formData.get('price'))
+			const productQty = Number(formData.get('quantity'))
+			const identifier = createSlugId(productTile)
 			const stallCoordinates =
 				product?.stallId.split(':').length == 3 ? product?.stallId : `${KindStalls}:${product.userId}:${product?.stallId}`
 			const evContent = {
 				id: identifier,
 				stall_id: product?.stallId.split(':').length == 3 ? product?.stallId.split(':')[2] : product?.stallId,
-				name: formData.get('title'),
-				description: formData.get('description'),
+				name: productTile,
+				description: productDescription,
 				images: images,
-				price: Number(formData.get('price')),
-				quantity: Number(formData.get('quantity')),
+				price: productPrice,
+				quantity: productQty,
 				shipping: shippingMethods,
 				currency: product?.currency,
 			}

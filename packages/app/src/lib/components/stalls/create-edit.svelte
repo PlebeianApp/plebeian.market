@@ -23,7 +23,7 @@
 	import { get } from 'svelte/store'
 
 	import { COUNTRIES_ISO, CURRENCIES } from '@plebeian/database/constants'
-	import { createId } from '@plebeian/database/utils'
+	import { createId, createSlugId } from '@plebeian/database/utils'
 
 	import { stallEventSchema } from '../../../schema/nostr-events'
 	import Spinner from '../assets/spinner.svelte'
@@ -172,14 +172,16 @@
 		if (!$ndkStore.activeUser?.pubkey) return
 		const userId = $ndkStore.activeUser.pubkey
 		const formData = new FormData(sEvent.currentTarget as HTMLFormElement, sEvent.submitter)
-		const identifier = stall?.identifier ? stall.identifier : createId()
+		const stallTile = String(formData.get('title'))
+		const stallDescription = String(formData.get('description'))
+		const identifier = createSlugId(stallTile)
 
 		const imageTag = headerImage ? ['image', headerImage] : null
 
 		const evContent = {
 			id: identifier,
-			name: formData.get('title'),
-			description: formData.get('description'),
+			name: stallTile,
+			description: stallDescription,
 			currency: currency,
 			shipping: shippingMethods.map((s) => s.json),
 		}
@@ -228,9 +230,10 @@
 	}
 </script>
 
+<!-- TODO Use collapsible to improve screen space, also make the drawer use a scroll area to handle overflow -->
 <form class="flex flex-col gap-4 grow" on:submit|preventDefault={create}>
 	<div class="grid w-full items-center gap-1.5">
-		<Label for="userImage" class="font-bold">Header image</Label>
+		<Label for="userImage" class="font-bold">Header image(Optional)</Label>
 		<SingleImage src={headerImage ?? stall?.image} on:save={handleSaveBannerImage} />
 	</div>
 

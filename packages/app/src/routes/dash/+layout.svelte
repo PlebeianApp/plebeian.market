@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { afterNavigate } from '$app/navigation'
 	import { page } from '$app/stores'
+	import MustLogin from '$lib/components/assets/mustLogin.svelte'
 	import * as Accordion from '$lib/components/ui/accordion'
 
 	import type { PageData } from './$types'
@@ -42,5 +43,7 @@
 		</div>
 	</div>
 {:else}
-	you must login
+	<div class="flex justify-center p-24">
+		<MustLogin />
+	</div>
 {/if}
