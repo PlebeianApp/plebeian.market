@@ -106,7 +106,7 @@
 	{/if}
 	<div class="flex flex-col gap-2">
 		{#if productsMode === 'list'}
-			{#if !toDisplayProducts?.length}
+			{#if $productsQuery?.isLoading}
 				<Skeleton class="h-12 w-full" />
 				<Skeleton class="h-12 w-full" />
 				<Skeleton class="h-12 w-full" />

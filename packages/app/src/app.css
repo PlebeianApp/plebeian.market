@@ -29,6 +29,7 @@
 	--neo-blue: #18b9fe;
 	--neo-gray: #f8f8f8;
 }
+
 /* .dark {
 	--background: 323 10% 10%;
 	--foreground: 323 0% 100%;
@@ -56,15 +57,19 @@
 	* {
 		@apply border-border;
 	}
+
 	body {
 		@apply bg-background text-foreground;
 	}
+
 	h1 {
 		@apply mb-8 text-5xl font-bold;
 	}
+
 	h2 {
 		@apply mb-4 text-3xl font-bold;
 	}
+
 	h3 {
 		@apply text-xl font-bold;
 	}

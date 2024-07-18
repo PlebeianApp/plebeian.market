@@ -249,6 +249,21 @@ export const createNcryptSec = (sk: string, pass: string): { decodedSk: Uint8Arr
 	return { decodedSk: decoded.data, ncryptsec }
 }
 
+export function stringToHexColor(input: string): string {
+	let hash = 0
+	for (let i = 0; i < input.length; i++) {
+		hash = input.charCodeAt(i) + ((hash << 5) - hash)
+	}
+
+	let color = '#'
+	for (let i = 0; i < 3; i++) {
+		const value = (hash >> (i * 8)) & 0xff
+		color += ('00' + value.toString(16)).substr(-2)
+	}
+
+	return color
+}
+
 export async function resolveQuery<T>(queryFn: () => CreateQueryResult<T, Error>): Promise<T> {
 	const queryPromise = queryFn()
 	let retryCount = 0
@@ -285,4 +300,52 @@ export async function shouldRegister(allowRegister?: boolean, userExists?: boole
 
 export function unixTimeNow() {
 	return Math.floor(new Date().getTime() / 1000)
+}
+
+export const calculateGeohashAccuracy = (boundingbox: [number, number, number, number]): number => {
+	const [minLat, maxLat, minLon, maxLon] = boundingbox.map(Number)
+	const latDiff = maxLat - minLat
+	const lonDiff = maxLon - minLon
+	const maxDiff = Math.max(latDiff, lonDiff)
+
+	if (maxDiff < 0.0001) return 9 // ~5m
+	if (maxDiff < 0.001) return 8 // ~40m
+	if (maxDiff < 0.01) return 7 // ~150m
+	if (maxDiff < 0.1) return 6 // ~1km
+	if (maxDiff < 1) return 5 // ~5km
+	return 4 // ~20km
+}
+
+export const debounce = (func: (...args: unknown[]) => void, delay: number) => {
+	let timeoutId: ReturnType<typeof setTimeout>
+	return (...args: unknown[]) => {
+		clearTimeout(timeoutId)
+		timeoutId = setTimeout(() => func(...args), delay)
+	}
+}
+
+export interface Location {
+	id: string
+	display_name: string
+	lat: string
+	lon: string
+	boundingbox: [number, number, number, number]
+}
+
+export const searchLocation = async (query: string): Promise<Location[]> => {
+	if (query.length < 3) return []
+	const response = await ofetch<{ response: Location[] }>(
+		`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`,
+		{ parseResponse: JSON.parse },
+	)
+	if (!response || !Array.isArray(response)) return []
+	return response.map(
+		(item: Location): Location => ({
+			id: item.id,
+			display_name: item.display_name,
+			lat: item.lat,
+			lon: item.lon,
+			boundingbox: item.boundingbox,
+		}),
+	)
 }

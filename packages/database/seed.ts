@@ -353,7 +353,17 @@ const main = async () => {
 		tagName: "t",
 		tagValue: v,
 	}))
-	  
+
+	const stallEventTagsData: NewEventTag[] = userStalls.flat(1).map((stall) => ({
+		userId: stall.userId,
+		eventId: stall.id,
+		eventKind: KindStalls,
+		tagName: "image",
+		tagValue: faker.image.urlLoremFlickr({
+			category: 'product',
+		}),
+	}))
+
 	const productMetaData = metaTypeData.flat(2).map((metaType) => {
 		const { dataType, name } = metaType
 		let valueText: string | null = null
@@ -495,7 +505,7 @@ const main = async () => {
 			{ table: dbSchema.stalls, data: userStalls.flat(1) },
 			{ table: dbSchema.auctions, data: auctionsData.flat(2) },
 			{ table: dbSchema.bids, data: bidsData.flat(2) },
-			{ table: dbSchema.eventTags, data: eventTagsData },
+			{ table: dbSchema.eventTags, data: [...eventTagsData, ...stallEventTagsData] },
 			{ table: dbSchema.products, data: productData.flat(2) },
 			{ table: dbSchema.metaTypes, data: metaTypeData.flat(1) },
 			{ table: dbSchema.productMeta, data: productMetaData.flat(1) },

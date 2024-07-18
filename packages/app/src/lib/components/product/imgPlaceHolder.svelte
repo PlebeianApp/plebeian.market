@@ -2,19 +2,25 @@
 	export let width = 500
 	export let height = 600
 	export let fillColor = '#cccccc'
-	export let imageType: 'main' | 'thumbnail' | 'gallery' | 'mini' = 'thumbnail'
+	export let imageType: 'main' | 'big' | 'thumbnail' | 'gallery' | 'mini' | 'manual' = 'thumbnail'
 	if (imageType == 'main') {
 		width = 400
 		height = 500
 	} else if (imageType == 'gallery') {
 		width = 200
 		height = 150
+	} else if (imageType == 'big') {
+		width = 1200
+		height = 650
 	} else if (imageType == 'thumbnail') {
 		width = 308
 		height = 329
 	} else if (imageType == 'mini') {
 		width = 80
 		height = 80
+	} else if (imageType == 'manual') {
+		width = width
+		height = height
 	}
 </script>
 

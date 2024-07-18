@@ -5,6 +5,7 @@
 	import { onMount } from 'svelte'
 	import { pwaInfo } from 'virtual:pwa-info'
 
+	import '@fontsource/ibm-plex-mono'
 	import '../app.css'
 
 	import type { RichCat } from '$lib/server/categories.service'
@@ -102,7 +103,7 @@
 	{#if appSettings.isFirstTimeRunning}
 		<slot />
 	{:else}
-		<div class="min-h-screen flex flex-col">
+		<div class="min-h-screen flex flex-col font-sans">
 			<Header />
 			<section class="flex-1">
 				<slot />
@@ -112,3 +113,9 @@
 		</div>
 	{/if}
 </QueryClientProvider>
+
+<style>
+	:global(body) {
+		font-family: 'IBM Plex Mono', monospace;
+	}
+</style>

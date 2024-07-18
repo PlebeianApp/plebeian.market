@@ -2,9 +2,8 @@
 	import { NostrBuildUploader } from '@nostrify/nostrify/uploaders'
 	import * as Collapsible from '$lib/components/ui/collapsible'
 	import * as Dialog from '$lib/components/ui/dialog/index.js'
-	import ndkStore from '$lib/stores/ndk'
+	import ndkStore, { NostrifyNDKSigner } from '$lib/stores/ndk'
 	import { createEventDispatcher } from 'svelte'
-	import { writable } from 'svelte/store'
 
 	import Spinner from '../assets/spinner.svelte'
 	import Button from '../ui/button/button.svelte'
@@ -16,102 +15,76 @@
 
 	const dispatch = createEventDispatcher()
 
-	let imageChoiceDialogOpen = writable(false)
-	let localSrc = writable(src)
-	let inputValue = writable('')
+	let imageChoiceDialogOpen = false
+	let inputValue = ''
+	let isLoading = false
+	let urlError: string | null = null
 
-	let uploading = writable(false)
-	let checkingImage = writable(false)
-
-	let urlError = writable<string | null>(null)
+	$: localSrc = inputValue && !urlError ? inputValue : null
 
 	const handleUploadIntent = async () => {
 		const input = document.createElement('input')
 		input.type = 'file'
 		input.accept = 'image/*'
 		input.onchange = async (e) => {
-			uploading.set(true)
-			const target = e.target as HTMLInputElement
-			const file = target.files?.[0]
+			isLoading = true
+			const file = (e.target as HTMLInputElement).files?.[0]
 			if (file) {
 				const uploader = new NostrBuildUploader({
-					signer: $ndkStore.signer,
+					signer: new NostrifyNDKSigner($ndkStore),
 				})
-				const [[_, url], ...tags] = await uploader.upload(file)
-				console.log(url, tags)
-				localSrc.set(url)
-				inputValue.set(url)
+				const [[_, url]] = await uploader.upload(file)
+				inputValue = url
+				urlError = null
 			}
-			uploading.set(false)
+			isLoading = false
 		}
 		input.click()
 	}
 
-	const isValidUrl = (url: string) => {
-		try {
-			new URL(url)
-			urlError.set(null)
-			return true
-		} catch (e) {
-			urlError.set('Invalid URL format')
-			return false
-		}
-	}
+	const validateAndSetImage = async (url: string) => {
+		isLoading = true
+		urlError = null
 
-	const validateImageUrl = async (url: string) => {
-		return new Promise<boolean>((resolve) => {
-			const img = new Image()
-			img.onload = () => resolve(true)
-			img.onerror = () => resolve(false)
-			img.src = url
-		})
-	}
-
-	const handleInput = async (e: Event) => {
-		checkingImage.set(true)
-		const input = e.target as HTMLInputElement
-		const newImageSrc = input.value
-
-		if (!isValidUrl(newImageSrc)) {
-			console.error('Invalid URL format')
-			checkingImage.set(false)
+		if (!url.trim()) {
+			isLoading = false
 			return
 		}
 
-		const isValidImage = await validateImageUrl(newImageSrc)
-		if (isValidImage) {
-			localSrc.set(newImageSrc)
-		} else {
-			console.error('Invalid image URL')
+		try {
+			new URL(url)
+			const isValid = await new Promise<boolean>((resolve) => {
+				const img = new Image()
+				img.onload = () => resolve(true)
+				img.onerror = () => resolve(false)
+				img.src = url
+			})
+
+			if (!isValid) {
+				urlError = 'Invalid image URL'
+			}
+		} catch (e) {
+			urlError = 'Invalid URL format'
 		}
-		checkingImage.set(false)
+
+		isLoading = false
+	}
+
+	const handleInput = (e: Event) => {
+		inputValue = (e.target as HTMLInputElement).value
+		validateAndSetImage(inputValue)
 	}
 
 	const handleSave = () => {
-		console.log('saving', $localSrc)
-		dispatch('save', $localSrc)
-		imageChoiceDialogOpen.set(false)
+		if (localSrc) {
+			dispatch('save', localSrc)
+			imageChoiceDialogOpen = false
+		}
 	}
 
-	const handleImageCLick = async (e: CustomEvent) => {
-		checkingImage.set(true)
-		const imageUrl = e.detail
-
-		inputValue.set(imageUrl)
-
-		if (!isValidUrl(imageUrl)) {
-			console.error('Invalid URL format')
-			checkingImage.set(false)
-			return
-		}
-
-		const isValidImage = await validateImageUrl(imageUrl)
-		if (isValidImage) {
-			localSrc.set(imageUrl)
-		} else {
-			console.error('Invalid image URL')
-		}
-		checkingImage.set(false)
+	const handleImageClick = (e: CustomEvent) => {
+		inputValue = e.detail
+		validateAndSetImage(inputValue)
 	}
 </script>
 
@@ -120,49 +93,52 @@
 		<img {src} alt="nip 96" class="w-full h-full object-cover" />
 	{:else}
 		<div class="w-full h-full min-h-[250px] flex items-center justify-center">
-			<Button on:click={() => imageChoiceDialogOpen.set(true)} variant="ghost"><span class="i-mdi-upload w-9 h-9" /></Button>
+			<Button on:click={() => (imageChoiceDialogOpen = true)} variant="ghost">
+				<span class="i-mdi-upload w-9 h-9" />
+			</Button>
 		</div>
 	{/if}
 
-	<Button on:click={() => imageChoiceDialogOpen.set(true)} variant="ghost" class="absolute top-1 right-1 font-bold text-red-500 border-0"
-		><span class="i-mdi-pencil-outline text-white w-6 h-6" /></Button
-	>
+	<Button on:click={() => (imageChoiceDialogOpen = true)} variant="ghost" class="absolute top-1 right-1 font-bold text-red-500 border-0">
+		<span class="i-mdi-pencil-outline text-white w-6 h-6" />
+	</Button>
 
-	<Dialog.Root bind:open={$imageChoiceDialogOpen}>
+	<Dialog.Root bind:open={imageChoiceDialogOpen}>
 		<Dialog.Content class="max-w-[66vw]">
 			<Dialog.Header>
-				<Dialog.Title>Set a remote image url or upload a new one {src}</Dialog.Title>
+				<Dialog.Title>Set a remote image url or upload a new one</Dialog.Title>
 			</Dialog.Header>
-			<div class="flex flex-row gap-4">
-				<div class="flex-1 flex flex-col gap-4">
-					{#if $localSrc}
-						<img src={$localSrc} alt="nip 96" class="w-full max-h-[50vh] h-auto object-cover" />
+			<div class="flex flex-col gap-4">
+				{#if localSrc}
+					<img src={localSrc} alt="nip 96" class="w-full max-h-[50vh] h-auto object-cover" />
+				{/if}
+				<div class="flex flex-row items-center">
+					<Input type="text" id="userImageRemote" name="imageRemoteInput" bind:value={inputValue} on:input={handleInput} />
+					{#if isLoading}
+						<Spinner />
 					{/if}
-					<div class="flex flex-row">
-						<Input type="text" id="userImageRemote" name="imageRemoteInput" bind:value={$inputValue} on:input={handleInput} />
-						{#if $checkingImage}
+				</div>
+				{#if urlError}
+					<p class="text-destructive">{urlError}</p>
+				{/if}
+				<div class="flex flex-row gap-2">
+					<Button variant={'secondary'} on:click={handleUploadIntent} class="w-full font-bold">
+						<span class="i-mdi-upload w-6 h-6" /> Upload
+						{#if isLoading}
 							<Spinner />
 						{/if}
-					</div>
-					{#if $urlError}
-						<p class="text-destructive">{$urlError}</p>
-					{/if}
-					<div class="flex flex-row gap-2">
-						<Button variant={'secondary'} on:click={handleUploadIntent} class="w-full font-bold">
-							<span class="i-mdi-upload w-6 h-6" />{' '}
-							Upload
-							{#if $uploading}
-								<Spinner />
-							{/if}</Button
-						>
-						<Button on:click={handleSave} class="w-full font-bold">Save</Button>
-					</div>
+					</Button>
+					<Button on:click={handleSave} class="w-full font-bold" disabled={!localSrc}>Save</Button>
 				</div>
 				{#if marketContext}
 					<div class="flex-1 max-h-[40vh] overflow-y-auto">
 						<Collapsible.Root>
-							<Collapsible.Trigger><span class="text-bold">use and already uploaded photo</span></Collapsible.Trigger>
-							<Collapsible.Content><UserImageHistory on:imageClick={(e) => handleImageCLick(e)} /></Collapsible.Content>
+							<Collapsible.Trigger>
+								<Button type="button" class="text-bold">use an already uploaded photo</Button>
+							</Collapsible.Trigger>
+							<Collapsible.Content>
+								<UserImageHistory on:imageClick={handleImageClick} />
+							</Collapsible.Content>
 						</Collapsible.Root>
 					</div>
 				{/if}

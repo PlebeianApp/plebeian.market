@@ -2,10 +2,10 @@ import type { NostrEvent } from '@nostr-dev-kit/ndk'
 import type { StallsFilter } from '$lib/schema'
 import type { DisplayProduct } from '$lib/server/products.service'
 import { error } from '@sveltejs/kit'
-import { standardDisplayDateFormat } from '$lib/constants'
+import { KindStalls, standardDisplayDateFormat } from '$lib/constants'
 import { stallsFilterSchema } from '$lib/schema'
 import { getProductsByStallId } from '$lib/server/products.service'
-import { getEventCoordinates } from '$lib/utils'
+import { customTagValue, getEventCoordinates } from '$lib/utils'
 import { format } from 'date-fns'
 
 import type { PaymentDetail, Shipping, Stall } from '@plebeian/database'
@@ -16,6 +16,7 @@ import {
 	eventTags,
 	getTableColumns,
 	inArray,
+	orders,
 	paymentDetails,
 	products,
 	shipping,
@@ -41,6 +42,7 @@ export type RichStall = {
 	productCount?: number
 	// orderCount?: number
 	paymentMethods?: PaymentDetail[]
+	image?: string
 	identifier: string
 	shipping: Partial<RichShippingInfo>[]
 }
@@ -51,6 +53,7 @@ export type DisplayStall = {
 	description: string
 	currency: string
 	createDate: string
+	image?: string
 	userId: string
 	shipping: Partial<RichShippingInfo>[]
 }
@@ -107,6 +110,12 @@ const resolveStalls = async (stall: Stall): Promise<RichStall> => {
 	// 		.execute()
 	// ).map((order) => order.count)
 
+	const [image] = await db
+		.select()
+		.from(eventTags)
+		.where(and(eq(eventTags.eventId, stall.id), eq(eventTags.tagName, 'image')))
+		.execute()
+
 	if (!ownerRes.userId) {
 		error(404, 'Not found')
 	}
@@ -131,6 +140,7 @@ const resolveStalls = async (stall: Stall): Promise<RichStall> => {
 		productCount,
 		// orderCount,
 		paymentMethods,
+		image: image?.tagValue ?? undefined,
 		identifier: stall.id.split(':')[2],
 		shipping: shippingInfo,
 	}
@@ -172,6 +182,7 @@ export type StallInfo = {
 	createDate: string
 	userId: string
 	products: DisplayProduct[]
+	image?: string
 }
 
 export const getStallById = async (id: string): Promise<StallInfo> => {
@@ -192,6 +203,12 @@ export const getStallById = async (id: string): Promise<StallInfo> => {
 	}
 	const stallProducts = await getProductsByStallId(uniqueStall.id)
 
+	const [image] = await db
+		.select()
+		.from(eventTags)
+		.where(and(eq(eventTags.eventId, id), eq(eventTags.tagName, 'image')))
+		.execute()
+
 	const stallInfo = {
 		id: uniqueStall.id,
 		name: uniqueStall.name,
@@ -199,6 +216,7 @@ export const getStallById = async (id: string): Promise<StallInfo> => {
 		currency: uniqueStall.currency,
 		createDate: format(uniqueStall.createdAt, standardDisplayDateFormat),
 		userId: ownerRes.userId,
+		image: image?.tagValue ?? undefined,
 		products: stallProducts,
 	}
 
@@ -266,6 +284,8 @@ export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall 
 			throw Error(`Invalid stall event data: ${zodError}`)
 		}
 
+		const imageTag = customTagValue(stallEvent.tags, 'image')[0]
+
 		const insertStall: Stall = {
 			id: coordinates,
 			createdAt: new Date(stallEvent.created_at * 1000),
@@ -323,6 +343,19 @@ export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall 
 
 		const stallResult = results[0] as Stall
 
+		if (imageTag) {
+			await db
+				.insert(eventTags)
+				.values({
+					userId: stallResult.userId,
+					eventId: stallResult.id,
+					tagName: 'image',
+					tagValue: imageTag,
+					eventKind: KindStalls,
+				})
+				.returning()
+		}
+
 		return {
 			id: stallResult.id,
 			name: stallResult.name,
@@ -359,6 +392,24 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
 			})
 			.where(eq(stalls.id, stallId))
 			.returning()
+
+		const [image] = await db
+			.select()
+			.from(eventTags)
+			.where(and(eq(eventTags.eventId, stallId), eq(eventTags.tagName, 'image')))
+			.execute()
+
+		const imageTag = customTagValue(stallEvent.tags, 'image')[0]
+
+		if (imageTag && image.tagValue !== imageTag) {
+			await db
+				.update(eventTags)
+				.set({
+					tagValue: imageTag,
+				})
+				.where(and(eq(eventTags.eventId, stallId), eq(eventTags.tagName, 'image')))
+				.execute()
+		}
 
 		if (!stallResult) {
 			throw new Error(`Stall not updated: ${stallId}`)
@@ -497,6 +548,7 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
 			description: stallResult.description,
 			currency: stallResult.currency,
 			createDate: format(stallResult.createdAt, standardDisplayDateFormat),
+			image: image?.tagValue ?? undefined,
 			userId: stallResult.userId,
 			shipping: parsedStall.shipping ?? [],
 		} as DisplayStall
@@ -505,6 +557,7 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
 		return null
 	}
 }
+
 export const deleteStall = async (stallId: string, userId: string): Promise<string> => {
 	const stallResult = await db.query.stalls.findFirst({
 		where: and(eq(stalls.id, stallId), eq(stalls.userId, userId)),

@@ -27,7 +27,7 @@
 	$: priceQuery = createProductPriceQuery(product as DisplayProduct)
 </script>
 
-<Card.Root class="relative grid grid-rows-[1fr_auto] gap-4 border-4 border-black bg-transparent text-black group">
+<Card.Root class="relative grid grid-rows-[1fr_auto] border-4 border-black bg-transparent text-black group">
 	{#if images}
 		{@const mainImage = images[0]?.imageOrder ? images.find((image) => image.imageOrder == 0 || 1) : images[0]}
 
@@ -54,19 +54,21 @@
 		<ImgPlaceHolder imageType={'thumbnail'} />
 	{/if}
 	<a href={userNip05 ? `/products/${userNip05}/${identifier}` : `/products/${id}`}>
-		<Card.Footer class="cursor-pointer flex flex-col gap-2 justify-end p-4 pb-2">
-			<div>
-				<span class="truncate font-bold whitespace-normal">{name}</span>
-			</div>
-			<div class=" inline-flex items-center gap-2 text-right">
-				<span class="text-sm">{price} {currency}</span>
-				<span class="font-bold">
-					{#if $priceQuery.isLoading}
-						<Spinner />
-					{:else if $priceQuery.data}
-						{$priceQuery.data}<small>sats</small>
-					{/if}
-				</span>
+		<Card.Footer class="cursor-pointer flex flex-col px-4 pt-2">
+			<div class="flex justify-between items-start w-full">
+				<div class="flex-grow">
+					<span class="text-sm truncate font-bold whitespace-normal">{name}</span>
+				</div>
+				<div class="flex flex-col items-end">
+					<span class="text-xs">{price} {currency}</span>
+					<span class="text-xs font-bold">
+						{#if $priceQuery.isLoading}
+							<Spinner />
+						{:else if $priceQuery.data}
+							{$priceQuery.data} <small>sats</small>
+						{/if}
+					</span>
+				</div>
 			</div>
 		</Card.Footer>
 	</a>

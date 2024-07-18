@@ -43,7 +43,6 @@
 		if (!userExist) {
 			const { stallNostrRes } = await fetchUserStallsData(activeUser?.id)
 			if (stallNostrRes) {
-				console.log(stallNostrRes)
 				const normalizedStallData = [...stallNostrRes]
 					.map(normalizeStallData)
 					.filter((result) => result.data !== null)
@@ -87,11 +86,11 @@
 	{/if}
 	<div class="flex flex-col gap-2">
 		{#if stallsMode === 'list'}
-			{#if !stalls?.length}
+			{#if $stallsQuery?.isLoading}
 				<Skeleton class="h-12 w-full" />
 				<Skeleton class="h-12 w-full" />
 				<Skeleton class="h-12 w-full" />
-			{:else}
+			{:else if stalls?.length}
 				{#each stalls as stall}
 					<Collapsible.Root class="border-black border p-2">
 						<div class="flex flex-row">

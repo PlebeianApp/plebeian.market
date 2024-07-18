@@ -15,7 +15,7 @@
 	const dispatch = createEventDispatcher()
 
 	const invalidateProductsQuery = () => {
-		queryClient.invalidateQueries({ queryKey: ['products', $ndkStore.activeUser.pubkey] })
+		queryClient.invalidateQueries({ queryKey: ['products', $ndkStore.activeUser?.pubkey] })
 	}
 
 	const handleSetMainImage = async (productId: string, imageUrl: string) => {

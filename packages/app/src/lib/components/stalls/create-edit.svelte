@@ -1,7 +1,12 @@
 <script lang="ts">
+	import type { NDKTag } from '@nostr-dev-kit/ndk'
 	import type { RichStall } from '$lib/server/stalls.service'
+	import type { Location } from '$lib/utils'
+	import type { GeoJSON } from 'geojson'
 	import { NDKEvent } from '@nostr-dev-kit/ndk'
+	import { browser } from '$app/environment'
 	import { page } from '$app/stores'
+	import SingleImage from '$lib/components/settings/editable-image.svelte'
 	import { Button } from '$lib/components/ui/button/index.js'
 	import * as Command from '$lib/components/ui/command/index.js'
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js'
@@ -12,7 +17,8 @@
 	import { KindStalls } from '$lib/constants'
 	import { createStallFromNostrEvent, updateStallFromNostrEvent } from '$lib/fetch/stalls.mutations'
 	import ndkStore from '$lib/stores/ndk'
-	import { checkIfUserExists, shouldRegister, unixTimeNow } from '$lib/utils'
+	import { calculateGeohashAccuracy, checkIfUserExists, debounce, searchLocation, shouldRegister, unixTimeNow } from '$lib/utils'
+	import geohash from 'ngeohash'
 	import { createEventDispatcher, onMount, tick } from 'svelte'
 	import { get } from 'svelte/store'
 
@@ -20,6 +26,12 @@
 	import { createId } from '@plebeian/database/utils'
 
 	import { stallEventSchema } from '../../../schema/nostr-events'
+	import Spinner from '../assets/spinner.svelte'
+	import Leaflet from '../leaflet.svelte'
+
+	interface GeoJSONWithBoundingBox extends GeoJSON.Feature<GeoJSON.Point> {
+		boundingbox: [number, number, number, number]
+	}
 
 	const {
 		appSettings: { allowRegister, defaultCurrency },
@@ -27,10 +39,57 @@
 
 	export let stall: RichStall | null = null
 
+	let locationSearchOpen = false
+	let shippingFromInput = ''
+	let selectedLocation: Location | null = null
+
+	let geohashOfSelectedGeometry: string | null = null
+
+	let locationResults: Location[] = []
+	let mapGeoJSON: GeoJSONWithBoundingBox | null = null
+	let isLoading = false
+	const debouncedSearch = debounce(async () => {
+		isLoading = true
+		locationResults = await searchLocation(shippingFromInput)
+		isLoading = false
+	}, 300)
+
+	const handleLocationSelect = (locationId: string) => {
+		const location = locationResults.find((loc) => loc.id === locationId)
+
+		if (location) {
+			shippingFromInput = location.display_name
+			mapGeoJSON = {
+				type: 'Point',
+				coordinates: [parseFloat(location.lon), parseFloat(location.lat)],
+				boundingbox: location.boundingbox,
+			}
+
+			const [minLat, maxLat, minLon, maxLon] = location.boundingbox.map(Number)
+			const centerLat = (minLat + maxLat) / 2
+			const centerLon = (minLon + maxLon) / 2
+			const accuracy = calculateGeohashAccuracy(mapGeoJSON.boundingbox)
+
+			geohashOfSelectedGeometry = geohash.encode(centerLat, centerLon, accuracy)
+		}
+	}
+
+	function closeAndFocusTrigger(triggerId: string) {
+		locationSearchOpen = false
+		tick().then(() => {
+			document.getElementById(triggerId)?.focus()
+		})
+	}
+
+	$: if (browser && shippingFromInput) {
+		debouncedSearch(shippingFromInput)
+	}
+
 	type Currency = (typeof CURRENCIES)[number]
 	type Shipping = (typeof stallEventSchema._type)['shipping'][0]
 
 	let currency: Currency = (stall?.currency as Currency) ?? defaultCurrency ?? 'BTC'
+	let headerImage = stall?.image
 
 	class ShippingMethod implements Shipping {
 		id: string
@@ -105,12 +164,6 @@
 		shippingMethods = shippingMethods.filter((s) => s.id !== id)
 	}
 
-	function closeAndFocusTrigger(triggerId: string) {
-		tick().then(() => {
-			document.getElementById(triggerId)?.focus()
-		})
-	}
-
 	const dispatch = createEventDispatcher<{
 		success: unknown
 	}>()
@@ -121,6 +174,8 @@
 		const formData = new FormData(sEvent.currentTarget as HTMLFormElement, sEvent.submitter)
 		const identifier = stall?.identifier ? stall.identifier : createId()
 
+		const imageTag = headerImage ? ['image', headerImage] : null
+
 		const evContent = {
 			id: identifier,
 			name: formData.get('title'),
@@ -128,12 +183,19 @@
 			currency: currency,
 			shipping: shippingMethods.map((s) => s.json),
 		}
+
+		const tags: NDKTag[] = [['d', identifier]]
+		if (imageTag) tags.push(imageTag)
+		if (geohashOfSelectedGeometry) {
+			tags.push(['g', geohashOfSelectedGeometry])
+		}
+
 		const newEvent = new NDKEvent($ndkStore, {
 			kind: KindStalls,
 			pubkey: userId,
 			content: JSON.stringify(evContent),
 			created_at: unixTimeNow(),
-			tags: [['d', identifier]],
+			tags: tags,
 		})
 
 		// await newEvent.publish().then((data) => console.log(data))
@@ -143,7 +205,7 @@
 		if (_shouldRegister) {
 			const nostrEvent = await newEvent.toNostrEvent()
 			if (stall) {
-				await get(updateStallFromNostrEvent).mutateAsync([`${KindStalls}:${userId}:${identifier}`, nostrEvent])
+				await get(updateStallFromNostrEvent).mutateAsync([stall.id, nostrEvent])
 			} else {
 				await get(createStallFromNostrEvent).mutateAsync(nostrEvent)
 			}
@@ -160,9 +222,18 @@
 				) ?? []
 		}
 	})
+
+	const handleSaveBannerImage = (event: CustomEvent) => {
+		headerImage = event.detail
+	}
 </script>
 
 <form class="flex flex-col gap-4 grow" on:submit|preventDefault={create}>
+	<div class="grid w-full items-center gap-1.5">
+		<Label for="userImage" class="font-bold">Header image</Label>
+		<SingleImage src={headerImage ?? stall?.image} on:save={handleSaveBannerImage} />
+	</div>
+
 	<div class="grid w-full items-center gap-1.5">
 		<Label for="title" class="font-bold">Title</Label>
 		<Input value={stall?.name} required class="border-2 border-black" type="text" name="title" placeholder="e.g. Fancy Wears" />
@@ -172,8 +243,51 @@
 		<Textarea value={stall?.description} class="border-2 border-black" placeholder="Description" name="description" />
 	</div>
 	<div class="grid w-full items-center gap-1.5">
-		<Label for="from" class="font-bold">Shipping From (Optional)</Label>
-		<Input class="border-2 border-black" type="text" name="from" placeholder="e.g. London" />
+		<div class="flex flex-row justify-between">
+			<Label for="from" class="font-bold">Shipping From (Optional)</Label>
+			{#if geohashOfSelectedGeometry}
+				<small class="ml-2 text-gray-500">Geohash: {geohashOfSelectedGeometry}</small>
+			{:else}
+				<small class="ml-2 text-gray-500">No geohash available</small>
+			{/if}
+		</div>
+		<Leaflet geoJSON={mapGeoJSON} />
+		<Popover.Root bind:open={locationSearchOpen} let:ids>
+			<Popover.Trigger asChild let:builder>
+				<Button
+					builders={[builder]}
+					variant="outline"
+					role="combobox"
+					aria-expanded={locationSearchOpen}
+					class="w-full justify-between border-2 border-black"
+				>
+					{selectedLocation?.display_name ?? 'Select a location...'}
+					{#if isLoading}
+						<Spinner />
+					{/if}
+				</Button>
+			</Popover.Trigger>
+			<Popover.Content class="w-2/4 p-0">
+				<Command.Root>
+					<Command.Input placeholder="Search location..." bind:value={shippingFromInput} />
+					<Command.Empty>No location found.</Command.Empty>
+					<Command.Group>
+						{#each locationResults as location}
+							<Command.Item
+								value={location.display_name}
+								onSelect={() => {
+									handleLocationSelect(location.id)
+									closeAndFocusTrigger(ids.trigger)
+									selectedLocation = location
+								}}
+							>
+								{location.display_name}
+							</Command.Item>
+						{/each}
+					</Command.Group>
+				</Command.Root>
+			</Popover.Content>
+		</Popover.Root>
 	</div>
 
 	<div class="grid w-full items-center gap-1.5">
