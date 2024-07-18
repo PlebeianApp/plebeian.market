@@ -41,54 +41,71 @@
 		if ('kind' in stallData) {
 			await handleNDKEvent(stallData as NDKEvent)
 		} else {
-			isMyStall = $ndkStore.activeUser?.pubkey === stall.userId
-			stall = stall
+			isMyStall = $ndkStore.activeUser?.pubkey === (stallData as Partial<RichStall>).userId
+			stall = stallData
 		}
 	})
 </script>
-{#if stall}
-<Card.Root class="relative grid grid-rows-[auto_1fr_auto] h-[40vh] gap-4 border-4 border-black text-black group">
-	<Card.Header class="p-0">
-			{#if stall.image}
-				<div class="h-[28vh]">
-					<img src={stall.image} alt="stall" class="object-cover w-full h-full" />
-				</div>
-			{:else if stall.id}
-				<div style={`background-color: ${stringToHexColor(stall.id)}`} class="h-[5vh]" />
-			{/if}
-	</Card.Header>
-	<Card.Content class="relative flex-grow truncate whitespace-normal">
-		<span class="truncate text-xl font-bold whitespace-normal">{stall.name}</span>
-		<p class=" whitespace-normal truncate text-sm font-light">
-			{stall.description}
-		</p>
-	</Card.Content>
-	<a href={stall.userNip05 ? `/stalls/${userNip05.toLocaleLowerCase()}/${stall.identifier}` : `/stalls/${stall.id?.replace(/^30017:/, '')}`}>
-		<Card.Footer class="flex flex-col items-start font-bold">
-			<div class="flex flex-col lg:flex-row justify-between w-full text-sm">
-				<span class="font-bold whitespace-normal">Since: {stall.createDate}</span>
-				<span class="whitespace-normal">Currency: {stall.currency}</span>
-			</div>
 
-			<div class="flex flex-col lg:flex-row justify-between w-full text-sm">
-				{#if stall.userName}
-					<span class="whitespace-normal">Owner: {stall.userName}</span>
-				{/if}
-				{#if stall.userNip05}
-					<small class="truncate font-light whitespace-normal">{stall.userNip05}</small>
-				{:else}
-					<small class="font-light truncate whitespace-normal">@{truncateString(npubEncode(stall.userId))}</small>
-				{/if}
-			</div>
-		</Card.Footer>
-	</a>
-	{#if isMyStall && stall.id}
-		<div
-			class="flex flex-col gap-2 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-black font-bold opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+{#if stall}
+	<Card.Root class="relative grid grid-rows-[auto_1fr_auto] h-[40vh] gap-4 border-4 border-black text-black group">
+		<a
+			href={stall.userNip05
+				? `/stalls/${stall.userNip05.toLocaleLowerCase()}/${stall.identifier}`
+				: `/stalls/${stall.id?.replace(/^30017:/, '')}`}
 		>
-			<Button class="bg-white" on:click={() => openDrawerForStall(stall.id)}>Edit stall</Button>
-			<Button class="bg-white" on:click={() => openDrawerForNewProductForStall(stall.id)}>Add product</Button>
-		</div>
-	{/if}
-</Card.Root>
+			<Card.Header class="p-0">
+				{#if stall.image}
+					<div class="h-[28vh]">
+						<img src={stall.image} alt="stall" class="object-cover w-full h-full" />
+					</div>
+				{:else if stall.id}
+					<div style={`background-color: ${stringToHexColor(stall.id)}`} class="h-[5vh]" />
+				{/if}
+			</Card.Header>
+		</a>
+		<Card.Content class="relative flex-grow truncate whitespace-normal">
+			<a
+				href={stall.userNip05
+					? `/stalls/${stall.userNip05.toLocaleLowerCase()}/${stall.identifier}`
+					: `/stalls/${stall.id?.replace(/^30017:/, '')}`}
+			>
+				<span class="truncate text-xl font-bold whitespace-normal">{stall.name}</span>
+				<p class=" whitespace-normal truncate text-sm font-light">
+					{stall.description}
+				</p>
+			</a>
+		</Card.Content>
+		<a
+			href={stall.userNip05
+				? `/stalls/${stall.userNip05.toLocaleLowerCase()}/${stall.identifier}`
+				: `/stalls/${stall.id?.replace(/^30017:/, '')}`}
+		>
+			<Card.Footer class="flex flex-col items-start font-bold">
+				<div class="flex flex-col lg:flex-row justify-between w-full text-sm">
+					<span class="font-bold whitespace-normal">Since: {stall.createDate}</span>
+					<span class="whitespace-normal">Currency: {stall.currency}</span>
+				</div>
+
+				<div class="flex flex-col lg:flex-row justify-between w-full text-sm">
+					{#if stall.userName}
+						<span class="whitespace-normal">Owner: {stall.userName}</span>
+					{/if}
+					{#if stall.userNip05}
+						<small class="truncate font-light whitespace-normal">{stall.userNip05}</small>
+					{:else}
+						<small class="font-light truncate whitespace-normal">@{truncateString(npubEncode(stall.userId))}</small>
+					{/if}
+				</div>
+			</Card.Footer>
+		</a>
+		{#if isMyStall && stall.id}
+			<div
+				class="flex flex-col gap-2 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-black font-bold opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+			>
+				<Button class="bg-white" on:click={() => openDrawerForStall(String(stall.id))}>Edit stall</Button>
+				<Button class="bg-white" on:click={() => openDrawerForNewProductForStall(String(stall.id))}>Add product</Button>
+			</div>
+		{/if}
+	</Card.Root>
 {/if}

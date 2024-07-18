@@ -141,7 +141,7 @@ export function normalizeStallData(nostrStall: NDKEvent): { data: Partial<RichSt
 			id,
 			userId: nostrStall.pubkey,
 			shipping: parsedShipping,
-      image: nostrStall.tagValue('image'),
+			image: nostrStall.tagValue('image'),
 		},
 		error: null,
 	}

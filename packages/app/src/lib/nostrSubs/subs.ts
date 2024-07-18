@@ -22,6 +22,6 @@ if (typeof window !== 'undefined') {
 }
 
 export const stallsSub: NDKEventStore<ExtendedBaseType<NDKEvent>> = ndk.storeSubscribe(
-	{ kinds: [KindStalls] },
+	{ kinds: [KindStalls], limit: 25 },
 	{ closeOnEose: true, autoStart: false },
 )

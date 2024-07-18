@@ -156,85 +156,77 @@
 
 {#if userProfile}
 	{@const { image, name } = userProfile}
-	<div class="flex min-h-screen w-full flex-col bg-muted/40">
-		<div class="flex flex-col">
-			<main class="text-black">
-				<div class="px-4 py-20 lg:px-12">
-					<div class="container relative h-[45vh]">
-						{#if $userProfileQuery?.data?.banner}
-							<img src={$userProfileQuery?.data?.banner} alt="profile" class="border-black border-2 object-cover w-full h-[25vh]" />
-						{:else}
-							<ImgPlaceHolder width={1600} height={300} imageType="manual" fillColor={stringToHexColor($userProfileQuery?.data?.name)} />
-						{/if}
+	<div class="px-4 lg:px-12">
+		<div class="flex flex-col gap-14 py-5">
+			<div class="container relative h-auto">
+				{#if userProfile.banner}
+					<img src={userProfile.banner} alt="profile" class="border-black border-2 object-cover w-full h-[25vh]" />
+				{:else}
+					<div style={`background-color: ${stringToHexColor(String(name))}`} class=" h-[10vh] border-2 border-black"></div>
+				{/if}
 
-						<Avatar class="border-black border-2 h-24 w-24 absolute top-5/6 left-[10vw] transform -translate-x-1/2 -translate-y-1/2">
-							<AvatarImage src={image} alt="profile" />
-							<AvatarFallback>{name}</AvatarFallback>
-						</Avatar>
+				<Avatar class="border-black border-2 h-24 w-24 absolute top-5/6 left-[10vw] transform -translate-x-1/2 -translate-y-1/2">
+					<AvatarImage src={image} alt="profile" />
+					<AvatarFallback>{name}</AvatarFallback>
+				</Avatar>
 
-						<div class="flex flex-row ml-[12vw] mt-8 justify-between">
-							<div class="flex flex-col">
-								<h2>{name}</h2>
-								<p>{$userProfileQuery?.data?.about}</p>
-							</div>
-							<div class="flex flex-col">
-								<div class="flex flex-row gap-2">
-									{#if isMe}
-										<DropdownMenu.Root>
-											<DropdownMenu.Trigger><Button>Create...</Button></DropdownMenu.Trigger>
-											<DropdownMenu.Content>
-												<DropdownMenu.Group>
-													<DropdownMenu.Item on:click={openDrawerForNewStall}>Create stall</DropdownMenu.Item>
-													<DropdownMenu.Item on:click={openDrawerForNewProduct}>Create product</DropdownMenu.Item>
-												</DropdownMenu.Group>
-											</DropdownMenu.Content>
-										</DropdownMenu.Root>
-									{/if}
-									<Button size="icon" variant="secondary" on:click={handleZap}>
-										<span class="i-mdi-dots-horizontal w-6 h-6" />
-									</Button>
-									<Button size="icon" variant="secondary" on:click={handleZap}>
-										<span class="i-mingcute-lightning-line w-6 h-6" />
-									</Button>
-									<Button size="icon" variant="secondary" on:click={handleSendMessage}>
-										<span class="i-mdi-message-bubble w-6 h-6" />
-									</Button>
-									{#if following}
-										<Button class="w-1/2 lg:w-auto" on:click={handleUnfollow}>Unfollow</Button>
-									{:else}
-										<Button class="w-1/2 lg:w-auto" on:click={handleFollow}>Follow</Button>
-									{/if}
-								</div>
-							</div>
+				<div class="flex flex-row ml-[12vw] mt-8 justify-between">
+					<div class="flex flex-col">
+						<h2>{name}</h2>
+						<p>{userProfile.about}</p>
+					</div>
+					<div class="flex flex-col">
+						<div class="flex flex-row gap-2">
+							{#if isMe}
+								<DropdownMenu.Root>
+									<DropdownMenu.Trigger><Button>Create...</Button></DropdownMenu.Trigger>
+									<DropdownMenu.Content>
+										<DropdownMenu.Group>
+											<DropdownMenu.Item on:click={openDrawerForNewStall}>Create stall</DropdownMenu.Item>
+											<DropdownMenu.Item on:click={openDrawerForNewProduct}>Create product</DropdownMenu.Item>
+										</DropdownMenu.Group>
+									</DropdownMenu.Content>
+								</DropdownMenu.Root>
+							{/if}
+							<Button size="icon" variant="secondary" on:click={handleZap}>
+								<span class="i-mdi-dots-horizontal w-6 h-6" />
+							</Button>
+							<Button size="icon" variant="secondary" on:click={handleZap}>
+								<span class="i-mingcute-lightning-line w-6 h-6" />
+							</Button>
+							<Button size="icon" variant="secondary" on:click={handleSendMessage}>
+								<span class="i-mdi-message-bubble w-6 h-6" />
+							</Button>
+							{#if following}
+								<Button class="w-1/2 lg:w-auto" on:click={handleUnfollow}>Unfollow</Button>
+							{:else}
+								<Button class="w-1/2 lg:w-auto" on:click={handleFollow}>Follow</Button>
+							{/if}
 						</div>
 					</div>
 				</div>
-				{#if stalls}
-					<div class="px-4 py-20 lg:px-12">
-						<div class="container">
-							<h2>Stalls</h2>
-							<div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-								{#each stalls as item}
-									<StallItem stallData={item} />
-								{/each}
-							</div>
-						</div>
-					{/if}
-
-					{#if toDisplayProducts}
-						<div class="px-4 py-20 lg:px-12">
-							<div class="container">
-								<h2>Products</h2>
-								<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-									{#each toDisplayProducts as item}
-										<ProductItem product={item} />
-									{/each}
-								</div>
-							</div>
-						</div>
-					{/if}
+			</div>
+			{#if stalls}
+				<div class="container">
+					<h2>Stalls</h2>
+					<div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+						{#each stalls as item}
+							<StallItem stallData={item} />
+						{/each}
+					</div>
 				</div>
-			</main>
+			{/if}
+
+			{#if toDisplayProducts}
+				<div class="container">
+					<h2>Products</h2>
+					<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+						{#each toDisplayProducts as item}
+							<ProductItem product={item} />
+						{/each}
+					</div>
+				</div>
+			{/if}
 		</div>
 	</div>
 {/if}
