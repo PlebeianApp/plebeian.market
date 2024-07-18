@@ -236,8 +236,8 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 							})),
 						)
 						.onConflictDoNothing({
-						target: [eventTags.tagName, eventTags.tagValue, eventTags.eventId]
-					})
+							target: [eventTags.tagName, eventTags.tagValue, eventTags.eventId],
+						})
 						.execute()
 				}
 
@@ -343,7 +343,7 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 				})),
 			)
 			.onConflictDoNothing({
-				target: [eventTags.tagName, eventTags.tagValue, eventTags.eventId]
+				target: [eventTags.tagName, eventTags.tagValue, eventTags.eventId],
 			})
 			.execute()
 	}
