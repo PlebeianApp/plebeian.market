@@ -273,11 +273,12 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 		currency: parsedProductData?.currency,
 		price: parsedProductData?.price?.toString(),
 		extraCost: parsedProductData?.shipping?.length ? parsedProductData?.shipping[0].cost?.toString() : String(0),
-		stallId: parsedProductData?.stallId,
+		stallId: parsedProductData?.stallId?.startsWith(KindStalls.toString())
+			? parsedProductData?.stallId
+			: `${KindStalls}:${productEvent.pubkey}:${parsedProductData?.stallId}`,
 		productName: parsedProductData?.name,
 		quantity: parsedProductData?.quantity !== null ? parsedProductData?.quantity : undefined,
 	}
-
 	const existingImages = await getImagesByProductId(productId)
 
 	const newImages = parsedProductData?.images?.filter((img) => !existingImages.find((eImg) => eImg.imageUrl === img))
