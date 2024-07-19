@@ -221,6 +221,11 @@ export function truncateString(str: string, maxLenght: number = 18): string {
 	return str
 }
 
+export function truncateText(str: string, maxLenght: number = 180): string {
+	if (str.length > maxLenght) return str.substring(0, maxLenght) + '...'
+	return str
+}
+
 export const getElapsedTimeInDays = (unixTimestamp: number): number => {
 	const now = new Date()
 	const targetDate = new Date(unixTimestamp * 1000)

@@ -2,8 +2,6 @@
 	import type { NDKUserProfile } from '@nostr-dev-kit/ndk'
 	import type { DisplayProduct } from '$lib/server/products.service'
 	import type { RichStall } from '$lib/server/stalls.service'
-	import Pattern from '$lib/components/Pattern.svelte'
-	import ImgPlaceHolder from '$lib/components/product/imgPlaceHolder.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
 	import StallItem from '$lib/components/stalls/stall-item.svelte'
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar'
@@ -23,8 +21,7 @@
 	} from '$lib/nostrSubs/utils'
 	import { openDrawerForNewProduct, openDrawerForNewStall } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
-	import { copyToClipboard, getElapsedTimeInDays, stringToHexColor } from '$lib/utils'
-	import { npubEncode } from 'nostr-tools/nip19'
+	import { getElapsedTimeInDays, stringToHexColor, truncateText } from '$lib/utils'
 	import { onMount } from 'svelte'
 	import { get } from 'svelte/store'
 
@@ -34,6 +31,7 @@
 	let stalls: Partial<RichStall>[] | null
 	let toDisplayProducts: Partial<DisplayProduct>[]
 	let following = false
+	let showFullAbout = false
 
 	export let data: PageData
 	const {
@@ -155,25 +153,42 @@
 </script>
 
 {#if userProfile}
-	{@const { image, name } = userProfile}
+	{@const { image, name, about, banner } = userProfile}
 	<div class="px-4 lg:px-12">
 		<div class="flex flex-col gap-14 py-5">
-			<div class="container relative h-auto">
-				{#if userProfile.banner}
-					<img src={userProfile.banner} alt="profile" class="border-black border-2 object-cover w-full h-[25vh]" />
+			<div class="relative h-auto">
+				{#if banner}
+					<img src={banner} alt="profile" class="border-black border-2 object-cover w-full h-[25vh]" />
 				{:else}
 					<div style={`background-color: ${stringToHexColor(String(name))}`} class=" h-[10vh] border-2 border-black"></div>
 				{/if}
 
-				<Avatar class="border-black border-2 h-24 w-24 absolute top-5/6 left-[10vw] transform -translate-x-1/2 -translate-y-1/2">
-					<AvatarImage src={image} alt="profile" />
-					<AvatarFallback>{name}</AvatarFallback>
-				</Avatar>
-
-				<div class="flex flex-row ml-[12vw] mt-8 justify-between">
-					<div class="flex flex-col max-w-[70%]">
-						<h2>{name}</h2>
-						<p class="break-words overflow-hidden">{userProfile.about}</p>
+				<div class="grid lg:grid-cols-[auto_1fr_auto] grid-rows-[auto_1fr_auto] gap-4 mt-8 justify-between">
+					<div class=" px-2">
+						<Avatar class="border-black border-2 h-24 w-24">
+							<AvatarImage src={image} alt="pfp" />
+							<AvatarFallback style={`background-color: ${stringToHexColor(String(name))}`}
+								><span class="i-tdesign-user-1 w-8 h-8" /></AvatarFallback
+							>
+						</Avatar>
+					</div>
+					<div class="flex flex-col">
+						<h1 class=" text-3xl">{name}</h1>
+						{#if about}
+							{@const _about = truncateText(about)}
+							{#if _about !== about}
+								<p class="break-words">{showFullAbout ? about : _about}</p>
+								<Button variant="outline" size="icon" on:click={() => (showFullAbout = !showFullAbout)}>
+									{#if !showFullAbout}
+										<span class=" i-mdi-plus" />
+									{:else}
+										<span class=" i-mdi-minus" />
+									{/if}
+								</Button>
+							{:else}
+								<p class="break-words">{about}</p>
+							{/if}
+						{/if}
 					</div>
 					<div class="flex flex-col">
 						<div class="flex flex-row gap-2">

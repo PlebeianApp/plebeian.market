@@ -241,6 +241,7 @@ export async function setNostrData(
 	allowRegister: boolean = false,
 	userId: string,
 	userExists: boolean = false,
+	allowEmptyStall: boolean = true,
 ): Promise<{ userInserted: boolean; stallInserted: boolean; productsInserted: boolean } | undefined> {
 	let userInserted: boolean = false
 	let stallInserted: boolean = false
@@ -252,7 +253,8 @@ export async function setNostrData(
 		}
 
 		if (stallData) {
-			_shouldRegister && (stallInserted = await handleStallNostrData(stallData))
+			if (allowEmptyStall) _shouldRegister && (stallInserted = await handleStallNostrData(stallData))
+			else if (productsData?.size) _shouldRegister && (stallInserted = await handleStallNostrData(stallData))
 		}
 
 		if (productsData?.size) {

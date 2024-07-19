@@ -8,7 +8,6 @@
 	import Button from '$lib/components/ui/button/button.svelte'
 	import * as Carousel from '$lib/components/ui/carousel'
 	import Input from '$lib/components/ui/input/input.svelte'
-	import Separator from '$lib/components/ui/separator/separator.svelte'
 	import * as Tabs from '$lib/components/ui/tabs/index.js'
 	import { KindStalls } from '$lib/constants'
 	import { createProductPriceQuery, createProductQuery, createProductsByFilterQuery } from '$lib/fetch/products.queries'
@@ -17,7 +16,7 @@
 	import { fetchProductData, fetchStallData, fetchUserData, normalizeProductsFromNostr, setNostrData } from '$lib/nostrSubs/utils'
 	import { addProduct } from '$lib/stores/cart'
 	import { openDrawerForProduct } from '$lib/stores/drawer-ui'
-	import { cn, resolveQuery } from '$lib/utils'
+	import { cn, resolveQuery, truncateText } from '$lib/utils'
 	import { onMount } from 'svelte'
 
 	import type { PageData } from './$types'
@@ -207,9 +206,7 @@
 					<article>
 						<h4 class="text-2xl font-bold">Details</h4>
 						<p>
-							{toDisplayProducts[0].description.length > 180
-								? `${toDisplayProducts[0].description?.substring(0, 180)}...`
-								: toDisplayProducts[0].description}
+							{truncateText(toDisplayProducts[0].description)}
 						</p>
 					</article>
 				{/if}
