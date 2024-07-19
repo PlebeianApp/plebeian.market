@@ -34,7 +34,7 @@
 					{#if $stallQuery.data}
 						<div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
 							{#each $stallQuery.data as item}
-								<StallItem stall={item} />
+								<StallItem stallData={item} />
 							{/each}
 						</div>
 					{/if}

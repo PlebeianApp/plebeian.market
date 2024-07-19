@@ -91,23 +91,25 @@ export function formatPrice(price: number): string {
 	return Number(price.toFixed(2)).toString()
 }
 
-export function getEventCoordinates(event: NostrEvent | VerifiedEvent | NDKEvent): EventCoordinates {
+export function getEventCoordinates(event: NostrEvent | VerifiedEvent | NDKEvent): EventCoordinates | null {
 	const { kind, pubkey, tags } = event
 
 	const [_, tagD] = tags.find(([key]) => key === 'd') ?? []
 
 	if (!event || !kind || kind < 30000 || kind >= 40000 || !pubkey || !tagD) {
-		throw new Error(
+		console.warn(
 			!kind
-				? 'no kind?'
+				? 'No kind found in event'
 				: kind < 30000 || kind >= 40000
 					? 'Invalid event kind, must be between 30000 and 40000'
 					: !pubkey
 						? 'Event object missing pubkey'
 						: !tagD
 							? 'Event object missing "d" tag'
-							: 'Unknown error',
+							: 'Unknown error in getEventCoordinates',
 		)
+		console.warn('Event id:', event?.id, 'Event pubkey', event?.pubkey)
+		return null
 	}
 
 	return {

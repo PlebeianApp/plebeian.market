@@ -26,7 +26,7 @@
 			<main class="text-black">
 				<div class="lg:px-12">
 					<div class="container">
-						<div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+						<div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
 							{#each filteredCategories.slice(0, showMore ? filteredCategories.length : pageSize) as cat}
 								<CatCompactItem {cat} />
 							{/each}
