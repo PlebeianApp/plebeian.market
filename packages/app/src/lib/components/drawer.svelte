@@ -4,8 +4,8 @@
 	import type { RichStall } from '$lib/server/stalls.service'
 	import CreateEditProduct from '$lib/components/product/create-edit.svelte'
 	import CreateEditStall from '$lib/components/stalls/create-edit.svelte'
+	import { ScrollArea } from '$lib/components/ui/scroll-area/index.js'
 	import * as Sheet from '$lib/components/ui/sheet/index.js'
-	import { KindProducts, KindStalls } from '$lib/constants'
 	import { deleteProductMutation } from '$lib/fetch/products.mutations'
 	import { createProductQuery } from '$lib/fetch/products.queries'
 	import { deleteStallMutation } from '$lib/fetch/stalls.mutations'
@@ -87,50 +87,52 @@
 </script>
 
 <Sheet.Root bind:open={isOpen} onOutsideClick={closeDrawer}>
-	<Sheet.Content side="right" class="min-w-[30vw] flex flex-col border-l-black border-2">
-		<Sheet.Title class="flex flex-row justify-between items-center content-center">
-			<Button size="icon" variant="outline" class=" border-none" on:click={closeDrawer}>
-				<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
-			</Button>
+	<Sheet.Content side="right" class="min-w-[30vw] flex flex-col border-l-black border-2 p-2">
+		<ScrollArea class="h-auto">
+			<Sheet.Title class="flex flex-row justify-start items-center content-center ">
+				<Button size="icon" variant="outline" class=" border-none" on:click={closeDrawer}>
+					<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
+				</Button>
+				{#if $drawerUI.drawerType === 'cart'}
+					Your cart
+				{:else if $drawerUI.drawerType === 'product'}
+					{#if $drawerUI.id}<span>Edit product</span><Button
+							on:click={handleDeleteProduct}
+							size="icon"
+							variant="ghost"
+							class=" text-destructive border-0"><span class="i-tdesign-delete-1 w-4 h-4"></span></Button
+						>
+					{:else}
+						<span>Create new product</span>
+					{/if}
+				{:else if $drawerUI.drawerType === 'stall'}
+					{#if $drawerUI.id}<span>Edit stall</span><Button
+							on:click={handleDeleteStall}
+							size="icon"
+							variant="ghost"
+							class=" text-destructive border-0"
+							><span class="i-tdesign-delete-1 w-4 h-4"></span>
+						</Button>
+					{:else}
+						<span>Create new stall</span>
+					{/if}
+				{/if}
+			</Sheet.Title>
 			{#if $drawerUI.drawerType === 'cart'}
-				Your cart
+				<ShoppingCart />
 			{:else if $drawerUI.drawerType === 'product'}
-				{#if $drawerUI.id}<span>Edit product</span><Button
-						on:click={handleDeleteProduct}
-						size="icon"
-						variant="ghost"
-						class=" text-destructive border-0"><span class="i-tdesign-delete-1 w-4 h-4"></span></Button
-					>
+				{#if currentProduct}
+					<CreateEditProduct product={currentProduct} on:success={handleSuccess} forStall={$drawerUI.forStall} />
 				{:else}
-					<span>Create new product</span>
+					<CreateEditProduct product={null} on:success={handleSuccess} />
 				{/if}
 			{:else if $drawerUI.drawerType === 'stall'}
-				{#if $drawerUI.id}<span>Edit stall</span><Button
-						on:click={handleDeleteStall}
-						size="icon"
-						variant="ghost"
-						class=" text-destructive border-0"
-						><span class="i-tdesign-delete-1 w-4 h-4"></span>
-					</Button>
+				{#if currentStall}
+					<CreateEditStall stall={currentStall} on:success={handleSuccess} />
 				{:else}
-					<span>Create new stall</span>
+					<CreateEditStall stall={null} on:success={handleSuccess} />
 				{/if}
 			{/if}
-		</Sheet.Title>
-		{#if $drawerUI.drawerType === 'cart'}
-			<ShoppingCart />
-		{:else if $drawerUI.drawerType === 'product'}
-			{#if currentProduct}
-				<CreateEditProduct product={currentProduct} on:success={handleSuccess} forStall={$drawerUI.forStall} />
-			{:else}
-				<CreateEditProduct product={null} on:success={handleSuccess} />
-			{/if}
-		{:else if $drawerUI.drawerType === 'stall'}
-			{#if currentStall}
-				<CreateEditStall stall={currentStall} on:success={handleSuccess} />
-			{:else}
-				<CreateEditStall stall={null} on:success={handleSuccess} />
-			{/if}
-		{/if}
+		</ScrollArea>
 	</Sheet.Content>
 </Sheet.Root>

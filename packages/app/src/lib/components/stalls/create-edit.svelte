@@ -8,6 +8,7 @@
 	import { page } from '$app/stores'
 	import SingleImage from '$lib/components/settings/editable-image.svelte'
 	import { Button } from '$lib/components/ui/button/index.js'
+	import * as Collapsible from '$lib/components/ui/collapsible'
 	import * as Command from '$lib/components/ui/command/index.js'
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js'
 	import { Input } from '$lib/components/ui/input/index.js'
@@ -18,6 +19,7 @@
 	import { createStallFromNostrEvent, updateStallFromNostrEvent } from '$lib/fetch/stalls.mutations'
 	import ndkStore from '$lib/stores/ndk'
 	import { calculateGeohashAccuracy, checkIfUserExists, debounce, searchLocation, shouldRegister, unixTimeNow } from '$lib/utils'
+	import { ChevronsUpDown } from 'lucide-svelte'
 	import geohash from 'ngeohash'
 	import { createEventDispatcher, onMount, tick } from 'svelte'
 	import { get } from 'svelte/store'
@@ -230,11 +232,19 @@
 	}
 </script>
 
-<!-- TODO Use collapsible to improve screen space, also make the drawer use a scroll area to handle overflow -->
 <form class="flex flex-col gap-4 grow" on:submit|preventDefault={create}>
 	<div class="grid w-full items-center gap-1.5">
-		<Label for="userImage" class="font-bold">Header image(Optional)</Label>
-		<SingleImage src={headerImage ?? stall?.image} on:save={handleSaveBannerImage} />
+		<Collapsible.Root>
+			<Collapsible.Trigger asChild let:builder>
+				<Button builders={[builder]} variant="ghost" size="sm" class=" w-full p-0">
+					<Label for="userImage" class="font-bold">Header image(Optional)</Label>
+					<span class=" i-ion-chevron-expand" />
+				</Button>
+			</Collapsible.Trigger>
+			<Collapsible.Content>
+				<SingleImage src={headerImage ?? stall?.image} on:save={handleSaveBannerImage} />
+			</Collapsible.Content>
+		</Collapsible.Root>
 	</div>
 
 	<div class="grid w-full items-center gap-1.5">
@@ -246,51 +256,58 @@
 		<Textarea value={stall?.description} class="border-2 border-black" placeholder="Description" name="description" />
 	</div>
 	<div class="grid w-full items-center gap-1.5">
-		<div class="flex flex-row justify-between">
-			<Label for="from" class="font-bold">Shipping From (Optional)</Label>
-			{#if geohashOfSelectedGeometry}
-				<small class="ml-2 text-gray-500">Geohash: {geohashOfSelectedGeometry}</small>
-			{:else}
-				<small class="ml-2 text-gray-500">No geohash available</small>
-			{/if}
-		</div>
-		<Leaflet geoJSON={mapGeoJSON} />
-		<Popover.Root bind:open={locationSearchOpen} let:ids>
-			<Popover.Trigger asChild let:builder>
-				<Button
-					builders={[builder]}
-					variant="outline"
-					role="combobox"
-					aria-expanded={locationSearchOpen}
-					class="w-full justify-between border-2 border-black"
-				>
-					{selectedLocation?.display_name ?? 'Select a location...'}
-					{#if isLoading}
-						<Spinner />
-					{/if}
+		<Collapsible.Root>
+			<Collapsible.Trigger asChild let:builder>
+				<Button builders={[builder]} variant="ghost" size="sm" class=" w-full p-0">
+					<Label for="from" class="font-bold">Shipping From (Optional)</Label>
+					<span class=" i-ion-chevron-expand" />
 				</Button>
-			</Popover.Trigger>
-			<Popover.Content class="w-2/4 p-0">
-				<Command.Root>
-					<Command.Input placeholder="Search location..." bind:value={shippingFromInput} />
-					<Command.Empty>No location found.</Command.Empty>
-					<Command.Group>
-						{#each locationResults as location}
-							<Command.Item
-								value={location.display_name}
-								onSelect={() => {
-									handleLocationSelect(location.id)
-									closeAndFocusTrigger(ids.trigger)
-									selectedLocation = location
-								}}
-							>
-								{location.display_name}
-							</Command.Item>
-						{/each}
-					</Command.Group>
-				</Command.Root>
-			</Popover.Content>
-		</Popover.Root>
+			</Collapsible.Trigger>
+			<Collapsible.Content>
+				<div class="flex flex-row justify-between">
+					{#if geohashOfSelectedGeometry}
+						<small class="ml-2 text-gray-500">Geohash: {geohashOfSelectedGeometry}</small>
+					{/if}
+				</div>
+				<Leaflet geoJSON={mapGeoJSON} />
+				<Popover.Root bind:open={locationSearchOpen} let:ids>
+					<Popover.Trigger asChild let:builder>
+						<Button
+							builders={[builder]}
+							variant="outline"
+							role="combobox"
+							aria-expanded={locationSearchOpen}
+							class="w-full justify-between border-2 border-black"
+						>
+							{selectedLocation?.display_name ?? 'Select a location...'}
+							{#if isLoading}
+								<Spinner />
+							{/if}
+						</Button>
+					</Popover.Trigger>
+					<Popover.Content class="w-2/4 p-0">
+						<Command.Root>
+							<Command.Input placeholder="Search location..." bind:value={shippingFromInput} />
+							<Command.Empty>No location found.</Command.Empty>
+							<Command.Group>
+								{#each locationResults as location}
+									<Command.Item
+										value={location.display_name}
+										onSelect={() => {
+											handleLocationSelect(location.id)
+											closeAndFocusTrigger(ids.trigger)
+											selectedLocation = location
+										}}
+									>
+										{location.display_name}
+									</Command.Item>
+								{/each}
+							</Command.Group>
+						</Command.Root>
+					</Popover.Content>
+				</Popover.Root>
+			</Collapsible.Content>
+		</Collapsible.Root>
 	</div>
 
 	<div class="grid w-full items-center gap-1.5">
