@@ -2,7 +2,6 @@
 	import type { NDKUserProfile } from '@nostr-dev-kit/ndk'
 	import type { CarouselAPI } from '$lib/components/ui/carousel/context'
 	import type { DisplayProduct } from '$lib/server/products.service'
-	import { beforeNavigate } from '$app/navigation'
 	import Spinner from '$lib/components/assets/spinner.svelte'
 	import ImgPlaceHolder from '$lib/components/product/imgPlaceHolder.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
@@ -96,9 +95,6 @@
 			)
 		}
 	})
-	beforeNavigate(() => {
-		toDisplayProducts[0].images = []
-	})
 
 	const handleIncrement = () => {
 		if (qtyToCart < toDisplayProducts[0].quantity) {
@@ -117,33 +113,35 @@
 	<div class="container py-16">
 		<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
 			<div class="flex flex-col gap-4">
-				{#if toDisplayProducts[0]?.images?.length}
-					{@const sortedImages = toDisplayProducts[0].images.slice().sort((a, b) => a.imageOrder - b.imageOrder)}
-					<Carousel.Root bind:api>
-						<Carousel.Content>
+				{#key toDisplayProducts[0].identifier}
+					{#if toDisplayProducts[0]?.images?.length}
+						{@const sortedImages = toDisplayProducts[0].images.slice().sort((a, b) => a.imageOrder - b.imageOrder)}
+						<Carousel.Root bind:api>
+							<Carousel.Content>
+								{#each sortedImages as item, i}
+									<Carousel.Item>
+										<img class="w-full h-auto" src={item.imageUrl} alt="" />
+									</Carousel.Item>
+								{/each}
+							</Carousel.Content>
+							<Carousel.Previous class="ml-14" />
+							<Carousel.Next class="mr-14" />
+						</Carousel.Root>
+						<div class="py-2 text-center text-sm text-muted-foreground overflow-auto flex">
+							<!-- Image {current} of {count} -->
 							{#each sortedImages as item, i}
-								<Carousel.Item>
-									<img class="w-full h-auto" src={item.imageUrl} alt="" />
-								</Carousel.Item>
+								<button
+									class={cn('w-32 object-cover aspect-square cursor-pointer p-1', i === current - 1 ? 'border border-primary' : null)}
+									on:click={() => api?.scrollTo(i)}
+								>
+									<img src={item.imageUrl} alt="" />
+								</button>
 							{/each}
-						</Carousel.Content>
-						<Carousel.Previous class="ml-14" />
-						<Carousel.Next class="mr-14" />
-					</Carousel.Root>
-					<div class="py-2 text-center text-sm text-muted-foreground overflow-auto flex">
-						<!-- Image {current} of {count} -->
-						{#each sortedImages as item, i}
-							<button
-								class={cn('w-32 object-cover aspect-square cursor-pointer p-1', i === current - 1 ? 'border border-primary' : null)}
-								on:click={() => api?.scrollTo(i)}
-							>
-								<img src={item.imageUrl} alt="" />
-							</button>
-						{/each}
-					</div>
-				{:else}
-					<ImgPlaceHolder imageType={'main'} />
-				{/if}
+						</div>
+					{:else}
+						<ImgPlaceHolder imageType={'main'} />
+					{/if}
+				{/key}
 			</div>
 			<div class="flex flex-col">
 				{#if isMyProduct}
@@ -205,12 +203,16 @@
 						><span class="underline">{userProfile?.name ? userProfile?.name : userProfile?.displayName}<span /></span></a
 					>
 				</span>
-				<article>
-					<h4 class="text-2xl font-bold">Details</h4>
-					<p>
-						{toDisplayProducts[0].description}
-					</p>
-				</article>
+				{#if toDisplayProducts[0].description}
+					<article>
+						<h4 class="text-2xl font-bold">Details</h4>
+						<p>
+							{toDisplayProducts[0].description.length > 180
+								? `${toDisplayProducts[0].description?.substring(0, 180)}...`
+								: toDisplayProducts[0].description}
+						</p>
+					</article>
+				{/if}
 			</div>
 		</div>
 	</div>
