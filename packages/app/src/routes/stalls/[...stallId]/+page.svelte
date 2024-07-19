@@ -71,7 +71,7 @@
 				const { stallNostrRes: stallData } = await fetchStallData(stall.id)
 
 				if (stallData) {
-					const normalizedStall = normalizeStallData(stallData).data
+					const normalizedStall = (await normalizeStallData(stallData)).data
 					if (normalizedStall) {
 						stallResponse = normalizedStall
 					}

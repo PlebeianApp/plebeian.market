@@ -172,10 +172,9 @@
 		if ($userExistQuery.isFetched && !$userExistQuery.data) {
 			const { stallNostrRes } = await fetchUserStallsData($ndkStore.activeUser?.pubkey as string)
 			if (stallNostrRes) {
-				const normalizedStallData = [...stallNostrRes]
-					.map(normalizeStallData)
-					.filter((result) => result.data !== null)
-					.map((result) => result.data)
+				const normalizedStallData = await Promise.all([...stallNostrRes].map(normalizeStallData)).then((results) =>
+					results.filter((result) => result.data !== null).map((result) => result.data),
+				)
 
 				if (stalls?.length) {
 					const newStalls = normalizedStallData.filter((stall) => !stalls?.some((existingStall) => stall.id === existingStall.id))

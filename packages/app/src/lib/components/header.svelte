@@ -47,7 +47,6 @@
 			</a>
 			<div class="hidden lg:flex mx-8 gap-8">
 				<a class="hover:underline font-semibold" href="/stalls/">Stall Browser</a>
-				<!-- <a class="hover:underline font-semibold" href="/category/">Category Browser</a> -->
 				<a class="hover:underline font-semibold" href="/market">Market Square</a>
 				<a class="hover:underline font-semibold" href="/">Plebeian Planet</a>
 			</div>

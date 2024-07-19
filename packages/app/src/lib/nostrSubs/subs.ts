@@ -3,11 +3,9 @@ import type { ExtendedBaseType, NDKEventStore } from '@nostr-dev-kit/ndk-svelte'
 import { page } from '$app/stores'
 import { KindStalls } from '$lib/constants'
 import ndkStore from '$lib/stores/ndk'
-import { derived, get } from 'svelte/store'
+import { get } from 'svelte/store'
 
 import type { AppSettings } from '@plebeian/database'
-
-import { normalizeStallData } from './utils'
 
 const ndk = get(ndkStore)
 

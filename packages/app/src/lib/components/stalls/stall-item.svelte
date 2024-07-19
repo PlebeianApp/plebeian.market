@@ -20,7 +20,7 @@
 
 	async function handleNDKEvent(event: NDKEvent) {
 		const authorPk = event.author.pubkey
-		const { data: parsedStall, error: _parseError } = normalizeStallData(event)
+		const { data: parsedStall, error: _parseError } = await normalizeStallData(event)
 		parseError = _parseError
 
 		if (!parsedStall || !parsedStall.shipping || !parsedStall.name) return
