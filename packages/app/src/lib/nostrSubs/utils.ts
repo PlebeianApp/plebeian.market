@@ -8,9 +8,11 @@ import { createProductsFromNostrMutation } from '$lib/fetch/products.mutations'
 import { createStallFromNostrEvent } from '$lib/fetch/stalls.mutations'
 import { userFromNostr } from '$lib/fetch/users.mutations'
 import ndkStore from '$lib/stores/ndk'
+import { addCachedEvent, getCachedEvent, updateCachedEvent } from '$lib/stores/session'
 import { getEventCoordinates, shouldRegister } from '$lib/utils'
 import { format } from 'date-fns'
 import { get } from 'svelte/store'
+import { ZodError } from 'zod'
 
 import type { ProductImagesType } from '@plebeian/database'
 
@@ -113,36 +115,77 @@ export async function handleProductNostrData(productsData: Set<NDKEvent>): Promi
 	return productsMutation ? true : false
 }
 
-export function normalizeStallData(nostrStall: NDKEvent): Partial<RichStall> | null {
-	const { tagD: identifier, coordinates: id } = getEventCoordinates(nostrStall)
-	const parsedStallContent = JSON.parse(nostrStall.content)
-	const parsedShipping: Partial<RichShippingInfo>[] =
-		parsedStallContent.shipping?.map((shipping: unknown) => {
-			const { data: shippingData, success } = shippingObjectSchema.safeParse(shipping)
-			if (!success) return null
-			return {
-				id: shippingData?.id,
-				name: shippingData?.name as string,
-				cost: shippingData?.cost,
-				regions: shippingData.regions,
-				countries: shippingData.countries,
-			} as RichShippingInfo
-		}) ?? []
+export async function normalizeStallData(nostrStall: NDKEvent): Promise<{ data: Partial<RichStall> | null; error: ZodError | null }> {
+	const coordinates = getEventCoordinates(nostrStall)
+	if (!nostrStall.content || !coordinates) {
+		return { data: null, error: null }
+	}
+
+	const cachedEvent = await getCachedEvent(coordinates.coordinates)
+	const isNewer = cachedEvent && cachedEvent.createdAt !== nostrStall?.created_at
+	if (cachedEvent && !isNewer) {
+		return { data: cachedEvent.data as Partial<RichStall>, error: cachedEvent.parseError }
+	}
+
+	let result: { data: Partial<RichStall> | null; error: ZodError | null }
 
 	try {
-		const { data, success } = stallEventSchema.safeParse(parsedStallContent)
-		if (!success) return null
-		return {
-			...data,
-			createDate: format(nostrStall.created_at ? nostrStall.created_at * 1000 : '', standardDisplayDateFormat),
-			identifier,
-			id,
-			userId: nostrStall.pubkey,
-			shipping: parsedShipping,
-			image: nostrStall.tagValue('image'),
+		const parsedStallContent = JSON.parse(nostrStall.content)
+		const parsedShipping: Partial<RichShippingInfo>[] =
+			parsedStallContent.shipping?.map((shipping: unknown) => {
+				const { data: shippingData, success, error: parseError } = shippingObjectSchema.safeParse(shipping)
+				if (!success) return { data: null, error: parseError }
+				return {
+					id: shippingData?.id,
+					name: shippingData?.name as string,
+					cost: shippingData?.cost,
+					regions: shippingData.regions,
+					countries: shippingData.countries,
+				} as RichShippingInfo
+			}) ?? []
+
+		const { data, success, error: parseError } = stallEventSchema.passthrough().safeParse(parsedStallContent)
+		if (!success && data) {
+			result = { data, error: parseError }
+		} else {
+			result = {
+				data: {
+					...data,
+					createDate: format(nostrStall.created_at ? nostrStall.created_at * 1000 : '', standardDisplayDateFormat),
+					identifier: coordinates.tagD,
+					id: coordinates.coordinates,
+					userId: coordinates.pubkey,
+					shipping: parsedShipping,
+					image: nostrStall.tagValue('image'),
+				},
+				error: null,
+			}
 		}
-	} catch (e) {
-		return null
+
+		if (isNewer == undefined) {
+			await addCachedEvent({
+				id: coordinates.coordinates,
+				createdAt: nostrStall.created_at as number,
+				kind: coordinates.kind,
+				pubkey: coordinates.pubkey,
+				data: result.data,
+				parseError: result.error,
+			})
+		} else {
+			await updateCachedEvent(coordinates.coordinates, {
+				id: coordinates.coordinates,
+				createdAt: nostrStall.created_at as number,
+				kind: coordinates.kind,
+				pubkey: coordinates.pubkey,
+				data: result.data,
+				parseError: result.error,
+			})
+		}
+
+		return result
+	} catch (error) {
+		console.error('Error processing stall data:', error)
+		return { data: null, error: error instanceof ZodError ? error : null }
 	}
 }
 
@@ -164,7 +207,7 @@ export function normalizeProductsFromNostr(
 				quantity: product.quantity as number,
 				images: product.images?.map((image) => ({
 					createdAt: new Date(),
-					productId: product.id,
+					productId: product.id as string,
 					auctionId: null,
 					imageUrl: image,
 					imageType: 'gallery' as ProductImagesType,
@@ -178,7 +221,7 @@ export function normalizeProductsFromNostr(
 				quantity: product.quantity as number,
 				images: product.images?.map((image) => ({
 					createdAt: new Date(),
-					productId: product.id,
+					productId: product.id as string,
 					auctionId: null,
 					imageUrl: image,
 					imageType: 'gallery' as ProductImagesType,

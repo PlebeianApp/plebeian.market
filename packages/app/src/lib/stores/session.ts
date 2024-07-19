@@ -1,19 +1,23 @@
+import type { ZodError } from 'zod'
 import Dexie from 'dexie'
 
 class SessionDexie extends Dexie {
-	accounts: Dexie.Table<Account, string> // Account is the type of your account object
+	accounts: Dexie.Table<Account, string>
+	cachedEvents: Dexie.Table<CachedEvent, string>
 
 	constructor() {
 		super('plebeian.session')
-		this.version(1).stores({
+		this.version(2).stores({
 			accounts: 'hexPubKey, type, lastLogged, relays, cSk',
+			cachedEvents: 'id, createdAt',
 		})
 		this.accounts = this.table('accounts')
+		this.cachedEvents = this.table('cachedEvents')
 	}
 }
 
 const sessions = new SessionDexie()
-
+// Account types
 export type BaseAccount = {
 	hexPubKey: string
 	type: 'NIP07' | 'NSEC' | 'NIP46'
@@ -36,6 +40,17 @@ type Nip46Account = BaseAccount & {
 
 type Account = Nip07Account | NsecAccount | Nip46Account
 
+// Cached Events type
+export type CachedEvent = {
+	id: string
+	createdAt: number
+	kind: number
+	pubkey: string
+	data: unknown
+	parseError: ZodError | null
+}
+
+// Account helper functions
 export async function addAccount(account: Account) {
 	try {
 		const result = await sessions.accounts.add(account)
@@ -63,4 +78,41 @@ export async function updateAccount(hexPubKey: string, updates: Partial<Account>
 
 export async function deleteAccount(hexPubKey: string): Promise<void> {
 	await sessions.accounts.where('hexPubKey').equals(hexPubKey).delete()
+}
+
+// Helper functions for cached events
+export async function getCachedEvent(id: string): Promise<CachedEvent | undefined> {
+	return await sessions.cachedEvents.get(id)
+}
+
+export async function addCachedEvent(event: CachedEvent): Promise<void> {
+	try {
+		await sessions.cachedEvents.put(event)
+		// console.log('Event cached in indexDB', event)
+	} catch (error) {
+		if (error instanceof Dexie.DexieError) {
+			console.warn(error.message)
+		} else {
+			throw error
+		}
+	}
+}
+
+export async function updateCachedEvent(id: string, updates: Partial<CachedEvent>): Promise<void> {
+	await sessions.cachedEvents.update(id, updates)
+}
+
+export async function deleteCachedEvent(id: string): Promise<void> {
+	await sessions.cachedEvents.where('id').equals(id).delete()
+}
+
+export async function cleanupCachedEvents(maxEntries: number = 1000, maxAgeMs: number = 7 * 24 * 60 * 60 * 1000): Promise<void> {
+	queueMicrotask(async () => {
+		const now = Date.now()
+		const allEvents = await sessions.cachedEvents.toArray()
+
+		const eventsToRemove = allEvents.filter((event) => now - event.createdAt > maxAgeMs || allEvents.length > maxEntries)
+
+		await sessions.cachedEvents.bulkDelete(eventsToRemove.map((event) => event.id))
+	})
 }

@@ -14,6 +14,7 @@
 	import Drawer from '$lib/components/drawer.svelte'
 	import { createCategoriesByFilterQuery } from '$lib/fetch/category.queries'
 	import { queryClient } from '$lib/fetch/client'
+	import { cleanupCachedEvents } from '$lib/stores/session'
 	import { get } from 'svelte/store'
 
 	import type { LayoutData } from './$types'
@@ -42,6 +43,7 @@
 				},
 			})
 		}
+		cleanupCachedEvents()
 	})
 
 	$: webManifestLink = pwaInfo ? pwaInfo.webManifest.linkTag : ''

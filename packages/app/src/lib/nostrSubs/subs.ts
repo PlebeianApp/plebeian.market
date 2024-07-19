@@ -3,11 +3,9 @@ import type { ExtendedBaseType, NDKEventStore } from '@nostr-dev-kit/ndk-svelte'
 import { page } from '$app/stores'
 import { KindStalls } from '$lib/constants'
 import ndkStore from '$lib/stores/ndk'
-import { derived, get } from 'svelte/store'
+import { get } from 'svelte/store'
 
 import type { AppSettings } from '@plebeian/database'
-
-import { normalizeStallData } from './utils'
 
 const ndk = get(ndkStore)
 
@@ -25,5 +23,3 @@ export const stallsSub: NDKEventStore<ExtendedBaseType<NDKEvent>> = ndk.storeSub
 	{ kinds: [KindStalls], limit: 25 },
 	{ closeOnEose: true, autoStart: false },
 )
-
-export const validStalls = derived(stallsSub, ($stallsSub) => $stallsSub.map(normalizeStallData).filter((stall) => stall !== null))
