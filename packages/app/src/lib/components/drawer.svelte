@@ -51,7 +51,7 @@
 			const { nostrProduct: productsData } = await fetchProductData($drawerUI.id as string)
 			if (!productsData?.size) return
 			if (productsData) {
-				const result = normalizeProductsFromNostr(productsData, $ndkStore.activeUser?.pubkey as string)
+				const result = await normalizeProductsFromNostr(productsData, $ndkStore.activeUser?.pubkey as string)
 				if (result) {
 					const { toDisplayProducts: _toDisplay } = result
 					currentProduct = _toDisplay[0]

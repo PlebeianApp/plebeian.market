@@ -12,7 +12,7 @@ import { addCachedEvent, getCachedEvent, updateCachedEvent } from '$lib/stores/s
 import { getEventCoordinates, shouldRegister } from '$lib/utils'
 import { format } from 'date-fns'
 import { get } from 'svelte/store'
-import { ZodError } from 'zod'
+import { ZodError, ZodSchema } from 'zod'
 
 import type { ProductImagesType } from '@plebeian/database'
 
@@ -115,123 +115,140 @@ export async function handleProductNostrData(productsData: Set<NDKEvent>): Promi
 	return productsMutation ? true : false
 }
 
-export async function normalizeStallData(nostrStall: NDKEvent): Promise<{ data: Partial<RichStall> | null; error: ZodError | null }> {
-	const coordinates = getEventCoordinates(nostrStall)
-	if (!nostrStall.content || !coordinates) {
-		return { data: null, error: null }
-	}
+type NormalizedData<T> = { data: Partial<T> | null; error: ZodError | null }
+
+async function normalizeNostrData<T>(
+	event: NDKEvent,
+	schema: ZodSchema,
+	transformer: (data: unknown, coordinates: ReturnType<typeof getEventCoordinates>) => Partial<T>,
+): Promise<NormalizedData<T>> {
+	const coordinates = getEventCoordinates(event)
+	if (!event.content || !coordinates) return { data: null, error: null }
 
 	const cachedEvent = await getCachedEvent(coordinates.coordinates)
-	const isNewer = cachedEvent && cachedEvent.createdAt !== nostrStall?.created_at
-	if (cachedEvent && !isNewer) {
-		return { data: cachedEvent.data as Partial<RichStall>, error: cachedEvent.parseError }
+	if (cachedEvent && cachedEvent.createdAt === event.created_at) {
+		return { data: cachedEvent.data as Partial<T>, error: cachedEvent.parseError }
 	}
 
-	let result: { data: Partial<RichStall> | null; error: ZodError | null }
-
 	try {
-		const parsedStallContent = JSON.parse(nostrStall.content)
-		const parsedShipping: Partial<RichShippingInfo>[] =
-			parsedStallContent.shipping?.map((shipping: unknown) => {
-				const { data: shippingData, success, error: parseError } = shippingObjectSchema.safeParse(shipping)
-				if (!success) return { data: null, error: parseError }
-				return {
-					id: shippingData?.id,
-					name: shippingData?.name as string,
-					cost: shippingData?.cost,
-					regions: shippingData.regions,
-					countries: shippingData.countries,
-				} as RichShippingInfo
-			}) ?? []
+		const parsedContent = JSON.parse(event.content)
+		const { data, success, error: parseError } = schema.safeParse(parsedContent)
 
-		const { data, success, error: parseError } = stallEventSchema.passthrough().safeParse(parsedStallContent)
-		if (!success && data) {
-			result = { data, error: parseError }
-		} else {
-			result = {
-				data: {
-					...data,
-					createDate: format(nostrStall.created_at ? nostrStall.created_at * 1000 : '', standardDisplayDateFormat),
-					identifier: coordinates.tagD,
-					id: coordinates.coordinates,
-					userId: coordinates.pubkey,
-					shipping: parsedShipping,
-					image: nostrStall.tagValue('image'),
-				},
-				error: null,
-			}
+		if (!success) return { data: null, error: parseError }
+
+		const transformedData = transformer(data, coordinates)
+		const result: NormalizedData<T> = { data: transformedData, error: null }
+
+		// Update cache
+		const cacheData = {
+			id: coordinates.coordinates,
+			createdAt: event.created_at as number,
+			kind: coordinates.kind,
+			pubkey: coordinates.pubkey,
+			data: result.data,
+			parseError: result.error,
 		}
 
-		if (isNewer == undefined) {
-			await addCachedEvent({
-				id: coordinates.coordinates,
-				createdAt: nostrStall.created_at as number,
-				kind: coordinates.kind,
-				pubkey: coordinates.pubkey,
-				data: result.data,
-				parseError: result.error,
-			})
+		if (cachedEvent) {
+			await updateCachedEvent(coordinates.coordinates, cacheData)
 		} else {
-			await updateCachedEvent(coordinates.coordinates, {
-				id: coordinates.coordinates,
-				createdAt: nostrStall.created_at as number,
-				kind: coordinates.kind,
-				pubkey: coordinates.pubkey,
-				data: result.data,
-				parseError: result.error,
-			})
+			await addCachedEvent(cacheData)
 		}
 
 		return result
 	} catch (error) {
-		console.error('Error processing stall data:', error)
+		console.error('Error processing data:', error)
 		return { data: null, error: error instanceof ZodError ? error : null }
 	}
 }
 
-export function normalizeProductsFromNostr(
+export async function normalizeStallData(nostrStall: NDKEvent): Promise<NormalizedData<RichStall>> {
+	return normalizeNostrData<RichStall>(nostrStall, stallEventSchema.passthrough(), (data, coordinates) => ({
+		...data,
+		createDate: formatDate(nostrStall.created_at),
+		identifier: coordinates.tagD,
+		id: coordinates.coordinates,
+		userId: coordinates.pubkey,
+		shipping: parseShipping(data.shipping),
+		image: nostrStall.tagValue('image'),
+	}))
+}
+
+function parseShipping(shipping: unknown[]): Partial<RichShippingInfo>[] {
+	return (shipping ?? [])
+		.map((item) => {
+			const { data: shippingData } = shippingObjectSchema.safeParse(item)
+			return shippingData
+				? ({
+						id: shippingData.id,
+						name: shippingData.name,
+						cost: shippingData.cost,
+						regions: shippingData.regions,
+						countries: shippingData.countries,
+					} as RichShippingInfo)
+				: null
+		})
+		.filter((item): item is RichShippingInfo => item !== null)
+}
+
+async function processProduct(
+	event: NDKEvent,
+	userId: string,
+	stallId?: string,
+): Promise<{ displayProduct: Partial<DisplayProduct>; event: NDKEvent } | null> {
+	const result = await normalizeNostrData<DisplayProduct>(event, productEventSchema, (data, coordinates) => ({
+		...data,
+		quantity: data.quantity as number,
+		images: createProductImages(data),
+		userId,
+		createdAt: formatDate(event.created_at),
+		identifier: coordinates.tagD,
+		id: coordinates.coordinates,
+	}))
+
+	if (result.data && (!stallId || result.data.stallId === stallId?.split(':')[2])) {
+		return { displayProduct: result.data, event }
+	}
+
+	return null
+}
+
+function createProductImages(
+	data: unknown,
+): { createdAt: Date; productId: string; auctionId: null; imageUrl: string; imageType: ProductImagesType; imageOrder: number }[] {
+	return (
+		data.images?.map((image: string, index: number) => ({
+			createdAt: new Date(),
+			productId: data.id as string,
+			auctionId: null,
+			imageUrl: image,
+			imageType: 'gallery' as ProductImagesType,
+			imageOrder: index,
+		})) ?? []
+	)
+}
+
+export function formatDate(timestamp: number | undefined): string {
+	return format(timestamp ? timestamp * 1000 : '', standardDisplayDateFormat)
+}
+
+export async function normalizeProductsFromNostr(
 	productsData: Set<NDKEvent>,
 	userId: string,
 	stallId?: string,
-): { toDisplayProducts: Partial<DisplayProduct>[]; stallProducts: Set<NDKEvent> } | null {
-	const toDisplayProducts: Partial<DisplayProduct>[] = []
-	const stallProducts = new Set<NDKEvent>()
-	for (const event of productsData) {
-		const { data: product, success, error: parseError } = productEventSchema.safeParse(JSON.parse(event.content))
-		if (!success) return null
+): Promise<{ toDisplayProducts: Partial<DisplayProduct>[]; stallProducts: Set<NDKEvent> } | null> {
+	if (!productsData.size || !stallId) return null
 
-		if (product.stallId == stallId?.split(':')[2]) {
-			stallProducts.add(event)
-			toDisplayProducts.push({
-				...product,
-				quantity: product.quantity as number,
-				images: product.images?.map((image) => ({
-					createdAt: new Date(),
-					productId: product.id as string,
-					auctionId: null,
-					imageUrl: image,
-					imageType: 'gallery' as ProductImagesType,
-					imageOrder: 0,
-				})),
-				userId: userId,
-			})
-		} else if (!stallId) {
-			toDisplayProducts.push({
-				...product,
-				quantity: product.quantity as number,
-				images: product.images?.map((image) => ({
-					createdAt: new Date(),
-					productId: product.id as string,
-					auctionId: null,
-					imageUrl: image,
-					imageType: 'gallery' as ProductImagesType,
-					imageOrder: 0,
-				})),
-				userId: userId,
-			})
-		}
+	const processedProducts = await Promise.all(Array.from(productsData).map((event) => processProduct(event, userId, stallId)))
+
+	const validProducts = processedProducts.filter((product): product is NonNullable<typeof product> => product !== null)
+
+	if (!validProducts.length) return null
+
+	return {
+		toDisplayProducts: validProducts.map((p) => p.displayProduct),
+		stallProducts: new Set(validProducts.map((p) => p.event)),
 	}
-	return { toDisplayProducts, stallProducts }
 }
 
 export async function setNostrData(
@@ -251,17 +268,15 @@ export async function setNostrData(
 		if (userData) {
 			_shouldRegister && (userInserted = await handleUserNostrData(userData, userId))
 		}
-
 		if (stallData) {
 			if (allowEmptyStall) _shouldRegister && (stallInserted = await handleStallNostrData(stallData))
 			else if (productsData?.size) _shouldRegister && (stallInserted = await handleStallNostrData(stallData))
 		}
-
 		if (productsData?.size) {
 			if (stallData) {
 				const { coordinates: stallCoordinates } = getEventCoordinates(stallData)
-				const result = normalizeProductsFromNostr(productsData, userId, stallCoordinates)
-				if (result) {
+				const result = await normalizeProductsFromNostr(productsData, userId, stallCoordinates)
+				if (result?.stallProducts.size) {
 					const { stallProducts } = result
 					_shouldRegister && (productsInserted = await handleProductNostrData(stallProducts))
 				}

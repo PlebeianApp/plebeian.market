@@ -4,10 +4,10 @@
 	import { categoriesQuery } from '$lib/fetch/category.queries'
 </script>
 
-<div class="flex min-h-screen w-full flex-col bg-muted/40">
+<div class="flex w-full flex-col">
 	<div class="flex flex-col">
 		<main class="text-black">
-			<div class="px-4 py-20 lg:px-12">
+			<div class="px-4 py-8 lg:px-12">
 				<div class="container">
 					<h2>Categories</h2>
 					<div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">

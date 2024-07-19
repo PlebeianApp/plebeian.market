@@ -32,10 +32,10 @@ const setDrawerState = (state: { drawerType: DraweUiType; id: IdType; forStall: 
 
 export const openDrawerForCart = () => {
 	const currentNdkStore = get(ndkStore)
-	if (!isUserLoggedIn(currentNdkStore)) {
-		handleUserNotLoggedIn('view your cart')
-		return
-	}
+	// if (!isUserLoggedIn(currentNdkStore)) {
+	// 	handleUserNotLoggedIn('view your cart')
+	// 	return
+	// }
 	setDrawerState({
 		drawerType: 'cart',
 		id: null,

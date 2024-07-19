@@ -85,7 +85,7 @@
 
 				const { products: productsData } = await fetchUserProductData(user.id)
 				if (productsData?.size) {
-					const result = normalizeProductsFromNostr(productsData, user.id as string, stall.id)
+					const result = await normalizeProductsFromNostr(productsData, user.id as string, stall.id)
 					if (result) {
 						const { toDisplayProducts: _toDisplay } = result
 						toDisplayProducts = _toDisplay
@@ -123,7 +123,7 @@
 </script>
 
 <main class="px-4 lg:px-12">
-	<div class="flex flex-col gap-14 py-5">
+	<div class="flex flex-col gap-14">
 		{#if stallResponse}
 			<div class="flex flex-col gap-2">
 				{#if stallResponse.image}
@@ -164,7 +164,8 @@
 								<AvatarImage src={userProfile?.image} alt="@shadcn" />
 								<AvatarFallback
 									style={`background-color: ${stringToHexColor(String(userProfile?.name ? userProfile?.name : userProfile?.displayName))}`}
-								></AvatarFallback>
+									><span class="i-tdesign-user-1 w-8 h-8" /></AvatarFallback
+								>
 							</Avatar>
 							<span>{userProfile?.name ? userProfile?.name : userProfile?.displayName}</span>
 						</a>
@@ -231,7 +232,7 @@
 		</div>
 	{:else}
 		<div class=" flex gap-4">
-			{#each [...Array(6)] as _, i}
+			{#each [...Array(3)] as _, i}
 				<Skeleton class=" h-80 w-full border-4 border-black text-black group" />
 			{/each}
 		</div>

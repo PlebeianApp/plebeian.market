@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
+	import { stringToHexColor } from '$lib/utils'
 
 	import AvatarFallback from '../ui/avatar/avatar-fallback.svelte'
 	import AvatarImage from '../ui/avatar/avatar-image.svelte'
@@ -20,7 +21,9 @@
 				{#if $userQuery.data.image}
 					<Avatar class="w-6 h-6">
 						<AvatarImage src={$userQuery.data.image} alt="pfp" />
-						<AvatarFallback>{$userQuery.data.name}</AvatarFallback>
+						<AvatarFallback style={`background-color: ${stringToHexColor(String($userQuery.data.name))}`}
+							><span class="i-tdesign-user-1 w-8 h-8" /></AvatarFallback
+						>
 					</Avatar>
 				{:else}
 					<span class=" i-tdesign-user w-6 h-6" />

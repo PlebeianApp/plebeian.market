@@ -1,13 +1,16 @@
-<div class="spinner">
+<script lang="ts">
+	export let size = 25
+
+	const sizeFormatted = `${size}px`
+</script>
+
+<div class="spinner" style={`width: ${sizeFormatted}; height: ${sizeFormatted};`}>
 	<div class="double-bounce1"></div>
 	<div class="double-bounce2"></div>
 </div>
 
 <style>
 	.spinner {
-		width: 25px;
-		height: 25px;
-
 		position: relative;
 		padding: 2px;
 	}

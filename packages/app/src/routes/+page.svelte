@@ -16,7 +16,7 @@
 </script>
 
 {#if !isFirstTimeRunning}
-	<div class="flex min-h-screen w-full flex-col bg-muted/40">
+	<div class="flex min-h-screen w-full flex-col">
 		<div class="flex flex-col">
 			<main class="text-black">
 				<div class="relative w-full bg-black py-20 text-center text-white">

@@ -110,8 +110,8 @@
 			<section class="flex-1">
 				<slot />
 			</section>
-			<Footer />
 			<Drawer />
+			<Footer />
 		</div>
 	{/if}
 </QueryClientProvider>

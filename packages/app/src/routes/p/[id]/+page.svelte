@@ -74,10 +74,9 @@
 		const { stallNostrRes } = await fetchUserStallsData(id)
 
 		if (stallNostrRes) {
-			const normalizedStallData = [...stallNostrRes]
-				.map(normalizeStallData)
-				.filter((result) => result.data !== null)
-				.map((result) => result.data)
+			const normalizedStallData = await Promise.all([...stallNostrRes].map(normalizeStallData)).then((results) =>
+				results.filter((result) => result.data !== null).map((result) => result.data),
+			)
 
 			if (stalls?.length) {
 				const newStalls = normalizedStallData.filter((stall) => !stalls?.some((existingStall) => stall?.id === existingStall.id))
@@ -93,7 +92,7 @@
 
 			const { products: productsData } = await fetchUserProductData(id)
 			if (productsData) {
-				const result = normalizeProductsFromNostr(productsData, id as string)
+				const result = await normalizeProductsFromNostr(productsData, id as string)
 				if (result) {
 					const { toDisplayProducts: _toDisplay } = result
 					toDisplayProducts = _toDisplay
@@ -114,7 +113,7 @@
 			}
 			const { products: productsData } = await fetchUserProductData(id)
 			if (productsData) {
-				const result = normalizeProductsFromNostr(productsData, id as string)
+				const result = await normalizeProductsFromNostr(productsData, id as string)
 				if (result) {
 					const { toDisplayProducts: _toDisplay } = result
 					toDisplayProducts = _toDisplay
@@ -155,7 +154,7 @@
 {#if userProfile}
 	{@const { image, name, about, banner } = userProfile}
 	<div class="px-4 lg:px-12">
-		<div class="flex flex-col gap-14 py-5">
+		<div class="flex flex-col gap-14">
 			<div class="relative h-auto">
 				{#if banner}
 					<img src={banner} alt="profile" class="border-black border-2 object-cover w-full h-[25vh]" />

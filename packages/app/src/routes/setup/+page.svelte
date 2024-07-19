@@ -114,7 +114,20 @@
 						{/if}
 
 						<Label class="truncate font-bold">Owner npub</Label>
-						<Input class=" border-black border-2" name="ownerPk" placeholder="owner npub" type="text" />
+						<div class="flex flex-row gap-2">
+							<Input class=" border-black border-2" name="ownerPk" placeholder="owner npub" type="text" id="ownerPkInput" />
+							<Button
+								on:click={async () => {
+									const user = await window.nostr?.getPublicKey()
+									const inputElement = document.getElementById('ownerPkInput')
+									if (inputElement && 'value' in inputElement) {
+										inputElement.value = npubEncode(user)
+									}
+								}}
+							>
+								<span class=" i-mingcute-key-2-fill text-black w-6 h-6"></span>
+							</Button>
+						</div>
 						<div class=" flex-grow">
 							<Label class="truncate font-bold">Instance name</Label>
 							<Input required class="border-black border-2" name="instanceName" placeholder="instance name" type="text" />
