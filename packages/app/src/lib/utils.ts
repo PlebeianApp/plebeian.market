@@ -128,15 +128,6 @@ export function customTagValue(eventTags: NDKTag[], key: string, thirdValue?: st
 	return values
 }
 
-export const slugify = (str: string) => {
-	return decodeURIComponent(str)
-		.toLowerCase()
-		.replace(/\s+/g, '-')
-		.replace(/[^\w-]/g, '')
-		.replace(/-+/g, '-')
-		.replace(/^-*|-*$/g, '')
-}
-
 export function isPReplacEvent(n: number | NDKKind): boolean {
 	return n >= 30000 && n < 40000
 }
@@ -227,6 +218,11 @@ export function nav_back() {
 
 export function truncateString(str: string, maxLenght: number = 18): string {
 	if (str.length > maxLenght) return str.substring(0, 12) + ':' + str.substring(str.length - 6)
+	return str
+}
+
+export function truncateText(str: string, maxLenght: number = 180): string {
+	if (str.length > maxLenght) return str.substring(0, maxLenght) + '...'
 	return str
 }
 

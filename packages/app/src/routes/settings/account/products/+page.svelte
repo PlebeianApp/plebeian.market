@@ -51,7 +51,7 @@
 			const { products: productsData } = await fetchUserProductData(activeUser.id)
 
 			if (productsData) {
-				const result = normalizeProductsFromNostr(productsData, activeUser.id as string)
+				const result = await normalizeProductsFromNostr(productsData, activeUser.id as string)
 
 				if (result) {
 					const { toDisplayProducts: _toDisplay } = result
@@ -61,7 +61,7 @@
 		} else {
 			const { products: productsData } = await fetchUserProductData(activeUser.id)
 			if (productsData) {
-				const result = normalizeProductsFromNostr(productsData, activeUser.id as string)
+				const result = await normalizeProductsFromNostr(productsData, activeUser.id as string)
 				if (result) {
 					const { toDisplayProducts: _toDisplay } = result
 					if (toDisplayProducts.length) {
