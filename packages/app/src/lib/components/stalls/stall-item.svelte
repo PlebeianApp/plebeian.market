@@ -49,7 +49,7 @@
 </script>
 
 {#if stall}
-	<Card.Root class="relative grid grid-rows-[auto_1fr_auto] h-[40vh] border-2 border-black text-black group overflow-hidden">
+	<Card.Root class="relative grid grid-rows-[auto_1fr_auto] h-[44vh] border-2 border-black text-black group overflow-hidden">
 		<a
 			href={stall.userNip05
 				? `/stalls/${stall.userNip05.toLocaleLowerCase()}/${stall.identifier}`
@@ -57,7 +57,7 @@
 		>
 			<Card.Header class="p-0">
 				{#if stall.image}
-					<div class="h-[28vh]">
+					<div class="h-[25vh]">
 						<img src={stall.image} alt="stall" class="object-cover w-full h-full" />
 					</div>
 				{:else if stall.id}
@@ -73,7 +73,7 @@
 			>
 				<span class="truncate text-xl font-bold whitespace-normal">{stall.name}</span>
 				<p class="text-sm font-light max-w-[90%]">
-					{truncateText(stall?.description)}
+					{truncateText(stall?.description, 121)}
 				</p>
 			</a>
 		</Card.Content>

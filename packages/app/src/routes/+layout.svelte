@@ -47,18 +47,6 @@
 	})
 
 	$: webManifestLink = pwaInfo ? pwaInfo.webManifest.linkTag : ''
-
-	queryClient.setQueryDefaults(['categories'], {
-		queryFn: async () => {
-			const query = get(createCategoriesByFilterQuery({ pageSize: 30 }))
-			const { data: categories } = await query.refetch()
-			return categories ?? null
-		},
-	})
-
-	queryClient.prefetchQuery<RichCat[]>({
-		queryKey: ['categories'],
-	})
 </script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com" />
