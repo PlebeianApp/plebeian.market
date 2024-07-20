@@ -373,7 +373,6 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
 	try {
 		const stallEventContent = JSON.parse(stallEvent.content)
 		const { data: parsedStall, success, error: parseError } = stallEventSchema.partial().safeParse({ id: stallId, ...stallEventContent })
-		console.log("parsedStall", parsedStall)
 		if (!success) {
 			throw new Error(`Failed to parse stall event: ${parseError}`)
 		}
