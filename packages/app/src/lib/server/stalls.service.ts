@@ -344,15 +344,13 @@ export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall 
 		const stallResult = results[0] as Stall
 
 		if (imageTag) {
-			await db
-				.insert(eventTags)
-				.values({
-					userId: stallResult.userId,
-					eventId: stallResult.id,
-					tagName: 'image',
-					tagValue: imageTag,
-					eventKind: KindStalls,
-				})
+			await db.insert(eventTags).values({
+				userId: stallResult.userId,
+				eventId: stallResult.id,
+				tagName: 'image',
+				tagValue: imageTag,
+				eventKind: KindStalls,
+			})
 		}
 
 		return {
@@ -410,15 +408,13 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
 					.where(and(eq(eventTags.eventId, stallId), eq(eventTags.tagName, 'image')))
 					.execute()
 			} else if (!image) {
-				await db
-					.insert(eventTags)
-					.values({
-						userId: stallResult.userId,
-						eventId: stallResult.id,
-						tagName: 'image',
-						tagValue: imageTag,
-						eventKind: KindStalls,
-					})
+				await db.insert(eventTags).values({
+					userId: stallResult.userId,
+					eventId: stallResult.id,
+					tagName: 'image',
+					tagValue: imageTag,
+					eventKind: KindStalls,
+				})
 			}
 		}
 

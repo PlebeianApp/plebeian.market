@@ -50,7 +50,7 @@
 			})
 		: undefined
 
-	$: stallsMixture = [...$stallsQuery?.data ?? [], ...nostrStalls ?? []]
+	$: stallsMixture = [...($stallsQuery?.data ?? []), ...(nostrStalls ?? [])]
 
 	$: productsQuery = exist
 		? createProductsByFilterQuery({
@@ -77,9 +77,10 @@
 		const { stallNostrRes } = await fetchUserStallsData(id)
 
 		if (stallNostrRes) {
-			nostrStalls = (await Promise.all([...stallNostrRes]
-				.map(normalizeStallData)))
-				.filter(({ data: stall }) => !$stallsQuery?.data?.some((existingStall) => stall?.id === existingStall.id)).map(({ data }) => data as Partial<RichStall>).filter(Boolean)
+			nostrStalls = (await Promise.all([...stallNostrRes].map(normalizeStallData)))
+				.filter(({ data: stall }) => !$stallsQuery?.data?.some((existingStall) => stall?.id === existingStall.id))
+				.map(({ data }) => data as Partial<RichStall>)
+				.filter(Boolean)
 		}
 
 		if (!exist) {
@@ -137,7 +138,6 @@
 		const user = $ndkStore.getUser({ pubkey: id as string })
 		// await user.sendMessage()
 	}
-
 </script>
 
 {#if userProfile}
