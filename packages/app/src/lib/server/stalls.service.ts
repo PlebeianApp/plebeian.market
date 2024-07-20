@@ -353,7 +353,6 @@ export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall 
 					tagValue: imageTag,
 					eventKind: KindStalls,
 				})
-				.returning()
 		}
 
 		return {
@@ -374,6 +373,7 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
 	try {
 		const stallEventContent = JSON.parse(stallEvent.content)
 		const { data: parsedStall, success, error: parseError } = stallEventSchema.partial().safeParse({ id: stallId, ...stallEventContent })
+		console.log("parsedStall", parsedStall)
 		if (!success) {
 			throw new Error(`Failed to parse stall event: ${parseError}`)
 		}
@@ -401,14 +401,26 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
 
 		const imageTag = customTagValue(stallEvent.tags, 'image')[0]
 
-		if (imageTag && image.tagValue !== imageTag) {
-			await db
-				.update(eventTags)
-				.set({
-					tagValue: imageTag,
-				})
-				.where(and(eq(eventTags.eventId, stallId), eq(eventTags.tagName, 'image')))
-				.execute()
+		if (imageTag) {
+			if (image && image?.tagValue !== imageTag) {
+				await db
+					.update(eventTags)
+					.set({
+						tagValue: imageTag,
+					})
+					.where(and(eq(eventTags.eventId, stallId), eq(eventTags.tagName, 'image')))
+					.execute()
+			} else if (!image) {
+				await db
+					.insert(eventTags)
+					.values({
+						userId: stallResult.userId,
+						eventId: stallResult.id,
+						tagName: 'image',
+						tagValue: imageTag,
+						eventKind: KindStalls,
+					})
+			}
 		}
 
 		if (!stallResult) {

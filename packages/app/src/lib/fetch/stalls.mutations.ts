@@ -66,13 +66,13 @@ export const updateStallFromNostrEvent = createMutation(
 			}
 		},
 
-		onSuccess: (data: DisplayStall | null) => {
+		onSuccess: async (data: DisplayStall | null) => {
 			if (data) {
 				console.log('Stall inserted in db successfully', data)
-				queryClient.invalidateQueries({
+				await queryClient.invalidateQueries({
 					queryKey: ['stalls', ...Object.values(stallsFilterSchema.safeParse({ userId: data.userId }).data as Partial<StallsFilter>)],
 				})
-				queryClient.invalidateQueries({ queryKey: ['shipping', data.id] })
+				await queryClient.invalidateQueries({ queryKey: ['shipping', data.id] })
 			}
 		},
 	},

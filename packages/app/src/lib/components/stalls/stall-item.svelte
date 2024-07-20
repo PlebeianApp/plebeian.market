@@ -8,7 +8,6 @@
 	import ndkStore from '$lib/stores/ndk'
 	import { stringToHexColor, truncateString } from '$lib/utils'
 	import { npubEncode } from 'nostr-tools/nip19'
-	import { onMount } from 'svelte'
 
 	import { Button } from '../ui/button'
 
@@ -37,14 +36,14 @@
 		stall = parsedStall
 	}
 
-	onMount(async () => {
+	$: {
 		if ('kind' in stallData) {
-			await handleNDKEvent(stallData as NDKEvent)
+			handleNDKEvent(stallData as NDKEvent)
 		} else {
 			isMyStall = $ndkStore.activeUser?.pubkey === (stallData as Partial<RichStall>).userId
 			stall = stallData
 		}
-	})
+	}
 </script>
 
 {#if stall}
