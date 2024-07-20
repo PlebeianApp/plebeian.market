@@ -34,7 +34,7 @@
 
 	let stalls: RichStall[] | null
 	let stall: RichStall | null = null
-
+	// TODO Categories are beign inserted in the db but they are not beign loaded when tring to edit/update a product
 	$: userExistQuery = createUserExistsQuery($ndkStore.activeUser?.pubkey as string)
 
 	$: stallsQuery = $userExistQuery.data
@@ -47,12 +47,12 @@
 		if ($stallsQuery?.data) stalls = $stallsQuery.data
 	}
 
-	let currentStallId = forStall ?? product?.stallId
+	$: currentStallIdentifier = forStall?.split(':')[2] ?? product?.stallId
 
 	$: {
 		if (stalls?.length) {
-			if (currentStallId) {
-				;[stall] = stalls.filter((pStall) => pStall.id === currentStallId)
+			if (currentStallIdentifier) {
+				;[stall] = stalls.filter((pStall) => pStall.identifier === currentStallIdentifier)
 			} else {
 				stall = stalls[0]
 			}
@@ -297,8 +297,8 @@
 						<DropdownMenu.Root>
 							<DropdownMenu.Trigger asChild let:builder>
 								<Button variant="outline" class="border-2 border-black" builders={[builder]}>
-									{#if currentStallId}
-										{@const defaultStall = stalls.find((stall) => stall.id === currentStallId)}
+									{#if currentStallIdentifier}
+										{@const defaultStall = stalls.find((stall) => stall.identifier === currentStallIdentifier)}
 										{defaultStall ? defaultStall.name : 'Select a stall'}
 									{:else}
 										{stall?.name}
@@ -311,9 +311,9 @@
 								<section class=" max-h-[350px] overflow-y-auto">
 									{#each stalls as item}
 										<DropdownMenu.CheckboxItem
-											checked={currentStallId === item.id}
+											checked={currentStallIdentifier === item.identifier}
 											on:click={() => {
-												currentStallId = item.id
+												currentStallIdentifier = item.identifier
 											}}
 										>
 											{item.name}

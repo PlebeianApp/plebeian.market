@@ -97,6 +97,7 @@ export const editProductMutation = createMutation(
 			const productPrice = Number(formData.get('price'))
 			const productQty = Number(formData.get('quantity'))
 			const identifier = createSlugId(productTile)
+			const eventImages = images.map((image) => image.imageUrl)
 			const stallCoordinates =
 				product?.stallId.split(':').length == 3 ? product?.stallId : `${KindStalls}:${product.userId}:${product?.stallId}`
 			const evContent = {
@@ -104,7 +105,7 @@ export const editProductMutation = createMutation(
 				stall_id: product?.stallId.split(':').length == 3 ? product?.stallId.split(':')[2] : product?.stallId,
 				name: productTile,
 				description: productDescription,
-				images: images,
+				images: eventImages,
 				price: productPrice,
 				quantity: productQty,
 				shipping: shippingMethods,
