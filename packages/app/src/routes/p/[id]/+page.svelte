@@ -28,7 +28,7 @@
 	import type { PageData } from './$types'
 
 	let userProfile: NDKUserProfile | null
-	let stalls: Partial<RichStall>[] | null
+	let nostrStalls: Partial<RichStall>[] | null = []
 	let toDisplayProducts: Partial<DisplayProduct>[]
 	let following = false
 	let showFullAbout = false
@@ -48,6 +48,8 @@
 			})
 		: undefined
 
+	$: stallsMixture = [...($stallsQuery?.data ?? []), ...(nostrStalls ?? [])]
+
 	$: productsQuery = exist
 		? createProductsByFilterQuery({
 				userId: id as string,
@@ -59,7 +61,6 @@
 	$: {
 		if (exist) {
 			if ($userProfileQuery?.data) userProfile = $userProfileQuery?.data
-			if ($stallsQuery?.data) stalls = $stallsQuery.data
 			if ($productsQuery?.data) toDisplayProducts = $productsQuery?.data
 		}
 	}
@@ -71,19 +72,14 @@
 	}
 
 	onMount(async () => {
+		if (!id) return
 		const { stallNostrRes } = await fetchUserStallsData(id)
 
 		if (stallNostrRes) {
-			const normalizedStallData = await Promise.all([...stallNostrRes].map(normalizeStallData)).then((results) =>
-				results.filter((result) => result.data !== null).map((result) => result.data),
-			)
-
-			if (stalls?.length) {
-				const newStalls = normalizedStallData.filter((stall) => !stalls?.some((existingStall) => stall?.id === existingStall.id))
-				stalls = [...stalls, ...newStalls] as Partial<RichStall>[]
-			} else {
-				stalls = normalizedStallData as Partial<RichStall>[]
-			}
+			nostrStalls = (await Promise.all([...stallNostrRes].map(normalizeStallData)))
+				.filter(({ data: stall }) => !$stallsQuery?.data?.some((existingStall) => stall?.id === existingStall.id))
+				.map(({ data }) => data as Partial<RichStall>)
+				.filter(Boolean)
 		}
 
 		if (!exist) {
@@ -140,14 +136,6 @@
 	const handleSendMessage = async () => {
 		const user = $ndkStore.getUser({ pubkey: id as string })
 		// await user.sendMessage()
-	}
-
-	const handleCreateStall = async () => {
-		openDrawerForNewStall()
-	}
-
-	const handleCreateProduct = async () => {
-		openDrawerForNewProduct()
 	}
 </script>
 
@@ -220,11 +208,11 @@
 					</div>
 				</div>
 			</div>
-			{#if stalls}
+			{#if stallsMixture?.length}
 				<div class="container">
 					<h2>Stalls</h2>
 					<div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-						{#each stalls as item}
+						{#each stallsMixture as item}
 							<StallItem stallData={item} />
 						{/each}
 					</div>

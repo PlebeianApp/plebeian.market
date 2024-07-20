@@ -40,7 +40,7 @@
 	onMount(async () => {
 		if (!stallData) return
 		if ('kind' in stallData) {
-			await handleNDKEvent(stallData as NDKEvent)
+			handleNDKEvent(stallData as NDKEvent)
 		} else {
 			isMyStall = $ndkStore.activeUser?.pubkey === (stallData as Partial<RichStall>).userId
 			stall = stallData
