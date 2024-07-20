@@ -1,3 +1,4 @@
+import type { LoadUserInfo } from '$lib/server/users.service.js'
 import { error } from '@sveltejs/kit'
 import { KindProducts } from '$lib/constants'
 import { productExists } from '$lib/server/products.service'
@@ -8,66 +9,98 @@ import { get } from 'svelte/store'
 
 import type { PageServerLoad } from './$types'
 
+type ProcessedInfo = {
+	userInfo: LoadUserInfo
+	productId: string
+	productIdentifier?: string
+}
+
+async function processNip05(nip05: string, productIdentifier: string): Promise<ProcessedInfo> {
+	const lowerNip05 = nip05.toLowerCase()
+	let userId = await getUserIdByNip05(lowerNip05)
+	let exist = !!userId
+
+	if (!userId) {
+		const $ndk = get(ndkStore)
+		const userNostrRes = await $ndk.getUserFromNip05(lowerNip05)
+		if (userNostrRes) {
+			userId = userNostrRes.pubkey
+			exist = false
+		}
+	}
+
+	return {
+		userInfo: { id: userId, exist },
+		productId: `${KindProducts}:${userId}:${productIdentifier}`,
+		productIdentifier,
+	}
+}
+
+async function processDirectId(root: string): Promise<ProcessedInfo> {
+	const [userId, productIdentifier] = root.split(':')
+	return {
+		userInfo: {
+			id: userId,
+			exist: await userExists(userId),
+		},
+		productId: `${KindProducts}:${root}`,
+		productIdentifier,
+	}
+}
+
+async function processFullId(productId: string): Promise<ProcessedInfo> {
+	const [, userId, productIdentifier] = productId.split(':')
+	return {
+		userInfo: {
+			id: userId,
+			exist: await userExists(userId),
+		},
+		productId,
+		productIdentifier,
+	}
+}
+
+async function getProductInfo(productId: string): Promise<boolean> {
+	try {
+		return await productExists(productId)
+	} catch (e) {
+		console.warn(JSON.stringify(e))
+		return false
+	}
+}
+
 export const load: PageServerLoad = async ({ params }) => {
 	const { productId } = params
-	let userId: string | undefined = undefined
-	let _productIdentifier: string | undefined
-	let _userExists: boolean = false
-	let _productExists: boolean = false
-	let _productId: string
+	const parts = productId.split('/')
 
-	const parts: string[] = productId.split('/')
 	if (parts.length < 1 || parts.length > 2) {
-		error(400, { message: 'Invalid productId format' })
+		throw error(400, 'Invalid productId format')
 	}
 
 	const [root, productIdentifier] = parts
-
-	if (NIP05_REGEX.test(root) && productIdentifier) {
-		const lowerNip05 = root.toLocaleLowerCase()
-		_productIdentifier = productIdentifier
-
-		const userRes = await getUserIdByNip05(lowerNip05)
-
-		if (userRes) {
-			userId = userRes
-			_userExists = true
-		} else {
-			const $ndk = get(ndkStore)
-			const userNostrRes = await $ndk.getUserFromNip05(lowerNip05)
-			if (userNostrRes) {
-				userId = userNostrRes.pubkey
-				_userExists = false
-			}
-		}
-		_productId = `${KindProducts}:${userId}:${_productIdentifier}`
-	} else if (root.split(':').length == 2) {
-		const [_userId, productIdentifier] = root.split(':')
-		userId = _userId
-		_productIdentifier = productIdentifier
-		const userRes = await userExists(userId)
-		if (userRes) {
-			_userExists = true
-		}
-		_productId = `${KindProducts}:${root}`
-	} else {
-		const [_, userPK, identifier] = productId.split(':')
-		userId = userPK
-		_userExists = await userExists(userId)
-		_productIdentifier = identifier
-		_productId = root
-	}
+	let processedInfo: ProcessedInfo
 
 	try {
-		const productRes = await productExists(_productId)
-		if (productRes) {
-			_productExists = true
+		if (NIP05_REGEX.test(root) && productIdentifier) {
+			processedInfo = await processNip05(root, productIdentifier)
+		} else if (root.split(':').length === 2) {
+			processedInfo = await processDirectId(root)
+		} else {
+			processedInfo = await processFullId(root)
+		}
+
+		const [userInfo, productExists] = await Promise.all([Promise.resolve(processedInfo.userInfo), getProductInfo(processedInfo.productId)])
+
+		return {
+			productRes: {
+				id: processedInfo.productId,
+				identifier: processedInfo.productIdentifier,
+				exist: productExists,
+			},
+			user: userInfo,
 		}
 	} catch (e) {
-		console.warn(JSON.stringify(e))
-	}
-	return {
-		productRes: { id: _productId, identifier: _productIdentifier, exist: _productExists },
-		user: { id: userId, exist: _userExists },
+		console.error('Error processing product data:', e)
+		throw error(500, 'Error processing product data')
 	}
 }

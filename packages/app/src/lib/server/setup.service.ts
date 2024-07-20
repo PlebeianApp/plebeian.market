@@ -72,6 +72,7 @@ export const updateAppSettings = async (appSettingsData: ExtendedAppSettings) =>
 				ownerPk: decodedOwnerPk,
 				isFirstTimeRunning: false,
 				allowRegister: JSON.parse(appSettingsData.allowRegister as unknown as string),
+				updatedAt: new Date(),
 			})
 			.where(appSettingsData.isFirstTimeRunning ? eq(appSettings.isFirstTimeRunning, true) : eq(appSettings.instancePk, decodedInstancePk))
 			.returning()

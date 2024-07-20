@@ -6,7 +6,7 @@
 	import { normalizeStallData } from '$lib/nostrSubs/utils'
 	import { openDrawerForNewProductForStall, openDrawerForStall } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
-	import { stringToHexColor, truncateString } from '$lib/utils'
+	import { stringToHexColor, truncateString, truncateText } from '$lib/utils'
 	import { npubEncode } from 'nostr-tools/nip19'
 	import { onMount } from 'svelte'
 
@@ -38,6 +38,7 @@
 	}
 
 	onMount(async () => {
+		if (!stallData) return
 		if ('kind' in stallData) {
 			await handleNDKEvent(stallData as NDKEvent)
 		} else {
@@ -48,7 +49,7 @@
 </script>
 
 {#if stall}
-	<Card.Root class="relative grid grid-rows-[auto_1fr_auto] h-[40vh] gap-4 border-4 border-black text-black group">
+	<Card.Root class="relative grid grid-rows-[auto_1fr_auto] h-[44vh] border-2 border-black text-black group overflow-hidden">
 		<a
 			href={stall.userNip05
 				? `/stalls/${stall.userNip05.toLocaleLowerCase()}/${stall.identifier}`
@@ -56,7 +57,7 @@
 		>
 			<Card.Header class="p-0">
 				{#if stall.image}
-					<div class="h-[28vh]">
+					<div class="h-[25vh]">
 						<img src={stall.image} alt="stall" class="object-cover w-full h-full" />
 					</div>
 				{:else if stall.id}
@@ -64,15 +65,15 @@
 				{/if}
 			</Card.Header>
 		</a>
-		<Card.Content class="relative flex-grow truncate whitespace-normal">
+		<Card.Content class="relative p-2 break-words">
 			<a
 				href={stall.userNip05
 					? `/stalls/${stall.userNip05.toLocaleLowerCase()}/${stall.identifier}`
 					: `/stalls/${stall.id?.replace(/^30017:/, '')}`}
 			>
 				<span class="truncate text-xl font-bold whitespace-normal">{stall.name}</span>
-				<p class=" whitespace-normal truncate text-sm font-light">
-					{stall.description}
+				<p class="text-sm font-light max-w-[90%]">
+					{truncateText(stall?.description, 121)}
 				</p>
 			</a>
 		</Card.Content>
@@ -81,18 +82,18 @@
 				? `/stalls/${stall.userNip05.toLocaleLowerCase()}/${stall.identifier}`
 				: `/stalls/${stall.id?.replace(/^30017:/, '')}`}
 		>
-			<Card.Footer class="flex flex-col items-start font-bold">
-				<div class="flex flex-col lg:flex-row justify-between w-full text-sm">
+			<Card.Footer class="flex flex-col items-start font-bold p-2">
+				<div class="flex flex-col xl:flex-row justify-between w-full text-sm">
 					<span class="font-bold whitespace-normal">Since: {stall.createDate}</span>
 					<span class="whitespace-normal">Currency: {stall.currency}</span>
 				</div>
 
-				<div class="flex flex-col lg:flex-row justify-between w-full text-sm">
+				<div class="flex flex-col xl:flex-row justify-between w-full text-sm">
 					{#if stall.userName}
 						<span class="whitespace-normal">Owner: {stall.userName}</span>
 					{/if}
 					{#if stall.userNip05}
-						<small class="truncate font-light whitespace-normal">{stall.userNip05}</small>
+						<small class="truncate font-light whitespace-normal">{truncateText(stall.userNip05, 21)}</small>
 					{:else}
 						<small class="font-light truncate whitespace-normal">@{truncateString(npubEncode(stall.userId))}</small>
 					{/if}

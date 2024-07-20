@@ -5,13 +5,13 @@
 
 	export let cat: RichCat
 	export let userId: string | null = null
+	function getCategoryUrl() {
+		const encodedCatName = encodeURIComponent(cat.name)
+		return userId ? `/category/${encodedCatName}/${userId}` : `/category/${encodedCatName}`
+	}
 </script>
 
-<Button
-	class="cursor-pointer border border-gray flex justify-start items-center p-4 font-bold"
-	variant="outline"
-	href={userId ? `/category/${cat.name}/${userId}` : `/category/${cat.name}`}
->
+<Button class="cursor-pointer border border-gray flex justify-start items-center p-4 font-bold" variant="outline" href={getCategoryUrl()}>
 	<div class="flex items-center gap-2 w-full justify-between">
 		<section class=" inline-flex items-center gap-2">
 			<span class=" i-mdi-category-outline w-6 h-6" />

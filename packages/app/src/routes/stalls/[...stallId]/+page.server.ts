@@ -1,3 +1,4 @@
+import type { LoadUserInfo } from '$lib/server/users.service.js'
 import { error } from '@sveltejs/kit'
 import { KindStalls } from '$lib/constants'
 import { stallExists } from '$lib/server/stalls.service'
@@ -8,64 +9,90 @@ import { get } from 'svelte/store'
 
 import type { PageServerLoad } from './$types'
 
-export const load: PageServerLoad = async ({ params }) => {
-	let userId: string | undefined = undefined
-	let stallId: string
-	let _stallIdentifier: string | undefined = undefined
-	let _userExists: boolean = false
-	let _stallExists: boolean = false
+type StallInfo = {
+	id: string
+	identifier?: string
+	exist: boolean
+}
 
-	const parts: string[] = params.stallId.split('/')
+type ProcessedInfo = {
+	userInfo: LoadUserInfo
+	stallId: string
+	stallIdentifier?: string
+}
+
+const processNip05 = async (nip05: string, stallIdentifier: string): Promise<ProcessedInfo> => {
+	const lowerNip05 = nip05.toLowerCase()
+	const userId = (await getUserIdByNip05(lowerNip05)) || (await get(ndkStore).getUserFromNip05(lowerNip05, false))?.pubkey
+
+	return {
+		userInfo: {
+			id: userId,
+			exist: Boolean(userId && (await userExists(userId))),
+		},
+		stallId: `${KindStalls}:${userId}:${stallIdentifier}`,
+		stallIdentifier,
+	}
+}
+
+const processDirectId = async (root: string): Promise<ProcessedInfo> => {
+	const [userId, stallIdentifier] = root.split(':')
+	return {
+		userInfo: {
+			id: userId,
+			exist: await userExists(userId),
+		},
+		stallId: `${KindStalls}:${root}`,
+		stallIdentifier,
+	}
+}
+
+const processFullId = async (stallId: string): Promise<ProcessedInfo> => {
+	const [, userId, stallIdentifier] = stallId.split(':')
+	return {
+		userInfo: {
+			id: userId,
+			exist: await userExists(userId),
+		},
+		stallId,
+		stallIdentifier,
+	}
+}
+
+const getStallInfo = async (stallId: string, stallIdentifier?: string): Promise<StallInfo> => {
+	return {
+		id: stallId,
+		identifier: stallIdentifier,
+		exist: await stallExists(stallId).catch(() => false),
+	}
+}
+
+export const load: PageServerLoad = async ({ params }) => {
+	const parts = params.stallId.split('/')
 	if (parts.length < 1 || parts.length > 2) {
-		error(500, { message: 'Invalid stall id format' })
+		throw error(400, 'Invalid stall id format')
 	}
 
 	const [root, stallIdentifier] = parts
+	let processedInfo: ProcessedInfo
 
-	if (NIP05_REGEX.test(root) && stallIdentifier) {
-		const lowerNip05 = root.toLocaleLowerCase()
-		_stallIdentifier = stallIdentifier
-		const userRes = await getUserIdByNip05(lowerNip05)
-
-		if (userRes) {
-			userId = userRes
-			_userExists = true
-		} else {
-			const $ndk = get(ndkStore)
-			const userNostrRes = await $ndk.getUserFromNip05(lowerNip05)
-			if (userNostrRes) {
-				userId = userNostrRes.pubkey
-				_userExists = false
-			} else {
-				userId = undefined
-				_userExists = false
-			}
-		}
-		stallId = `${KindStalls}:${userId}:${stallIdentifier}`
-	} else if (root.split(':').length == 2) {
-		userId = root.split(':')[0]
-		_stallIdentifier = root.split(':')[1]
-		const userRes = await userExists(userId)
-		if (userRes) {
-			_userExists = true
-		}
-		stallId = `${KindStalls}:${root}`
-	} else {
-		userId = root.split(':')[1]
-		_stallIdentifier = root.split(':')[2]
-		_userExists = await userExists(userId)
-		stallId = root
-	}
 	try {
-		const stallRes = await stallExists(stallId)
-		if (stallRes) {
-			_stallExists = true
+		if (NIP05_REGEX.test(root) && stallIdentifier) {
+			processedInfo = await processNip05(root, stallIdentifier)
+		} else if (root.split(':').length === 2) {
+			processedInfo = await processDirectId(root)
+		} else {
+			processedInfo = await processFullId(root)
 		}
+
+		const [userInfo, stallInfo] = await Promise.all([
+			Promise.resolve(processedInfo.userInfo),
+			getStallInfo(processedInfo.stallId, processedInfo.stallIdentifier),
+		])
+
+		return { stall: stallInfo, user: userInfo }
 	} catch (e) {
-		console.warn(JSON.stringify(e))
-	}
-	return {
-		stall: { id: stallId, identifier: _stallIdentifier, exist: _stallExists },
-		user: { id: userId, exist: _userExists },
+		console.error('Error processing stall data:', e)
+		throw error(500, 'Error processing stall data')
 	}
 }

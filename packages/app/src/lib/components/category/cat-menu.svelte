@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { RichCat } from '$lib/server/categories.service'
-	import { categoriesQuery } from '$lib/fetch/category.queries'
+	import { createCategoriesByFilterQuery } from '$lib/fetch/category.queries'
 
 	import Button from '../ui/button/button.svelte'
 	import Skeleton from '../ui/skeleton/skeleton.svelte'
@@ -11,6 +11,8 @@
 	let pageSize = 4
 
 	let filteredCategories: RichCat[] = []
+	$: categoriesQuery = createCategoriesByFilterQuery({ pageSize: 30 })
+
 	$: if ($categoriesQuery.data) filteredCategories = $categoriesQuery.data?.filter((cat) => (cat.productCount ?? 0) > 0) || []
 </script>
 

@@ -8,6 +8,7 @@
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
 	import { login } from '$lib/ndkLogin'
 	import { type BaseAccount, type NsecAccount } from '$lib/stores/session'
+	import { stringToHexColor } from '$lib/utils'
 	import { format } from 'date-fns'
 	import { npubEncode } from 'nostr-tools/nip19'
 	import { onMount } from 'svelte'
@@ -68,7 +69,10 @@
 				{:else if $userQuery?.data}
 					<Avatar>
 						<AvatarImage src={$userQuery.data?.image} alt="pfp" />
-						<AvatarFallback>{$userQuery.data?.name ?? $userQuery.data?.displayName ?? ''}</AvatarFallback>
+						<AvatarFallback
+							style={`background-color: ${stringToHexColor(String($userQuery.data?.name ?? $userQuery.data?.displayName ?? ''))}`}
+							><span class="i-tdesign-user-1 w-8 h-8" /></AvatarFallback
+						>
 					</Avatar>
 					<section class="flex flex-col">
 						<span class="font-bold">{$userQuery.data?.name ?? $userQuery.data?.displayName ?? ''}</span>

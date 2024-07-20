@@ -22,7 +22,7 @@
 	} from '$lib/nostrSubs/utils'
 	import { openDrawerForStall } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
-	import { getEventCoordinates, stringToHexColor } from '$lib/utils'
+	import { getEventCoordinates, stringToHexColor, truncateString, truncateText } from '$lib/utils'
 	import { onMount } from 'svelte'
 
 	import type { PageData } from './$types'
@@ -32,6 +32,7 @@
 	let stallResponse: Partial<RichStall>
 	let toDisplayProducts: Partial<DisplayProduct>[]
 	let userProfile: NDKUserProfile | null
+	let showFullDescription = false
 
 	$: stallsQuery =
 		stall.exist && user.id
@@ -59,7 +60,6 @@
 	$: {
 		if ($stallsQuery?.data) {
 			stallResponse = $stallsQuery?.data[0]
-			console.log(stallResponse)
 		}
 	}
 
@@ -85,14 +85,14 @@
 
 				const { products: productsData } = await fetchUserProductData(user.id)
 				if (productsData?.size) {
-					const result = normalizeProductsFromNostr(productsData, user.id as string, stall.id)
+					const result = await normalizeProductsFromNostr(productsData, user.id as string, stall.id)
 					if (result) {
 						const { toDisplayProducts: _toDisplay } = result
 						toDisplayProducts = _toDisplay
 					}
 				}
 
-				await setNostrData(stallData, user.exist ? null : userData, productsData, appSettings.allowRegister, user.id, user.exist)
+				await setNostrData(stallData, user.exist ? null : userData, productsData, appSettings.allowRegister, user.id, user.exist, false)
 			} else {
 				fetchUserProductData(user.id as string).then((data) => {
 					const { products } = data
@@ -122,31 +122,50 @@
 	}
 </script>
 
-<main class="flex flex-col container text-black my-20">
-	<div class="flex w-full flex-col min-h-[65vh] gap-12 mb-12">
+<main class="px-4 lg:px-12">
+	<div class="flex flex-col gap-14">
 		{#if stallResponse}
-			{#if stallResponse.image}
-				<div class="border-black border-2 w-full h-[25vh] relative overflow-hidden">
-					<img src={stallResponse.image} alt="profile" class="absolute top-0 left-0 w-full h-full object-cover object-top" />
-				</div>
-			{:else}
-				<div
-					style={`background-color: ${stringToHexColor(stall.id)}`}
-					class={`border-black w-full border-2 h-[15vh] relative overflow-hidden`}
-				/>
-			{/if}
+			<div class="flex flex-col gap-2">
+				{#if stallResponse.image}
+					<div class="border-black border-2 w-full h-[25vh] relative overflow-hidden">
+						<img src={stallResponse.image} alt="profile" class="absolute top-0 left-0 w-full h-full object-cover object-top" />
+					</div>
+				{:else}
+					<div
+						style={`background-color: ${stringToHexColor(stall.id)}`}
+						class={`border-black w-full border-2 h-[10vh] relative overflow-hidden`}
+					/>
+				{/if}
+				{#if stallResponse.name}
+					<h1 class="text-3xl">{stallResponse.name}</h1>
+				{/if}
 
-			<h1>{stallResponse.name}</h1>
-
-			<p class="text-2xl">{stallResponse.description}</p>
-
+				{#if stallResponse.description}
+					{@const _description = truncateText(stallResponse.description, 256)}
+					{#if _description !== stallResponse.description}
+						<p class="break-words">{showFullDescription ? stallResponse.description : _description}</p>
+						<Button variant="outline" size="icon" on:click={() => (showFullDescription = !showFullDescription)}>
+							{#if !showFullDescription}
+								<span class=" i-mdi-plus" />
+							{:else}
+								<span class=" i-mdi-minus" />
+							{/if}
+						</Button>
+					{:else}
+						<p class="break-words">{stallResponse.description}</p>
+					{/if}
+				{/if}
+			</div>
 			<div class="flex flex-row gap-12">
 				<section class="w-fit">
 					{#if userProfile}
 						<a href={`/p/${userProfile?.nip05 ? userProfile?.nip05 : user.id}`} class="flex flex-col items-center">
 							<Avatar>
 								<AvatarImage src={userProfile?.image} alt="@shadcn" />
-								<AvatarFallback>{userProfile?.name?.substring(0, 2)}</AvatarFallback>
+								<AvatarFallback
+									style={`background-color: ${stringToHexColor(String(userProfile?.name ? userProfile?.name : userProfile?.displayName))}`}
+									><span class="i-tdesign-user-1 w-8 h-8" /></AvatarFallback
+								>
 							</Avatar>
 							<span>{userProfile?.name ? userProfile?.name : userProfile?.displayName}</span>
 						</a>
@@ -161,21 +180,23 @@
 							<div class=" flex flex-col gap-2 items-start">
 								{#if stallResponse.shipping?.length}
 									<span class=" font-bold">Shipping zones</span>
-									<section class=" flex gap-2 flex-wrap">
+									<section class="gap-2">
 										{#each stallResponse.shipping as shipping}
-											{#if shipping.name || shipping.id}
-												<span>{shipping.name || shipping.id}</span>
-											{/if}
-											{#if shipping.regions}
-												{#each shipping.regions as region}
-													<Badge variant="secondary">{region}</Badge>
-												{/each}
-											{/if}
-											{#if shipping.countries}
-												{#each shipping.countries as country}
-													<Badge variant="secondary">{country}</Badge>
-												{/each}
-											{/if}
+											<div class=" flex gap-2">
+												{#if shipping.name || shipping.id}
+													<span>{truncateString(shipping.name || shipping.id || '')}</span>
+												{/if}
+												{#if shipping.regions}
+													{#each shipping.regions as region}
+														<Badge variant="secondary">{region}</Badge>
+													{/each}
+												{/if}
+												{#if shipping.countries}
+													{#each shipping.countries as country}
+														<Badge variant="secondary">{country}</Badge>
+													{/each}
+												{/if}
+											</div>
 										{/each}
 									</section>
 								{/if}
@@ -211,7 +232,7 @@
 		</div>
 	{:else}
 		<div class=" flex gap-4">
-			{#each [...Array(6)] as _, i}
+			{#each [...Array(3)] as _, i}
 				<Skeleton class=" h-80 w-full border-4 border-black text-black group" />
 			{/each}
 		</div>
