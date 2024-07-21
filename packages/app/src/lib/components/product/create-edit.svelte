@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Category } from '$lib/fetch/products.mutations'
 	import type { DisplayProduct } from '$lib/server/products.service'
+	import type { RichShippingInfo } from '$lib/server/shipping.service'
 	import type { RichStall } from '$lib/server/stalls.service'
 	import type { StallIdType } from '$lib/stores/drawer-ui'
 	import Button from '$lib/components/ui/button/button.svelte'
@@ -47,6 +48,8 @@
 		if ($stallsQuery?.data) stalls = $stallsQuery.data
 	}
 
+	let currentShipping: Partial<RichShippingInfo> | null = null
+	let extraCost: string = ""
 	let currentStallId = forStall ?? product?.stallId
 
 	$: {
@@ -194,13 +197,7 @@
 					sEvent,
 					stall,
 					images.map((image) => ({ imageUrl: image.imageUrl })),
-					shippingMethods.map((s) => ({
-						id: s.id,
-						name: s.name ?? '',
-						cost: s.cost ?? '',
-						regions: s.regions ?? [],
-						countries: s.countries ?? [],
-					})),
+					{ id: currentShipping!.id!, cost: extraCost },
 					categories,
 				])
 
@@ -214,13 +211,7 @@
 					sEvent,
 					product,
 					images.map((image) => ({ imageUrl: image.imageUrl })),
-					shippingMethods.map((s) => ({
-						id: s.id,
-						name: s.name ?? '',
-						cost: s.cost ?? '',
-						regions: s.regions ?? [],
-						countries: s.countries ?? [],
-					})),
+					{ id: currentShipping!.id!, cost: extraCost },
 					categories,
 				])
 				toast.success('Product updated!')
@@ -237,7 +228,7 @@
 	<Spinner />
 {:else}
 	<form on:submit|preventDefault={(sEvent) => submit(sEvent, stall)} class="flex flex-col gap-4 grow h-full">
-		<Tabs.Root value="basic" class="p-4">
+		<Tabs.Root value="shipping" class="p-4">
 			<Tabs.List class="w-full justify-around bg-transparent">
 				<Tabs.Trigger value="basic" class={activeTab}>Basic</Tabs.Trigger>
 				<Tabs.Trigger value="categories" class={activeTab}>Categories</Tabs.Trigger>
@@ -441,22 +432,39 @@
 								</Popover.Root>
 							</section>
 						</div>
-
-						<div class="h-full flex flex-col justify-end">
-							<div class="flex gap-1">
-								<Button on:click={() => addShipping(item.id)} variant="outline" class="font-bold border-0 h-full"
-									><span class="i-tdesign-copy"></span></Button
-								>
-								<Button on:click={() => removeShipping(item.id)} variant="outline" class="font-bold text-red-500 border-0 h-full"
-									><span class="i-tdesign-delete-1"></span></Button
-								>
-							</div>
-						</div>
 					</div>
 				{/each}
 
-				<div class="grid gap-1.5">
-					<Button on:click={() => addShipping()} variant="outline" class="font-bold ml-auto">Add Shipping Method</Button>
+				<div class="grid w-full items-center gap-1.5">
+					<Label for="from" class="font-bold">Shipping Method</Label>
+					<DropdownMenu.Root>
+						<DropdownMenu.Trigger asChild let:builder>
+							<Button variant="outline" class="border-2 border-black" builders={[builder]}>
+								{currentShipping?.name ?? 'Choose a shipping method'}
+							</Button>
+						</DropdownMenu.Trigger>
+						<DropdownMenu.Content class="w-56">
+							<DropdownMenu.Label>Stall</DropdownMenu.Label>
+							<DropdownMenu.Separator />
+							<section class=" max-h-[350px] overflow-y-auto">
+								{#each stall?.shipping ?? [] as item}
+									<DropdownMenu.CheckboxItem
+										checked={currentShipping === item}
+										on:click={() => {
+											currentShipping = item
+										}}
+									>
+										{item.name}
+									</DropdownMenu.CheckboxItem>
+								{/each}
+							</section>
+						</DropdownMenu.Content>
+					</DropdownMenu.Root>
+
+					<div class="grid w-full items-center gap-1.5">
+						<Label for="from" class="font-bold">Extra cost</Label>
+						<Input required class="border-2 border-black" type="text" name="extra" />
+					</div>
 				</div>
 			</Tabs.Content>
 

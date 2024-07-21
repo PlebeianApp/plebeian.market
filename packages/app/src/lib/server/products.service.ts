@@ -7,7 +7,7 @@ import { getImagesByProductId } from '$lib/server/productImages.service'
 import { customTagValue, getEventCoordinates } from '$lib/utils'
 import { format } from 'date-fns'
 
-import type { Product, ProductImage, ProductMeta, ProductTypes } from '@plebeian/database'
+import { Product, ProductImage, ProductMeta, productShipping, ProductTypes } from '@plebeian/database'
 import {
 	and,
 	createId,
@@ -27,6 +27,7 @@ import {
 import { productEventSchema } from '../../schema/nostr-events'
 import { getStallById } from './stalls.service'
 import { getNip05ByUserId } from './users.service'
+import { RichShippingInfo } from './shipping.service'
 
 export type DisplayProduct = Pick<Product, 'id' | 'description' | 'currency' | 'quantity' | 'userId' | 'identifier' | 'stallId'> & {
 	name: Product['productName']
@@ -34,11 +35,15 @@ export type DisplayProduct = Pick<Product, 'id' | 'description' | 'currency' | '
 	createdAt: string
 	price: number
 	images: ProductImage[]
+	shipping?: Partial<RichShippingInfo>
 }
 
 export const toDisplayProduct = async (product: Product): Promise<DisplayProduct> => {
 	const images = await getImagesByProductId(product.id)
 	const userNip05 = await getNip05ByUserId(product.userId)
+
+	const shipping = await db.query.productShipping.findFirst({ where: and(eq(productShipping.productId, product.id))})
+
 	return {
 		id: product.id,
 		identifier: product.identifier,
@@ -52,6 +57,7 @@ export const toDisplayProduct = async (product: Product): Promise<DisplayProduct
 		quantity: product.quantity,
 		images: images,
 		stallId: product.stallId.startsWith(KindStalls.toString()) ? product.stallId.split(':')[2] : product.stallId,
+		shipping,
 	}
 }
 
@@ -219,6 +225,17 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 
 				if (insertProductImages?.length) {
 					await db.insert(productImages).values(insertProductImages).returning()
+				}
+
+				if (parsedProduct.shipping?.length) {
+					await db
+						.insert(productShipping)
+						.values(parsedProduct.shipping.map((s) =>  ({
+							cost: s.cost!,
+							shippingId: s.id,
+							productId: eventCoordinates!.coordinates!
+						})))
+					.execute()
 				}
 
 				if (productEvent.tags.length) {
