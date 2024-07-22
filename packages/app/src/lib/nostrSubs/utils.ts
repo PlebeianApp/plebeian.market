@@ -1,4 +1,5 @@
 import type { NDKEvent, NDKUserProfile } from '@nostr-dev-kit/ndk'
+import type { EventCoordinates } from '$lib/interfaces'
 import type { DisplayProduct } from '$lib/server/products.service'
 import type { RichShippingInfo } from '$lib/server/shipping.service'
 import type { RichStall } from '$lib/server/stalls.service'
@@ -274,7 +275,7 @@ export async function setNostrData(
 		}
 		if (productsData?.size) {
 			if (stallData) {
-				const { coordinates: stallCoordinates } = getEventCoordinates(stallData)
+				const { coordinates: stallCoordinates } = getEventCoordinates(stallData) as EventCoordinates
 				const result = await normalizeProductsFromNostr(productsData, userId, stallCoordinates)
 				if (result?.stallProducts.size) {
 					const { stallProducts } = result

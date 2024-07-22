@@ -102,7 +102,7 @@
 	<Button on:click={() => (imageChoiceDialogOpen = true)} variant="ghost" class="absolute top-1 right-1 font-bold text-red-500 border-0">
 		<span class="i-mdi-pencil-outline text-white w-6 h-6" />
 	</Button>
-	<!-- TODO improve robustness and parsin of urls -->
+	<!-- TODO improve robustness and parsing of urls: if you input something its not an url its going to try to get it -->
 	<Dialog.Root bind:open={imageChoiceDialogOpen}>
 		<Dialog.Content class="max-w-[66vw]">
 			<Dialog.Header>

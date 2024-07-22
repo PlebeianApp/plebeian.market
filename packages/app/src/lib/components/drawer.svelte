@@ -121,12 +121,14 @@
 			{#if $drawerUI.drawerType === 'cart'}
 				<ShoppingCart />
 			{:else if $drawerUI.drawerType === 'product'}
+				<!-- FIXME currentProduct is null -->
 				{#if currentProduct}
 					<CreateEditProduct product={currentProduct} on:success={handleSuccess} forStall={$drawerUI.forStall} />
 				{:else}
 					<CreateEditProduct product={null} on:success={handleSuccess} />
 				{/if}
 			{:else if $drawerUI.drawerType === 'stall'}
+				<!-- FIXME currentStall is null -->
 				{#if currentStall}
 					<CreateEditStall stall={currentStall} on:success={handleSuccess} />
 				{:else}

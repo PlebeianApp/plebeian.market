@@ -29,7 +29,7 @@
 	import Spinner from '../assets/spinner.svelte'
 	import MultiImageEdit from './multi-image-edit.svelte'
 
-	export let product: DisplayProduct | null = null
+	export let product: Partial<DisplayProduct> | null = null
 	export let forStall: StallIdType | null = null
 
 	let stalls: RichStall[] | null
@@ -65,7 +65,7 @@
 	let categories: Category[] = []
 	let images: Partial<ProductImage>[] = product?.images ?? []
 
-	function updateProductImages(updatedProduct: DisplayProduct | null) {
+	function updateProductImages(updatedProduct: Partial<DisplayProduct> | null) {
 		if (updatedProduct) {
 			images = updatedProduct.images ?? []
 		}
@@ -177,7 +177,9 @@
 				)
 
 				if (stalls?.length) {
-					const newStalls = normalizedStallData.filter((stall) => !stalls?.some((existingStall) => stall.id === existingStall.id))
+					const newStalls = normalizedStallData.filter(
+						(stall) => !stalls?.some((existingStall) => stall?.identifier === existingStall.identifier),
+					)
 					stalls = [...stalls, ...newStalls] as RichStall[]
 				} else {
 					stalls = normalizedStallData as RichStall[]

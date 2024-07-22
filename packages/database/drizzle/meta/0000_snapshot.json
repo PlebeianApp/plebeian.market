@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "deb28c93-ff96-4d6e-822c-b924b12377ef",
+  "id": "05caf48d-e2c4-426e-a0ff-f967eec5eaae",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "app_settings": {
@@ -263,7 +263,7 @@
           "name": "currency",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "quantity": {
@@ -1321,7 +1321,7 @@
           "name": "currency",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "quantity": {
@@ -1399,6 +1399,21 @@
           ],
           "columnsTo": [
             "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        },
+        "products_stall_id_currency_stalls_id_currency_fk": {
+          "name": "products_stall_id_currency_stalls_id_currency_fk",
+          "tableFrom": "products",
+          "tableTo": "stalls",
+          "columnsFrom": [
+            "stall_id",
+            "currency"
+          ],
+          "columnsTo": [
+            "id",
+            "currency"
           ],
           "onDelete": "cascade",
           "onUpdate": "cascade"
@@ -1652,7 +1667,16 @@
           "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "stalls_id_currency_unique": {
+          "name": "stalls_id_currency_unique",
+          "columns": [
+            "id",
+            "currency"
+          ],
+          "isUnique": true
+        }
+      },
       "foreignKeys": {
         "stalls_user_id_users_id_fk": {
           "name": "stalls_user_id_users_id_fk",

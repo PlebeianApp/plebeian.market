@@ -70,6 +70,7 @@ export const createProductMutation = createMutation(
 			const _shouldRegister = await shouldRegister(undefined, undefined, $ndkStore.activeUser.pubkey)
 			if (_shouldRegister) get(createProductsFromNostrMutation).mutateAsync(new Set([newEvent]))
 		},
+		// TODO invalidate products query onSucess
 	},
 	queryClient,
 )
@@ -78,7 +79,7 @@ export const editProductMutation = createMutation(
 	{
 		mutationFn: async ([sEvent, product, images, shippingMethods, categories]: [
 			SubmitEvent,
-			DisplayProduct,
+			Partial<DisplayProduct>,
 			Partial<ProductImage>[],
 			{
 				id: string
@@ -99,10 +100,10 @@ export const editProductMutation = createMutation(
 			const identifier = createSlugId(productTile)
 			const eventImages = images.map((image) => image.imageUrl)
 			const stallCoordinates =
-				product?.stallId.split(':').length == 3 ? product?.stallId : `${KindStalls}:${product.userId}:${product?.stallId}`
+				product?.stallId?.split(':').length == 3 ? product?.stallId : `${KindStalls}:${product.userId}:${product?.stallId}`
 			const evContent = {
 				id: identifier,
-				stall_id: product?.stallId.split(':').length == 3 ? product?.stallId.split(':')[2] : product?.stallId,
+				stall_id: product?.stallId?.split(':').length == 3 ? product?.stallId.split(':')[2] : product?.stallId,
 				name: productTile,
 				description: productDescription,
 				images: eventImages,
@@ -129,6 +130,7 @@ export const editProductMutation = createMutation(
 				})
 			}
 		},
+		// TODO invalidate products query onSucess
 	},
 	queryClient,
 )

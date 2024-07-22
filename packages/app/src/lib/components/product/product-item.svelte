@@ -6,11 +6,11 @@
 	import { addProduct } from '$lib/stores/cart'
 	import { openDrawerForProduct } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
+	import { stringToHexColor } from '$lib/utils'
 
 	import Spinner from '../assets/spinner.svelte'
 	import { Button } from '../ui/button'
 	import Separator from '../ui/separator/separator.svelte'
-	import ImgPlaceHolder from './imgPlaceHolder.svelte'
 
 	export let product: Partial<DisplayProduct>
 	let { images, name, currency, price, userNip05, identifier, id, userId, quantity } = product
@@ -29,7 +29,7 @@
 </script>
 
 <Card.Root class="relative grid grid-rows-[1fr_auto] border-2 border-black bg-transparent text-black group">
-	{#if images}
+	{#if images?.length}
 		{@const mainImage = images[0]?.imageOrder ? images.find((image) => image.imageOrder == 0 || 1) : images[0]}
 
 		<div class="relative">
@@ -54,7 +54,9 @@
 			{/if}
 		</div>
 	{:else}
-		<ImgPlaceHolder imageType={'thumbnail'} />
+		<div class="h-[329px] flex items-center justify-center p-2">
+			<span style={`color:${stringToHexColor(String(name || identifier))}`} class=" i-mdi-package-variant-closed w-16 h-16"></span>
+		</div>
 	{/if}
 	<a href={userNip05 ? `/products/${userNip05}/${identifier}` : `/products/${id}`}>
 		<Card.Footer class="cursor-pointer">
@@ -64,7 +66,9 @@
 				</div>
 				<Separator></Separator>
 				<div class="flex flex-col items-start">
-					{#if price && currency && !['sat', 'sats', 'btc'].includes(currency)}
+					{#if price && currency && !['sat', 'sats'].includes(currency.toLowerCase())}
+						<span class="text-xs">{price.toLocaleString('en-US', { style: 'currency', currency: currency })} {currency}</span>
+					{:else if price && currency && currency.toLowerCase() == 'btc'}
 						<span class="text-xs">{price.toLocaleString('en-US', { style: 'currency', currency: currency })} {currency}</span>
 					{/if}
 					<span class=" font-bold">

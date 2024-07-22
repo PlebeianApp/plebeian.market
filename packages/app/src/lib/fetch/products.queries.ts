@@ -31,7 +31,8 @@ export const createProductPriceQuery = (product: DisplayProduct) =>
 		{
 			queryKey: ['products', 'price', product.id],
 			queryFn: async () => {
-				return await currencyToBtc(product.currency, product.price, true)
+				// TODO get currency from stall
+				return await currencyToBtc(String(product.currency), product.price, true)
 			},
 		},
 		queryClient,

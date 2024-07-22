@@ -100,8 +100,8 @@
 						[...(products as Set<NDKEvent>)].filter((product) => {
 							const stallId = JSON.parse(product.content).stall_id
 							if (stallId == stall.id.split(':')[2]) {
-								const productId = getEventCoordinates(product).coordinates
-								return !toDisplayProducts.some((displayProduct) => displayProduct.id?.includes(productId))
+								const productId = getEventCoordinates(product)?.coordinates
+								return productId && !toDisplayProducts.some((displayProduct) => displayProduct.id?.includes(productId))
 							}
 						}),
 					)
@@ -211,7 +211,7 @@
 			</div>
 
 			{#if isMyStall}
-				<Button class="mt-4" on:click={() => openDrawerForStall(stall.id)}>Edit stall</Button>
+				<Button class="mt-4 w-fit" on:click={() => openDrawerForStall(stall.id)}>Edit stall</Button>
 			{/if}
 		{:else}
 			<section class=" flex flex-col gap-2">

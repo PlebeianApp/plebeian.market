@@ -37,7 +37,7 @@
 	const linkDetails = data.menuItems
 		.find((item) => item.value === 'account-settings')
 		?.links.find((item) => item.href === $page.url.pathname)
-
+	// TODO stalls from nostr are not beign loaded
 	onMount(async () => {
 		if (!activeUser?.id) return
 		if (!userExist) {

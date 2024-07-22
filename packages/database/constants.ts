@@ -1,5 +1,6 @@
 export const CURRENCIES = [
 	'BTC', // Bitcoin
+	'SATS', // Satoshis
 	'USD', // United States Dollar
 	'EUR', // Euro
 	'JPY', // Japanese Yen

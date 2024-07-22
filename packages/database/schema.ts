@@ -46,7 +46,7 @@ const standardProductColumns = {
 	identifier: text('identifier').notNull(),
 	productName: text('product_name').notNull(),
 	description: text('description').notNull(),
-	currency: text('currency').notNull(),
+	currency: text('currency'),
 	quantity: integer('quantity').notNull(),
 	extraCost: numeric('extra_cost').notNull().default('0'),
 }
@@ -154,16 +154,22 @@ export const userMeta = sqliteTable('user_meta', {
 })
 
 // Stalls table
-export const stalls = sqliteTable('stalls', {
-	...standardColumns,
-	name: text('name').notNull(),
-	description: text('description').notNull(),
-	identifier: text('identifier').notNull(),
-	currency: text('currency').notNull(),
-	userId: text('user_id')
-		.notNull()
-		.references(() => users.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
-})
+export const stalls = sqliteTable(
+	'stalls',
+	{
+		...standardColumns,
+		name: text('name').notNull(),
+		description: text('description').notNull(),
+		identifier: text('identifier').notNull(),
+		currency: text('currency').notNull(),
+		userId: text('user_id')
+			.notNull()
+			.references(() => users.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
+	},
+	(table) => ({
+		uniqueIdCurrency: unique().on(table.id, table.currency),
+	}),
+)
 
 // Payment details
 export const paymentDetails = sqliteTable('payment_details', {
@@ -251,15 +257,26 @@ export const eventTags = sqliteTable(
 )
 
 // Products
-export const products = sqliteTable('products', {
-	...standardColumns,
-	...standardProductColumns,
-	productType: text('product_type', { enum: Object.values(PRODUCT_TYPES) as NonEmptyArray<ProductTypes> })
-		.notNull()
-		.default('simple'),
-	parentId: text('parent_id').references((): AnySQLiteColumn => products.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
-	price: numeric('price').notNull(),
-})
+export const products = sqliteTable(
+	'products',
+	{
+		...standardColumns,
+		...standardProductColumns,
+		productType: text('product_type', { enum: Object.values(PRODUCT_TYPES) as NonEmptyArray<ProductTypes> })
+			.notNull()
+			.default('simple'),
+		parentId: text('parent_id').references((): AnySQLiteColumn => products.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
+		price: numeric('price').notNull(),
+	},
+	(table) => ({
+		stallCurrencyFk: foreignKey({
+			columns: [table.stallId, table.currency],
+			foreignColumns: [stalls.id, stalls.currency],
+		})
+			.onDelete('cascade')
+			.onUpdate('cascade'),
+	}),
+)
 
 export const productToEventsRelations = relations(products, ({ many }) => ({
 	categories: many(eventTags),

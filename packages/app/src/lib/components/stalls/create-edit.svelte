@@ -19,7 +19,6 @@
 	import { createStallFromNostrEvent, updateStallFromNostrEvent } from '$lib/fetch/stalls.mutations'
 	import ndkStore from '$lib/stores/ndk'
 	import { calculateGeohashAccuracy, checkIfUserExists, debounce, searchLocation, shouldRegister, unixTimeNow } from '$lib/utils'
-	import { ChevronsUpDown } from 'lucide-svelte'
 	import geohash from 'ngeohash'
 	import { createEventDispatcher, onMount, tick } from 'svelte'
 	import { get } from 'svelte/store'
@@ -39,7 +38,7 @@
 		appSettings: { allowRegister, defaultCurrency },
 	} = $page.data
 
-	export let stall: RichStall | null = null
+	export let stall: Partial<RichStall> | null = null
 
 	let locationSearchOpen = false
 	let shippingFromInput = ''
@@ -70,7 +69,7 @@
 			const [minLat, maxLat, minLon, maxLon] = location.boundingbox.map(Number)
 			const centerLat = (minLat + maxLat) / 2
 			const centerLon = (minLon + maxLon) / 2
-			const accuracy = calculateGeohashAccuracy(mapGeoJSON.boundingbox)
+			const accuracy = calculateGeohashAccuracy(mapGeoJSON?.boundingbox)
 
 			geohashOfSelectedGeometry = geohash.encode(centerLat, centerLon, accuracy)
 		}
@@ -208,7 +207,7 @@
 		const _shouldRegister = await shouldRegister(allowRegister, userExist)
 		if (_shouldRegister) {
 			const nostrEvent = await newEvent.toNostrEvent()
-			if (stall) {
+			if (stall?.id) {
 				await get(updateStallFromNostrEvent).mutateAsync([stall.id, nostrEvent])
 			} else {
 				await get(createStallFromNostrEvent).mutateAsync(nostrEvent)
@@ -242,11 +241,10 @@
 				</Button>
 			</Collapsible.Trigger>
 			<Collapsible.Content>
-				<SingleImage src={headerImage ?? stall?.image} on:save={handleSaveBannerImage} />
+				<SingleImage src={headerImage || stall?.image || ''} on:save={handleSaveBannerImage} />
 			</Collapsible.Content>
 		</Collapsible.Root>
 	</div>
-
 	<div class="grid w-full items-center gap-1.5">
 		<Label for="title" class="font-bold">Title</Label>
 		<Input value={stall?.name} required class="border-2 border-black" type="text" name="title" placeholder="e.g. Fancy Wears" />
