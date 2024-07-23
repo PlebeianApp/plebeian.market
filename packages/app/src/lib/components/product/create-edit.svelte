@@ -154,7 +154,7 @@
 	<Spinner />
 {:else}
 	<form on:submit|preventDefault={(sEvent) => submit(sEvent, stall)} class="flex flex-col gap-4 grow h-full">
-		<Tabs.Root value="shipping" class="p-4">
+		<Tabs.Root value="basic" class="p-4">
 			<Tabs.List class="w-full justify-around bg-transparent">
 				<Tabs.Trigger value="basic" class={activeTab}>Basic</Tabs.Trigger>
 				<Tabs.Trigger value="categories" class={activeTab}>Categories</Tabs.Trigger>
@@ -290,7 +290,9 @@
 											currentShipping = item
 										}}
 									>
-										{item.name}
+										<div>
+											<span class=" font-bold">{item.name}</span>, {item.cost}{stall?.currency}
+										</div>
 									</DropdownMenu.CheckboxItem>
 								{/each}
 							</section>

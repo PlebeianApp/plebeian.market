@@ -286,7 +286,7 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 	const parsedProduct = productEventSchema.safeParse({ id: productId, ...productEventContent })
 
 	if (!parsedProduct.success) {
-		error(500, 'Bad product schema')
+		error(500, `Bad product schema, ${parsedProduct.error}`)
 	}
 
 	const parsedProductData = parsedProduct.data
