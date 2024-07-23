@@ -40,7 +40,7 @@ export const getAllCategories = async (filter: CatsFilter = catsFilterSchema.par
 
 	if (richCats.length > 0) {
 		return richCats
+	} else {
+		return []
 	}
-
-	error(404, { message: `No categories found` })
 }

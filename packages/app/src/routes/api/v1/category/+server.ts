@@ -11,8 +11,7 @@ export async function GET({ url: { searchParams } }) {
 		try {
 			return json(await getAllCategories(filter.data))
 		} catch (e: unknown) {
-			if ((e as Response).status == 404) return json([])
-			else error((e as Response).status, { message: `${e}` })
+			return error((e as Response).status, { message: `${e}` })
 		}
 	}
 }

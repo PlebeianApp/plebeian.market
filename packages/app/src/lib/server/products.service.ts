@@ -15,7 +15,6 @@ import {
 	eq,
 	events,
 	eventTags,
-	eventTagsPrimaryKey,
 	getTableColumns,
 	PRODUCT_META,
 	productImages,
@@ -137,6 +136,7 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 		const productPromises = productEvents.map(async (productEvent) => {
 			try {
 				const eventCoordinates = getEventCoordinates(productEvent)
+				if (!eventCoordinates) return
 				const productEventContent = JSON.parse(productEvent.content)
 				const {
 					data: parsedProduct,
@@ -147,17 +147,16 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 				if (!success) error(500, { message: `${parseError}` })
 
 				if (!parsedProduct) {
-					throw 'Bad product schema'
+					throw Error('Bad product schema')
 				}
 
 				const stall = parsedProduct.stallId?.startsWith(`${KindStalls}`)
 					? await getStallById(parsedProduct.stallId)
 					: await getStallById(`${KindStalls}:${productEvent.pubkey}:${parsedProduct.stallId}`)
-
 				const parentId = customTagValue(productEvent.tags, 'a')[0] || null
 				const extraCost = parsedProduct.shipping?.length ? parsedProduct.shipping[0].cost : 0
 				if (!stall) {
-					throw 'Stall not found'
+					throw Error('Stall not found')
 				}
 
 				if (!parsedProduct.type) {
@@ -203,7 +202,6 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 					imageType: 'gallery',
 					imageOrder: index + 1,
 				}))
-
 				await db.insert(events).values({
 					id: eventCoordinates.coordinates,
 					author: productEvent.pubkey,
@@ -212,7 +210,6 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 				})
 
 				const productResult = await db.insert(products).values(insertProduct).returning()
-
 				if (insertSpecs?.length) {
 					await db.insert(productMeta).values(insertSpecs).returning()
 				}
@@ -244,11 +241,10 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 				if (productResult[0]) {
 					return toDisplayProduct(productResult[0])
 				} else {
-					throw 'Failed to create product'
+					throw Error('Failed to create product')
 				}
 			} catch (e) {
-				console.error('Error creating product:', e)
-				error(500, { message: `${e}` })
+				throw Error(`${e}`)
 			}
 		})
 		const results = await Promise.all(productPromises)
@@ -339,7 +335,7 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 					secondTagValue: tag[2],
 					thirdTagValue: tag[3],
 					userId: productEvent.pubkey,
-					eventId: eventCoordinates.coordinates,
+					eventId: eventCoordinates?.coordinates as string,
 					eventKind: productEvent.kind!,
 				})),
 			)
