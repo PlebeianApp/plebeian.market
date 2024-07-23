@@ -5,6 +5,8 @@ import { currencyToBtc } from '$lib/utils'
 import { toast } from 'svelte-sonner'
 import { derived, get, writable } from 'svelte/store'
 
+import type { StallCoordinatesType } from './drawer-ui'
+
 // TODO Adapt cart to non registered users
 interface Product {
 	id: string
@@ -75,7 +77,7 @@ function findUser(pubkey: string): User {
 	return user
 }
 
-function findStall(user: User, stallId: string, currency: string): Stall {
+function findStall(user: User, stallId: StallCoordinatesType, currency: string): Stall {
 	let stall = user.stalls.find((s) => s.id === stallId)
 	if (!stall) {
 		stall = { id: stallId, products: [], currency, shippingMethodId: null, shippingCost: 0 }
@@ -139,7 +141,7 @@ export const getShippingMethod = (stallId: string) => {
 	})
 }
 
-export function addProduct(userPubkey: string, stallId: string, product: Product, currency: string) {
+export function addProduct(userPubkey: string, stallId: StallCoordinatesType, product: Product, currency: string) {
 	const user = findUser(userPubkey)
 	const stall = findStall(user, stallId, currency)
 	cart.update((c) => {

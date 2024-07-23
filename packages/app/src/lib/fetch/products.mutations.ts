@@ -68,9 +68,19 @@ export const createProductMutation = createMutation(
 			await newEvent.sign()
 			// await newEvent.publish().then((d) => console.log(d))
 			const _shouldRegister = await shouldRegister(undefined, undefined, $ndkStore.activeUser.pubkey)
-			if (_shouldRegister) get(createProductsFromNostrMutation).mutateAsync(new Set([newEvent]))
+			if (_shouldRegister) {
+				const response = get(createProductsFromNostrMutation).mutateAsync(new Set([newEvent]))
+				return response
+			}
 		},
-		// TODO invalidate products query onSucess
+		onSuccess: (data: DisplayProduct[] | undefined | null) => {
+			if (data) {
+				queryClient.invalidateQueries({ queryKey: ['products'] })
+				queryClient.invalidateQueries({ queryKey: ['shipping'] })
+				queryClient.invalidateQueries({ queryKey: ['categories'] })
+				queryClient.invalidateQueries({ queryKey: ['stalls'] })
+			}
+		},
 	},
 	queryClient,
 )
@@ -125,12 +135,21 @@ export const editProductMutation = createMutation(
 			const nostrEvent = await newEvent.toNostrEvent()
 			const _shouldRegister = await shouldRegister(undefined, undefined, $ndkStore.activeUser.pubkey)
 			if (_shouldRegister) {
-				await createRequest(`PUT /api/v1/products/${product.id}`, {
+				const response = await createRequest(`PUT /api/v1/products/${product.id}`, {
 					body: nostrEvent,
 				})
+				return response
 			}
 		},
 		// TODO invalidate products query onSucess
+		onSuccess: (data: DisplayProduct | undefined) => {
+			if (data) {
+				queryClient.invalidateQueries({ queryKey: ['products'] })
+				queryClient.invalidateQueries({ queryKey: ['shipping'] })
+				queryClient.invalidateQueries({ queryKey: ['categories'] })
+				queryClient.invalidateQueries({ queryKey: ['stalls'] })
+			}
+		},
 	},
 	queryClient,
 )

@@ -29,9 +29,8 @@ export const createProductQuery = (productId: string) =>
 export const createProductPriceQuery = (product: DisplayProduct) =>
 	createQuery<number | null>(
 		{
-			queryKey: ['products', 'price', product.id],
+			queryKey: ['product-price', product.userId, product.id],
 			queryFn: async () => {
-				// TODO get currency from stall
 				return await currencyToBtc(String(product.currency), product.price, true)
 			},
 		},

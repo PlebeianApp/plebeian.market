@@ -8,14 +8,11 @@
 	import '@fontsource/ibm-plex-mono'
 	import '../app.css'
 
-	import type { RichCat } from '$lib/server/categories.service'
 	import { QueryClientProvider } from '@tanstack/svelte-query'
 	import { goto } from '$app/navigation'
 	import Drawer from '$lib/components/drawer.svelte'
-	import { createCategoriesByFilterQuery } from '$lib/fetch/category.queries'
 	import { queryClient } from '$lib/fetch/client'
 	import { cleanupCachedEvents } from '$lib/stores/session'
-	import { get } from 'svelte/store'
 
 	import type { LayoutData } from './$types'
 

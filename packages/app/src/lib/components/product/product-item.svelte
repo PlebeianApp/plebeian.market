@@ -1,7 +1,8 @@
 <script lang="ts">
 	import type { DisplayProduct } from '$lib/server/products.service'
+	import type { ProductCoordinatesType, StallCoordinatesType } from '$lib/stores/drawer-ui'
 	import * as Card from '$lib/components/ui/card/index.js'
-	import { KindProducts } from '$lib/constants'
+	import { KindProducts, KindStalls } from '$lib/constants'
 	import { createProductPriceQuery } from '$lib/fetch/products.queries'
 	import { addProduct } from '$lib/stores/cart'
 	import { openDrawerForProduct } from '$lib/stores/drawer-ui'
@@ -16,16 +17,14 @@
 	let { images, name, currency, price, userNip05, identifier, id, userId, quantity } = product
 
 	let isMyProduct = false
-
-	$: {
-		if ($ndkStore.activeUser?.pubkey) {
-			isMyProduct = $ndkStore.activeUser.pubkey === userId
-		}
-		if (!id?.startsWith(KindProducts.toString())) {
-			id = `${KindProducts}:${userId}:${id}`
-		}
-	}
+	const stallCoordinates: StallCoordinatesType = !product.stallId?.startsWith(String(KindStalls))
+		? (`${KindStalls}:${userId}:${product.stallId}` as StallCoordinatesType)
+		: (product.stallId as StallCoordinatesType)
+	const productCoordinates: ProductCoordinatesType = !id?.startsWith(String(KindProducts))
+		? (`${KindProducts}:${userId}:${id}` as ProductCoordinatesType)
+		: (id as ProductCoordinatesType)
 	$: priceQuery = createProductPriceQuery(product as DisplayProduct)
+	$: isMyProduct = $ndkStore.activeUser?.pubkey ? $ndkStore.activeUser.pubkey === userId : false
 </script>
 
 <Card.Root class="relative grid grid-rows-[1fr_auto] border-2 border-black bg-transparent text-black group">
@@ -36,29 +35,13 @@
 			<div class=" flex items-center justify-center p-2">
 				<img class="h-[329px] object-cover transition-opacity duration-300 group-hover:opacity-70" src={mainImage?.imageUrl} alt="" />
 			</div>
-			{#if isMyProduct}
-				<Button
-					on:click={() => openDrawerForProduct(id ? id : '')}
-					class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white text-black font-bold opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-				>
-					Edit product
-				</Button>
-			{:else}
-				<Button
-					on:click={() =>
-						addProduct(userId, product.stallId, { id: id, name: name, amount: 1, price: price, stockQuantity: quantity }, currency)}
-					class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white text-black font-bold opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-				>
-					Add to cart
-				</Button>
-			{/if}
 		</div>
 	{:else}
 		<div class="h-[329px] flex items-center justify-center p-2">
 			<span style={`color:${stringToHexColor(String(name || identifier))}`} class=" i-mdi-package-variant-closed w-16 h-16"></span>
 		</div>
 	{/if}
-	<a href={userNip05 ? `/products/${userNip05}/${identifier}` : `/products/${id}`}>
+	<a href={userNip05 ? `/products/${userNip05}/${identifier}` : `/products/${productCoordinates}`}>
 		<Card.Footer class="cursor-pointer">
 			<div class="flex flex-col justify-between items-start w-full gap-2">
 				<div class="flex-grow">
@@ -85,4 +68,30 @@
 			</div>
 		</Card.Footer>
 	</a>
+
+	{#if isMyProduct}
+		<div
+			class="flex flex-col gap-2 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-black font-bold opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+		>
+			<Button
+				on:click={() => openDrawerForProduct(productCoordinates, stallCoordinates)}
+				class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white text-black font-bold opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+			>
+				Edit product
+			</Button>
+		</div>
+	{:else if userId}
+		<Button
+			on:click={() =>
+				addProduct(
+					userId,
+					stallCoordinates,
+					{ id: productCoordinates, name: String(name), amount: 1, price: Number(price), stockQuantity: Number(quantity) },
+					String(currency),
+				)}
+			class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white text-black font-bold opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+		>
+			Add to cart
+		</Button>
+	{/if}
 </Card.Root>

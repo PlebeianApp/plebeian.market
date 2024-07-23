@@ -23,7 +23,7 @@
 	export let data: PageData
 	const { currencies, appSettings, adminUsers, instancePass } = data
 	let checked = true
-	let selectedCurrency: Selected<string> = { value: 'BTC', label: 'BTC' }
+	let selectedCurrency: Selected<string> = { value: currencies[0], label: currencies[0] }
 	let newInstanceNsec = ''
 	let newInstanceNpub = ''
 	let adminsList: string[] = adminUsers.map((user) => npubEncode(user))

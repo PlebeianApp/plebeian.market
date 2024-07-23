@@ -1,11 +1,10 @@
 <script lang="ts">
 	import { createProductQuery } from '$lib/fetch/products.queries'
 	import { getProductAmount } from '$lib/stores/cart'
-	import { formatPrice } from '$lib/utils'
+	import { formatPrice, stringToHexColor } from '$lib/utils'
 	import { createEventDispatcher } from 'svelte'
 
 	import Spinner from '../assets/spinner.svelte'
-	import ImgPlaceHolder from '../product/imgPlaceHolder.svelte'
 	import SatPriceLoader from '../product/sat-price-loader.svelte'
 	import Button from '../ui/button/button.svelte'
 	import Input from '../ui/input/input.svelte'
@@ -18,7 +17,7 @@
 	$: currentAmount = getProductAmount(productId)
 
 	const handleIncrement = () => {
-		if ($currentAmount < $product.data.quantity) {
+		if ($product.data && $currentAmount < $product.data.quantity) {
 			dispatch('increment')
 		}
 	}
@@ -30,6 +29,7 @@
 	}
 
 	const handleSetAmount = (e) => {
+		if (!$product.data) return
 		const newAmount = Math.min(Math.max(1, parseInt(e.target.value) || 1), $product.data.quantity)
 		dispatch('setAmount', newAmount)
 	}
@@ -47,7 +47,12 @@
 			{#if $product.data.images[0]}
 				<img class="contain h-[80px] aspect-square object-cover" src={$product.data.images[0].imageUrl} alt="" />
 			{:else}
-				<ImgPlaceHolder imageType={'mini'} />
+				<div class="h-[80px] aspect-square flex items-center justify-center">
+					<span
+						style={`color:${stringToHexColor(String($product.data.name || $product.data.identifier))}`}
+						class=" i-mdi-package-variant-closed w-10 h-10"
+					></span>
+				</div>
 			{/if}
 			<div class="flex flex-col flex-grow justify-between">
 				<div class="font-bold">{$product.data.name}</div>

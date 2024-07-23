@@ -163,7 +163,7 @@
 					{/if}
 					sats
 				</h2>
-				{#if toDisplayProducts[0].price && toDisplayProducts[0].currency && !['sat', 'sats', 'btc'].includes(toDisplayProducts[0].currency)}
+				{#if toDisplayProducts[0].price && toDisplayProducts[0].currency && !['sat', 'sats', 'btc'].includes(toDisplayProducts[0].currency.toLowerCase())}
 					<h3 class=" text-lg font-normal">
 						{toDisplayProducts[0].price.toLocaleString('en-US', { style: 'currency', currency: toDisplayProducts[0].currency })}
 						{toDisplayProducts[0].currency}

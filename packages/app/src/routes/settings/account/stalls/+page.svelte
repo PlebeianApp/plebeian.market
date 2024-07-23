@@ -7,7 +7,7 @@
 	import * as Collapsible from '$lib/components/ui/collapsible'
 	import { Skeleton } from '$lib/components/ui/skeleton'
 	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
-	import { fetchUserStallsData, normalizeStallData } from '$lib/nostrSubs/utils'
+	import { fetchUserStallsData, normalizeStallData, setNostrData } from '$lib/nostrSubs/utils'
 	import ndkStore from '$lib/stores/ndk'
 	import { nav_back } from '$lib/utils'
 	import { onMount } from 'svelte'
@@ -15,7 +15,11 @@
 	import type { PageData } from './$types'
 
 	export let data: PageData
-	const { userExist, activeUser } = data
+	const {
+		userExist,
+		activeUser,
+		appSettings: { allowRegister },
+	} = data
 	let stalls: Partial<RichStall>[] | null
 	let stallsMode: 'list' | 'create' | 'edit' = 'list'
 
@@ -40,17 +44,27 @@
 	// TODO stalls from nostr are not beign loaded
 	onMount(async () => {
 		if (!activeUser?.id) return
-		if (!userExist) {
-			const { stallNostrRes } = await fetchUserStallsData(activeUser?.id)
-			if (stallNostrRes) {
-				const normalizedStallData = await Promise.all([...stallNostrRes].map(normalizeStallData)).then((results) =>
-					results.filter((result) => result.data !== null).map((result) => result.data),
+
+		const { stallNostrRes } = await fetchUserStallsData(activeUser?.id)
+		if (stallNostrRes?.size) {
+			const normalizedStallData = await Promise.all([...stallNostrRes].map(normalizeStallData)).then((results) =>
+				results.filter((result) => result.data !== null).map((result) => result.data),
+			)
+			if (stalls?.length) {
+				const newStalls = normalizedStallData.filter(
+					(stall) => !stalls?.some((existingStall) => stall?.identifier === existingStall.identifier),
 				)
-				if (stalls?.length) {
-					const newStalls = normalizedStallData.filter((stall) => !stalls?.some((existingStall) => stall.id === existingStall.id))
-					stalls = [...stalls, ...newStalls] as Partial<RichStall>[]
-				} else {
-					stalls = normalizedStallData as Partial<RichStall>[]
+				console.log(newStalls)
+				if (newStalls.length) {
+					for (const stallData of stallNostrRes) {
+						await setNostrData(stallData, null, null, allowRegister, activeUser.id, userExist)
+					}
+				}
+				stalls = [...stalls, ...newStalls] as Partial<RichStall>[]
+			} else {
+				stalls = normalizedStallData as Partial<RichStall>[]
+				for (const stallData of stallNostrRes) {
+					await setNostrData(stallData, null, null, allowRegister, activeUser.id, userExist)
 				}
 			}
 		}

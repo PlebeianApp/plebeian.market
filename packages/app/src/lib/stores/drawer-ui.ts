@@ -1,19 +1,20 @@
 import type NDKSvelte from '@nostr-dev-kit/ndk-svelte'
+import type { KindProducts, KindStalls } from '$lib/constants'
 import ndkStore from '$lib/stores/ndk'
 import { toast } from 'svelte-sonner'
 import { get, writable } from 'svelte/store'
 
 export type DraweUiType = 'stall' | 'product' | 'cart' | null
 
-export type StallIdType = `30017:${string}:${string}`
-export type ProductIdType = `30018:${string}:${string}`
+export type StallCoordinatesType = `${typeof KindStalls}:${string}:${string}`
+export type ProductCoordinatesType = `${typeof KindProducts}:${string}:${string}`
 
-type IdType = StallIdType | ProductIdType | null
+type IdType = StallCoordinatesType | ProductCoordinatesType | null
 
 export const drawerUI = writable<{
 	drawerType: DraweUiType
 	id: IdType
-	forStall: StallIdType | null
+	forStall: StallCoordinatesType | null
 }>({
 	drawerType: null,
 	id: null,
@@ -26,7 +27,7 @@ const handleUserNotLoggedIn = (action: string) => {
 	toast.error(`You need to be logged in to ${action}`)
 }
 
-const setDrawerState = (state: { drawerType: DraweUiType; id: IdType; forStall: StallIdType | null }) => {
+const setDrawerState = (state: { drawerType: DraweUiType; id: IdType; forStall: StallCoordinatesType | null }) => {
 	drawerUI.set(state)
 }
 
@@ -75,18 +76,18 @@ export const openDrawerForStall = (stallId: string) => {
 		handleUserNotLoggedIn('view a stall')
 		return
 	}
-	const id = stallId as StallIdType
+	const id = stallId as StallCoordinatesType
 	setDrawerState({ drawerType: 'stall', id, forStall: null })
 }
 
-export const openDrawerForProduct = (productId: string) => {
+export const openDrawerForProduct = (productId: string, stallId?: StallCoordinatesType) => {
 	const currentNdkStore = get(ndkStore)
 	if (!isUserLoggedIn(currentNdkStore)) {
 		handleUserNotLoggedIn('view a product')
 		return
 	}
-	const id = productId as ProductIdType
-	setDrawerState({ drawerType: 'product', id, forStall: null })
+	const id = productId as ProductCoordinatesType
+	setDrawerState({ drawerType: 'product', id, forStall: stallId ? stallId : null })
 }
 
 export const closeDrawer = () => {
@@ -103,5 +104,5 @@ export const openDrawerForNewProductForStall = (stallId: string) => {
 		handleUserNotLoggedIn('create a product')
 		return
 	}
-	setDrawerState({ drawerType: 'product', id: null, forStall: stallId as StallIdType })
+	setDrawerState({ drawerType: 'product', id: null, forStall: stallId as StallCoordinatesType })
 }

@@ -2,7 +2,7 @@
 	import type { Category } from '$lib/fetch/products.mutations'
 	import type { DisplayProduct } from '$lib/server/products.service'
 	import type { RichStall } from '$lib/server/stalls.service'
-	import type { StallIdType } from '$lib/stores/drawer-ui'
+	import type { StallCoordinatesType } from '$lib/stores/drawer-ui'
 	import Button from '$lib/components/ui/button/button.svelte'
 	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte'
 	import * as Command from '$lib/components/ui/command/index.js'
@@ -30,7 +30,7 @@
 	import MultiImageEdit from './multi-image-edit.svelte'
 
 	export let product: Partial<DisplayProduct> | null = null
-	export let forStall: StallIdType | null = null
+	export let forStall: StallCoordinatesType | null = null
 
 	let stalls: RichStall[] | null
 	let stall: RichStall | null = null

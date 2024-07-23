@@ -94,7 +94,7 @@
 			</div>
 			<div class="flex flex-row items-center gap-2">
 				<Button class="grow" disabled={!$allStallsHaveShippingMethod} on:click={handleCheckout}>Checkout</Button>
-				<Button class="w-20" variant="destructive" on:click={clearCart}>Clear cart</Button>
+				<Button class="w-20" variant="destructive" on:click={clearCart}><span class=" i-mdi-trash-can" /></Button>
 				<Button variant="secondary" on:click={updatePrices} size="icon"><span class="i-mdi-update"></span></Button>
 			</div>
 		</div>

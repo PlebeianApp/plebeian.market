@@ -1,4 +1,5 @@
 import type { NostrEvent } from '@nostr-dev-kit/ndk'
+import type { EventCoordinates } from '$lib/interfaces'
 import type { StallsFilter } from '$lib/schema'
 import type { DisplayStall } from '$lib/server/stalls.service'
 import { error } from '@sveltejs/kit'
@@ -21,7 +22,7 @@ declare module './client' {
 export const createStallFromNostrEvent = createMutation(
 	{
 		mutationFn: async (stallEvent: NostrEvent) => {
-			const { coordinates } = getEventCoordinates(stallEvent)
+			const { coordinates } = getEventCoordinates(stallEvent) as EventCoordinates
 			try {
 				const response = await createRequest(`POST /api/v1/stalls/${coordinates}`, {
 					body: stallEvent,

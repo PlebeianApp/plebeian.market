@@ -4,7 +4,9 @@ import type { DisplayProduct } from '$lib/server/products.service'
 import type { RichShippingInfo } from '$lib/server/shipping.service'
 import type { RichStall } from '$lib/server/stalls.service'
 import { NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk'
+import { invalidateAll } from '$app/navigation'
 import { KindProducts, KindStalls, standardDisplayDateFormat } from '$lib/constants'
+import { queryClient } from '$lib/fetch/client'
 import { createProductsFromNostrMutation } from '$lib/fetch/products.mutations'
 import { createStallFromNostrEvent } from '$lib/fetch/stalls.mutations'
 import { userFromNostr } from '$lib/fetch/users.mutations'
@@ -35,7 +37,7 @@ export async function fetchStallData(stallId: string): Promise<{
 
 	const stallNostrRes: NDKEvent | null = fetchedStall
 		? fetchedStall
-		: await $ndkStore.fetchEvent(stallFilter, { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST })
+		: await $ndkStore.fetchEvent(stallFilter, { cacheUsage: NDKSubscriptionCacheUsage.PARALLEL })
 
 	return { stallNostrRes }
 }
@@ -50,7 +52,7 @@ export async function fetchUserStallsData(userId: string): Promise<{
 	}
 
 	const stallNostrRes: Set<NDKEvent> | null = await $ndkStore.fetchEvents(stallFilter, {
-		cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY,
+		cacheUsage: NDKSubscriptionCacheUsage.PARALLEL,
 	})
 
 	return { stallNostrRes }
@@ -107,12 +109,14 @@ export async function handleStallNostrData(stallData: NDKEvent): Promise<boolean
 	const $createStallFromNostrEvent = get(createStallFromNostrEvent)
 	const stallEvent = await stallData.toNostrEvent()
 	const stallMutation = await $createStallFromNostrEvent.mutateAsync(stallEvent)
+	stallMutation && queryClient.invalidateQueries({ queryKey: ['product-price', stallEvent.pubkey] })
 	return stallMutation ? true : false
 }
 
 export async function handleProductNostrData(productsData: Set<NDKEvent>): Promise<boolean> {
 	const $createProductsFromNostrMutation = get(createProductsFromNostrMutation)
 	const productsMutation = await $createProductsFromNostrMutation.mutateAsync(productsData)
+	productsMutation && (await invalidateAll())
 	return productsMutation ? true : false
 }
 
@@ -144,7 +148,7 @@ async function normalizeNostrData<T>(
 		const cacheData = {
 			id: coordinates.coordinates,
 			createdAt: event.created_at as number,
-			insertedAt: unixTimeNow(),
+			insertedAt: Number(new Date()),
 			kind: coordinates.kind,
 			pubkey: coordinates.pubkey,
 			data: result.data,
