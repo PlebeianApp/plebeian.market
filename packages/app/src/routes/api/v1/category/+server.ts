@@ -8,6 +8,11 @@ export async function GET({ url: { searchParams } }) {
 	if (!filter.success) {
 		return error(400, `Invalid request: ${JSON.stringify(filter.error)}`)
 	} else {
-		return json(await getAllCategories(filter.data))
+		try {
+			return json(await getAllCategories(filter.data))
+		} catch (e: unknown) {
+			if ((e as Response).status == 404) return json([])
+			else error((e as Response).status, { message: `${e}` })
+		}
 	}
 }

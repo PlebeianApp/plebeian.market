@@ -137,7 +137,7 @@
 					/>
 				{/if}
 				{#if stallResponse.name}
-					<h1 class="text-3xl">{stallResponse.name}</h1>
+					<h1 class="text-3xl">{truncateText(stallResponse.name, 50)}</h1>
 				{/if}
 
 				{#if stallResponse.description}
@@ -158,7 +158,7 @@
 			</div>
 			<div class="flex flex-row gap-12">
 				<section class="w-fit">
-					{#if userProfile}
+					{#if userProfile?.name || userProfile?.displayName}
 						<a href={`/p/${userProfile?.nip05 ? userProfile?.nip05 : user.id}`} class="flex flex-col items-center">
 							<Avatar>
 								<AvatarImage src={userProfile?.image} alt="@shadcn" />
@@ -167,7 +167,7 @@
 									><span class="i-tdesign-user-1 w-8 h-8" /></AvatarFallback
 								>
 							</Avatar>
-							<span>{userProfile?.name ? userProfile?.name : userProfile?.displayName}</span>
+							<span>{truncateText(String(userProfile?.name || userProfile?.displayName), 15)}</span>
 						</a>
 					{:else}
 						<Skeleton class="h-24 w-24 rounded-full" />

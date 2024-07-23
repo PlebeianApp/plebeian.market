@@ -44,6 +44,7 @@ type Account = Nip07Account | NsecAccount | Nip46Account
 export type CachedEvent = {
 	id: string
 	createdAt: number
+	insertedAt: number
 	kind: number
 	pubkey: string
 	data: unknown
@@ -88,7 +89,6 @@ export async function getCachedEvent(id: string): Promise<CachedEvent | undefine
 export async function addCachedEvent(event: CachedEvent): Promise<void> {
 	try {
 		await sessions.cachedEvents.put(event)
-		// console.log('Event cached in indexDB', event)
 	} catch (error) {
 		if (error instanceof Dexie.DexieError) {
 			console.warn(error.message)
@@ -111,8 +111,11 @@ export async function cleanupCachedEvents(maxEntries: number = 1000, maxAgeMs: n
 		const now = Date.now()
 		const allEvents = await sessions.cachedEvents.toArray()
 
-		const eventsToRemove = allEvents.filter((event) => now - event.createdAt > maxAgeMs || allEvents.length > maxEntries)
+		const eventsToRemove = allEvents.filter((event) => now - event.insertedAt > maxAgeMs || allEvents.length > maxEntries)
 
-		await sessions.cachedEvents.bulkDelete(eventsToRemove.map((event) => event.id))
+		if (eventsToRemove.length) {
+			console.log('Cleaning cache', eventsToRemove)
+			await sessions.cachedEvents.bulkDelete(eventsToRemove.map((event) => event.id))
+		}
 	})
 }

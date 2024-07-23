@@ -88,8 +88,7 @@
 
 	type Currency = (typeof CURRENCIES)[number]
 	type Shipping = (typeof stallEventSchema._type)['shipping'][0]
-
-	let currency: Currency = (stall?.currency as Currency) ?? defaultCurrency ?? 'BTC'
+	let currency: Currency = (stall?.currency as Currency) ?? defaultCurrency ?? CURRENCIES[0]
 	let headerImage = stall?.image
 
 	class ShippingMethod implements Shipping {

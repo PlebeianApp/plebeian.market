@@ -10,12 +10,12 @@ import { createStallFromNostrEvent } from '$lib/fetch/stalls.mutations'
 import { userFromNostr } from '$lib/fetch/users.mutations'
 import ndkStore from '$lib/stores/ndk'
 import { addCachedEvent, getCachedEvent, updateCachedEvent } from '$lib/stores/session'
-import { getEventCoordinates, shouldRegister } from '$lib/utils'
+import { getEventCoordinates, shouldRegister, unixTimeNow } from '$lib/utils'
 import { format } from 'date-fns'
 import { get } from 'svelte/store'
 import { ZodError, ZodSchema } from 'zod'
 
-import type { ProductImagesType } from '@plebeian/database'
+import type { ProductImage, ProductImagesType } from '@plebeian/database'
 
 import { productEventSchema, shippingObjectSchema, stallEventSchema } from '../../schema/nostr-events'
 import { stallsSub } from './subs'
@@ -121,7 +121,7 @@ type NormalizedData<T> = { data: Partial<T> | null; error: ZodError | null }
 async function normalizeNostrData<T>(
 	event: NDKEvent,
 	schema: ZodSchema,
-	transformer: (data: unknown, coordinates: ReturnType<typeof getEventCoordinates>) => Partial<T>,
+	transformer: (data: T, coordinates: ReturnType<typeof getEventCoordinates>) => Partial<T>,
 ): Promise<NormalizedData<T>> {
 	const coordinates = getEventCoordinates(event)
 	if (!event.content || !coordinates) return { data: null, error: null }
@@ -144,6 +144,7 @@ async function normalizeNostrData<T>(
 		const cacheData = {
 			id: coordinates.coordinates,
 			createdAt: event.created_at as number,
+			insertedAt: unixTimeNow(),
 			kind: coordinates.kind,
 			pubkey: coordinates.pubkey,
 			data: result.data,
@@ -167,10 +168,10 @@ export async function normalizeStallData(nostrStall: NDKEvent): Promise<Normaliz
 	return normalizeNostrData<RichStall>(nostrStall, stallEventSchema.passthrough(), (data, coordinates) => ({
 		...data,
 		createDate: formatDate(nostrStall.created_at),
-		identifier: coordinates.tagD,
-		id: coordinates.coordinates,
-		userId: coordinates.pubkey,
-		shipping: parseShipping(data.shipping),
+		identifier: coordinates?.tagD,
+		id: coordinates?.coordinates,
+		userId: coordinates?.pubkey,
+		shipping: parseShipping(data?.shipping),
 		image: nostrStall.tagValue('image'),
 	}))
 }
@@ -200,11 +201,11 @@ async function processProduct(
 	const result = await normalizeNostrData<DisplayProduct>(event, productEventSchema, (data, coordinates) => ({
 		...data,
 		quantity: data.quantity as number,
-		images: createProductImages(data),
+		images: createProductImages(data.images as unknown as string[], String(coordinates?.coordinates)),
 		userId,
 		createdAt: formatDate(event.created_at),
-		identifier: coordinates.tagD,
-		id: coordinates.coordinates,
+		identifier: coordinates?.tagD,
+		id: coordinates?.coordinates,
 	}))
 
 	if (result.data && (!stallId || result.data.stallId === stallId?.split(':')[2])) {
@@ -214,19 +215,17 @@ async function processProduct(
 	return null
 }
 
-function createProductImages(
-	data: unknown,
-): { createdAt: Date; productId: string; auctionId: null; imageUrl: string; imageType: ProductImagesType; imageOrder: number }[] {
-	return (
-		data.images?.map((image: string, index: number) => ({
+function createProductImages(images: string[], productId: string): ProductImage[] {
+	const imagesMap =
+		images.map((imageUrl, index) => ({
 			createdAt: new Date(),
-			productId: data.id as string,
+			productId,
 			auctionId: null,
-			imageUrl: image,
+			imageUrl: imageUrl as string,
 			imageType: 'gallery' as ProductImagesType,
 			imageOrder: index,
 		})) ?? []
-	)
+	return imagesMap
 }
 
 export function formatDate(timestamp: number | undefined): string {

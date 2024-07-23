@@ -72,9 +72,11 @@
 					: `/stalls/${stall.id?.replace(/^30017:/, '')}`}
 			>
 				<span class="truncate text-xl font-bold whitespace-normal">{stall.name}</span>
-				<p class="text-sm font-light max-w-[90%]">
-					{truncateText(stall?.description, 121)}
-				</p>
+				{#if stall?.description}
+					<p class="text-sm font-light max-w-[90%]">
+						{truncateText(stall.description, 121)}
+					</p>
+				{/if}
 			</a>
 		</Card.Content>
 		<a
@@ -83,12 +85,12 @@
 				: `/stalls/${stall.id?.replace(/^30017:/, '')}`}
 		>
 			<Card.Footer class="flex flex-col items-start font-bold p-2">
-				<div class="flex flex-col xl:flex-row justify-between w-full text-sm">
-					<span class="font-bold whitespace-normal">Since: {stall.createDate}</span>
+				<div class="flex flex-col 2xl:flex-row justify-between w-full text-sm">
+					<!-- <span class="font-bold whitespace-normal">Since: {stall.createDate}</span> -->
 					<span class="whitespace-normal">Currency: {stall.currency}</span>
 				</div>
 
-				<div class="flex flex-col xl:flex-row justify-between w-full text-sm">
+				<div class="flex flex-col 2xl:flex-row justify-between w-full text-sm">
 					{#if stall.userName}
 						<span class="whitespace-normal">Owner: {stall.userName}</span>
 					{/if}
