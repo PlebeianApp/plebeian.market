@@ -6,11 +6,9 @@
 	import type { StallIdType } from '$lib/stores/drawer-ui'
 	import Button from '$lib/components/ui/button/button.svelte'
 	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte'
-	import * as Command from '$lib/components/ui/command/index.js'
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js'
 	import Input from '$lib/components/ui/input/input.svelte'
 	import Label from '$lib/components/ui/label/label.svelte'
-	import * as Popover from '$lib/components/ui/popover/index.js'
 	import * as Tabs from '$lib/components/ui/tabs/index.js'
 	import Textarea from '$lib/components/ui/textarea/textarea.svelte'
 	import { queryClient } from '$lib/fetch/client'
@@ -23,10 +21,8 @@
 	import { toast } from 'svelte-sonner'
 
 	import type { ProductImage } from '@plebeian/database'
-	import { COUNTRIES_ISO } from '@plebeian/database/constants'
 	import { createId } from '@plebeian/database/utils'
 
-	import type { stallEventSchema } from '../../../schema/nostr-events'
 	import Spinner from '../assets/spinner.svelte'
 	import MultiImageEdit from './multi-image-edit.svelte'
 
@@ -36,7 +32,6 @@
 	let stalls: RichStall[] | null
 	let stall: RichStall | null = null
 
-	$: console.log(stalls, stall)
 	$: userExistQuery = createUserExistsQuery($ndkStore.activeUser?.pubkey as string)
 
 	$: stallsQuery = $userExistQuery.data
@@ -51,14 +46,11 @@
 
 	let currentShipping: Partial<RichShippingInfo> | null = null
 	let extraCost: string = product?.shipping?.cost ?? ''
-	console.log('product', product?.shipping, extraCost)
 	$: {
 		currentShipping ??= stall?.shipping.find((s) => s.id === product?.shipping?.shippingId) ?? null
-		console.log('currentShipping', currentShipping)
 	}
 
 	let currentStallId = forStall ?? product?.stallId
-	console.log('here', currentStallId)
 
 	$: {
 		if (stalls?.length) {
