@@ -7,7 +7,7 @@ import { getImagesByProductId } from '$lib/server/productImages.service'
 import { customTagValue, getEventCoordinates } from '$lib/utils'
 import { format } from 'date-fns'
 
-import { Product, ProductImage, ProductMeta, productShipping, ProductTypes } from '@plebeian/database'
+import { Product, ProductImage, ProductMeta, ProductShipping, productShipping, ProductTypes } from '@plebeian/database'
 import {
 	and,
 	createId,
@@ -15,7 +15,6 @@ import {
 	eq,
 	events,
 	eventTags,
-	eventTagsPrimaryKey,
 	getTableColumns,
 	PRODUCT_META,
 	productImages,
@@ -27,7 +26,6 @@ import {
 import { productEventSchema } from '../../schema/nostr-events'
 import { getStallById } from './stalls.service'
 import { getNip05ByUserId } from './users.service'
-import { RichShippingInfo } from './shipping.service'
 
 export type DisplayProduct = Pick<Product, 'id' | 'description' | 'currency' | 'quantity' | 'userId' | 'identifier' | 'stallId'> & {
 	name: Product['productName']
@@ -35,7 +33,7 @@ export type DisplayProduct = Pick<Product, 'id' | 'description' | 'currency' | '
 	createdAt: string
 	price: number
 	images: ProductImage[]
-	shipping?: Partial<RichShippingInfo>
+	shipping?: ProductShipping
 }
 
 export const toDisplayProduct = async (product: Product): Promise<DisplayProduct> => {
@@ -345,6 +343,24 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 		})
 		.where(eq(products.id, productId))
 		.returning()
+
+	if (parsedProductData.shipping?.length) {
+		const shipping = parsedProductData.shipping[0]
+		await db
+			.insert(productShipping)
+			.values({
+				cost: shipping.cost!,
+				shippingId: shipping.id,
+				productId: productId
+			})
+		.onConflictDoUpdate({
+			target: [productShipping.productId, productShipping.shippingId],
+			set: {
+				cost: shipping.cost!,
+			}
+		})
+		.execute()
+	}
 
 	if (productEvent.tags.length) {
 		await db
