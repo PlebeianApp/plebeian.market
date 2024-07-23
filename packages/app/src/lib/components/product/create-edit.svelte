@@ -50,15 +50,15 @@
 	}
 
 	let currentShipping: Partial<RichShippingInfo> | null = null
-	let extraCost: string = product?.shipping?.cost ?? ""
-	console.log("product", product?.shipping, extraCost)
+	let extraCost: string = product?.shipping?.cost ?? ''
+	console.log('product', product?.shipping, extraCost)
 	$: {
 		currentShipping ??= stall?.shipping.find((s) => s.id === product?.shipping?.shippingId) ?? null
-		console.log("currentShipping", currentShipping)
+		console.log('currentShipping', currentShipping)
 	}
-	
+
 	let currentStallId = forStall ?? product?.stallId
-	console.log("here", currentStallId)
+	console.log('here', currentStallId)
 
 	$: {
 		if (stalls?.length) {

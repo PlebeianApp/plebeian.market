@@ -7,7 +7,6 @@ import { getImagesByProductId } from '$lib/server/productImages.service'
 import { customTagValue, getEventCoordinates } from '$lib/utils'
 import { format } from 'date-fns'
 
-import { Product, ProductImage, ProductMeta, ProductShipping, productShipping, ProductTypes } from '@plebeian/database'
 import {
 	and,
 	createId,
@@ -16,10 +15,16 @@ import {
 	events,
 	eventTags,
 	getTableColumns,
+	Product,
 	PRODUCT_META,
+	ProductImage,
 	productImages,
+	ProductMeta,
 	productMeta,
 	products,
+	ProductShipping,
+	productShipping,
+	ProductTypes,
 	sql,
 } from '@plebeian/database'
 
@@ -40,7 +45,7 @@ export const toDisplayProduct = async (product: Product): Promise<DisplayProduct
 	const images = await getImagesByProductId(product.id)
 	const userNip05 = await getNip05ByUserId(product.userId)
 
-	const shipping = await db.query.productShipping.findFirst({ where: and(eq(productShipping.productId, product.id))})
+	const shipping = await db.query.productShipping.findFirst({ where: and(eq(productShipping.productId, product.id)) })
 
 	return {
 		id: product.id,
@@ -228,12 +233,14 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 				if (parsedProduct.shipping?.length) {
 					await db
 						.insert(productShipping)
-						.values(parsedProduct.shipping.map((s) =>  ({
-							cost: s.cost!,
-							shippingId: s.id,
-							productId: eventCoordinates!.coordinates!
-						})))
-					.execute()
+						.values(
+							parsedProduct.shipping.map((s) => ({
+								cost: s.cost!,
+								shippingId: s.id,
+								productId: eventCoordinates!.coordinates!,
+							})),
+						)
+						.execute()
 				}
 
 				if (productEvent.tags.length) {
@@ -351,15 +358,15 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 			.values({
 				cost: shipping.cost!,
 				shippingId: shipping.id,
-				productId: productId
+				productId: productId,
 			})
-		.onConflictDoUpdate({
-			target: [productShipping.productId, productShipping.shippingId],
-			set: {
-				cost: shipping.cost!,
-			}
-		})
-		.execute()
+			.onConflictDoUpdate({
+				target: [productShipping.productId, productShipping.shippingId],
+				set: {
+					cost: shipping.cost!,
+				},
+			})
+			.execute()
 	}
 
 	if (productEvent.tags.length) {

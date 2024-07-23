@@ -219,7 +219,8 @@ export const shippingZones = sqliteTable(
 )
 
 export const productShipping = sqliteTable(
-	'product_shipping', {
+	'product_shipping',
+	{
 		productId: text('product_id').references(() => products.id, { onUpdate: 'cascade', onDelete: 'cascade' }),
 		shippingId: text('shipping_id')
 			.notNull()
