@@ -136,14 +136,13 @@ async function normalizeNostrData<T>(
 	}
 
 	try {
+		// TODO Review this we are not storing events with errors so we parse them all the time
 		const parsedContent = JSON.parse(event.content)
 		const { data, success, error: parseError } = schema.safeParse(parsedContent)
-
 		if (!success) return { data: null, error: parseError }
 
 		const transformedData = transformer(data, coordinates)
 		const result: NormalizedData<T> = { data: transformedData, error: null }
-
 		// Update cache
 		const cacheData = {
 			id: coordinates.coordinates,

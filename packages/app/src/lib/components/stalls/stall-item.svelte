@@ -1,7 +1,6 @@
 <script lang="ts">
 	import type { NDKEvent } from '@nostr-dev-kit/ndk'
 	import type { RichStall } from '$lib/server/stalls.service'
-	import type { ZodError } from 'zod'
 	import * as Card from '$lib/components/ui/card/index'
 	import { normalizeStallData } from '$lib/nostrSubs/utils'
 	import { openDrawerForNewProductForStall, openDrawerForStall } from '$lib/stores/drawer-ui'
@@ -15,15 +14,13 @@
 	export let stallData: Partial<RichStall> | NDKEvent
 
 	let stall: Partial<RichStall>
-	let parseError: ZodError | null
 	let isMyStall: boolean
 
 	async function handleNDKEvent(event: NDKEvent) {
 		const authorPk = event.author.pubkey
 		const { data: parsedStall, error: _parseError } = await normalizeStallData(event)
-		parseError = _parseError
 
-		if (!parsedStall || !parsedStall.shipping || !parsedStall.name) return
+		if (!parsedStall) return
 
 		isMyStall = $ndkStore.activeUser?.pubkey === authorPk
 		const user = $ndkStore.getUser({ pubkey: authorPk })

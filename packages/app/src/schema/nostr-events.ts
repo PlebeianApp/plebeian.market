@@ -4,6 +4,26 @@ import { z } from 'zod'
 import type { ProductTypes } from '@plebeian/database'
 import { PRODUCT_TYPES } from '@plebeian/database/constants'
 
+const forbiddenWords = new Set([
+	'test',
+	'testing',
+	'example',
+	'dummy',
+	'fake',
+	'demo',
+	'sample',
+	'trial',
+	'sandbox',
+	'mock',
+	'placeholder',
+	'lorem',
+	'admin',
+	'password',
+])
+
+const escapedWords = Array.from(forbiddenWords).map((word) => word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+const forbiddenPattern = new RegExp(`(?:^|\\s)(${escapedWords.join('|')})(?:$|\\s|[^a-z])`, 'i')
+
 const productTypeValidator = (value: unknown) => {
 	if (typeof value !== 'string') {
 		return { error: new Error(`Invalid product type: ${value}`) }
@@ -64,8 +84,18 @@ export const bidEventSchema = z.number().int()
 
 export const stallEventSchema = z.object({
 	id: z.string(),
-	name: z.string(),
-	description: z.string().optional(),
+	name: z
+		.string()
+		.trim()
+		.refine((name) => !forbiddenPattern.test(name), {
+			message: `Name cannot contain a forbidden word}`,
+		}),
+	description: z
+		.string()
+		.optional()
+		.refine((description) => description === undefined || !forbiddenPattern.test(description) || !description.trim().length, {
+			message: `Description cannot contain any forbidden word}`,
+		}),
 	currency: z.string(),
 	shipping: z.array(shippingObjectSchema),
 })

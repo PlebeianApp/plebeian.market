@@ -64,7 +64,7 @@
 	}
 
 	$: if ($productsQuery?.data) toDisplayProducts = $productsQuery?.data
-
+	// TODO handle null profiles
 	onMount(async () => {
 		if (user.id) {
 			if (!stall.exist) {
