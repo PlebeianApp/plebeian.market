@@ -3,6 +3,7 @@
 	import type { DisplayProduct } from '$lib/server/products.service'
 	import type { RichStall } from '$lib/server/stalls.service'
 	import type { StallCoordinatesType } from '$lib/stores/drawer-ui'
+	import { ShippingMethod } from '$lib/classes/shipping'
 	import Button from '$lib/components/ui/button/button.svelte'
 	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte'
 	import * as Command from '$lib/components/ui/command/index.js'
@@ -25,102 +26,39 @@
 	import { COUNTRIES_ISO } from '@plebeian/database/constants'
 	import { createId } from '@plebeian/database/utils'
 
-	import type { stallEventSchema } from '../../../schema/nostr-events'
 	import Spinner from '../assets/spinner.svelte'
 	import MultiImageEdit from './multi-image-edit.svelte'
 
 	export let product: Partial<DisplayProduct> | null = null
 	export let forStall: StallCoordinatesType | null = null
-
-	let stalls: RichStall[] | null
-	let stall: RichStall | null = null
 	// TODO Categories are beign inserted in the db but they are not beign loaded when tring to edit/update a product
+
+	let stalls: RichStall[] | null = null
+	let stall: RichStall | null = null
+	let categories: Category[] = []
+	let images: Partial<ProductImage>[] = []
+	let shippingMethods: ShippingMethod[] = []
+
 	$: userExistQuery = createUserExistsQuery($ndkStore.activeUser?.pubkey as string)
+	$: stallsQuery = $userExistQuery.data ? createStallsByFilterQuery({ userId: $ndkStore.activeUser?.pubkey }) : undefined
 
-	$: stallsQuery = $userExistQuery.data
-		? createStallsByFilterQuery({
-				userId: $ndkStore.activeUser?.pubkey,
-			})
-		: undefined
-
-	$: {
-		if ($stallsQuery?.data) stalls = $stallsQuery.data
-	}
-
-	$: currentStallIdentifier = forStall?.split(':')[2] ?? product?.stallId
+	$: if ($stallsQuery?.data) stalls = $stallsQuery.data
 
 	$: {
 		if (stalls?.length) {
-			if (currentStallIdentifier) {
-				;[stall] = stalls.filter((pStall) => pStall.identifier === currentStallIdentifier)
-			} else {
-				stall = stalls[0]
-			}
+			stall = stalls.find((s) => s.identifier == currentStallIdentifier) || stalls[0]
 		}
 	}
 
-	const activeTab =
-		'w-full font-bold border-b-2 border-black text-black data-[state=active]:border-b-primary data-[state=active]:text-primary'
+	$: currentStallIdentifier = forStall?.split(':')[2] || product?.stallId || (stalls && stalls[0].identifier)
 
-	let categories: Category[] = []
-	let images: Partial<ProductImage>[] = product?.images ?? []
+	$: updateProductImages(product)
 
 	function updateProductImages(updatedProduct: Partial<DisplayProduct> | null) {
 		if (updatedProduct) {
 			images = updatedProduct.images ?? []
 		}
 	}
-
-	$: updateProductImages(product)
-
-	type Shipping = (typeof stallEventSchema._type)['shipping'][0]
-	class ShippingMethod implements Shipping {
-		id: string
-		name: string
-		cost: string
-		regions: string[]
-		countries: string[]
-
-		constructor(id: string, name: string, cost: string, regions: string[] = [], countries: string[] = []) {
-			this.id = id
-			this.name = name
-			this.cost = cost
-			this.regions = regions
-			this.countries = countries
-		}
-
-		addRegion(region: string) {
-			this.regions.push(region)
-			shippingMethods = shippingMethods
-		}
-
-		removeRegion(region: string) {
-			this.regions = this.regions.filter((z) => z !== region)
-			shippingMethods = shippingMethods
-		}
-
-		addCountry(country: string) {
-			this.countries.push(country)
-			shippingMethods = shippingMethods
-		}
-
-		removeCountry(country: string) {
-			this.countries = this.countries.filter((z) => z !== country)
-			shippingMethods = shippingMethods
-		}
-
-		get json() {
-			return {
-				id: this.id,
-				name: this.name,
-				cost: this.cost,
-				regions: this.regions,
-				countries: this.countries,
-			} as Shipping
-		}
-	}
-
-	let shippingMethods: ShippingMethod[] = []
 
 	function addShipping(id?: string) {
 		if (id) {
@@ -141,20 +79,6 @@
 		shippingMethods = shippingMethods.filter((s) => s.id !== id)
 	}
 
-	function closeAndFocusTrigger(triggerId: string) {
-		tick().then(() => {
-			document.getElementById(triggerId)?.focus()
-		})
-	}
-
-	async function addCategory() {
-		const key = createId()
-		categories = [...categories, { key, name: `category ${categories.length + 1}`, checked: true }]
-		await tick()
-		const el = document.querySelector(`span[data-category-key="${key}"]`) as HTMLSpanElement
-		el.focus()
-	}
-
 	function handleNewImageAdded(e: CustomEvent) {
 		images = [
 			...images,
@@ -166,6 +90,36 @@
 
 	function handleImagRemoved(e: CustomEvent) {
 		images = images.filter((image) => image.imageUrl !== e.detail)
+	}
+
+	function addCategory() {
+		const key = createId()
+		categories = [...categories, { key, name: `category ${categories.length + 1}`, checked: true }]
+	}
+
+	async function handleSubmit(sEvent: SubmitEvent, stall: RichStall | null) {
+		if (!stall) return
+		try {
+			const mutationFn = product ? $editProductMutation : $createProductMutation
+			await mutationFn.mutateAsync([
+				sEvent,
+				product ?? stall,
+				images.map((image) => ({ imageUrl: image.imageUrl })),
+				shippingMethods.map((s) => ({
+					id: s.id,
+					name: s.name ?? '',
+					cost: s.cost ?? '',
+					regions: s.regions ?? [],
+					countries: s.countries ?? [],
+				})),
+				categories,
+			])
+
+			toast.success(`Product ${product ? 'updated' : 'created'}!`)
+			queryClient.invalidateQueries({ queryKey: ['products', $ndkStore.activeUser?.pubkey] })
+		} catch (error) {
+			toast.error(`Failed to ${product ? 'update' : 'create'} product: ${error}`)
+		}
 	}
 
 	onMount(async () => {
@@ -188,57 +142,20 @@
 		}
 	})
 
-	const submit = async (sEvent: SubmitEvent, stall: RichStall | null) => {
-		if (stall == null) return
-		if (!product) {
-			try {
-				await $createProductMutation.mutateAsync([
-					sEvent,
-					stall,
-					images.map((image) => ({ imageUrl: image.imageUrl })),
-					shippingMethods.map((s) => ({
-						id: s.id,
-						name: s.name ?? '',
-						cost: s.cost ?? '',
-						regions: s.regions ?? [],
-						countries: s.countries ?? [],
-					})),
-					categories,
-				])
+	const activeTab =
+		'w-full font-bold border-b-2 border-black text-black data-[state=active]:border-b-primary data-[state=active]:text-primary'
 
-				toast.success('Product created!')
-			} catch (e) {
-				toast.error(`Failed to create product: ${e}`)
-			}
-		} else {
-			try {
-				await $editProductMutation.mutateAsync([
-					sEvent,
-					product,
-					images.map((image) => ({ imageUrl: image.imageUrl })),
-					shippingMethods.map((s) => ({
-						id: s.id,
-						name: s.name ?? '',
-						cost: s.cost ?? '',
-						regions: s.regions ?? [],
-						countries: s.countries ?? [],
-					})),
-					categories,
-				])
-				toast.success('Product updated!')
-			} catch (e) {
-				toast.error(`Failed to update product: ${e}`)
-			}
-		}
-
-		queryClient.invalidateQueries({ queryKey: ['products', $ndkStore.activeUser?.pubkey] })
+	function closeAndFocusTrigger(triggerId: string) {
+		tick().then(() => {
+			document.getElementById(triggerId)?.focus()
+		})
 	}
 </script>
 
 {#if !stalls || !stalls.length}
 	<Spinner />
 {:else}
-	<form on:submit|preventDefault={(sEvent) => submit(sEvent, stall)} class="flex flex-col gap-4 grow h-full">
+	<form on:submit|preventDefault={(sEvent) => handleSubmit(sEvent, stall)} class="flex flex-col gap-4 grow h-full">
 		<Tabs.Root value="basic" class="p-4">
 			<Tabs.List class="w-full justify-around bg-transparent">
 				<Tabs.Trigger value="basic" class={activeTab}>Basic</Tabs.Trigger>
@@ -281,15 +198,7 @@
 
 					<div class="grid w-full items-center gap-1.5">
 						<Label for="quantity" class="font-bold">Quantity</Label>
-						<Input
-							value={product?.quantity ?? ''}
-							required
-							class="border-2 border-black"
-							type="number"
-							name="quantity"
-							placeholder="10"
-							min={1}
-						/>
+						<Input value={product?.quantity ?? ''} required class="border-2 border-black" type="number" name="quantity" placeholder="10" />
 					</div>
 				</div>
 

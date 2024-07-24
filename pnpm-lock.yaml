@@ -168,6 +168,9 @@ importers:
       '@types/leaflet':
         specifier: ^1.9.12
         version: 1.9.12
+      '@types/ngeohash':
+        specifier: ^0.6.8
+        version: 0.6.8
       '@vite-pwa/assets-generator':
         specifier: ^0.2.4
         version: 0.2.4
@@ -2027,6 +2030,9 @@ packages:
 
   '@types/leaflet@1.9.12':
     resolution: {integrity: sha512-BK7XS+NyRI291HIo0HCfE18Lp8oA30H1gpi1tf0mF3TgiCEzanQjOqNZ4x126SXzzi2oNSZhZ5axJp1k0iM6jg==}
+
+  '@types/ngeohash@0.6.8':
+    resolution: {integrity: sha512-A90x3HMwE1yXbWCnd0ztHzv8rAQPjwTzX2diYI/6OrWm/3oairDaehw5WPWJFgZ+8+J/OuF99IbipmMa2le6tQ==}
 
   '@types/node@20.14.2':
     resolution: {integrity: sha512-xyu6WAMVwv6AKFLB+e/7ySZVr/0zLCzOa7rSpq6jNwpqOrUbcACDWC+53d4n2QHOnDou0fbIsg8wZu/sxrnI4Q==}
@@ -6895,6 +6901,8 @@ snapshots:
   '@types/leaflet@1.9.12':
     dependencies:
       '@types/geojson': 7946.0.14
+
+  '@types/ngeohash@0.6.8': {}
 
   '@types/node@20.14.2':
     dependencies:

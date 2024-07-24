@@ -1,4 +1,5 @@
 import type { NostrEvent } from '@nostr-dev-kit/ndk'
+import type { EventCoordinates } from '$lib/interfaces'
 import type { StallsFilter } from '$lib/schema'
 import type { DisplayProduct } from '$lib/server/products.service'
 import { error } from '@sveltejs/kit'
@@ -16,7 +17,6 @@ import {
 	eventTags,
 	getTableColumns,
 	inArray,
-	orders,
 	paymentDetails,
 	products,
 	shipping,
@@ -269,7 +269,7 @@ export const getStallsByUserId = async (userId: string): Promise<RichStall[]> =>
 
 export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall | undefined> => {
 	try {
-		const { coordinates, tagD } = getEventCoordinates(stallEvent)
+		const { coordinates, tagD } = getEventCoordinates(stallEvent) as EventCoordinates
 		const stallEventContent = JSON.parse(stallEvent.content)
 		if (!stallEventContent) {
 			throw Error(`Error parsing stall event content`)
@@ -285,6 +285,7 @@ export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall 
 		}
 
 		const imageTag = customTagValue(stallEvent.tags, 'image')[0]
+		const geoTag = customTagValue(stallEvent.tags, 'g')[0]
 
 		const insertStall: Stall = {
 			id: coordinates,
@@ -353,6 +354,16 @@ export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall 
 			})
 		}
 
+		if (geoTag) {
+			await db.insert(eventTags).values({
+				userId: stallResult.userId,
+				eventId: stallResult.id,
+				tagName: 'g',
+				tagValue: geoTag,
+				eventKind: KindStalls,
+			})
+		}
+
 		return {
 			id: stallResult.id,
 			name: stallResult.name,
@@ -396,7 +407,14 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
 			.where(and(eq(eventTags.eventId, stallId), eq(eventTags.tagName, 'image')))
 			.execute()
 
+		const [geo] = await db
+			.select()
+			.from(eventTags)
+			.where(and(eq(eventTags.eventId, stallId), eq(eventTags.tagName, 'g')))
+			.execute()
+
 		const imageTag = customTagValue(stallEvent.tags, 'image')[0]
+		const geoTag = customTagValue(stallEvent.tags, 'g')[0]
 
 		if (imageTag) {
 			if (image && image?.tagValue !== imageTag) {
@@ -413,6 +431,26 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
 					eventId: stallResult.id,
 					tagName: 'image',
 					tagValue: imageTag,
+					eventKind: KindStalls,
+				})
+			}
+		}
+
+		if (geoTag) {
+			if (geo && geo?.tagValue !== geoTag) {
+				await db
+					.update(eventTags)
+					.set({
+						tagValue: geoTag,
+					})
+					.where(and(eq(eventTags.eventId, stallId), eq(eventTags.tagName, 'g')))
+					.execute()
+			} else if (!geo) {
+				await db.insert(eventTags).values({
+					userId: stallResult.userId,
+					eventId: stallResult.id,
+					tagName: 'g',
+					tagValue: geoTag,
 					eventKind: KindStalls,
 				})
 			}
