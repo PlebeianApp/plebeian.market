@@ -87,6 +87,7 @@
 
 				const { products: productsData } = await fetchUserProductData(id)
 				if (productsData) {
+					// FIXME not working well, normalize products alway return null since there is no stallId
 					const result = await normalizeProductsFromNostr(productsData, id)
 					if (result) toDisplayProducts = result.toDisplayProducts
 				}

@@ -7,6 +7,7 @@ import { PRODUCT_TYPES } from '@plebeian/database/constants'
 const forbiddenWords = new Set([
 	'test',
 	'testing',
+	'TestStore',
 	'example',
 	'dummy',
 	'fake',
