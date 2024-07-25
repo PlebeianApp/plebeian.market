@@ -359,24 +359,19 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 		.where(eq(products.id, productId))
 		.returning()
 
-	if (parsedProductData.shipping?.length) {
-		for (const shipping of parsedProductData.shipping) {
-			await db
+	await db.transaction(async (tx) => {
+		await tx.delete(productShipping).where(eq(productShipping.productId, productId))
+		for (const shipping of parsedProductData.shipping ?? []) {
+			await tx
 				.insert(productShipping)
 				.values({
 					cost: shipping.cost!,
 					shippingId: shipping.id,
 					productId: productId,
 				})
-				.onConflictDoUpdate({
-					target: [productShipping.productId, productShipping.shippingId],
-					set: {
-						cost: shipping.cost!,
-					},
-				})
 				.execute()
 		}
-	}
+	})
 
 	if (productEvent.tags.length) {
 		await db

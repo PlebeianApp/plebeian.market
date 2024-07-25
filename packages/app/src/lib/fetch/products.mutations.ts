@@ -28,7 +28,7 @@ export const createProductMutation = createMutation(
 		mutationFn: async ([sEvent, stall, images, shippingMethods, categories]: [
 			SubmitEvent,
 			RichStall,
-			Partial<ProductImage>[],
+			string[],
 			{
 				id: string
 				cost: string
@@ -76,7 +76,7 @@ export const editProductMutation = createMutation(
 		mutationFn: async ([sEvent, product, images, shippingMethods, categories]: [
 			SubmitEvent,
 			DisplayProduct,
-			Partial<ProductImage>[],
+			string[],
 			{
 				id: string
 				cost: string

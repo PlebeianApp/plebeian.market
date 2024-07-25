@@ -126,7 +126,7 @@
 				await $createProductMutation.mutateAsync([
 					sEvent,
 					stall,
-					images.map((image) => ({ imageUrl: image.imageUrl })),
+					images.map((image) => image.imageUrl!),
 					currentShippings?.map(({ shipping, extraCost }) => ({ id: shipping!.id!, cost: extraCost })) ?? [],
 					categories,
 				])
@@ -140,7 +140,7 @@
 				await $editProductMutation.mutateAsync([
 					sEvent,
 					product,
-					images.map((image) => ({ imageUrl: image.imageUrl })),
+					images.map((image) => image.imageUrl!),
 					currentShippings?.map(({ shipping, extraCost }) => ({ id: shipping!.id!, cost: extraCost })) ?? [],
 					categories,
 				])
