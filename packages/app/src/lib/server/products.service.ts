@@ -38,14 +38,16 @@ export type DisplayProduct = Pick<Product, 'id' | 'description' | 'currency' | '
 	createdAt: string
 	price: number
 	images: ProductImage[]
-	shipping?: ProductShipping
+	shipping: ProductShipping[]
 }
 
 export const toDisplayProduct = async (product: Product): Promise<DisplayProduct> => {
 	const images = await getImagesByProductId(product.id)
 	const userNip05 = await getNip05ByUserId(product.userId)
 
-	const shipping = await db.query.productShipping.findFirst({ where: and(eq(productShipping.productId, product.id)) })
+	const shipping = await db.query.productShipping.findMany({
+		where: and(eq(productShipping.productId, product.id)),
+	})
 
 	return {
 		id: product.id,
@@ -151,7 +153,10 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 					data: parsedProduct,
 					success,
 					error: parseError,
-				} = productEventSchema.safeParse({ id: productEventContent.id, ...productEventContent })
+				} = productEventSchema.safeParse({
+					id: productEventContent.id,
+					...productEventContent,
+				})
 
 				if (!success) error(500, { message: `${parseError}` })
 
@@ -283,7 +288,10 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 export const updateProduct = async (productId: string, productEvent: NostrEvent): Promise<DisplayProduct> => {
 	const eventCoordinates = getEventCoordinates(productEvent)
 	const productEventContent = JSON.parse(productEvent.content)
-	const parsedProduct = productEventSchema.safeParse({ id: productId, ...productEventContent })
+	const parsedProduct = productEventSchema.safeParse({
+		id: productId,
+		...productEventContent,
+	})
 
 	if (!parsedProduct.success) {
 		error(500, `Bad product schema, ${parsedProduct.error}`)
@@ -352,21 +360,22 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 		.returning()
 
 	if (parsedProductData.shipping?.length) {
-		const shipping = parsedProductData.shipping[0]
-		await db
-			.insert(productShipping)
-			.values({
-				cost: shipping.cost!,
-				shippingId: shipping.id,
-				productId: productId,
-			})
-			.onConflictDoUpdate({
-				target: [productShipping.productId, productShipping.shippingId],
-				set: {
+		for (const shipping of parsedProductData.shipping) {
+			await db
+				.insert(productShipping)
+				.values({
 					cost: shipping.cost!,
-				},
-			})
-			.execute()
+					shippingId: shipping.id,
+					productId: productId,
+				})
+				.onConflictDoUpdate({
+					target: [productShipping.productId, productShipping.shippingId],
+					set: {
+						cost: shipping.cost!,
+					},
+				})
+				.execute()
+		}
 	}
 
 	if (productEvent.tags.length) {

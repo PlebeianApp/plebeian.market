@@ -24,6 +24,7 @@
 	import { createId } from '@plebeian/database/utils'
 
 	import Spinner from '../assets/spinner.svelte'
+	import Separator from '../ui/separator/separator.svelte'
 	import MultiImageEdit from './multi-image-edit.svelte'
 
 	export let product: DisplayProduct | null = null
@@ -44,10 +45,13 @@
 		if ($stallsQuery?.data) stalls = $stallsQuery.data
 	}
 
-	let currentShipping: Partial<RichShippingInfo> | null = null
-	let extraCost: string = product?.shipping?.cost ?? ''
+	let currentShippings: { shipping: Partial<RichShippingInfo> | null; extraCost: string }[] | null = null
+	// let extraCost: string = product?.shipping?.cost ?? ''
 	$: {
-		currentShipping ??= stall?.shipping.find((s) => s.id === product?.shipping?.shippingId) ?? null
+		currentShippings ??=
+			stall?.shipping
+				.filter((s) => product?.shipping.some((sh) => sh.shippingId === s.id))
+				.map((s) => ({ shipping: s, extraCost: product?.shipping.find((sh) => sh.shippingId === s.id)!.cost! })) ?? null
 	}
 
 	let currentStallId = forStall ?? product?.stallId
@@ -123,7 +127,7 @@
 					sEvent,
 					stall,
 					images.map((image) => ({ imageUrl: image.imageUrl })),
-					{ id: currentShipping!.id!, cost: extraCost },
+					currentShippings?.map(({ shipping, extraCost }) => ({ id: shipping!.id!, cost: extraCost })) ?? [],
 					categories,
 				])
 
@@ -137,7 +141,7 @@
 					sEvent,
 					product,
 					images.map((image) => ({ imageUrl: image.imageUrl })),
-					{ id: currentShipping!.id!, cost: extraCost },
+					currentShippings?.map(({ shipping, extraCost }) => ({ id: shipping!.id!, cost: extraCost })) ?? [],
 					categories,
 				])
 				toast.success('Product updated!')
@@ -154,7 +158,7 @@
 	<Spinner />
 {:else}
 	<form on:submit|preventDefault={(sEvent) => submit(sEvent, stall)} class="flex flex-col gap-4 grow h-full">
-		<Tabs.Root value="basic" class="p-4">
+		<Tabs.Root value="shipping" class="p-4">
 			<Tabs.List class="w-full justify-around bg-transparent">
 				<Tabs.Trigger value="basic" class={activeTab}>Basic</Tabs.Trigger>
 				<Tabs.Trigger value="categories" class={activeTab}>Categories</Tabs.Trigger>
@@ -271,38 +275,56 @@
 			</Tabs.Content>
 
 			<Tabs.Content value="shipping" class="flex flex-col gap-2 p-2">
-				<div class="grid w-full items-center gap-1.5">
-					<Label for="from" class="font-bold">Shipping Method</Label>
-					<DropdownMenu.Root>
-						<DropdownMenu.Trigger asChild let:builder>
-							<Button variant="outline" class="border-2 border-black" builders={[builder]}>
-								{currentShipping?.name ?? 'Choose a shipping method'}
-							</Button>
-						</DropdownMenu.Trigger>
-						<DropdownMenu.Content class="w-56">
-							<DropdownMenu.Label>Stall</DropdownMenu.Label>
-							<DropdownMenu.Separator />
-							<section class=" max-h-[350px] overflow-y-auto">
-								{#each stall?.shipping ?? [] as item}
-									<DropdownMenu.CheckboxItem
-										checked={currentShipping === item}
-										on:click={() => {
-											currentShipping = item
-										}}
-									>
-										<div>
-											<span class=" font-bold">{item.name}</span>, {item.cost}{stall?.currency}
-										</div>
-									</DropdownMenu.CheckboxItem>
-								{/each}
-							</section>
-						</DropdownMenu.Content>
-					</DropdownMenu.Root>
-
+				{#each currentShippings ?? [] as shippingMethod}
 					<div class="grid w-full items-center gap-1.5">
-						<Label for="from" class="font-bold">Extra cost</Label>
-						<Input bind:value={extraCost} required class="border-2 border-black" type="text" name="extra" />
+						<Label for="from" class="font-bold">Shipping Method</Label>
+						<DropdownMenu.Root>
+							<DropdownMenu.Trigger asChild let:builder>
+								<Button variant="outline" class="border-2 border-black" builders={[builder]}>
+									{shippingMethod.shipping?.name ?? 'Choose a shipping method'}
+								</Button>
+							</DropdownMenu.Trigger>
+							<DropdownMenu.Content class="w-56">
+								<DropdownMenu.Label>Stall</DropdownMenu.Label>
+								<DropdownMenu.Separator />
+								<section class=" max-h-[350px] overflow-y-auto">
+									{#each stall?.shipping.filter((s) => !currentShippings?.some((sh) => sh.shipping?.id === s.id)) ?? [] as item}
+										<DropdownMenu.CheckboxItem
+											checked={shippingMethod.shipping === item}
+											on:click={() => {
+												shippingMethod.shipping = item
+											}}
+										>
+											<div>
+												<span class=" font-bold">{item.name}</span>, {item.cost}{stall?.currency}
+											</div>
+										</DropdownMenu.CheckboxItem>
+									{/each}
+								</section>
+							</DropdownMenu.Content>
+						</DropdownMenu.Root>
+
+						<div class="grid w-full items-center gap-1.5">
+							<Label for="from" class="font-bold">Extra cost</Label>
+							<Input bind:value={shippingMethod.extraCost} required class="border-2 border-black" type="text" name="extra" />
+						</div>
 					</div>
+
+					<Button
+						on:click={() => (currentShippings = currentShippings?.filter((sh) => sh !== shippingMethod) ?? null)}
+						variant="outline"
+						class="font-bold text-red-500 border-0 h-full"><span class="i-tdesign-delete-1"></span></Button
+					>
+					<Separator />
+				{/each}
+
+				<div class="grid gap-1.5">
+					<Button
+						on:click={() => (currentShippings = [...(currentShippings ?? []), { shipping: null, extraCost: '' }])}
+						disabled={currentShippings?.length === stall?.shipping.length}
+						variant="outline"
+						class="font-bold ml-auto">Add Shipping Method</Button
+					>
 				</div>
 			</Tabs.Content>
 

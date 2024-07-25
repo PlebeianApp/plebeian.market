@@ -25,14 +25,14 @@ export type Category = { key: string; name: string; checked: boolean }
 
 export const createProductMutation = createMutation(
 	{
-		mutationFn: async ([sEvent, stall, images, shippingMethod, categories]: [
+		mutationFn: async ([sEvent, stall, images, shippingMethods, categories]: [
 			SubmitEvent,
 			RichStall,
 			Partial<ProductImage>[],
 			{
 				id: string
 				cost: string
-			},
+			}[],
 			Category[],
 		]) => {
 			const $ndkStore = get(ndkStore)
@@ -51,7 +51,7 @@ export const createProductMutation = createMutation(
 				images: images,
 				price: productPrice,
 				quantity: productQty,
-				shipping: [shippingMethod],
+				shipping: shippingMethods,
 				currency: stall.currency,
 			}
 			const newEvent = new NDKEvent($ndkStore, {
@@ -73,14 +73,14 @@ export const createProductMutation = createMutation(
 
 export const editProductMutation = createMutation(
 	{
-		mutationFn: async ([sEvent, product, images, shippingMethod, categories]: [
+		mutationFn: async ([sEvent, product, images, shippingMethods, categories]: [
 			SubmitEvent,
 			DisplayProduct,
 			Partial<ProductImage>[],
 			{
 				id: string
 				cost: string
-			},
+			}[],
 			Category[],
 		]) => {
 			const $ndkStore = get(ndkStore)
@@ -101,7 +101,7 @@ export const editProductMutation = createMutation(
 				images: images,
 				price: productPrice,
 				quantity: productQty,
-				shipping: [shippingMethod],
+				shipping: shippingMethods,
 				currency: product?.currency,
 			}
 			const newEvent = new NDKEvent($ndkStore, {
