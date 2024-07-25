@@ -3,6 +3,7 @@
 	import * as Collapsible from '$lib/components/ui/collapsible'
 	import * as Dialog from '$lib/components/ui/dialog/index.js'
 	import ndkStore, { NostrifyNDKSigner } from '$lib/stores/ndk'
+	import { debounce } from '$lib/utils'
 	import { createEventDispatcher } from 'svelte'
 
 	import Spinner from '../assets/spinner.svelte'
@@ -71,8 +72,14 @@
 	}
 
 	const handleInput = (e: Event) => {
-		inputValue = (e.target as HTMLInputElement).value
-		validateAndSetImage(inputValue)
+		const eValue = (e.target as HTMLInputElement).value
+		try {
+			new URL(eValue)
+			inputValue = eValue
+			validateAndSetImage(inputValue)
+		} catch {
+			return
+		}
 	}
 
 	const handleSave = () => {
@@ -102,7 +109,6 @@
 	<Button on:click={() => (imageChoiceDialogOpen = true)} variant="ghost" class="absolute top-1 right-1 font-bold text-red-500 border-0">
 		<span class="i-mdi-pencil-outline text-white w-6 h-6" />
 	</Button>
-	<!-- TODO improve robustness and parsing of urls: if you input something its not an url its going to try to get it -->
 	<Dialog.Root bind:open={imageChoiceDialogOpen}>
 		<Dialog.Content class="max-w-[66vw]">
 			<Dialog.Header>
@@ -113,7 +119,14 @@
 					<img src={localSrc} alt="nip 96" class="w-full max-h-[50vh] h-auto object-cover" />
 				{/if}
 				<div class="flex flex-row items-center">
-					<Input type="text" id="userImageRemote" name="imageRemoteInput" bind:value={inputValue} on:input={handleInput} />
+					<Input
+						type="text"
+						id="userImageRemote"
+						name="imageRemoteInput"
+						on:input={debounce((e) => {
+							handleInput(e)
+						}, 300)}
+					/>
 					{#if isLoading}
 						<Spinner />
 					{/if}
