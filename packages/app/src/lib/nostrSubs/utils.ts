@@ -19,6 +19,7 @@ import { ZodError, ZodSchema } from 'zod'
 
 import type { ProductImage, ProductImagesType } from '@plebeian/database'
 
+import type { StallCheck } from '../../routes/stalls/[...stallId]/proxy+page.server'
 import { productEventSchema, shippingObjectSchema, stallEventSchema } from '../../schema/nostr-events'
 import { stallsSub } from './subs'
 
@@ -240,7 +241,7 @@ export async function normalizeProductsFromNostr(
 	userId: string,
 	stallId?: string,
 ): Promise<{ toDisplayProducts: Partial<DisplayProduct>[]; stallProducts: Set<NDKEvent> } | null> {
-	if (!productsData.size || !stallId) return null
+	if (!productsData.size) return null
 
 	const processedProducts = await Promise.all(Array.from(productsData).map((event) => processProduct(event, userId, stallId)))
 
@@ -292,4 +293,56 @@ export async function setNostrData(
 		console.error(e)
 		return undefined
 	}
+}
+
+export const mergeProducts = async (
+	existingProducts: Partial<DisplayProduct>[],
+	newProductsData: Set<NDKEvent>,
+	userId: string,
+): Promise<Partial<DisplayProduct>[]> => {
+	if (!newProductsData.size) return existingProducts
+
+	try {
+		const newProducts = await normalizeProductsFromNostr(newProductsData, userId)
+		if (!newProducts?.toDisplayProducts.length) return existingProducts
+		const productMap = new Map()
+		const existingLength = existingProducts.length
+		const newLength = newProducts?.toDisplayProducts.length
+
+		for (let i = 0; i < existingLength; i++) {
+			const product = existingProducts[i]
+			if (!product?.identifier) continue
+			productMap.set(product.identifier, product)
+		}
+
+		for (let i = 0; i < newLength; i++) {
+			const product = newProducts.toDisplayProducts[i]
+			productMap.set(product.identifier, product)
+		}
+		return Array.from(productMap.values())
+	} catch (error) {
+		console.error('Error merging products:', error)
+		return existingProducts
+	}
+}
+
+export const getNewProducts = (products: Set<NDKEvent>, stall: StallCheck, existingProducts: Partial<DisplayProduct>[]): Set<NDKEvent> => {
+	const stallIdSuffix = stall.id.split(':')[2]
+	const existingProductIds = new Set(existingProducts.map((p) => p.id?.split(':')[2]))
+	const newProducts = new Set<NDKEvent>()
+
+	for (const product of products) {
+		let parsedContent
+		try {
+			parsedContent = JSON.parse(product.content)
+		} catch {
+			continue
+		}
+
+		if (parsedContent.stall_id === stallIdSuffix && !existingProductIds.has(parsedContent.id)) {
+			newProducts.add(product)
+		}
+	}
+
+	return newProducts
 }

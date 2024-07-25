@@ -15,7 +15,7 @@
 		fetchUserProductData,
 		fetchUserStallsData,
 		handleUserNostrData,
-		normalizeProductsFromNostr,
+		mergeProducts,
 		normalizeStallData,
 		setNostrData,
 	} from '$lib/nostrSubs/utils'
@@ -68,9 +68,8 @@
 				if (userData) userProfile = userData
 
 				const { products: productsData } = await fetchUserProductData(id)
-				if (productsData) {
-					const result = await normalizeProductsFromNostr(productsData, id)
-					if (result) toDisplayProducts = result.toDisplayProducts
+				if (productsData?.size) {
+					toDisplayProducts = await mergeProducts(toDisplayProducts, productsData, id)
 				}
 
 				await setNostrData(null, userProfile, null, allowRegister, id, exist)
@@ -86,10 +85,8 @@
 				}
 
 				const { products: productsData } = await fetchUserProductData(id)
-				if (productsData) {
-					// FIXME not working well, normalize products alway return null since there is no stallId
-					const result = await normalizeProductsFromNostr(productsData, id)
-					if (result) toDisplayProducts = result.toDisplayProducts
+				if (productsData?.size) {
+					toDisplayProducts = await mergeProducts(toDisplayProducts, productsData, id)
 				}
 			}
 		}

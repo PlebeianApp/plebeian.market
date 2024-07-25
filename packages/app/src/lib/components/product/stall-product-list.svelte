@@ -31,7 +31,7 @@
 		if (!activeUser?.id) return
 		if (!userExist) {
 			const { products: productsData } = await fetchUserProductData(activeUser.id)
-			if (productsData) {
+			if (productsData?.size) {
 				const result = await normalizeProductsFromNostr(productsData, activeUser.id as string, stall.id)
 				if (result) {
 					const { toDisplayProducts: _toDisplay } = result

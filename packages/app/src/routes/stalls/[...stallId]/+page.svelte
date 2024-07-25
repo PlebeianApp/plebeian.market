@@ -16,13 +16,14 @@
 		fetchStallData,
 		fetchUserData,
 		fetchUserProductData,
+		getNewProducts,
 		normalizeProductsFromNostr,
 		normalizeStallData,
 		setNostrData,
 	} from '$lib/nostrSubs/utils'
 	import { openDrawerForStall } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
-	import { getEventCoordinates, stringToHexColor, truncateString, truncateText } from '$lib/utils'
+	import { stringToHexColor, truncateString, truncateText } from '$lib/utils'
 	import { onMount } from 'svelte'
 
 	import type { PageData } from './$types'
@@ -94,21 +95,13 @@
 
 				await setNostrData(stallData, user.exist ? null : userData, productsData, appSettings.allowRegister, user.id, user.exist, false)
 			} else {
-				fetchUserProductData(user.id as string).then((data) => {
-					const { products } = data
-					const newProducts = new Set(
-						[...(products as Set<NDKEvent>)].filter((product) => {
-							const stallId = JSON.parse(product.content).stall_id
-							if (stallId == stall.id.split(':')[2]) {
-								const productId = getEventCoordinates(product)?.coordinates
-								return productId && !toDisplayProducts.some((displayProduct) => displayProduct.id?.includes(productId))
-							}
-						}),
-					)
+				const { products: productsData } = await fetchUserProductData(user.id)
+				if (productsData?.size) {
+					const newProducts = getNewProducts(productsData, stall, toDisplayProducts)
 					setNostrData(null, null, newProducts, appSettings.allowRegister, user.id as string, user.exist).then((data) => {
 						data?.productsInserted && $productsQuery?.refetch()
 					})
-				})
+				}
 			}
 		}
 	})
