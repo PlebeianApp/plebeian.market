@@ -207,7 +207,7 @@ export async function copyToClipboard(data: BlobPart, mimeType = 'text/plain') {
 		}
 		toast.success('Copied 👍')
 	} catch (e) {
-		toast.success(`Error: ${e}`)
+		toast.error(`Error: ${e}`)
 		console.log(e)
 	}
 }

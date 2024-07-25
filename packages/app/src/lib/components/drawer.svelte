@@ -13,6 +13,7 @@
 	import { closeDrawer, drawerUI } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
 	import { checkIfUserExists } from '$lib/utils'
+	import { toast } from 'svelte-sonner'
 
 	import ShoppingCart from './cart/shopping-cart.svelte'
 	import { Button } from './ui/button'
@@ -107,7 +108,7 @@
 				{/key}
 			{:else if $drawerUI.drawerType === 'stall'}
 				{#key currentStall}
-					<CreateEditStall stall={currentStall} on:success={handleSuccess} />
+					<CreateEditStall stall={currentStall} on:success={handleSuccess} on:error={(e) => toast.error(`${e}`)} />
 				{/key}
 			{/if}
 		</ScrollArea>

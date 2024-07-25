@@ -121,7 +121,7 @@ export async function handleProductNostrData(productsData: Set<NDKEvent>): Promi
 	return productsMutation ? true : false
 }
 
-type NormalizedData<T> = { data: Partial<T> | null; error: ZodError | null }
+export type NormalizedData<T> = { data: Partial<T> | null; error: ZodError | null }
 
 async function normalizeNostrData<T>(
 	event: NDKEvent,

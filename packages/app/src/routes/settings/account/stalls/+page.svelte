@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { NormalizedData } from '$lib/nostrSubs/utils'
 	import type { RichStall } from '$lib/server/stalls.service'
 	import { page } from '$app/stores'
 	import StallProductList from '$lib/components/product/stall-product-list.svelte'
@@ -41,33 +42,72 @@
 	const linkDetails = data.menuItems
 		.find((item) => item.value === 'account-settings')
 		?.links.find((item) => item.href === $page.url.pathname)
-	// TODO stalls from nostr are not beign loaded
-	onMount(async () => {
-		if (!activeUser?.id) return
 
-		const { stallNostrRes } = await fetchUserStallsData(activeUser?.id)
-		if (stallNostrRes?.size) {
-			const normalizedStallData = await Promise.all([...stallNostrRes].map(normalizeStallData)).then((results) =>
-				results.filter((result) => result.data !== null).map((result) => result.data),
-			)
-			if (stalls?.length) {
-				const newStalls = normalizedStallData.filter(
-					(stall) => !stalls?.some((existingStall) => stall?.identifier === existingStall.identifier),
-				)
-				console.log(newStalls)
-				if (newStalls.length) {
-					for (const stallData of stallNostrRes) {
-						await setNostrData(stallData, null, null, allowRegister, activeUser.id, userExist)
-					}
-				}
-				stalls = [...stalls, ...newStalls] as Partial<RichStall>[]
-			} else {
-				stalls = normalizedStallData as Partial<RichStall>[]
-				for (const stallData of stallNostrRes) {
-					await setNostrData(stallData, null, null, allowRegister, activeUser.id, userExist)
-				}
+	const mergeAndFilterStalls = (
+		existingStalls: Partial<RichStall>[],
+		newStalls: Partial<RichStall>[],
+	): {
+		mergedStalls: Partial<RichStall>[]
+		newStallsAdded: Partial<RichStall>[]
+	} => {
+		const stallMap = new Map<string, Partial<RichStall>>()
+		const newStallsAdded: Partial<RichStall>[] = []
+
+		for (const stall of existingStalls) {
+			if (stall?.identifier) {
+				stallMap.set(stall.identifier, stall)
 			}
 		}
+
+		for (const stall of newStalls) {
+			if (stall?.identifier) {
+				if (!stallMap.has(stall.identifier)) {
+					newStallsAdded.push(stall)
+				}
+				stallMap.set(stall.identifier, stall)
+			}
+		}
+
+		return {
+			mergedStalls: Array.from(stallMap.values()),
+			newStallsAdded,
+		}
+	}
+
+	async function fetchData(): Promise<void> {
+		if (!activeUser?.id) return
+		try {
+			const { stallNostrRes } = await fetchUserStallsData(activeUser.id)
+			if (!stallNostrRes?.size) return
+
+			const normalizedStallData = (await Promise.all(Array.from(stallNostrRes).map(normalizeStallData)))
+				.filter((result): result is NormalizedData<RichStall> => result.data !== null)
+				.map((result) => result.data as Partial<RichStall>)
+
+			const { mergedStalls, newStallsAdded } = mergeAndFilterStalls(stalls || [], normalizedStallData)
+
+			if (newStallsAdded.length) {
+				await Promise.all(
+					newStallsAdded.map((stall) =>
+						setNostrData(
+							Array.from(stallNostrRes).find((s) => s.id === stall.id) || null,
+							null,
+							null,
+							allowRegister,
+							activeUser.id as string,
+							userExist,
+						),
+					),
+				)
+			}
+
+			stalls = mergedStalls
+		} catch (error) {
+			console.error('Error fetching and processing stalls:', error)
+		}
+	}
+	onMount(async () => {
+		await fetchData()
 	})
 </script>
 
@@ -134,7 +174,13 @@
 				{/each}
 			{/if}
 		{:else if stallsMode === 'create' || stallsMode === 'edit'}
-			<CreateEditStall stall={currentStall} on:success={() => (stallsMode = 'list')} />
+			<CreateEditStall
+				stall={currentStall}
+				on:success={() => {
+					stallsMode = 'list'
+					fetchData()
+				}}
+			/>
 		{/if}
 	</div>
 </div>

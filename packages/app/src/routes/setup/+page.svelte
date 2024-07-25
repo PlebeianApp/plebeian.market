@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Selected } from 'bits-ui'
 	import { goto } from '$app/navigation'
+	import { processAppSettings, submitAppSettings } from '$lib/appSettings'
 	import Button from '$lib/components/ui/button/button.svelte'
 	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte'
 	import * as Command from '$lib/components/ui/command/index.js'
@@ -10,13 +11,11 @@
 	import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '$lib/components/ui/select'
 	import Separator from '$lib/components/ui/separator/separator.svelte'
 	import { availabeLogos } from '$lib/constants'
-	import { copyToClipboard, createNcryptSec } from '$lib/utils'
+	import { copyToClipboard } from '$lib/utils'
 	import { generateSecretKey, getPublicKey, nip19 } from 'nostr-tools'
 	import { npubEncode } from 'nostr-tools/nip19'
-	import { ofetch } from 'ofetch'
 	import { onMount, tick } from 'svelte'
-
-	import type { AppSettings } from '@plebeian/database'
+	import { toast } from 'svelte-sonner'
 
 	import type { PageData } from './$types'
 
@@ -42,24 +41,41 @@
 	}
 
 	async function handleSubmit(event: SubmitEvent) {
+		event.preventDefault()
 		const formData = new FormData(event.currentTarget as HTMLFormElement)
-		const formObject = Object.fromEntries(formData.entries()) as AppSettings
-		formObject.allowRegister = checked
-		formObject.defaultCurrency = selectedCurrency.value
-		formObject.logoUrl = logoUrl
-		const filteredFormObject = Object.fromEntries(Object.entries(formObject).filter(([_, value]) => value !== ''))
+		const formObject = Object.fromEntries(formData)
 
-		const { ncryptsec } = createNcryptSec(filteredFormObject.instanceSk as string, instancePass as string)
-		if (ncryptsec) filteredFormObject.instanceSk = ncryptsec
 		try {
-			await ofetch('/setup', {
-				method: 'POST',
-				body: filteredFormObject,
-			})
-
+			const processedData = processAppSettings(
+				{
+					...formObject,
+					allowRegister: checked,
+					defaultCurrency: selectedCurrency.value,
+					logoUrl: logoUrl || undefined,
+					contactEmail: formObject.contactEmail || undefined,
+				},
+				true,
+				instancePass,
+			)
+			await submitAppSettings(processedData, true)
+			toast.success('App settings successfully updated!')
 			goto('/', { invalidateAll: true })
 		} catch (e) {
 			console.error('Failed to submit form', e)
+			if (e instanceof Error && e.message) {
+				try {
+					const errors = JSON.parse(e.message)
+					if (Array.isArray(errors)) {
+						errors.forEach((error) => toast.error(error.message))
+					} else {
+						toast.error(e.message)
+					}
+				} catch {
+					toast.error(e.message)
+				}
+			} else {
+				toast.error('An unknown error occurred')
+			}
 		}
 	}
 	function closeAndFocusTrigger(triggerId: string) {

@@ -13,7 +13,7 @@
 
 	export let data: PageData
 	const { userExist, activeUser } = data
-	let toDisplayProducts: Partial<DisplayProduct>[]
+	let toDisplayProducts: Partial<DisplayProduct>[] = []
 
 	let productsMode: 'list' | 'create' | 'edit' = 'list'
 	$: productsQuery = userExist

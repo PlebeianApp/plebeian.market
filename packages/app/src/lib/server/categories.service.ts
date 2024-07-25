@@ -1,5 +1,4 @@
 import type { CatsFilter } from '$lib/schema'
-import { error } from '@sveltejs/kit'
 import { catsFilterSchema } from '$lib/schema'
 
 import { and, countDistinct, db, desc, eq, eventTags, products, sql } from '@plebeian/database'

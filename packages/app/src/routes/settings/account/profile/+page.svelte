@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { NDKUserProfile } from '@nostr-dev-kit/ndk'
+	import type { FormDataWithEntries } from '$lib/interfaces'
 	import type { RichUser } from '$lib/server/users.service'
 	import { page } from '$app/stores'
 	import SingleImage from '$lib/components/settings/editable-image.svelte'
@@ -20,10 +21,6 @@
 
 	$: editingActiveUser = activeUser ?? ({} as RichUser)
 
-	interface FormDataWithEntries extends FormData {
-		entries(): IterableIterator<[string, string]>
-	}
-
 	const handleSubmit = async (event: SubmitEvent) => {
 		const formData = new FormData(event.currentTarget as HTMLFormElement) as FormDataWithEntries
 		const formObject = Object.fromEntries(formData.entries())
@@ -40,7 +37,7 @@
 		ndkUser.profile = filteredProfile as NDKUserProfile
 		if (userExist && filteredProfile) {
 			try {
-				const res = await $userDataMutation.mutateAsync(filteredProfile)
+				await $userDataMutation.mutateAsync(filteredProfile)
 				// await ndkUser.publish().then((data) => console.log(data))
 				toast.success('User data updated')
 			} catch (error) {

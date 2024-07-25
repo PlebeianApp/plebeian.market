@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { NDKTag } from '@nostr-dev-kit/ndk'
+	import type { FormDataWithEntries } from '$lib/interfaces'
 	import type { RichStall } from '$lib/server/stalls.service'
 	import type { Location } from '$lib/utils'
 	import type { GeoJSON } from 'geojson'
@@ -38,7 +39,7 @@
 
 	export let stall: Partial<RichStall> | null = null
 
-	const dispatch = createEventDispatcher<{ success: unknown }>()
+	const dispatch = createEventDispatcher<{ success: unknown; error: unknown }>()
 
 	const {
 		appSettings: { allowRegister, defaultCurrency },
@@ -102,19 +103,9 @@
 		event.preventDefault()
 		if (!$ndkStore.activeUser?.pubkey) return
 
-		const form = event.target as HTMLFormElement
-		const formData = new FormData(form)
-		const stallTitle = String(formData.get('title'))
-		const stallDescription = String(formData.get('description'))
-		const identifier = createSlugId(stallTitle)
-
-		const evContent = {
-			id: identifier,
-			name: stallTitle,
-			description: stallDescription,
-			currency,
-			shipping: shippingMethods.map((s) => s.json),
-		}
+		const formData = new FormData(event.currentTarget as HTMLFormElement) as FormDataWithEntries
+		const formObject = Object.fromEntries(formData.entries())
+		const identifier = stall?.identifier ?? createSlugId(String(formObject.title))
 
 		const tags: NDKTag[] = [['d', identifier]]
 		if (headerImage) tags.push(['image', headerImage])
@@ -123,29 +114,46 @@
 		const newEvent = new NDKEvent($ndkStore, {
 			kind: KindStalls,
 			pubkey: $ndkStore.activeUser.pubkey,
-			content: JSON.stringify(evContent),
+			content: JSON.stringify({
+				id: identifier,
+				name: formObject.title,
+				description: formObject.description,
+				currency,
+				shipping: shippingMethods.map((s) => s.json),
+			}),
 			created_at: unixTimeNow(),
 			tags,
 		})
 
-		await newEvent.sign()
-		const userExist = await checkIfUserExists()
-		const _shouldRegister = await shouldRegister(allowRegister, userExist)
-
-		if (_shouldRegister) {
-			const nostrEvent = await newEvent.toNostrEvent()
-			if (stall?.id) {
-				await $updateStallFromNostrEvent.mutateAsync([stall.id, nostrEvent])
-			} else {
-				await $createStallFromNostrEvent.mutateAsync(nostrEvent)
+		try {
+			const [publishResult, userExists] = await Promise.all([
+				newEvent.sign(),
+				//   newEvent.publish(),
+				checkIfUserExists(),
+			])
+			if (publishResult) {
+				console.log(publishResult)
 			}
+			if (await shouldRegister(allowRegister, userExists)) {
+				const nostrEvent = await newEvent.toNostrEvent()
+				await (stall?.id
+					? $updateStallFromNostrEvent.mutateAsync([stall.id, nostrEvent])
+					: $createStallFromNostrEvent.mutateAsync(nostrEvent))
+			}
+
+			dispatch('success', null)
+		} catch (error) {
+			console.error('Error creating or updating stall:', error)
+			dispatch('error', error)
 		}
-
-		dispatch('success', null)
 	}
-
 	onMount(() => {
-		shippingMethods = stall?.shipping?.map((s) => new ShippingMethod(s?.id, s?.name, s?.cost, s?.regions, s?.countries)) ?? []
+		shippingMethods =
+			stall?.shipping?.flatMap((s) =>
+				s?.id && s?.name && s?.cost && Array.isArray(s?.regions) && Array.isArray(s?.countries)
+					? [new ShippingMethod(s.id, s.name, s.cost, s.regions, s.countries)]
+					: [],
+			) ?? []
 	})
 </script>
 

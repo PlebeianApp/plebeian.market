@@ -4,3 +4,7 @@ export interface EventCoordinates {
 	pubkey: string
 	tagD: string
 }
+
+export interface FormDataWithEntries extends FormData {
+	entries(): IterableIterator<[string, string]>
+}
