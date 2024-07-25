@@ -130,6 +130,7 @@ describe('products service', () => {
 			name: 'Hello Product',
 			price: 133,
 			quantity: 6,
+			shipping: [],
 		})
 	})
 
@@ -164,6 +165,7 @@ describe('products service', () => {
 			userNip05: expect.any(String),
 			price: targetProduct.price,
 			quantity: targetProduct.quantity,
+			shipping: [],
 		})
 	})
 })
