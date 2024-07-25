@@ -46,12 +46,12 @@
 	}
 
 	let currentShippings: { shipping: Partial<RichShippingInfo> | null; extraCost: string }[] | null = null
-	// let extraCost: string = product?.shipping?.cost ?? ''
+
 	$: {
 		currentShippings ??=
 			stall?.shipping
 				.filter((s) => product?.shipping.some((sh) => sh.shippingId === s.id))
-				.map((s) => ({ shipping: s, extraCost: product?.shipping.find((sh) => sh.shippingId === s.id)!.cost! })) ?? null
+				.map((s) => ({ shipping: s, extraCost: product?.shipping.find((sh) => sh.shippingId === s.id)?.cost ?? '' })) ?? null
 	}
 
 	let currentStallId = forStall ?? product?.stallId
