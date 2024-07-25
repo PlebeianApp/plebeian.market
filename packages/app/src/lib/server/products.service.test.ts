@@ -50,6 +50,7 @@ describe('products service', () => {
 			price: NaN,
 			currency: 'testCurrency',
 			quantity: 1,
+			shipping: [],
 			images: [],
 			stallId: 'testStallId',
 		})
