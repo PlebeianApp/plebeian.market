@@ -42,6 +42,7 @@
 				userId: $ndkStore.activeUser?.pubkey,
 			})
 		: undefined
+	$: isLoading = $stallsQuery?.isLoading ?? false
 
 	$: {
 		if ($stallsQuery?.data) stalls = $stallsQuery.data
@@ -170,6 +171,7 @@
 
 	onMount(async () => {
 		if ($userExistQuery.isFetched && !$userExistQuery.data) {
+			isLoading = true
 			const { stallNostrRes } = await fetchUserStallsData($ndkStore.activeUser?.pubkey as string)
 			if (stallNostrRes) {
 				const normalizedStallData = await Promise.all([...stallNostrRes].map(normalizeStallData)).then((results) =>
@@ -183,6 +185,7 @@
 					stalls = normalizedStallData as RichStall[]
 				}
 			}
+			isLoading = false
 		}
 	})
 
@@ -233,8 +236,10 @@
 	}
 </script>
 
-{#if !stalls || !stalls.length}
+{#if isLoading}
 	<Spinner />
+{:else if !stalls?.length}
+	<div>Creating products needs at least one defined <a class="underline" href="/settings/account/products">stall</a></div>
 {:else}
 	<form on:submit|preventDefault={(sEvent) => submit(sEvent, stall)} class="flex flex-col gap-4 grow h-full">
 		<Tabs.Root value="basic" class="p-4">
