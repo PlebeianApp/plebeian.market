@@ -107,7 +107,7 @@
 			await mutationFn.mutateAsync([
 				sEvent,
 				product ?? stall,
-				images.map((image) => ({ imageUrl: image.imageUrl })),
+				images.map((image) => image.imageUrl!),
 				shippingMethods.map((s) => ({
 					id: s.id,
 					name: s.name ?? '',
@@ -205,7 +205,7 @@
 					</div>
 
 					<div class="grid w-full items-center gap-1.5">
-						<Label for="quantity" class="font-bold">Quantity</Label>
+						<Label title="quantity" for="quantity" class="font-bold">Quantity</Label>
 						<Input value={product?.quantity ?? ''} required class="border-2 border-black" type="number" name="quantity" placeholder="10" />
 					</div>
 				</div>
