@@ -21,8 +21,10 @@
 	$: shouldGlow = v4v[0] > 0.14
 	$: emojiClass = shouldGlow ? 'wiggle-shake-glow' : shouldShake ? 'wiggle-shake' : shouldWiggle ? 'wiggle' : ''
 
+	$: platformQuery = platformV4VForUserQuery('platform')
+
 	onMount(() => {
-		const unsubscribe = platformV4VForUserQuery.subscribe((result) => {
+		const unsubscribe = platformQuery.subscribe((result) => {
 			if (result.data !== undefined) {
 				v4v = [result.data]
 			} else if (result.error) {
@@ -45,7 +47,10 @@
 
 	const handleSetV4VAmount = async () => {
 		const ammount = v4v[0].toPrecision(2)
-		const res = await $setV4VForUserMutation.mutateAsync(ammount)
+		const res = await $setV4VForUserMutation.mutateAsync({
+			amount: ammount,
+			target: 'platform',
+		})
 		toast.success(`Value for value contribution set to ${decimalToPercentage(res)}%`)
 	}
 </script>
@@ -80,7 +85,7 @@
 		</span>
 	</div>
 
-	<Button class="w-full font-bold" disabled={$platformV4VForUserQuery.data === v4v[0]} on:click={handleSetV4VAmount}>Save</Button>
+	<Button class="w-full font-bold" disabled={$platformQuery.data === v4v[0]} on:click={handleSetV4VAmount}>Save</Button>
 </div>
 
 <style>

@@ -126,16 +126,18 @@ const main = async () => {
 			let valueText: string | null = null
 			let valueBoolean: boolean | null = null
 			let valueNumeric: number | null = null
+			let key: string | null = null
 
 			if (name == USER_META.TRUST_LVL.value) {
 				valueText = faker.helpers.arrayElement(Object.values(USER_TRUST_LEVEL))
 			} else if (name == USER_META.ROLE.value) {
 				valueText = faker.helpers.arrayElement(Object.values(USER_ROLES))
-			} else if (name == USER_META.PLATFORM_SHARE.value) {
+			} else if (name == USER_META.V4V_SHARE.value) {
 				valueNumeric = parseFloat(faker.finance.amount({
 					min: 0.01,
 					max: 0.2
 				}))
+				key = 'platform'
 			}
 
 			const userMeta = {
@@ -145,6 +147,7 @@ const main = async () => {
 				valueText: valueText,
 				valueBoolean: valueBoolean,
 				valueNumeric: valueNumeric,
+				key: key,
 				createdAt: faker.date.recent(),
 				updatedAt: faker.date.future(),
 			} as UserMeta

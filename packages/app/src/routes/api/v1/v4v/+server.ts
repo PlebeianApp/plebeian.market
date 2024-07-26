@@ -1,17 +1,18 @@
 import { error, json } from '@sveltejs/kit'
 import { authorizeUserless } from '$lib/auth'
-import { getV4VPlatformShareForUser, setV4VPlatformShareForUser } from '$lib/server/v4v.service'
+import { getV4VPlatformShareForUserByTarget, setV4VPlatformShareForUserByTarget } from '$lib/server/v4v.service'
 import { z } from 'zod'
 
 export async function GET({ request, url: { searchParams } }) {
 	const userId = searchParams.get('userId')
+	const target = searchParams.get('target')
 
-	if (!userId) {
+	if (!userId || !target) {
 		error(400, 'Invalid request')
 	}
 
 	try {
-		return json(await getV4VPlatformShareForUser(userId))
+		return json(await getV4VPlatformShareForUserByTarget(userId, target))
 	} catch (e) {
 		error(500, JSON.stringify(e))
 	}
@@ -19,8 +20,9 @@ export async function GET({ request, url: { searchParams } }) {
 
 export async function PUT({ request, url: { searchParams } }) {
 	const v4vPlatformShare = searchParams.get('v4vPlatformShare')
+	const target = searchParams.get('target')
 
-	if (!v4vPlatformShare) {
+	if (!v4vPlatformShare || !target) {
 		error(400, 'Invalid request: userId and v4vPlatformShare are required')
 	}
 
@@ -35,7 +37,7 @@ export async function PUT({ request, url: { searchParams } }) {
 		}
 		const parsedV4VPlatformShare = parseResult.data
 		const userId = await authorizeUserless(request, 'PUT')
-		const amount = await setV4VPlatformShareForUser(parsedV4VPlatformShare, userId)
+		const amount = await setV4VPlatformShareForUserByTarget(parsedV4VPlatformShare, userId, target)
 
 		return json(amount)
 	} catch (e) {

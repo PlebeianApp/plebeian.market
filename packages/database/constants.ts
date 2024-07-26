@@ -120,10 +120,10 @@ export const APP_SETTINGS_META: Record<string, MetaInterface<'blossom_server' | 
 
 export type AppSettingsMetaName = ObjectValues<typeof APP_SETTINGS_META>
 
-export const USER_META: Record<string, MetaInterface<'trust_lvl' | 'role' | 'platform_share'>> = {
+export const USER_META: Record<string, MetaInterface<'trust_lvl' | 'role' | 'v4v_share'>> = {
 	TRUST_LVL: { value: 'trust_lvl', dataType: 'text' },
 	ROLE: { value: 'role', dataType: 'text' },
-	PLATFORM_SHARE: { value: 'platform_share', dataType: 'numeric' },
+	V4V_SHARE: { value: 'v4v_share', dataType: 'numeric' },
 } as const
 
 export type UserMetaName = ObjectValues<typeof USER_META>

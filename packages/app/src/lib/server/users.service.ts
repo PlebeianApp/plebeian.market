@@ -4,9 +4,10 @@ import { error } from '@sveltejs/kit'
 import { usersFilterSchema } from '$lib/schema'
 
 import type { NewUser, User, UserMeta, UserRoles, UserTrustLevel } from '@plebeian/database'
-import { and, db, eq, inArray, products, sql, USER_META, userMeta, users } from '@plebeian/database'
+import { and, db, eq, inArray, INITIAL_V4V_PLATFORM_SHARE_PERCENTAGE, products, sql, USER_META, userMeta, users } from '@plebeian/database'
 
 import { userEventSchema } from '../../schema/nostr-events'
+import { setV4VPlatformShareForUserByTarget } from './v4v.service'
 
 export interface RichUser extends User {
 	role: UserRoles
@@ -252,6 +253,8 @@ export const createUser = async (
 		if (!userResult) {
 			throw Error('Failed to create user')
 		}
+
+		await setV4VPlatformShareForUserByTarget(INITIAL_V4V_PLATFORM_SHARE_PERCENTAGE, userMetaData.id, 'platform')
 
 		return userResult
 	} catch (e) {
