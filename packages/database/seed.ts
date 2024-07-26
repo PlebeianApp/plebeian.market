@@ -126,11 +126,18 @@ const main = async () => {
 			let valueText: string | null = null
 			let valueBoolean: boolean | null = null
 			let valueNumeric: number | null = null
+			let key: string | null = null
 
 			if (name == USER_META.TRUST_LVL.value) {
 				valueText = faker.helpers.arrayElement(Object.values(USER_TRUST_LEVEL))
 			} else if (name == USER_META.ROLE.value) {
 				valueText = faker.helpers.arrayElement(Object.values(USER_ROLES))
+			} else if (name == USER_META.V4V_SHARE.value) {
+				valueNumeric = parseFloat(faker.finance.amount({
+					min: 0.01,
+					max: 0.2
+				}))
+				key = 'platform'
 			}
 
 			const userMeta = {
@@ -140,6 +147,7 @@ const main = async () => {
 				valueText: valueText,
 				valueBoolean: valueBoolean,
 				valueNumeric: valueNumeric,
+				key: key,
 				createdAt: faker.date.recent(),
 				updatedAt: faker.date.future(),
 			} as UserMeta
@@ -222,35 +230,35 @@ const main = async () => {
 
 	const shippingZonesData = shippingData.flatMap((shippingMethods) => {
 		return shippingMethods.flatMap((shipping) => {
-		  const uniqueCombinations = new Set();
-		  
-		  return randomLengthArrayFromTo(2, 4).map(() => {
-			let regionCode, countryCode;
-			
-			do {
-			  regionCode = faker.location.countryCode();
-			  countryCode = faker.location.countryCode();
-			} while (uniqueCombinations.has(`${regionCode}-${countryCode}`));
-			
-			uniqueCombinations.add(`${regionCode}-${countryCode}`);
-			
-			return {
-			  id: createId(),
-			  shippingId: shipping.id,
-			  shippingUserId: shipping.userId,
-			  stallId: shipping.stallId,
-			  regionCode,
-			  countryCode,
-			} as ShippingZone
-		  })
+			const uniqueCombinations = new Set();
+
+			return randomLengthArrayFromTo(2, 4).map(() => {
+				let regionCode, countryCode;
+
+				do {
+					regionCode = faker.location.countryCode();
+					countryCode = faker.location.countryCode();
+				} while (uniqueCombinations.has(`${regionCode}-${countryCode}`));
+
+				uniqueCombinations.add(`${regionCode}-${countryCode}`);
+
+				return {
+					id: createId(),
+					shippingId: shipping.id,
+					shippingUserId: shipping.userId,
+					stallId: shipping.stallId,
+					regionCode,
+					countryCode,
+				} as ShippingZone
+			})
 		})
-	  })
-	  
-	  const uniqueShippingZonesData = Array.from(
-		new Map(shippingZonesData.flat().map(zone => 
-		  [`${zone.shippingId}-${zone.regionCode}-${zone.countryCode}`, zone]
+	})
+
+	const uniqueShippingZonesData = Array.from(
+		new Map(shippingZonesData.flat().map(zone =>
+			[`${zone.shippingId}-${zone.regionCode}-${zone.countryCode}`, zone]
 		)).values()
-	  );
+	);
 
 	const auctionsData = userStalls.map((stallByUser) => {
 		return stallByUser.map((stall) => {

@@ -3,9 +3,10 @@ import { usersFilterSchema } from '$lib/schema'
 import { decodePk } from '$lib/utils'
 
 import type { NewAppSettings, UserRoles } from '@plebeian/database'
-import { appSettings, db, eq, sql, USER_META, USER_ROLES, userMeta, users } from '@plebeian/database'
+import { appSettings, db, eq, INITIAL_V4V_PLATFORM_SHARE_PERCENTAGE, sql, USER_META, USER_ROLES, userMeta, users } from '@plebeian/database'
 
 import { getUsersByRole } from './users.service'
+import { setV4VPlatformShareForUserByTarget } from './v4v.service'
 
 export type ExtendedAppSettings = NewAppSettings & {
 	adminsList?: string[]
@@ -77,6 +78,8 @@ export const updateAppSettings = async (appSettingsData: ExtendedAppSettings) =>
 			.where(appSettingsData.isFirstTimeRunning ? eq(appSettings.isFirstTimeRunning, true) : eq(appSettings.instancePk, decodedInstancePk))
 			.returning()
 			.execute()
+
+		await setV4VPlatformShareForUserByTarget(INITIAL_V4V_PLATFORM_SHARE_PERCENTAGE, decodedOwnerPk, 'platform')
 
 		if (!appSettingsRes) {
 			error(500, { message: `Failed to update app settings` })
