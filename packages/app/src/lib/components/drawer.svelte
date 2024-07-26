@@ -15,6 +15,7 @@
 	import ndkStore from '$lib/stores/ndk'
 	import { checkIfUserExists } from '$lib/utils'
 
+	import Spinner from './assets/spinner.svelte'
 	import ShoppingCart from './cart/shopping-cart.svelte'
 	import { Button } from './ui/button'
 
@@ -22,6 +23,7 @@
 
 	let productQuery: ReturnType<typeof createProductQuery> | undefined
 	let stallQuery: ReturnType<typeof createStallQuery> | undefined
+	$: isLoading = ($stallQuery?.isLoading || $productQuery?.isLoading) ?? false
 
 	let userExist: boolean | undefined = undefined
 
@@ -48,6 +50,7 @@
 	const check = async () => {
 		userExist = await checkIfUserExists($ndkStore.activeUser?.pubkey)
 		if (!userExist && $drawerUI.drawerType === 'product') {
+			isLoading = true
 			const { nostrProduct: productsData } = await fetchProductData($drawerUI.id as string)
 			if (!productsData?.size) return
 			if (productsData) {
@@ -57,8 +60,10 @@
 					currentProduct = _toDisplay[0]
 				}
 			}
+			isLoading = false
 		}
 		if (!userExist && $drawerUI.drawerType === 'stall') {
+			isLoading = true
 			const { stallNostrRes: stallData } = await fetchStallData($drawerUI.id as string)
 			if (stallData) {
 				const result = (await normalizeStallData(stallData)).data
@@ -66,6 +71,7 @@
 					currentStall = result
 				}
 			}
+			isLoading = false
 		}
 	}
 
@@ -88,51 +94,55 @@
 
 <Sheet.Root bind:open={isOpen} onOutsideClick={closeDrawer}>
 	<Sheet.Content side="right" class="min-w-[30vw] flex flex-col border-l-black border-2 p-2">
-		<ScrollArea class="h-auto">
-			<Sheet.Title class="flex flex-row justify-start items-center content-center ">
-				<Button size="icon" variant="outline" class=" border-none" on:click={closeDrawer}>
-					<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
-				</Button>
+		{#if isLoading}
+			<Spinner />
+		{:else}
+			<ScrollArea class="h-auto">
+				<Sheet.Title class="flex flex-row justify-start items-center content-center ">
+					<Button size="icon" variant="outline" class=" border-none" on:click={closeDrawer}>
+						<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
+					</Button>
+					{#if $drawerUI.drawerType === 'cart'}
+						Your cart
+					{:else if $drawerUI.drawerType === 'product'}
+						{#if $drawerUI.id}<span>Edit product</span><Button
+								on:click={handleDeleteProduct}
+								size="icon"
+								variant="ghost"
+								class=" text-destructive border-0"><span class="i-tdesign-delete-1 w-4 h-4"></span></Button
+							>
+						{:else}
+							<span>Create new product</span>
+						{/if}
+					{:else if $drawerUI.drawerType === 'stall'}
+						{#if $drawerUI.id}<span>Edit stall</span><Button
+								on:click={handleDeleteStall}
+								size="icon"
+								variant="ghost"
+								class=" text-destructive border-0"
+								><span class="i-tdesign-delete-1 w-4 h-4"></span>
+							</Button>
+						{:else}
+							<span>Create new stall</span>
+						{/if}
+					{/if}
+				</Sheet.Title>
 				{#if $drawerUI.drawerType === 'cart'}
-					Your cart
+					<ShoppingCart />
 				{:else if $drawerUI.drawerType === 'product'}
-					{#if $drawerUI.id}<span>Edit product</span><Button
-							on:click={handleDeleteProduct}
-							size="icon"
-							variant="ghost"
-							class=" text-destructive border-0"><span class="i-tdesign-delete-1 w-4 h-4"></span></Button
-						>
+					{#if currentProduct}
+						<CreateEditProduct product={currentProduct} on:success={handleSuccess} forStall={$drawerUI.forStall} />
 					{:else}
-						<span>Create new product</span>
+						<CreateEditProduct product={null} on:success={handleSuccess} />
 					{/if}
 				{:else if $drawerUI.drawerType === 'stall'}
-					{#if $drawerUI.id}<span>Edit stall</span><Button
-							on:click={handleDeleteStall}
-							size="icon"
-							variant="ghost"
-							class=" text-destructive border-0"
-							><span class="i-tdesign-delete-1 w-4 h-4"></span>
-						</Button>
+					{#if currentStall}
+						<CreateEditStall stall={currentStall} on:success={handleSuccess} />
 					{:else}
-						<span>Create new stall</span>
+						<CreateEditStall stall={null} on:success={handleSuccess} />
 					{/if}
 				{/if}
-			</Sheet.Title>
-			{#if $drawerUI.drawerType === 'cart'}
-				<ShoppingCart />
-			{:else if $drawerUI.drawerType === 'product'}
-				{#if currentProduct}
-					<CreateEditProduct product={currentProduct} on:success={handleSuccess} forStall={$drawerUI.forStall} />
-				{:else}
-					<CreateEditProduct product={null} on:success={handleSuccess} />
-				{/if}
-			{:else if $drawerUI.drawerType === 'stall'}
-				{#if currentStall}
-					<CreateEditStall stall={currentStall} on:success={handleSuccess} />
-				{:else}
-					<CreateEditStall stall={null} on:success={handleSuccess} />
-				{/if}
-			{/if}
-		</ScrollArea>
+			</ScrollArea>
+		{/if}
 	</Sheet.Content>
 </Sheet.Root>
