@@ -30,6 +30,7 @@
 				userId: $ndkStore.activeUser?.pubkey,
 			})
 		: undefined
+	$: isLoading = $stallsQuery?.isLoading ?? false
 
 	$: {
 		if ($stallsQuery?.data) {
@@ -77,6 +78,7 @@
 
 	async function fetchData(): Promise<void> {
 		if (!activeUser?.id) return
+    isLoading = true
 		try {
 			const { stallNostrRes } = await fetchUserStallsData(activeUser.id)
 			if (!stallNostrRes?.size) return
@@ -105,6 +107,7 @@
 			stalls = mergedStalls
 		} catch (error) {
 			console.error('Error fetching and processing stalls:', error)
+			isLoading = false
 		}
 	}
 	onMount(async () => {
@@ -140,7 +143,7 @@
 	{/if}
 	<div class="flex flex-col gap-2">
 		{#if stallsMode === 'list'}
-			{#if $stallsQuery?.isLoading}
+			{#if isLoading}
 				<Skeleton class="h-12 w-full" />
 				<Skeleton class="h-12 w-full" />
 				<Skeleton class="h-12 w-full" />
