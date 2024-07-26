@@ -41,12 +41,6 @@
 	$: userExistQuery = createUserExistsQuery($ndkStore.activeUser?.pubkey as string)
 	$: stallsQuery = $userExistQuery.data ? createStallsByFilterQuery({ userId: $ndkStore.activeUser?.pubkey }) : undefined
 
-	$: stallsQuery = $userExistQuery.data
-		? createStallsByFilterQuery({
-				userId: $ndkStore.activeUser?.pubkey,
-			})
-		: undefined
-
 	$: {
 		if ($stallsQuery?.data) stalls = $stallsQuery.data
 	}
@@ -56,8 +50,8 @@
 	$: {
 		currentShippings ??=
 			stall?.shipping
-				.filter((s) => product?.shipping.some((sh) => sh.shippingId === s.id))
-				.map((s) => ({ shipping: s, extraCost: product?.shipping.find((sh) => sh.shippingId === s.id)?.cost ?? '' })) ?? null
+				.filter((s) => product?.shipping?.some((sh) => sh.shippingId === s.id))
+				.map((s) => ({ shipping: s, extraCost: product?.shipping?.find((sh) => sh.shippingId === s.id)?.cost ?? '' })) ?? null
 	}
 
 	$: currentStallIdentifier = forStall?.split(':')[2] || product?.stallId || (stalls && stalls[0].identifier)
@@ -81,14 +75,6 @@
 	}
 
 	$: updateProductImages(product)
-
-	async function addCategory() {
-		const key = createId()
-		categories = [...categories, { key, name: `category ${categories.length + 1}`, checked: true }]
-		await tick()
-		const el = document.querySelector(`span[data-category-key="${key}"]`) as HTMLSpanElement
-		el.focus()
-	}
 
 	function handleNewImageAdded(e: CustomEvent) {
 		images = [

@@ -172,6 +172,15 @@ CREATE TABLE `product_meta` (
 	FOREIGN KEY (`meta_name`) REFERENCES `meta_types`(`name`) ON UPDATE cascade ON DELETE cascade
 );
 --> statement-breakpoint
+CREATE TABLE `product_shipping` (
+	`product_id` text,
+	`shipping_id` text NOT NULL,
+	`extra_cost` numeric NOT NULL,
+	PRIMARY KEY(`product_id`, `shipping_id`),
+	FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON UPDATE cascade ON DELETE cascade,
+	FOREIGN KEY (`shipping_id`) REFERENCES `shipping`(`id`) ON UPDATE no action ON DELETE cascade
+);
+--> statement-breakpoint
 CREATE TABLE `products` (
 	`id` text PRIMARY KEY NOT NULL,
 	`created_at` integer DEFAULT (unixepoch()) NOT NULL,

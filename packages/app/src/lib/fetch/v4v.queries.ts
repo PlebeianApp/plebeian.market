@@ -31,16 +31,17 @@ declare module './client' {
 	}
 }
 
-export const platformV4VForUserQuery = (target: string) =>
-	createQuery(
-		derived(ndkStore, ($ndkStore) => ({
-			queryKey: ['v4v', $ndkStore.activeUser?.pubkey],
+export const platformV4VForUserQuery = (target: string, userId: string) =>
+	createQuery<number>(
+		{
+			queryKey: ['v4v', userId],
 			queryFn: async () => {
-				const { activeUser } = $ndkStore
-				if (!activeUser?.pubkey) return null
-				return createRequest(`GET ${buildV4VURL({ userId: activeUser.pubkey, target })}`, { auth: false })
+				try {
+					return await createRequest(`GET ${buildV4VURL({ userId, target })}`, { auth: false })
+				} catch (e) {
+					return 0
+				}
 			},
-			enabled: !!$ndkStore.activeUser?.pubkey,
-		})),
+		},
 		queryClient,
 	)

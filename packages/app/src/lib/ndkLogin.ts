@@ -158,11 +158,14 @@ export async function loginDb(user: NDKUser) {
 			if (e.status === 404) {
 				console.log('creating user')
 				const body: { id: string } & NDKUserProfile = userEventSchema.parse(unNullify({ id: user.pubkey, ...user.profile }))
-				await createRequest('POST /api/v1/users/', {
+				const res = await createRequest('POST /api/v1/users/', {
 					auth: true,
 					body: body,
 				})
-				queryClient.setQueryData(['users', 'exists', body.id], true)
+				if (res) {
+					await invalidateAll()
+					queryClient.setQueryData(['users', 'exists', body.id], true)
+				}
 			}
 		}
 	}

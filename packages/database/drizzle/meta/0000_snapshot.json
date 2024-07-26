@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "05caf48d-e2c4-426e-a0ff-f967eec5eaae",
+  "id": "ac2081c1-6d6f-476c-b132-c6b28423ecd7",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "app_settings": {
@@ -1256,6 +1256,71 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
+    "product_shipping": {
+      "name": "product_shipping",
+      "columns": {
+        "product_id": {
+          "name": "product_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "shipping_id": {
+          "name": "shipping_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "extra_cost": {
+          "name": "extra_cost",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "product_shipping_product_id_products_id_fk": {
+          "name": "product_shipping_product_id_products_id_fk",
+          "tableFrom": "product_shipping",
+          "tableTo": "products",
+          "columnsFrom": [
+            "product_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        },
+        "product_shipping_shipping_id_shipping_id_fk": {
+          "name": "product_shipping_shipping_id_shipping_id_fk",
+          "tableFrom": "product_shipping",
+          "tableTo": "shipping",
+          "columnsFrom": [
+            "shipping_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "product_shipping_product_id_shipping_id_pk": {
+          "columns": [
+            "product_id",
+            "shipping_id"
+          ],
+          "name": "product_shipping_product_id_shipping_id_pk"
+        }
+      },
+      "uniqueConstraints": {}
+    },
     "products": {
       "name": "products",
       "columns": {
@@ -1911,5 +1976,8 @@
     "schemas": {},
     "tables": {},
     "columns": {}
+  },
+  "internal": {
+    "indexes": {}
   }
 }

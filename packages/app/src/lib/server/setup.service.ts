@@ -24,23 +24,26 @@ export const getAppSettings = async () => {
 
 const adminsToSync = async (appSettingsData: ExtendedAppSettings) => {
 	try {
-		const decodedOwnerPk = decodePk(appSettingsData.ownerPk)
-		const desiredAdmins = [
-			...(decodedOwnerPk ? [{ id: decodedOwnerPk }] : []),
-			...(appSettingsData.adminsList?.map((adminPk) => ({
-				id: decodePk(adminPk),
-			})) ?? []),
-		].filter((admin) => admin?.id !== null)
+		const desiredAdminIds = new Set(
+			[appSettingsData.ownerPk, ...(appSettingsData.adminsList || [])].map(decodePk).filter((id): id is string => Boolean(id)),
+		)
 
-		const currentAdminUsers = await getUsersByRole(usersFilterSchema.parse({ role: USER_ROLES.ADMIN }))
+		const currentAdminUsers = new Set(await getUsersByRole(usersFilterSchema.parse({ role: USER_ROLES.ADMIN })))
 
-		const newAdmins = desiredAdmins.filter((admin) => !currentAdminUsers.includes(admin.id))
-		const removedAdmins = currentAdminUsers.filter((user) => !desiredAdmins.some((admin) => admin.id === user))
+		const newAdminIds = [...desiredAdminIds].filter((id) => !currentAdminUsers.has(id))
+		const removedAdminIds = [...currentAdminUsers].filter((id) => !desiredAdminIds.has(id))
 
-		await Promise.all([
-			newAdmins.length ? insertUsers(newAdmins) : Promise.resolve(),
-			removedAdmins.length ? revokeAdmins(removedAdmins) : Promise.resolve(),
-		])
+		const operations = [
+			...newAdminIds.flatMap((id) => [
+				insertUsers([{ id }]),
+				setV4VPlatformShareForUserByTarget(INITIAL_V4V_PLATFORM_SHARE_PERCENTAGE, id, 'platform'),
+			]),
+			...(removedAdminIds.length ? [revokeAdmins(removedAdminIds)] : []),
+		]
+
+		if (operations.length > 0) {
+			await Promise.all(operations)
+		}
 	} catch (e) {
 		error(500, { message: `Error in adminsToSync: ${e}` })
 	}
@@ -78,8 +81,6 @@ export const updateAppSettings = async (appSettingsData: ExtendedAppSettings) =>
 			.where(appSettingsData.isFirstTimeRunning ? eq(appSettings.isFirstTimeRunning, true) : eq(appSettings.instancePk, decodedInstancePk))
 			.returning()
 			.execute()
-
-		await setV4VPlatformShareForUserByTarget(INITIAL_V4V_PLATFORM_SHARE_PERCENTAGE, decodedOwnerPk, 'platform')
 
 		if (!appSettingsRes) {
 			error(500, { message: `Failed to update app settings` })
