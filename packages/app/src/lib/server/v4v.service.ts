@@ -2,12 +2,12 @@ import { error } from '@sveltejs/kit'
 
 import { and, db, eq, USER_META, userMeta } from '@plebeian/database'
 
-export const setV4VPlatformShareForUserByTarget = async (v4vShare: number, decodedOwnerPk: string, shareTarget: string) => {
+export const setV4VPlatformShareForUserByTarget = async (v4vShare: number, userId: string, shareTarget: string) => {
 	try {
 		const existingRecord = await db
 			.select()
 			.from(userMeta)
-			.where(and(eq(userMeta.metaName, USER_META.V4V_SHARE.value), eq(userMeta.userId, decodedOwnerPk), eq(userMeta.key, shareTarget)))
+			.where(and(eq(userMeta.metaName, USER_META.V4V_SHARE.value), eq(userMeta.userId, userId), eq(userMeta.key, shareTarget)))
 			.execute()
 
 		let result
@@ -18,14 +18,13 @@ export const setV4VPlatformShareForUserByTarget = async (v4vShare: number, decod
 				.set({
 					valueNumeric: v4vShare.toString(),
 				})
-				.where(and(eq(userMeta.metaName, USER_META.V4V_SHARE.value), eq(userMeta.userId, decodedOwnerPk), eq(userMeta.key, shareTarget)))
+				.where(and(eq(userMeta.metaName, USER_META.V4V_SHARE.value), eq(userMeta.userId, userId), eq(userMeta.key, shareTarget)))
 				.returning()
 		} else {
-			// Insert new record
 			result = await db
 				.insert(userMeta)
 				.values({
-					userId: decodedOwnerPk,
+					userId: userId,
 					metaName: USER_META.V4V_SHARE.value,
 					key: shareTarget,
 					valueNumeric: v4vShare.toString(),
@@ -40,7 +39,7 @@ export const setV4VPlatformShareForUserByTarget = async (v4vShare: number, decod
 		return result[0].valueNumeric
 	} catch (e) {
 		console.error(e)
-		throw error(500, `Failed to set platform share for user ${decodedOwnerPk}. Reason: ${e}`)
+		throw error(500, `Failed to set platform share for user ${userId}. Reason: ${e}`)
 	}
 }
 

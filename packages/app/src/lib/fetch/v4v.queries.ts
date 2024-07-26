@@ -4,9 +4,20 @@ import { derived } from 'svelte/store'
 
 import { createRequest, queryClient } from './client'
 
+type V4VURL = `/api/v1/v4v?userId=${string}&target=${string}`
+
+interface V4VQueryParams {
+	userId: string
+	target: string
+}
+
+function buildV4VURL({ userId, target }: V4VQueryParams): V4VURL {
+	return `/api/v1/v4v?userId=${encodeURIComponent(userId)}&target=${encodeURIComponent(target)}`
+}
+
 declare module './client' {
 	interface Endpoints {
-		[k: `GET /api/v1/v4v?userId=${string}`]: Operation<
+		[k: `GET ${V4VURL}`]: Operation<
 			string,
 			'GET',
 			never,
@@ -25,14 +36,9 @@ export const platformV4VForUserQuery = (target: string) =>
 		derived(ndkStore, ($ndkStore) => ({
 			queryKey: ['v4v', $ndkStore.activeUser?.pubkey],
 			queryFn: async () => {
-				if ($ndkStore.activeUser?.pubkey) {
-					const user = await createRequest(`GET /api/v1/v4v?userId=${$ndkStore.activeUser.pubkey}&target=${target}`, {
-						auth: false,
-					})
-
-					return user
-				}
-				return null
+				const { activeUser } = $ndkStore
+				if (!activeUser?.pubkey) return null
+				return createRequest(`GET ${buildV4VURL({ userId: activeUser.pubkey, target })}`, { auth: false })
 			},
 			enabled: !!$ndkStore.activeUser?.pubkey,
 		})),
