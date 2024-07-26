@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { KindStalls } from '$lib/constants'
 	import {
 		allStallsHaveShippingMethod,
 		cart,
@@ -59,7 +60,7 @@
 					<MiniUser userId={user.pubkey} />
 					{#each user.stalls as stall}
 						<div class="flex flex-col w-full">
-							<MiniStall stallId={stall.id} />
+							<MiniStall stallId={stall.id.split(':').length !== 3 ? `${KindStalls}:${user.pubkey}:${stall.id}` : stall.id} />
 							{#each stall.products as product}
 								<div class="flex flex-col w-full">
 									<ProductInCart
@@ -81,15 +82,27 @@
 			<div class="flex flex-col gap-2">
 				<div class="flex flex-row justify-between">
 					<h3>Subtotal</h3>
-					<div>{totalInSats - totalShippingCost} sats</div>
+					<div>
+						{(totalInSats - totalShippingCost).toLocaleString('en-US', {
+							maximumFractionDigits: 2,
+						})} sats
+					</div>
 				</div>
 				<div class="flex flex-row justify-between">
 					<div>{totalAmountItems} items</div>
-					<div>{totalShippingCost} sats (shipping)</div>
+					<div>
+						{totalShippingCost.toLocaleString('en-US', {
+							maximumFractionDigits: 2,
+						})} sats (shipping)
+					</div>
 				</div>
 				<div class="flex flex-row justify-between font-bold">
 					<div>Total:</div>
-					<u>{totalInSats} sats</u>
+					<u
+						>{totalInSats.toLocaleString('en-US', {
+							maximumFractionDigits: 2,
+						})} sats</u
+					>
 				</div>
 			</div>
 			<div class="flex flex-row items-center gap-2">

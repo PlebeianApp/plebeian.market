@@ -1,8 +1,11 @@
 <script lang="ts">
+	import type { DisplayProduct } from '$lib/server/products.service'
+	import { NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk'
 	import { createProductQuery } from '$lib/fetch/products.queries'
+	import { fetchProductData, normalizeProductsFromNostr } from '$lib/nostrSubs/utils'
 	import { getProductAmount } from '$lib/stores/cart'
-	import { formatPrice, stringToHexColor } from '$lib/utils'
-	import { createEventDispatcher } from 'svelte'
+	import { checkIfProductExists, checkIfUserExists, formatPrice, stringToHexColor } from '$lib/utils'
+	import { createEventDispatcher, onMount } from 'svelte'
 
 	import Spinner from '../assets/spinner.svelte'
 	import SatPriceLoader from '../product/sat-price-loader.svelte'
@@ -13,11 +16,20 @@
 
 	const dispatch = createEventDispatcher()
 
-	$: product = createProductQuery(productId)
+	let productExist: boolean | undefined = undefined
+	let productData: Partial<DisplayProduct> | null = null
+	let isLoading = true
+
+	$: productQuery = productExist !== undefined && productExist ? createProductQuery(productId) : undefined
 	$: currentAmount = getProductAmount(productId)
 
+	$: {
+		if (productExist && $productQuery?.data) productData = $productQuery.data
+		isLoading = productExist ? $productQuery?.isLoading ?? false : false
+	}
+
 	const handleIncrement = () => {
-		if ($product.data && $currentAmount < $product.data.quantity) {
+		if (productData && $currentAmount < (productData?.quantity ?? 0)) {
 			dispatch('increment')
 		}
 	}
@@ -29,33 +41,48 @@
 	}
 
 	const handleSetAmount = (e) => {
-		if (!$product.data) return
-		const newAmount = Math.min(Math.max(1, parseInt(e.target.value) || 1), $product.data.quantity)
+		if (!productData) return
+		const newAmount = Math.min(Math.max(1, parseInt(e.target.value) || 1), productData?.quantity ?? 0)
 		dispatch('setAmount', newAmount)
 	}
 
 	const handleRemove = () => {
 		dispatch('remove')
 	}
+
+	onMount(async () => {
+		productExist = await checkIfProductExists(productId)
+
+		if (!productExist) {
+			const { nostrProduct } = await fetchProductData(productId, NDKSubscriptionCacheUsage.ONLY_CACHE)
+			if (nostrProduct) {
+				const result = await normalizeProductsFromNostr(nostrProduct, productId.split(':')[1])
+				if (result && result.toDisplayProducts.length > 0) {
+					productData = result.toDisplayProducts[0]
+				}
+			}
+			isLoading = false
+		}
+	})
 </script>
 
 <div>
-	{#if $product.isLoading}
+	{#if isLoading}
 		<Spinner />
-	{:else if $product.data}
+	{:else if productData}
 		<div class="flex flex-row h-18 justify-between my-4 gap-2">
-			{#if $product.data.images[0]}
-				<img class="contain h-[80px] aspect-square object-cover" src={$product.data.images[0].imageUrl} alt="" />
+			{#if productData.images && productData.images[0]}
+				<img class="contain h-[80px] aspect-square object-cover" src={productData.images[0].imageUrl} alt="" />
 			{:else}
 				<div class="h-[80px] aspect-square flex items-center justify-center">
 					<span
-						style={`color:${stringToHexColor(String($product.data.name || $product.data.identifier))}`}
+						style={`color:${stringToHexColor(String(productData.name || productData.identifier))}`}
 						class=" i-mdi-package-variant-closed w-10 h-10"
 					></span>
 				</div>
 			{/if}
 			<div class="flex flex-col flex-grow justify-between">
-				<div class="font-bold">{$product.data.name}</div>
+				<div class="font-bold">{productData.name}</div>
 
 				<div class="flex flex-row">
 					<Button class="border-2 border-black" size="icon" variant="outline" on:click={handleDecrement} disabled={$currentAmount <= 1}>
@@ -67,7 +94,7 @@
 						value={$currentAmount}
 						on:input={handleSetAmount}
 						min="1"
-						max={$product.data.quantity}
+						max={productData.quantity}
 						readonly
 					/>
 					<Button
@@ -75,7 +102,7 @@
 						size="icon"
 						variant="outline"
 						on:click={handleIncrement}
-						disabled={$currentAmount >= $product.data.quantity}
+						disabled={$currentAmount >= (productData?.quantity ?? 0)}
 					>
 						<span class="i-mdi-plus w-4 h-4"></span>
 					</Button>
@@ -85,9 +112,11 @@
 				</div>
 			</div>
 			<div class="flex flex-col justify-between text-right">
-				<SatPriceLoader factor={$currentAmount} product={$product.data} />
-				<div>({$product.data.currency} {formatPrice($product.data.price * $currentAmount)})</div>
+				<SatPriceLoader factor={$currentAmount} product={productData} />
+				<div>({productData.currency} {formatPrice(productData?.price ?? 0 * $currentAmount)})</div>
 			</div>
 		</div>
+	{:else}
+		<div>Product not found</div>
 	{/if}
 </div>

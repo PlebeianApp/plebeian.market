@@ -23,7 +23,10 @@ import type { StallCheck } from '../../routes/stalls/[...stallId]/proxy+page.ser
 import { productEventSchema, shippingObjectSchema, stallEventSchema } from '../../schema/nostr-events'
 import { stallsSub } from './subs'
 
-export async function fetchStallData(stallId: string): Promise<{
+export async function fetchStallData(
+	stallId: string,
+	subCacheUsage?: NDKSubscriptionCacheUsage,
+): Promise<{
 	stallNostrRes: NDKEvent | null
 }> {
 	const $stallsSub = get(stallsSub)
@@ -38,7 +41,7 @@ export async function fetchStallData(stallId: string): Promise<{
 
 	const stallNostrRes: NDKEvent | null = fetchedStall
 		? fetchedStall
-		: await $ndkStore.fetchEvent(stallFilter, { cacheUsage: NDKSubscriptionCacheUsage.PARALLEL })
+		: await $ndkStore.fetchEvent(stallFilter, { cacheUsage: subCacheUsage ?? NDKSubscriptionCacheUsage.PARALLEL })
 
 	return { stallNostrRes }
 }
@@ -59,7 +62,10 @@ export async function fetchUserStallsData(userId: string): Promise<{
 	return { stallNostrRes }
 }
 
-export async function fetchUserData(userId: string): Promise<{
+export async function fetchUserData(
+	userId: string,
+	subCacheUsage?: NDKSubscriptionCacheUsage,
+): Promise<{
 	userProfile: NDKUserProfile | null
 }> {
 	const $ndkStore = get(ndkStore)
@@ -67,7 +73,7 @@ export async function fetchUserData(userId: string): Promise<{
 		pubkey: userId,
 	})
 
-	const userProfile = await ndkUser.fetchProfile({ cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY })
+	const userProfile = await ndkUser.fetchProfile({ cacheUsage: subCacheUsage ?? NDKSubscriptionCacheUsage.ONLY_RELAY })
 	return { userProfile }
 }
 
@@ -84,7 +90,10 @@ export async function fetchUserProductData(userId: string): Promise<{
 	return { products: productsNostrRes }
 }
 
-export async function fetchProductData(productId: string): Promise<{
+export async function fetchProductData(
+	productId: string,
+	subCacheUsage?: NDKSubscriptionCacheUsage,
+): Promise<{
 	nostrProduct: Set<NDKEvent> | null
 }> {
 	const [_, userId, identifier] = productId.split(':')
@@ -94,8 +103,9 @@ export async function fetchProductData(productId: string): Promise<{
 		authors: [userId],
 		'#d': [identifier],
 	}
-	const productsNostrRes = await $ndkStore.fetchEvents(productsFilter, { cacheUsage: NDKSubscriptionCacheUsage.PARALLEL })
-
+	const productsNostrRes = await $ndkStore.fetchEvents(productsFilter, {
+		cacheUsage: subCacheUsage ?? NDKSubscriptionCacheUsage.ONLY_RELAY,
+	})
 	return { nostrProduct: productsNostrRes }
 }
 
