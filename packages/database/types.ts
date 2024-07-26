@@ -34,6 +34,9 @@ export type NewProduct = InferInsertModel<typeof dbSchema.products>
 export type ProductImage = InferSelectModel<typeof dbSchema.productImages>
 export type NewProductImage = InferInsertModel<typeof dbSchema.productImages>
 
+export type ProductShipping = InferSelectModel<typeof dbSchema.productShipping>
+export type NewProductShipping = InferInsertModel<typeof dbSchema.productShipping>
+
 export type Stall = InferSelectModel<typeof dbSchema.stalls>
 export type NewStall = InferInsertModel<typeof dbSchema.stalls>
 

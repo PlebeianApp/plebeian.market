@@ -91,6 +91,10 @@ export function formatPrice(price: number): string {
 	return Number(price.toFixed(2)).toString()
 }
 
+export function decimalToPercentage(value: number): number {
+	return Number((value * 100).toPrecision(2))
+}
+
 export function getEventCoordinates(event: NostrEvent | VerifiedEvent | NDKEvent): EventCoordinates | null {
 	const { kind, pubkey, tags } = event
 

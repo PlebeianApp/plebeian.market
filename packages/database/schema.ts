@@ -224,6 +224,22 @@ export const shippingZones = sqliteTable(
 	},
 )
 
+export const productShipping = sqliteTable(
+	'product_shipping',
+	{
+		productId: text('product_id').references(() => products.id, { onUpdate: 'cascade', onDelete: 'cascade' }),
+		shippingId: text('shipping_id')
+			.notNull()
+			.references(() => shipping.id, { onDelete: 'cascade' }),
+		cost: numeric('extra_cost').notNull(),
+	},
+	(t) => {
+		return {
+			pk: primaryKey({ columns: [t.productId, t.shippingId] }),
+		}
+	},
+)
+
 // Shipping relations
 export const shippingRelations = relations(shipping, ({ many }) => ({
 	shippingZones: many(shippingZones),
