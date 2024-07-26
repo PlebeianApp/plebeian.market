@@ -219,7 +219,7 @@
 				</div>
 			{/if}
 
-			{#if toDisplayProducts}
+			{#if toDisplayProducts.length}
 				<div class="container">
 					<h2>Products</h2>
 					<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">

@@ -24,6 +24,7 @@
 				userId: $ndkStore.activeUser?.pubkey,
 			})
 		: undefined
+	$: isLoading = $stallsQuery?.isLoading ?? false
 
 	$: {
 		if ($stallsQuery?.data) {
@@ -41,6 +42,7 @@
 	onMount(async () => {
 		if (!activeUser?.id) return
 		if (!userExist) {
+			isLoading = true
 			const { stallNostrRes } = await fetchUserStallsData(activeUser?.id)
 			if (stallNostrRes) {
 				const normalizedStallData = await Promise.all([...stallNostrRes].map(normalizeStallData)).then((results) =>
@@ -53,6 +55,7 @@
 					stalls = normalizedStallData as Partial<RichStall>[]
 				}
 			}
+			isLoading = false
 		}
 	})
 </script>
@@ -85,7 +88,7 @@
 	{/if}
 	<div class="flex flex-col gap-2">
 		{#if stallsMode === 'list'}
-			{#if $stallsQuery?.isLoading}
+			{#if isLoading}
 				<Skeleton class="h-12 w-full" />
 				<Skeleton class="h-12 w-full" />
 				<Skeleton class="h-12 w-full" />
