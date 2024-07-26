@@ -50,7 +50,7 @@
 		<Spinner />
 	{:else if toDisplayProducts.length}
 		{#each toDisplayProducts as product}
-			<a class="flex flex-row justify-between my-4 gap-2" href={`/products/${product.id}`>
+			<a class="flex flex-row justify-between my-4 gap-2" href={`/products/${product.id}`}>
 				{#if product?.images?.length}
 					<img class="contain h-[60px] aspect-square object-cover" src={product.images[0].imageUrl} alt="" />
 				{:else}
