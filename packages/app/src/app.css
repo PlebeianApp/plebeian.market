@@ -94,3 +94,8 @@
 	color: black !important;
 	border-color: black !important;
 }
+
+.test-no-animations * {
+	transition: none !important;
+	animation: none !important;
+}

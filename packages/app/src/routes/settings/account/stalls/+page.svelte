@@ -128,6 +128,7 @@
 				</section>
 			</div>
 			<Button
+				id="create-new-stall"
 				on:click={() => {
 					stallsMode = 'create'
 					currentStall = null

@@ -75,13 +75,17 @@
 								>
 							</DropdownMenu.Item>
 							<DropdownMenu.Item>
-								<a href="/settings" class="inline-flex items-center gap-2 w-full"><span class="i-tdesign-user-setting" />Settings</a>
+								<a id="headerMenuSettings" href="/settings" class="inline-flex items-center gap-2 w-full"
+									><span class="i-tdesign-user-setting" />Settings</a
+								>
 							</DropdownMenu.Item>
 							<DropdownMenu.Item>
-								<a href="/dash" class="inline-flex items-center gap-2 w-full"><span class=" i-tdesign-dashboard" />Dashboard</a>
+								<a id="headerMenuDashboard" href="/dash" class="inline-flex items-center gap-2 w-full"
+									><span class=" i-tdesign-dashboard" />Dashboard</a
+								>
 							</DropdownMenu.Item>
 							<DropdownMenu.Item>
-								<Button variant="destructive" class="inline-flex items-center gap-2" on:click={() => logout()}
+								<Button id="headerMenuLogOut" variant="destructive" class="inline-flex items-center gap-2" on:click={() => logout()}
 									><span class="i-tdesign-user-arrow-right"></span>Log out</Button
 								>
 							</DropdownMenu.Item>
