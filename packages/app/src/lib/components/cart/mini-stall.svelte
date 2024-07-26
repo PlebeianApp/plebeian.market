@@ -12,7 +12,8 @@
 	$: stall = createStallQuery(stallId)
 	$: shippingMethods = createShippingQuery(stallId)
 	$: currentShippingMethodId = getShippingMethod(stallId)
-
+	// FIXME shipping method is an empty list in some stalls that already have a shipping method, improve handling of validation errors
+	$: console.log($shippingMethods?.data)
 	function handleShippingMethodSelect(methodId: string) {
 		setShippingMethod(stallId, methodId)
 	}

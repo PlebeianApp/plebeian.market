@@ -15,6 +15,7 @@
 
 	import type { PageData } from './$types'
 
+	// TODO no delete button
 	export let data: PageData
 	const {
 		userExist,

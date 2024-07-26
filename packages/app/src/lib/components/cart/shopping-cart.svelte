@@ -19,7 +19,7 @@
 	import ProductInCart from './product-in-cart.svelte'
 
 	$: ({ totalAmountItems, totalInSats, totalShippingCost } = $getTotalAmounts)
-
+	// TODO improve stores reactivity
 	const handleIncrement = (productId: string) => {
 		incrementProduct(productId)
 	}

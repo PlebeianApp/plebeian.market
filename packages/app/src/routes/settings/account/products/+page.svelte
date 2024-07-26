@@ -14,7 +14,7 @@
 	export let data: PageData
 	const { userExist, activeUser } = data
 	let toDisplayProducts: Partial<DisplayProduct>[] = []
-
+	// TODO no delete button
 	let productsMode: 'list' | 'create' | 'edit' = 'list'
 	$: productsQuery = userExist
 		? createProductsByFilterQuery({
