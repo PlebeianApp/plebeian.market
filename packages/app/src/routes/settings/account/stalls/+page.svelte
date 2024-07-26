@@ -78,7 +78,7 @@
 
 	async function fetchData(): Promise<void> {
 		if (!activeUser?.id) return
-    isLoading = true
+		isLoading = true
 		try {
 			const { stallNostrRes } = await fetchUserStallsData(activeUser.id)
 			if (!stallNostrRes?.size) return

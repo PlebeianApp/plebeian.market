@@ -60,7 +60,7 @@
 				.map((s) => ({ shipping: s, extraCost: product?.shipping?.find((sh) => sh.shippingId === s.id)?.cost ?? '' })) ?? null
 	}
 
-	$: currentStallIdentifier = forStall?.split(':')[2] || product?.stallId || (stalls && stalls[0].identifier)
+	$: currentStallIdentifier = forStall?.split(':')[2] || product?.stallId || (stalls && stalls[0]?.identifier)
 
 	$: {
 		if (stalls?.length) {
@@ -125,27 +125,28 @@
 		}
 	}
 
-	onMount(async () => {
-		if ($userExistQuery.isFetched && !$userExistQuery.data) {
-			isLoading = true
-			const { stallNostrRes } = await fetchUserStallsData($ndkStore.activeUser?.pubkey as string)
-			if (stallNostrRes) {
-				const normalizedStallData = await Promise.all([...stallNostrRes].map(normalizeStallData)).then((results) =>
-					results.filter((result) => result.data !== null).map((result) => result.data),
+	const fetchData = async () => {
+		$userExistQuery.data == false && (isLoading = true)
+		const { stallNostrRes } = await fetchUserStallsData($ndkStore.activeUser?.pubkey as string)
+		if (stallNostrRes) {
+			const normalizedStallData = await Promise.all([...stallNostrRes].map(normalizeStallData)).then((results) =>
+				results.filter((result) => result.data !== null).map((result) => result.data),
+			)
+			if (stalls?.length) {
+				const newStalls = normalizedStallData.filter(
+					(stall) => !stalls?.some((existingStall) => stall?.identifier === existingStall.identifier),
 				)
-
-				if (stalls?.length) {
-					const newStalls = normalizedStallData.filter(
-						(stall) => !stalls?.some((existingStall) => stall?.identifier === existingStall.identifier),
-					)
-					stalls = [...stalls, ...newStalls] as RichStall[]
-				} else {
-					stalls = normalizedStallData as RichStall[]
-				}
+				stalls = [...stalls, ...newStalls] as RichStall[]
+			} else {
+				stalls = normalizedStallData as RichStall[]
 			}
-			isLoading = false
 		}
-	})
+		isLoading = false
+	}
+
+	$: if ($userExistQuery.isFetched) {
+		fetchData()
+	}
 
 	const activeTab =
 		'w-full font-bold border-b-2 border-black text-black data-[state=active]:border-b-primary data-[state=active]:text-primary'
@@ -160,7 +161,7 @@
 {#if isLoading}
 	<Spinner />
 {:else if !stalls?.length}
-	<div>Creating products needs at least one defined <a class="underline" href="/settings/account/products">stall</a></div>
+	<div>Creating products needs at least one defined <a class="underline" href="/settings/account/stalls">stall</a></div>
 {:else}
 	<form on:submit|preventDefault={(sEvent) => handleSubmit(sEvent, stall)} class="flex flex-col gap-4 grow h-full">
 		<Tabs.Root value="basic" class="p-4">
