@@ -28,13 +28,10 @@ export const createProductMutation = createMutation(
 		mutationFn: async ([sEvent, stall, images, shippingMethods, categories]: [
 			SubmitEvent,
 			RichStall,
-			Partial<ProductImage>[],
+			string[],
 			{
 				id: string
-				name: string
 				cost: string
-				regions: string[]
-				countries: string[]
 			}[],
 			Category[],
 		]) => {
@@ -79,13 +76,10 @@ export const editProductMutation = createMutation(
 		mutationFn: async ([sEvent, product, images, shippingMethods, categories]: [
 			SubmitEvent,
 			DisplayProduct,
-			Partial<ProductImage>[],
+			string[],
 			{
 				id: string
-				name: string
 				cost: string
-				regions: string[]
-				countries: string[]
 			}[],
 			Category[],
 		]) => {

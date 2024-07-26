@@ -7,7 +7,6 @@ import { getImagesByProductId } from '$lib/server/productImages.service'
 import { customTagValue, getEventCoordinates } from '$lib/utils'
 import { format } from 'date-fns'
 
-import type { Product, ProductImage, ProductMeta, ProductTypes } from '@plebeian/database'
 import {
 	and,
 	createId,
@@ -15,12 +14,17 @@ import {
 	eq,
 	events,
 	eventTags,
-	eventTagsPrimaryKey,
 	getTableColumns,
+	Product,
 	PRODUCT_META,
+	ProductImage,
 	productImages,
+	ProductMeta,
 	productMeta,
 	products,
+	ProductShipping,
+	productShipping,
+	ProductTypes,
 	sql,
 } from '@plebeian/database'
 
@@ -34,11 +38,17 @@ export type DisplayProduct = Pick<Product, 'id' | 'description' | 'currency' | '
 	createdAt: string
 	price: number
 	images: ProductImage[]
+	shipping: ProductShipping[]
 }
 
 export const toDisplayProduct = async (product: Product): Promise<DisplayProduct> => {
 	const images = await getImagesByProductId(product.id)
 	const userNip05 = await getNip05ByUserId(product.userId)
+
+	const shipping = await db.query.productShipping.findMany({
+		where: and(eq(productShipping.productId, product.id)),
+	})
+
 	return {
 		id: product.id,
 		identifier: product.identifier,
@@ -52,6 +62,7 @@ export const toDisplayProduct = async (product: Product): Promise<DisplayProduct
 		quantity: product.quantity,
 		images: images,
 		stallId: product.stallId.startsWith(KindStalls.toString()) ? product.stallId.split(':')[2] : product.stallId,
+		shipping,
 	}
 }
 
@@ -142,7 +153,10 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 					data: parsedProduct,
 					success,
 					error: parseError,
-				} = productEventSchema.safeParse({ id: productEventContent.id, ...productEventContent })
+				} = productEventSchema.safeParse({
+					id: productEventContent.id,
+					...productEventContent,
+				})
 
 				if (!success) error(500, { message: `${parseError}` })
 
@@ -221,6 +235,19 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 					await db.insert(productImages).values(insertProductImages).returning()
 				}
 
+				if (parsedProduct.shipping?.length) {
+					await db
+						.insert(productShipping)
+						.values(
+							parsedProduct.shipping.map((s) => ({
+								cost: s.cost!,
+								shippingId: s.id,
+								productId: eventCoordinates!.coordinates!,
+							})),
+						)
+						.execute()
+				}
+
 				if (productEvent.tags.length) {
 					await db
 						.insert(eventTags)
@@ -261,10 +288,13 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 export const updateProduct = async (productId: string, productEvent: NostrEvent): Promise<DisplayProduct> => {
 	const eventCoordinates = getEventCoordinates(productEvent)
 	const productEventContent = JSON.parse(productEvent.content)
-	const parsedProduct = productEventSchema.safeParse({ id: productId, ...productEventContent })
+	const parsedProduct = productEventSchema.safeParse({
+		id: productId,
+		...productEventContent,
+	})
 
 	if (!parsedProduct.success) {
-		error(500, 'Bad product schema')
+		error(500, `Bad product schema, ${parsedProduct.error}`)
 	}
 
 	const parsedProductData = parsedProduct.data
@@ -328,6 +358,20 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 		})
 		.where(eq(products.id, productId))
 		.returning()
+
+	await db.transaction(async (tx) => {
+		await tx.delete(productShipping).where(eq(productShipping.productId, productId))
+		for (const shipping of parsedProductData.shipping ?? []) {
+			await tx
+				.insert(productShipping)
+				.values({
+					cost: shipping.cost!,
+					shippingId: shipping.id,
+					productId: productId,
+				})
+				.execute()
+		}
+	})
 
 	if (productEvent.tags.length) {
 		await db
