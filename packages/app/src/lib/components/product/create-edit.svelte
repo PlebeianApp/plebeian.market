@@ -158,7 +158,7 @@
 	<Spinner />
 {:else}
 	<form on:submit|preventDefault={(sEvent) => submit(sEvent, stall)} class="flex flex-col gap-4 grow h-full">
-		<Tabs.Root value="shipping" class="p-4">
+		<Tabs.Root value="basic" class="p-4">
 			<Tabs.List class="w-full justify-around bg-transparent">
 				<Tabs.Trigger value="basic" class={activeTab}>Basic</Tabs.Trigger>
 				<Tabs.Trigger value="categories" class={activeTab}>Categories</Tabs.Trigger>
@@ -305,7 +305,7 @@
 						</DropdownMenu.Root>
 
 						<div class="grid w-full items-center gap-1.5">
-							<Label for="from" class="font-bold">Extra cost</Label>
+							<Label for="from" class="font-bold">Extra cost <small class="font-light">(in {stall?.currency})</small></Label>
 							<Input bind:value={shippingMethod.extraCost} required class="border-2 border-black" type="text" name="extra" />
 						</div>
 					</div>
