@@ -9,7 +9,7 @@ describe('/stalls', () => {
 	it('GET', async () => {
 		const result = await fetch(`http://${process.env.APP_HOST}:${process.env.APP_PORT}/api/v1/stalls`).then((response) => response.json())
 
-		expect(result.length).toBeGreaterThan(0)
+		expect(result.stalls.length).toBeGreaterThan(0)
 	})
 
 	it('GET with filter', async () => {
@@ -24,7 +24,7 @@ describe('/stalls', () => {
 			`http://${process.env.APP_HOST}:${process.env.APP_PORT}/api/v1/stalls?${new URLSearchParams(routeParams)}`,
 		).then((response) => response.json())
 
-		expect(result).toHaveLength(15)
+		expect(result.stalls).toHaveLength(15)
 	})
 
 	it('POST', async () => {
@@ -80,6 +80,6 @@ describe('/stalls', () => {
 			(response) => response.json(),
 		)
 
-		expect(result.length).toBeTruthy()
+		expect(result.stalls.length).toBeTruthy()
 	})
 })
