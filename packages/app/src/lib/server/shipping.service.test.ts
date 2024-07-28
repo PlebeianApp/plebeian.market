@@ -5,7 +5,7 @@ import { getShippingByStallId, getShippingZonesByStallId } from './shipping.serv
 
 describe('Shipping service', () => {
 	it('gets shipping by stall id', async () => {
-		const [stall] = await getAllStalls()
+		const {stalls: [stall]} = await getAllStalls()
 
 		const shipping = await getShippingByStallId(stall.id)
 
@@ -13,7 +13,7 @@ describe('Shipping service', () => {
 	})
 
 	it('gets shipping zones by stall id', async () => {
-		const stalls = await getAllStalls()
+		const { stalls } = await getAllStalls()
 
 		const zonesForEachStall = await Promise.all(stalls.map((stall) => getShippingZonesByStallId(stall.id)))
 

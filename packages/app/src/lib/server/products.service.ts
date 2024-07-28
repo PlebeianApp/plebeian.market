@@ -95,8 +95,7 @@ export const getProductsByStallId = async (stallId: string): Promise<DisplayProd
 	error(404, 'Not found')
 }
 
-export const getAllProducts = async (filter: ProductsFilter = productsFilterSchema.parse({})): Promise<DisplayProduct[]> => {
-	const orderBy = {
+export const getAllProducts = async (filter: ProductsFilter = productsFilterSchema.parse({})) => {	const orderBy = {
 		createdAt: products.createdAt,
 		price: products.price,
 	}[filter.orderBy]
@@ -104,14 +103,20 @@ export const getAllProducts = async (filter: ProductsFilter = productsFilterSche
 	const productsResult = await db.query.products.findMany({
 		limit: filter.pageSize,
 		offset: (filter.page - 1) * filter.pageSize,
-		orderBy: (products, { asc, desc }) => (filter.order === 'asc' ? asc(orderBy) : desc(orderBy)),
-		where: and(filter.userId ? eq(products.userId, filter.userId) : undefined),
+		orderBy: (products, { asc, desc }) => (filter.order === 'asc' ? asc(orderBy) : desc(orderBy)),		where: and(filter.userId ? eq(products.userId, filter.userId) : undefined),
 	})
+
+  const [{ count: total }] = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(products)
+    .where(
+      and(filter.userId ? eq(products.userId, filter.userId) : undefined),
+    );
 
 	const displayProducts: DisplayProduct[] = await Promise.all(productsResult.map(toDisplayProduct))
 
 	if (displayProducts) {
-		return displayProducts
+		return { total, products: displayProducts }
 	}
 
 	error(404, 'Not found')

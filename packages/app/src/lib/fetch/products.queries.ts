@@ -8,7 +8,7 @@ import { createRequest, queryClient } from './client'
 
 declare module './client' {
 	interface Endpoints {
-		'GET /api/v1/products': Operation<'/api/v1/products', 'GET', never, never, DisplayProduct[], ProductsFilter>
+		'GET /api/v1/products': Operation<'/api/v1/products', 'GET', never, never, { total: number, products: DisplayProduct[] }, ProductsFilter>
 		[k: `GET /api/v1/products/${string}`]: Operation<string, 'GET', never, never, DisplayProduct, never>
 		[k: `GET /api/v1/products/${string}?exists`]: Operation<string, 'GET', never, never, boolean, never>
 	}
@@ -39,14 +39,14 @@ export const createProductPriceQuery = (product: DisplayProduct) =>
 	)
 
 export const createProductsByFilterQuery = (filter: Partial<ProductsFilter>) =>
-	createQuery<DisplayProduct[]>(
+	createQuery(
 		{
 			queryKey: ['products', ...Object.values(filter)],
 			queryFn: async () => {
-				const products = await createRequest('GET /api/v1/products', {
+				const response = await createRequest('GET /api/v1/products', {
 					params: productsFilterSchema.parse(filter),
 				})
-				return products
+				return response
 			},
 		},
 		queryClient,

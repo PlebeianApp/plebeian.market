@@ -8,7 +8,7 @@ export type RichCat = {
 	productCount: number
 }
 
-export const getAllCategories = async (filter: CatsFilter = catsFilterSchema.parse({})): Promise<RichCat[]> => {
+export const getAllCategories = async (filter: CatsFilter = catsFilterSchema.parse({})) => {
 	let query = db
 		.select({
 			category: eventTags.tagValue,
@@ -37,9 +37,21 @@ export const getAllCategories = async (filter: CatsFilter = catsFilterSchema.par
 		productCount,
 	}))
 
+	const [{count: total}] = await db.select({ count: sql<number>`count(*)` })
+		.from(eventTags)
+		.where(
+			and(
+				filter.userId ? eq(eventTags.userId, filter.userId) : undefined,
+				eq(eventTags.tagName, 't'),
+				filter.category ? eq(eventTags.tagValue, filter.category) : undefined,
+			),
+		)
+	.groupBy(eventTags.tagValue)
+	.execute()
+
 	if (richCats.length > 0) {
-		return richCats
+		return { total, categories: richCats }
 	} else {
-		return []
+		return { total: 0, categories: richCats }
 	}
 }

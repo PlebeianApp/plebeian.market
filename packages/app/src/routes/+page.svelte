@@ -43,13 +43,14 @@
 				</div>
 				{#if products?.length}
 					<div class=" px-4 py-20 lg:px-12">
-						<div class="container">
+						<div class="container flex flex-col items-center">
 							<h2>Products</h2>
 							<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
 								{#each products as item}
 									<ProductItem product={item} />
 								{/each}
 							</div>
+						<Button class="mt-6 p-4 font-bold" href="/products">Explore products</Button>
 						</div>
 					</div>
 				{/if}

@@ -8,19 +8,19 @@ import { createRequest, queryClient } from './client'
 
 declare module './client' {
 	interface Endpoints {
-		'GET /api/v1/category': Operation<'/api/v1/category', 'GET', never, never, RichCat[], CatsFilter>
+		'GET /api/v1/category': Operation<'/api/v1/category', 'GET', never, never, { total: number, categories: RichCat[] }, CatsFilter>
 	}
 }
 
 export const createCategoriesByFilterQuery = (filter: Partial<CatsFilter>) =>
-	createQuery<RichCat[]>(
+	createQuery(
 		{
 			queryKey: ['categories', ...Object.values(filter)],
 			queryFn: async () => {
-				const categories = await createRequest('GET /api/v1/category', {
+				const response = await createRequest('GET /api/v1/category', {
 					params: catsFilterSchema.parse(filter),
 				})
-				return categories
+				return response
 			},
 		},
 		queryClient,

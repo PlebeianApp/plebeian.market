@@ -77,13 +77,13 @@ describe('products service', () => {
 	})
 
 	it('gets all products', async () => {
-		const products = await getAllProducts()
+		const { products } = await getAllProducts()
 
 		expect(products.length).toBeGreaterThan(0)
 	})
 
 	it('gets product by id', async () => {
-		const products = await getAllProducts()
+		const { products } = await getAllProducts()
 
 		const product = await getProductById(products[0].id)
 
