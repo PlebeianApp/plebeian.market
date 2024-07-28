@@ -31,12 +31,11 @@
 	• The order status is set to "pending" if not paid, or "paid" if payment is successful.  
 * Exceptions:  
 	• If both users are unregistered or paranoid, no order entry is created.  
-	• However, if one of both parties are registered and non-paranoid, but one of both are paranoid or non-registered, an order entry is still created.  
+	• However, if the seller are registered and non-paranoid, but the buyer is paranoid or non-registered, an order entry is still created, in case of paranoid user the `buyer_user_id` public key can be encrypted using the merchant's key.  
 * Order Management:  
 	• If an order entry is created:  
 	- The user and merchant can then view communication and order details/status in their dashboard.  
-	• If no order entry is created:  
-	- Users can still maintain their communication in direct messages, but there is no order entry to manage.  
+	• If no order entry is created, users can still maintain their communication in direct messages, but there is no order entry to manage.  
   
 **Step 6: Merchant Order Management**  
   
@@ -58,10 +57,10 @@
 
 **Key features**
 -  **Unified Cart and Checkout**
-	- All products from different vendors are displayed together, and the customer checks out once to complete the entire order. This requires more complex backend order management and payouts, but provides the best user experience
+	- All products from different merchants are displayed together, and the customer checks out once to complete the entire order
 - **Checkout Best Practices**
-	- **Provide clear vendor attribution** - Make it obvious which products are from which vendor
+	- **Provide clear vendor attribution** - Make it obvious which products are from which merchant
 	- **Unregistered users checkout** - Don't force account creation to reduce friction
 	- **Use a progress indicator** - Show the customer's progress through the checkout steps
-	- **Optimize form fields** - Unify required fields for all the vendors (one form to rule them all), but allowing customisation for each one
+	- **Optimize form fields** - Unify required fields for all the merchants (one form to rule them all), but allowing customisation for each one if necessary
 	- **Provide order review** - Allow the customer to review and edit the order before finalising
