@@ -21,7 +21,7 @@
 	} from '$lib/nostrSubs/utils'
 	import { openDrawerForNewProduct, openDrawerForNewStall } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
-	import { getElapsedTimeInDays, stringToHexColor, truncateText } from '$lib/utils'
+	import { getElapsedTimeInDays, truncateText } from '$lib/utils'
 	import { onMount } from 'svelte'
 
 	import type { PageData } from './$types'
@@ -125,20 +125,20 @@
 				{#if banner}
 					<img src={banner} alt="profile" class="border-black border-2 object-cover w-full h-[25vh]" />
 				{:else}
-					<div style={`background-color: ${stringToHexColor(String(name))}`} class="h-[10vh] border-2 border-black"></div>
+					<div style={`background-color: #${id?.substring(0, 6)}`} class="h-[10vh] border-2 border-black"></div>
 				{/if}
 
 				<div class="grid lg:grid-cols-[auto_1fr_auto] grid-rows-[auto_1fr_auto] gap-4 mt-8 justify-between">
 					<div class="px-2">
 						<Avatar class="border-black border-2 h-24 w-24">
 							<AvatarImage src={image} alt="pfp" />
-							<AvatarFallback style={`background-color: ${stringToHexColor(String(name))}`}>
+							<AvatarFallback style={`background-color: #${id?.substring(0, 6)}`}>
 								<span class="i-tdesign-user-1 w-8 h-8" />
 							</AvatarFallback>
 						</Avatar>
 					</div>
 					<div class="flex flex-col">
-						<h1 class="text-3xl">{name}</h1>
+						<h1 class="text-3xl">{name ?? `Unnamed user`}</h1>
 						{#if about}
 							{@const truncatedAbout = truncateText(about)}
 							{#if truncatedAbout !== about}

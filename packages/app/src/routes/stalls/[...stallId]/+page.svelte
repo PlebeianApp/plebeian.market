@@ -51,7 +51,6 @@
 			: undefined
 
 	$: userProfileQuery = user.exist ? createUserByIdQuery(user.id as string) : undefined
-
 	$: {
 		if ($userProfileQuery?.data) {
 			userProfile = $userProfileQuery?.data
@@ -77,11 +76,14 @@
 						stallResponse = normalizedStall
 					}
 				}
+
 				const { userProfile: userData } = await fetchUserData(user.id as string)
 				if (userData) {
 					userProfile = userData
 					stallResponse.userName = userData?.name || userData?.displayName
 					stallResponse.userNip05 = userData?.nip05
+				} else {
+					userProfile = { id: user.id }
 				}
 
 				const { products: productsData } = await fetchUserProductData(user.id)
@@ -161,6 +163,15 @@
 								>
 							</Avatar>
 							<span>{truncateText(String(userProfile?.name || userProfile?.displayName), 15)}</span>
+						</a>
+					{:else if userProfile?.id}
+						<a href={`/p/${userProfile.id}`} class="flex flex-col items-center">
+							<Avatar>
+								<AvatarFallback style={`background-color: #${String(userProfile.id).substring(0, 6)}`}
+									><span class="i-tdesign-user-1 w-8 h-8" /></AvatarFallback
+								>
+							</Avatar>
+							<span>Unnamed user</span>
 						</a>
 					{:else}
 						<Skeleton class="h-24 w-24 rounded-full" />

@@ -12,8 +12,9 @@ import { createStallFromNostrEvent } from '$lib/fetch/stalls.mutations'
 import { userFromNostr } from '$lib/fetch/users.mutations'
 import ndkStore from '$lib/stores/ndk'
 import { addCachedEvent, getCachedEvent, updateCachedEvent } from '$lib/stores/session'
-import { getEventCoordinates, shouldRegister, unixTimeNow } from '$lib/utils'
+import { checkIfStallExists, getEventCoordinates, shouldRegister } from '$lib/utils'
 import { format } from 'date-fns'
+import { ofetch } from 'ofetch'
 import { get } from 'svelte/store'
 import { ZodError, ZodSchema } from 'zod'
 
@@ -281,16 +282,23 @@ export async function setNostrData(
 	try {
 		if (userData) {
 			_shouldRegister && (userInserted = await handleUserNostrData(userData, userId))
+		} else if (userId && !userExists && stallData && productsData?.size) {
+			_shouldRegister &&
+				(userInserted = await ofetch('/p', {
+					method: 'POST',
+					body: { userId },
+				}))
+			userInserted && console.log('Null user registered sucesfully', userId)
 		}
 		if (stallData) {
 			if (allowEmptyStall) _shouldRegister && (stallInserted = await handleStallNostrData(stallData))
-			else if (productsData?.size) _shouldRegister && (stallInserted = await handleStallNostrData(stallData))
 		}
 		if (productsData?.size) {
 			if (stallData) {
 				const { coordinates: stallCoordinates } = getEventCoordinates(stallData) as EventCoordinates
 				const result = await normalizeProductsFromNostr(productsData, userId, stallCoordinates)
 				if (result?.stallProducts.size) {
+					_shouldRegister && (stallInserted = await handleStallNostrData(stallData))
 					const { stallProducts } = result
 					_shouldRegister && (productsInserted = await handleProductNostrData(stallProducts))
 				}

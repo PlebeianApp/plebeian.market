@@ -9,7 +9,6 @@
 	import { login, logout } from '$lib/ndkLogin'
 	import ndkStore from '$lib/stores/ndk'
 	import { getAccount } from '$lib/stores/session'
-	import { stringToHexColor } from '$lib/utils'
 	import { onMount } from 'svelte'
 
 	import type { PageData } from '../../routes/$types'
@@ -93,8 +92,7 @@
 			{#if $ndkStore.activeUser}
 				<Avatar>
 					<AvatarImage src={$ndkStore.activeUser.profile?.image} alt="pfp" />
-					<AvatarFallback
-						style={`background-color: ${stringToHexColor(String($ndkStore.activeUser.profile?.name ?? $ndkStore.activeUser.profile?.displayName ?? ''))}`}
+					<AvatarFallback style={`background-color: #${$ndkStore.activeUser?.pubkey?.substring(0, 6)}`}
 						><span class="i-tdesign-user-1 w-8 h-8" /></AvatarFallback
 					>
 				</Avatar>

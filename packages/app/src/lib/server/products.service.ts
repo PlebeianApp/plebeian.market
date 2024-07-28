@@ -232,18 +232,25 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 				if (insertProductImages?.length) {
 					await db.insert(productImages).values(insertProductImages).returning()
 				}
-
+				// FIXME (#191) Right now this is just a basic filtering
 				if (parsedProduct.shipping?.length) {
-					await db
-						.insert(productShipping)
-						.values(
-							parsedProduct.shipping.map((s) => ({
-								cost: s.cost!,
-								shippingId: s.id,
-								productId: eventCoordinates!.coordinates!,
-							})),
-						)
-						.execute()
+					const validShipping = parsedProduct.shipping.filter((s) => s.id && s.id.trim() !== '')
+					if (validShipping.length) {
+						console.log('Inserting product shipping')
+						await db
+							.insert(productShipping)
+							.values(
+								validShipping.map((s) => ({
+									cost: s.cost!,
+									shippingId: s.id!,
+									productId: eventCoordinates!.coordinates!,
+								})),
+							)
+							.execute()
+						console.log('Product shipping inserted successfully')
+					} else {
+						console.log('No valid shipping entries to insert')
+					}
 				}
 
 				if (productEvent.tags.length) {

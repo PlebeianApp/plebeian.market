@@ -3,7 +3,7 @@
 	import { NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
 	import { fetchUserData } from '$lib/nostrSubs/utils'
-	import { checkIfUserExists, stringToHexColor } from '$lib/utils'
+	import { checkIfUserExists } from '$lib/utils'
 	import { onMount } from 'svelte'
 
 	import AvatarFallback from '../ui/avatar/avatar-fallback.svelte'
@@ -37,13 +37,13 @@
 <div>
 	{#if isLoading}
 		<Skeleton class="h-4 w-[250px]" />
-	{:else if userProfile}
+	{:else if userProfile?.id}
 		<a href={`/p/${userProfile.id}`}>
 			<div class="py-1 flex flex-row items-center gap-2">
 				{#if userProfile.image}
 					<Avatar class="w-6 h-6">
 						<AvatarImage src={userProfile.image} alt="pfp" />
-						<AvatarFallback style={`background-color: ${stringToHexColor(String(userProfile.name))}`}
+						<AvatarFallback style={`background-color: #${String(userProfile.id).substring(0, 6)}`}
 							><span class="i-tdesign-user-1 w-8 h-8" /></AvatarFallback
 						>
 					</Avatar>
