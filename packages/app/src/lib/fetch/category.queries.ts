@@ -8,7 +8,7 @@ import { createRequest, queryClient } from './client'
 
 declare module './client' {
 	interface Endpoints {
-		'GET /api/v1/category': Operation<'/api/v1/category', 'GET', never, never, { total: number, categories: RichCat[] }, CatsFilter>
+		'GET /api/v1/category': Operation<'/api/v1/category', 'GET', never, never, { total: number; categories: RichCat[] }, CatsFilter>
 	}
 }
 

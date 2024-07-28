@@ -46,8 +46,8 @@ export const getAllCategories = async (filter: CatsFilter = catsFilterSchema.par
 				filter.category ? eq(eventTags.tagValue, filter.category) : undefined,
 			),
 		)
-	.groupBy(eventTags.tagValue)
-	.execute()
+		.groupBy(eventTags.tagValue)
+		.execute()
 
 	if (richCats.length > 0) {
 		return { total, categories: richCats }

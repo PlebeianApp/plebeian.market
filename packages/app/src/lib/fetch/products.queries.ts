@@ -8,7 +8,14 @@ import { createRequest, queryClient } from './client'
 
 declare module './client' {
 	interface Endpoints {
-		'GET /api/v1/products': Operation<'/api/v1/products', 'GET', never, never, { total: number, products: DisplayProduct[] }, ProductsFilter>
+		'GET /api/v1/products': Operation<
+			'/api/v1/products',
+			'GET',
+			never,
+			never,
+			{ total: number; products: DisplayProduct[] },
+			ProductsFilter
+		>
 		[k: `GET /api/v1/products/${string}`]: Operation<string, 'GET', never, never, DisplayProduct, never>
 		[k: `GET /api/v1/products/${string}?exists`]: Operation<string, 'GET', never, never, boolean, never>
 	}

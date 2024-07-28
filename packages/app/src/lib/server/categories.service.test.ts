@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 
 describe('categories service', () => {
 	it('gets all categories', async () => {
-		const { categories }  = await getAllCategories()
+		const { categories } = await getAllCategories()
 
 		expect(categories.length).toBeGreaterThan(0)
 	})
