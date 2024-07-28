@@ -108,7 +108,7 @@ export const getAllProducts = async (filter: ProductsFilter = productsFilterSche
 		where: and(filter.userId ? eq(products.userId, filter.userId) : undefined),
 	})
 
-	const [{ count: total }] = await db
+	const [{ count: total } = { count: 0 }] = await db
 		.select({ count: sql<number>`count(*)` })
 		.from(products)
 		.where(and(filter.userId ? eq(products.userId, filter.userId) : undefined))

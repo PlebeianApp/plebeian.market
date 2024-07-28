@@ -160,7 +160,7 @@ export const getAllStalls = async (filter: StallsFilter = stallsFilterSchema.par
 		.where(and(filter.userId ? eq(stalls.userId, filter.userId) : undefined, filter.stallId ? eq(stalls.id, filter.stallId) : undefined))
 		.execute()
 
-	const [{ count: total }] = await db
+	const [{ count: total } = { count: 0 }] = await db
 		.select({ count: sql<number>`count(*)` })
 		.from(stalls)
 		.where(and(filter.userId ? eq(stalls.userId, filter.userId) : undefined, filter.stallId ? eq(stalls.id, filter.stallId) : undefined))
