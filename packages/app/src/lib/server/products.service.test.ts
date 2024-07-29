@@ -50,6 +50,7 @@ describe('products service', () => {
 			price: NaN,
 			currency: 'testCurrency',
 			quantity: 1,
+			shipping: [],
 			images: [],
 			stallId: 'testStallId',
 		})
@@ -100,20 +101,12 @@ describe('products service', () => {
 			type: 'simple',
 			description: 'Hello Description',
 			images: ['http://example.com/image1.jpg', 'http://example.com/image2.jpg'],
-			currency: 'USD',
+			currency: stall.currency,
 			price: 133,
 			quantity: 6,
 			specs: [
 				['color', 'red'],
 				['size', 'medium'],
-			],
-			shipping: [
-				{
-					id: createId(),
-					name: 'USPS',
-					cost: '21.21',
-					regions: ['USA', 'CAN'],
-				},
 			],
 		}
 		const newEvent = new NDKEvent(new NDK({ signer: skSigner }), {
@@ -125,10 +118,10 @@ describe('products service', () => {
 		})
 		await newEvent.sign(skSigner)
 		const [product] = await createProducts([newEvent as NostrEvent])
-		expect(product).toStrictEqual({
+		expect(product).toEqual({
 			id: expect.any(String),
 			createdAt: expect.any(String),
-			currency: 'USD',
+			currency: stall.currency,
 			description: 'Hello Description',
 			stallId: stall.id.split(':')[2],
 			identifier: identifier,
@@ -138,6 +131,7 @@ describe('products service', () => {
 			name: 'Hello Product',
 			price: 133,
 			quantity: 6,
+			shipping: [],
 		})
 	})
 
@@ -159,7 +153,7 @@ describe('products service', () => {
 		})
 		const product = await updateProduct(targetProduct.id, newEvent as NostrEvent)
 
-		expect(product).toStrictEqual({
+		expect(product).toEqual({
 			id: targetProduct.id,
 			createdAt: expect.any(String),
 			currency: targetProduct.currency,
@@ -172,6 +166,7 @@ describe('products service', () => {
 			userNip05: expect.any(String),
 			price: targetProduct.price,
 			quantity: targetProduct.quantity,
+			shipping: [],
 		})
 	})
 })

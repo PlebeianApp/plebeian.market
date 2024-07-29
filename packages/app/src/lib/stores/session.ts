@@ -9,7 +9,7 @@ class SessionDexie extends Dexie {
 		super('plebeian.session')
 		this.version(2).stores({
 			accounts: 'hexPubKey, type, lastLogged, relays, cSk',
-			cachedEvents: 'id, createdAt',
+			cachedEvents: 'id, createdAt, insertedAt',
 		})
 		this.accounts = this.table('accounts')
 		this.cachedEvents = this.table('cachedEvents')
@@ -44,6 +44,7 @@ type Account = Nip07Account | NsecAccount | Nip46Account
 export type CachedEvent = {
 	id: string
 	createdAt: number
+	insertedAt: number
 	kind: number
 	pubkey: string
 	data: unknown
@@ -88,7 +89,6 @@ export async function getCachedEvent(id: string): Promise<CachedEvent | undefine
 export async function addCachedEvent(event: CachedEvent): Promise<void> {
 	try {
 		await sessions.cachedEvents.put(event)
-		// console.log('Event cached in indexDB', event)
 	} catch (error) {
 		if (error instanceof Dexie.DexieError) {
 			console.warn(error.message)
@@ -106,13 +106,29 @@ export async function deleteCachedEvent(id: string): Promise<void> {
 	await sessions.cachedEvents.where('id').equals(id).delete()
 }
 
-export async function cleanupCachedEvents(maxEntries: number = 1000, maxAgeMs: number = 7 * 24 * 60 * 60 * 1000): Promise<void> {
+export function cleanupCachedEvents(maxEntries: number = 1000, maxAgeMs: number = 7 * 24 * 60 * 60 * 1000): void {
 	queueMicrotask(async () => {
-		const now = Date.now()
-		const allEvents = await sessions.cachedEvents.toArray()
+		try {
+			const now = Date.now()
+			const cutoffDate = now - maxAgeMs
 
-		const eventsToRemove = allEvents.filter((event) => now - event.createdAt > maxAgeMs || allEvents.length > maxEntries)
+			const oldEventsDeleted = await sessions.cachedEvents.where('insertedAt').below(cutoffDate).delete()
 
-		await sessions.cachedEvents.bulkDelete(eventsToRemove.map((event) => event.id))
+			if (oldEventsDeleted > 0) {
+				console.log(`Deleted ${oldEventsDeleted} old events (inserted before ${new Date(cutoffDate)})`)
+			}
+
+			const count = await sessions.cachedEvents.count()
+
+			if (count > maxEntries) {
+				const numberOfItemsToRemove = count - maxEntries
+				const oldestItems = await sessions.cachedEvents.orderBy('insertedAt').limit(numberOfItemsToRemove).primaryKeys()
+
+				await sessions.cachedEvents.bulkDelete(oldestItems)
+				console.log(`Deleted ${oldestItems.length} oldest events to maintain max of ${maxEntries} entries`)
+			}
+		} catch (error) {
+			console.error('Error during cache cleanup:', error)
+		}
 	})
 }

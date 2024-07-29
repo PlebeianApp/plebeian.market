@@ -49,24 +49,12 @@ export const ensureAuthorsExists = async (pubkeys: string[]): Promise<{ id: stri
 
 	return insertedAuthors
 }
-// TODO not used by the moment
-export const persistAuthor = async (pubkey: string, profile: NDKUserProfile | null): Promise<boolean> => {
-	const [newUser] = await db
-		.insert(users)
-		.values({
-			id: pubkey,
-			...(profile && { profile: profile as Partial<User> }),
-		})
-		.returning()
-	if (!newUser.id) {
-		error(500, 'Failed to insert user')
-	}
-	return !!newUser.id
-}
 
 export const persistEvent = async (event: NostrEvent): Promise<NostrEvent | undefined> => {
 	await ensureAuthorExists(event.pubkey)
-	const eventTargetId: string = isPReplacEvent(event.kind as number) ? getEventCoordinates(event).coordinates : (event.id as string)
+	const eventTargetId: string = isPReplacEvent(event.kind as number)
+		? (getEventCoordinates(event)?.coordinates as string)
+		: (event.id as string)
 	type Event = InferSelectModel<typeof events>
 	const eventExists = await db
 		.select({ id: sql`1` })

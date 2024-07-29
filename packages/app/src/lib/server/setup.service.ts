@@ -3,9 +3,10 @@ import { usersFilterSchema } from '$lib/schema'
 import { decodePk } from '$lib/utils'
 
 import type { NewAppSettings, UserRoles } from '@plebeian/database'
-import { appSettings, db, eq, sql, USER_META, USER_ROLES, userMeta, users } from '@plebeian/database'
+import { appSettings, db, eq, INITIAL_V4V_PLATFORM_SHARE_PERCENTAGE, sql, USER_META, USER_ROLES, userMeta, users } from '@plebeian/database'
 
 import { getUsersByRole } from './users.service'
+import { setV4VPlatformShareForUserByTarget } from './v4v.service'
 
 export type ExtendedAppSettings = NewAppSettings & {
 	adminsList?: string[]
@@ -23,23 +24,26 @@ export const getAppSettings = async () => {
 
 const adminsToSync = async (appSettingsData: ExtendedAppSettings) => {
 	try {
-		const decodedOwnerPk = decodePk(appSettingsData.ownerPk)
-		const desiredAdmins = [
-			...(decodedOwnerPk ? [{ id: decodedOwnerPk }] : []),
-			...(appSettingsData.adminsList?.map((adminPk) => ({
-				id: decodePk(adminPk),
-			})) ?? []),
-		].filter((admin) => admin?.id !== null)
+		const desiredAdminIds = new Set(
+			[appSettingsData.ownerPk, ...(appSettingsData.adminsList || [])].map(decodePk).filter((id): id is string => Boolean(id)),
+		)
 
-		const currentAdminUsers = await getUsersByRole(usersFilterSchema.parse({ role: USER_ROLES.ADMIN }))
+		const currentAdminUsers = new Set(await getUsersByRole(usersFilterSchema.parse({ role: USER_ROLES.ADMIN })))
 
-		const newAdmins = desiredAdmins.filter((admin) => !currentAdminUsers.includes(admin.id))
-		const removedAdmins = currentAdminUsers.filter((user) => !desiredAdmins.some((admin) => admin.id === user))
+		const newAdminIds = [...desiredAdminIds].filter((id) => !currentAdminUsers.has(id))
+		const removedAdminIds = [...currentAdminUsers].filter((id) => !desiredAdminIds.has(id))
 
-		await Promise.all([
-			newAdmins.length ? insertUsers(newAdmins) : Promise.resolve(),
-			removedAdmins.length ? revokeAdmins(removedAdmins) : Promise.resolve(),
-		])
+		const operations = [
+			...newAdminIds.flatMap((id) => [
+				insertUsers([{ id }]),
+				setV4VPlatformShareForUserByTarget(INITIAL_V4V_PLATFORM_SHARE_PERCENTAGE, id, 'platform'),
+			]),
+			...(removedAdminIds.length ? [revokeAdmins(removedAdminIds)] : []),
+		]
+
+		if (operations.length > 0) {
+			await Promise.all(operations)
+		}
 	} catch (e) {
 		error(500, { message: `Error in adminsToSync: ${e}` })
 	}

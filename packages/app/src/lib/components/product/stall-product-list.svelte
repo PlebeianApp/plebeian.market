@@ -21,6 +21,7 @@
 				stallId: stall.id,
 			})
 		: undefined
+	$: isLoading = $productsByStall?.isLoading ?? false
 
 	$: {
 		if ($productsByStall?.data) {
@@ -30,24 +31,26 @@
 	onMount(async () => {
 		if (!activeUser?.id) return
 		if (!userExist) {
+			isLoading = true
 			const { products: productsData } = await fetchUserProductData(activeUser.id)
-			if (productsData) {
+			if (productsData?.size) {
 				const result = await normalizeProductsFromNostr(productsData, activeUser.id as string, stall.id)
 				if (result) {
 					const { toDisplayProducts: _toDisplay } = result
 					toDisplayProducts = _toDisplay
 				}
 			}
+			isLoading = false
 		}
 	})
 </script>
 
 <div>
-	{#if !toDisplayProducts?.length}
+	{#if isLoading}
 		<Spinner />
 	{:else if toDisplayProducts.length}
 		{#each toDisplayProducts as product}
-			<a class="flex flex-row justify-between my-4 gap-2" href="/products/{product.id}">
+			<a class="flex flex-row justify-between my-4 gap-2" href={`/products/${product.id}`}>
 				{#if product?.images?.length}
 					<img class="contain h-[60px] aspect-square object-cover" src={product.images[0].imageUrl} alt="" />
 				{:else}

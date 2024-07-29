@@ -3,7 +3,6 @@
 	import type { CarouselAPI } from '$lib/components/ui/carousel/context'
 	import type { DisplayProduct } from '$lib/server/products.service'
 	import Spinner from '$lib/components/assets/spinner.svelte'
-	import ImgPlaceHolder from '$lib/components/product/imgPlaceHolder.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
 	import Button from '$lib/components/ui/button/button.svelte'
 	import * as Carousel from '$lib/components/ui/carousel'
@@ -16,7 +15,7 @@
 	import { fetchProductData, fetchStallData, fetchUserData, normalizeProductsFromNostr, setNostrData } from '$lib/nostrSubs/utils'
 	import { addProduct } from '$lib/stores/cart'
 	import { openDrawerForProduct } from '$lib/stores/drawer-ui'
-	import { cn, resolveQuery, truncateText } from '$lib/utils'
+	import { cn, resolveQuery, stringToHexColor, truncateText } from '$lib/utils'
 	import { onMount } from 'svelte'
 
 	import type { PageData } from './$types'
@@ -140,7 +139,12 @@
 							Image {current} of {count}
 						</div>
 					{:else}
-						<ImgPlaceHolder imageType={'main'} />
+						<div class="h-full flex items-center justify-center border-2 border-black">
+							<span
+								style={`color:${stringToHexColor(String(toDisplayProducts[0].name || toDisplayProducts[0].identifier))}`}
+								class=" i-mdi-package-variant-closed w-16 h-16"
+							></span>
+						</div>
 					{/if}
 				{/key}
 			</div>
@@ -159,7 +163,7 @@
 					{/if}
 					sats
 				</h2>
-				{#if toDisplayProducts[0].price && toDisplayProducts[0].currency && !['sat', 'sats', 'btc'].includes(toDisplayProducts[0].currency)}
+				{#if toDisplayProducts[0].price && toDisplayProducts[0].currency && !['sat', 'sats', 'btc'].includes(toDisplayProducts[0].currency.toLowerCase())}
 					<h3 class=" text-lg font-normal">
 						{toDisplayProducts[0].price.toLocaleString('en-US', { style: 'currency', currency: toDisplayProducts[0].currency })}
 						{toDisplayProducts[0].currency}

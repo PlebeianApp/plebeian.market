@@ -1,15 +1,15 @@
 <script lang="ts">
 	import type { Category } from '$lib/fetch/products.mutations'
 	import type { DisplayProduct } from '$lib/server/products.service'
+	import type { RichShippingInfo } from '$lib/server/shipping.service'
 	import type { RichStall } from '$lib/server/stalls.service'
-	import type { StallIdType } from '$lib/stores/drawer-ui'
+	import type { StallCoordinatesType } from '$lib/stores/drawer-ui'
+	import { ShippingMethod } from '$lib/classes/shipping'
 	import Button from '$lib/components/ui/button/button.svelte'
 	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte'
-	import * as Command from '$lib/components/ui/command/index.js'
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js'
 	import Input from '$lib/components/ui/input/input.svelte'
 	import Label from '$lib/components/ui/label/label.svelte'
-	import * as Popover from '$lib/components/ui/popover/index.js'
 	import * as Tabs from '$lib/components/ui/tabs/index.js'
 	import Textarea from '$lib/components/ui/textarea/textarea.svelte'
 	import { queryClient } from '$lib/fetch/client'
@@ -22,18 +22,21 @@
 	import { toast } from 'svelte-sonner'
 
 	import type { ProductImage } from '@plebeian/database'
-	import { COUNTRIES_ISO } from '@plebeian/database/constants'
 	import { createId } from '@plebeian/database/utils'
 
-	import type { stallEventSchema } from '../../../schema/nostr-events'
 	import Spinner from '../assets/spinner.svelte'
+	import Separator from '../ui/separator/separator.svelte'
 	import MultiImageEdit from './multi-image-edit.svelte'
 
-	export let product: DisplayProduct | null = null
-	export let forStall: StallIdType | null = null
+	export let product: Partial<DisplayProduct> | null = null
+	export let forStall: StallCoordinatesType | null = null
+	// TODO Categories are beign inserted in the db but they are not beign loaded when tring to edit/update a product
 
-	let stalls: RichStall[] | null
+	let stalls: RichStall[] | null = null
 	let stall: RichStall | null = null
+	let categories: Category[] = []
+	let images: Partial<ProductImage>[] = []
+	let shippingMethods: ShippingMethod[] = []
 
 	$: userExistQuery = createUserExistsQuery($ndkStore.activeUser?.pubkey as string)
 
@@ -42,118 +45,42 @@
 				userId: $ndkStore.activeUser?.pubkey,
 			})
 		: undefined
+	$: isLoading = $stallsQuery?.isLoading ?? false
 
 	$: {
 		if ($stallsQuery?.data) stalls = $stallsQuery.data
 	}
 
-	let currentStallId = forStall ?? product?.stallId
+	let currentShippings: { shipping: Partial<RichShippingInfo> | null; extraCost: string }[] | null = null
+
+	$: {
+		currentShippings ??=
+			stall?.shipping
+				.filter((s) => product?.shipping?.some((sh) => sh.shippingId === s.id))
+				.map((s) => ({ shipping: s, extraCost: product?.shipping?.find((sh) => sh.shippingId === s.id)?.cost ?? '' })) ?? null
+	}
+
+	$: currentStallIdentifier = forStall?.split(':')[2] || product?.stallId || (stalls && stalls[0]?.identifier)
 
 	$: {
 		if (stalls?.length) {
-			if (currentStallId) {
-				;[stall] = stalls.filter((pStall) => pStall.id === currentStallId)
+			if (currentStallIdentifier) {
+				;[stall] = stalls.filter((pStall) => pStall.identifier === currentStallIdentifier)
 			} else {
 				stall = stalls[0]
 			}
 		}
 	}
 
-	const activeTab =
-		'w-full font-bold border-b-2 border-black text-black data-[state=active]:border-b-primary data-[state=active]:text-primary'
+	$: updateProductImages(product)
 
-	let categories: Category[] = []
-	let images: Partial<ProductImage>[] = product?.images ?? []
-
-	function updateProductImages(updatedProduct: DisplayProduct | null) {
+	function updateProductImages(updatedProduct: Partial<DisplayProduct> | null) {
 		if (updatedProduct) {
 			images = updatedProduct.images ?? []
 		}
 	}
 
 	$: updateProductImages(product)
-
-	type Shipping = (typeof stallEventSchema._type)['shipping'][0]
-	class ShippingMethod implements Shipping {
-		id: string
-		name: string
-		cost: string
-		regions: string[]
-		countries: string[]
-
-		constructor(id: string, name: string, cost: string, regions: string[] = [], countries: string[] = []) {
-			this.id = id
-			this.name = name
-			this.cost = cost
-			this.regions = regions
-			this.countries = countries
-		}
-
-		addRegion(region: string) {
-			this.regions.push(region)
-			shippingMethods = shippingMethods
-		}
-
-		removeRegion(region: string) {
-			this.regions = this.regions.filter((z) => z !== region)
-			shippingMethods = shippingMethods
-		}
-
-		addCountry(country: string) {
-			this.countries.push(country)
-			shippingMethods = shippingMethods
-		}
-
-		removeCountry(country: string) {
-			this.countries = this.countries.filter((z) => z !== country)
-			shippingMethods = shippingMethods
-		}
-
-		get json() {
-			return {
-				id: this.id,
-				name: this.name,
-				cost: this.cost,
-				regions: this.regions,
-				countries: this.countries,
-			} as Shipping
-		}
-	}
-
-	let shippingMethods: ShippingMethod[] = []
-
-	function addShipping(id?: string) {
-		if (id) {
-			const existingMethod = shippingMethods.find((method) => method.id === id)
-			if (existingMethod) {
-				const duplicatedMethod = new ShippingMethod(createId(), existingMethod.name!, existingMethod.cost, existingMethod.regions)
-				shippingMethods = [...shippingMethods, duplicatedMethod]
-			} else {
-				console.error(`No shipping method found with id ${id}`)
-			}
-		} else {
-			const newMethod = new ShippingMethod(createId(), '', '0')
-			shippingMethods = [...shippingMethods, newMethod]
-		}
-	}
-
-	function removeShipping(id: string) {
-		shippingMethods = shippingMethods.filter((s) => s.id !== id)
-	}
-
-	function closeAndFocusTrigger(triggerId: string) {
-		tick().then(() => {
-			document.getElementById(triggerId)?.focus()
-		})
-	}
-
-	async function addCategory() {
-		const key = createId()
-		categories = [...categories, { key, name: `category ${categories.length + 1}`, checked: true }]
-		await tick()
-		const el = document.querySelector(`span[data-category-key="${key}"]`) as HTMLSpanElement
-		el.focus()
-	}
 
 	function handleNewImageAdded(e: CustomEvent) {
 		images = [
@@ -168,75 +95,75 @@
 		images = images.filter((image) => image.imageUrl !== e.detail)
 	}
 
-	onMount(async () => {
-		if ($userExistQuery.isFetched && !$userExistQuery.data) {
-			const { stallNostrRes } = await fetchUserStallsData($ndkStore.activeUser?.pubkey as string)
-			if (stallNostrRes) {
-				const normalizedStallData = await Promise.all([...stallNostrRes].map(normalizeStallData)).then((results) =>
-					results.filter((result) => result.data !== null).map((result) => result.data),
+	function addCategory() {
+		const key = createId()
+		categories = [...categories, { key, name: `category ${categories.length + 1}`, checked: true }]
+	}
+
+	async function handleSubmit(sEvent: SubmitEvent, stall: RichStall | null) {
+		if (!stall) return
+		try {
+			const mutationFn = product ? $editProductMutation : $createProductMutation
+			await mutationFn.mutateAsync([
+				sEvent,
+				product ?? stall,
+				images.map((image) => image.imageUrl!),
+				shippingMethods.map((s) => ({
+					id: s.id,
+					name: s.name ?? '',
+					cost: s.cost ?? '',
+					regions: s.regions ?? [],
+					countries: s.countries ?? [],
+				})),
+				categories,
+			])
+
+			toast.success(`Product ${product ? 'updated' : 'created'}!`)
+			queryClient.invalidateQueries({ queryKey: ['products', $ndkStore.activeUser?.pubkey] })
+		} catch (error) {
+			toast.error(`Failed to ${product ? 'update' : 'create'} product: ${error}`)
+		}
+	}
+
+	const fetchData = async () => {
+		$userExistQuery.data == false && (isLoading = true)
+		const { stallNostrRes } = await fetchUserStallsData($ndkStore.activeUser?.pubkey as string)
+		if (stallNostrRes) {
+			const normalizedStallData = await Promise.all([...stallNostrRes].map(normalizeStallData)).then((results) =>
+				results.filter((result) => result.data !== null).map((result) => result.data),
+			)
+			if (stalls?.length) {
+				const newStalls = normalizedStallData.filter(
+					(stall) => !stalls?.some((existingStall) => stall?.identifier === existingStall.identifier),
 				)
-
-				if (stalls?.length) {
-					const newStalls = normalizedStallData.filter((stall) => !stalls?.some((existingStall) => stall.id === existingStall.id))
-					stalls = [...stalls, ...newStalls] as RichStall[]
-				} else {
-					stalls = normalizedStallData as RichStall[]
-				}
+				stalls = [...stalls, ...newStalls] as RichStall[]
+			} else {
+				stalls = normalizedStallData as RichStall[]
 			}
 		}
-	})
+		isLoading = false
+	}
 
-	const submit = async (sEvent: SubmitEvent, stall: RichStall | null) => {
-		if (stall == null) return
-		if (!product) {
-			try {
-				await $createProductMutation.mutateAsync([
-					sEvent,
-					stall,
-					images.map((image) => ({ imageUrl: image.imageUrl })),
-					shippingMethods.map((s) => ({
-						id: s.id,
-						name: s.name ?? '',
-						cost: s.cost ?? '',
-						regions: s.regions ?? [],
-						countries: s.countries ?? [],
-					})),
-					categories,
-				])
+	$: if ($userExistQuery.isFetched) {
+		fetchData()
+	}
 
-				toast.success('Product created!')
-			} catch (e) {
-				toast.error(`Failed to create product: ${e}`)
-			}
-		} else {
-			try {
-				await $editProductMutation.mutateAsync([
-					sEvent,
-					product,
-					images.map((image) => ({ imageUrl: image.imageUrl })),
-					shippingMethods.map((s) => ({
-						id: s.id,
-						name: s.name ?? '',
-						cost: s.cost ?? '',
-						regions: s.regions ?? [],
-						countries: s.countries ?? [],
-					})),
-					categories,
-				])
-				toast.success('Product updated!')
-			} catch (e) {
-				toast.error(`Failed to update product: ${e}`)
-			}
-		}
+	const activeTab =
+		'w-full font-bold border-b-2 border-black text-black data-[state=active]:border-b-primary data-[state=active]:text-primary'
 
-		queryClient.invalidateQueries({ queryKey: ['products', $ndkStore.activeUser?.pubkey] })
+	function closeAndFocusTrigger(triggerId: string) {
+		tick().then(() => {
+			document.getElementById(triggerId)?.focus()
+		})
 	}
 </script>
 
-{#if !stalls || !stalls.length}
+{#if isLoading}
 	<Spinner />
+{:else if !stalls?.length}
+	<div>Creating products needs at least one defined <a class="underline" href="/settings/account/stalls">stall</a></div>
 {:else}
-	<form on:submit|preventDefault={(sEvent) => submit(sEvent, stall)} class="flex flex-col gap-4 grow h-full">
+	<form on:submit|preventDefault={(sEvent) => handleSubmit(sEvent, stall)} class="flex flex-col gap-4 grow h-full">
 		<Tabs.Root value="basic" class="p-4">
 			<Tabs.List class="w-full justify-around bg-transparent">
 				<Tabs.Trigger value="basic" class={activeTab}>Basic</Tabs.Trigger>
@@ -278,16 +205,8 @@
 					</div>
 
 					<div class="grid w-full items-center gap-1.5">
-						<Label for="quantity" class="font-bold">Quantity</Label>
-						<Input
-							value={product?.quantity ?? ''}
-							required
-							class="border-2 border-black"
-							type="number"
-							name="quantity"
-							placeholder="10"
-							min={1}
-						/>
+						<Label title="quantity" for="quantity" class="font-bold">Quantity</Label>
+						<Input value={product?.quantity ?? ''} required class="border-2 border-black" type="number" name="quantity" placeholder="10" />
 					</div>
 				</div>
 
@@ -297,8 +216,8 @@
 						<DropdownMenu.Root>
 							<DropdownMenu.Trigger asChild let:builder>
 								<Button variant="outline" class="border-2 border-black" builders={[builder]}>
-									{#if currentStallId}
-										{@const defaultStall = stalls.find((stall) => stall.id === currentStallId)}
+									{#if currentStallIdentifier}
+										{@const defaultStall = stalls.find((stall) => stall.identifier === currentStallIdentifier)}
 										{defaultStall ? defaultStall.name : 'Select a stall'}
 									{:else}
 										{stall?.name}
@@ -311,9 +230,9 @@
 								<section class=" max-h-[350px] overflow-y-auto">
 									{#each stalls as item}
 										<DropdownMenu.CheckboxItem
-											checked={currentStallId === item.id}
+											checked={currentStallIdentifier === item.identifier}
 											on:click={() => {
-												currentStallId = item.id
+												currentStallIdentifier = item.identifier
 											}}
 										>
 											{item.name}
@@ -354,109 +273,56 @@
 			</Tabs.Content>
 
 			<Tabs.Content value="shipping" class="flex flex-col gap-2 p-2">
-				{#each shippingMethods as item, i}
-					<div class="grid grid-cols-[1fr_1fr_1fr_auto] w-full items-start gap-2">
-						<div>
-							<Label for="shipping" class="font-bold">{i + 1}. Shipping Name</Label>
-							<Input
-								required
-								bind:value={item.name}
-								class="border-2 border-black"
-								type="text"
-								name="shipping"
-								placeholder="24/28h Europe"
-							/>
-						</div>
-						<div>
-							<Label for="cost" class="font-bold">Base Cost</Label>
-							<Input
-								bind:value={item.cost}
-								class="border-2 border-black"
-								min={0}
-								type="text"
-								pattern="^(?!.*\\.\\.)[0-9]*([.][0-9]+)?"
-								name="cost"
-								placeholder="e.g. $30"
-							/>
-						</div>
-
-						<div>
-							<!-- FIXME: not working -->
-							<Label class="font-bold">Zones</Label>
-							<section>
-								<Popover.Root let:ids>
-									<Popover.Trigger asChild let:builder>
-										<Button
-											builders={[builder]}
-											variant="outline"
-											role="combobox"
-											aria-expanded="true"
-											class="w-full max-w-full border-2 border-black justify-between truncate"
-											>{item.regions.length ? item.regions.join(', ') : 'Select'}</Button
+				{#each currentShippings ?? [] as shippingMethod}
+					<div class="grid w-full items-center gap-1.5">
+						<Label for="from" class="font-bold">Shipping Method</Label>
+						<DropdownMenu.Root>
+							<DropdownMenu.Trigger asChild let:builder>
+								<Button variant="outline" class="border-2 border-black" builders={[builder]}>
+									{shippingMethod.shipping?.name ?? 'Choose a shipping method'}
+								</Button>
+							</DropdownMenu.Trigger>
+							<DropdownMenu.Content class="w-56">
+								<DropdownMenu.Label>Stall</DropdownMenu.Label>
+								<DropdownMenu.Separator />
+								<section class=" max-h-[350px] overflow-y-auto">
+									{#each stall?.shipping.filter((s) => !currentShippings?.some((sh) => sh.shipping?.id === s.id)) ?? [] as item}
+										<DropdownMenu.CheckboxItem
+											checked={shippingMethod.shipping === item}
+											on:click={() => {
+												shippingMethod.shipping = item
+											}}
 										>
-									</Popover.Trigger>
-									<Popover.Content class="w-[200px] max-h-[350px] overflow-y-auto p-0">
-										<Command.Root>
-											<Command.Input placeholder="Search country..." />
-											<Command.Empty>No country found.</Command.Empty>
-											<Command.Group>
-												{#each Object.values(COUNTRIES_ISO).sort((a, b) => {
-													if (item.regions.includes(a.iso3) && item.regions.includes(b.iso3)) {
-														return 0
-													} else if (item.regions.includes(a.iso3)) {
-														return -1
-													} else if (item.regions.includes(b.iso3)) {
-														return 1
-													}
-													return 0
-												}) as country}
-													<Command.Item
-														value={country.iso3}
-														onSelect={(currentValue) => {
-															if (item.regions.includes(country.iso3)) {
-																item.removeCountry(currentValue)
-															} else {
-																item.addCountry(currentValue)
-															}
+											<div>
+												<span class=" font-bold">{item.name}</span>, {item.cost}{stall?.currency}
+											</div>
+										</DropdownMenu.CheckboxItem>
+									{/each}
+								</section>
+							</DropdownMenu.Content>
+						</DropdownMenu.Root>
 
-															closeAndFocusTrigger(ids.trigger)
-														}}
-													>
-														<section class="flex flex-col">
-															<div class="flex gap-2">
-																{#if item.regions.includes(country.iso3)}
-																	<span class="i-tdesign-check"> </span>
-																{/if}
-
-																<span>{country.iso3}</span>
-															</div>
-
-															<small>({country.name})</small>
-														</section>
-													</Command.Item>
-												{/each}
-											</Command.Group>
-										</Command.Root>
-									</Popover.Content>
-								</Popover.Root>
-							</section>
-						</div>
-
-						<div class="h-full flex flex-col justify-end">
-							<div class="flex gap-1">
-								<Button on:click={() => addShipping(item.id)} variant="outline" class="font-bold border-0 h-full"
-									><span class="i-tdesign-copy"></span></Button
-								>
-								<Button on:click={() => removeShipping(item.id)} variant="outline" class="font-bold text-red-500 border-0 h-full"
-									><span class="i-tdesign-delete-1"></span></Button
-								>
-							</div>
+						<div class="grid w-full items-center gap-1.5">
+							<Label for="from" class="font-bold">Extra cost <small class="font-light">(in {stall?.currency})</small></Label>
+							<Input bind:value={shippingMethod.extraCost} required class="border-2 border-black" type="text" name="extra" />
 						</div>
 					</div>
+
+					<Button
+						on:click={() => (currentShippings = currentShippings?.filter((sh) => sh !== shippingMethod) ?? null)}
+						variant="outline"
+						class="font-bold text-red-500 border-0 h-full"><span class="i-tdesign-delete-1"></span></Button
+					>
+					<Separator />
 				{/each}
 
 				<div class="grid gap-1.5">
-					<Button on:click={() => addShipping()} variant="outline" class="font-bold ml-auto">Add Shipping Method</Button>
+					<Button
+						on:click={() => (currentShippings = [...(currentShippings ?? []), { shipping: null, extraCost: '' }])}
+						disabled={currentShippings?.length === stall?.shipping.length}
+						variant="outline"
+						class="font-bold ml-auto">Add Shipping Method</Button
+					>
 				</div>
 			</Tabs.Content>
 

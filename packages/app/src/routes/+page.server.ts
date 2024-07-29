@@ -2,14 +2,14 @@ import { toDisplayProduct } from '$lib/server/products.service'
 import { getAppSettings } from '$lib/server/setup.service'
 
 import type { AppSettings } from '@plebeian/database'
-import { and, db, eq, getTableColumns, productMeta, products } from '@plebeian/database'
+import { and, asc, db, desc, eq, getTableColumns, productMeta, products } from '@plebeian/database'
 
 import type { PageServerLoad } from './$types'
 
 const getHomeProducts = async () => {
-	const productsQuery = db.select().from(products)
+	const productsQuery = db.select().from(products).orderBy(asc(products.createdAt)).limit(8)
 
-	const productsResult = await productsQuery.limit(8).execute()
+	const productsResult = await productsQuery.execute()
 	const featuredProductsResult = await db
 		.select({
 			...getTableColumns(products),

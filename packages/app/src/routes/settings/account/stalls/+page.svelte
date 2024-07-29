@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { NormalizedData } from '$lib/nostrSubs/utils'
 	import type { RichStall } from '$lib/server/stalls.service'
 	import { page } from '$app/stores'
 	import StallProductList from '$lib/components/product/stall-product-list.svelte'
@@ -7,15 +8,20 @@
 	import * as Collapsible from '$lib/components/ui/collapsible'
 	import { Skeleton } from '$lib/components/ui/skeleton'
 	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
-	import { fetchUserStallsData, normalizeStallData } from '$lib/nostrSubs/utils'
+	import { fetchUserStallsData, normalizeStallData, setNostrData } from '$lib/nostrSubs/utils'
 	import ndkStore from '$lib/stores/ndk'
 	import { nav_back } from '$lib/utils'
 	import { onMount } from 'svelte'
 
 	import type { PageData } from './$types'
 
+	// TODO no delete button
 	export let data: PageData
-	const { userExist, activeUser } = data
+	const {
+		userExist,
+		activeUser,
+		appSettings: { allowRegister },
+	} = data
 	let stalls: Partial<RichStall>[] | null
 	let stallsMode: 'list' | 'create' | 'edit' = 'list'
 
@@ -24,6 +30,7 @@
 				userId: $ndkStore.activeUser?.pubkey,
 			})
 		: undefined
+	$: isLoading = $stallsQuery?.isLoading ?? false
 
 	$: {
 		if ($stallsQuery?.data) {
@@ -38,22 +45,73 @@
 		.find((item) => item.value === 'account-settings')
 		?.links.find((item) => item.href === $page.url.pathname)
 
-	onMount(async () => {
-		if (!activeUser?.id) return
-		if (!userExist) {
-			const { stallNostrRes } = await fetchUserStallsData(activeUser?.id)
-			if (stallNostrRes) {
-				const normalizedStallData = await Promise.all([...stallNostrRes].map(normalizeStallData)).then((results) =>
-					results.filter((result) => result.data !== null).map((result) => result.data),
-				)
-				if (stalls?.length) {
-					const newStalls = normalizedStallData.filter((stall) => !stalls?.some((existingStall) => stall.id === existingStall.id))
-					stalls = [...stalls, ...newStalls] as Partial<RichStall>[]
-				} else {
-					stalls = normalizedStallData as Partial<RichStall>[]
-				}
+	const mergeAndFilterStalls = (
+		existingStalls: Partial<RichStall>[],
+		newStalls: Partial<RichStall>[],
+	): {
+		mergedStalls: Partial<RichStall>[]
+		newStallsAdded: Partial<RichStall>[]
+	} => {
+		const stallMap = new Map<string, Partial<RichStall>>()
+		const newStallsAdded: Partial<RichStall>[] = []
+
+		for (const stall of existingStalls) {
+			if (stall?.identifier) {
+				stallMap.set(stall.identifier, stall)
 			}
 		}
+
+		for (const stall of newStalls) {
+			if (stall?.identifier) {
+				if (!stallMap.has(stall.identifier)) {
+					newStallsAdded.push(stall)
+				}
+				stallMap.set(stall.identifier, stall)
+			}
+		}
+
+		return {
+			mergedStalls: Array.from(stallMap.values()),
+			newStallsAdded,
+		}
+	}
+
+	async function fetchData(): Promise<void> {
+		if (!activeUser?.id) return
+		isLoading = true
+		try {
+			const { stallNostrRes } = await fetchUserStallsData(activeUser.id)
+			if (!stallNostrRes?.size) return
+
+			const normalizedStallData = (await Promise.all(Array.from(stallNostrRes).map(normalizeStallData)))
+				.filter((result): result is NormalizedData<RichStall> => result.data !== null)
+				.map((result) => result.data as Partial<RichStall>)
+
+			const { mergedStalls, newStallsAdded } = mergeAndFilterStalls(stalls || [], normalizedStallData)
+
+			if (newStallsAdded.length) {
+				await Promise.all(
+					newStallsAdded.map((stall) =>
+						setNostrData(
+							Array.from(stallNostrRes).find((s) => s.id === stall.id) || null,
+							null,
+							null,
+							allowRegister,
+							activeUser.id as string,
+							userExist,
+						),
+					),
+				)
+			}
+
+			stalls = mergedStalls
+		} catch (error) {
+			console.error('Error fetching and processing stalls:', error)
+			isLoading = false
+		}
+	}
+	onMount(async () => {
+		await fetchData()
 	})
 </script>
 
@@ -85,7 +143,7 @@
 	{/if}
 	<div class="flex flex-col gap-2">
 		{#if stallsMode === 'list'}
-			{#if $stallsQuery?.isLoading}
+			{#if isLoading}
 				<Skeleton class="h-12 w-full" />
 				<Skeleton class="h-12 w-full" />
 				<Skeleton class="h-12 w-full" />
@@ -120,7 +178,13 @@
 				{/each}
 			{/if}
 		{:else if stallsMode === 'create' || stallsMode === 'edit'}
-			<CreateEditStall stall={currentStall} on:success={() => (stallsMode = 'list')} />
+			<CreateEditStall
+				stall={currentStall}
+				on:success={() => {
+					stallsMode = 'list'
+					fetchData()
+				}}
+			/>
 		{/if}
 	</div>
 </div>

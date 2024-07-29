@@ -7,7 +7,6 @@ import { getImagesByProductId } from '$lib/server/productImages.service'
 import { customTagValue, getEventCoordinates } from '$lib/utils'
 import { format } from 'date-fns'
 
-import type { Product, ProductImage, ProductMeta, ProductTypes } from '@plebeian/database'
 import {
 	and,
 	createId,
@@ -15,12 +14,17 @@ import {
 	eq,
 	events,
 	eventTags,
-	eventTagsPrimaryKey,
 	getTableColumns,
+	Product,
 	PRODUCT_META,
+	ProductImage,
 	productImages,
+	ProductMeta,
 	productMeta,
 	products,
+	ProductShipping,
+	productShipping,
+	ProductTypes,
 	sql,
 } from '@plebeian/database'
 
@@ -34,11 +38,17 @@ export type DisplayProduct = Pick<Product, 'id' | 'description' | 'currency' | '
 	createdAt: string
 	price: number
 	images: ProductImage[]
+	shipping: ProductShipping[]
 }
 
 export const toDisplayProduct = async (product: Product): Promise<DisplayProduct> => {
 	const images = await getImagesByProductId(product.id)
 	const userNip05 = await getNip05ByUserId(product.userId)
+
+	const shipping = await db.query.productShipping.findMany({
+		where: and(eq(productShipping.productId, product.id)),
+	})
+
 	return {
 		id: product.id,
 		identifier: product.identifier,
@@ -52,6 +62,7 @@ export const toDisplayProduct = async (product: Product): Promise<DisplayProduct
 		quantity: product.quantity,
 		images: images,
 		stallId: product.stallId.startsWith(KindStalls.toString()) ? product.stallId.split(':')[2] : product.stallId,
+		shipping,
 	}
 }
 
@@ -137,27 +148,30 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 		const productPromises = productEvents.map(async (productEvent) => {
 			try {
 				const eventCoordinates = getEventCoordinates(productEvent)
+				if (!eventCoordinates) return
 				const productEventContent = JSON.parse(productEvent.content)
 				const {
 					data: parsedProduct,
 					success,
 					error: parseError,
-				} = productEventSchema.safeParse({ id: productEventContent.id, ...productEventContent })
+				} = productEventSchema.safeParse({
+					id: productEventContent.id,
+					...productEventContent,
+				})
 
 				if (!success) error(500, { message: `${parseError}` })
 
 				if (!parsedProduct) {
-					throw 'Bad product schema'
+					throw Error('Bad product schema')
 				}
 
 				const stall = parsedProduct.stallId?.startsWith(`${KindStalls}`)
 					? await getStallById(parsedProduct.stallId)
 					: await getStallById(`${KindStalls}:${productEvent.pubkey}:${parsedProduct.stallId}`)
-
 				const parentId = customTagValue(productEvent.tags, 'a')[0] || null
 				const extraCost = parsedProduct.shipping?.length ? parsedProduct.shipping[0].cost : 0
 				if (!stall) {
-					throw 'Stall not found'
+					throw Error('Stall not found')
 				}
 
 				if (!parsedProduct.type) {
@@ -203,7 +217,6 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 					imageType: 'gallery',
 					imageOrder: index + 1,
 				}))
-
 				await db.insert(events).values({
 					id: eventCoordinates.coordinates,
 					author: productEvent.pubkey,
@@ -212,13 +225,30 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 				})
 
 				const productResult = await db.insert(products).values(insertProduct).returning()
-
 				if (insertSpecs?.length) {
 					await db.insert(productMeta).values(insertSpecs).returning()
 				}
 
 				if (insertProductImages?.length) {
 					await db.insert(productImages).values(insertProductImages).returning()
+				}
+				// FIXME (#191) Right now this is just a basic filtering
+				if (parsedProduct.shipping?.length) {
+					const validShipping = parsedProduct.shipping.filter((s) => s.id && s.id.trim() !== '')
+					if (validShipping.length) {
+						await db
+							.insert(productShipping)
+							.values(
+								validShipping.map((s) => ({
+									cost: s.cost!,
+									shippingId: s.id!,
+									productId: eventCoordinates!.coordinates!,
+								})),
+							)
+							.execute()
+					} else {
+						console.log('No valid shipping entries to insert')
+					}
 				}
 
 				if (productEvent.tags.length) {
@@ -244,11 +274,10 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 				if (productResult[0]) {
 					return toDisplayProduct(productResult[0])
 				} else {
-					throw 'Failed to create product'
+					throw Error('Failed to create product')
 				}
 			} catch (e) {
-				console.error('Error creating product:', e)
-				error(500, { message: `${e}` })
+				throw Error(`${e}`)
 			}
 		})
 		const results = await Promise.all(productPromises)
@@ -261,10 +290,13 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 export const updateProduct = async (productId: string, productEvent: NostrEvent): Promise<DisplayProduct> => {
 	const eventCoordinates = getEventCoordinates(productEvent)
 	const productEventContent = JSON.parse(productEvent.content)
-	const parsedProduct = productEventSchema.safeParse({ id: productId, ...productEventContent })
+	const parsedProduct = productEventSchema.safeParse({
+		id: productId,
+		...productEventContent,
+	})
 
 	if (!parsedProduct.success) {
-		error(500, 'Bad product schema')
+		error(500, `Bad product schema, ${parsedProduct.error}`)
 	}
 
 	const parsedProductData = parsedProduct.data
@@ -329,6 +361,20 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 		.where(eq(products.id, productId))
 		.returning()
 
+	await db.transaction(async (tx) => {
+		await tx.delete(productShipping).where(eq(productShipping.productId, productId))
+		for (const shipping of parsedProductData.shipping ?? []) {
+			await tx
+				.insert(productShipping)
+				.values({
+					cost: shipping.cost!,
+					shippingId: shipping.id,
+					productId: productId,
+				})
+				.execute()
+		}
+	})
+
 	if (productEvent.tags.length) {
 		await db
 			.insert(eventTags)
@@ -339,7 +385,7 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 					secondTagValue: tag[2],
 					thirdTagValue: tag[3],
 					userId: productEvent.pubkey,
-					eventId: eventCoordinates.coordinates,
+					eventId: eventCoordinates?.coordinates as string,
 					eventKind: productEvent.kind!,
 				})),
 			)

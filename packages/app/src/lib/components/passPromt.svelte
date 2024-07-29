@@ -8,7 +8,6 @@
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
 	import { login } from '$lib/ndkLogin'
 	import { type BaseAccount, type NsecAccount } from '$lib/stores/session'
-	import { stringToHexColor } from '$lib/utils'
 	import { format } from 'date-fns'
 	import { npubEncode } from 'nostr-tools/nip19'
 	import { onMount } from 'svelte'
@@ -25,7 +24,6 @@
 	export let accointInfo: NsecAccount
 
 	let checked: boolean
-
 	async function loginWrapper(loginMethod: BaseAccount['type'], formData?: FormData) {
 		;(await login(loginMethod, formData)) ? toast.success('Login sucess!') : toast.error('Login error!')
 		dialogOpen = false
@@ -69,8 +67,7 @@
 				{:else if $userQuery?.data}
 					<Avatar>
 						<AvatarImage src={$userQuery.data?.image} alt="pfp" />
-						<AvatarFallback
-							style={`background-color: ${stringToHexColor(String($userQuery.data?.name ?? $userQuery.data?.displayName ?? ''))}`}
+						<AvatarFallback style={`background-color: #${String($userQuery.data?.userId).substring(0, 6)}`}
 							><span class="i-tdesign-user-1 w-8 h-8" /></AvatarFallback
 						>
 					</Avatar>
@@ -82,11 +79,6 @@
 			</div>
 			<small>Last logged: {format(accointInfo.lastLogged, standardDisplayDateFormat)}</small>
 
-			<!-- <form class="flex flex-col gap-2" on:submit|preventDefault={(sEvent) => loginWrapper('NSEC', new FormData(sEvent.currentTarget, sEvent.submitter))}>
-				<Input class="hidden" id="key" placeholder="Private key (nsec1...)" type="text" value={accointInfo.cSk} />
-				<Input class="border-black border-2" id="password" placeholder="Password" type="password" />
-				<Button type="submit">Sign in</Button>
-			</form> -->
 			<form
 				class="flex flex-col gap-2"
 				on:submit|preventDefault={(sEvent) => loginWrapper('NSEC', new FormData(sEvent.currentTarget, sEvent.submitter))}

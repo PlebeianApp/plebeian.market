@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "2a6844b6-d121-490e-a4fd-349ff3ab859e",
+  "id": "ac2081c1-6d6f-476c-b132-c6b28423ecd7",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "app_settings": {
@@ -263,7 +263,7 @@
           "name": "currency",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "quantity": {
@@ -1243,6 +1243,71 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
+    "product_shipping": {
+      "name": "product_shipping",
+      "columns": {
+        "product_id": {
+          "name": "product_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "shipping_id": {
+          "name": "shipping_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "extra_cost": {
+          "name": "extra_cost",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "product_shipping_product_id_products_id_fk": {
+          "name": "product_shipping_product_id_products_id_fk",
+          "tableFrom": "product_shipping",
+          "tableTo": "products",
+          "columnsFrom": [
+            "product_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        },
+        "product_shipping_shipping_id_shipping_id_fk": {
+          "name": "product_shipping_shipping_id_shipping_id_fk",
+          "tableFrom": "product_shipping",
+          "tableTo": "shipping",
+          "columnsFrom": [
+            "shipping_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "product_shipping_product_id_shipping_id_pk": {
+          "columns": [
+            "product_id",
+            "shipping_id"
+          ],
+          "name": "product_shipping_product_id_shipping_id_pk"
+        }
+      },
+      "uniqueConstraints": {}
+    },
     "products": {
       "name": "products",
       "columns": {
@@ -1308,7 +1373,7 @@
           "name": "currency",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "quantity": {
@@ -1386,6 +1451,21 @@
           ],
           "columnsTo": [
             "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        },
+        "products_stall_id_currency_stalls_id_currency_fk": {
+          "name": "products_stall_id_currency_stalls_id_currency_fk",
+          "tableFrom": "products",
+          "tableTo": "stalls",
+          "columnsFrom": [
+            "stall_id",
+            "currency"
+          ],
+          "columnsTo": [
+            "id",
+            "currency"
           ],
           "onDelete": "cascade",
           "onUpdate": "cascade"
@@ -1639,7 +1719,16 @@
           "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "stalls_id_currency_unique": {
+          "name": "stalls_id_currency_unique",
+          "columns": [
+            "id",
+            "currency"
+          ],
+          "isUnique": true
+        }
+      },
       "foreignKeys": {
         "stalls_user_id_users_id_fk": {
           "name": "stalls_user_id_users_id_fk",

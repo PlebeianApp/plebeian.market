@@ -9,7 +9,7 @@ import { get } from 'svelte/store'
 
 import type { PageServerLoad } from './$types'
 
-type StallInfo = {
+export type StallCheck = {
 	id: string
 	identifier?: string
 	exist: boolean
@@ -59,7 +59,7 @@ const processFullId = async (stallId: string): Promise<ProcessedInfo> => {
 	}
 }
 
-const getStallInfo = async (stallId: string, stallIdentifier?: string): Promise<StallInfo> => {
+const getStallInfo = async (stallId: string, stallIdentifier?: string): Promise<StallCheck> => {
 	return {
 		id: stallId,
 		identifier: stallIdentifier,

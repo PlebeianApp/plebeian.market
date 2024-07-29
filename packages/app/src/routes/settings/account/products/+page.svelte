@@ -5,7 +5,7 @@
 	import { Button } from '$lib/components/ui/button/index.js'
 	import { Skeleton } from '$lib/components/ui/skeleton'
 	import { createProductsByFilterQuery } from '$lib/fetch/products.queries'
-	import { fetchUserProductData, normalizeProductsFromNostr } from '$lib/nostrSubs/utils'
+	import { fetchUserProductData, mergeProducts } from '$lib/nostrSubs/utils'
 	import { nav_back } from '$lib/utils'
 	import { onMount } from 'svelte'
 
@@ -13,8 +13,8 @@
 
 	export let data: PageData
 	const { userExist, activeUser } = data
-	let toDisplayProducts: Partial<DisplayProduct>[]
-
+	let toDisplayProducts: Partial<DisplayProduct>[] = []
+	// TODO no delete button
 	let productsMode: 'list' | 'create' | 'edit' = 'list'
 	$: productsQuery = userExist
 		? createProductsByFilterQuery({
@@ -50,28 +50,13 @@
 		if (!userExist) {
 			const { products: productsData } = await fetchUserProductData(activeUser.id)
 
-			if (productsData) {
-				const result = await normalizeProductsFromNostr(productsData, activeUser.id as string)
-
-				if (result) {
-					const { toDisplayProducts: _toDisplay } = result
-					toDisplayProducts = _toDisplay
-				}
+			if (productsData?.size) {
+				toDisplayProducts = await mergeProducts(toDisplayProducts, productsData, activeUser.id)
 			}
 		} else {
 			const { products: productsData } = await fetchUserProductData(activeUser.id)
-			if (productsData) {
-				const result = await normalizeProductsFromNostr(productsData, activeUser.id as string)
-				if (result) {
-					const { toDisplayProducts: _toDisplay } = result
-					if (toDisplayProducts.length) {
-						toDisplayProducts = toDisplayProducts.concat(
-							_toDisplay.filter((newProduct) => !toDisplayProducts.some((existingProduct) => existingProduct.identifier === newProduct.id)),
-						)
-					} else {
-						toDisplayProducts = _toDisplay
-					}
-				}
+			if (productsData?.size) {
+				toDisplayProducts = await mergeProducts(toDisplayProducts, productsData, activeUser.id)
 			}
 		}
 	})

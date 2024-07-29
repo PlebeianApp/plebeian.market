@@ -17,6 +17,8 @@ import { twMerge } from 'tailwind-merge'
 
 import type { EventCoordinates } from './interfaces'
 import { numSatsInBtc } from './constants'
+import { createProductExistsQuery } from './fetch/products.queries'
+import { createStallExistsQuery } from './fetch/stalls.queries'
 import { createUserExistsQuery } from './fetch/users.queries'
 
 export function cn(...inputs: ClassValue[]) {
@@ -89,6 +91,10 @@ export const bitcoinToSatoshis = (amountInBtc: number) => {
 
 export function formatPrice(price: number): string {
 	return Number(price.toFixed(2)).toString()
+}
+
+export function decimalToPercentage(value: number): number {
+	return Number((value * 100).toPrecision(2))
 }
 
 export function getEventCoordinates(event: NostrEvent | VerifiedEvent | NDKEvent): EventCoordinates | null {
@@ -207,7 +213,7 @@ export async function copyToClipboard(data: BlobPart, mimeType = 'text/plain') {
 		}
 		toast.success('Copied 👍')
 	} catch (e) {
-		toast.success(`Error: ${e}`)
+		toast.error(`Error: ${e}`)
 		console.log(e)
 	}
 }
@@ -285,6 +291,16 @@ export async function resolveQuery<T>(queryFn: () => CreateQueryResult<T, Error>
 
 export async function checkIfUserExists(userId?: string): Promise<boolean> {
 	if (userId) return await resolveQuery(() => createUserExistsQuery(userId))
+	return false
+}
+
+export async function checkIfStallExists(stallId?: string): Promise<boolean> {
+	if (stallId) return await resolveQuery(() => createStallExistsQuery(stallId))
+	return false
+}
+
+export async function checkIfProductExists(productId?: string): Promise<boolean> {
+	if (productId) return await resolveQuery(() => createProductExistsQuery(productId))
 	return false
 }
 

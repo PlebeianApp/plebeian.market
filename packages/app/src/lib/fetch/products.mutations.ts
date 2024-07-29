@@ -28,13 +28,10 @@ export const createProductMutation = createMutation(
 		mutationFn: async ([sEvent, stall, images, shippingMethods, categories]: [
 			SubmitEvent,
 			RichStall,
-			Partial<ProductImage>[],
+			string[],
 			{
 				id: string
-				name: string
 				cost: string
-				regions: string[]
-				countries: string[]
 			}[],
 			Category[],
 		]) => {
@@ -68,7 +65,18 @@ export const createProductMutation = createMutation(
 			await newEvent.sign()
 			// await newEvent.publish().then((d) => console.log(d))
 			const _shouldRegister = await shouldRegister(undefined, undefined, $ndkStore.activeUser.pubkey)
-			if (_shouldRegister) get(createProductsFromNostrMutation).mutateAsync(new Set([newEvent]))
+			if (_shouldRegister) {
+				const response = get(createProductsFromNostrMutation).mutateAsync(new Set([newEvent]))
+				return response
+			}
+		},
+		onSuccess: (data: DisplayProduct[] | undefined | null) => {
+			if (data) {
+				queryClient.invalidateQueries({ queryKey: ['products'] })
+				queryClient.invalidateQueries({ queryKey: ['shipping'] })
+				queryClient.invalidateQueries({ queryKey: ['categories'] })
+				queryClient.invalidateQueries({ queryKey: ['stalls'] })
+			}
 		},
 	},
 	queryClient,
@@ -78,14 +86,11 @@ export const editProductMutation = createMutation(
 	{
 		mutationFn: async ([sEvent, product, images, shippingMethods, categories]: [
 			SubmitEvent,
-			DisplayProduct,
+			Partial<DisplayProduct>,
 			Partial<ProductImage>[],
 			{
 				id: string
-				name: string
 				cost: string
-				regions: string[]
-				countries: string[]
 			}[],
 			Category[],
 		]) => {
@@ -97,14 +102,15 @@ export const editProductMutation = createMutation(
 			const productPrice = Number(formData.get('price'))
 			const productQty = Number(formData.get('quantity'))
 			const identifier = createSlugId(productTile)
+			const eventImages = images.map((image) => image.imageUrl)
 			const stallCoordinates =
-				product?.stallId.split(':').length == 3 ? product?.stallId : `${KindStalls}:${product.userId}:${product?.stallId}`
+				product?.stallId?.split(':').length == 3 ? product?.stallId : `${KindStalls}:${product.userId}:${product?.stallId}`
 			const evContent = {
 				id: identifier,
-				stall_id: product?.stallId.split(':').length == 3 ? product?.stallId.split(':')[2] : product?.stallId,
+				stall_id: product?.stallId?.split(':').length == 3 ? product?.stallId.split(':')[2] : product?.stallId,
 				name: productTile,
 				description: productDescription,
-				images: images,
+				images: eventImages,
 				price: productPrice,
 				quantity: productQty,
 				shipping: shippingMethods,
@@ -123,9 +129,19 @@ export const editProductMutation = createMutation(
 			const nostrEvent = await newEvent.toNostrEvent()
 			const _shouldRegister = await shouldRegister(undefined, undefined, $ndkStore.activeUser.pubkey)
 			if (_shouldRegister) {
-				await createRequest(`PUT /api/v1/products/${product.id}`, {
+				const response = await createRequest(`PUT /api/v1/products/${product.id}`, {
 					body: nostrEvent,
 				})
+				return response
+			}
+		},
+		// TODO invalidate products query onSucess
+		onSuccess: (data: DisplayProduct | undefined) => {
+			if (data) {
+				queryClient.invalidateQueries({ queryKey: ['products'] })
+				queryClient.invalidateQueries({ queryKey: ['shipping'] })
+				queryClient.invalidateQueries({ queryKey: ['categories'] })
+				queryClient.invalidateQueries({ queryKey: ['stalls'] })
 			}
 		},
 	},
