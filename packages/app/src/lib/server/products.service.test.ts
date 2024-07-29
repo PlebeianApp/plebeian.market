@@ -59,7 +59,7 @@ describe('products service', () => {
 	it('gets products by user id', async () => {
 		const userId = devUser1.pk
 
-		const products = await getProductsByUserId(productsFilterSchema.parse({ userId: userId }))
+		const { products } = await getProductsByUserId(productsFilterSchema.parse({ userId: userId }))
 
 		expect(products.length).toBeGreaterThan(0)
 	})
@@ -71,7 +71,7 @@ describe('products service', () => {
 
 		expect(stalls.length).toBeGreaterThan(0)
 
-		const products = await getProductsByStallId(stalls[0].id)
+		const { products } = await getProductsByStallId(stalls[0].id)
 
 		expect(products.length).toBeGreaterThan(0)
 	})
