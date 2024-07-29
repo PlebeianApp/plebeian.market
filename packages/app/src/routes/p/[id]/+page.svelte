@@ -84,15 +84,11 @@
 
 		if (!exist) {
 			const { userProfile: userData } = await fetchUserData(id)
-			userData && (userProfile = userData)
-
+			if (userData) userProfile = userData
+			// FIXME products from stalls with forbidden words are beign displayed
 			const { products: productsData } = await fetchUserProductData(id)
-			if (productsData) {
-				const result = await normalizeProductsFromNostr(productsData, id as string)
-				if (result) {
-					const { toDisplayProducts: _toDisplay } = result
-					toDisplayProducts = _toDisplay
-				}
+			if (productsData?.size) {
+				// toDisplayProducts = await mergeProducts(toDisplayProducts, productsData, id)
 			}
 
 			await setNostrData(null, userProfile, null, allowRegister, id, exist)

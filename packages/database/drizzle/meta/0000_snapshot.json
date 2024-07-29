@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "deb28c93-ff96-4d6e-822c-b924b12377ef",
+  "id": "2a6844b6-d121-490e-a4fd-349ff3ab859e",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "app_settings": {
@@ -922,19 +922,6 @@
           ],
           "onDelete": "cascade",
           "onUpdate": "cascade"
-        },
-        "orders_buyer_user_id_users_id_fk": {
-          "name": "orders_buyer_user_id_users_id_fk",
-          "tableFrom": "orders",
-          "tableTo": "users",
-          "columnsFrom": [
-            "buyer_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
         },
         "orders_shipping_id_shipping_id_fk": {
           "name": "orders_shipping_id_shipping_id_fk",
@@ -1887,5 +1874,8 @@
     "schemas": {},
     "tables": {},
     "columns": {}
+  },
+  "internal": {
+    "indexes": {}
   }
 }
