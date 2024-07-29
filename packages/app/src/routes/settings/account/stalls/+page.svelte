@@ -28,13 +28,14 @@
 	$: stallsQuery = userExist
 		? createStallsByFilterQuery({
 				userId: $ndkStore.activeUser?.pubkey,
+				pageSize: 999,
 			})
 		: undefined
 	$: isLoading = $stallsQuery?.isLoading ?? false
 
 	$: {
 		if ($stallsQuery?.data) {
-			stalls = $stallsQuery?.data
+			stalls = $stallsQuery?.data.stalls
 		}
 	}
 

@@ -8,7 +8,7 @@
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
 
 	$: categoriesQuery = createCategoriesByFilterQuery({ category: $page.params.category, userId: $page.params.userId })
-	$: categoryData = $categoriesQuery.data?.[0]
+	$: categoryData = $categoriesQuery.data?.categories[0]
 
 	$: productsQuery = createProductsByFilterQuery({
 		userId: $page.params.userId,
@@ -35,7 +35,7 @@
 					<div class="container">
 						<h2 class="relative z-10 flex gap-2 items-center justify-center"><span />Products</h2>
 						<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-							{#each $productsQuery.data as product}
+							{#each $productsQuery.data.products as product}
 								<ProductItem {product} />
 							{/each}
 						</div>

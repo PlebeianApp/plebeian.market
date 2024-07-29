@@ -43,12 +43,13 @@
 	$: stallsQuery = $userExistQuery.data
 		? createStallsByFilterQuery({
 				userId: $ndkStore.activeUser?.pubkey,
+				pageSize: 999,
 			})
 		: undefined
 	$: isLoading = $stallsQuery?.isLoading ?? false
 
 	$: {
-		if ($stallsQuery?.data) stalls = $stallsQuery.data
+		if ($stallsQuery?.data) stalls = $stallsQuery.data.stalls
 	}
 
 	let currentShippings: { shipping: Partial<RichShippingInfo> | null; extraCost: string }[] | null = null

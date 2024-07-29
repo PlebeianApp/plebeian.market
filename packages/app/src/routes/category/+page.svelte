@@ -19,7 +19,7 @@
 							<Skeleton class=" h-96 w-full" />
 							<Skeleton class=" h-96 w-full" />
 						{:else if $categoriesQuery.data}
-							{#each $categoriesQuery.data as cat}
+							{#each $categoriesQuery.data.categories as cat}
 								<CatCompactItem {cat} />
 							{/each}
 						{/if}
