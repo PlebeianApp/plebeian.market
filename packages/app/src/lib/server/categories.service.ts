@@ -37,7 +37,8 @@ export const getAllCategories = async (filter: CatsFilter = catsFilterSchema.par
 		productCount,
 	}))
 
-	const [{count: total}] = await db.select({ count: sql<number>`count(*)` })
+	const [{ count: total } = { count: 0 }] = await db
+		.select({ count: sql<number>`count(*)` })
 		.from(eventTags)
 		.where(
 			and(
