@@ -137,7 +137,7 @@ describe('products service', () => {
 
 	it('updates a product', async () => {
 		const stall = await getStallsByUserId(devUser1.pk).then((stalls) => stalls[0])
-		const targetProduct = await getProductsByStallId(stall.id).then((products) => products[0])
+		const targetProduct = await getProductsByStallId(stall.id).then(({ products }) => products[0])
 		const skSigner = new NDKPrivateKeySigner(devUser1.sk)
 		const evContent = {
 			stall_id: stall.id.split(':')[2],
