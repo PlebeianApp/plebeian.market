@@ -1,25 +1,33 @@
 import type { NDKEvent, NDKUserProfile } from '@nostr-dev-kit/ndk'
+import type { EventCoordinates } from '$lib/interfaces'
 import type { DisplayProduct } from '$lib/server/products.service'
 import type { RichShippingInfo } from '$lib/server/shipping.service'
 import type { RichStall } from '$lib/server/stalls.service'
 import { NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk'
+import { invalidateAll } from '$app/navigation'
 import { KindProducts, KindStalls, standardDisplayDateFormat } from '$lib/constants'
+import { queryClient } from '$lib/fetch/client'
 import { createProductsFromNostrMutation } from '$lib/fetch/products.mutations'
 import { createStallFromNostrEvent } from '$lib/fetch/stalls.mutations'
 import { userFromNostr } from '$lib/fetch/users.mutations'
 import ndkStore from '$lib/stores/ndk'
 import { addCachedEvent, getCachedEvent, updateCachedEvent } from '$lib/stores/session'
-import { getEventCoordinates, shouldRegister } from '$lib/utils'
+import { checkIfStallExists, getEventCoordinates, shouldRegister } from '$lib/utils'
 import { format } from 'date-fns'
+import { ofetch } from 'ofetch'
 import { get } from 'svelte/store'
 import { ZodError, ZodSchema } from 'zod'
 
-import type { ProductImagesType } from '@plebeian/database'
+import type { ProductImage, ProductImagesType } from '@plebeian/database'
 
+import type { StallCheck } from '../../routes/stalls/[...stallId]/proxy+page.server'
 import { productEventSchema, shippingObjectSchema, stallEventSchema } from '../../schema/nostr-events'
 import { stallsSub } from './subs'
 
-export async function fetchStallData(stallId: string): Promise<{
+export async function fetchStallData(
+	stallId: string,
+	subCacheUsage?: NDKSubscriptionCacheUsage,
+): Promise<{
 	stallNostrRes: NDKEvent | null
 }> {
 	const $stallsSub = get(stallsSub)
@@ -34,7 +42,7 @@ export async function fetchStallData(stallId: string): Promise<{
 
 	const stallNostrRes: NDKEvent | null = fetchedStall
 		? fetchedStall
-		: await $ndkStore.fetchEvent(stallFilter, { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST })
+		: await $ndkStore.fetchEvent(stallFilter, { cacheUsage: subCacheUsage ?? NDKSubscriptionCacheUsage.PARALLEL })
 
 	return { stallNostrRes }
 }
@@ -49,13 +57,16 @@ export async function fetchUserStallsData(userId: string): Promise<{
 	}
 
 	const stallNostrRes: Set<NDKEvent> | null = await $ndkStore.fetchEvents(stallFilter, {
-		cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY,
+		cacheUsage: NDKSubscriptionCacheUsage.PARALLEL,
 	})
 
 	return { stallNostrRes }
 }
 
-export async function fetchUserData(userId: string): Promise<{
+export async function fetchUserData(
+	userId: string,
+	subCacheUsage?: NDKSubscriptionCacheUsage,
+): Promise<{
 	userProfile: NDKUserProfile | null
 }> {
 	const $ndkStore = get(ndkStore)
@@ -63,7 +74,7 @@ export async function fetchUserData(userId: string): Promise<{
 		pubkey: userId,
 	})
 
-	const userProfile = await ndkUser.fetchProfile({ cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY })
+	const userProfile = await ndkUser.fetchProfile({ cacheUsage: subCacheUsage ?? NDKSubscriptionCacheUsage.ONLY_RELAY })
 	return { userProfile }
 }
 
@@ -80,7 +91,10 @@ export async function fetchUserProductData(userId: string): Promise<{
 	return { products: productsNostrRes }
 }
 
-export async function fetchProductData(productId: string): Promise<{
+export async function fetchProductData(
+	productId: string,
+	subCacheUsage?: NDKSubscriptionCacheUsage,
+): Promise<{
 	nostrProduct: Set<NDKEvent> | null
 }> {
 	const [_, userId, identifier] = productId.split(':')
@@ -90,8 +104,9 @@ export async function fetchProductData(productId: string): Promise<{
 		authors: [userId],
 		'#d': [identifier],
 	}
-	const productsNostrRes = await $ndkStore.fetchEvents(productsFilter, { cacheUsage: NDKSubscriptionCacheUsage.PARALLEL })
-
+	const productsNostrRes = await $ndkStore.fetchEvents(productsFilter, {
+		cacheUsage: subCacheUsage ?? NDKSubscriptionCacheUsage.ONLY_RELAY,
+	})
 	return { nostrProduct: productsNostrRes }
 }
 
@@ -106,21 +121,23 @@ export async function handleStallNostrData(stallData: NDKEvent): Promise<boolean
 	const $createStallFromNostrEvent = get(createStallFromNostrEvent)
 	const stallEvent = await stallData.toNostrEvent()
 	const stallMutation = await $createStallFromNostrEvent.mutateAsync(stallEvent)
+	stallMutation && queryClient.invalidateQueries({ queryKey: ['product-price', stallEvent.pubkey] })
 	return stallMutation ? true : false
 }
 
 export async function handleProductNostrData(productsData: Set<NDKEvent>): Promise<boolean> {
 	const $createProductsFromNostrMutation = get(createProductsFromNostrMutation)
 	const productsMutation = await $createProductsFromNostrMutation.mutateAsync(productsData)
+	productsMutation && (await invalidateAll())
 	return productsMutation ? true : false
 }
 
-type NormalizedData<T> = { data: Partial<T> | null; error: ZodError | null }
+export type NormalizedData<T> = { data: Partial<T> | null; error: ZodError | null }
 
 async function normalizeNostrData<T>(
 	event: NDKEvent,
 	schema: ZodSchema,
-	transformer: (data: unknown, coordinates: ReturnType<typeof getEventCoordinates>) => Partial<T>,
+	transformer: (data: T, coordinates: ReturnType<typeof getEventCoordinates>) => Partial<T>,
 ): Promise<NormalizedData<T>> {
 	const coordinates = getEventCoordinates(event)
 	if (!event.content || !coordinates) return { data: null, error: null }
@@ -131,18 +148,18 @@ async function normalizeNostrData<T>(
 	}
 
 	try {
+		// TODO Review this we are not storing events with errors so we parse them all the time
 		const parsedContent = JSON.parse(event.content)
 		const { data, success, error: parseError } = schema.safeParse(parsedContent)
-
 		if (!success) return { data: null, error: parseError }
 
 		const transformedData = transformer(data, coordinates)
 		const result: NormalizedData<T> = { data: transformedData, error: null }
-
 		// Update cache
 		const cacheData = {
 			id: coordinates.coordinates,
 			createdAt: event.created_at as number,
+			insertedAt: Number(new Date()),
 			kind: coordinates.kind,
 			pubkey: coordinates.pubkey,
 			data: result.data,
@@ -166,10 +183,10 @@ export async function normalizeStallData(nostrStall: NDKEvent): Promise<Normaliz
 	return normalizeNostrData<RichStall>(nostrStall, stallEventSchema.passthrough(), (data, coordinates) => ({
 		...data,
 		createDate: formatDate(nostrStall.created_at),
-		identifier: coordinates.tagD,
-		id: coordinates.coordinates,
-		userId: coordinates.pubkey,
-		shipping: parseShipping(data.shipping),
+		identifier: coordinates?.tagD,
+		id: coordinates?.coordinates,
+		userId: coordinates?.pubkey,
+		shipping: parseShipping(data?.shipping),
 		image: nostrStall.tagValue('image'),
 	}))
 }
@@ -199,11 +216,11 @@ async function processProduct(
 	const result = await normalizeNostrData<DisplayProduct>(event, productEventSchema, (data, coordinates) => ({
 		...data,
 		quantity: data.quantity as number,
-		images: createProductImages(data),
+		images: createProductImages(data.images as unknown as string[], String(coordinates?.coordinates)),
 		userId,
 		createdAt: formatDate(event.created_at),
-		identifier: coordinates.tagD,
-		id: coordinates.coordinates,
+		identifier: coordinates?.tagD,
+		id: coordinates?.coordinates,
 	}))
 
 	if (result.data && (!stallId || result.data.stallId === stallId?.split(':')[2])) {
@@ -213,19 +230,17 @@ async function processProduct(
 	return null
 }
 
-function createProductImages(
-	data: unknown,
-): { createdAt: Date; productId: string; auctionId: null; imageUrl: string; imageType: ProductImagesType; imageOrder: number }[] {
-	return (
-		data.images?.map((image: string, index: number) => ({
+function createProductImages(images: string[], productId: string): ProductImage[] {
+	const imagesMap =
+		images.map((imageUrl, index) => ({
 			createdAt: new Date(),
-			productId: data.id as string,
+			productId,
 			auctionId: null,
-			imageUrl: image,
+			imageUrl: imageUrl as string,
 			imageType: 'gallery' as ProductImagesType,
 			imageOrder: index,
 		})) ?? []
-	)
+	return imagesMap
 }
 
 export function formatDate(timestamp: number | undefined): string {
@@ -237,7 +252,7 @@ export async function normalizeProductsFromNostr(
 	userId: string,
 	stallId?: string,
 ): Promise<{ toDisplayProducts: Partial<DisplayProduct>[]; stallProducts: Set<NDKEvent> } | null> {
-	if (!productsData.size || !stallId) return null
+	if (!productsData.size) return null
 
 	const processedProducts = await Promise.all(Array.from(productsData).map((event) => processProduct(event, userId, stallId)))
 
@@ -267,16 +282,23 @@ export async function setNostrData(
 	try {
 		if (userData) {
 			_shouldRegister && (userInserted = await handleUserNostrData(userData, userId))
+		} else if (userId && !userExists && stallData && productsData?.size) {
+			_shouldRegister &&
+				(userInserted = await ofetch('/p', {
+					method: 'POST',
+					body: { userId },
+				}))
+			userInserted && console.log('Null user registered sucesfully', userId)
 		}
 		if (stallData) {
 			if (allowEmptyStall) _shouldRegister && (stallInserted = await handleStallNostrData(stallData))
-			else if (productsData?.size) _shouldRegister && (stallInserted = await handleStallNostrData(stallData))
 		}
 		if (productsData?.size) {
 			if (stallData) {
-				const { coordinates: stallCoordinates } = getEventCoordinates(stallData)
+				const { coordinates: stallCoordinates } = getEventCoordinates(stallData) as EventCoordinates
 				const result = await normalizeProductsFromNostr(productsData, userId, stallCoordinates)
 				if (result?.stallProducts.size) {
+					_shouldRegister && (stallInserted = await handleStallNostrData(stallData))
 					const { stallProducts } = result
 					_shouldRegister && (productsInserted = await handleProductNostrData(stallProducts))
 				}
@@ -289,4 +311,56 @@ export async function setNostrData(
 		console.error(e)
 		return undefined
 	}
+}
+
+export const mergeProducts = async (
+	existingProducts: Partial<DisplayProduct>[],
+	newProductsData: Set<NDKEvent>,
+	userId: string,
+): Promise<Partial<DisplayProduct>[]> => {
+	if (!newProductsData.size) return existingProducts
+
+	try {
+		const newProducts = await normalizeProductsFromNostr(newProductsData, userId)
+		if (!newProducts?.toDisplayProducts.length) return existingProducts
+		const productMap = new Map()
+		const existingLength = existingProducts.length
+		const newLength = newProducts?.toDisplayProducts.length
+
+		for (let i = 0; i < existingLength; i++) {
+			const product = existingProducts[i]
+			if (!product?.identifier) continue
+			productMap.set(product.identifier, product)
+		}
+
+		for (let i = 0; i < newLength; i++) {
+			const product = newProducts.toDisplayProducts[i]
+			productMap.set(product.identifier, product)
+		}
+		return Array.from(productMap.values())
+	} catch (error) {
+		console.error('Error merging products:', error)
+		return existingProducts
+	}
+}
+
+export const getNewProducts = (products: Set<NDKEvent>, stall: StallCheck, existingProducts: Partial<DisplayProduct>[]): Set<NDKEvent> => {
+	const stallIdSuffix = stall.id.split(':')[2]
+	const existingProductIds = new Set(existingProducts.map((p) => p.id?.split(':')[2]))
+	const newProducts = new Set<NDKEvent>()
+
+	for (const product of products) {
+		let parsedContent
+		try {
+			parsedContent = JSON.parse(product.content)
+		} catch {
+			continue
+		}
+
+		if (parsedContent.stall_id === stallIdSuffix && !existingProductIds.has(parsedContent.id)) {
+			newProducts.add(product)
+		}
+	}
+
+	return newProducts
 }

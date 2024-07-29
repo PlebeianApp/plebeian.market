@@ -12,7 +12,7 @@
 	import type { PageData } from './$types'
 
 	export let data: PageData
-	const { appSettings } = data
+	const { appSettings, activeUser } = data
 	let v4v = [0.1]
 	const details = data.menuItems.find((item) => item.value === 'v4v-settings')
 	$: emojiSize = 16 + v4v[0] * 100
@@ -21,7 +21,7 @@
 	$: shouldGlow = v4v[0] > 0.14
 	$: emojiClass = shouldGlow ? 'wiggle-shake-glow' : shouldShake ? 'wiggle-shake' : shouldWiggle ? 'wiggle' : ''
 
-	$: platformQuery = platformV4VForUserQuery('platform')
+	$: platformQuery = platformV4VForUserQuery('platform', activeUser.id)
 
 	onMount(() => {
 		const unsubscribe = platformQuery.subscribe((result) => {

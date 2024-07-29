@@ -22,10 +22,8 @@ export const getShippingMethodById = async (methodId: string): Promise<RichShipp
 		name: shipping.name as string,
 		cost: shipping.cost,
 		isDefault: shipping.isDefault,
-		zones: shipping.shippingZones.map((zone) => ({
-			region: zone.regionCode,
-			country: zone.countryCode,
-		})),
+		regions: shipping.shippingZones.map((zone) => zone.regionCode).filter((region) => region !== null) as string[],
+		countries: shipping.shippingZones.map((zone) => zone.countryCode).filter((country) => country !== null) as string[],
 	}))
 	return shippingInfos
 }

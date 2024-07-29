@@ -120,10 +120,6 @@
 						<Input id="signUpPassword" required class="border-black border-2" name="password" placeholder="Password" type="password" />
 						<Button id="signUpSubmit" type="submit" class="w-full">Generate an account</Button>
 					</form>
-					<p class="w-full text-center">
-						Already have an account?
-						<Tabs.Trigger value="join" class="underline cursor-pointer p-0">Sign in</Tabs.Trigger>
-					</p>
 				</Tabs.Content>
 				<div class=" flex flex-col gap-2 items-center">
 					<Separator />

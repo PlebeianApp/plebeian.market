@@ -1,11 +1,16 @@
+import type { CreateQueryResult } from '@tanstack/svelte-query'
+import type { RichShippingInfo } from '$lib/server/shipping.service'
 import { browser } from '$app/environment'
+import { KindStalls } from '$lib/constants'
 import { createProductQuery } from '$lib/fetch/products.queries'
 import { createShippingMethodQuery } from '$lib/fetch/shipping.queries'
-import { currencyToBtc } from '$lib/utils'
+import { fetchStallData, normalizeStallData } from '$lib/nostrSubs/utils'
+import { checkIfStallExists, currencyToBtc } from '$lib/utils'
 import { toast } from 'svelte-sonner'
 import { derived, get, writable } from 'svelte/store'
 
-// TODO Adapt cart to non registered users
+import type { StallCoordinatesType } from './drawer-ui'
+
 interface Product {
 	id: string
 	name: string
@@ -75,7 +80,7 @@ function findUser(pubkey: string): User {
 	return user
 }
 
-function findStall(user: User, stallId: string, currency: string): Stall {
+function findStall(user: User, stallId: StallCoordinatesType, currency: string): Stall {
 	let stall = user.stalls.find((s) => s.id === stallId)
 	if (!stall) {
 		stall = { id: stallId, products: [], currency, shippingMethodId: null, shippingCost: 0 }
@@ -97,30 +102,40 @@ function cleanupCart(c: Cart): Cart {
 	})
 }
 
-async function updateShippingCost(stall: Stall) {
+async function updateShippingCost(stall: Stall, userId: string) {
 	if (stall.shippingMethodId) {
-		const shippingQuery = createShippingMethodQuery(stall.shippingMethodId)
-		return new Promise<void>((resolve) => {
-			let unsubscribe = () => {}
-			unsubscribe = shippingQuery.subscribe((queryResult) => {
-				if (queryResult.data && queryResult.data.length > 0) {
-					stall.shippingCost = +queryResult.data[0].cost
-					cart.update((c) => c) // Trigger an update to the cart
-				}
-				unsubscribe()
-				resolve()
+		const stallCoordinates = stall.id.split(':').length === 3 ? stall.id : `${KindStalls}:${userId}:${stall.id}`
+		const stallExist = await checkIfStallExists(stallCoordinates)
+		const stallNostrRes = !stallExist ? await fetchStallData(stallCoordinates) : undefined
+		const normalizedStall = stallNostrRes?.stallNostrRes ? await normalizeStallData(stallNostrRes.stallNostrRes) : undefined
+		const shippingQuery = stallExist ? createShippingMethodQuery(stall.shippingMethodId) : normalizedStall?.data?.shipping
+		if (stallExist) {
+			return new Promise<void>((resolve) => {
+				let unsubscribe = () => {}
+				unsubscribe = (shippingQuery as CreateQueryResult<RichShippingInfo[], Error>)?.subscribe((queryResult) => {
+					if (queryResult.data && queryResult.data.length > 0) {
+						stall.shippingCost = +queryResult.data[0].cost
+						cart.update((c) => c)
+					}
+					unsubscribe()
+					resolve()
+				})
 			})
-		})
+		} else {
+			stall.shippingCost = Number((shippingQuery as Partial<RichShippingInfo>[]).filter((s) => s.id === stall.shippingMethodId)[0].cost)
+			cart.update((c) => c)
+		}
 	}
 }
 
 export async function setShippingMethod(stallId: string, shippingMethodId: string) {
 	const currentCart = get(cart)
+	const [_, userId, _stallIdentifier] = stallId.split(':')
 	for (const user of currentCart) {
-		const stall = user.stalls.find((s) => s.id === stallId)
+		const stall = user.stalls.find((s) => s.id.split(':').pop() == _stallIdentifier)
 		if (stall) {
 			stall.shippingMethodId = shippingMethodId
-			await updateShippingCost(stall)
+			await updateShippingCost(stall, userId)
 			cart.set(currentCart)
 			break
 		}
@@ -130,7 +145,7 @@ export async function setShippingMethod(stallId: string, shippingMethodId: strin
 export const getShippingMethod = (stallId: string) => {
 	return derived(cart, ($cart) => {
 		for (const user of $cart) {
-			const stall = user.stalls.find((s) => s.id === stallId)
+			const stall = user.stalls.find((s) => s.id.split(':').pop() === stallId.split(':').pop())
 			if (stall) {
 				return stall.shippingMethodId
 			}
@@ -139,7 +154,7 @@ export const getShippingMethod = (stallId: string) => {
 	})
 }
 
-export function addProduct(userPubkey: string, stallId: string, product: Product, currency: string) {
+export function addProduct(userPubkey: string, stallId: StallCoordinatesType, product: Product, currency: string) {
 	const user = findUser(userPubkey)
 	const stall = findStall(user, stallId, currency)
 	cart.update((c) => {
@@ -307,7 +322,7 @@ export const getTotalAmounts = derived<typeof cart, TotalAmounts>(
 
 					currencyToBtc(stall.currency, productTotal, true)
 						.then((satsAmount) => {
-							totalInSats += satsAmount
+							totalInSats += satsAmount as number
 							pendingConversions--
 							attemptToFinalize()
 						})
@@ -321,7 +336,7 @@ export const getTotalAmounts = derived<typeof cart, TotalAmounts>(
 				pendingConversions++
 				currencyToBtc(stall.currency, stall.shippingCost, true)
 					.then((satsAmount) => {
-						totalShippingCostInSats += satsAmount
+						totalShippingCostInSats += satsAmount as number
 						pendingConversions--
 						attemptToFinalize()
 					})

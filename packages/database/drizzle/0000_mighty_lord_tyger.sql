@@ -35,7 +35,7 @@ CREATE TABLE `auctions` (
 	`identifier` text NOT NULL,
 	`product_name` text NOT NULL,
 	`description` text NOT NULL,
-	`currency` text NOT NULL,
+	`currency` text,
 	`quantity` integer NOT NULL,
 	`extra_cost` numeric DEFAULT '0' NOT NULL,
 	`starting_bid_amount` numeric NOT NULL,
@@ -172,6 +172,15 @@ CREATE TABLE `product_meta` (
 	FOREIGN KEY (`meta_name`) REFERENCES `meta_types`(`name`) ON UPDATE cascade ON DELETE cascade
 );
 --> statement-breakpoint
+CREATE TABLE `product_shipping` (
+	`product_id` text,
+	`shipping_id` text NOT NULL,
+	`extra_cost` numeric NOT NULL,
+	PRIMARY KEY(`product_id`, `shipping_id`),
+	FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON UPDATE cascade ON DELETE cascade,
+	FOREIGN KEY (`shipping_id`) REFERENCES `shipping`(`id`) ON UPDATE no action ON DELETE cascade
+);
+--> statement-breakpoint
 CREATE TABLE `products` (
 	`id` text PRIMARY KEY NOT NULL,
 	`created_at` integer DEFAULT (unixepoch()) NOT NULL,
@@ -181,7 +190,7 @@ CREATE TABLE `products` (
 	`identifier` text NOT NULL,
 	`product_name` text NOT NULL,
 	`description` text NOT NULL,
-	`currency` text NOT NULL,
+	`currency` text,
 	`quantity` integer NOT NULL,
 	`extra_cost` numeric DEFAULT '0' NOT NULL,
 	`product_type` text DEFAULT 'simple' NOT NULL,
@@ -189,7 +198,8 @@ CREATE TABLE `products` (
 	`price` numeric NOT NULL,
 	FOREIGN KEY (`stall_id`) REFERENCES `stalls`(`id`) ON UPDATE cascade ON DELETE cascade,
 	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE cascade ON DELETE cascade,
-	FOREIGN KEY (`parent_id`) REFERENCES `products`(`id`) ON UPDATE cascade ON DELETE cascade
+	FOREIGN KEY (`parent_id`) REFERENCES `products`(`id`) ON UPDATE cascade ON DELETE cascade,
+	FOREIGN KEY (`stall_id`,`currency`) REFERENCES `stalls`(`id`,`currency`) ON UPDATE cascade ON DELETE cascade
 );
 --> statement-breakpoint
 CREATE TABLE `shipping` (
@@ -259,4 +269,5 @@ CREATE TABLE `users` (
 	`last_login` integer
 );
 --> statement-breakpoint
-CREATE UNIQUE INDEX `shipping_zones_shipping_id_region_code_country_code_unique` ON `shipping_zones` (`shipping_id`,`region_code`,`country_code`);
+CREATE UNIQUE INDEX `shipping_zones_shipping_id_region_code_country_code_unique` ON `shipping_zones` (`shipping_id`,`region_code`,`country_code`);--> statement-breakpoint
+CREATE UNIQUE INDEX `stalls_id_currency_unique` ON `stalls` (`id`,`currency`);

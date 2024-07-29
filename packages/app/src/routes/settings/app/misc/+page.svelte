@@ -1,8 +1,8 @@
 <script lang="ts">
 	import type { Selected } from 'bits-ui'
-	import type { ZodError } from 'zod'
 	import { invalidateAll } from '$app/navigation'
 	import { page } from '$app/stores'
+	import { processAppSettings, submitAppSettings } from '$lib/appSettings.js'
 	import { Button } from '$lib/components/ui/button'
 	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte'
 	import * as Command from '$lib/components/ui/command/index.js'
@@ -15,10 +15,8 @@
 	import SelectTrigger from '$lib/components/ui/select/select-trigger.svelte'
 	import Separator from '$lib/components/ui/separator/separator.svelte'
 	import { availabeLogos } from '$lib/constants'
-	import { createRequest } from '$lib/fetch/client'
 	import { copyToClipboard, nav_back } from '$lib/utils'
 	import { npubEncode } from 'nostr-tools/nip19'
-	import { ofetch } from 'ofetch'
 	import { onMount, tick } from 'svelte'
 	import { toast } from 'svelte-sonner'
 
@@ -33,24 +31,44 @@
 	let open = false
 
 	async function handleSubmit(event: SubmitEvent) {
+		event.preventDefault()
 		const formData = new FormData(event.currentTarget as HTMLFormElement)
-		const formObject = Object.fromEntries(formData.entries())
-		formObject.allowRegister = checked.toString()
-		formObject.defaultCurrency = selectedCurrency.value
-		formObject.logoUrl = logoUrl
-		formObject.instancePk = npubEncode(appSettings.instancePk)
-		const filteredFormObject = Object.fromEntries(Object.entries(formObject).filter(([_, value]) => value !== ''))
+		const formObject = Object.fromEntries(formData)
 
 		try {
-			await createRequest('PUT /settings/app/misc', {
-				body: filteredFormObject,
-			})
+			const processedData = processAppSettings(
+				{
+					...formObject,
+					allowRegister: checked,
+					defaultCurrency: selectedCurrency.value,
+					logoUrl: logoUrl || undefined,
+					// Only include instancePk if it exists in the original appSettings
+					...(data.appSettings.instancePk ? { instancePk: data.appSettings.instancePk } : {}),
+				},
+				false,
+			)
+			await submitAppSettings(processedData, false)
 			toast.success('App settings successfully updated!')
 			invalidateAll()
 		} catch (e) {
 			console.error('Failed to submit form', e)
+			if (e instanceof Error && e.message) {
+				try {
+					const errors = JSON.parse(e.message)
+					if (Array.isArray(errors)) {
+						errors.forEach((error) => toast.error(error.message))
+					} else {
+						toast.error(e.message)
+					}
+				} catch {
+					toast.error(e.message)
+				}
+			} else {
+				toast.error('An unknown error occurred')
+			}
 		}
 	}
+
 	function closeAndFocusTrigger(triggerId: string) {
 		open = false
 		tick().then(() => {
@@ -111,6 +129,7 @@
 								name="instanceName"
 								placeholder="instance name"
 								type="text"
+								required
 							/>
 						</div>
 

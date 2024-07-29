@@ -1,4 +1,5 @@
 import type { NostrEvent } from '@nostr-dev-kit/ndk'
+import type { EventCoordinates } from '$lib/interfaces'
 import type { StallsFilter } from '$lib/schema'
 import type { DisplayStall } from '$lib/server/stalls.service'
 import { error } from '@sveltejs/kit'
@@ -21,7 +22,7 @@ declare module './client' {
 export const createStallFromNostrEvent = createMutation(
 	{
 		mutationFn: async (stallEvent: NostrEvent) => {
-			const { coordinates } = getEventCoordinates(stallEvent)
+			const { coordinates } = getEventCoordinates(stallEvent) as EventCoordinates
 			try {
 				const response = await createRequest(`POST /api/v1/stalls/${coordinates}`, {
 					body: stallEvent,
@@ -70,7 +71,7 @@ export const updateStallFromNostrEvent = createMutation(
 			if (data) {
 				console.log('Stall inserted in db successfully', data)
 				await queryClient.invalidateQueries({
-					queryKey: ['stalls', ...Object.values(stallsFilterSchema.safeParse({ userId: data.userId }).data as Partial<StallsFilter>)],
+					queryKey: ['stalls', data.userId],
 				})
 				await queryClient.invalidateQueries({ queryKey: ['shipping', data.id] })
 			}

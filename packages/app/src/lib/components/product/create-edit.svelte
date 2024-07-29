@@ -3,7 +3,8 @@
 	import type { DisplayProduct } from '$lib/server/products.service'
 	import type { RichShippingInfo } from '$lib/server/shipping.service'
 	import type { RichStall } from '$lib/server/stalls.service'
-	import type { StallIdType } from '$lib/stores/drawer-ui'
+	import type { StallCoordinatesType } from '$lib/stores/drawer-ui'
+	import { ShippingMethod } from '$lib/classes/shipping'
 	import Button from '$lib/components/ui/button/button.svelte'
 	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte'
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js'
@@ -27,11 +28,15 @@
 	import Separator from '../ui/separator/separator.svelte'
 	import MultiImageEdit from './multi-image-edit.svelte'
 
-	export let product: DisplayProduct | null = null
-	export let forStall: StallIdType | null = null
+	export let product: Partial<DisplayProduct> | null = null
+	export let forStall: StallCoordinatesType | null = null
+	// TODO Categories are beign inserted in the db but they are not beign loaded when tring to edit/update a product
 
-	let stalls: RichStall[] | null
+	let stalls: RichStall[] | null = null
 	let stall: RichStall | null = null
+	let categories: Category[] = []
+	let images: Partial<ProductImage>[] = []
+	let shippingMethods: ShippingMethod[] = []
 
 	$: userExistQuery = createUserExistsQuery($ndkStore.activeUser?.pubkey as string)
 
@@ -51,43 +56,31 @@
 	$: {
 		currentShippings ??=
 			stall?.shipping
-				.filter((s) => product?.shipping.some((sh) => sh.shippingId === s.id))
-				.map((s) => ({ shipping: s, extraCost: product?.shipping.find((sh) => sh.shippingId === s.id)?.cost ?? '' })) ?? null
+				.filter((s) => product?.shipping?.some((sh) => sh.shippingId === s.id))
+				.map((s) => ({ shipping: s, extraCost: product?.shipping?.find((sh) => sh.shippingId === s.id)?.cost ?? '' })) ?? null
 	}
 
-	let currentStallId = forStall ?? product?.stallId
+	$: currentStallIdentifier = forStall?.split(':')[2] || product?.stallId || (stalls && stalls[0]?.identifier)
 
 	$: {
 		if (stalls?.length) {
-			if (currentStallId) {
-				;[stall] = stalls.filter((pStall) => pStall.identifier === currentStallId)
+			if (currentStallIdentifier) {
+				;[stall] = stalls.filter((pStall) => pStall.identifier === currentStallIdentifier)
 			} else {
 				stall = stalls[0]
 			}
 		}
 	}
 
-	const activeTab =
-		'w-full font-bold border-b-2 border-black text-black data-[state=active]:border-b-primary data-[state=active]:text-primary'
+	$: updateProductImages(product)
 
-	let categories: Category[] = []
-	let images: Partial<ProductImage>[] = product?.images ?? []
-
-	function updateProductImages(updatedProduct: DisplayProduct | null) {
+	function updateProductImages(updatedProduct: Partial<DisplayProduct> | null) {
 		if (updatedProduct) {
 			images = updatedProduct.images ?? []
 		}
 	}
 
 	$: updateProductImages(product)
-
-	async function addCategory() {
-		const key = createId()
-		categories = [...categories, { key, name: `category ${categories.length + 1}`, checked: true }]
-		await tick()
-		const el = document.querySelector(`span[data-category-key="${key}"]`) as HTMLSpanElement
-		el.focus()
-	}
 
 	function handleNewImageAdded(e: CustomEvent) {
 		images = [
@@ -102,67 +95,75 @@
 		images = images.filter((image) => image.imageUrl !== e.detail)
 	}
 
-	onMount(async () => {
-		if ($userExistQuery.isFetched && !$userExistQuery.data) {
-			isLoading = true
-			const { stallNostrRes } = await fetchUserStallsData($ndkStore.activeUser?.pubkey as string)
-			if (stallNostrRes) {
-				const normalizedStallData = await Promise.all([...stallNostrRes].map(normalizeStallData)).then((results) =>
-					results.filter((result) => result.data !== null).map((result) => result.data),
+	function addCategory() {
+		const key = createId()
+		categories = [...categories, { key, name: `category ${categories.length + 1}`, checked: true }]
+	}
+
+	async function handleSubmit(sEvent: SubmitEvent, stall: RichStall | null) {
+		if (!stall) return
+		try {
+			const mutationFn = product ? $editProductMutation : $createProductMutation
+			await mutationFn.mutateAsync([
+				sEvent,
+				product ?? stall,
+				images.map((image) => image.imageUrl!),
+				shippingMethods.map((s) => ({
+					id: s.id,
+					name: s.name ?? '',
+					cost: s.cost ?? '',
+					regions: s.regions ?? [],
+					countries: s.countries ?? [],
+				})),
+				categories,
+			])
+
+			toast.success(`Product ${product ? 'updated' : 'created'}!`)
+			queryClient.invalidateQueries({ queryKey: ['products', $ndkStore.activeUser?.pubkey] })
+		} catch (error) {
+			toast.error(`Failed to ${product ? 'update' : 'create'} product: ${error}`)
+		}
+	}
+
+	const fetchData = async () => {
+		$userExistQuery.data == false && (isLoading = true)
+		const { stallNostrRes } = await fetchUserStallsData($ndkStore.activeUser?.pubkey as string)
+		if (stallNostrRes) {
+			const normalizedStallData = await Promise.all([...stallNostrRes].map(normalizeStallData)).then((results) =>
+				results.filter((result) => result.data !== null).map((result) => result.data),
+			)
+			if (stalls?.length) {
+				const newStalls = normalizedStallData.filter(
+					(stall) => !stalls?.some((existingStall) => stall?.identifier === existingStall.identifier),
 				)
-
-				if (stalls?.length) {
-					const newStalls = normalizedStallData.filter((stall) => !stalls?.some((existingStall) => stall.id === existingStall.id))
-					stalls = [...stalls, ...newStalls] as RichStall[]
-				} else {
-					stalls = normalizedStallData as RichStall[]
-				}
-			}
-			isLoading = false
-		}
-	})
-
-	const submit = async (sEvent: SubmitEvent, stall: RichStall | null) => {
-		if (stall == null) return
-		if (!product) {
-			try {
-				await $createProductMutation.mutateAsync([
-					sEvent,
-					stall,
-					images.map((image) => image.imageUrl!),
-					currentShippings?.map(({ shipping, extraCost }) => ({ id: shipping!.id!, cost: extraCost })) ?? [],
-					categories,
-				])
-
-				toast.success('Product created!')
-			} catch (e) {
-				toast.error(`Failed to create product: ${e}`)
-			}
-		} else {
-			try {
-				await $editProductMutation.mutateAsync([
-					sEvent,
-					product,
-					images.map((image) => image.imageUrl!),
-					currentShippings?.map(({ shipping, extraCost }) => ({ id: shipping!.id!, cost: extraCost })) ?? [],
-					categories,
-				])
-				toast.success('Product updated!')
-			} catch (e) {
-				toast.error(`Failed to update product: ${e}`)
+				stalls = [...stalls, ...newStalls] as RichStall[]
+			} else {
+				stalls = normalizedStallData as RichStall[]
 			}
 		}
+		isLoading = false
+	}
 
-		queryClient.invalidateQueries({ queryKey: ['products', $ndkStore.activeUser?.pubkey] })
+	$: if ($userExistQuery.isFetched) {
+		fetchData()
+	}
+
+	const activeTab =
+		'w-full font-bold border-b-2 border-black text-black data-[state=active]:border-b-primary data-[state=active]:text-primary'
+
+	function closeAndFocusTrigger(triggerId: string) {
+		tick().then(() => {
+			document.getElementById(triggerId)?.focus()
+		})
 	}
 </script>
 
 {#if isLoading}
 	<Spinner />
 {:else if !stalls?.length}
-	<div>Creating products needs at least one defined <a class="underline" href="/settings/account/products">stall</a></div>
+	<div>Creating products needs at least one defined <a class="underline" href="/settings/account/stalls">stall</a></div>
 {:else}
-	<form on:submit|preventDefault={(sEvent) => submit(sEvent, stall)} class="flex flex-col gap-4 grow h-full">
+	<form on:submit|preventDefault={(sEvent) => handleSubmit(sEvent, stall)} class="flex flex-col gap-4 grow h-full">
 		<Tabs.Root value="basic" class="p-4">
 			<Tabs.List class="w-full justify-around bg-transparent">
 				<Tabs.Trigger value="basic" class={activeTab}>Basic</Tabs.Trigger>
@@ -204,16 +205,8 @@
 					</div>
 
 					<div class="grid w-full items-center gap-1.5">
-						<Label for="quantity" class="font-bold">Quantity</Label>
-						<Input
-							value={product?.quantity ?? ''}
-							required
-							class="border-2 border-black"
-							type="number"
-							name="quantity"
-							placeholder="10"
-							min={1}
-						/>
+						<Label title="quantity" for="quantity" class="font-bold">Quantity</Label>
+						<Input value={product?.quantity ?? ''} required class="border-2 border-black" type="number" name="quantity" placeholder="10" />
 					</div>
 				</div>
 
@@ -223,8 +216,8 @@
 						<DropdownMenu.Root>
 							<DropdownMenu.Trigger asChild let:builder>
 								<Button variant="outline" class="border-2 border-black" builders={[builder]}>
-									{#if currentStallId}
-										{@const defaultStall = stalls.find((stall) => stall.identifier === currentStallId)}
+									{#if currentStallIdentifier}
+										{@const defaultStall = stalls.find((stall) => stall.identifier === currentStallIdentifier)}
 										{defaultStall ? defaultStall.name : 'Select a stall'}
 									{:else}
 										{stall?.name}
@@ -237,9 +230,9 @@
 								<section class=" max-h-[350px] overflow-y-auto">
 									{#each stalls as item}
 										<DropdownMenu.CheckboxItem
-											checked={currentStallId === item.id}
+											checked={currentStallIdentifier === item.identifier}
 											on:click={() => {
-												currentStallId = item.id
+												currentStallIdentifier = item.identifier
 											}}
 										>
 											{item.name}

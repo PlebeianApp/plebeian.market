@@ -4,6 +4,7 @@
 
 	import { Button } from '../ui/button'
 
+	// TODO improve store reactivity, sometimes take time to react
 	$: ({ totalAmountItems } = $getTotalAmounts)
 
 	initializeCart()

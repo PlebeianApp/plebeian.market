@@ -16,13 +16,14 @@
 		fetchStallData,
 		fetchUserData,
 		fetchUserProductData,
+		getNewProducts,
 		normalizeProductsFromNostr,
 		normalizeStallData,
 		setNostrData,
 	} from '$lib/nostrSubs/utils'
 	import { openDrawerForStall } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
-	import { getEventCoordinates, stringToHexColor, truncateString, truncateText } from '$lib/utils'
+	import { stringToHexColor, truncateString, truncateText } from '$lib/utils'
 	import { onMount } from 'svelte'
 
 	import type { PageData } from './$types'
@@ -50,7 +51,6 @@
 			: undefined
 
 	$: userProfileQuery = user.exist ? createUserByIdQuery(user.id as string) : undefined
-
 	$: {
 		if ($userProfileQuery?.data) {
 			userProfile = $userProfileQuery?.data
@@ -64,7 +64,7 @@
 	}
 
 	$: if ($productsQuery?.data) toDisplayProducts = $productsQuery?.data
-
+	// TODO handle null profiles
 	onMount(async () => {
 		if (user.id) {
 			if (!stall.exist) {
@@ -76,11 +76,14 @@
 						stallResponse = normalizedStall
 					}
 				}
+
 				const { userProfile: userData } = await fetchUserData(user.id as string)
 				if (userData) {
 					userProfile = userData
 					stallResponse.userName = userData?.name || userData?.displayName
 					stallResponse.userNip05 = userData?.nip05
+				} else {
+					userProfile = { id: user.id }
 				}
 
 				const { products: productsData } = await fetchUserProductData(user.id)
@@ -94,21 +97,13 @@
 
 				await setNostrData(stallData, user.exist ? null : userData, productsData, appSettings.allowRegister, user.id, user.exist, false)
 			} else {
-				fetchUserProductData(user.id as string).then((data) => {
-					const { products } = data
-					const newProducts = new Set(
-						[...(products as Set<NDKEvent>)].filter((product) => {
-							const stallId = JSON.parse(product.content).stall_id
-							if (stallId == stall.id.split(':')[2]) {
-								const productId = getEventCoordinates(product).coordinates
-								return !toDisplayProducts.some((displayProduct) => displayProduct.id?.includes(productId))
-							}
-						}),
-					)
+				const { products: productsData } = await fetchUserProductData(user.id)
+				if (productsData?.size) {
+					const newProducts = getNewProducts(productsData, stall, toDisplayProducts)
 					setNostrData(null, null, newProducts, appSettings.allowRegister, user.id as string, user.exist).then((data) => {
 						data?.productsInserted && $productsQuery?.refetch()
 					})
-				})
+				}
 			}
 		}
 	})
@@ -137,7 +132,7 @@
 					/>
 				{/if}
 				{#if stallResponse.name}
-					<h1 class="text-3xl">{stallResponse.name}</h1>
+					<h1 class="text-3xl">{truncateText(stallResponse.name, 50)}</h1>
 				{/if}
 
 				{#if stallResponse.description}
@@ -158,7 +153,7 @@
 			</div>
 			<div class="flex flex-row gap-12">
 				<section class="w-fit">
-					{#if userProfile}
+					{#if userProfile?.name || userProfile?.displayName}
 						<a href={`/p/${userProfile?.nip05 ? userProfile?.nip05 : user.id}`} class="flex flex-col items-center">
 							<Avatar>
 								<AvatarImage src={userProfile?.image} alt="@shadcn" />
@@ -167,7 +162,16 @@
 									><span class="i-tdesign-user-1 w-8 h-8" /></AvatarFallback
 								>
 							</Avatar>
-							<span>{userProfile?.name ? userProfile?.name : userProfile?.displayName}</span>
+							<span>{truncateText(String(userProfile?.name || userProfile?.displayName), 15)}</span>
+						</a>
+					{:else if userProfile?.id}
+						<a href={`/p/${userProfile.id}`} class="flex flex-col items-center">
+							<Avatar>
+								<AvatarFallback style={`background-color: #${String(userProfile.id).substring(0, 6)}`}
+									><span class="i-tdesign-user-1 w-8 h-8" /></AvatarFallback
+								>
+							</Avatar>
+							<span>Unnamed user</span>
 						</a>
 					{:else}
 						<Skeleton class="h-24 w-24 rounded-full" />
@@ -211,7 +215,7 @@
 			</div>
 
 			{#if isMyStall}
-				<Button class="mt-4" on:click={() => openDrawerForStall(stall.id)}>Edit stall</Button>
+				<Button class="mt-4 w-fit" on:click={() => openDrawerForStall(stall.id)}>Edit stall</Button>
 			{/if}
 		{:else}
 			<section class=" flex flex-col gap-2">

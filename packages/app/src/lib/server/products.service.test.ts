@@ -101,7 +101,7 @@ describe('products service', () => {
 			type: 'simple',
 			description: 'Hello Description',
 			images: ['http://example.com/image1.jpg', 'http://example.com/image2.jpg'],
-			currency: 'USD',
+			currency: stall.currency,
 			price: 133,
 			quantity: 6,
 			specs: [
@@ -121,7 +121,7 @@ describe('products service', () => {
 		expect(product).toEqual({
 			id: expect.any(String),
 			createdAt: expect.any(String),
-			currency: 'USD',
+			currency: stall.currency,
 			description: 'Hello Description',
 			stallId: stall.id.split(':')[2],
 			identifier: identifier,

@@ -2,11 +2,14 @@ import { error, json } from '@sveltejs/kit'
 import { authorizeUserless } from '$lib/auth'
 import { KindProducts } from '$lib/constants'
 import { verifyAndPersistRawEvent } from '$lib/server/nostrEvents.service'
-import { deleteProduct, getProductById, updateProduct } from '$lib/server/products.service'
+import { deleteProduct, getProductById, productExists, updateProduct } from '$lib/server/products.service'
 
 import type { RequestHandler } from './$types'
 
-export const GET: RequestHandler = async ({ params }) => {
+export const GET: RequestHandler = async ({ params, url: { searchParams } }) => {
+	if (searchParams.has('exists')) {
+		return json(await productExists(params.productId))
+	}
 	return json(await getProductById(params.productId))
 }
 

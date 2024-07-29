@@ -14,7 +14,7 @@ import { FetchError } from 'ofetch'
 import { get } from 'svelte/store'
 
 import { userEventSchema } from '../schema/nostr-events'
-import { createRequest } from './fetch/client'
+import { createRequest, queryClient } from './fetch/client'
 
 function unNullify<T extends object>(obj: T): T {
 	return Object.fromEntries(Object.entries(obj).filter(([_, v]) => v != null)) as unknown as T
@@ -158,10 +158,14 @@ export async function loginDb(user: NDKUser) {
 			if (e.status === 404) {
 				console.log('creating user')
 				const body: { id: string } & NDKUserProfile = userEventSchema.parse(unNullify({ id: user.pubkey, ...user.profile }))
-				await createRequest('POST /api/v1/users/', {
+				const res = await createRequest('POST /api/v1/users/', {
 					auth: true,
 					body: body,
 				})
+				if (res) {
+					await invalidateAll()
+					queryClient.setQueryData(['users', 'exists', body.id], true)
+				}
 			}
 		}
 	}

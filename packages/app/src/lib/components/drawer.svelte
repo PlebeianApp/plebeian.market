@@ -1,5 +1,4 @@
 <script lang="ts">
-	import type { CreateQueryResult } from '@tanstack/svelte-query'
 	import type { DisplayProduct } from '$lib/server/products.service'
 	import type { RichStall } from '$lib/server/stalls.service'
 	import CreateEditProduct from '$lib/components/product/create-edit.svelte'
@@ -14,56 +13,51 @@
 	import { closeDrawer, drawerUI } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
 	import { checkIfUserExists } from '$lib/utils'
+	import { toast } from 'svelte-sonner'
 
 	import Spinner from './assets/spinner.svelte'
 	import ShoppingCart from './cart/shopping-cart.svelte'
 	import { Button } from './ui/button'
 
-	let isOpen: boolean = false
-
 	let productQuery: ReturnType<typeof createProductQuery> | undefined
 	let stallQuery: ReturnType<typeof createStallQuery> | undefined
-	$: isLoading = ($stallQuery?.isLoading || $productQuery?.isLoading) ?? false
-
+	let currentProduct: Partial<DisplayProduct> | null = null
+	let currentStall: Partial<RichStall> | null = null
 	let userExist: boolean | undefined = undefined
 
 	$: isOpen = $drawerUI.drawerType !== null
+	$: isLoading = ($stallQuery?.isLoading || $productQuery?.isLoading) ?? false
+	$: if ($drawerUI.drawerType && $drawerUI.id) {
+		initializeData()
+	}
 
-	let currentProduct: Partial<DisplayProduct> | null = null
-	let currentStall: Partial<RichStall> | null = null
+	$: if ($productQuery?.data) currentProduct = $productQuery.data
+	$: if ($stallQuery?.data) currentStall = $stallQuery.data
 
-	$: if ($drawerUI.drawerType === 'product') {
-		check()
-		if ($drawerUI.id) {
-			productQuery = userExist !== undefined && userExist ? createProductQuery($drawerUI.id) : undefined
-		}
-	} else if ($drawerUI.drawerType === 'stall') {
-		check()
-		if ($drawerUI.id) {
-			stallQuery = userExist !== undefined && userExist ? createStallQuery($drawerUI.id) : undefined
+	async function initializeData() {
+		userExist = await checkIfUserExists($ndkStore.activeUser?.pubkey)
+		if (userExist) {
+			if ($drawerUI.drawerType === 'product') {
+				productQuery = createProductQuery($drawerUI.id!)
+			} else if ($drawerUI.drawerType === 'stall') {
+				stallQuery = createStallQuery($drawerUI.id!)
+			}
+		} else {
+			await fetchDataFromNostr()
 		}
 	}
 
-	$: $productQuery?.data && (currentProduct = $productQuery.data)
-	$: $stallQuery?.data && (currentStall = $stallQuery.data)
-
-	const check = async () => {
-		userExist = await checkIfUserExists($ndkStore.activeUser?.pubkey)
-		if (!userExist && $drawerUI.drawerType === 'product') {
-			isLoading = true
+	async function fetchDataFromNostr() {
+		isLoading = true
+		if ($drawerUI.drawerType === 'product') {
 			const { nostrProduct: productsData } = await fetchProductData($drawerUI.id as string)
-			if (!productsData?.size) return
-			if (productsData) {
+			if (productsData?.size) {
 				const result = await normalizeProductsFromNostr(productsData, $ndkStore.activeUser?.pubkey as string)
 				if (result) {
-					const { toDisplayProducts: _toDisplay } = result
-					currentProduct = _toDisplay[0]
+					currentProduct = result.toDisplayProducts[0]
 				}
 			}
-			isLoading = false
-		}
-		if (!userExist && $drawerUI.drawerType === 'stall') {
-			isLoading = true
+		} else if ($drawerUI.drawerType === 'stall') {
 			const { stallNostrRes: stallData } = await fetchStallData($drawerUI.id as string)
 			if (stallData) {
 				const result = (await normalizeStallData(stallData)).data
@@ -71,23 +65,20 @@
 					currentStall = result
 				}
 			}
-			isLoading = false
 		}
+		isLoading = false
 	}
 
-	const handleSuccess = () => {
+	function handleSuccess() {
 		closeDrawer()
 	}
 
-	const handleDeleteStall = async () => {
-		if (!currentStall?.id) return
-		await $deleteStallMutation.mutateAsync(currentStall.id)
-		closeDrawer()
-	}
-
-	const handleDeleteProduct = async () => {
-		if (!currentProduct?.id) return
-		await $deleteProductMutation.mutateAsync(currentProduct.id)
+	async function handleDelete() {
+		if ($drawerUI.drawerType === 'stall' && currentStall?.id) {
+			await $deleteStallMutation.mutateAsync(currentStall.id)
+		} else if ($drawerUI.drawerType === 'product' && currentProduct?.id) {
+			await $deleteProductMutation.mutateAsync(currentProduct.id)
+		}
 		closeDrawer()
 	}
 </script>
@@ -99,48 +90,32 @@
 		{:else}
 			<ScrollArea class="h-auto">
 				<Sheet.Title class="flex flex-row justify-start items-center content-center ">
-					<Button size="icon" variant="outline" class=" border-none" on:click={closeDrawer}>
+					<Button size="icon" variant="outline" class="border-none" on:click={closeDrawer}>
 						<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
 					</Button>
 					{#if $drawerUI.drawerType === 'cart'}
 						Your cart
-					{:else if $drawerUI.drawerType === 'product'}
-						{#if $drawerUI.id}<span>Edit product</span><Button
-								on:click={handleDeleteProduct}
-								size="icon"
-								variant="ghost"
-								class=" text-destructive border-0"><span class="i-tdesign-delete-1 w-4 h-4"></span></Button
-							>
-						{:else}
-							<span>Create new product</span>
-						{/if}
-					{:else if $drawerUI.drawerType === 'stall'}
-						{#if $drawerUI.id}<span>Edit stall</span><Button
-								on:click={handleDeleteStall}
-								size="icon"
-								variant="ghost"
-								class=" text-destructive border-0"
-								><span class="i-tdesign-delete-1 w-4 h-4"></span>
+					{:else if $drawerUI.drawerType === 'product' || $drawerUI.drawerType === 'stall'}
+						{#if $drawerUI.id}
+							<span>Edit {$drawerUI.drawerType}</span>
+							<Button on:click={handleDelete} size="icon" variant="ghost" class="text-destructive border-0">
+								<span class="i-tdesign-delete-1 w-4 h-4" />
 							</Button>
 						{:else}
-							<span>Create new stall</span>
+							<span>Create new {$drawerUI.drawerType}</span>
 						{/if}
 					{/if}
 				</Sheet.Title>
 				{#if $drawerUI.drawerType === 'cart'}
 					<ShoppingCart />
 				{:else if $drawerUI.drawerType === 'product'}
-					{#if currentProduct}
+					{#key currentProduct}
 						<CreateEditProduct product={currentProduct} on:success={handleSuccess} forStall={$drawerUI.forStall} />
-					{:else}
-						<CreateEditProduct product={null} on:success={handleSuccess} />
-					{/if}
+					{/key}
 				{:else if $drawerUI.drawerType === 'stall'}
-					{#if currentStall}
-						<CreateEditStall stall={currentStall} on:success={handleSuccess} />
-					{:else}
-						<CreateEditStall stall={null} on:success={handleSuccess} />
-					{/if}
+					{#key currentStall}
+						<CreateEditStall stall={currentStall} on:success={handleSuccess} on:error={(e) => toast.error(`${e}`)} />
+					{/key}
 				{/if}
 			</ScrollArea>
 		{/if}
