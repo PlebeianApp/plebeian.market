@@ -236,7 +236,6 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 				if (parsedProduct.shipping?.length) {
 					const validShipping = parsedProduct.shipping.filter((s) => s.id && s.id.trim() !== '')
 					if (validShipping.length) {
-						console.log('Inserting product shipping')
 						await db
 							.insert(productShipping)
 							.values(
@@ -247,7 +246,6 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 								})),
 							)
 							.execute()
-						console.log('Product shipping inserted successfully')
 					} else {
 						console.log('No valid shipping entries to insert')
 					}

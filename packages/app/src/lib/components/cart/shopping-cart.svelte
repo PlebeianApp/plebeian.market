@@ -21,6 +21,7 @@
 
 	$: ({ totalAmountItems, totalInSats, totalShippingCost } = $getTotalAmounts)
 	// TODO improve stores reactivity
+	// FIXME unregistered users stills not working as expected(in prod), when you add a product for first time to your cart it says product not found, then if you open it again it appears
 	const handleIncrement = (productId: string) => {
 		incrementProduct(productId)
 	}

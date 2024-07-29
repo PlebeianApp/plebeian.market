@@ -12,7 +12,7 @@ import { createStallFromNostrEvent } from '$lib/fetch/stalls.mutations'
 import { userFromNostr } from '$lib/fetch/users.mutations'
 import ndkStore from '$lib/stores/ndk'
 import { addCachedEvent, getCachedEvent, updateCachedEvent } from '$lib/stores/session'
-import { checkIfStallExists, getEventCoordinates, shouldRegister } from '$lib/utils'
+import { getEventCoordinates, shouldRegister } from '$lib/utils'
 import { format } from 'date-fns'
 import { ofetch } from 'ofetch'
 import { get } from 'svelte/store'
@@ -107,6 +107,13 @@ export async function fetchProductData(
 	const productsNostrRes = await $ndkStore.fetchEvents(productsFilter, {
 		cacheUsage: subCacheUsage ?? NDKSubscriptionCacheUsage.ONLY_RELAY,
 	})
+	if (subCacheUsage == NDKSubscriptionCacheUsage.ONLY_CACHE && !productsNostrRes) {
+		return {
+			nostrProduct: await $ndkStore.fetchEvents(productsFilter, {
+				cacheUsage: NDKSubscriptionCacheUsage.PARALLEL,
+			}),
+		}
+	}
 	return { nostrProduct: productsNostrRes }
 }
 

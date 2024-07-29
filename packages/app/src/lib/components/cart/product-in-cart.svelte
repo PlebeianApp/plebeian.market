@@ -52,7 +52,6 @@
 
 	onMount(async () => {
 		productExist = await checkIfProductExists(productId)
-
 		if (!productExist) {
 			const { nostrProduct } = await fetchProductData(productId, NDKSubscriptionCacheUsage.ONLY_CACHE)
 			if (nostrProduct) {
@@ -65,6 +64,8 @@
 		}
 	})
 </script>
+
+// product in cart
 
 <div>
 	{#if isLoading}

@@ -59,12 +59,12 @@ export const initialSetupDataSchema = z.object({
 	instanceSk: z.string().startsWith('ncryptsec'),
 	ownerPk: z.string().startsWith('npub').optional(),
 	adminsList: z.array(z.string().startsWith('npub')).optional(),
-	instanceName: z.string(),
+	instanceName: z.string().max(24),
 	logoUrl: z.union([z.string().url(), z.enum(validUrls), z.null()]).optional(),
 	contactEmail: z.union([z.string().email(), z.null()]).optional(),
 	defaultCurrency: z.string(),
-	allowRegister: z.boolean(),
-	isFirstTimeRunning: z.boolean().optional(),
+	allowRegister: z.coerce.boolean(),
+	isFirstTimeRunning: z.coerce.boolean().optional(),
 })
 
 export const postProductImageSchema = z.object({

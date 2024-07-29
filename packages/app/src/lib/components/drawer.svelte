@@ -84,11 +84,11 @@
 </script>
 
 <Sheet.Root bind:open={isOpen} onOutsideClick={closeDrawer}>
-	<Sheet.Content side="right" class="min-w-[30vw] flex flex-col border-l-black border-2 p-2">
-		{#if isLoading}
-			<Spinner />
-		{:else}
-			<ScrollArea class="h-auto">
+	<ScrollArea class="h-auto">
+		<Sheet.Content side="right" class="min-w-[30vw] flex flex-col border-l-black border-2 p-2">
+			{#if isLoading}
+				<Spinner />
+			{:else}
 				<Sheet.Title class="flex flex-row justify-start items-center content-center ">
 					<Button size="icon" variant="outline" class="border-none" on:click={closeDrawer}>
 						<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
@@ -117,7 +117,7 @@
 						<CreateEditStall stall={currentStall} on:success={handleSuccess} on:error={(e) => toast.error(`${e}`)} />
 					{/key}
 				{/if}
-			</ScrollArea>
-		{/if}
-	</Sheet.Content>
+			{/if}
+		</Sheet.Content>
+	</ScrollArea>
 </Sheet.Root>
