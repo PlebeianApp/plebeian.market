@@ -1,3 +1,7 @@
+## Step by step high level checkout experience flow
+
+> Prototype: [figma](https://www.figma.com/design/qddIrt9LUqwr3HVPJvL19K/Untitled?node-id=0-1&t=ZoOKfLxJ5y36dzBE-1)
+
 **Step 1: Cart Summary**  
   
 * A user fills their cart with products from multiple merchants.  
