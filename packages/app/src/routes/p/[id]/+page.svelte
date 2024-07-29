@@ -66,7 +66,7 @@
 			if (!exist) {
 				const { userProfile: userData } = await fetchUserData(id)
 				if (userData) userProfile = userData
-
+				// FIXME products from stalls with forbidden words are beign displayed
 				const { products: productsData } = await fetchUserProductData(id)
 				if (productsData?.size) {
 					toDisplayProducts = await mergeProducts(toDisplayProducts, productsData, id)

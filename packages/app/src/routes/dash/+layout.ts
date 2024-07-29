@@ -15,10 +15,10 @@ export const load = async () => {
 			title: '🛍️ Orders',
 			description: 'View and manage your orders',
 			value: 'orders',
-			root: '/dash/orders',
+			root: '/dash/order',
 			links: [
-				{ title: '💰 Sales', href: '/dash/orders/sales', description: 'Manage your sales' },
-				{ title: '🛍️ Purchases', href: '/dash/orders/purchases', description: 'View your purchases' },
+				{ title: '💰 Sales', href: '/dash/order/sales', description: 'Manage your sales' },
+				{ title: '🛍️ Purchases', href: '/dash/order/purchases', description: 'View your purchases' },
 			],
 		},
 		// {

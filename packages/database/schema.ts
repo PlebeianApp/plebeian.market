@@ -386,9 +386,7 @@ export const orders = sqliteTable('orders', {
 	sellerUserId: text('seller_user_id')
 		.notNull()
 		.references(() => users.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
-	buyerUserId: text('buyer_user_id')
-		.notNull()
-		.references(() => users.id),
+	buyerUserId: text('buyer_user_id').notNull(), // This can be encrypted with the seller's key in case buyer its paranoid
 	status: text('status', { enum: Object.values(ORDER_STATUS) as NonEmptyArray<OrderStatus> })
 		.notNull()
 		.default('pending'),
