@@ -3,7 +3,8 @@
 	import { NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
 	import { fetchUserData } from '$lib/nostrSubs/utils'
-	import { checkIfUserExists } from '$lib/utils'
+	import { checkIfUserExists, truncateString } from '$lib/utils'
+	import { npubEncode } from 'nostr-tools/nip19'
 	import { onMount } from 'svelte'
 
 	import AvatarFallback from '../ui/avatar/avatar-fallback.svelte'
@@ -50,7 +51,9 @@
 				{:else}
 					<span class=" i-tdesign-user w-6 h-6" />
 				{/if}
-				<span class=" font-bold">{userProfile.name}</span>
+				{#if userProfile.name || userProfile.displayName || userProfile.id}
+					<span class=" font-bold">{truncateString(userProfile.name || userProfile.displayName || npubEncode(userProfile.id))}</span>
+				{/if}
 			</div>
 		</a>
 	{/if}

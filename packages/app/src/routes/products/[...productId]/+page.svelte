@@ -13,7 +13,7 @@
 	import { createStallExistsQuery } from '$lib/fetch/stalls.queries'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
 	import { fetchProductData, fetchStallData, fetchUserData, normalizeProductsFromNostr, setNostrData } from '$lib/nostrSubs/utils'
-	import { addProduct } from '$lib/stores/cart'
+	import { handleAddToCart } from '$lib/stores/cart'
 	import { openDrawerForProduct } from '$lib/stores/drawer-ui'
 	import { cn, resolveQuery, stringToHexColor, truncateText } from '$lib/utils'
 	import { onMount } from 'svelte'
@@ -195,18 +195,8 @@
 					<Button
 						class="ml-2"
 						on:click={() =>
-							addProduct(
-								toDisplayProducts[0].userId,
-								toDisplayProducts[0].stallId,
-								{
-									id: toDisplayProducts[0].id,
-									name: toDisplayProducts[0].name,
-									amount: qtyToCart,
-									price: toDisplayProducts[0].price,
-									stockQuantity: toDisplayProducts[0].quantity,
-								},
-								toDisplayProducts[0].currency,
-							)}>Add to cart</Button
+							handleAddToCart(String(toDisplayProducts[0].userId), String(toDisplayProducts[0].stallId), toDisplayProducts[0])}
+						>Add to cart</Button
 					>
 				</div>
 				<span class="my-8 font-bold"
