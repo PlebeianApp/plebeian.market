@@ -13,9 +13,6 @@ describe('stalls', async () => {
 	beforeAll(async () => {
 		browser = await chromium.launch(opts)
 		page = await browser.newPage()
-		await page.evaluate(() => {
-			document.body.classList.add('test-no-animations')
-		})
 	})
 
 	afterAll(async () => {
@@ -53,8 +50,8 @@ describe('stalls', async () => {
 
 		await page.click('text=Stalls')
 		await page.click('text=New')
-		await page.fill('input[name="title"]', 'Test Stall')
-		await page.fill('textarea[name="description"]', 'This is a test stall description')
+		await page.fill('input[name="title"]', 'My super Stall')
+		await page.fill('textarea[name="description"]', 'This is a super stall description')
 
 		// Select currency
 		await page.click('button:has-text("BTC")')
@@ -62,20 +59,20 @@ describe('stalls', async () => {
 
 		// Add shipping method
 		await page.click('button:has-text("Add Shipping Method")')
-		await page.fill('input[name="shipping"]', 'Standard Shipping')
-		await page.fill('input[name="shipping-cost"]', '10')
+		await page.fill('input[id="shipping-name-0"]', 'Standard Shipping')
+		await page.fill('input[id="shipping-cost-0"]', '10')
 
-		// Select countries for shipping
+		// Select countries for first shipping method
 		await page.click('button:has-text("Select")')
 		await page.fill('input[placeholder="Search country..."]', 'USA')
 		await page.click('text=USA')
 		await page.keyboard.press('Escape')
 
 		// Submit the form
-		await page.click('button:has-text("Save")')
+		await page.click('#stall-save-button')
 
 		// Verify that the new stall appears in the list
-		const stallName = await page.textContent('text=Test Stall')
-		expect(stallName).toBe('Test Stall')
+		const stallName = await page.textContent('text=My super Stall')
+		expect(stallName).toBe('My super Stall')
 	})
 })
