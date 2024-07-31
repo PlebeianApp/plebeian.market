@@ -9,7 +9,6 @@ import { getProductsByStallId } from '$lib/server/products.service'
 import { customTagValue, getEventCoordinates } from '$lib/utils'
 import { format } from 'date-fns'
 
-import type { PaymentDetail, Shipping, Stall } from '@plebeian/database'
 import {
 	and,
 	db,
@@ -146,7 +145,7 @@ const resolveStalls = async (stall: Stall): Promise<RichStall> => {
 	}
 }
 
-export const getAllStalls = async (filter: StallsFilter = stallsFilterSchema.parse({})): Promise<RichStall[]> => {
+export const getAllStalls = async (filter: StallsFilter = stallsFilterSchema.parse({})) => {
 	const orderBy = {
 		createdAt: products.createdAt,
 		price: products.price,
@@ -161,6 +160,11 @@ export const getAllStalls = async (filter: StallsFilter = stallsFilterSchema.par
 		.where(and(filter.userId ? eq(stalls.userId, filter.userId) : undefined, filter.stallId ? eq(stalls.id, filter.stallId) : undefined))
 		.execute()
 
+	const [{ count: total } = { count: 0 }] = await db
+		.select({ count: sql<number>`count(*)` })
+		.from(stalls)
+		.where(and(filter.userId ? eq(stalls.userId, filter.userId) : undefined, filter.stallId ? eq(stalls.id, filter.stallId) : undefined))
+		.execute()
 	const richStalls = await Promise.all(
 		stallsResult.map(async (stall) => {
 			return await resolveStalls(stall)
@@ -168,7 +172,7 @@ export const getAllStalls = async (filter: StallsFilter = stallsFilterSchema.par
 	)
 
 	if (richStalls) {
-		return richStalls
+		return { total, stalls: richStalls }
 	}
 
 	error(404, 'Not found')

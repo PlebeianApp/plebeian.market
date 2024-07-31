@@ -29,6 +29,7 @@
 	$: stallsQuery = $ndkStore.activeUser?.pubkey
 		? createStallsByFilterQuery({
 				userId: $ndkStore.activeUser.pubkey,
+				pageSize: 999,
 			})
 		: null
 
@@ -96,7 +97,7 @@
 							<SelectContent class="border-black border-2 max-h-[350px] overflow-y-auto">
 								<SelectItem value={null}>General</SelectItem>
 								{#if $stallsQuery && $stallsQuery.data}
-									{#each $stallsQuery.data as stall}
+									{#each $stallsQuery.data.stalls as stall}
 										<div class="flex items-center gap-2">
 											<SelectItem value={stall.id}>{stall.name}</SelectItem>
 										</div>

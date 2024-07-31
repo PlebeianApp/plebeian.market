@@ -5,7 +5,7 @@ describe('/categories', () => {
 	it('GET', async () => {
 		const result = await fetch(`http://${process.env.APP_HOST}:${process.env.APP_PORT}/api/v1/category`).then((response) => response.json())
 
-		expect(result.length).toBeGreaterThan(0)
+		expect(result.categories.length).toBeGreaterThan(0)
 	})
 
 	it('GET with filter', async () => {
@@ -17,15 +17,15 @@ describe('/categories', () => {
 			`http://${process.env.APP_HOST}:${process.env.APP_PORT}/api/v1/category?${new URLSearchParams(routeParams)}`,
 		).then((response) => response.json())
 
-		expect(result.length).toBeGreaterThan(0)
+		expect(result.categories.length).toBeGreaterThan(0)
 	})
 
 	it('GET categories by product id', async () => {
-		const productId = await getAllProducts().then((product) => product[0].id)
+		const productId = await getAllProducts().then(({ products }) => products[0].id)
 		const result = await fetch(`http://${process.env.APP_HOST}:${process.env.APP_PORT}/api/v1/category?productId=${productId}`).then(
 			(response) => response.json(),
 		)
 
-		expect(result.length).toBeTruthy()
+		expect(result.categories.length).toBeTruthy()
 	})
 })

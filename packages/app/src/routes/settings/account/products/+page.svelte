@@ -28,7 +28,7 @@
 	$: {
 		if ($productsQuery?.data) {
 			$productsQuery.refetch()
-			toDisplayProducts = $productsQuery.data
+			toDisplayProducts = $productsQuery.data.products
 		}
 	}
 
