@@ -11,7 +11,9 @@ import { format } from 'date-fns'
 
 import {
 	and,
+	asc,
 	db,
+	desc,
 	eq,
 	eventTags,
 	getTableColumns,
@@ -147,8 +149,7 @@ const resolveStalls = async (stall: Stall): Promise<RichStall> => {
 
 export const getAllStalls = async (filter: StallsFilter = stallsFilterSchema.parse({})) => {
 	const orderBy = {
-		createdAt: products.createdAt,
-		price: products.price,
+		createdAt: stalls.createdAt,
 	}[filter.orderBy]
 
 	const stallsResult = await db
@@ -156,7 +157,7 @@ export const getAllStalls = async (filter: StallsFilter = stallsFilterSchema.par
 		.from(stalls)
 		.limit(filter.pageSize)
 		.offset((filter.page - 1) * filter.pageSize)
-		// .orderBy(filter.order === "asc" ? asc(orderBy) : desc(orderBy))
+		.orderBy(filter.order === "asc" ? asc(orderBy) : desc(orderBy))
 		.where(and(filter.userId ? eq(stalls.userId, filter.userId) : undefined, filter.stallId ? eq(stalls.id, filter.stallId) : undefined))
 		.execute()
 

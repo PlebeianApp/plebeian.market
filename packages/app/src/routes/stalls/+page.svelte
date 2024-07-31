@@ -2,12 +2,21 @@
 	import CatMenu from '$lib/components/category/cat-menu.svelte'
 	import StallItem from '$lib/components/stalls/stall-item.svelte'
 	import * as Pagination from '$lib/components/ui/pagination'
+	import * as Select from '$lib/components/ui/select'
 	import { Skeleton } from '$lib/components/ui/skeleton'
 	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
+	import type { Selected } from 'bits-ui'
 
 	const pageSize = 10
 	let page = 1
-	$: stallQuery = createStallsByFilterQuery({ pageSize, page })
+	let sort: Selected<"asc" | "desc"> = {
+		label: "Latest",
+		value: "desc"
+	}
+	function onSortSelectedChange(v?: typeof sort) {
+		sort = v!
+	}
+	$: stallsQuery = createStallsByFilterQuery({ pageSize, page, order: sort.value ?? 'desc' })
 </script>
 
 <div class="flex min-h-screen w-full flex-col">
@@ -18,11 +27,21 @@
 					<CatMenu />
 					<h2>Stalls</h2>
 
-					{#if $stallQuery.error}
-						<p>{JSON.stringify($stallQuery.error)}</p>
+					<Select.Root selected={sort} onSelectedChange={onSortSelectedChange}>
+						<Select.Trigger class="w-[100px]">
+							<Select.Value placeholder="Sort" />
+						</Select.Trigger>
+						<Select.Content>
+							<Select.Item value="desc">Latest</Select.Item>
+							<Select.Item value="asc">Oldest</Select.Item>
+						</Select.Content>
+					</Select.Root>
+
+					{#if $stallsQuery.error}
+						<p>{JSON.stringify($stallsQuery.error)}</p>
 					{/if}
 
-					{#if $stallQuery.isLoading}
+					{#if $stallsQuery.isLoading}
 						<div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
 							{#each [...Array(6)] as _, i}
 								<Skeleton class="h-4 w-[200px]" />
@@ -30,17 +49,17 @@
 						</div>
 					{/if}
 
-					{#if $stallQuery.isError}
-						<p>Error: {$stallQuery.error}</p>
+					{#if $stallsQuery.isError}
+						<p>Error: {$stallsQuery.error}</p>
 					{/if}
 
-					{#if $stallQuery.data}
+					{#if $stallsQuery.data}
 						<div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-							{#each $stallQuery.data.stalls as item}
+							{#each $stallsQuery.data.stalls as item (item.id)}
 								<StallItem stallData={item} />
 							{/each}
 						</div>
-						<Pagination.Root bind:page count={$stallQuery.data?.total} perPage={pageSize} let:pages let:currentPage>
+						<Pagination.Root bind:page count={$stallsQuery.data?.total} perPage={pageSize} let:pages let:currentPage>
 							<Pagination.Content>
 								<Pagination.Item>
 									<Pagination.PrevButton />

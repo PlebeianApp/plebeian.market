@@ -17,8 +17,8 @@ export const createStallQuery = (stallId: string) =>
 	createQuery<RichStall>(
 		{
 			queryKey: ['stalls', stallId],
-			queryFn: async () => {
-				return await createRequest(`GET /api/v1/stalls/${stallId}`, {
+			queryFn: () => {
+				return createRequest(`GET /api/v1/stalls/${stallId}`, {
 					auth: false,
 				})
 			},
