@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { goto } from '$app/navigation'
 	import { cart } from '$lib/stores/cart'
 	import { onMount } from 'svelte'
 
@@ -90,7 +91,7 @@
 			</div>
 			<div class="flex justify-between mt-4">
 				<Button variant="outline" on:click={clearCart}>Clear Cart</Button>
-				<Button on:click={() => console.log('going to checkout')}>Proceed to Checkout</Button>
+				<Button on:click={() => goto('/checkout')}>Proceed to Checkout</Button>
 			</div>
 		{:else}
 			<p>Your cart is empty.</p>

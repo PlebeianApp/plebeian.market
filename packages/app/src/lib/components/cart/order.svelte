@@ -1,9 +1,12 @@
 <script lang="ts">
 	import type { CartProduct, CartStall, CartUser } from '$lib/stores/cart'
+	import { Button } from '$lib/components/ui/button/index.js'
 	import { KindStalls } from '$lib/constants'
 	import { createCurrencyConversionQuery } from '$lib/fetch/products.queries'
 	import { resolveQuery } from '$lib/utils'
 	import { createEventDispatcher, onDestroy } from 'svelte'
+
+	import type { Order } from '@plebeian/database'
 
 	import Spinner from '../assets/spinner.svelte'
 	import Separator from '../ui/separator/separator.svelte'
@@ -15,7 +18,8 @@
 	export let stalls: Record<string, CartStall>
 	export let products: Record<string, CartProduct>
 	export let mode: 'cart' | 'checkout' | 'payment' = 'cart'
-
+	export let formData: Partial<Order> = {}
+	$: hasFormData = Object.keys(formData).length > 0
 	const dispatch = createEventDispatcher()
 
 	function handleProductUpdate(event: CustomEvent, stallId: string, productId: string) {
@@ -122,7 +126,9 @@
 			Error calculating total {error}
 		{/await}
 	{:else if mode === 'checkout'}
-		<!-- Checkout mode UI -->
+		{#if hasFormData}
+			<Button on:click={() => console.log(formData)}>Send</Button>
+		{/if}
 	{:else if mode === 'payment'}
 		<!-- Payment mode UI -->
 	{/if}
