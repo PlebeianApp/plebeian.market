@@ -40,6 +40,7 @@
 			? createStallsByFilterQuery({
 					userId: user.id,
 					stallId: stall.id,
+					pageSize: 1,
 				})
 			: undefined
 
@@ -59,11 +60,11 @@
 
 	$: {
 		if ($stallsQuery?.data) {
-			stallResponse = $stallsQuery?.data[0]
+			stallResponse = $stallsQuery?.data.stalls[0]
 		}
 	}
 
-	$: if ($productsQuery?.data) toDisplayProducts = $productsQuery?.data
+	$: if ($productsQuery?.data) toDisplayProducts = $productsQuery?.data.products
 	// TODO handle null profiles
 	onMount(async () => {
 		if (user.id) {

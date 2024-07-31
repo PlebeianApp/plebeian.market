@@ -1,52 +1,63 @@
 <script lang="ts">
-	import type { RichCat } from '$lib/server/categories.service'
+	import * as Pagination from '$lib/components/ui/pagination'
 	import { createCategoriesByFilterQuery } from '$lib/fetch/category.queries'
 
-	import Button from '../ui/button/button.svelte'
 	import Skeleton from '../ui/skeleton/skeleton.svelte'
 	import CatCompactItem from './cat-compact-item.svelte'
 
-	export let isExpanded: boolean = false
-	let showMore = isExpanded
-	let pageSize = 4
+	const pageSize = 10
+	let page = 1
 
-	let filteredCategories: RichCat[] = []
-	$: categoriesQuery = createCategoriesByFilterQuery({ pageSize: 30 })
-
-	$: if ($categoriesQuery.data) filteredCategories = $categoriesQuery.data?.filter((cat) => (cat.productCount ?? 0) > 0) || []
+	$: categoriesQuery = createCategoriesByFilterQuery({ pageSize, page })
 </script>
 
-{#if $categoriesQuery.isLoading}
-	<Skeleton class=" h-96 w-full" />
-	<Skeleton class=" h-96 w-full" />
-	<Skeleton class=" h-96 w-full" />
-	<Skeleton class=" h-96 w-full" />
-{:else if filteredCategories.length}
-	<h3>Categories</h3>
-	<div class="flex flex-col">
-		<div class="flex flex-col">
-			<main class="text-black">
-				<div class="lg:px-12">
-					<div class="container">
-						<div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-							{#each filteredCategories.slice(0, showMore ? filteredCategories.length : pageSize) as cat}
-								<CatCompactItem {cat} />
-							{/each}
-						</div>
-						{#if filteredCategories.length > pageSize}
-							<div class=" text-center py-1">
-								<Button on:click={() => (showMore = !showMore)} size="icon" class="cursor-pointer border-0" variant="ghost">
-									{#if showMore}
-										<span class=" i-tdesign-minus"></span>
-									{:else}
-										<span class=" i-tdesign-plus"></span>
-									{/if}
-								</Button>
+<div class="flex flex-col gap-6">
+	{#if $categoriesQuery.isLoading}
+		<Skeleton class=" h-96 w-full" />
+		<Skeleton class=" h-96 w-full" />
+		<Skeleton class=" h-96 w-full" />
+		<Skeleton class=" h-96 w-full" />
+	{:else if $categoriesQuery.data?.categories.length}
+		<h3>Categories</h3>
+		<div class="flex flex-col gap-6">
+			<div class="flex flex-col">
+				<main class="text-black">
+					<div class="lg:px-12">
+						<div class="container">
+							<div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+								{#each $categoriesQuery.data?.categories as cat}
+									<CatCompactItem {cat} />
+								{/each}
 							</div>
-						{/if}
+						</div>
 					</div>
-				</div>
-			</main>
+				</main>
+			</div>
+			{#if $categoriesQuery.data?.categories.length > pageSize}
+				<Pagination.Root bind:page count={$categoriesQuery.data?.total} perPage={pageSize} let:pages let:currentPage>
+					<Pagination.Content>
+						<Pagination.Item>
+							<Pagination.PrevButton />
+						</Pagination.Item>
+						{#each pages as page (page.key)}
+							{#if page.type === 'ellipsis'}
+								<Pagination.Item>
+									<Pagination.Ellipsis />
+								</Pagination.Item>
+							{:else}
+								<Pagination.Item>
+									<Pagination.Link {page} isActive={currentPage == page.value}>
+										{page.value}
+									</Pagination.Link>
+								</Pagination.Item>
+							{/if}
+						{/each}
+						<Pagination.Item>
+							<Pagination.NextButton />
+						</Pagination.Item>
+					</Pagination.Content>
+				</Pagination.Root>
+			{/if}
 		</div>
-	</div>
-{/if}
+	{/if}
+</div>

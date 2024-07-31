@@ -44,11 +44,11 @@
 	$: productsQuery = exist ? createProductsByFilterQuery({ userId: id }) : undefined
 	$: userProfileQuery = exist ? createUserByIdQuery(id) : undefined
 
-	$: stallsMixture = [...($stallsQuery?.data ?? []), ...nostrStalls]
+	$: stallsMixture = [...($stallsQuery?.data?.stalls ?? []), ...nostrStalls]
 
 	$: {
 		if (exist && $userProfileQuery?.data) userProfile = $userProfileQuery.data
-		if (exist && $productsQuery?.data) toDisplayProducts = $productsQuery.data
+		if (exist && $productsQuery?.data) toDisplayProducts = $productsQuery.data.products
 	}
 
 	onMount(async () => {
@@ -58,7 +58,7 @@
 			const { stallNostrRes } = await fetchUserStallsData(id)
 			if (stallNostrRes) {
 				nostrStalls = (await Promise.all([...stallNostrRes].map(normalizeStallData)))
-					.filter(({ data: stall }) => !$stallsQuery?.data?.some((existingStall) => stall?.id === existingStall.id))
+					.filter(({ data: stall }) => !$stallsQuery?.data?.stalls.some((existingStall) => stall?.id === existingStall.id))
 					.map(({ data }) => data as Partial<RichStall>)
 					.filter(Boolean)
 			}

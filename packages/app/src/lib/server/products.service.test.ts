@@ -59,7 +59,7 @@ describe('products service', () => {
 	it('gets products by user id', async () => {
 		const userId = devUser1.pk
 
-		const products = await getProductsByUserId(productsFilterSchema.parse({ userId: userId }))
+		const { products } = await getProductsByUserId(productsFilterSchema.parse({ userId: userId }))
 
 		expect(products.length).toBeGreaterThan(0)
 	})
@@ -71,19 +71,19 @@ describe('products service', () => {
 
 		expect(stalls.length).toBeGreaterThan(0)
 
-		const products = await getProductsByStallId(stalls[0].id)
+		const { products } = await getProductsByStallId(stalls[0].id)
 
 		expect(products.length).toBeGreaterThan(0)
 	})
 
 	it('gets all products', async () => {
-		const products = await getAllProducts()
+		const { products } = await getAllProducts()
 
 		expect(products.length).toBeGreaterThan(0)
 	})
 
 	it('gets product by id', async () => {
-		const products = await getAllProducts()
+		const { products } = await getAllProducts()
 
 		const product = await getProductById(products[0].id)
 
@@ -137,7 +137,7 @@ describe('products service', () => {
 
 	it('updates a product', async () => {
 		const stall = await getStallsByUserId(devUser1.pk).then((stalls) => stalls[0])
-		const targetProduct = await getProductsByStallId(stall.id).then((products) => products[0])
+		const targetProduct = await getProductsByStallId(stall.id).then(({ products }) => products[0])
 		const skSigner = new NDKPrivateKeySigner(devUser1.sk)
 		const evContent = {
 			stall_id: stall.id.split(':')[2],

@@ -29,13 +29,13 @@ describe('stalls service', () => {
 	})
 
 	it('gets all stalls', async () => {
-		const stalls = await getAllStalls()
+		const { stalls } = await getAllStalls()
 
 		expect(stalls.length).toBeGreaterThan(0)
 	})
 
 	it('gets stall by id', async () => {
-		const stalls = await getAllStalls()
+		const { stalls } = await getAllStalls()
 
 		const product = await getStallById(stalls[0].id)
 

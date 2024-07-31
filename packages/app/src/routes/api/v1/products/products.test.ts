@@ -9,7 +9,7 @@ describe('/products', () => {
 	it('GET', async () => {
 		const result = await fetch(`http://${process.env.APP_HOST}:${process.env.APP_PORT}/api/v1/products`).then((response) => response.json())
 
-		expect(result).toHaveLength(10)
+		expect(result.products).toHaveLength(10)
 	})
 
 	// it('GET with filter', async () => {

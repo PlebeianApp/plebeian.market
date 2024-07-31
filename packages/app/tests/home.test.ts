@@ -1,31 +1,31 @@
 import type { Browser, Page } from 'playwright'
-import { expect } from '@playwright/test'
-import { chromium } from 'playwright'
-import { afterAll, beforeAll, describe, test } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 
-import { opts } from './globalSetup'
+import { HomePage } from './page/homePage'
+import { setupBrowser, teardownBrowser } from './utils/testUtils'
 
-describe('home', async () => {
+describe('Home Page', () => {
 	let browser: Browser
 	let page: Page
+	let homePage: HomePage
 
-	beforeAll(async () => {
-		browser = await chromium.launch(opts)
-		page = await browser.newPage()
+	beforeEach(async () => {
+		;({ browser, page } = await setupBrowser())
+		homePage = new HomePage(page)
 	})
 
-	afterAll(async () => {
-		await browser?.close()
+	afterEach(async () => {
+		await teardownBrowser(browser)
 	})
 
-	test('h1 should be visible or redirect to setup page', async () => {
-		await page.goto(`http://${process.env.APP_HOST}:${process.env.APP_PORT}/`)
-
+	test('h1 should be visible on the home page', async () => {
+		await homePage.navigate()
 		await page.waitForLoadState('networkidle')
 
-		const pageTitle = await page.textContent('h1')
+		const pageTitle = await homePage.getPageTitle()
 		expect(pageTitle).toBe('Sell stuff for sats')
-		const listButton = await page.$('text=List my stuff')
-		expect(listButton).not.toBeNull()
+
+		const isListButtonVisible = await homePage.isListMyStuffButtonVisible()
+		expect(isListButtonVisible).toBe(true)
 	})
 })
