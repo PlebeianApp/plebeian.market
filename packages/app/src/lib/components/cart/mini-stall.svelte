@@ -51,6 +51,7 @@
 			isLoading = false
 		}
 	})
+	// TODO Improve visualization of the sipping methods
 </script>
 
 <div class="flex flex-col justify-between gap-2">
@@ -67,7 +68,13 @@
 				<Button variant="secondary" class="border-2 border-black h-8" builders={[builder]}>
 					{#if shippingData?.length && currentShippingMethodId}
 						{@const method = shippingData?.find((m) => m.id === currentShippingMethodId)}
-						{method?.name || method?.id ? truncateString(method.name || method.id) : 'Select shipping method'}
+						{method?.name || method?.countries?.length
+							? method?.countries?.join(',')
+							: '' || method?.regions?.length
+								? method?.regions?.join(',')
+								: '' || method?.id
+									? truncateString(method.id)
+									: 'Select shipping method'}
 					{:else}
 						Select shipping method
 					{/if}

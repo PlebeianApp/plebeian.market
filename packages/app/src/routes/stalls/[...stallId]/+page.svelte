@@ -65,7 +65,7 @@
 	}
 
 	$: if ($productsQuery?.data) toDisplayProducts = $productsQuery?.data.products
-	// TODO handle null profiles
+
 	onMount(async () => {
 		if (user.id) {
 			if (!stall.exist) {
@@ -158,8 +158,7 @@
 						<a href={`/p/${userProfile?.nip05 ? userProfile?.nip05 : user.id}`} class="flex flex-col items-center">
 							<Avatar>
 								<AvatarImage src={userProfile?.image} alt="@shadcn" />
-								<AvatarFallback
-									style={`background-color: ${stringToHexColor(String(userProfile?.name ? userProfile?.name : userProfile?.displayName))}`}
+								<AvatarFallback style={`background-color: #${user.id?.substring(0, 6)}`}
 									><span class="i-tdesign-user-1 w-8 h-8" /></AvatarFallback
 								>
 							</Avatar>
