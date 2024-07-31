@@ -9,8 +9,10 @@ import { getProductsByStallId } from '$lib/server/products.service'
 import { customTagValue, getEventCoordinates } from '$lib/utils'
 import { format } from 'date-fns'
 
+import type { PaymentDetail, Shipping, Stall } from '@plebeian/database'
 import {
 	and,
+	count,
 	db,
 	eq,
 	eventTags,
@@ -161,7 +163,7 @@ export const getAllStalls = async (filter: StallsFilter = stallsFilterSchema.par
 		.execute()
 
 	const [{ count: total } = { count: 0 }] = await db
-		.select({ count: sql<number>`count(*)` })
+		.select({ count: count() })
 		.from(stalls)
 		.where(and(filter.userId ? eq(stalls.userId, filter.userId) : undefined, filter.stallId ? eq(stalls.id, filter.stallId) : undefined))
 		.execute()
@@ -221,7 +223,7 @@ export const getStallById = async (id: string): Promise<StallInfo> => {
 		createDate: format(uniqueStall.createdAt, standardDisplayDateFormat),
 		userId: ownerRes.userId,
 		image: image?.tagValue ?? undefined,
-		products: stallProducts,
+		products: stallProducts.products,
 	}
 
 	if (stallInfo) {

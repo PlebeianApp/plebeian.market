@@ -55,7 +55,7 @@
 			userProfile = $userProfileQuery?.data
 		}
 		if ($otherProducts?.data) {
-			userProducts = $otherProducts.data
+			userProducts = $otherProducts.data.products
 		}
 	}
 

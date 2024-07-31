@@ -39,12 +39,12 @@
 				</div>
 			</div>
 		{/if}
-		{#if $productsQuery.data}
+		{#if $productsQuery.data?.products}
 			<div class=" px-4 lg:px-12">
 				<div class="container">
 					<h2 class="relative z-10 flex gap-2 items-center justify-center">Products</h2>
 					<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-						{#each $productsQuery.data.products as product}
+						{#each $productsQuery?.data.products as product}
 							<ProductItem {product} />
 						{/each}
 					</div>
