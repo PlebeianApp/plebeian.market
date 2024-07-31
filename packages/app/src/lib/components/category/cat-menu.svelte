@@ -25,7 +25,7 @@
 					<div class="lg:px-12">
 						<div class="container">
 							<div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-								{#each $categoriesQuery.data?.categories as cat}
+								{#each $categoriesQuery.data?.categories as cat (cat.name)}
 									<CatCompactItem {cat} />
 								{/each}
 							</div>

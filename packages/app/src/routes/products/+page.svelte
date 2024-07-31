@@ -36,7 +36,7 @@
 
 					{#if $productsQuery.data}
 						<div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-							{#each $productsQuery.data.products as item}
+							{#each $productsQuery.data.products as item (item.id)}
 								<ProductItem product={item} />
 							{/each}
 						</div>
