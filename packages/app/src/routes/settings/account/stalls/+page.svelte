@@ -119,7 +119,7 @@
 	{#if stallsMode === 'list'}
 		<div class="flex justify-between items-center">
 			<div class=" flex items-center gap-1">
-				<Button size="icon" variant="outline" class=" border-none" on:click={() => nav_back()}>
+				<Button id="create-edit-back-button" size="icon" variant="outline" class=" border-none" on:click={() => nav_back()}>
 					<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
 				</Button>
 				<section>
@@ -128,6 +128,7 @@
 				</section>
 			</div>
 			<Button
+				id="create-new-stall"
 				on:click={() => {
 					stallsMode = 'create'
 					currentStall = null
@@ -137,7 +138,7 @@
 			>
 		</div>
 	{:else if stallsMode === 'create' || stallsMode === 'edit'}
-		<button class="w-fit" on:click={() => (stallsMode = 'list')}>
+		<button id="create-edit-back-button" class="w-fit" on:click={() => (stallsMode = 'list')}>
 			<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
 		</button>
 	{/if}

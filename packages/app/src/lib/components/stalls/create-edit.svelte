@@ -346,5 +346,5 @@
 		<Button on:click={() => addShipping()} variant="outline" class="font-bold ml-auto">Add Shipping Method</Button>
 	</div>
 
-	<Button type="submit" class="w-full font-bold">Save</Button>
+	<Button id="stall-save-button" type="submit" class="w-full font-bold">Save</Button>
 </form>
