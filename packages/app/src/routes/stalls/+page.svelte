@@ -1,17 +1,17 @@
 <script lang="ts">
+	import type { Selected } from 'bits-ui'
 	import CatMenu from '$lib/components/category/cat-menu.svelte'
 	import StallItem from '$lib/components/stalls/stall-item.svelte'
 	import * as Pagination from '$lib/components/ui/pagination'
 	import * as Select from '$lib/components/ui/select'
 	import { Skeleton } from '$lib/components/ui/skeleton'
 	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
-	import type { Selected } from 'bits-ui'
 
 	const pageSize = 10
 	let page = 1
-	let sort: Selected<"asc" | "desc"> = {
-		label: "Latest",
-		value: "desc"
+	let sort: Selected<'asc' | 'desc'> = {
+		label: 'Latest',
+		value: 'desc',
 	}
 	function onSortSelectedChange(v?: typeof sort) {
 		sort = v!

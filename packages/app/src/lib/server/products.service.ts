@@ -9,8 +9,10 @@ import { format } from 'date-fns'
 
 import {
 	and,
+	asc,
 	createId,
 	db,
+	desc,
 	eq,
 	events,
 	eventTags,
@@ -26,8 +28,6 @@ import {
 	productShipping,
 	ProductTypes,
 	sql,
-    desc,
-    asc,
 } from '@plebeian/database'
 
 import { productEventSchema } from '../../schema/nostr-events'
@@ -96,7 +96,12 @@ export const getProductsByStallId = async (stallId: string, filter: ProductsFilt
 		price: products.price,
 	}[filter.orderBy]
 
-	const productsResult = await db.select().from(products).orderBy(filter.order === 'asc' ? asc(orderBy) : desc(orderBy)).where(eq(products.stallId, stallId)).execute()
+	const productsResult = await db
+		.select()
+		.from(products)
+		.orderBy(filter.order === 'asc' ? asc(orderBy) : desc(orderBy))
+		.where(eq(products.stallId, stallId))
+		.execute()
 
 	const displayProducts: DisplayProduct[] = await Promise.all(productsResult.map(toDisplayProduct))
 
