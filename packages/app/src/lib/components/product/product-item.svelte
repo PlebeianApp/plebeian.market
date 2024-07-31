@@ -81,18 +81,6 @@
 			</Button>
 		</div>
 	{:else if userId}
-		<!-- <Button
-			on:click={() =>
-				addProduct(
-					userId,
-					stallCoordinates,
-					{ id: productCoordinates, name: String(name), amount: 1, price: Number(price), stockQuantity: Number(quantity) },
-					String(currency),
-				)}
-			class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white text-black font-bold opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-		>
-			Add to cart
-		</Button> -->
 		<Button
 			class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white text-black font-bold opacity-0 transition-opacity duration-300 group-hover:opacity-100"
 			on:click={() => handleAddToCart(userId, stallCoordinates, product)}>Add to cart</Button

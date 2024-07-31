@@ -1,8 +1,9 @@
 <script lang="ts">
-	import { formatPrice, stringToHexColor } from '$lib/utils'
+	import type { CartProduct } from '$lib/stores/cart'
+	import { debounce, formatPrice, stringToHexColor } from '$lib/utils'
 	import { createEventDispatcher } from 'svelte'
+	import { toast } from 'svelte-sonner'
 
-	import type { CartProduct } from './types'
 	import Button from '../ui/button/button.svelte'
 	import Input from '../ui/input/input.svelte'
 
@@ -10,24 +11,30 @@
 
 	const dispatch = createEventDispatcher()
 
-	function handleIncrement() {
+	const handleIncrement = debounce(() => {
 		if (product.amount < product.stockQuantity) {
 			dispatch('increment', { action: 'increment' })
 		}
-	}
+	}, 200)
 
-	function handleDecrement() {
+	const handleDecrement = debounce(() => {
 		if (product.amount > 1) {
 			dispatch('decrement', { action: 'decrement' })
 		}
-	}
+	}, 200)
+
+	const debouncedSetAmount = debounce((newAmount) => {
+		dispatch('setAmount', { action: 'setAmount', amount: newAmount })
+	}, 500)
 
 	function handleSetAmount(e: Event) {
 		const newAmount = Math.min(Math.max(1, parseInt((e.target as HTMLInputElement).value) || 1), product.stockQuantity)
-		dispatch('setAmount', { action: 'setAmount', amount: newAmount })
+		debouncedSetAmount(newAmount)
 	}
+
 	function handleRemove() {
 		dispatch('remove', { action: 'remove' })
+		toast.success('Product removed from cart')
 	}
 </script>
 
@@ -69,6 +76,6 @@
 		</div>
 	</div>
 	<div class="flex flex-col justify-between text-right">
-		<div>{formatPrice(product.price * product.amount)}</div>
+		<div>{formatPrice(product.price * product.amount)}({product?.currency ?? product.currency})</div>
 	</div>
 </div>

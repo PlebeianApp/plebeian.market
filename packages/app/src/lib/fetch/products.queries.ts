@@ -30,10 +30,24 @@ export const createProductQuery = (productId: string) =>
 export const createProductPriceQuery = (product: DisplayProduct) =>
 	createQuery<number | null>(
 		{
-			queryKey: ['product-price', product.userId, product.id],
+			queryKey: ['product-price', product.currency, product.price],
 			queryFn: async () => {
 				return await currencyToBtc(String(product.currency), product.price, true)
 			},
+		},
+		queryClient,
+	)
+
+export const createCurrencyConversionQuery = (fromCurrency: string, amount: number) =>
+	createQuery<number | null>(
+		{
+			queryKey: ['currency-conversion', fromCurrency, amount],
+			queryFn: async () => {
+				const result = await currencyToBtc(fromCurrency, amount, true)
+				return result
+			},
+			enabled: amount > 0,
+			staleTime: 1000 * 60 * 30,
 		},
 		queryClient,
 	)

@@ -5,17 +5,7 @@
 
 	import { Button } from '../ui/button'
 
-	const totalProducts = derived(cart, ($cart) =>
-		$cart.reduce(
-			(total, user) =>
-				total +
-				user.stalls.reduce(
-					(stallTotal, stall) => stallTotal + stall.products.reduce((productTotal, product) => productTotal + product.amount, 0),
-					0,
-				),
-			0,
-		),
-	)
+	const totalProducts = derived(cart, ($cart) => Object.values($cart.products).reduce((total, product) => total + product.amount, 0))
 </script>
 
 <Button class="p-2 hidden sm:flex relative" on:click={openDrawerForCart}>

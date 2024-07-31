@@ -23,7 +23,7 @@
 
 	$: stallQuery = stallExist !== undefined && stallExist ? createStallQuery(stallId) : undefined
 	$: shippingMethods = stallExist !== undefined && stallExist ? createShippingQuery(stallId) : undefined
-	$: currentShippingMethodId = $cart.find((u) => u.pubkey === userPubkey)?.stalls.find((s) => s.id === stallId)?.shippingMethodId || null
+	$: currentShippingMethodId = $cart.stalls[stallId]?.shippingMethodId || null
 	$: {
 		if ($stallQuery?.data) stallData = $stallQuery.data
 		if ($shippingMethods?.data) shippingData = $shippingMethods.data
