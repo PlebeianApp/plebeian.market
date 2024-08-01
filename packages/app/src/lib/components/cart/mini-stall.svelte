@@ -6,14 +6,15 @@
 	import { createShippingQuery } from '$lib/fetch/shipping.queries'
 	import { createStallQuery } from '$lib/fetch/stalls.queries'
 	import { fetchStallData, normalizeStallData } from '$lib/nostrSubs/utils'
-	import { getShippingMethod, setShippingMethod } from '$lib/stores/cart'
-	import { checkIfStallExists, checkIfUserExists, truncateString } from '$lib/utils'
+	import { cart } from '$lib/stores/cart'
+	import { checkIfStallExists, truncateString } from '$lib/utils'
 	import { onMount } from 'svelte'
 
 	import Spinner from '../assets/spinner.svelte'
 	import { Button } from '../ui/button'
 
 	export let stallId: string
+	export let userPubkey: string
 
 	let stallExist: boolean | undefined = undefined
 	let stallData: Partial<RichStall> | null = null
@@ -22,7 +23,7 @@
 
 	$: stallQuery = stallExist !== undefined && stallExist ? createStallQuery(stallId) : undefined
 	$: shippingMethods = stallExist !== undefined && stallExist ? createShippingQuery(stallId) : undefined
-	$: currentShippingMethodId = getShippingMethod(stallId)
+	$: currentShippingMethodId = $cart.stalls[stallId]?.shippingMethodId || null
 	$: {
 		if ($stallQuery?.data) stallData = $stallQuery.data
 		if ($shippingMethods?.data) shippingData = $shippingMethods.data
@@ -30,7 +31,10 @@
 	}
 
 	function handleShippingMethodSelect(methodId: string) {
-		setShippingMethod(stallId, methodId)
+		const selectedMethod = shippingData?.find((m) => m.id === methodId)
+		if (selectedMethod) {
+			cart.setShippingMethod(userPubkey, stallId, methodId, Number(selectedMethod.cost))
+		}
 	}
 
 	onMount(async () => {
@@ -47,6 +51,7 @@
 			isLoading = false
 		}
 	})
+	// TODO Improve visualization of the sipping methods
 </script>
 
 <div class="flex flex-col justify-between gap-2">
@@ -61,9 +66,15 @@
 		<DropdownMenu.Root>
 			<DropdownMenu.Trigger asChild let:builder>
 				<Button variant="secondary" class="border-2 border-black h-8" builders={[builder]}>
-					{#if shippingData?.length && $currentShippingMethodId}
-						{@const method = shippingData?.find((m) => m.id === $currentShippingMethodId)}
-						{method?.name || method?.id ? truncateString(method.name || method.id) : 'Select shipping method'}
+					{#if shippingData?.length && currentShippingMethodId}
+						{@const method = shippingData?.find((m) => m.id === currentShippingMethodId)}
+						{method?.name || method?.countries?.length
+							? method?.countries?.join(',')
+							: '' || method?.regions?.length
+								? method?.regions?.join(',')
+								: '' || method?.id
+									? truncateString(method.id)
+									: 'Select shipping method'}
 					{:else}
 						Select shipping method
 					{/if}
@@ -76,7 +87,7 @@
 					{#if shippingData?.length}
 						{#each shippingData as method}
 							<DropdownMenu.CheckboxItem
-								checked={$currentShippingMethodId === method.id}
+								checked={currentShippingMethodId === method.id}
 								on:click={() => handleShippingMethodSelect(String(method?.id))}
 							>
 								<section class="flex items-center w-full justify-between">

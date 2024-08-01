@@ -34,13 +34,17 @@ export const createProductQuery = (productId: string) =>
 		queryClient,
 	)
 
-export const createProductPriceQuery = (product: DisplayProduct) =>
+export const createCurrencyConversionQuery = (fromCurrency: string, amount: number) =>
 	createQuery<number | null>(
 		{
-			queryKey: ['product-price', product.userId, product.id],
+			queryKey: ['currency-conversion', fromCurrency, amount],
 			queryFn: async () => {
-				return await currencyToBtc(String(product.currency), product.price, true)
+				if (!fromCurrency || !amount) return null
+				const result = await currencyToBtc(fromCurrency, amount, true)
+				return result
 			},
+			enabled: amount > 0,
+			staleTime: 1000 * 60 * 60,
 		},
 		queryClient,
 	)

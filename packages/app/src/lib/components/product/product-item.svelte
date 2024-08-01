@@ -3,8 +3,8 @@
 	import type { ProductCoordinatesType, StallCoordinatesType } from '$lib/stores/drawer-ui'
 	import * as Card from '$lib/components/ui/card/index.js'
 	import { KindProducts, KindStalls } from '$lib/constants'
-	import { createProductPriceQuery } from '$lib/fetch/products.queries'
-	import { addProduct } from '$lib/stores/cart'
+	import { createCurrencyConversionQuery } from '$lib/fetch/products.queries'
+	import { handleAddToCart } from '$lib/stores/cart'
 	import { openDrawerForProduct } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
 	import { stringToHexColor } from '$lib/utils'
@@ -23,7 +23,7 @@
 	const productCoordinates: ProductCoordinatesType = !id?.startsWith(String(KindProducts))
 		? (`${KindProducts}:${userId}:${id}` as ProductCoordinatesType)
 		: (id as ProductCoordinatesType)
-	$: priceQuery = createProductPriceQuery(product as DisplayProduct)
+	$: priceQuery = createCurrencyConversionQuery(String(currency), Number(price))
 	$: isMyProduct = $ndkStore.activeUser?.pubkey ? $ndkStore.activeUser.pubkey === userId : false
 </script>
 
@@ -82,16 +82,8 @@
 		</div>
 	{:else if userId}
 		<Button
-			on:click={() =>
-				addProduct(
-					userId,
-					stallCoordinates,
-					{ id: productCoordinates, name: String(name), amount: 1, price: Number(price), stockQuantity: Number(quantity) },
-					String(currency),
-				)}
 			class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white text-black font-bold opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+			on:click={() => handleAddToCart(userId, stallCoordinates, product)}>Add to cart</Button
 		>
-			Add to cart
-		</Button>
 	{/if}
 </Card.Root>

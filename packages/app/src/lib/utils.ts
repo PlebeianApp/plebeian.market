@@ -280,7 +280,7 @@ export async function resolveQuery<T>(queryFn: () => CreateQueryResult<T, Error>
 				resolve(currentQuery.data)
 			} else if (retryCount < maxRetries) {
 				retryCount++
-				setTimeout(check, 10)
+				setTimeout(check, 250)
 			} else {
 				reject(new Error('Max retries exceeded'))
 			}

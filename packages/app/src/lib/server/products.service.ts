@@ -7,9 +7,11 @@ import { getImagesByProductId } from '$lib/server/productImages.service'
 import { customTagValue, getEventCoordinates } from '$lib/utils'
 import { format } from 'date-fns'
 
+import type { Product, ProductImage, ProductMeta, ProductShipping, ProductTypes } from '@plebeian/database'
 import {
 	and,
 	asc,
+	count,
 	createId,
 	db,
 	desc,
@@ -17,16 +19,11 @@ import {
 	events,
 	eventTags,
 	getTableColumns,
-	Product,
 	PRODUCT_META,
-	ProductImage,
 	productImages,
-	ProductMeta,
 	productMeta,
 	products,
-	ProductShipping,
 	productShipping,
-	ProductTypes,
 	sql,
 } from '@plebeian/database'
 
@@ -79,7 +76,7 @@ export const getProductsByUserId = async (filter: ProductsFilter = productsFilte
 	const displayProducts: DisplayProduct[] = await Promise.all(productsResult.map(toDisplayProduct))
 
 	const [{ count: total } = { count: 0 }] = await db
-		.select({ count: sql<number>`count(*)` })
+		.select({ count: count() })
 		.from(products)
 		.where(filter.userId ? eq(products.userId, filter.userId) : undefined)
 
@@ -105,10 +102,7 @@ export const getProductsByStallId = async (stallId: string, filter: ProductsFilt
 
 	const displayProducts: DisplayProduct[] = await Promise.all(productsResult.map(toDisplayProduct))
 
-	const [{ count: total } = { count: 0 }] = await db
-		.select({ count: sql<number>`count(*)` })
-		.from(products)
-		.where(eq(products.stallId, stallId))
+	const [{ count: total } = { count: 0 }] = await db.select({ count: count() }).from(products).where(eq(products.stallId, stallId))
 
 	if (displayProducts) {
 		return { total, products: displayProducts }
@@ -131,7 +125,7 @@ export const getAllProducts = async (filter: ProductsFilter = productsFilterSche
 	})
 
 	const [{ count: total } = { count: 0 }] = await db
-		.select({ count: sql<number>`count(*)` })
+		.select({ count: count() })
 		.from(products)
 		.where(and(filter.userId ? eq(products.userId, filter.userId) : undefined))
 
@@ -145,29 +139,13 @@ export const getAllProducts = async (filter: ProductsFilter = productsFilterSche
 }
 
 export const getProductById = async (productId: string): Promise<DisplayProduct> => {
-	const [productResult] = await db.select().from(products).where(eq(products.id, productId)).execute()
+	const [productRes] = await db.select().from(products).where(eq(products.id, productId)).execute()
 
-	if (!productResult) {
+	if (!productRes) {
 		error(404, 'Not found')
 	}
 
-	const images = await getImagesByProductId(productId)
-	const userNip05 = await getNip05ByUserId(productResult.userId)
-
-	return {
-		id: productResult.id,
-		identifier: productResult.identifier,
-		userId: productResult.userId,
-		userNip05: userNip05,
-		createdAt: format(productResult.createdAt, standardDisplayDateFormat),
-		name: productResult.productName,
-		description: productResult.description,
-		price: parseFloat(productResult.price),
-		currency: productResult.currency,
-		quantity: productResult.quantity,
-		images: images,
-		stallId: productResult.stallId,
-	}
+	return await toDisplayProduct(productRes)
 }
 
 export const createProducts = async (productEvents: NostrEvent[]) => {
@@ -459,10 +437,11 @@ const preparedProductsByCatName = db
 	.offset(sql.placeholder('offset'))
 	.prepare()
 
-export const getProductsByCatName = async (filter: ProductsFilter): Promise<DisplayProduct[]> => {
+export const getProductsByCatName = async (filter: ProductsFilter): Promise<{ total: number; products: DisplayProduct[] }> => {
 	if (!filter.category) {
 		throw new Error('Category Name must be provided')
 	}
+
 	const productRes = await preparedProductsByCatName.execute({
 		userId: filter.userId,
 		category: filter.category,
@@ -470,10 +449,18 @@ export const getProductsByCatName = async (filter: ProductsFilter): Promise<Disp
 		offset: (filter.page - 1) * filter.pageSize,
 	})
 
-	if (productRes) {
-		return await Promise.all(productRes.map(toDisplayProduct))
+	if (!productRes || productRes.length === 0) {
+		throw error(404, 'Not found')
 	}
-	throw error(404, 'not found')
+
+	const displayProducts: DisplayProduct[] = await Promise.all(productRes.map(toDisplayProduct))
+
+	const [{ count: total } = { count: 0 }] = await db
+		.select({ count: count() })
+		.from(eventTags)
+		.where(eq(eventTags.tagValue, filter.category))
+
+	return { total, products: displayProducts }
 }
 
 export const productExists = async (productId: string): Promise<boolean> => {

@@ -1,7 +1,7 @@
 import type { CatsFilter } from '$lib/schema'
 import { catsFilterSchema } from '$lib/schema'
 
-import { and, countDistinct, db, desc, eq, eventTags, products, sql } from '@plebeian/database'
+import { and, count, countDistinct, db, desc, eq, eventTags, products, sql } from '@plebeian/database'
 
 export type RichCat = {
 	name: string
@@ -38,7 +38,7 @@ export const getAllCategories = async (filter: CatsFilter = catsFilterSchema.par
 	}))
 
 	const [{ count: total } = { count: 0 }] = await db
-		.select({ count: sql<number>`count(*)` })
+		.select({ count: count() })
 		.from(eventTags)
 		.where(
 			and(

@@ -1,402 +1,420 @@
-import type { CreateQueryResult } from '@tanstack/svelte-query'
-import type { RichShippingInfo } from '$lib/server/shipping.service'
-import { browser } from '$app/environment'
-import { KindStalls } from '$lib/constants'
-import { createProductQuery } from '$lib/fetch/products.queries'
-import { createShippingMethodQuery } from '$lib/fetch/shipping.queries'
-import { fetchStallData, normalizeStallData } from '$lib/nostrSubs/utils'
-import { checkIfStallExists, currencyToBtc } from '$lib/utils'
+import type { DisplayProduct } from '$lib/server/products.service'
+import { createCurrencyConversionQuery } from '$lib/fetch/products.queries'
+import { debounce, resolveQuery } from '$lib/utils'
 import { toast } from 'svelte-sonner'
 import { derived, get, writable } from 'svelte/store'
 
-import type { StallCoordinatesType } from './drawer-ui'
+import type { ProductImage, ProductShipping } from '@plebeian/database'
 
-interface Product {
+export interface CartProduct {
 	id: string
 	name: string
 	amount: number
 	price: number
+	currency: string
 	stockQuantity: number
+	images?: ProductImage[]
+	shipping: ProductShipping[]
 }
 
-interface Stall {
+export interface CartStall {
 	id: string
-	products: Product[]
+	products: string[]
 	currency: string
 	shippingMethodId: string | null
 	shippingCost: number
 }
 
-interface User {
+export interface CartUser {
 	pubkey: string
-	stalls: Stall[]
+	stalls: string[]
 }
 
-type Cart = User[]
+interface NormalizedCart {
+	users: Record<string, CartUser>
+	stalls: Record<string, CartStall>
+	products: Record<string, CartProduct>
+}
 
-function saveCartToStorage(cartData: Cart) {
-	if (browser) {
-		sessionStorage.setItem('cart', JSON.stringify(cartData))
+function createCart() {
+	const { subscribe, set, update } = writable<NormalizedCart>(loadInitialCart())
+
+	let batchUpdateTimeout: number | null = null
+
+	const batchUpdate = (cart: NormalizedCart) => {
+		if (batchUpdateTimeout) clearTimeout(batchUpdateTimeout)
+		batchUpdateTimeout = setTimeout(() => {
+			saveToStorage(cart)
+			batchUpdateTimeout = null
+		}, 300) as unknown as number
 	}
-}
 
-function loadCartFromStorage(): Cart {
-	if (browser) {
-		const savedCart = sessionStorage.getItem('cart')
-		return savedCart ? JSON.parse(savedCart) : []
-	}
-	return []
-}
-
-export const cart = writable<Cart>(loadCartFromStorage())
-
-if (browser) {
-	cart.subscribe(($cart) => {
-		saveCartToStorage($cart)
-	})
-}
-
-export function initializeCart() {
-	if (browser) {
-		const savedCart = loadCartFromStorage()
-		cart.set(savedCart)
-	}
-}
-
-export function clearCart() {
-	cart.set([])
-	if (browser) {
-		sessionStorage.removeItem('cart')
-	}
-}
-
-function findUser(pubkey: string): User {
-	const currentCart = get(cart)
-	let user = currentCart.find((u) => u.pubkey === pubkey)
-	if (!user) {
-		user = { pubkey, stalls: [] }
-		cart.update((c) => [...c, user as User])
-	}
-	return user
-}
-
-function findStall(user: User, stallId: StallCoordinatesType, currency: string): Stall {
-	let stall = user.stalls.find((s) => s.id === stallId)
-	if (!stall) {
-		stall = { id: stallId, products: [], currency, shippingMethodId: null, shippingCost: 0 }
-		cart.update((c) => {
-			const userIndex = c.findIndex((u) => u.pubkey === user.pubkey)
-			if (userIndex !== -1) {
-				c[userIndex].stalls.push(stall as Stall)
-			}
-			return c
-		})
-	}
-	return stall
-}
-
-function cleanupCart(c: Cart): Cart {
-	return c.filter((user) => {
-		user.stalls = user.stalls.filter((stall) => stall.products.length > 0)
-		return user.stalls.length > 0
-	})
-}
-
-async function updateShippingCost(stall: Stall, userId: string) {
-	if (stall.shippingMethodId) {
-		const stallCoordinates = stall.id.split(':').length === 3 ? stall.id : `${KindStalls}:${userId}:${stall.id}`
-		const stallExist = await checkIfStallExists(stallCoordinates)
-		const stallNostrRes = !stallExist ? await fetchStallData(stallCoordinates) : undefined
-		const normalizedStall = stallNostrRes?.stallNostrRes ? await normalizeStallData(stallNostrRes.stallNostrRes) : undefined
-		const shippingQuery = stallExist ? createShippingMethodQuery(stall.shippingMethodId) : normalizedStall?.data?.shipping
-		if (stallExist) {
-			return new Promise<void>((resolve) => {
-				let unsubscribe = () => {}
-				unsubscribe = (shippingQuery as CreateQueryResult<RichShippingInfo[], Error>)?.subscribe((queryResult) => {
-					if (queryResult.data && queryResult.data.length > 0) {
-						stall.shippingCost = +queryResult.data[0].cost
-						cart.update((c) => c)
-					}
-					unsubscribe()
-					resolve()
-				})
-			})
-		} else {
-			stall.shippingCost = Number((shippingQuery as Partial<RichShippingInfo>[]).filter((s) => s.id === stall.shippingMethodId)[0].cost)
-			cart.update((c) => c)
+	const saveToStorage = async (cart: NormalizedCart) => {
+		if (typeof sessionStorage !== 'undefined') {
+			sessionStorage.setItem('cart', JSON.stringify(cart))
 		}
 	}
-}
 
-export async function setShippingMethod(stallId: string, shippingMethodId: string) {
-	const currentCart = get(cart)
-	const [_, userId, _stallIdentifier] = stallId.split(':')
-	for (const user of currentCart) {
-		const stall = user.stalls.find((s) => s.id.split(':').pop() == _stallIdentifier)
-		if (stall) {
-			stall.shippingMethodId = shippingMethodId
-			await updateShippingCost(stall, userId)
-			cart.set(currentCart)
-			break
-		}
-	}
-}
-
-export const getShippingMethod = (stallId: string) => {
-	return derived(cart, ($cart) => {
-		for (const user of $cart) {
-			const stall = user.stalls.find((s) => s.id.split(':').pop() === stallId.split(':').pop())
-			if (stall) {
-				return stall.shippingMethodId
+	function loadInitialCart(): NormalizedCart {
+		if (typeof sessionStorage !== 'undefined') {
+			const storedCart = sessionStorage.getItem('cart')
+			if (storedCart) {
+				return JSON.parse(storedCart)
 			}
 		}
-		return null
-	})
-}
+		return { users: {}, stalls: {}, products: {} }
+	}
 
-export function addProduct(userPubkey: string, stallId: StallCoordinatesType, product: Product, currency: string) {
-	const user = findUser(userPubkey)
-	const stall = findStall(user, stallId, currency)
-	cart.update((c) => {
-		const userIndex = c.findIndex((u) => u.pubkey === user.pubkey)
-		const stallIndex = c[userIndex].stalls.findIndex((s) => s.id === stall.id)
-		const existingProduct = c[userIndex].stalls[stallIndex].products.find((p) => p.id === product.id)
-
-		if (existingProduct) {
-			existingProduct.amount = Math.min(existingProduct.amount + product.amount, product.stockQuantity)
-		} else {
-			c[userIndex].stalls[stallIndex].products.push({
-				...product,
-				amount: Math.min(product.amount, product.stockQuantity),
-			})
+	const findOrCreateUserStallProduct = (cart: NormalizedCart, userPubkey: string, stallId: string, productId?: string) => {
+		const user = cart.users[userPubkey] || { pubkey: userPubkey, stalls: [] }
+		if (!cart.users[userPubkey]) {
+			cart.users[userPubkey] = user
 		}
-		return c
-	})
-	toast.success('Product added to cart')
-}
 
-export function removeProduct(productId: string) {
-	cart.update((c) => {
-		for (let i = 0; i < c.length; i++) {
-			for (let j = 0; j < c[i].stalls.length; j++) {
-				const index = c[i].stalls[j].products.findIndex((p) => p.id === productId)
-				if (index !== -1) {
-					c[i].stalls[j].products.splice(index, 1)
-					return cleanupCart(c)
-				}
+		const stall = cart.stalls[stallId] || { id: stallId, products: [], currency: '', shippingMethodId: null, shippingCost: 0 }
+		if (!cart.stalls[stallId]) {
+			cart.stalls[stallId] = stall
+			user.stalls.push(stallId)
+		}
+
+		const product = productId ? cart.products[productId] : undefined
+
+		return { user, stall, product }
+	}
+
+	const calculateStallTotal = async (stall: CartStall, products: Record<string, CartProduct>) => {
+		let stallTotalInCurrency = 0
+		let stallExtraShippingCost = 0
+
+		for (const productId of stall.products) {
+			const product = products[productId]
+			const productTotal = product.price * product.amount
+			stallTotalInCurrency += productTotal
+
+			if (stall?.shippingMethodId) {
+				const extraShippingCost = product.shipping?.find((s) => s.shippingId === stall.shippingMethodId)?.cost || 0
+				stallExtraShippingCost += Number(extraShippingCost) * product.amount
 			}
 		}
-		return c
-	})
-	toast.success('Product removed from cart')
-}
 
-export function incrementProduct(productId: string) {
-	cart.update((c) => {
-		for (let i = 0; i < c.length; i++) {
-			for (let j = 0; j < c[i].stalls.length; j++) {
-				const product = c[i].stalls[j].products.find((p) => p.id === productId)
-				if (product) {
-					if (product.amount < product.stockQuantity) {
-						product.amount++
-					}
-					return c
-				}
-			}
-		}
-		return c
-	})
-}
-
-export function decrementProduct(productId: string) {
-	cart.update((c) => {
-		for (let i = 0; i < c.length; i++) {
-			for (let j = 0; j < c[i].stalls.length; j++) {
-				const productIndex = c[i].stalls[j].products.findIndex((p) => p.id === productId)
-				if (productIndex !== -1) {
-					if (c[i].stalls[j].products[productIndex].amount > 1) {
-						c[i].stalls[j].products[productIndex].amount--
-					} else {
-						c[i].stalls[j].products.splice(productIndex, 1)
-					}
-					return cleanupCart(c)
-				}
-			}
-		}
-		return c
-	})
-}
-
-export function getStallProducts(stallId: string): Product[] {
-	const currentCart = get(cart)
-	for (const user of currentCart) {
-		const stall = user.stalls.find((s) => s.id === stallId)
-		if (stall) {
-			return stall.products
+		const [stallTotalInSats, shippingInSats, extraShippingInSats] = await Promise.all([
+			resolveQuery(() => createCurrencyConversionQuery(stall.currency, stallTotalInCurrency)),
+			stall.shippingCost && stall.currency
+				? resolveQuery(() => createCurrencyConversionQuery(stall.currency, stall.shippingCost))
+				: Promise.resolve(0),
+			stallExtraShippingCost && stall.currency
+				? resolveQuery(() => createCurrencyConversionQuery(stall.currency, stallExtraShippingCost))
+				: Promise.resolve(0),
+		])
+		const _stallTotalInSats = stallTotalInSats ?? 0
+		const _shippingInSats = shippingInSats ?? 0
+		const _extraShippingInSats = extraShippingInSats ?? 0
+		const stallShippingCost = stall.shippingCost ?? 0
+		return {
+			subtotalInSats: _stallTotalInSats,
+			shippingInSats: _shippingInSats + _extraShippingInSats,
+			totalInSats: _stallTotalInSats + _shippingInSats + _extraShippingInSats,
+			subtotalInCurrency: stallTotalInCurrency,
+			shippingInCurrency: stallShippingCost + stallExtraShippingCost,
+			totalInCurrency: stallTotalInCurrency + stallShippingCost + stallExtraShippingCost,
+			currency: stall.currency,
 		}
 	}
-	return []
-}
 
-export function setAmountForProduct(productId: string, amount: number) {
-	cart.update((c) => {
-		for (let i = 0; i < c.length; i++) {
-			for (let j = 0; j < c[i].stalls.length; j++) {
-				const productIndex = c[i].stalls[j].products.findIndex((p) => p.id === productId)
-				if (productIndex !== -1) {
-					const product = c[i].stalls[j].products[productIndex]
-					if (amount > 0) {
-						product.amount = Math.min(amount, product.stockQuantity)
-					} else {
-						c[i].stalls[j].products.splice(productIndex, 1)
-					}
-					return cleanupCart(c)
-				}
-			}
-		}
-		return c
-	})
-}
+	const calculateUserTotal = async (userPubkey: string) => {
+		const cart = get({ subscribe })
+		const user = cart.users[userPubkey]
+		if (!user) return null
 
-export const getProductAmount = (productId: string) => {
-	return derived(cart, ($cart) => {
-		for (const user of $cart) {
-			for (const stall of user.stalls) {
-				const product = stall.products.find((p) => p.id === productId)
-				if (product) {
-					return product.amount
-				}
-			}
-		}
-		return 0
-	})
-}
-
-export const allStallsHaveShippingMethod = derived(cart, ($cart) => {
-	for (const user of $cart) {
-		for (const stall of user.stalls) {
-			if (!stall.shippingMethodId) {
-				return false
-			}
-		}
-	}
-	return $cart.length > 0 // Return true only if there are stalls and all have shipping methods
-})
-
-interface TotalAmounts {
-	totalAmountItems: number
-	totalInSats: number
-	totalShippingCost: number
-}
-
-const initialTotalAmounts: TotalAmounts = {
-	totalAmountItems: 0,
-	totalInSats: 0,
-	totalShippingCost: 0,
-}
-
-export const getTotalAmounts = derived<typeof cart, TotalAmounts>(
-	cart,
-	($cart, set) => {
-		let totalAmountItems = 0
+		let subtotalInSats = 0
+		let shippingInSats = 0
 		let totalInSats = 0
-		let totalShippingCostInSats = 0
-		let pendingConversions = 0
+		const currencyTotals: Record<string, { subtotal: number; shipping: number; total: number }> = {}
 
-		function attemptToFinalize() {
-			if (pendingConversions === 0) {
-				set({
-					totalAmountItems,
-					totalInSats: totalInSats + totalShippingCostInSats,
-					totalShippingCost: totalShippingCostInSats,
-				})
+		const stallTotalsPromises = user.stalls.map(async (stallId) => {
+			const stall = cart.stalls[stallId]
+			return await calculateStallTotal(stall, cart.products)
+		})
+
+		const stallTotals = await Promise.all(stallTotalsPromises)
+
+		for (const stallTotal of stallTotals) {
+			subtotalInSats += stallTotal.subtotalInSats
+			shippingInSats += stallTotal.shippingInSats
+			totalInSats += stallTotal.totalInSats
+
+			if (!currencyTotals[stallTotal.currency]) {
+				currencyTotals[stallTotal.currency] = { subtotal: 0, shipping: 0, total: 0 }
+			}
+			currencyTotals[stallTotal.currency].subtotal += stallTotal.subtotalInCurrency
+			currencyTotals[stallTotal.currency].shipping += stallTotal.shippingInCurrency
+			currencyTotals[stallTotal.currency].total += stallTotal.totalInCurrency
+		}
+
+		return { subtotalInSats, shippingInSats, totalInSats, currencyTotals }
+	}
+
+	const calculateGrandTotal = async () => {
+		const cart = get({ subscribe })
+		if (Object.keys(cart.users).length === 0) {
+			return {
+				grandSubtotalInSats: 0,
+				grandShippingInSats: 0,
+				grandTotalInSats: 0,
+				currencyTotals: {},
 			}
 		}
 
-		for (const user of $cart) {
-			for (const stall of user.stalls) {
-				for (const product of stall.products) {
-					totalAmountItems += product.amount
-					const productTotal = product.price * product.amount
-					pendingConversions++
+		let grandSubtotalInSats = 0
+		let grandShippingInSats = 0
+		let grandTotalInSats = 0
+		const currencyTotals: Record<string, { subtotal: number; shipping: number; total: number }> = {}
 
-					currencyToBtc(stall.currency, productTotal, true)
-						.then((satsAmount) => {
-							totalInSats += satsAmount as number
-							pendingConversions--
-							attemptToFinalize()
-						})
-						.catch((error) => {
-							console.error('Error converting currency to BTC:', error)
-							pendingConversions--
-							attemptToFinalize()
-						})
+		const userTotalsPromises = Object.keys(cart.users).map(async (userPubkey) => {
+			return await calculateUserTotal(userPubkey)
+		})
+
+		const userTotals = await Promise.all(userTotalsPromises)
+
+		for (const userTotal of userTotals) {
+			if (userTotal) {
+				grandSubtotalInSats += userTotal.subtotalInSats
+				grandShippingInSats += userTotal.shippingInSats
+				grandTotalInSats += userTotal.totalInSats
+
+				for (const [currency, amounts] of Object.entries(userTotal.currencyTotals)) {
+					if (!currencyTotals[currency]) {
+						currencyTotals[currency] = { subtotal: 0, shipping: 0, total: 0 }
+					}
+					currencyTotals[currency].subtotal += amounts.subtotal
+					currencyTotals[currency].shipping += amounts.shipping
+					currencyTotals[currency].total += amounts.total
+				}
+			}
+		}
+
+		return {
+			grandSubtotalInSats,
+			grandShippingInSats,
+			grandTotalInSats,
+			currencyTotals,
+		}
+	}
+	return {
+		subscribe,
+		addProduct: (userPubkey: string, stallId: string, product: CartProduct, currency: string) =>
+			update((cart) => {
+				const { stall } = findOrCreateUserStallProduct(cart, userPubkey, stallId)
+
+				if (cart.products[product.id]) {
+					cart.products[product.id].amount = Math.min(cart.products[product.id].amount + product.amount, product.stockQuantity)
+				} else {
+					cart.products[product.id] = { ...product }
+					stall.products.push(product.id)
 				}
 
-				pendingConversions++
-				currencyToBtc(stall.currency, stall.shippingCost, true)
-					.then((satsAmount) => {
-						totalShippingCostInSats += satsAmount as number
-						pendingConversions--
-						attemptToFinalize()
-					})
-					.catch((error) => {
-						console.error('Error converting shipping cost to BTC:', error)
-						pendingConversions--
-						attemptToFinalize()
-					})
+				stall.currency = currency
+
+				batchUpdate(cart)
+				return cart
+			}),
+
+		updateProductAmount: (userPubkey: string, stallId: string, productId: string, amount: number) =>
+			update((cart) => {
+				const product = cart.products[productId]
+				if (product) {
+					product.amount = Math.min(amount, product.stockQuantity)
+				}
+				batchUpdate(cart)
+				return cart
+			}),
+
+		removeProduct: (userPubkey: string, stallId: string, productId: string) =>
+			update((cart) => {
+				const stall = cart.stalls[stallId]
+				if (stall) {
+					stall.products = stall.products.filter((id) => id !== productId)
+					delete cart.products[productId]
+				}
+
+				// Clean up empty stalls and users
+				if (stall.products.length === 0) {
+					delete cart.stalls[stallId]
+					const user = cart.users[userPubkey]
+					if (user) {
+						user.stalls = user.stalls.filter((id) => id !== stallId)
+						if (user.stalls.length === 0) {
+							delete cart.users[userPubkey]
+						}
+					}
+				}
+
+				batchUpdate(cart)
+				return cart
+			}),
+
+		setShippingMethod: (userPubkey: string, stallId: string, shippingMethodId: string, shippingCost: number) =>
+			update((cart) => {
+				const stall = cart.stalls[stallId]
+				if (stall) {
+					stall.shippingMethodId = shippingMethodId
+					stall.shippingCost = shippingCost
+				}
+				batchUpdate(cart)
+				return cart
+			}),
+
+		getShippingMethod: (userPubkey: string, stallId: string): string | null => {
+			const cart = get({ subscribe })
+			return cart.stalls[stallId]?.shippingMethodId || null
+		},
+
+		clear: () => {
+			set({ users: {}, stalls: {}, products: {} })
+			if (typeof sessionStorage !== 'undefined') {
+				sessionStorage.removeItem('cart')
 			}
-		}
+		},
+		handleProductUpdate: (event: CustomEvent) => {
+			const { action, userPubkey, stallId, productId, amount } = event.detail
 
-		if (pendingConversions === 0) {
-			set({
-				totalAmountItems,
-				totalInSats: 0,
-				totalShippingCost: 0,
-			})
-		}
+			update((cart) => {
+				switch (action) {
+					case 'increment':
+						cart.products[productId].amount = Math.min(cart.products[productId].amount + 1, cart.products[productId].stockQuantity)
+						break
+					case 'decrement':
+						cart.products[productId].amount = Math.max(cart.products[productId].amount - 1, 0)
+						break
+					case 'setAmount':
+						cart.products[productId].amount = Math.min(amount, cart.products[productId].stockQuantity)
+						break
+					case 'remove': {
+						const stall = cart.stalls[stallId]
+						if (stall) {
+							stall.products = stall.products.filter((id) => id !== productId)
+							delete cart.products[productId]
 
-		return initialTotalAmounts
-	},
-	initialTotalAmounts,
-)
-
-export async function updatePrices() {
-	const currentCart = get(cart)
-	const updatedCart = [...currentCart]
-	let hasChanges = false
-
-	const updatePromises = updatedCart.flatMap((user) =>
-		user.stalls.flatMap((stall) =>
-			stall.products
-				.map(async (product) => {
-					return new Promise<void>((resolve) => {
-						const productQuery = createProductQuery(product.id)
-						let unsubscribe = () => {}
-						unsubscribe = productQuery.subscribe((queryResult) => {
-							if (queryResult.data) {
-								if (queryResult.data.price !== product.price) {
-									product.price = queryResult.data.price
-									hasChanges = true
-								}
-								if (queryResult.data.quantity !== product.stockQuantity) {
-									product.stockQuantity = queryResult.data.quantity
-									product.amount = Math.min(product.amount, product.stockQuantity)
-									hasChanges = true
+							if (stall.products.length === 0) {
+								delete cart.stalls[stallId]
+								const user = cart.users[userPubkey]
+								if (user) {
+									user.stalls = user.stalls.filter((id) => id !== stallId)
+									if (user.stalls.length === 0) {
+										delete cart.users[userPubkey]
+									}
 								}
 							}
-							unsubscribe()
-							resolve()
-						})
-					})
-				})
-				.concat([updateShippingCost(stall)]),
-		),
-	)
+						}
+						break
+					}
+				}
+				batchUpdate(cart)
+				return cart
+			})
+		},
+		calculateUserTotal,
+		calculateGrandTotal,
+	}
+}
 
-	await Promise.all(updatePromises)
+export const cart = createCart()
 
-	if (hasChanges) {
-		cart.set(updatedCart)
+export const cartTotal = derived(cart, ($cart) =>
+	Object.values($cart.stalls).reduce(
+		(total, stall) =>
+			total +
+			stall.products.reduce((stallTotal, productId) => stallTotal + $cart.products[productId].price * $cart.products[productId].amount, 0) +
+			(stall.shippingCost || 0),
+		0,
+	),
+)
+
+export const userCartTotal = derived(cart, ($cart) =>
+	Object.values($cart.users).map((user) => ({
+		userPubkey: user.pubkey,
+		total: user.stalls.reduce((userTotal, stallId) => {
+			const stall = $cart.stalls[stallId]
+			return (
+				userTotal +
+				stall.products.reduce(
+					(stallTotal, productId) => stallTotal + $cart.products[productId].price * $cart.products[productId].amount,
+					0,
+				) +
+				(stall.shippingCost || 0)
+			)
+		}, 0),
+	})),
+)
+
+export const cartTotalInSats = derived(cart, ($cart, set) => {
+	const calculateTotal = async () => {
+		let totalSats = 0
+		for (const stall of Object.values($cart.stalls)) {
+			const stallTotal =
+				stall.products.reduce((total, productId) => {
+					const product = $cart.products[productId]
+					return total + product.price * product.amount
+				}, 0) + (stall.shippingCost || 0)
+			const stallTotalInSats = (await resolveQuery(() => createCurrencyConversionQuery(stall.currency, stallTotal))) || 0
+			totalSats += stallTotalInSats
+		}
+		set(totalSats)
+	}
+
+	const debouncedCalculate = debounce(calculateTotal, 250)
+	debouncedCalculate()
+})
+
+export const userCartTotalInSats = derived(cart, ($cart, set) => {
+	const calculateUserTotals = async () => {
+		const userTotals = []
+		for (const user of Object.values($cart.users)) {
+			let userTotalSats = 0
+			for (const stallId of user.stalls) {
+				const stall = $cart.stalls[stallId]
+				const stallTotal =
+					stall.products.reduce((total, productId) => {
+						const product = $cart.products[productId]
+						return total + product.price * product.amount
+					}, 0) + (stall.shippingCost || 0)
+				const stallTotalInSats = (await resolveQuery(() => createCurrencyConversionQuery(stall.currency, stallTotal))) || 0
+				userTotalSats += stallTotalInSats
+			}
+			userTotals.push({ userPubkey: user.pubkey, totalSats: userTotalSats })
+		}
+		set(userTotals)
+	}
+
+	const debouncedCalculate = debounce(calculateUserTotals, 250)
+	debouncedCalculate()
+})
+
+export function handleAddToCart(userId: string, stallCoordinates: string, product: Partial<DisplayProduct>) {
+	const currentCart = get(cart)
+	const currentAmount = currentCart.products[product.id ?? '']?.amount || 0
+
+	const availableStock = product.quantity ?? 0
+	const amountToAdd = Math.min(1, availableStock - currentAmount)
+	const currency = product.currency ?? ''
+	if (amountToAdd > 0) {
+		cart.addProduct(
+			userId,
+			stallCoordinates,
+			{
+				id: product.id ?? '',
+				name: product.name ?? '',
+				amount: amountToAdd,
+				price: Number(product.price) || 0,
+				stockQuantity: availableStock,
+				images: product.images,
+				currency: product.currency as string,
+				shipping: product.shipping || [],
+			},
+			currency,
+		)
+		toast.success('Product added to cart')
+	} else {
+		toast.error('Cannot add more of this product to the cart')
 	}
 }
