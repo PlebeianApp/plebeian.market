@@ -106,14 +106,17 @@ function createCart() {
 				? resolveQuery(() => createCurrencyConversionQuery(stall.currency, stallExtraShippingCost))
 				: Promise.resolve(0),
 		])
-
+		const _stallTotalInSats = stallTotalInSats ?? 0
+		const _shippingInSats = shippingInSats ?? 0
+		const _extraShippingInSats = extraShippingInSats ?? 0
+		const stallShippingCost = stall.shippingCost ?? 0
 		return {
-			subtotalInSats: stallTotalInSats ?? 0,
-			shippingInSats: (shippingInSats ?? 0) + (extraShippingInSats ?? 0),
-			totalInSats: (stallTotalInSats ?? 0) + (shippingInSats ?? 0) + (extraShippingInSats ?? 0),
+			subtotalInSats: _stallTotalInSats,
+			shippingInSats: _shippingInSats + _extraShippingInSats,
+			totalInSats: _stallTotalInSats + _shippingInSats + _extraShippingInSats,
 			subtotalInCurrency: stallTotalInCurrency,
-			shippingInCurrency: (stall.shippingCost ?? 0) + stallExtraShippingCost,
-			totalInCurrency: stallTotalInCurrency + (stall.shippingCost ?? 0) + stallExtraShippingCost,
+			shippingInCurrency: stallShippingCost + stallExtraShippingCost,
+			totalInCurrency: stallTotalInCurrency + stallShippingCost + stallExtraShippingCost,
 			currency: stall.currency,
 		}
 	}

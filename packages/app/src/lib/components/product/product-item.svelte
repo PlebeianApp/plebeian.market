@@ -23,7 +23,7 @@
 	const productCoordinates: ProductCoordinatesType = !id?.startsWith(String(KindProducts))
 		? (`${KindProducts}:${userId}:${id}` as ProductCoordinatesType)
 		: (id as ProductCoordinatesType)
-	$: priceQuery = createCurrencyConversionQuery(currency as string, price as number)
+	$: priceQuery = createCurrencyConversionQuery(String(currency), Number(price))
 	$: isMyProduct = $ndkStore.activeUser?.pubkey ? $ndkStore.activeUser.pubkey === userId : false
 </script>
 
