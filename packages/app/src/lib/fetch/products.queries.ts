@@ -1,6 +1,7 @@
 import type { ProductsFilter } from '$lib/schema'
 import type { DisplayProduct } from '$lib/server/products.service'
 import { createQuery } from '@tanstack/svelte-query'
+import { fetchUserProductData, normalizeProductsFromNostr } from '$lib/nostrSubs/utils'
 import { productsFilterSchema } from '$lib/schema'
 import { currencyToBtc } from '$lib/utils'
 
@@ -57,7 +58,22 @@ export const createProductsByFilterQuery = (filter: Partial<ProductsFilter>) =>
 				const response = await createRequest('GET /api/v1/products', {
 					params: productsFilterSchema.parse(filter),
 				})
-				return response
+				if (response.products.length) {
+					return response.products
+				}
+				if (filter.userId) {
+					const { products: productsData } = await fetchUserProductData(filter.userId)
+					if (productsData?.size) {
+						const result = await normalizeProductsFromNostr(productsData, filter.userId)
+						if (result) return result.toDisplayProducts
+					}
+				} else if (filter.stallId) {
+					const { products: productsData } = await fetchUserProductData(filter.stallId.split(':')[1])
+					if (productsData?.size) {
+						const result = await normalizeProductsFromNostr(productsData, filter.stallId.split(':')[1], filter.stallId)
+						if (result) return result.toDisplayProducts
+					}
+				}
 			},
 		},
 		queryClient,
