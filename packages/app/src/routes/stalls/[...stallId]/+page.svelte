@@ -2,12 +2,14 @@
 	import type { NDKUserProfile } from '@nostr-dev-kit/ndk'
 	import type { DisplayProduct } from '$lib/server/products.service'
 	import type { RichStall } from '$lib/server/stalls.service'
+	import type { Selected } from 'bits-ui'
 	import { NDKEvent } from '@nostr-dev-kit/ndk'
 	import ProductItem from '$lib/components/product/product-item.svelte'
 	import * as Accordion from '$lib/components/ui/accordion'
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar'
 	import Badge from '$lib/components/ui/badge/badge.svelte'
 	import { Button } from '$lib/components/ui/button'
+	import * as Select from '$lib/components/ui/select'
 	import Skeleton from '$lib/components/ui/skeleton/skeleton.svelte'
 	import { createProductsByFilterQuery } from '$lib/fetch/products.queries'
 	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
@@ -44,10 +46,19 @@
 				})
 			: undefined
 
+	let sort: Selected<'asc' | 'desc'> = {
+		label: 'Latest',
+		value: 'desc',
+	}
+	function onSortSelectedChange(v?: typeof sort) {
+		sort = v!
+	}
+
 	$: productsQuery =
 		stall.exist && user.id
 			? createProductsByFilterQuery({
 					stallId: stall.id,
+					order: sort.value ?? 'desc',
 				})
 			: undefined
 
@@ -228,9 +239,19 @@
 	</div>
 	{#if stallResponse}
 		<h2>Products</h2>
-		<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+
+		<Select.Root selected={sort} onSelectedChange={onSortSelectedChange}>
+			<Select.Trigger class="w-[100px]">
+				<Select.Value placeholder="Sort" />
+			</Select.Trigger>
+			<Select.Content>
+				<Select.Item value="desc">Latest</Select.Item>
+				<Select.Item value="asc">Oldest</Select.Item>
+			</Select.Content>
+		</Select.Root>
+		<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 mt-6">
 			{#if toDisplayProducts}
-				{#each toDisplayProducts as item}
+				{#each toDisplayProducts as item (item.id)}
 					<ProductItem product={item} />
 				{/each}
 			{/if}

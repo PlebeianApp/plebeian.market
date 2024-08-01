@@ -9,8 +9,10 @@ import { format } from 'date-fns'
 
 import {
 	and,
+	asc,
 	createId,
 	db,
+	desc,
 	eq,
 	events,
 	eventTags,
@@ -88,8 +90,18 @@ export const getProductsByUserId = async (filter: ProductsFilter = productsFilte
 	error(404, 'Not found')
 }
 
-export const getProductsByStallId = async (stallId: string) => {
-	const productsResult = await db.select().from(products).where(eq(products.stallId, stallId)).execute()
+export const getProductsByStallId = async (stallId: string, filter: ProductsFilter = productsFilterSchema.parse({})) => {
+	const orderBy = {
+		createdAt: products.createdAt,
+		price: products.price,
+	}[filter.orderBy]
+
+	const productsResult = await db
+		.select()
+		.from(products)
+		.orderBy(filter.order === 'asc' ? asc(orderBy) : desc(orderBy))
+		.where(eq(products.stallId, stallId))
+		.execute()
 
 	const displayProducts: DisplayProduct[] = await Promise.all(productsResult.map(toDisplayProduct))
 
