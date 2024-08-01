@@ -3,7 +3,7 @@
 	import type { ProductCoordinatesType, StallCoordinatesType } from '$lib/stores/drawer-ui'
 	import * as Card from '$lib/components/ui/card/index.js'
 	import { KindProducts, KindStalls } from '$lib/constants'
-	import { createProductPriceQuery } from '$lib/fetch/products.queries'
+	import { createCurrencyConversionQuery } from '$lib/fetch/products.queries'
 	import { handleAddToCart } from '$lib/stores/cart'
 	import { openDrawerForProduct } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
@@ -23,7 +23,7 @@
 	const productCoordinates: ProductCoordinatesType = !id?.startsWith(String(KindProducts))
 		? (`${KindProducts}:${userId}:${id}` as ProductCoordinatesType)
 		: (id as ProductCoordinatesType)
-	$: priceQuery = createProductPriceQuery(product as DisplayProduct)
+	$: priceQuery = createCurrencyConversionQuery(currency as string, price as number)
 	$: isMyProduct = $ndkStore.activeUser?.pubkey ? $ndkStore.activeUser.pubkey === userId : false
 </script>
 

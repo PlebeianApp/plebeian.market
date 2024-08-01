@@ -4,7 +4,7 @@ import { debounce, resolveQuery } from '$lib/utils'
 import { toast } from 'svelte-sonner'
 import { derived, get, writable } from 'svelte/store'
 
-import type { ProductImage } from '@plebeian/database'
+import type { ProductImage, ProductShipping } from '@plebeian/database'
 
 export interface CartProduct {
 	id: string
@@ -14,6 +14,7 @@ export interface CartProduct {
 	currency: string
 	stockQuantity: number
 	images?: ProductImage[]
+	shipping: ProductShipping[]
 }
 
 export interface CartStall {
@@ -81,6 +82,121 @@ function createCart() {
 		return { user, stall, product }
 	}
 
+	const calculateStallTotal = async (stall: CartStall, products: Record<string, CartProduct>) => {
+		let stallTotalInCurrency = 0
+		let stallExtraShippingCost = 0
+
+		for (const productId of stall.products) {
+			const product = products[productId]
+			const productTotal = product.price * product.amount
+			stallTotalInCurrency += productTotal
+
+			if (stall?.shippingMethodId) {
+				const extraShippingCost = product.shipping?.find((s) => s.shippingId === stall.shippingMethodId)?.cost || 0
+				stallExtraShippingCost += Number(extraShippingCost) * product.amount
+			}
+		}
+
+		const [stallTotalInSats, shippingInSats, extraShippingInSats] = await Promise.all([
+			resolveQuery(() => createCurrencyConversionQuery(stall.currency, stallTotalInCurrency)),
+			stall.shippingCost && stall.currency
+				? resolveQuery(() => createCurrencyConversionQuery(stall.currency, stall.shippingCost))
+				: Promise.resolve(0),
+			stallExtraShippingCost && stall.currency
+				? resolveQuery(() => createCurrencyConversionQuery(stall.currency, stallExtraShippingCost))
+				: Promise.resolve(0),
+		])
+
+		return {
+			subtotalInSats: stallTotalInSats ?? 0,
+			shippingInSats: (shippingInSats ?? 0) + (extraShippingInSats ?? 0),
+			totalInSats: (stallTotalInSats ?? 0) + (shippingInSats ?? 0) + (extraShippingInSats ?? 0),
+			subtotalInCurrency: stallTotalInCurrency,
+			shippingInCurrency: (stall.shippingCost ?? 0) + stallExtraShippingCost,
+			totalInCurrency: stallTotalInCurrency + (stall.shippingCost ?? 0) + stallExtraShippingCost,
+			currency: stall.currency,
+		}
+	}
+
+	const calculateUserTotal = async (userPubkey: string) => {
+		const cart = get({ subscribe })
+		const user = cart.users[userPubkey]
+		if (!user) return null
+
+		let subtotalInSats = 0
+		let shippingInSats = 0
+		let totalInSats = 0
+		const currencyTotals: Record<string, { subtotal: number; shipping: number; total: number }> = {}
+
+		const stallTotalsPromises = user.stalls.map(async (stallId) => {
+			const stall = cart.stalls[stallId]
+			return await calculateStallTotal(stall, cart.products)
+		})
+
+		const stallTotals = await Promise.all(stallTotalsPromises)
+
+		for (const stallTotal of stallTotals) {
+			subtotalInSats += stallTotal.subtotalInSats
+			shippingInSats += stallTotal.shippingInSats
+			totalInSats += stallTotal.totalInSats
+
+			if (!currencyTotals[stallTotal.currency]) {
+				currencyTotals[stallTotal.currency] = { subtotal: 0, shipping: 0, total: 0 }
+			}
+			currencyTotals[stallTotal.currency].subtotal += stallTotal.subtotalInCurrency
+			currencyTotals[stallTotal.currency].shipping += stallTotal.shippingInCurrency
+			currencyTotals[stallTotal.currency].total += stallTotal.totalInCurrency
+		}
+
+		return { subtotalInSats, shippingInSats, totalInSats, currencyTotals }
+	}
+
+	const calculateGrandTotal = async () => {
+		const cart = get({ subscribe })
+		if (Object.keys(cart.users).length === 0) {
+			return {
+				grandSubtotalInSats: 0,
+				grandShippingInSats: 0,
+				grandTotalInSats: 0,
+				currencyTotals: {},
+			}
+		}
+
+		let grandSubtotalInSats = 0
+		let grandShippingInSats = 0
+		let grandTotalInSats = 0
+		const currencyTotals: Record<string, { subtotal: number; shipping: number; total: number }> = {}
+
+		const userTotalsPromises = Object.keys(cart.users).map(async (userPubkey) => {
+			return await calculateUserTotal(userPubkey)
+		})
+
+		const userTotals = await Promise.all(userTotalsPromises)
+
+		for (const userTotal of userTotals) {
+			if (userTotal) {
+				grandSubtotalInSats += userTotal.subtotalInSats
+				grandShippingInSats += userTotal.shippingInSats
+				grandTotalInSats += userTotal.totalInSats
+
+				for (const [currency, amounts] of Object.entries(userTotal.currencyTotals)) {
+					if (!currencyTotals[currency]) {
+						currencyTotals[currency] = { subtotal: 0, shipping: 0, total: 0 }
+					}
+					currencyTotals[currency].subtotal += amounts.subtotal
+					currencyTotals[currency].shipping += amounts.shipping
+					currencyTotals[currency].total += amounts.total
+				}
+			}
+		}
+
+		return {
+			grandSubtotalInSats,
+			grandShippingInSats,
+			grandTotalInSats,
+			currencyTotals,
+		}
+	}
 	return {
 		subscribe,
 		addProduct: (userPubkey: string, stallId: string, product: CartProduct, currency: string) =>
@@ -156,6 +272,46 @@ function createCart() {
 				sessionStorage.removeItem('cart')
 			}
 		},
+		handleProductUpdate: (event: CustomEvent) => {
+			const { action, userPubkey, stallId, productId, amount } = event.detail
+
+			update((cart) => {
+				switch (action) {
+					case 'increment':
+						cart.products[productId].amount = Math.min(cart.products[productId].amount + 1, cart.products[productId].stockQuantity)
+						break
+					case 'decrement':
+						cart.products[productId].amount = Math.max(cart.products[productId].amount - 1, 0)
+						break
+					case 'setAmount':
+						cart.products[productId].amount = Math.min(amount, cart.products[productId].stockQuantity)
+						break
+					case 'remove': {
+						const stall = cart.stalls[stallId]
+						if (stall) {
+							stall.products = stall.products.filter((id) => id !== productId)
+							delete cart.products[productId]
+
+							if (stall.products.length === 0) {
+								delete cart.stalls[stallId]
+								const user = cart.users[userPubkey]
+								if (user) {
+									user.stalls = user.stalls.filter((id) => id !== stallId)
+									if (user.stalls.length === 0) {
+										delete cart.users[userPubkey]
+									}
+								}
+							}
+						}
+						break
+					}
+				}
+				batchUpdate(cart)
+				return cart
+			})
+		},
+		calculateUserTotal,
+		calculateGrandTotal,
 	}
 }
 
@@ -250,6 +406,7 @@ export function handleAddToCart(userId: string, stallCoordinates: string, produc
 				stockQuantity: availableStock,
 				images: product.images,
 				currency: product.currency as string,
+				shipping: product.shipping || [],
 			},
 			currency,
 		)

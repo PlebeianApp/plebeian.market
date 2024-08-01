@@ -9,7 +9,7 @@
 	import Input from '$lib/components/ui/input/input.svelte'
 	import * as Tabs from '$lib/components/ui/tabs/index.js'
 	import { KindStalls } from '$lib/constants'
-	import { createProductPriceQuery, createProductQuery, createProductsByFilterQuery } from '$lib/fetch/products.queries'
+	import { createCurrencyConversionQuery, createProductQuery, createProductsByFilterQuery } from '$lib/fetch/products.queries'
 	import { createStallExistsQuery } from '$lib/fetch/stalls.queries'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
 	import { fetchProductData, fetchStallData, fetchUserData, normalizeProductsFromNostr, setNostrData } from '$lib/nostrSubs/utils'
@@ -43,7 +43,9 @@
 
 	$: userProfileQuery = user.exist ? createUserByIdQuery(user.id as string) : undefined
 
-	$: priceQuery = toDisplayProducts ? createProductPriceQuery(toDisplayProducts[0] as DisplayProduct) : undefined
+	$: priceQuery = toDisplayProducts
+		? createCurrencyConversionQuery(toDisplayProducts[0].currency as string, toDisplayProducts[0].price as number)
+		: undefined
 
 	$: otherProducts = user.exist ? createProductsByFilterQuery({ userId: user.id, pageSize: 3 }) : undefined
 

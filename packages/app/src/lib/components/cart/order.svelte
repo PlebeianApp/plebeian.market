@@ -2,13 +2,11 @@
 	import type { CartProduct, CartStall, CartUser } from '$lib/stores/cart'
 	import { Button } from '$lib/components/ui/button/index.js'
 	import { KindStalls } from '$lib/constants'
-	import { createCurrencyConversionQuery } from '$lib/fetch/products.queries'
-	import { resolveQuery } from '$lib/utils'
-	import { createEventDispatcher, onDestroy } from 'svelte'
+	import { cart } from '$lib/stores/cart'
+	import { createEventDispatcher, onDestroy, onMount } from 'svelte'
 
 	import type { Order } from '@plebeian/database'
 
-	import Spinner from '../assets/spinner.svelte'
 	import Separator from '../ui/separator/separator.svelte'
 	import MiniStall from './mini-stall.svelte'
 	import MiniUser from './mini-user.svelte'
@@ -19,6 +17,9 @@
 	export let products: Record<string, CartProduct>
 	export let mode: 'cart' | 'checkout' | 'payment' = 'cart'
 	export let formData: Partial<Order> = {}
+
+	let userTotal: Awaited<ReturnType<typeof cart.calculateUserTotal>> | null = null
+
 	$: hasFormData = Object.keys(formData).length > 0
 	const dispatch = createEventDispatcher()
 
@@ -38,55 +39,15 @@
 		})
 	}
 
-	async function calculateOrderTotals(
-		userStalls: string[],
-	): Promise<{ totalInSats: number; totalInCurrency: number; shippingInSats: number; shippingCurrency: number; currency: string }> {
-		let totalSats = 0
-		let shippingSats = 0
-		let totalInCurrency = 0
-		let shippingCurrency = 0
-		let currency = ''
-
-		const stallTotalsPromises = userStalls.map(async (stallId) => {
-			const stall = stalls[stallId]
-			if (stall.currency) currency = stall.currency
-
-			const stallTotal = stall.products.reduce((total, productId) => {
-				const product = products[productId]
-				return total + product.price * product.amount
-			}, 0)
-
-			const [stallTotalInSats, shippingSatsPromise] = await Promise.all([
-				resolveQuery(() => createCurrencyConversionQuery(stall.currency, stallTotal)),
-				stall.shippingCost ? resolveQuery(() => createCurrencyConversionQuery(stall.currency, stall.shippingCost)) : Promise.resolve(0),
-			])
-
-			return {
-				stallTotalInSats: stallTotalInSats || 0,
-				shippingSats: shippingSatsPromise || 0,
-				stallTotal,
-				shippingCost: stall.shippingCost,
-			}
-		})
-
-		const stallTotals = await Promise.all(stallTotalsPromises)
-
-		for (const { stallTotalInSats, shippingSats: _shippingSats, stallTotal, shippingCost } of stallTotals) {
-			totalSats += stallTotalInSats
-			shippingSats += _shippingSats
-			totalInCurrency += stallTotal
-			shippingCurrency += shippingCost
-		}
-
-		return { totalInSats: totalSats, totalInCurrency, shippingInSats: shippingSats, shippingCurrency, currency }
+	function updateUserTotal() {
+		cart.calculateUserTotal(user.pubkey).then((result) => (userTotal = result))
 	}
-	$: orderTotalsPromise = calculateOrderTotals(user.stalls)
 
-	$: {
-		orderTotalsPromise.then(({ totalInSats, shippingInSats }) => {
-			dispatch('orderTotalUpdate', { userPubkey: user.pubkey, totalInSats, shippingInSats })
-		})
+	$: if ($cart) {
+		updateUserTotal()
 	}
+
+	onMount(updateUserTotal)
 
 	onDestroy(() => {
 		dispatch('orderTotalUpdate', { userPubkey: user.pubkey, totalInSats: 0, shippingInSats: 0 })
@@ -114,23 +75,13 @@
 		</div>
 	{/each}
 
-	{#if mode === 'cart'}
-		{#await orderTotalsPromise}
-			<Spinner />
-		{:then { totalInSats, totalInCurrency, shippingInSats, shippingCurrency, currency }}
-			<div class="flex flex-col">
-				<small>Shipping: {shippingInSats.toLocaleString()} sats ({shippingCurrency} {currency})</small>
-				<small>Stall total: {totalInSats.toLocaleString()} sats ({totalInCurrency} {currency})</small>
-			</div>
-		{:catch error}
-			Error calculating total {error}
-		{/await}
-	{:else if mode === 'checkout'}
-		{#if hasFormData}
-			<Button on:click={() => console.log(formData)}>Send</Button>
-		{/if}
-	{:else if mode === 'payment'}
-		<!-- Payment mode UI -->
+	{#if (mode === 'cart' || mode === 'checkout') && userTotal}
+		<div class="flex flex-col">
+			<small>Shipping in sats: {userTotal.shippingInSats.toLocaleString()} sats</small>
+			<small>Total in sats: {userTotal.totalInSats.toLocaleString()} sats</small>
+		</div>
+	{:else if mode === 'payment' && hasFormData}
+		<Button on:click={() => console.log(formData)}>Send</Button>
 	{/if}
 </div>
 <Separator />

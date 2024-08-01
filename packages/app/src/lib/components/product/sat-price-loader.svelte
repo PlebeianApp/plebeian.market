@@ -1,12 +1,11 @@
 <script lang="ts">
 	import type { DisplayProduct } from '$lib/server/products.service'
-	import { createProductPriceQuery } from '$lib/fetch/products.queries'
+	import { createCurrencyConversionQuery } from '$lib/fetch/products.queries'
 	import { formatPrice } from '$lib/utils'
 
 	export let product: Partial<DisplayProduct>
-	$: priceQuery = createProductPriceQuery(product as DisplayProduct)
+	$: priceQuery = createCurrencyConversionQuery(product.currency as string, product.price as number)
 	export let factor = 1
-	$: priceQuery = createProductPriceQuery(product)
 </script>
 
 {#if $priceQuery.isLoading}
