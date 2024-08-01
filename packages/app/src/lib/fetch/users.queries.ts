@@ -3,6 +3,7 @@ import type { UsersFilter } from '$lib/schema'
 import type { RichUser } from '$lib/server/users.service'
 import { createQuery } from '@tanstack/svelte-query'
 import { invalidateAll } from '$app/navigation'
+import { fetchUserData } from '$lib/nostrSubs/utils'
 import { usersFilterSchema } from '$lib/schema'
 import ndkStore from '$lib/stores/ndk'
 import { derived } from 'svelte/store'
@@ -39,12 +40,18 @@ export const activeUserQuery = createQuery(
 )
 
 export const createUserByIdQuery = (id: string) =>
-	createQuery<NDKUserProfile>(
+	createQuery<NDKUserProfile | null>(
 		{
 			queryKey: ['users', id],
 			queryFn: async () => {
-				const user = (await createRequest(`GET /api/v1/users/${id}`, {})) as NDKUserProfile
-				return user
+				try {
+					const user = (await createRequest(`GET /api/v1/users/${id}`, {})) as NDKUserProfile
+					return user
+				} catch (e) {
+					const { userProfile: userData } = await fetchUserData(id)
+					if (userData) return userData
+					return null
+				}
 			},
 			enabled: !!id,
 		},

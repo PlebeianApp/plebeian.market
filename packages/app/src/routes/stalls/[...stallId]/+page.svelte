@@ -28,6 +28,7 @@
 	import { stringToHexColor, truncateString, truncateText } from '$lib/utils'
 	import { onMount } from 'svelte'
 
+	// TODO Keep working on this
 	import type { PageData } from './$types'
 
 	export let data: PageData
@@ -37,98 +38,108 @@
 	let userProfile: NDKUserProfile | null
 	let showFullDescription = false
 
-	$: stallsQuery =
-		stall.exist && user.id
-			? createStallsByFilterQuery({
-					userId: user.id,
-					stallId: stall.id,
-					pageSize: 1,
-				})
-			: undefined
-
 	let sort: Selected<'asc' | 'desc'> = {
 		label: 'Latest',
 		value: 'desc',
 	}
-	function onSortSelectedChange(v?: typeof sort) {
-		sort = v!
-	}
 
-	$: productsQuery =
-		stall.exist && user.id
-			? createProductsByFilterQuery({
-					stallId: stall.id,
-					order: sort.value ?? 'desc',
-				})
-			: undefined
-
-	$: userProfileQuery = user.exist ? createUserByIdQuery(user.id as string) : undefined
-	$: {
-		if ($userProfileQuery?.data) {
-			userProfile = $userProfileQuery?.data
-		}
-	}
-
-	$: {
-		if ($stallsQuery?.data) {
-			stallResponse = $stallsQuery?.data.stalls[0]
-		}
-	}
-
-	$: if ($productsQuery?.data) toDisplayProducts = $productsQuery?.data.products
-
-	onMount(async () => {
-		if (user.id) {
-			if (!stall.exist) {
-				const { stallNostrRes: stallData } = await fetchStallData(stall.id)
-
-				if (stallData) {
-					const normalizedStall = (await normalizeStallData(stallData)).data
-					if (normalizedStall) {
-						stallResponse = normalizedStall
-					}
-				}
-
-				const { userProfile: userData } = await fetchUserData(user.id as string)
-				if (userData) {
-					userProfile = userData
-					stallResponse.userName = userData?.name || userData?.displayName
-					stallResponse.userNip05 = userData?.nip05
-				} else {
-					userProfile = { id: user.id }
-				}
-
-				const { products: productsData } = await fetchUserProductData(user.id)
-				if (productsData?.size) {
-					const result = await normalizeProductsFromNostr(productsData, user.id as string, stall.id)
-					if (result) {
-						const { toDisplayProducts: _toDisplay } = result
-						toDisplayProducts = _toDisplay
-					}
-				}
-
-				await setNostrData(stallData, user.exist ? null : userData, productsData, appSettings.allowRegister, user.id, user.exist, false)
-			} else {
-				const { products: productsData } = await fetchUserProductData(user.id)
-				if (productsData?.size) {
-					const newProducts = getNewProducts(productsData, stall, toDisplayProducts)
-					setNostrData(null, null, newProducts, appSettings.allowRegister, user.id as string, user.exist).then((data) => {
-						data?.productsInserted && $productsQuery?.refetch()
-					})
-				}
-			}
-		}
+	$: stallsQuery = createStallsByFilterQuery({
+		userId: user.id,
+		stallId: stall.id,
+		pageSize: 1,
 	})
 
-	let isMyStall = false
+	$: console.log($stallsQuery?.data)
 
-	$: {
-		if ($ndkStore.activeUser?.pubkey) {
-			isMyStall = $ndkStore.activeUser?.pubkey === user.id
-		}
-	}
+	$: productsQuery = createProductsByFilterQuery({
+		stallId: stall.id,
+		order: sort.value ?? 'desc',
+	})
+
+	$: console.log($productsQuery?.data)
+
+	$: userProfileQuery = createUserByIdQuery(user.id as string)
+	$: console.log($userProfileQuery?.data)
+	// function onSortSelectedChange(v?: typeof sort) {
+	// 	sort = v!
+	// }
+
+	// $: productsQuery =
+	// 	stall.exist && user.id
+	// 		? createProductsByFilterQuery({
+	// 				stallId: stall.id,
+	// 				order: sort.value ?? 'desc',
+	// 			})
+	// 		: undefined
+
+	// $: userProfileQuery = user.exist ? createUserByIdQuery(user.id as string) : undefined
+	// $: {
+	// 	if ($userProfileQuery?.data) {
+	// 		userProfile = $userProfileQuery?.data
+	// 	}
+	// }
+
+	// $: {
+	// 	if ($stallsQuery?.data) {
+	// 		stallResponse = $stallsQuery?.data.stalls[0]
+	// 	}
+	// }
+
+	// $: if ($productsQuery?.data) toDisplayProducts = $productsQuery?.data.products
+
+	// onMount(async () => {
+	// 	if (user.id) {
+	// 		if (!stall.exist) {
+	// 			const { stallNostrRes: stallData } = await fetchStallData(stall.id)
+
+	// 			if (stallData) {
+	// 				const normalizedStall = (await normalizeStallData(stallData)).data
+	// 				if (normalizedStall) {
+	// 					stallResponse = normalizedStall
+	// 				}
+	// 			}
+
+	// 			const { userProfile: userData } = await fetchUserData(user.id as string)
+	// 			if (userData) {
+	// 				userProfile = userData
+	// 				stallResponse.userName = userData?.name || userData?.displayName
+	// 				stallResponse.userNip05 = userData?.nip05
+	// 			} else {
+	// 				userProfile = { id: user.id }
+	// 			}
+
+	// 			const { products: productsData } = await fetchUserProductData(user.id)
+	// 			if (productsData?.size) {
+	// 				const result = await normalizeProductsFromNostr(productsData, user.id as string, stall.id)
+	// 				if (result) {
+	// 					const { toDisplayProducts: _toDisplay } = result
+	// 					toDisplayProducts = _toDisplay
+	// 				}
+	// 			}
+
+	// 			await setNostrData(stallData, user.exist ? null : userData, productsData, appSettings.allowRegister, user.id, user.exist, false)
+	// 		} else {
+	// 			const { products: productsData } = await fetchUserProductData(user.id)
+	// 			if (productsData?.size) {
+	// 				const newProducts = getNewProducts(productsData, stall, toDisplayProducts)
+	// 				setNostrData(null, null, newProducts, appSettings.allowRegister, user.id as string, user.exist).then((data) => {
+	// 					data?.productsInserted && $productsQuery?.refetch()
+	// 				})
+	// 			}
+	// 		}
+	// 	}
+	// })
+
+	// let isMyStall = false
+
+	// $: {
+	// 	if ($ndkStore.activeUser?.pubkey) {
+	// 		isMyStall = $ndkStore.activeUser?.pubkey === user.id
+	// 	}
+	// }
 </script>
 
+<!-- 
 <main class="px-4 lg:px-12">
 	<div class="flex flex-col gap-14">
 		{#if stallResponse}
@@ -262,4 +273,4 @@
 			{/each}
 		</div>
 	{/if}
-</main>
+</main> -->
