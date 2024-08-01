@@ -19,7 +19,7 @@ export async function GET({ url: { searchParams } }) {
 	} else if (filter.data.userId) {
 		return json(await getProductsByUserId(filter.data))
 	} else if (filter.data.stallId) {
-		return json(await getProductsByStallId(filter.data.stallId))
+		return json(await getProductsByStallId(filter.data.stallId, filter.data))
 	} else {
 		return json(await getAllProducts(filter.data))
 	}
