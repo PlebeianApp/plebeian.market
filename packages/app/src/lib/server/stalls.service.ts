@@ -12,8 +12,8 @@ import { format } from 'date-fns'
 import type { PaymentDetail, Shipping, Stall } from '@plebeian/database'
 import {
 	and,
-	count,
 	asc,
+	count,
 	db,
 	desc,
 	eq,

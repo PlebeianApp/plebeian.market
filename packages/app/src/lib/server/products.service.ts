@@ -10,8 +10,8 @@ import { format } from 'date-fns'
 import type { Product, ProductImage, ProductMeta, ProductShipping, ProductTypes } from '@plebeian/database'
 import {
 	and,
-	count,
 	asc,
+	count,
 	createId,
 	db,
 	desc,
