@@ -1,5 +1,6 @@
 <script lang="ts">
 	import CatMenu from '$lib/components/category/cat-menu.svelte'
+	import Chat from '$lib/components/chat.svelte'
 	import Pattern from '$lib/components/Pattern.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
 	import { Button } from '$lib/components/ui/button/index.js'
@@ -36,24 +37,29 @@
 						</div>
 					</div>
 				{/if}
-				<div class="py-5 lg:px-12">
-					<div class="container">
-						<CatMenu />
+				<div class="container max-w-[700px]">
+					<Chat />
+					<div>
+						<div class="py-5 lg:px-12">
+							<div class="container">
+								<CatMenu />
+							</div>
+						</div>
+						{#if products?.length}
+							<div class=" px-4 py-20 lg:px-12">
+								<div class="container flex flex-col items-center">
+									<h2>Products</h2>
+									<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+										{#each products as item}
+											<ProductItem product={item} />
+										{/each}
+									</div>
+									<Button class="mt-6 p-4 font-bold" href="/products">Explore products</Button>
+								</div>
+							</div>
+						{/if}
 					</div>
 				</div>
-				{#if products?.length}
-					<div class=" px-4 py-20 lg:px-12">
-						<div class="container flex flex-col items-center">
-							<h2>Products</h2>
-							<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-								{#each products as item}
-									<ProductItem product={item} />
-								{/each}
-							</div>
-							<Button class="mt-6 p-4 font-bold" href="/products">Explore products</Button>
-						</div>
-					</div>
-				{/if}
 			</main>
 		</div>
 	</div>
