@@ -128,7 +128,7 @@ export async function handleStallNostrData(stallData: NDKEvent): Promise<boolean
 	const $createStallFromNostrEvent = get(createStallFromNostrEvent)
 	const stallEvent = await stallData.toNostrEvent()
 	const stallMutation = await $createStallFromNostrEvent.mutateAsync(stallEvent)
-	stallMutation && queryClient.invalidateQueries({ queryKey: ['product-price', stallEvent.pubkey] })
+	// stallMutation && queryClient.invalidateQueries({ queryKey: ['product-price', stallEvent.pubkey] })
 	return stallMutation ? true : false
 }
 
@@ -258,7 +258,11 @@ export async function normalizeProductsFromNostr(
 	productsData: Set<NDKEvent>,
 	userId: string,
 	stallId?: string,
-): Promise<{ toDisplayProducts: Partial<DisplayProduct>[]; stallProducts: Set<NDKEvent> } | null> {
+): Promise<{
+	toDisplayProducts: Partial<DisplayProduct>[]
+	stallProducts: Set<NDKEvent>
+	stallProductsToDisplay: Partial<DisplayProduct>[]
+} | null> {
 	if (!productsData.size) return null
 
 	const processedProducts = await Promise.all(Array.from(productsData).map((event) => processProduct(event, userId, stallId)))
@@ -270,13 +274,14 @@ export async function normalizeProductsFromNostr(
 	return {
 		toDisplayProducts: validProducts.map((p) => p.displayProduct),
 		stallProducts: new Set(validProducts.map((p) => p.event)),
+		stallProductsToDisplay: validProducts.map((p) => p.displayProduct),
 	}
 }
 
 export async function setNostrData(
-	stallData: NDKEvent | null,
-	userData: NDKUserProfile | null,
-	productsData: Set<NDKEvent> | null,
+	stallData: NDKEvent | null | undefined,
+	userData: NDKUserProfile | null | undefined,
+	productsData: Set<NDKEvent> | null | undefined,
 	allowRegister: boolean = false,
 	userId: string,
 	userExists: boolean = false,

@@ -33,66 +33,66 @@
 		appSettings: { allowRegister },
 	} = data
 
-	let userProfile: NDKUserProfile | null = null
-	let nostrStalls: Partial<RichStall>[] = []
-	let toDisplayProducts: Partial<DisplayProduct>[] = []
+	// let userProfile: NDKUserProfile | null = null
+	// let nostrStalls: Partial<RichStall>[] = []
+	// let toDisplayProducts: Partial<DisplayProduct>[] = []
 	let following = false
 	let showFullAbout = false
-	$: isMe = $ndkStore.activeUser?.pubkey === id
+	$: isMe = $ndkStore.activeUser?.pubkey == id
 
-	$: stallsQuery = exist ? createStallsByFilterQuery({ userId: id }) : undefined
-	$: productsQuery = exist ? createProductsByFilterQuery({ userId: id }) : undefined
-	$: userProfileQuery = exist ? createUserByIdQuery(id) : undefined
+	$: userProfileQuery = createUserByIdQuery(id)
+	$: stallsQuery = createStallsByFilterQuery({ userId: id })
+	$: productsQuery = createProductsByFilterQuery({ userId: id })
 
-	$: stallsMixture = [...($stallsQuery?.data?.stalls ?? []), ...nostrStalls]
+	// $: stallsMixture = [...($stallsQuery?.data?.stalls ?? []), ...nostrStalls]
 
-	$: {
-		if (exist && $userProfileQuery?.data) userProfile = $userProfileQuery.data
-		if (exist && $productsQuery?.data) toDisplayProducts = $productsQuery.data.products
-	}
+	// $: {
+	// 	if (exist && $userProfileQuery?.data) userProfile = $userProfileQuery.data
+	// 	if (exist && $productsQuery?.data) toDisplayProducts = $productsQuery.data.products
+	// }
 
-	onMount(async () => {
-		if (!id) return
+	// onMount(async () => {
+	// 	if (!id) return
 
-		const fetchAndProcessData = async () => {
-			const { stallNostrRes } = await fetchUserStallsData(id)
-			if (stallNostrRes) {
-				nostrStalls = (await Promise.all([...stallNostrRes].map(normalizeStallData)))
-					.filter(({ data: stall }) => !$stallsQuery?.data?.stalls.some((existingStall) => stall?.id === existingStall.id))
-					.map(({ data }) => data as Partial<RichStall>)
-					.filter(Boolean)
-			}
+	// 	const fetchAndProcessData = async () => {
+	// 		const { stallNostrRes } = await fetchUserStallsData(id)
+	// 		if (stallNostrRes) {
+	// 			nostrStalls = (await Promise.all([...stallNostrRes].map(normalizeStallData)))
+	// 				.filter(({ data: stall }) => !$stallsQuery?.data?.stalls.some((existingStall) => stall?.id === existingStall.id))
+	// 				.map(({ data }) => data as Partial<RichStall>)
+	// 				.filter(Boolean)
+	// 		}
 
-			if (!exist) {
-				const { userProfile: userData } = await fetchUserData(id)
-				if (userData) userProfile = userData
-				// FIXME products from stalls with forbidden words are beign displayed
-				const { products: productsData } = await fetchUserProductData(id)
-				if (productsData?.size) {
-					toDisplayProducts = await mergeProducts(toDisplayProducts, productsData, id)
-				}
+	// 		if (!exist) {
+	// 			const { userProfile: userData } = await fetchUserData(id)
+	// 			if (userData) userProfile = userData
+	// 			// FIXME products from stalls with forbidden words are beign displayed
+	// 			const { products: productsData } = await fetchUserProductData(id)
+	// 			if (productsData?.size) {
+	// 				toDisplayProducts = await mergeProducts(toDisplayProducts, productsData, id)
+	// 			}
 
-				await setNostrData(null, userProfile, null, allowRegister, id, exist)
-			} else {
-				const userProfileUpdatedAt = $userProfileQuery?.data?.updated_at
-				const elapsedTime = getElapsedTimeInDays(userProfileUpdatedAt as number)
-				if (elapsedTime > 5 && userProfile) {
-					const { userProfile: newUserProfile } = await fetchUserData(id)
-					if (newUserProfile) {
-						await handleUserNostrData(newUserProfile, id)
-						console.log('User profile updated from nostr')
-					}
-				}
+	// 			await setNostrData(null, userProfile, null, allowRegister, id, exist)
+	// 		} else {
+	// 			const userProfileUpdatedAt = $userProfileQuery?.data?.updated_at
+	// 			const elapsedTime = getElapsedTimeInDays(userProfileUpdatedAt as number)
+	// 			if (elapsedTime > 5 && userProfile) {
+	// 				const { userProfile: newUserProfile } = await fetchUserData(id)
+	// 				if (newUserProfile) {
+	// 					await handleUserNostrData(newUserProfile, id)
+	// 					console.log('User profile updated from nostr')
+	// 				}
+	// 			}
 
-				const { products: productsData } = await fetchUserProductData(id)
-				if (productsData?.size) {
-					toDisplayProducts = await mergeProducts(toDisplayProducts, productsData, id)
-				}
-			}
-		}
+	// 			const { products: productsData } = await fetchUserProductData(id)
+	// 			if (productsData?.size) {
+	// 				toDisplayProducts = await mergeProducts(toDisplayProducts, productsData, id)
+	// 			}
+	// 		}
+	// 	}
 
-		fetchAndProcessData()
-	})
+	// 	fetchAndProcessData()
+	// })
 
 	const handleFollow = () => {
 		const user = $ndkStore.getUser({ pubkey: id })
@@ -117,8 +117,8 @@
 	}
 </script>
 
-{#if userProfile}
-	{@const { image, name, about, banner } = userProfile}
+{#if $userProfileQuery.data}
+	{@const { image, name, about, banner } = $userProfileQuery.data}
 	<div class="px-4 lg:px-12">
 		<div class="flex flex-col gap-14">
 			<div class="relative h-auto">
@@ -180,22 +180,22 @@
 					</div>
 				</div>
 			</div>
-			{#if stallsMixture.length}
+			{#if $stallsQuery.data?.stalls?.length}
 				<div class="container">
 					<h2>Stalls</h2>
 					<div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-						{#each stallsMixture as item (item.id)}
+						{#each $stallsQuery.data?.stalls as item (item.id)}
 							<StallItem stallData={item} />
 						{/each}
 					</div>
 				</div>
 			{/if}
 
-			{#if toDisplayProducts.length}
+			{#if $productsQuery.data?.products.length}
 				<div class="container">
 					<h2>Products</h2>
 					<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-						{#each toDisplayProducts as item (item.id)}
+						{#each $productsQuery.data?.products as item (item.id)}
 							<ProductItem product={item} />
 						{/each}
 					</div>

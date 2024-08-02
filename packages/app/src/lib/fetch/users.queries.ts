@@ -3,9 +3,11 @@ import type { UsersFilter } from '$lib/schema'
 import type { RichUser } from '$lib/server/users.service'
 import { createQuery } from '@tanstack/svelte-query'
 import { invalidateAll } from '$app/navigation'
-import { fetchUserData } from '$lib/nostrSubs/utils'
+import { fetchUserData, handleUserNostrData } from '$lib/nostrSubs/utils'
 import { usersFilterSchema } from '$lib/schema'
 import ndkStore from '$lib/stores/ndk'
+import { shouldRegister } from '$lib/utils'
+import { ofetch } from 'ofetch'
 import { derived } from 'svelte/store'
 
 import type { UserMeta } from '@plebeian/database'
@@ -39,6 +41,24 @@ export const activeUserQuery = createQuery(
 	queryClient,
 )
 
+// export const createUserByIdQuery = (id: string) =>
+// 	createQuery<NDKUserProfile | null>(
+// 		{
+// 			queryKey: ['users', id],
+// 			queryFn: async () => {
+// 				try {
+// 					const user = (await createRequest(`GET /api/v1/users/${id}`, {})) as NDKUserProfile
+// 					return user
+// 				} catch (e) {
+// 					const { userProfile: userData } = await fetchUserData(id)
+// 					if (userData) return userData
+// 					return null
+// 				}
+// 			},
+// 			enabled: !!id,
+// 		},
+// 		queryClient,
+// 	)
 export const createUserByIdQuery = (id: string) =>
 	createQuery<NDKUserProfile | null>(
 		{
@@ -47,9 +67,24 @@ export const createUserByIdQuery = (id: string) =>
 				try {
 					const user = (await createRequest(`GET /api/v1/users/${id}`, {})) as NDKUserProfile
 					return user
-				} catch (e) {
+				} catch (error) {
 					const { userProfile: userData } = await fetchUserData(id)
-					if (userData) return userData
+					if (userData) {
+						// console.log("Looking the userData",userData)
+						// const shouldReg = await shouldRegister(allowRegister, userExists, id);
+						// if (shouldReg) {
+						//   await handleUserNostrData(userData, id);
+						// }
+						return userData
+					} else if (!userData && id) {
+						// console.log("Seems that there is not that data",userData)
+						// const shouldReg = await shouldRegister(allowRegister, userExists, id);
+						// if (shouldReg) {
+						//   await ofetch('/p', { method: 'POST', body: { userId: id } });
+						//   console.log('Null user registered successfully', id);
+						// }
+						return { id }
+					}
 					return null
 				}
 			},
