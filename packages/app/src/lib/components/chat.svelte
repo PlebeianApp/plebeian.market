@@ -117,7 +117,7 @@
 	</div>
 
 	<div>
-		<a href="#" class={cn('h-9 w-9', 'dark:bg-muted dark:text-muted-foreground dark:hover:bg-muted dark:hover:text-white')}>
+		<a href="/" class={cn('h-9 w-9', 'dark:bg-muted dark:text-muted-foreground dark:hover:bg-muted dark:hover:text-white')}>
 			<Info size={20} class="text-muted-foreground" />
 		</a>
 	</div>
