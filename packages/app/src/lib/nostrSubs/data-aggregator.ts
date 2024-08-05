@@ -48,11 +48,11 @@ class DataAggregator {
 
 export const dataAggregator = new DataAggregator()
 
-export async function processQueuedInsertions(allowRegister: boolean = false) {
+export async function processQueuedInsertions(allowRegister?: boolean) {
 	const userQueue = dataAggregator.getUserQueue()
 	const stallQueue = dataAggregator.getStallQueue()
 	const productQueue = dataAggregator.getProductQueue()
-
+	if (allowRegister == undefined || !userQueue.size || !stallQueue.size || !productQueue.size) return
 	const allUserIds = new Set([
 		...Array.from(userQueue).map((user) => user.id as string),
 		...Array.from(stallQueue)
@@ -62,7 +62,7 @@ export async function processQueuedInsertions(allowRegister: boolean = false) {
 			.map((product) => product.pubkey)
 			.filter(Boolean),
 	])
-	if (!allUserIds.size) return
+
 	console.log('Looking all user Ids', allUserIds)
 	for (const userId of allUserIds) {
 		const userExists = await checkIfUserExists(userId)

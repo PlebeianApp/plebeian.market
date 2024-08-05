@@ -1,11 +1,9 @@
 import type { NostrEvent } from '@nostr-dev-kit/ndk'
 import type { EventCoordinates } from '$lib/interfaces'
 import type { StallsFilter } from '$lib/schema'
-import type { DisplayProduct } from '$lib/server/products.service'
 import { error } from '@sveltejs/kit'
 import { KindStalls, standardDisplayDateFormat } from '$lib/constants'
 import { stallsFilterSchema } from '$lib/schema'
-import { getProductsByStallId } from '$lib/server/products.service'
 import { customTagValue, getEventCoordinates } from '$lib/utils'
 import { format } from 'date-fns'
 

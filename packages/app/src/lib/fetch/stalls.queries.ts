@@ -40,9 +40,9 @@ export const createStallQuery = (stallId: string) =>
 	)
 
 export const createStallsByFilterQuery = (filter: Partial<StallsFilter>) =>
-	createQuery(
+	createQuery<{ total: number; stalls: Partial<RichStall>[] } | null>(
 		{
-			queryKey: ['stalls', ...Object.values(stallsFilterSchema.safeParse(filter).data as Partial<StallsFilter>)],
+			queryKey: ['stalls', ...Object.values(filter)],
 			queryFn: async () => {
 				const response = await createRequest('GET /api/v1/stalls', {
 					params: stallsFilterSchema.parse(filter),
@@ -67,6 +67,7 @@ export const createStallsByFilterQuery = (filter: Partial<StallsFilter>) =>
 						}
 					}
 				}
+				return null
 			},
 		},
 		queryClient,

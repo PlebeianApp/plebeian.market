@@ -45,8 +45,7 @@ export const createUserByIdQuery = (id: string) =>
 			queryKey: ['users', id],
 			queryFn: async () => {
 				try {
-					const user = (await createRequest(`GET /api/v1/users/${id}`, {})) as NDKUserProfile
-					return user
+					return (await createRequest(`GET /api/v1/users/${id}`, {})) as NDKUserProfile
 				} catch (error) {
 					const { userProfile: userData } = await fetchUserData(id)
 					if (userData) {

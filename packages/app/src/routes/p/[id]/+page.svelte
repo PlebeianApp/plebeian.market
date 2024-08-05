@@ -18,10 +18,7 @@
 	import type { PageData } from './$types'
 
 	export let data: PageData
-	const {
-		id,
-		appSettings: { allowRegister },
-	} = data
+	const { id } = data
 
 	let nostrStalls: Partial<RichStall>[] = []
 	let toDisplayProducts: Partial<DisplayProduct>[] = []
