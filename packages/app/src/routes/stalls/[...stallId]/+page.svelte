@@ -1,5 +1,4 @@
 <script lang="ts">
-	import type { NDKEvent } from '@nostr-dev-kit/ndk'
 	import type { Selected } from 'bits-ui'
 	import ProductItem from '$lib/components/product/product-item.svelte'
 	import * as Accordion from '$lib/components/ui/accordion'
@@ -11,7 +10,6 @@
 	import { createProductsByFilterQuery } from '$lib/fetch/products.queries'
 	import { createStallQuery } from '$lib/fetch/stalls.queries'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
-	import { normalizeStallData, setNostrData } from '$lib/nostrSubs/utils'
 	import { openDrawerForStall } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
 	import { stringToHexColor, truncateString, truncateText } from '$lib/utils'
@@ -19,11 +17,7 @@
 	import type { PageData } from './$types'
 
 	export let data: PageData
-	const {
-		stall,
-		user,
-		appSettings: { allowRegister },
-	} = data
+	const { stall, user } = data
 	let showFullDescription = false
 
 	let sort: Selected<'asc' | 'desc'> = {
@@ -37,9 +31,7 @@
 	$: userProfileQuery = createUserByIdQuery(String(user.id))
 
 	$: stallQuery = createStallQuery(stall.id)
-
 	$: productsQuery = createProductsByFilterQuery({
-		userId: user.id,
 		stallId: stall.id,
 	})
 
@@ -49,18 +41,13 @@
 		if ($ndkStore.activeUser?.pubkey) {
 			isMyStall = $ndkStore.activeUser?.pubkey == user.id
 		}
-		if ($stallQuery.data?.origin == 'nostr' && $productsQuery.data?.origin == 'nostr' && $userProfileQuery.data) {
-			console.log('doing this')
-			setNostrData($stallQuery.data.event, $userProfileQuery.data, $productsQuery.data.events, allowRegister, String(user.id), user.exist)
-		}
 	}
 </script>
 
-<!-- 
 <main class="px-4 lg:px-12">
 	<div class="flex flex-col gap-14">
 		{#if $stallQuery.data?.stall}
-			{@const { image, name, description, currency, createDate, shipping } = $stallQuery.data?.stall}
+			{@const { image, name, description, currency, createDate, shipping } = $stallQuery.data.stall}
 			<div class="flex flex-col gap-2">
 				{#if image}
 					<div class="border-black border-2 w-full h-[25vh] relative overflow-hidden">
@@ -192,4 +179,4 @@
 			{/each}
 		</div>
 	{/if}
-</main> -->
+</main>

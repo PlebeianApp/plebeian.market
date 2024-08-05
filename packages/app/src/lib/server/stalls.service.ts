@@ -181,54 +181,14 @@ export const getAllStalls = async (filter: StallsFilter = stallsFilterSchema.par
 	error(404, 'Not found')
 }
 
-export type StallInfo = {
-	id: string
-	name: string
-	description: string
-	currency: string
-	createDate: string
-	userId: string
-	products: DisplayProduct[]
-	image?: string
-}
-
-export const getStallById = async (id: string): Promise<StallInfo> => {
+export const getStallById = async (id: string): Promise<RichStall> => {
 	const [uniqueStall] = await db.select().from(stalls).where(eq(stalls.id, id)).execute()
 	if (!uniqueStall) {
 		error(404, 'Stall not found')
 	}
-	const [ownerRes] = await db
-		.select({
-			userId: users.id,
-		})
-		.from(users)
-		.where(eq(users.id, uniqueStall.userId))
-		.execute()
-
-	if (!ownerRes.userId) {
-		error(404, 'Not found')
-	}
-	const stallProducts = await getProductsByStallId(uniqueStall.id)
-
-	const [image] = await db
-		.select()
-		.from(eventTags)
-		.where(and(eq(eventTags.eventId, id), eq(eventTags.tagName, 'image')))
-		.execute()
-
-	const stallInfo = {
-		id: uniqueStall.id,
-		name: uniqueStall.name,
-		description: uniqueStall.description,
-		currency: uniqueStall.currency,
-		createDate: format(uniqueStall.createdAt, standardDisplayDateFormat),
-		userId: ownerRes.userId,
-		image: image?.tagValue ?? undefined,
-		products: stallProducts.products,
-	}
-
-	if (stallInfo) {
-		return stallInfo
+	const richStall = await resolveStalls(uniqueStall)
+	if (richStall) {
+		return richStall
 	}
 
 	error(404, 'Not found')

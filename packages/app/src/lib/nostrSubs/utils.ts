@@ -75,16 +75,21 @@ export async function fetchUserData(
 	})
 
 	const userProfile = await ndkUser.fetchProfile({ cacheUsage: subCacheUsage ?? NDKSubscriptionCacheUsage.ONLY_RELAY })
+
 	return { userProfile }
 }
 
-export async function fetchUserProductData(userId: string): Promise<{
+export async function fetchUserProductData(
+	userId: string,
+	identifier?: string,
+): Promise<{
 	products: Set<NDKEvent> | null
 }> {
 	const $ndkStore = get(ndkStore)
 	const productsFilter = {
 		kinds: [KindProducts],
 		authors: [userId],
+		...(identifier && { '#d': [identifier] }),
 	}
 	const productsNostrRes = await $ndkStore.fetchEvents(productsFilter, { cacheUsage: NDKSubscriptionCacheUsage.PARALLEL })
 
@@ -261,7 +266,6 @@ export async function normalizeProductsFromNostr(
 ): Promise<{
 	toDisplayProducts: Partial<DisplayProduct>[]
 	stallProducts: Set<NDKEvent>
-	stallProductsToDisplay: Partial<DisplayProduct>[]
 } | null> {
 	if (!productsData.size) return null
 
@@ -274,7 +278,6 @@ export async function normalizeProductsFromNostr(
 	return {
 		toDisplayProducts: validProducts.map((p) => p.displayProduct),
 		stallProducts: new Set(validProducts.map((p) => p.event)),
-		stallProductsToDisplay: validProducts.map((p) => p.displayProduct),
 	}
 }
 
@@ -323,56 +326,4 @@ export async function setNostrData(
 		console.error(e)
 		return undefined
 	}
-}
-
-export const mergeProducts = async (
-	existingProducts: Partial<DisplayProduct>[],
-	newProductsData: Set<NDKEvent>,
-	userId: string,
-): Promise<Partial<DisplayProduct>[]> => {
-	if (!newProductsData.size) return existingProducts
-
-	try {
-		const newProducts = await normalizeProductsFromNostr(newProductsData, userId)
-		if (!newProducts?.toDisplayProducts.length) return existingProducts
-		const productMap = new Map()
-		const existingLength = existingProducts.length
-		const newLength = newProducts?.toDisplayProducts.length
-
-		for (let i = 0; i < existingLength; i++) {
-			const product = existingProducts[i]
-			if (!product?.identifier) continue
-			productMap.set(product.identifier, product)
-		}
-
-		for (let i = 0; i < newLength; i++) {
-			const product = newProducts.toDisplayProducts[i]
-			productMap.set(product.identifier, product)
-		}
-		return Array.from(productMap.values())
-	} catch (error) {
-		console.error('Error merging products:', error)
-		return existingProducts
-	}
-}
-
-export const getNewProducts = (products: Set<NDKEvent>, stall: StallCheck, existingProducts: Partial<DisplayProduct>[]): Set<NDKEvent> => {
-	const stallIdSuffix = stall.id.split(':')[2]
-	const existingProductIds = new Set(existingProducts.map((p) => p.id?.split(':')[2]))
-	const newProducts = new Set<NDKEvent>()
-
-	for (const product of products) {
-		let parsedContent
-		try {
-			parsedContent = JSON.parse(product.content)
-		} catch {
-			continue
-		}
-
-		if (parsedContent.stall_id === stallIdSuffix && !existingProductIds.has(parsedContent.id)) {
-			newProducts.add(product)
-		}
-	}
-
-	return newProducts
 }

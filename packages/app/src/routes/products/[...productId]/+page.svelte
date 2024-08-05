@@ -1,22 +1,16 @@
 <script lang="ts">
-	import type { NDKUserProfile } from '@nostr-dev-kit/ndk'
 	import type { CarouselAPI } from '$lib/components/ui/carousel/context'
-	import type { DisplayProduct } from '$lib/server/products.service'
 	import Spinner from '$lib/components/assets/spinner.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
 	import Button from '$lib/components/ui/button/button.svelte'
 	import * as Carousel from '$lib/components/ui/carousel'
 	import Input from '$lib/components/ui/input/input.svelte'
 	import * as Tabs from '$lib/components/ui/tabs/index.js'
-	import { KindStalls } from '$lib/constants'
 	import { createCurrencyConversionQuery, createProductQuery, createProductsByFilterQuery } from '$lib/fetch/products.queries'
-	import { createStallExistsQuery } from '$lib/fetch/stalls.queries'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
-	import { fetchProductData, fetchStallData, fetchUserData, normalizeProductsFromNostr, setNostrData } from '$lib/nostrSubs/utils'
 	import { handleAddToCart } from '$lib/stores/cart'
 	import { openDrawerForProduct } from '$lib/stores/drawer-ui'
-	import { cn, resolveQuery, stringToHexColor, truncateText } from '$lib/utils'
-	import { onMount } from 'svelte'
+	import { cn, stringToHexColor, truncateText } from '$lib/utils'
 
 	import type { PageData } from './$types'
 
@@ -31,33 +25,17 @@
 		appSettings: { allowRegister },
 	} = data)
 	let isMyProduct = false
-	// let toDisplayProducts: Partial<DisplayProduct>[]
-	// let userProfile: NDKUserProfile | null
-	// let userProducts: DisplayProduct[]
 	let qtyToCart = 1
 
 	const activeTab =
 		'w-full font-bold border-b-2 border-black text-black data-[state=active]:border-b-primary data-[state=active]:text-primary'
 
 	$: productsQuery = createProductQuery(productRes.id)
-
 	$: userProfileQuery = createUserByIdQuery(user.id as string)
 
 	$: priceQuery = createCurrencyConversionQuery($productsQuery.data?.currency as string, $productsQuery.data?.price as number)
 
 	$: otherProducts = user.exist ? createProductsByFilterQuery({ userId: user.id, pageSize: 3 }) : undefined
-
-	// $: {
-	// 	if ($productsQuery?.data) {
-	// 		toDisplayProducts = [$productsQuery?.data]
-	// 	}
-	// 	if ($userProfileQuery?.data) {
-	// 		userProfile = $userProfileQuery?.data
-	// 	}
-	// 	if ($otherProducts?.data) {
-	// 		userProducts = $otherProducts.data.products
-	// 	}
-	// }
 
 	$: if (api) {
 		count = api.scrollSnapList().length
@@ -66,33 +44,6 @@
 			current = api.selectedScrollSnap() + 1
 		})
 	}
-
-	// onMount(async () => {
-	// 	if (!productRes.exist && productRes.id) {
-	// 		const { userProfile: userData } = await fetchUserData(user.id as string)
-	// 		userData && (userProfile = userData)
-	// 		const { nostrProduct: productsData } = await fetchProductData(productRes.id as string)
-	// 		if (!productsData?.size) return
-	// 		if (productsData) {
-	// 			const result = await normalizeProductsFromNostr(productsData, user.id as string)
-	// 			if (result) {
-	// 				const { toDisplayProducts: _toDisplay } = result
-	// 				toDisplayProducts = _toDisplay
-	// 			}
-	// 		}
-	// 		const productStallId = JSON.parse(Array.from(productsData)[0]?.content as string).stall_id
-	// 		const { stallNostrRes } = await fetchStallData(`${KindStalls}:${user.id}:${productStallId}`)
-	// 		const stallExist = await resolveQuery(() => createStallExistsQuery(`${KindStalls}:${user.id}:${productStallId}`))
-	// 		await setNostrData(
-	// 			stallExist ? null : stallNostrRes,
-	// 			user.exist ? null : userData,
-	// 			stallExist ? null : productsData,
-	// 			allowRegister,
-	// 			user.id as string,
-	// 			user.exist,
-	// 		)
-	// 	}
-	// })
 
 	const handleIncrement = () => {
 		if (qtyToCart < $productsQuery.data?.quantity) {

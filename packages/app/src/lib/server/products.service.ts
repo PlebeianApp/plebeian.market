@@ -28,7 +28,7 @@ import {
 } from '@plebeian/database'
 
 import { productEventSchema } from '../../schema/nostr-events'
-import { getStallById } from './stalls.service'
+import { stallExists } from './stalls.service'
 import { getNip05ByUserId } from './users.service'
 
 export type DisplayProduct = Pick<Product, 'id' | 'description' | 'currency' | 'quantity' | 'userId' | 'identifier' | 'stallId'> & {
@@ -153,8 +153,11 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 		const productPromises = productEvents.map(async (productEvent) => {
 			try {
 				const eventCoordinates = getEventCoordinates(productEvent)
-				if (!eventCoordinates) return
+				if (!eventCoordinates) {
+					return
+				}
 				const productEventContent = JSON.parse(productEvent.content)
+
 				const {
 					data: parsedProduct,
 					success,
@@ -164,20 +167,27 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 					...productEventContent,
 				})
 
-				if (!success) error(500, { message: `${parseError}` })
+				if (!success) {
+					error(500, { message: `${parseError}` })
+				}
 
 				if (!parsedProduct) {
 					throw Error('Bad product schema')
 				}
 
-				const stall = parsedProduct.stallId?.startsWith(`${KindStalls}`)
-					? await getStallById(parsedProduct.stallId)
-					: await getStallById(`${KindStalls}:${productEvent.pubkey}:${parsedProduct.stallId}`)
-				const parentId = customTagValue(productEvent.tags, 'a')[0] || null
-				const extraCost = parsedProduct.shipping?.length ? parsedProduct.shipping[0].cost : 0
+				const stallId = parsedProduct.stallId?.startsWith(`${KindStalls}`)
+					? parsedProduct.stallId
+					: `${KindStalls}:${productEvent.pubkey}:${parsedProduct.stallId}`
+
+				const stall = await stallExists(stallId)
+
 				if (!stall) {
 					throw Error('Stall not found')
 				}
+
+				const parentId = customTagValue(productEvent.tags, 'a')[0] || null
+
+				const extraCost = parsedProduct.shipping?.length ? parsedProduct.shipping[0].cost : 0
 
 				if (!parsedProduct.type) {
 					parsedProduct.type = 'simple'
@@ -196,7 +206,7 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 					productType: parsedProduct.type as ProductTypes,
 					parentId: parentId,
 					userId: productEvent.pubkey,
-					stallId: stall.id,
+					stallId: stallId,
 					quantity: parsedProduct.quantity ?? 0,
 				}
 
@@ -230,6 +240,11 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 				})
 
 				const productResult = await db.insert(products).values(insertProduct).returning()
+
+				if (!productResult.length) {
+					throw Error('Failed to insert product')
+				}
+
 				if (insertSpecs?.length) {
 					await db.insert(productMeta).values(insertSpecs).returning()
 				}
@@ -238,23 +253,23 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 					await db.insert(productImages).values(insertProductImages).returning()
 				}
 				// FIXME (#191) Right now this is just a basic filtering
-				if (parsedProduct.shipping?.length) {
-					const validShipping = parsedProduct.shipping.filter((s) => s.id && s.id.trim() !== '')
-					if (validShipping.length) {
-						await db
-							.insert(productShipping)
-							.values(
-								validShipping.map((s) => ({
-									cost: s.cost!,
-									shippingId: s.id!,
-									productId: eventCoordinates!.coordinates!,
-								})),
-							)
-							.execute()
-					} else {
-						console.log('No valid shipping entries to insert')
-					}
-				}
+				// if (parsedProduct.shipping?.length) {
+				// 	const validShipping = parsedProduct.shipping.filter((s) => s.id && s.id.trim() !== '')
+				// 	if (validShipping.length) {
+				// 		await db
+				// 			.insert(productShipping)
+				// 			.values(
+				// 				validShipping.map((s) => ({
+				// 					cost: s.cost!,
+				// 					shippingId: s.id!,
+				// 					productId: eventCoordinates!.coordinates!,
+				// 				})),
+				// 			)
+				// 			.execute()
+				// 	} else {
+				// 		console.log('No valid shipping entries to insert')
+				// 	}
+				// }
 
 				if (productEvent.tags.length) {
 					await db

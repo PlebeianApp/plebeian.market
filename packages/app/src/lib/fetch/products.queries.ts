@@ -1,13 +1,12 @@
-import type { NDKEvent } from '@nostr-dev-kit/ndk'
 import type { ProductsFilter } from '$lib/schema'
 import type { DisplayProduct } from '$lib/server/products.service'
 import { createQuery } from '@tanstack/svelte-query'
-import { fetchUserProductData, handleProductNostrData, normalizeProductsFromNostr } from '$lib/nostrSubs/utils'
+import { dataAggregator } from '$lib/nostrSubs/data-aggregator'
+import { fetchUserProductData, normalizeProductsFromNostr } from '$lib/nostrSubs/utils'
 import { productsFilterSchema } from '$lib/schema'
-import { currencyToBtc, resolveQuery, shouldRegister } from '$lib/utils'
+import { currencyToBtc } from '$lib/utils'
 
 import { createRequest, queryClient } from './client'
-import { createStallExistsQuery } from './stalls.queries'
 
 declare module './client' {
 	interface Endpoints {
@@ -25,13 +24,31 @@ declare module './client' {
 }
 
 export const createProductQuery = (productId: string) =>
-	createQuery<DisplayProduct>(
+	createQuery<DisplayProduct | null>(
 		{
 			queryKey: ['products', productId],
 			queryFn: async () => {
-				return await createRequest(`GET /api/v1/products/${productId}`, {
-					auth: false,
-				})
+				try {
+					const response = await createRequest(`GET /api/v1/products/${productId}`, {
+						auth: false,
+					})
+					if (response) return response
+					throw Error
+				} catch {
+					const [_, userId, productIdentifier] = productId.split(':')
+					console.log(productIdentifier)
+					const { products: productsData } = await fetchUserProductData(userId, productIdentifier)
+					if (productsData?.size) {
+						const result = await normalizeProductsFromNostr(productsData, userId)
+						if (result) {
+							const { toDisplayProducts, stallProducts } = result
+							dataAggregator.addProducts(stallProducts)
+
+							return toDisplayProducts[0] as DisplayProduct
+						}
+					}
+				}
+				return null
 			},
 		},
 		queryClient,
@@ -52,33 +69,8 @@ export const createCurrencyConversionQuery = (fromCurrency: string, amount: numb
 		queryClient,
 	)
 
-// export const createProductsByFilterQuery = (filter: Partial<ProductsFilter>) =>
-// 	createQuery(
-// 		{
-// 			queryKey: ['products', ...Object.values(filter)],
-// 			queryFn: async () => {
-// 				const response = await createRequest('GET /api/v1/products', {
-// 					params: productsFilterSchema.parse(filter),
-// 				})
-// 				if (response.products.length) return response
-// 				if (filter.stallId) {
-// 					const userId = filter.stallId.split(':')[1]
-// 					const { products: productsData } = await fetchUserProductData(userId)
-// 					if (productsData?.size) {
-// 						const result = await normalizeProductsFromNostr(productsData, userId, filter.stallId)
-// 						if (result?.toDisplayProducts.length) {
-// 							const { toDisplayProducts: _toDisplay } = result
-// 							return { total: _toDisplay.length, products: _toDisplay }
-// 						}
-// 					}
-// 				}
-// 			},
-// 		},
-// 		queryClient,
-// 	)
-
 export const createProductsByFilterQuery = (filter: Partial<ProductsFilter>) =>
-	createQuery<{ total: number; products: Partial<DisplayProduct>[]; origin: 'db' | 'nostr'; events?: Set<NDKEvent> } | null>(
+	createQuery<{ total: number; products: Partial<DisplayProduct>[] } | null>(
 		{
 			queryKey: ['products', ...Object.values(filter)],
 			queryFn: async () => {
@@ -86,7 +78,7 @@ export const createProductsByFilterQuery = (filter: Partial<ProductsFilter>) =>
 					const response = await createRequest('GET /api/v1/products', {
 						params: productsFilterSchema.parse(filter),
 					})
-					if (response.products.length) return { ...response, origin: 'db' }
+					if (response.products.length) return response
 					throw Error
 				} catch (error) {
 					const userId = (filter.stallId && filter.stallId.split(':')[1]) || filter?.userId || null
@@ -97,25 +89,24 @@ export const createProductsByFilterQuery = (filter: Partial<ProductsFilter>) =>
 						if (productsData?.size) {
 							const result = await normalizeProductsFromNostr(productsData, userId, filter.stallId)
 							if (result) {
-								const { stallProductsToDisplay } = result
+								const { toDisplayProducts, stallProducts } = result
+								dataAggregator.addProducts(stallProducts)
+
 								return {
-									total: stallProductsToDisplay.length,
-									products: stallProductsToDisplay as DisplayProduct[],
-									origin: 'nostr',
-									events: productsData,
+									total: toDisplayProducts.length,
+									products: toDisplayProducts as DisplayProduct[],
 								}
 							}
 						}
 					} else if (filter.userId) {
 						if (productsData?.size) {
+							dataAggregator.addProducts(productsData)
 							const result = await normalizeProductsFromNostr(productsData, filter.userId)
 							if (result) {
 								const { toDisplayProducts } = result
 								return {
 									total: toDisplayProducts.length,
 									products: toDisplayProducts as DisplayProduct[],
-									origin: 'nostr',
-									events: productsData,
 								}
 							}
 						}

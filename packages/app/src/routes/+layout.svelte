@@ -9,18 +9,21 @@
 	import '../app.css'
 
 	import { QueryClientProvider } from '@tanstack/svelte-query'
-	import { goto } from '$app/navigation'
+	import { goto, onNavigate } from '$app/navigation'
 	import Drawer from '$lib/components/drawer.svelte'
 	import { queryClient } from '$lib/fetch/client'
+	import { processQueuedInsertions } from '$lib/nostrSubs/data-aggregator'
 	import { cleanupCachedEvents } from '$lib/stores/session'
 
 	import type { LayoutData } from './$types'
 
 	export let data: LayoutData
-	$: ({ appSettings } = data)
+	$: ({
+		appSettings: { isFirstTimeRunning, allowRegister },
+	} = data)
 
 	onMount(async () => {
-		if (appSettings.isFirstTimeRunning) {
+		if (isFirstTimeRunning) {
 			goto('/setup', { invalidateAll: true })
 		}
 		if (pwaInfo) {
@@ -44,6 +47,10 @@
 	})
 
 	$: webManifestLink = pwaInfo ? pwaInfo.webManifest.linkTag : ''
+
+	onNavigate(() => {
+		processQueuedInsertions(allowRegister)
+	})
 </script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -87,7 +94,7 @@
 	/>
 </svelte:head>
 <QueryClientProvider client={queryClient}>
-	{#if appSettings.isFirstTimeRunning}
+	{#if isFirstTimeRunning}
 		<slot />
 	{:else}
 		<div class="min-h-screen flex flex-col font-sans">

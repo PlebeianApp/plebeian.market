@@ -1,9 +1,9 @@
-import type { NDKEvent } from '@nostr-dev-kit/ndk'
 import type { NormalizedData } from '$lib/nostrSubs/utils'
 import type { StallsFilter } from '$lib/schema'
 import type { RichStall } from '$lib/server/stalls.service'
 import { createQuery } from '@tanstack/svelte-query'
-import { fetchStallData, fetchUserStallsData, handleStallNostrData, normalizeStallData } from '$lib/nostrSubs/utils'
+import { dataAggregator } from '$lib/nostrSubs/data-aggregator'
+import { fetchStallData, fetchUserStallsData, normalizeStallData } from '$lib/nostrSubs/utils'
 import { stallsFilterSchema } from '$lib/schema'
 
 import { createRequest, queryClient } from './client'
@@ -17,18 +17,19 @@ declare module './client' {
 }
 
 export const createStallQuery = (stallId: string) =>
-	createQuery<{ stall: Partial<RichStall> | null; origin?: 'db' | 'nostr'; event?: NDKEvent }>(
+	createQuery<{ stall: Partial<RichStall> | null }>(
 		{
 			queryKey: ['stalls', stallId],
 			queryFn: async () => {
 				try {
 					const stall = await createRequest(`GET /api/v1/stalls/${stallId}`, {})
-					return { stall: stall as RichStall, origin: 'db' }
+					return { stall: stall as RichStall }
 				} catch (error) {
 					const { stallNostrRes: stallData } = await fetchStallData(stallId)
 					if (stallData) {
+						dataAggregator.addStall(stallData)
 						const normalized = await normalizeStallData(stallData)
-						return { stall: normalized.data, origin: 'nostr', event: stallData }
+						return { stall: normalized.data }
 					}
 					return { stall: null }
 				}
