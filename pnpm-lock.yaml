@@ -23,6 +23,9 @@ importers:
 
   packages/app:
     dependencies:
+      '@efstajas/svelte-stepper':
+        specifier: ^0.2.1
+        version: 0.2.1(svelte@4.2.17)
       '@fontsource/ibm-plex-mono':
         specifier: ^5.0.13
         version: 5.0.13
@@ -1003,6 +1006,11 @@ packages:
   '@commitlint/types@19.0.3':
     resolution: {integrity: sha512-tpyc+7i6bPG9mvaBbtKUeghfyZSDgWquIDfMgqYtTbmZ9Y9VzEm2je9EYcQ0aoz5o7NvGS+rcDec93yO08MHYA==}
     engines: {node: '>=v18'}
+
+  '@efstajas/svelte-stepper@0.2.1':
+    resolution: {integrity: sha512-++1nVZ7P/ZpUTxsX5osSuM7VaxqOldWA1UmC9a2WN1QqZyvBd/IUHPc7KIJuQ+RfCMwpNg7mg+tDZwqyZUuMHA==}
+    peerDependencies:
+      svelte: ^4.0.0
 
   '@egoist/tailwindcss-icons@1.8.0':
     resolution: {integrity: sha512-75LfllKL2lq0sGH+wcpsn/sLtJ0kMkDWmcZTLAB76QLDTmfsFu4QHwZVbtCD2woGyKl9c8KvtOUW9JSjRqOVtA==}
@@ -2149,7 +2157,7 @@ packages:
   '@vitest/ui@1.6.0':
     resolution: {integrity: sha512-k3Lyo+ONLOgylctiGovRKy7V4+dIN2yxstX3eY5cWFXH6WP+ooVX79YSyi0GagdTQzLmT43BF27T0s6dOIPBXA==}
     peerDependencies:
-      vitest: 1.6.0
+      vitest: workspace:*
 
   '@vitest/utils@1.6.0':
     resolution: {integrity: sha512-21cPiuGMoMZwiOHa2i4LXkMkMkCGzA+MVFV70jRwHo95dL4x/ts5GZhML1QWuy7yfp3WzK3lRvZi3JnXTYqrBw==}
@@ -6017,6 +6025,11 @@ snapshots:
     dependencies:
       '@types/conventional-commits-parser': 5.0.0
       chalk: 5.3.0
+
+  '@efstajas/svelte-stepper@0.2.1(svelte@4.2.17)':
+    dependencies:
+      esm-env: 1.0.0
+      svelte: 4.2.17
 
   '@egoist/tailwindcss-icons@1.8.0(tailwindcss@3.4.3)':
     dependencies:
