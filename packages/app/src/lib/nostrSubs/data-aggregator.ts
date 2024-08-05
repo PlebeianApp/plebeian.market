@@ -1,7 +1,7 @@
 import type { NDKEvent, NDKUserProfile } from '@nostr-dev-kit/ndk'
-import { checkIfUserExists, getEventCoordinates, shouldRegister } from '$lib/utils'
+import { checkIfUserExists, getElapsedTimeInDays, getEventCoordinates, shouldRegister } from '$lib/utils'
 
-import { handleProductNostrData, handleStallNostrData, handleUserNostrData } from './utils'
+import { fetchUserData, handleProductNostrData, handleStallNostrData, handleUserNostrData } from './utils'
 
 class DataAggregator {
 	private userQueue: Set<NDKUserProfile> = new Set()
@@ -92,4 +92,15 @@ export async function processQueuedInsertions(allowRegister?: boolean) {
 	}
 
 	dataAggregator.clear()
+}
+
+export async function checkIfOldProfile(userId: string, updatedAt?: number) {
+	if (!updatedAt) return
+	const elapsedTime = getElapsedTimeInDays(updatedAt)
+	if (elapsedTime > 5) {
+		const { userProfile: newUserProfile } = await fetchUserData(userId)
+		if (newUserProfile) {
+			await handleUserNostrData(newUserProfile, userId)
+		}
+	}
 }

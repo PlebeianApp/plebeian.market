@@ -3,7 +3,7 @@ import type { UsersFilter } from '$lib/schema'
 import type { RichUser } from '$lib/server/users.service'
 import { createQuery } from '@tanstack/svelte-query'
 import { invalidateAll } from '$app/navigation'
-import { dataAggregator } from '$lib/nostrSubs/data-aggregator'
+import { checkIfOldProfile, dataAggregator } from '$lib/nostrSubs/data-aggregator'
 import { fetchUserData } from '$lib/nostrSubs/utils'
 import { usersFilterSchema } from '$lib/schema'
 import ndkStore from '$lib/stores/ndk'
@@ -45,7 +45,9 @@ export const createUserByIdQuery = (id: string) =>
 			queryKey: ['users', id],
 			queryFn: async () => {
 				try {
-					return (await createRequest(`GET /api/v1/users/${id}`, {})) as NDKUserProfile
+					const result = (await createRequest(`GET /api/v1/users/${id}`, {})) as NDKUserProfile
+					if (result.updated_at) checkIfOldProfile(id, Number(result.updated_at))
+					return result
 				} catch (error) {
 					const { userProfile: userData } = await fetchUserData(id)
 					if (userData) {
