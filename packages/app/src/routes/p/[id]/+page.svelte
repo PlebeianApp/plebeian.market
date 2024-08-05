@@ -9,10 +9,17 @@
 	import { createProductsByFilterQuery } from '$lib/fetch/products.queries'
 	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
-	import { fetchUserProductData, fetchUserStallsData, normalizeProductsFromNostr, normalizeStallData } from '$lib/nostrSubs/utils'
+	import {
+		fetchUserData,
+		fetchUserProductData,
+		fetchUserStallsData,
+		handleUserNostrData,
+		normalizeProductsFromNostr,
+		normalizeStallData,
+	} from '$lib/nostrSubs/utils'
 	import { openDrawerForNewProduct, openDrawerForNewStall } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
-	import { mergeWithExisting, truncateText } from '$lib/utils'
+	import { getElapsedTimeInDays, mergeWithExisting, truncateText } from '$lib/utils'
 	import { onMount } from 'svelte'
 
 	import type { PageData } from './$types'
@@ -34,7 +41,12 @@
 	$: productsMixture = mergeWithExisting($productsQuery?.data?.products ?? [], toDisplayProducts, 'id')
 
 	onMount(async () => {
-		const [{ stallNostrRes }, { products: productsData }] = await Promise.all([fetchUserStallsData(id), fetchUserProductData(id)])
+		if (!id) return
+		const [{ stallNostrRes }, { products: productsData }, { userProfile }] = await Promise.all([
+			fetchUserStallsData(id),
+			fetchUserProductData(id),
+			fetchUserData(id),
+		])
 
 		if (stallNostrRes) {
 			nostrStalls = (await Promise.all([...stallNostrRes].map(normalizeStallData)))
@@ -44,6 +56,15 @@
 
 		if (productsData?.size) {
 			toDisplayProducts = (await normalizeProductsFromNostr(productsData, id))?.toDisplayProducts ?? []
+		}
+		if (!$userProfileQuery?.data?.updated_at) return
+		const userProfileUpdatedAt = $userProfileQuery?.data.updated_at
+		const elapsedTime = getElapsedTimeInDays(userProfileUpdatedAt as number)
+		if (elapsedTime > 5 && userProfile) {
+			const { userProfile: newUserProfile } = await fetchUserData(id)
+			if (newUserProfile) {
+				await handleUserNostrData(newUserProfile, id)
+			}
 		}
 	})
 
