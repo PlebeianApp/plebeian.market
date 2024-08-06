@@ -5,6 +5,7 @@
 	type Constructor<T> = new (...args: any[]) => T
 
 	type OmitContext<T> = Omit<T, 'context' | 'currentStepIndex'>
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	type Props<T> = T extends SvelteComponent<infer P, any, any> ? OmitContext<P> : never
 	type PropsOrUndefined<T> = Props<T> extends Record<string, never> ? undefined : Props<T>
 
