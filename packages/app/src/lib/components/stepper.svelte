@@ -1,48 +1,46 @@
 <script lang="ts">
-  interface $$Slots {
-    // we don't want to render a default slot
-    default: never
-    // the named slot exposes no variables (use an empty object)
-    // we have to use the `$$Slots` interface if we have two slots with the same name exposing differently typed props
-    'conditional-slot': { valid?: string; invalid?: string }
-		[k: string]: {}
-  }
-  export let currentStep = 0;
+	import type { SvelteComponent } from 'svelte'
 
-  const isComplete = (index: number) => index < currentStep;
-  const isActive = (index: number) => index === currentStep;
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	type Constructor<T> = new (...args: any[]) => T
 
-  let steps = [];
+	type OmitContext<T> = Omit<T, 'context' | 'currentStepIndex'>
+	type Props<T> = T extends SvelteComponent<infer P, any, any> ? OmitContext<P> : never
+	type PropsOrUndefined<T> = Props<T> extends Record<string, never> ? undefined : Props<T>
 
-  $: steps = [...$$slots];
+	type Step<T extends SvelteComponent = SvelteComponent> = {
+		component: Constructor<T>
+		props: PropsOrUndefined<T>
+	}
 
-  const getStepLabel = (index) => {
-    return steps[index] && steps[index].label ? steps[index].label : `Step ${index + 1}`;
-  };
+	export let steps: Step[] = []
+	export let currentStep = 0
 </script>
 
 <div class="w-full flex items-center">
-  {#each steps as _, index}
-    <div class="flex items-center">
-      <div class="relative">
-        <div class={`w-8 h-8 flex items-center justify-center rounded-full ${isComplete(index) ? 'bg-green-500' : 'bg-gray-200'} ${isActive(index) ? 'ring-4 ring-green-200' : ''}`}>
-          {index + 1}
-        </div>
+	{#each steps as _, index}
+		<div class="flex items-center">
+			<div class="relative">
+				<div
+					class={`w-8 h-8 flex items-center justify-center rounded-full ${index < currentStep ? 'bg-green-500' : 'bg-gray-200'} ${index === currentStep ? 'ring-4 ring-green-200' : ''}`}
+				>
+					{index + 1}
+				</div>
 				{#if index < steps.length - 1}
-        	<div class="absolute top-1/2 w-full border-t-2 border-gray-200 left-8"></div>
-        {/if}
-      </div>
-      <div class="ml-2">{getStepLabel(index)}</div>
-    </div>
-  {/each}
+					<div class="absolute top-1/2 w-full border-t-2 border-gray-200 left-8"></div>
+				{/if}
+			</div>
+			<div class="ml-2"></div>
+		</div>
+	{/each}
 </div>
 
 <div class="w-full bg-gray-200 rounded-full h-2.5 mt-4">
-  <div class="bg-green-500 h-2.5 rounded-full" style="width: {currentStep / (steps.length - 1) * 100}%"></div>
+	<div class="bg-green-500 h-2.5 rounded-full" style="width: {(currentStep / (steps.length - 1)) * 100}%"></div>
 </div>
 
 <div class="mt-8">
-  <slot name="step-0" />
-  <slot name={`step-${currentStep}`} />
+	{#if steps[currentStep]?.component}
+		<svelte:component this={steps[currentStep].component} {...steps[currentStep].props} />
+	{/if}
 </div>
-
