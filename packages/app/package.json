@@ -55,7 +55,6 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"@efstajas/svelte-stepper": "^0.2.1",
 		"@fontsource/ibm-plex-mono": "^5.0.13",
 		"@internationalized/date": "^3.5.4",
 		"@nostr-dev-kit/ndk": "^2.8.2",
