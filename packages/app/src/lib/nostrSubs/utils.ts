@@ -133,7 +133,6 @@ export async function handleStallNostrData(stallData: NDKEvent): Promise<boolean
 	const $createStallFromNostrEvent = get(createStallFromNostrEvent)
 	const stallEvent = await stallData.toNostrEvent()
 	const stallMutation = await $createStallFromNostrEvent.mutateAsync(stallEvent)
-	// stallMutation && queryClient.invalidateQueries({ queryKey: ['product-price', stallEvent.pubkey] })
 	return stallMutation ? true : false
 }
 

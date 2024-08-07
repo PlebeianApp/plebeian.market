@@ -1,7 +1,7 @@
 import type { ProductsFilter } from '$lib/schema'
 import type { DisplayProduct } from '$lib/server/products.service'
 import { createQuery } from '@tanstack/svelte-query'
-import { dataAggregator } from '$lib/nostrSubs/data-aggregator'
+import { aggregatorAddProducts } from '$lib/nostrSubs/data-aggregator'
 import { fetchUserProductData, normalizeProductsFromNostr } from '$lib/nostrSubs/utils'
 import { productsFilterSchema } from '$lib/schema'
 import { currencyToBtc } from '$lib/utils'
@@ -41,7 +41,7 @@ export const createProductQuery = (productId: string) =>
 						const result = await normalizeProductsFromNostr(productsData, userId)
 						if (result) {
 							const { toDisplayProducts, stallProducts } = result
-							dataAggregator.addProducts(stallProducts)
+							aggregatorAddProducts(stallProducts)
 
 							return toDisplayProducts[0] as DisplayProduct
 						}
@@ -89,7 +89,7 @@ export const createProductsByFilterQuery = (filter: Partial<ProductsFilter>) =>
 							const result = await normalizeProductsFromNostr(productsData, userId, filter.stallId)
 							if (result) {
 								const { toDisplayProducts, stallProducts } = result
-								dataAggregator.addProducts(stallProducts)
+								aggregatorAddProducts(stallProducts)
 
 								return {
 									total: toDisplayProducts.length,
@@ -99,7 +99,7 @@ export const createProductsByFilterQuery = (filter: Partial<ProductsFilter>) =>
 						}
 					} else if (filter.userId) {
 						if (productsData?.size) {
-							dataAggregator.addProducts(productsData)
+							aggregatorAddProducts(productsData)
 							const result = await normalizeProductsFromNostr(productsData, filter.userId)
 							if (result) {
 								const { toDisplayProducts } = result

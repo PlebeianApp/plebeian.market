@@ -2,7 +2,7 @@ import type { NormalizedData } from '$lib/nostrSubs/utils'
 import type { StallsFilter } from '$lib/schema'
 import type { RichStall } from '$lib/server/stalls.service'
 import { createQuery } from '@tanstack/svelte-query'
-import { dataAggregator } from '$lib/nostrSubs/data-aggregator'
+import { aggregatorAddStall } from '$lib/nostrSubs/data-aggregator'
 import { fetchStallData, fetchUserStallsData, normalizeStallData } from '$lib/nostrSubs/utils'
 import { stallsFilterSchema } from '$lib/schema'
 
@@ -27,7 +27,7 @@ export const createStallQuery = (stallId: string) =>
 				} catch (error) {
 					const { stallNostrRes: stallData } = await fetchStallData(stallId)
 					if (stallData) {
-						dataAggregator.addStall(stallData)
+						aggregatorAddStall(stallData)
 						const normalized = await normalizeStallData(stallData)
 						return { stall: normalized.data }
 					}

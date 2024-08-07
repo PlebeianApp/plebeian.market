@@ -3,7 +3,7 @@ import type { UsersFilter } from '$lib/schema'
 import type { RichUser } from '$lib/server/users.service'
 import { createQuery } from '@tanstack/svelte-query'
 import { invalidateAll } from '$app/navigation'
-import { checkIfOldProfile, dataAggregator } from '$lib/nostrSubs/data-aggregator'
+import { aggregatorAddUser, checkIfOldProfile } from '$lib/nostrSubs/data-aggregator'
 import { fetchUserData } from '$lib/nostrSubs/utils'
 import { usersFilterSchema } from '$lib/schema'
 import ndkStore from '$lib/stores/ndk'
@@ -51,7 +51,7 @@ export const createUserByIdQuery = (id: string) =>
 				} catch (error) {
 					const { userProfile: userData } = await fetchUserData(id)
 					if (userData) {
-						dataAggregator.addUser(userData, id)
+						aggregatorAddUser(userData, id)
 						return userData
 					} else if (!userData && id) {
 						// TODO Handle null profiles

@@ -3,55 +3,36 @@ import { checkIfUserExists, getElapsedTimeInDays, getEventCoordinates, shouldReg
 
 import { fetchUserData, handleProductNostrData, handleStallNostrData, handleUserNostrData } from './utils'
 
-class DataAggregator {
-	private userQueue: Set<NDKUserProfile> = new Set()
-	private stallQueue: Set<NDKEvent> = new Set()
-	private productQueue: Set<NDKEvent> = new Set()
+const userQueue: Set<NDKUserProfile> = new Set()
+const stallQueue: Set<NDKEvent> = new Set()
+const productQueue: Set<NDKEvent> = new Set()
 
-	addUser(user: NDKUserProfile, userId: string) {
-		user.id = userId
-		this.userQueue.add(user)
-	}
+export function aggregatorAddUser(user: NDKUserProfile, userId: string) {
+	user.id = userId
+	userQueue.add(user)
+}
 
-	addStall(stall: NDKEvent) {
-		this.stallQueue.add(stall)
-	}
+export function aggregatorAddStall(stall: NDKEvent) {
+	stallQueue.add(stall)
+}
 
-	addProduct(product: NDKEvent) {
-		this.productQueue.add(product)
-	}
+export function aggregatorAddProduct(product: NDKEvent) {
+	productQueue.add(product)
+}
 
-	addProducts(products: Set<NDKEvent>) {
-		for (const product of products) {
-			this.productQueue.add(product)
-		}
-	}
-
-	getUserQueue(): Set<NDKUserProfile> {
-		return this.userQueue
-	}
-
-	getStallQueue(): Set<NDKEvent> {
-		return this.stallQueue
-	}
-
-	getProductQueue(): Set<NDKEvent> {
-		return this.productQueue
-	}
-
-	clear() {
-		this.userQueue.clear()
-		this.stallQueue.clear()
-		this.productQueue.clear()
+export function aggregatorAddProducts(products: Set<NDKEvent>) {
+	for (const product of products) {
+		productQueue.add(product)
 	}
 }
 
-export const dataAggregator = new DataAggregator()
+function clearQueues() {
+	userQueue.clear()
+	stallQueue.clear()
+	productQueue.clear()
+}
 
 export async function processQueuedInsertions(allowRegister?: boolean) {
-	const userQueue = dataAggregator.getUserQueue()
-	const stallQueue = dataAggregator.getStallQueue()
-	const productQueue = dataAggregator.getProductQueue()
 	if (allowRegister == undefined || !userQueue.size || !stallQueue.size || !productQueue.size) return
 	const allUserIds = new Set([
 		...Array.from(userQueue).map((user) => user.id as string),
@@ -90,7 +71,7 @@ export async function processQueuedInsertions(allowRegister?: boolean) {
 		}
 	}
 
-	dataAggregator.clear()
+	clearQueues()
 }
 
 export async function checkIfOldProfile(userId: string, updatedAt?: number) {
