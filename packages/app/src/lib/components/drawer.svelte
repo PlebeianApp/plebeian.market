@@ -1,6 +1,4 @@
 <script lang="ts">
-	import type { DisplayProduct } from '$lib/server/products.service'
-	import type { RichStall } from '$lib/server/stalls.service'
 	import CreateEditProduct from '$lib/components/product/create-edit.svelte'
 	import CreateEditStall from '$lib/components/stalls/create-edit.svelte'
 	import { ScrollArea } from '$lib/components/ui/scroll-area/index.js'
@@ -9,10 +7,7 @@
 	import { createProductQuery } from '$lib/fetch/products.queries'
 	import { deleteStallMutation } from '$lib/fetch/stalls.mutations'
 	import { createStallQuery } from '$lib/fetch/stalls.queries'
-	import { fetchProductData, fetchStallData, normalizeProductsFromNostr, normalizeStallData } from '$lib/nostrSubs/utils'
 	import { closeDrawer, drawerUI } from '$lib/stores/drawer-ui'
-	import ndkStore from '$lib/stores/ndk'
-	import { checkIfUserExists } from '$lib/utils'
 	import { toast } from 'svelte-sonner'
 
 	import Spinner from './assets/spinner.svelte'
@@ -21,9 +16,6 @@
 
 	let productQuery: ReturnType<typeof createProductQuery> | undefined
 	let stallQuery: ReturnType<typeof createStallQuery> | undefined
-	let currentProduct: Partial<DisplayProduct> | null = null
-	let currentStall: Partial<RichStall> | null = null
-	let userExist: boolean | undefined = undefined
 
 	$: isOpen = $drawerUI.drawerType !== null
 	$: isLoading = ($stallQuery?.isLoading || $productQuery?.isLoading) ?? false
@@ -31,42 +23,12 @@
 		initializeData()
 	}
 
-	$: if ($productQuery?.data) currentProduct = $productQuery.data
-	$: if ($stallQuery?.data) currentStall = $stallQuery.data
-
 	async function initializeData() {
-		userExist = await checkIfUserExists($ndkStore.activeUser?.pubkey)
-		if (userExist) {
-			if ($drawerUI.drawerType === 'product') {
-				productQuery = createProductQuery($drawerUI.id!)
-			} else if ($drawerUI.drawerType === 'stall') {
-				stallQuery = createStallQuery($drawerUI.id!)
-			}
-		} else {
-			await fetchDataFromNostr()
-		}
-	}
-
-	async function fetchDataFromNostr() {
-		isLoading = true
 		if ($drawerUI.drawerType === 'product') {
-			const { nostrProduct: productsData } = await fetchProductData($drawerUI.id as string)
-			if (productsData?.size) {
-				const result = await normalizeProductsFromNostr(productsData, $ndkStore.activeUser?.pubkey as string)
-				if (result) {
-					currentProduct = result.toDisplayProducts[0]
-				}
-			}
+			productQuery = createProductQuery($drawerUI.id!)
 		} else if ($drawerUI.drawerType === 'stall') {
-			const { stallNostrRes: stallData } = await fetchStallData($drawerUI.id as string)
-			if (stallData) {
-				const result = (await normalizeStallData(stallData)).data
-				if (result) {
-					currentStall = result
-				}
-			}
+			stallQuery = createStallQuery($drawerUI.id!)
 		}
-		isLoading = false
 	}
 
 	function handleSuccess() {
@@ -74,10 +36,10 @@
 	}
 
 	async function handleDelete() {
-		if ($drawerUI.drawerType === 'stall' && currentStall?.id) {
-			await $deleteStallMutation.mutateAsync(currentStall.id)
-		} else if ($drawerUI.drawerType === 'product' && currentProduct?.id) {
-			await $deleteProductMutation.mutateAsync(currentProduct.id)
+		if ($drawerUI.drawerType === 'stall' && $stallQuery?.data?.stall?.id) {
+			await $deleteStallMutation.mutateAsync($stallQuery?.data?.stall?.id)
+		} else if ($drawerUI.drawerType === 'product' && $productQuery?.data?.id) {
+			await $deleteProductMutation.mutateAsync($productQuery?.data?.id)
 		}
 		closeDrawer()
 	}
@@ -109,12 +71,12 @@
 				{#if $drawerUI.drawerType === 'cart'}
 					<ShoppingCart />
 				{:else if $drawerUI.drawerType === 'product'}
-					{#key currentProduct}
-						<CreateEditProduct product={currentProduct} on:success={handleSuccess} forStall={$drawerUI.forStall} />
+					{#key $productQuery?.data}
+						<CreateEditProduct product={$productQuery?.data} on:success={handleSuccess} forStall={$drawerUI.forStall} />
 					{/key}
 				{:else if $drawerUI.drawerType === 'stall'}
-					{#key currentStall}
-						<CreateEditStall stall={currentStall} on:success={handleSuccess} on:error={(e) => toast.error(`${e}`)} />
+					{#key $stallQuery?.data?.stall?.id}
+						<CreateEditStall stall={$stallQuery?.data?.stall} on:success={handleSuccess} on:error={(e) => toast.error(`${e}`)} />
 					{/key}
 				{/if}
 			{/if}
