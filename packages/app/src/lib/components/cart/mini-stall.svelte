@@ -1,14 +1,8 @@
 <script lang="ts">
-	import type { RichShippingInfo } from '$lib/server/shipping.service'
-	import type { RichStall } from '$lib/server/stalls.service'
-	import { NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk'
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
-	import { createShippingQuery } from '$lib/fetch/shipping.queries'
 	import { createStallQuery } from '$lib/fetch/stalls.queries'
-	import { fetchStallData, normalizeStallData } from '$lib/nostrSubs/utils'
 	import { cart } from '$lib/stores/cart'
-	import { checkIfStallExists, truncateString } from '$lib/utils'
-	import { onMount } from 'svelte'
+	import { truncateString } from '$lib/utils'
 
 	import Spinner from '../assets/spinner.svelte'
 	import { Button } from '../ui/button'
@@ -16,64 +10,39 @@
 	export let stallId: string
 	export let userPubkey: string
 
-	let stallExist: boolean | undefined = undefined
-	let stallData: Partial<RichStall> | null = null
-	let shippingData: Partial<RichShippingInfo>[] | undefined
-	let isLoading = true
-
-	$: stallQuery = stallExist !== undefined && stallExist ? createStallQuery(stallId) : undefined
-	$: shippingMethods = stallExist !== undefined && stallExist ? createShippingQuery(stallId) : undefined
+	$: stallQuery = createStallQuery(stallId)
 	$: currentShippingMethodId = $cart.stalls[stallId]?.shippingMethodId || null
-	$: {
-		if ($stallQuery?.data) stallData = $stallQuery.data
-		if ($shippingMethods?.data) shippingData = $shippingMethods.data
-		isLoading = $stallQuery?.isLoading ?? false
-	}
 
 	function handleShippingMethodSelect(methodId: string) {
-		const selectedMethod = shippingData?.find((m) => m.id === methodId)
+		const selectedMethod = $stallQuery.data?.stall?.shipping?.find((m) => m.id === methodId)
 		if (selectedMethod) {
 			cart.setShippingMethod(userPubkey, stallId, methodId, Number(selectedMethod.cost))
 		}
 	}
 
-	onMount(async () => {
-		stallExist = await checkIfStallExists(stallId)
-		if (!stallExist) {
-			const { stallNostrRes } = await fetchStallData(stallId, NDKSubscriptionCacheUsage.ONLY_CACHE)
-			if (stallNostrRes) {
-				const normalizedStall = await normalizeStallData(stallNostrRes)
-				if (normalizedStall.data) {
-					stallData = normalizedStall.data
-					normalizedStall.data.shipping?.length && (shippingData = normalizedStall.data.shipping)
-				}
-			}
-			isLoading = false
-		}
-	})
-	// TODO Improve visualization of the sipping methods
+	// TODO Keep improving visualization of the sipping methods
 </script>
 
 <div class="flex flex-col justify-between gap-2">
-	{#if isLoading}
+	{#if $stallQuery.isLoading}
 		<Spinner />
-	{:else if stallData}
+	{:else if $stallQuery.data?.stall}
 		<div class="flex flex-row gap-1">
 			<span class="i-tdesign-store w-6 h-6" />
-			<span>{stallData.name}</span>
+			<span>{$stallQuery.data?.stall.name}</span>
 		</div>
 
 		<DropdownMenu.Root>
 			<DropdownMenu.Trigger asChild let:builder>
 				<Button variant="secondary" class="border-2 border-black h-8" builders={[builder]}>
-					{#if shippingData?.length && currentShippingMethodId}
-						{@const method = shippingData?.find((m) => m.id === currentShippingMethodId)}
+					{#if $stallQuery.data?.stall?.shipping?.length && currentShippingMethodId}
+						{@const method = $stallQuery.data?.stall?.shipping?.find((m) => m.id === currentShippingMethodId)}
 						{method?.name || method?.countries?.length
 							? method?.countries?.join(',')
 							: '' || method?.regions?.length
 								? method?.regions?.join(',')
 								: '' || method?.id
-									? truncateString(method.id)
+									? truncateString(String(method?.id))
 									: 'Select shipping method'}
 					{:else}
 						Select shipping method
@@ -84,14 +53,22 @@
 				<DropdownMenu.Label>Shipping Method</DropdownMenu.Label>
 				<DropdownMenu.Separator />
 				<section class="max-h-[350px] overflow-y-auto">
-					{#if shippingData?.length}
-						{#each shippingData as method}
+					{#if $stallQuery.data?.stall?.shipping?.length}
+						{#each $stallQuery.data?.stall?.shipping as method}
 							<DropdownMenu.CheckboxItem
 								checked={currentShippingMethodId === method.id}
 								on:click={() => handleShippingMethodSelect(String(method?.id))}
 							>
 								<section class="flex items-center w-full justify-between">
-									<span>{truncateString(String(method.name || method.id))}</span>
+									<span>
+										{method?.name || method?.countries?.length
+											? method?.countries?.join(',')
+											: '' || method?.regions?.length
+												? method?.regions?.join(',')
+												: '' || method?.id
+													? truncateString(String(method?.id))
+													: 'Select shipping method'}</span
+									>
 									<span>{method.cost}</span>
 								</section>
 							</DropdownMenu.CheckboxItem>

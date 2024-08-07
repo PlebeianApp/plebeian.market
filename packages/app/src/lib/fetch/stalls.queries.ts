@@ -1,6 +1,9 @@
+import type { NormalizedData } from '$lib/nostrSubs/utils'
 import type { StallsFilter } from '$lib/schema'
 import type { RichStall } from '$lib/server/stalls.service'
 import { createQuery } from '@tanstack/svelte-query'
+import { aggregatorAddStall } from '$lib/nostrSubs/data-aggregator'
+import { fetchStallData, fetchUserStallsData, normalizeStallData } from '$lib/nostrSubs/utils'
 import { stallsFilterSchema } from '$lib/schema'
 
 import { createRequest, queryClient } from './client'
@@ -14,27 +17,57 @@ declare module './client' {
 }
 
 export const createStallQuery = (stallId: string) =>
-	createQuery<RichStall>(
+	createQuery<{ stall: Partial<RichStall> | null }>(
 		{
 			queryKey: ['stalls', stallId],
-			queryFn: () => {
-				return createRequest(`GET /api/v1/stalls/${stallId}`, {
-					auth: false,
-				})
+			queryFn: async () => {
+				try {
+					const stall = await createRequest(`GET /api/v1/stalls/${stallId}`, {})
+					return { stall: stall as RichStall }
+				} catch (error) {
+					const { stallNostrRes: stallData } = await fetchStallData(stallId)
+					if (stallData) {
+						aggregatorAddStall(stallData)
+						const normalized = await normalizeStallData(stallData)
+						return { stall: normalized.data }
+					}
+					return { stall: null }
+				}
 			},
+			enabled: !!stallId,
 		},
 		queryClient,
 	)
 
 export const createStallsByFilterQuery = (filter: Partial<StallsFilter>) =>
-	createQuery(
+	createQuery<{ total: number; stalls: Partial<RichStall>[] } | null>(
 		{
-			queryKey: ['stalls', ...Object.values(stallsFilterSchema.safeParse(filter).data as Partial<StallsFilter>)],
+			queryKey: ['stalls', ...Object.values(filter)],
 			queryFn: async () => {
 				const response = await createRequest('GET /api/v1/stalls', {
 					params: stallsFilterSchema.parse(filter),
 				})
-				return response
+				if (response.stalls.length) return response
+				if (filter.stallId) {
+					const { stallNostrRes: stallData } = await fetchStallData(filter.stallId)
+					if (stallData) {
+						const normalizedStall = (await normalizeStallData(stallData)).data
+						if (normalizedStall) {
+							return { total: 1, stalls: [normalizedStall] }
+						}
+					}
+				} else if (filter.userId) {
+					const { stallNostrRes: stallData } = await fetchUserStallsData(filter.userId)
+					if (stallData) {
+						const normalizedStallData = (await Promise.all(Array.from(stallData).map(normalizeStallData)))
+							.filter((result): result is NormalizedData<RichStall> => result.data !== null)
+							.map((result) => result.data as Partial<RichStall>)
+						if (normalizedStallData.length) {
+							return { total: normalizedStallData.length, stalls: normalizedStallData }
+						}
+					}
+				}
+				return null
 			},
 		},
 		queryClient,

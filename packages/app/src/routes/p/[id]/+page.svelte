@@ -1,5 +1,4 @@
 <script lang="ts">
-	import type { NDKUserProfile } from '@nostr-dev-kit/ndk'
 	import type { DisplayProduct } from '$lib/server/products.service'
 	import type { RichStall } from '$lib/server/stalls.service'
 	import ProductItem from '$lib/components/product/product-item.svelte'
@@ -10,88 +9,43 @@
 	import { createProductsByFilterQuery } from '$lib/fetch/products.queries'
 	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
-	import {
-		fetchUserData,
-		fetchUserProductData,
-		fetchUserStallsData,
-		handleUserNostrData,
-		mergeProducts,
-		normalizeStallData,
-		setNostrData,
-	} from '$lib/nostrSubs/utils'
+	import { fetchUserProductData, fetchUserStallsData, normalizeProductsFromNostr, normalizeStallData } from '$lib/nostrSubs/utils'
 	import { openDrawerForNewProduct, openDrawerForNewStall } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
-	import { getElapsedTimeInDays, truncateText } from '$lib/utils'
+	import { mergeWithExisting, truncateText } from '$lib/utils'
 	import { onMount } from 'svelte'
 
 	import type { PageData } from './$types'
 
 	export let data: PageData
-	const {
-		id,
-		exist,
-		appSettings: { allowRegister },
-	} = data
+	const { id } = data
 
-	let userProfile: NDKUserProfile | null = null
 	let nostrStalls: Partial<RichStall>[] = []
 	let toDisplayProducts: Partial<DisplayProduct>[] = []
 	let following = false
 	let showFullAbout = false
-	$: isMe = $ndkStore.activeUser?.pubkey === id
+	$: isMe = $ndkStore.activeUser?.pubkey == id
 
-	$: stallsQuery = exist ? createStallsByFilterQuery({ userId: id }) : undefined
-	$: productsQuery = exist ? createProductsByFilterQuery({ userId: id }) : undefined
-	$: userProfileQuery = exist ? createUserByIdQuery(id) : undefined
+	$: userProfileQuery = createUserByIdQuery(id as string)
+	$: stallsQuery = createStallsByFilterQuery({ userId: id })
+	$: productsQuery = createProductsByFilterQuery({ userId: id })
 
-	$: stallsMixture = [...($stallsQuery?.data?.stalls ?? []), ...nostrStalls]
-
-	$: {
-		if (exist && $userProfileQuery?.data) userProfile = $userProfileQuery.data
-		if (exist && $productsQuery?.data) toDisplayProducts = $productsQuery.data.products
-	}
+	$: stallsMixture = mergeWithExisting($stallsQuery?.data?.stalls ?? [], nostrStalls, 'id')
+	$: productsMixture = mergeWithExisting($productsQuery?.data?.products ?? [], toDisplayProducts, 'id')
 
 	onMount(async () => {
 		if (!id) return
+		const [{ stallNostrRes }, { products: productsData }] = await Promise.all([fetchUserStallsData(id), fetchUserProductData(id)])
 
-		const fetchAndProcessData = async () => {
-			const { stallNostrRes } = await fetchUserStallsData(id)
-			if (stallNostrRes) {
-				nostrStalls = (await Promise.all([...stallNostrRes].map(normalizeStallData)))
-					.filter(({ data: stall }) => !$stallsQuery?.data?.stalls.some((existingStall) => stall?.id === existingStall.id))
-					.map(({ data }) => data as Partial<RichStall>)
-					.filter(Boolean)
-			}
-
-			if (!exist) {
-				const { userProfile: userData } = await fetchUserData(id)
-				if (userData) userProfile = userData
-				// FIXME products from stalls with forbidden words are beign displayed
-				const { products: productsData } = await fetchUserProductData(id)
-				if (productsData?.size) {
-					toDisplayProducts = await mergeProducts(toDisplayProducts, productsData, id)
-				}
-
-				await setNostrData(null, userProfile, null, allowRegister, id, exist)
-			} else {
-				const userProfileUpdatedAt = $userProfileQuery?.data?.updated_at
-				const elapsedTime = getElapsedTimeInDays(userProfileUpdatedAt as number)
-				if (elapsedTime > 5 && userProfile) {
-					const { userProfile: newUserProfile } = await fetchUserData(id)
-					if (newUserProfile) {
-						await handleUserNostrData(newUserProfile, id)
-						console.log('User profile updated from nostr')
-					}
-				}
-
-				const { products: productsData } = await fetchUserProductData(id)
-				if (productsData?.size) {
-					toDisplayProducts = await mergeProducts(toDisplayProducts, productsData, id)
-				}
-			}
+		if (stallNostrRes) {
+			nostrStalls = (await Promise.all([...stallNostrRes].map(normalizeStallData)))
+				.map(({ data }) => data as Partial<RichStall>)
+				.filter(Boolean)
 		}
 
-		fetchAndProcessData()
+		if (productsData?.size) {
+			toDisplayProducts = (await normalizeProductsFromNostr(productsData, id))?.toDisplayProducts ?? []
+		}
 	})
 
 	const handleFollow = () => {
@@ -117,8 +71,8 @@
 	}
 </script>
 
-{#if userProfile}
-	{@const { image, name, about, banner } = userProfile}
+{#if $userProfileQuery.data}
+	{@const { image, name, about, banner } = $userProfileQuery.data}
 	<div class="px-4 lg:px-12">
 		<div class="flex flex-col gap-14">
 			<div class="relative h-auto">
@@ -191,11 +145,11 @@
 				</div>
 			{/if}
 
-			{#if toDisplayProducts.length}
+			{#if productsMixture.length}
 				<div class="container">
 					<h2>Products</h2>
 					<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-						{#each toDisplayProducts as item (item.id)}
+						{#each productsMixture as item (item.id)}
 							<ProductItem product={item} />
 						{/each}
 					</div>

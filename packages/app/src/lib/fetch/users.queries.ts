@@ -3,6 +3,8 @@ import type { UsersFilter } from '$lib/schema'
 import type { RichUser } from '$lib/server/users.service'
 import { createQuery } from '@tanstack/svelte-query'
 import { invalidateAll } from '$app/navigation'
+import { aggregatorAddUser, checkIfOldProfile } from '$lib/nostrSubs/data-aggregator'
+import { fetchUserData } from '$lib/nostrSubs/utils'
 import { usersFilterSchema } from '$lib/schema'
 import ndkStore from '$lib/stores/ndk'
 import { derived } from 'svelte/store'
@@ -37,14 +39,32 @@ export const activeUserQuery = createQuery(
 	})),
 	queryClient,
 )
-
 export const createUserByIdQuery = (id: string) =>
-	createQuery<NDKUserProfile>(
+	createQuery<NDKUserProfile | null>(
 		{
 			queryKey: ['users', id],
 			queryFn: async () => {
-				const user = (await createRequest(`GET /api/v1/users/${id}`, {})) as NDKUserProfile
-				return user
+				try {
+					const result = (await createRequest(`GET /api/v1/users/${id}`, {})) as NDKUserProfile
+					if (result.updated_at) checkIfOldProfile(id, Number(result.updated_at))
+					return result
+				} catch (error) {
+					const { userProfile: userData } = await fetchUserData(id)
+					if (userData) {
+						aggregatorAddUser(userData, id)
+						return userData
+					} else if (!userData && id) {
+						// TODO Handle null profiles
+						// console.log("Seems that there is not that data",userData)
+						// const shouldReg = await shouldRegister(allowRegister, userExists, id);
+						// if (shouldReg) {
+						//   await ofetch('/p', { method: 'POST', body: { userId: id } });
+						//   console.log('Null user registered successfully', id);
+						// }
+						return { id }
+					}
+					return null
+				}
 			},
 			enabled: !!id,
 		},

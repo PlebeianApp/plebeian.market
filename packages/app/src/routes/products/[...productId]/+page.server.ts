@@ -1,8 +1,7 @@
-import type { LoadUserInfo } from '$lib/server/users.service.js'
 import { error } from '@sveltejs/kit'
 import { KindProducts } from '$lib/constants'
 import { productExists } from '$lib/server/products.service'
-import { getUserIdByNip05, userExists } from '$lib/server/users.service.js'
+import { getUserIdByNip05 } from '$lib/server/users.service.js'
 import ndkStore from '$lib/stores/ndk'
 import { NIP05_REGEX } from 'nostr-tools/nip05'
 import { get } from 'svelte/store'
@@ -10,7 +9,7 @@ import { get } from 'svelte/store'
 import type { PageServerLoad } from './$types'
 
 type ProcessedInfo = {
-	userInfo: LoadUserInfo
+	userInfo: { id: string | null }
 	productId: string
 	productIdentifier?: string
 }
@@ -18,19 +17,17 @@ type ProcessedInfo = {
 async function processNip05(nip05: string, productIdentifier: string): Promise<ProcessedInfo> {
 	const lowerNip05 = nip05.toLowerCase()
 	let userId = await getUserIdByNip05(lowerNip05)
-	let exist = !!userId
 
 	if (!userId) {
 		const $ndk = get(ndkStore)
 		const userNostrRes = await $ndk.getUserFromNip05(lowerNip05)
 		if (userNostrRes) {
 			userId = userNostrRes.pubkey
-			exist = false
 		}
 	}
 
 	return {
-		userInfo: { id: userId, exist },
+		userInfo: { id: userId },
 		productId: `${KindProducts}:${userId}:${productIdentifier}`,
 		productIdentifier,
 	}
@@ -41,7 +38,6 @@ async function processDirectId(root: string): Promise<ProcessedInfo> {
 	return {
 		userInfo: {
 			id: userId,
-			exist: await userExists(userId),
 		},
 		productId: `${KindProducts}:${root}`,
 		productIdentifier,
@@ -53,7 +49,6 @@ async function processFullId(productId: string): Promise<ProcessedInfo> {
 	return {
 		userInfo: {
 			id: userId,
-			exist: await userExists(userId),
 		},
 		productId,
 		productIdentifier,

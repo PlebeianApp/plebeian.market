@@ -1,44 +1,40 @@
-import type { LoadUserInfo } from '$lib/server/users.service.js'
-import { getUserIdByNip05, userExists } from '$lib/server/users.service.js'
+import { getUserIdByNip05 } from '$lib/server/users.service.js'
 import ndkStore from '$lib/stores/ndk'
 import { NIP05_REGEX } from 'nostr-tools/nip05'
 import { get } from 'svelte/store'
 
 import type { PageServerLoad } from './$types'
 
-async function processNip05(nip05: string): Promise<LoadUserInfo> {
+async function processNip05(nip05: string): Promise<{ id: string }> {
 	const lowerNip05 = nip05.toLowerCase()
 	let userId = await getUserIdByNip05(lowerNip05)
-	let exist = !!userId
 
 	if (!userId) {
 		const $ndk = get(ndkStore)
 		const userNostrRes = await $ndk.getUserFromNip05(lowerNip05)
 		if (userNostrRes) {
 			userId = userNostrRes.pubkey
-			exist = false
 		}
 	}
 
-	return { id: userId || '', exist }
+	return { id: userId || '' }
 }
 
-async function processDirectId(id: string): Promise<LoadUserInfo> {
+async function processDirectId(id: string): Promise<{ id: string }> {
 	return {
 		id,
-		exist: await userExists(id),
 	}
 }
 
-export const load: PageServerLoad = async ({ params }) => {
+export const load: PageServerLoad = async ({ params }): Promise<{ id: string }> => {
 	const { id } = params
 
 	try {
-		const LoadUserInfo = NIP05_REGEX.test(id) ? await processNip05(id) : await processDirectId(id)
+		const loadUserInfo = NIP05_REGEX.test(id) ? await processNip05(id) : await processDirectId(id)
 
-		return LoadUserInfo
+		return loadUserInfo
 	} catch (e) {
 		console.error('Error processing user data:', e)
-		return { id: '', exist: false }
+		return { id: '' }
 	}
 }

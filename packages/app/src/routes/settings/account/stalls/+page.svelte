@@ -1,5 +1,4 @@
 <script lang="ts">
-	import type { NormalizedData } from '$lib/nostrSubs/utils'
 	import type { RichStall } from '$lib/server/stalls.service'
 	import { page } from '$app/stores'
 	import StallProductList from '$lib/components/product/stall-product-list.svelte'
@@ -8,111 +7,56 @@
 	import * as Collapsible from '$lib/components/ui/collapsible'
 	import { Skeleton } from '$lib/components/ui/skeleton'
 	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
-	import { fetchUserStallsData, normalizeStallData, setNostrData } from '$lib/nostrSubs/utils'
+	import { fetchUserStallsData, normalizeStallData } from '$lib/nostrSubs/utils'
 	import ndkStore from '$lib/stores/ndk'
-	import { nav_back } from '$lib/utils'
+	import { mergeWithExisting, nav_back } from '$lib/utils'
 	import { onMount } from 'svelte'
 
 	import type { PageData } from './$types'
 
-	// TODO no delete button
 	export let data: PageData
 	const {
-		userExist,
 		activeUser,
 		appSettings: { allowRegister },
 	} = data
-	let stalls: Partial<RichStall>[] | null
+
 	let stallsMode: 'list' | 'create' | 'edit' = 'list'
+	let nostrStalls: Partial<RichStall>[] = []
 
-	$: stallsQuery = userExist
-		? createStallsByFilterQuery({
-				userId: $ndkStore.activeUser?.pubkey,
-				pageSize: 999,
-			})
-		: undefined
-	$: isLoading = $stallsQuery?.isLoading ?? false
+	$: stallsQuery = createStallsByFilterQuery({
+		userId: $ndkStore.activeUser?.pubkey,
+		pageSize: 999,
+	})
 
-	$: {
-		if ($stallsQuery?.data) {
-			stalls = $stallsQuery?.data.stalls
-		}
-	}
+	$: stallsMixture = mergeWithExisting($stallsQuery?.data?.stalls ?? [], nostrStalls, 'identifier')
 
-	$: stallsMode === 'list' ? ($stallsQuery?.data ? $stallsQuery?.refetch() : null) : null
+	$: stallsMode === 'list' ? $stallsQuery?.refetch() : null
 
 	let currentStall: Partial<RichStall> | null = null
+
 	const linkDetails = data.menuItems
 		.find((item) => item.value === 'account-settings')
 		?.links.find((item) => item.href === $page.url.pathname)
 
-	const mergeAndFilterStalls = (
-		existingStalls: Partial<RichStall>[],
-		newStalls: Partial<RichStall>[],
-	): {
-		mergedStalls: Partial<RichStall>[]
-		newStallsAdded: Partial<RichStall>[]
-	} => {
-		const stallMap = new Map<string, Partial<RichStall>>()
-		const newStallsAdded: Partial<RichStall>[] = []
-
-		for (const stall of existingStalls) {
-			if (stall?.identifier) {
-				stallMap.set(stall.identifier, stall)
-			}
-		}
-
-		for (const stall of newStalls) {
-			if (stall?.identifier) {
-				if (!stallMap.has(stall.identifier)) {
-					newStallsAdded.push(stall)
-				}
-				stallMap.set(stall.identifier, stall)
-			}
-		}
-
-		return {
-			mergedStalls: Array.from(stallMap.values()),
-			newStallsAdded,
+	$: if (stallsMode === 'edit' && stallsMixture && currentStall) {
+		const updatedStall = stallsMixture.find((stall) => stall.identifier === currentStall?.identifier)
+		if (updatedStall) {
+			currentStall = updatedStall
 		}
 	}
 
-	async function fetchData(): Promise<void> {
+	onMount(async () => {
 		if (!activeUser?.id) return
-		isLoading = true
 		try {
 			const { stallNostrRes } = await fetchUserStallsData(activeUser.id)
-			if (!stallNostrRes?.size) return
-
-			const normalizedStallData = (await Promise.all(Array.from(stallNostrRes).map(normalizeStallData)))
-				.filter((result): result is NormalizedData<RichStall> => result.data !== null)
-				.map((result) => result.data as Partial<RichStall>)
-
-			const { mergedStalls, newStallsAdded } = mergeAndFilterStalls(stalls || [], normalizedStallData)
-
-			if (newStallsAdded.length) {
-				await Promise.all(
-					newStallsAdded.map((stall) =>
-						setNostrData(
-							Array.from(stallNostrRes).find((s) => s.id === stall.id) || null,
-							null,
-							null,
-							allowRegister,
-							activeUser.id as string,
-							userExist,
-						),
-					),
-				)
+			if (stallNostrRes) {
+				nostrStalls = (await Promise.all([...stallNostrRes].map(normalizeStallData)))
+					.map(({ data }) => data as Partial<RichStall>)
+					.filter(Boolean)
 			}
-
-			stalls = mergedStalls
 		} catch (error) {
 			console.error('Error fetching and processing stalls:', error)
-			isLoading = false
 		}
-	}
-	onMount(async () => {
-		await fetchData()
 	})
 </script>
 
@@ -145,12 +89,12 @@
 	{/if}
 	<div class="flex flex-col gap-2">
 		{#if stallsMode === 'list'}
-			{#if isLoading}
+			{#if $stallsQuery?.isLoading}
 				<Skeleton class="h-12 w-full" />
 				<Skeleton class="h-12 w-full" />
 				<Skeleton class="h-12 w-full" />
-			{:else if stalls?.length}
-				{#each stalls as stall}
+			{:else if stallsMixture?.length}
+				{#each stallsMixture as stall}
 					<Collapsible.Root class="border-black border p-2">
 						<div class="flex flex-row">
 							<Collapsible.Trigger class="flex flex-row w-full items-center justify-between gap-2">
@@ -184,7 +128,6 @@
 				stall={currentStall}
 				on:success={() => {
 					stallsMode = 'list'
-					fetchData()
 				}}
 			/>
 		{/if}

@@ -26,8 +26,8 @@ export const slugify = (str: string, wordLimit?: number): string => {
 	return slug
 }
 
-export const createSlugId = (name: string, wordLimit = 3): string => {
+export const createSlugId = (name: string, wordLimit = 3, sufix?: string, separator = '-'): string => {
 	const slugifiedName = slugify(name, wordLimit)
-	const uniqueId = createId()
-	return `${slugifiedName}-${uniqueId}`
+	const uniqueId = sufix ?? createId()
+	return `${slugifiedName}${separator}${uniqueId}`
 }

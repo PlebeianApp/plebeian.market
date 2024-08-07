@@ -1,8 +1,7 @@
-import type { LoadUserInfo } from '$lib/server/users.service.js'
 import { error } from '@sveltejs/kit'
 import { KindStalls } from '$lib/constants'
 import { stallExists } from '$lib/server/stalls.service'
-import { getUserIdByNip05, userExists } from '$lib/server/users.service.js'
+import { getUserIdByNip05 } from '$lib/server/users.service.js'
 import ndkStore from '$lib/stores/ndk'
 import { NIP05_REGEX } from 'nostr-tools/nip05'
 import { get } from 'svelte/store'
@@ -16,19 +15,18 @@ export type StallCheck = {
 }
 
 type ProcessedInfo = {
-	userInfo: LoadUserInfo
+	userInfo: { id: string | null }
 	stallId: string
 	stallIdentifier?: string
 }
 
 const processNip05 = async (nip05: string, stallIdentifier: string): Promise<ProcessedInfo> => {
 	const lowerNip05 = nip05.toLowerCase()
-	const userId = (await getUserIdByNip05(lowerNip05)) || (await get(ndkStore).getUserFromNip05(lowerNip05, false))?.pubkey
+	const userId = (await getUserIdByNip05(lowerNip05)) || (await get(ndkStore).getUserFromNip05(lowerNip05, false))?.pubkey || null
 
 	return {
 		userInfo: {
 			id: userId,
-			exist: Boolean(userId && (await userExists(userId))),
 		},
 		stallId: `${KindStalls}:${userId}:${stallIdentifier}`,
 		stallIdentifier,
@@ -40,7 +38,6 @@ const processDirectId = async (root: string): Promise<ProcessedInfo> => {
 	return {
 		userInfo: {
 			id: userId,
-			exist: await userExists(userId),
 		},
 		stallId: `${KindStalls}:${root}`,
 		stallIdentifier,
@@ -52,7 +49,6 @@ const processFullId = async (stallId: string): Promise<ProcessedInfo> => {
 	return {
 		userInfo: {
 			id: userId,
-			exist: await userExists(userId),
 		},
 		stallId,
 		stallIdentifier,

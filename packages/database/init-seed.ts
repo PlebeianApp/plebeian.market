@@ -1,17 +1,7 @@
 import { sql } from 'drizzle-orm'
 
-import {
-	APP_SETTINGS_META,
-	AppSettingsMetaName,
-	DIGITAL_PRODUCT_META,
-	DigitalProductMetaName,
-	GENERAL_META,
-	META_NAMES,
-	PRODUCT_META,
-	ProductMetaName,
-	USER_META,
-	UserMetaName,
-} from './constants'
+import type { AppSettingsMetaName, DigitalProductMetaName, ProductMetaName, UserMetaName } from './constants'
+import { APP_SETTINGS_META, DIGITAL_PRODUCT_META, GENERAL_META, META_NAMES, PRODUCT_META, USER_META } from './constants'
 import { db } from './database'
 import { AppSettings } from './types'
 

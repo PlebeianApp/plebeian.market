@@ -363,3 +363,8 @@ export const searchLocation = async (query: string): Promise<Location[]> => {
 		}),
 	)
 }
+
+export function mergeWithExisting<T>(existing: T[], newItems: T[], key: keyof T) {
+	const existingSet = new Set(existing.map((item) => item[key]))
+	return [...existing, ...newItems.filter((item) => !existingSet.has(item[key]))]
+}

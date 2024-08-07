@@ -14,11 +14,6 @@ export interface RichUser extends User {
 	trustLevel: UserTrustLevel
 }
 
-export type LoadUserInfo = {
-	id?: string
-	exist: boolean
-}
-
 const resolveUser = async (user: User): Promise<RichUser> => {
 	try {
 		const [roleRes] = await db

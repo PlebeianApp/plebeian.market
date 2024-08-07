@@ -1,11 +1,10 @@
-import type { NDKKind, NDKUserProfile, NostrEvent } from '@nostr-dev-kit/ndk'
+import type { NDKKind, NostrEvent } from '@nostr-dev-kit/ndk'
 import type { VerifiedEvent } from 'nostr-tools'
 import { NSchema as n } from '@nostrify/nostrify'
 import { error } from '@sveltejs/kit'
 import { getEventCoordinates, isPReplacEvent } from '$lib/utils'
 import { verifyEvent } from 'nostr-tools'
 
-import type { InferSelectModel, User } from '@plebeian/database'
 import { db, eq, events, inArray, sql, users } from '@plebeian/database'
 
 import { userExists, usersExists } from './users.service'
@@ -55,7 +54,6 @@ export const persistEvent = async (event: NostrEvent): Promise<NostrEvent | unde
 	const eventTargetId: string = isPReplacEvent(event.kind as number)
 		? (getEventCoordinates(event)?.coordinates as string)
 		: (event.id as string)
-	type Event = InferSelectModel<typeof events>
 	const eventExists = await db
 		.select({ id: sql`1` })
 		.from(events)

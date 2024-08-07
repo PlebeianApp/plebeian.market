@@ -5,8 +5,8 @@
 	import { Button } from '$lib/components/ui/button/index.js'
 	import { Skeleton } from '$lib/components/ui/skeleton'
 	import { createProductsByFilterQuery } from '$lib/fetch/products.queries'
-	import { fetchUserProductData, mergeProducts } from '$lib/nostrSubs/utils'
-	import { nav_back } from '$lib/utils'
+	import { fetchUserProductData, normalizeProductsFromNostr } from '$lib/nostrSubs/utils'
+	import { mergeWithExisting, nav_back } from '$lib/utils'
 	import { onMount } from 'svelte'
 
 	import type { PageData } from './$types'
@@ -14,23 +14,15 @@
 	export let data: PageData
 	const { userExist, activeUser } = data
 	let toDisplayProducts: Partial<DisplayProduct>[] = []
-	// TODO no delete button
 	let productsMode: 'list' | 'create' | 'edit' = 'list'
-	$: productsQuery = userExist
-		? createProductsByFilterQuery({
-				userId: activeUser?.id,
-				pageSize: 100,
-			})
-		: undefined
 
+	$: productsQuery = createProductsByFilterQuery({
+		userId: activeUser?.id,
+		pageSize: 100,
+	})
+
+	$: productsMixture = mergeWithExisting($productsQuery?.data?.products ?? [], toDisplayProducts, 'id')
 	$: productsMode === 'list' ? $productsQuery?.refetch() : null
-
-	$: {
-		if ($productsQuery?.data) {
-			$productsQuery.refetch()
-			toDisplayProducts = $productsQuery.data.products
-		}
-	}
 
 	let currentProduct: Partial<DisplayProduct> | null = null
 
@@ -38,8 +30,8 @@
 		.find((item) => item.value === 'account-settings')
 		?.links.find((item) => item.href === $page.url.pathname)
 
-	$: if (productsMode === 'edit' && toDisplayProducts && currentProduct) {
-		const updatedProduct = toDisplayProducts.find((product) => product.id === currentProduct?.id)
+	$: if (productsMode === 'edit' && productsMixture && currentProduct) {
+		const updatedProduct = productsMixture.find((product) => product.id === currentProduct?.id)
 		if (updatedProduct) {
 			currentProduct = updatedProduct
 		}
@@ -47,17 +39,11 @@
 
 	onMount(async () => {
 		if (!activeUser?.id) return
-		if (!userExist) {
-			const { products: productsData } = await fetchUserProductData(activeUser.id)
+		const { products: productsData } = await fetchUserProductData(activeUser.id)
 
-			if (productsData?.size) {
-				toDisplayProducts = await mergeProducts(toDisplayProducts, productsData, activeUser.id)
-			}
-		} else {
-			const { products: productsData } = await fetchUserProductData(activeUser.id)
-			if (productsData?.size) {
-				toDisplayProducts = await mergeProducts(toDisplayProducts, productsData, activeUser.id)
-			}
+		if (productsData?.size) {
+			const normalizedProducts = await normalizeProductsFromNostr(productsData, activeUser.id)
+			toDisplayProducts = normalizedProducts?.toDisplayProducts ?? []
 		}
 	})
 </script>
@@ -96,7 +82,7 @@
 				<Skeleton class="h-12 w-full" />
 				<Skeleton class="h-12 w-full" />
 			{:else}
-				{#each toDisplayProducts as product}
+				{#each productsMixture as product}
 					<Button
 						on:click={() => {
 							productsMode = 'edit'
