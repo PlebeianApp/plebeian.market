@@ -1,6 +1,6 @@
 <script lang="ts">
-	import Stepper from '$lib/components/stepper.svelte'
 	import Review from '$lib/components/checkout-review.svelte'
+	import Stepper from '$lib/components/stepper.svelte'
 
 	let currentStep = 0
 
