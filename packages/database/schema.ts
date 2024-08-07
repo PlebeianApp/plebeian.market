@@ -319,34 +319,6 @@ export const productImages = sqliteTable(
 	},
 )
 
-// Categories
-// export const categories = sqliteTable('categories', {
-// 	name: text('name').primaryKey(),
-// 	description: text('description').notNull(),
-// 	parent: text('parent').references((): AnySQLiteColumn => categories.name, { onDelete: 'cascade', onUpdate: 'cascade' }),
-// })
-
-// // Product categories
-// export const productCategories = sqliteTable(
-// 	'product_categories',
-// 	{
-// 		productId: text('product_id')
-// 			.references(() => products.id, { onDelete: 'cascade', onUpdate: 'cascade' })
-// 			.notNull(),
-// 		category: text('category')
-// 			.references(() => categories.name, { onDelete: 'cascade', onUpdate: 'cascade' })
-// 			.notNull(),
-// 		userId: text('user_id')
-// 			.references(() => users.id, { onDelete: 'cascade', onUpdate: 'cascade' })
-// 			.notNull(),
-// 	},
-// 	(table) => {
-// 		return {
-// 			pk: primaryKey({ columns: [table.productId, table.category] }),
-// 		}
-// 	},
-// )
-
 // Auctions
 export const auctions = sqliteTable('auctions', {
 	...standardColumns,

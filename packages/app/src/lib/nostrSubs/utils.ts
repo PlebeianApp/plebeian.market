@@ -279,3 +279,7 @@ export async function normalizeProductsFromNostr(
 		stallProducts: new Set(validProducts.map((p) => p.event)),
 	}
 }
+
+export const createShippingCoordinates = (shippingId: string, stallIdentifier: string) => {
+	return `${shippingId}:${stallIdentifier.substring(0, 8)}`
+}

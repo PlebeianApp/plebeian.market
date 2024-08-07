@@ -33,7 +33,7 @@ function clearQueues() {
 }
 
 export async function processQueuedInsertions(allowRegister?: boolean) {
-	if (allowRegister == undefined || !userQueue.size || !stallQueue.size || !productQueue.size) return
+	if (![stallQueue, productQueue, userQueue].some((queue) => queue.size > 0) || allowRegister === undefined) return
 	const allUserIds = new Set([
 		...Array.from(userQueue).map((user) => user.id as string),
 		...Array.from(stallQueue)
@@ -43,13 +43,11 @@ export async function processQueuedInsertions(allowRegister?: boolean) {
 			.map((product) => product.pubkey)
 			.filter(Boolean),
 	])
-
 	for (const userId of allUserIds) {
 		const userExists = await checkIfUserExists(userId)
 		const shouldRegisterUser = await shouldRegister(allowRegister, userExists, userId)
 
 		if (shouldRegisterUser) {
-			console.log('Registering data for', truncateString(userId))
 			const user = Array.from(userQueue).find((u) => u.id === userId)
 			const userStalls = Array.from(stallQueue).filter((stall) => getEventCoordinates(stall)?.pubkey === userId)
 			const userProducts = new Set(Array.from(productQueue).filter((product) => getEventCoordinates(product)?.pubkey === userId))
@@ -57,8 +55,7 @@ export async function processQueuedInsertions(allowRegister?: boolean) {
 			if (user && !userExists) {
 				await handleUserNostrData(user, userId)
 			}
-
-			if (userProducts.size > 0 && userStalls) {
+			if (userProducts.size > 0 && userStalls.length) {
 				for (const stall of userStalls) {
 					await handleStallNostrData(stall)
 				}

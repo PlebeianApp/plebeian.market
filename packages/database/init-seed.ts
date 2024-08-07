@@ -75,6 +75,7 @@ const main = async () => {
 		db.delete(dbSchema.bids),
 		db.delete(dbSchema.orders),
 		db.delete(dbSchema.orderItems),
+		db.delete(dbSchema.productShipping),
 		db.delete(dbSchema.invoices),
 		db.delete(dbSchema.shipping),
 		db.delete(dbSchema.shippingZones),
