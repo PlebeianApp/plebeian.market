@@ -390,7 +390,8 @@ export const userCartTotalInSats = derived(cart, ($cart, set) => {
 	debouncedCalculate()
 })
 
-export function handleAddToCart(userId: string, stallCoordinates: string, product: Partial<DisplayProduct>) {
+export function handleAddToCart(userId: string, stallCoordinates: string, product: Partial<DisplayProduct> | null) {
+	if (!product) return
 	const currentCart = get(cart)
 	const currentAmount = currentCart.products[product.id ?? '']?.amount || 0
 

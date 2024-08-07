@@ -1,13 +1,12 @@
 <script lang="ts">
+	import type { NDKUserProfile } from '@nostr-dev-kit/ndk'
 	import { stringToHexColor } from '$lib/utils'
-
-	import type { User } from '@plebeian/database'
 
 	import AvatarFallback from '../ui/avatar/avatar-fallback.svelte'
 	import AvatarImage from '../ui/avatar/avatar-image.svelte'
 	import Avatar from '../ui/avatar/avatar.svelte'
 
-	export let user: User
+	export let user: NDKUserProfile
 	const { image, name } = user
 </script>
 

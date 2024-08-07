@@ -1,5 +1,5 @@
 import type { NDKEvent, NDKUserProfile } from '@nostr-dev-kit/ndk'
-import { checkIfUserExists, getElapsedTimeInDays, getEventCoordinates, shouldRegister } from '$lib/utils'
+import { checkIfUserExists, getElapsedTimeInDays, getEventCoordinates, shouldRegister, truncateString } from '$lib/utils'
 
 import { fetchUserData, handleProductNostrData, handleStallNostrData, handleUserNostrData } from './utils'
 
@@ -63,13 +63,12 @@ export async function processQueuedInsertions(allowRegister?: boolean) {
 			.filter(Boolean),
 	])
 
-	console.log('Looking all user Ids', allUserIds)
 	for (const userId of allUserIds) {
 		const userExists = await checkIfUserExists(userId)
 		const shouldRegisterUser = await shouldRegister(allowRegister, userExists, userId)
-		console.log('looking if userExist and if should register', userExists, shouldRegisterUser)
 
 		if (shouldRegisterUser) {
+			console.log('Registering data for', truncateString(userId))
 			const user = Array.from(userQueue).find((u) => u.id === userId)
 			const userStalls = Array.from(stallQueue).filter((stall) => getEventCoordinates(stall)?.pubkey === userId)
 			const userProducts = new Set(Array.from(productQueue).filter((product) => getEventCoordinates(product)?.pubkey === userId))

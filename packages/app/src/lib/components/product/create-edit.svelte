@@ -15,10 +15,7 @@
 	import { queryClient } from '$lib/fetch/client'
 	import { createProductMutation, editProductMutation } from '$lib/fetch/products.mutations'
 	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
-	import { createUserExistsQuery } from '$lib/fetch/users.queries'
-	import { fetchUserStallsData, normalizeStallData } from '$lib/nostrSubs/utils'
 	import ndkStore from '$lib/stores/ndk'
-	import { onMount, tick } from 'svelte'
 	import { toast } from 'svelte-sonner'
 
 	import type { ProductImage } from '@plebeian/database'
@@ -31,44 +28,35 @@
 	export let product: Partial<DisplayProduct> | null = null
 	export let forStall: StallCoordinatesType | null = null
 	// TODO Categories are beign inserted in the db but they are not beign loaded when tring to edit/update a product
-
-	let stalls: RichStall[] | null = null
-	let stall: RichStall | null = null
+	// FIXME Product shipping bug (#191)
+	let stall: Partial<RichStall> | null = null
 	let categories: Category[] = []
 	let images: Partial<ProductImage>[] = []
 	let shippingMethods: ShippingMethod[] = []
 
-	$: userExistQuery = createUserExistsQuery($ndkStore.activeUser?.pubkey as string)
-
-	$: stallsQuery = $userExistQuery.data
-		? createStallsByFilterQuery({
-				userId: $ndkStore.activeUser?.pubkey,
-				pageSize: 999,
-			})
-		: undefined
-	$: isLoading = $stallsQuery?.isLoading ?? false
-
-	$: {
-		if ($stallsQuery?.data) stalls = $stallsQuery.data.stalls
-	}
+	$: stallsQuery = createStallsByFilterQuery({
+		userId: $ndkStore.activeUser?.pubkey,
+		pageSize: 999,
+	})
 
 	let currentShippings: { shipping: Partial<RichShippingInfo> | null; extraCost: string }[] | null = null
 
 	$: {
 		currentShippings ??=
 			stall?.shipping
-				.filter((s) => product?.shipping?.some((sh) => sh.shippingId === s.id))
+				?.filter((s) => product?.shipping?.some((sh) => sh.shippingId === s.id))
 				.map((s) => ({ shipping: s, extraCost: product?.shipping?.find((sh) => sh.shippingId === s.id)?.cost ?? '' })) ?? null
 	}
 
-	$: currentStallIdentifier = forStall?.split(':')[2] || product?.stallId || (stalls && stalls[0]?.identifier)
+	$: currentStallIdentifier =
+		forStall?.split(':')[2] || product?.stallId || ($stallsQuery.data?.stalls && $stallsQuery.data.stalls[0]?.identifier)
 
 	$: {
-		if (stalls?.length) {
+		if ($stallsQuery.data?.stalls.length) {
 			if (currentStallIdentifier) {
-				;[stall] = stalls.filter((pStall) => pStall.identifier === currentStallIdentifier)
+				;[stall] = $stallsQuery.data.stalls.filter((pStall) => pStall.identifier === currentStallIdentifier)
 			} else {
-				stall = stalls[0]
+				stall = $stallsQuery.data?.stalls[0]
 			}
 		}
 	}
@@ -101,23 +89,35 @@
 		categories = [...categories, { key, name: `category ${categories.length + 1}`, checked: true }]
 	}
 
-	async function handleSubmit(sEvent: SubmitEvent, stall: RichStall | null) {
+	async function handleSubmit(sEvent: SubmitEvent, stall: Partial<RichStall> | null) {
 		if (!stall) return
 		try {
-			const mutationFn = product ? $editProductMutation : $createProductMutation
-			await mutationFn.mutateAsync([
-				sEvent,
-				product ?? stall,
-				images.map((image) => image.imageUrl!),
-				shippingMethods.map((s) => ({
-					id: s.id,
-					name: s.name ?? '',
-					cost: s.cost ?? '',
-					regions: s.regions ?? [],
-					countries: s.countries ?? [],
-				})),
-				categories,
-			])
+			if (product) {
+				await $editProductMutation.mutateAsync([
+					sEvent,
+					product,
+					images.map((image) => ({ imageUrl: image.imageUrl! })),
+					shippingMethods.map((s) => ({
+						id: s.id,
+						name: s.name ?? '',
+						cost: s.cost ?? '',
+						regions: s.regions ?? [],
+						countries: s.countries ?? [],
+					})),
+					categories,
+				])
+			} else {
+				await $createProductMutation.mutateAsync([
+					sEvent,
+					stall,
+					images.map((image) => image.imageUrl!),
+					shippingMethods.map((s) => ({
+						id: s.id,
+						cost: s.cost ?? '',
+					})),
+					categories,
+				])
+			}
 
 			toast.success(`Product ${product ? 'updated' : 'created'}!`)
 			queryClient.invalidateQueries({ queryKey: ['products', $ndkStore.activeUser?.pubkey] })
@@ -126,42 +126,13 @@
 		}
 	}
 
-	const fetchData = async () => {
-		$userExistQuery.data == false && (isLoading = true)
-		const { stallNostrRes } = await fetchUserStallsData($ndkStore.activeUser?.pubkey as string)
-		if (stallNostrRes) {
-			const normalizedStallData = await Promise.all([...stallNostrRes].map(normalizeStallData)).then((results) =>
-				results.filter((result) => result.data !== null).map((result) => result.data),
-			)
-			if (stalls?.length) {
-				const newStalls = normalizedStallData.filter(
-					(stall) => !stalls?.some((existingStall) => stall?.identifier === existingStall.identifier),
-				)
-				stalls = [...stalls, ...newStalls] as RichStall[]
-			} else {
-				stalls = normalizedStallData as RichStall[]
-			}
-		}
-		isLoading = false
-	}
-
-	$: if ($userExistQuery.isFetched) {
-		fetchData()
-	}
-
 	const activeTab =
 		'w-full font-bold border-b-2 border-black text-black data-[state=active]:border-b-primary data-[state=active]:text-primary'
-
-	function closeAndFocusTrigger(triggerId: string) {
-		tick().then(() => {
-			document.getElementById(triggerId)?.focus()
-		})
-	}
 </script>
 
-{#if isLoading}
+{#if $stallsQuery.isLoading}
 	<Spinner />
-{:else if !stalls?.length}
+{:else if !$stallsQuery.data?.stalls.length}
 	<div>Creating products needs at least one defined <a class="underline" href="/settings/account/stalls">stall</a></div>
 {:else}
 	<form on:submit|preventDefault={(sEvent) => handleSubmit(sEvent, stall)} class="flex flex-col gap-4 grow h-full">
@@ -218,7 +189,7 @@
 							<DropdownMenu.Trigger asChild let:builder>
 								<Button variant="outline" class="border-2 border-black" builders={[builder]}>
 									{#if currentStallIdentifier}
-										{@const defaultStall = stalls.find((stall) => stall.identifier === currentStallIdentifier)}
+										{@const defaultStall = $stallsQuery.data?.stalls.find((stall) => stall.identifier === currentStallIdentifier)}
 										{defaultStall ? defaultStall.name : 'Select a stall'}
 									{:else}
 										{stall?.name}
@@ -229,7 +200,7 @@
 								<DropdownMenu.Label>Stall</DropdownMenu.Label>
 								<DropdownMenu.Separator />
 								<section class=" max-h-[350px] overflow-y-auto">
-									{#each stalls as item}
+									{#each $stallsQuery.data?.stalls as item}
 										<DropdownMenu.CheckboxItem
 											checked={currentStallIdentifier === item.identifier}
 											on:click={() => {
@@ -287,7 +258,7 @@
 								<DropdownMenu.Label>Stall</DropdownMenu.Label>
 								<DropdownMenu.Separator />
 								<section class=" max-h-[350px] overflow-y-auto">
-									{#each stall?.shipping.filter((s) => !currentShippings?.some((sh) => sh.shipping?.id === s.id)) ?? [] as item}
+									{#each stall?.shipping?.filter((s) => !currentShippings?.some((sh) => sh.shipping?.id === s.id)) ?? [] as item}
 										<DropdownMenu.CheckboxItem
 											checked={shippingMethod.shipping === item}
 											on:click={() => {
@@ -320,7 +291,7 @@
 				<div class="grid gap-1.5">
 					<Button
 						on:click={() => (currentShippings = [...(currentShippings ?? []), { shipping: null, extraCost: '' }])}
-						disabled={currentShippings?.length === stall?.shipping.length}
+						disabled={currentShippings?.length === stall?.shipping?.length}
 						variant="outline"
 						class="font-bold ml-auto">Add Shipping Method</Button
 					>

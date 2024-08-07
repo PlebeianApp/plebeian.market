@@ -1,6 +1,5 @@
 <script lang="ts">
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
-	import { createShippingQuery } from '$lib/fetch/shipping.queries'
 	import { createStallQuery } from '$lib/fetch/stalls.queries'
 	import { cart } from '$lib/stores/cart'
 	import { truncateString } from '$lib/utils'
@@ -12,17 +11,16 @@
 	export let userPubkey: string
 
 	$: stallQuery = createStallQuery(stallId)
-	$: shippingMethods = createShippingQuery(stallId)
 	$: currentShippingMethodId = $cart.stalls[stallId]?.shippingMethodId || null
 
 	function handleShippingMethodSelect(methodId: string) {
-		const selectedMethod = $shippingMethods.data?.find((m) => m.id === methodId)
+		const selectedMethod = $stallQuery.data?.stall?.shipping?.find((m) => m.id === methodId)
 		if (selectedMethod) {
 			cart.setShippingMethod(userPubkey, stallId, methodId, Number(selectedMethod.cost))
 		}
 	}
 
-	// TODO Improve visualization of the sipping methods
+	// TODO Keep improving visualization of the sipping methods
 </script>
 
 <div class="flex flex-col justify-between gap-2">
@@ -37,8 +35,8 @@
 		<DropdownMenu.Root>
 			<DropdownMenu.Trigger asChild let:builder>
 				<Button variant="secondary" class="border-2 border-black h-8" builders={[builder]}>
-					{#if $shippingMethods.data?.length && currentShippingMethodId}
-						{@const method = $shippingMethods.data?.find((m) => m.id === currentShippingMethodId)}
+					{#if $stallQuery.data?.stall?.shipping?.length && currentShippingMethodId}
+						{@const method = $stallQuery.data?.stall?.shipping?.find((m) => m.id === currentShippingMethodId)}
 						{method?.name || method?.countries?.length
 							? method?.countries?.join(',')
 							: '' || method?.regions?.length
@@ -55,14 +53,22 @@
 				<DropdownMenu.Label>Shipping Method</DropdownMenu.Label>
 				<DropdownMenu.Separator />
 				<section class="max-h-[350px] overflow-y-auto">
-					{#if $shippingMethods.data?.length}
-						{#each $shippingMethods.data as method}
+					{#if $stallQuery.data?.stall?.shipping?.length}
+						{#each $stallQuery.data?.stall?.shipping as method}
 							<DropdownMenu.CheckboxItem
 								checked={currentShippingMethodId === method.id}
 								on:click={() => handleShippingMethodSelect(String(method?.id))}
 							>
 								<section class="flex items-center w-full justify-between">
-									<span>{truncateString(String(method.name || method.id))}</span>
+									<span>
+										{method?.name || method?.countries?.length
+											? method?.countries?.join(',')
+											: '' || method?.regions?.length
+												? method?.regions?.join(',')
+												: '' || method?.id
+													? truncateString(String(method?.id))
+													: 'Select shipping method'}</span
+									>
 									<span>{method.cost}</span>
 								</section>
 							</DropdownMenu.CheckboxItem>

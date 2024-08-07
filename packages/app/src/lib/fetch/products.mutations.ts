@@ -27,7 +27,7 @@ export const createProductMutation = createMutation(
 	{
 		mutationFn: async ([sEvent, stall, images, shippingMethods, categories]: [
 			SubmitEvent,
-			RichStall,
+			Partial<RichStall>,
 			string[],
 			{
 				id: string
@@ -45,7 +45,7 @@ export const createProductMutation = createMutation(
 			const identifier = createSlugId(productTile)
 			const evContent = {
 				id: identifier,
-				stall_id: stall.id.split(':').length == 3 ? stall.id.split(':')[2] : stall.id,
+				stall_id: stall?.id?.split(':').length == 3 ? stall.id.split(':')[2] : stall.id,
 				name: productTile,
 				description: productDescription,
 				images: images,

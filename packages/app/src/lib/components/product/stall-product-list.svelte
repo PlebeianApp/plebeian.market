@@ -1,14 +1,11 @@
 <script lang="ts">
 	import type { RichStall } from '$lib/server/stalls.service'
-	import { page } from '$app/stores'
 	import { createProductsByFilterQuery } from '$lib/fetch/products.queries'
 
 	import Spinner from '../assets/spinner.svelte'
 	import Separator from '../ui/separator/separator.svelte'
 	import ImgPlaceHolder from './imgPlaceHolder.svelte'
 	import SatPriceLoader from './sat-price-loader.svelte'
-
-	const { activeUser, userExist } = $page.data
 
 	export let stall: Partial<RichStall>
 

@@ -82,6 +82,7 @@ export const getAuctionsByUserId = async (auctionId: string): Promise<DisplayAuc
 
 export const createAuction = async (auctionEvent: NostrEvent, auctionStatus: AuctionStatus): Promise<DisplayAuction> => {
 	const eventCoordinates = getEventCoordinates(auctionEvent)
+	if (!eventCoordinates?.coordinates) throw Error('Invalid coordinates')
 	const auctionEventContent = JSON.parse(auctionEvent.content)
 	const parsedAuction = auctionEventSchema.parse({ id: auctionEventContent.id, ...auctionEventContent })
 	const stall = await getStallById(parsedAuction.stall_id)
@@ -147,8 +148,11 @@ export const createAuction = async (auctionEvent: NostrEvent, auctionStatus: Auc
 
 export const updateAuction = async (auctionId: string, auctionEvent: NostrEvent): Promise<DisplayAuction> => {
 	const auctionEventContent = JSON.parse(auctionEvent.content)
+
 	const parsedAuction = auctionEventSchema.partial().parse({ id: auctionId, ...auctionEventContent })
 	const eventCoordinates = getEventCoordinates(auctionEvent)
+	if (!eventCoordinates?.coordinates) throw Error('Invalid coordinates')
+
 	const startDate = parsedAuction?.start_date ? new Date(parsedAuction.start_date * 1000) : new Date()
 
 	const extraCost = (parsedAuction.shipping && parsedAuction.shipping[0].cost) || 0

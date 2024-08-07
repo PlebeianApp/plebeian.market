@@ -19,11 +19,7 @@
 	let current = 0
 
 	export let data: PageData
-	$: ({
-		user,
-		productRes,
-		appSettings: { allowRegister },
-	} = data)
+	$: ({ productRes, user } = data)
 	let isMyProduct = false
 	let qtyToCart = 1
 
@@ -31,11 +27,11 @@
 		'w-full font-bold border-b-2 border-black text-black data-[state=active]:border-b-primary data-[state=active]:text-primary'
 
 	$: productsQuery = createProductQuery(productRes.id)
-	$: userProfileQuery = createUserByIdQuery(user.id as string)
+	$: userProfileQuery = user.id ? createUserByIdQuery(user.id) : null
 
 	$: priceQuery = createCurrencyConversionQuery($productsQuery.data?.currency as string, $productsQuery.data?.price as number)
 
-	$: otherProducts = user.exist ? createProductsByFilterQuery({ userId: user.id, pageSize: 3 }) : undefined
+	$: otherProducts = user.id ? createProductsByFilterQuery({ userId: user.id, pageSize: 3 }) : null
 
 	$: if (api) {
 		count = api.scrollSnapList().length
@@ -46,7 +42,7 @@
 	}
 
 	const handleIncrement = () => {
-		if (qtyToCart < $productsQuery.data?.quantity) {
+		if ($productsQuery.data?.quantity && qtyToCart < $productsQuery.data?.quantity) {
 			qtyToCart++
 		}
 	}
@@ -58,7 +54,7 @@
 	}
 </script>
 
-{#if $productsQuery.data}
+{#if $productsQuery.data && user.id}
 	<div class="container">
 		<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
 			<div class="flex flex-col gap-1">
@@ -67,7 +63,7 @@
 						{@const sortedImages = $productsQuery.data.images.slice().sort((a, b) => a.imageOrder - b.imageOrder)}
 						<Carousel.Root bind:api>
 							<Carousel.Content>
-								{#each sortedImages as item, i}
+								{#each sortedImages as item}
 									<Carousel.Item>
 										<img class="w-full h-auto" src={item.imageUrl} alt="" />
 									</Carousel.Item>
@@ -145,15 +141,15 @@
 					</Button>
 					<Button
 						class="ml-2"
-						on:click={() => handleAddToCart(String($productsQuery.data.userId), String($productsQuery.data.stallId), $productsQuery.data)}
+						on:click={() => handleAddToCart(String($productsQuery.data?.userId), String($productsQuery.data?.stallId), $productsQuery.data)}
 						>Add to cart</Button
 					>
 				</div>
 				<span class="my-8 font-bold"
 					>Sold by <a
-						href={`/p/${$userProfileQuery.data?.nip05 ? $userProfileQuery.data?.nip05 : $userProfileQuery.data?.id ? $userProfileQuery.data?.id : user.id}`}
+						href={`/p/${$userProfileQuery?.data?.nip05 ? $userProfileQuery.data?.nip05 : $userProfileQuery?.data?.id ? $userProfileQuery.data?.id : user.id}`}
 						><span class="underline"
-							>{$userProfileQuery.data?.name ? $userProfileQuery.data?.name : $userProfileQuery.data?.displayName}<span /></span
+							>{$userProfileQuery?.data?.name ? $userProfileQuery.data?.name : $userProfileQuery?.data?.displayName}<span /></span
 						></a
 					>
 				</span>
@@ -187,7 +183,7 @@
 
 	{#if $otherProducts?.data?.products.length}
 		<div class="container py-12">
-			<h2>More from {$userProfileQuery.data?.name}</h2>
+			<h2>More from {$userProfileQuery?.data?.name}</h2>
 			<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
 				{#each $otherProducts?.data?.products as item}
 					<ProductItem product={item} />
