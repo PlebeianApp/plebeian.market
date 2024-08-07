@@ -1,7 +1,6 @@
 <script lang="ts">
 	import Review from '$lib/components/checkout/review.svelte'
 	import Stepper from '$lib/components/stepper.svelte'
-	
 
 	let currentStep = 0
 
