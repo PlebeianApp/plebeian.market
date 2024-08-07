@@ -36,7 +36,6 @@ export const createProductQuery = (productId: string) =>
 					throw Error
 				} catch {
 					const [_, userId, productIdentifier] = productId.split(':')
-					console.log(productIdentifier)
 					const { products: productsData } = await fetchUserProductData(userId, productIdentifier)
 					if (productsData?.size) {
 						const result = await normalizeProductsFromNostr(productsData, userId)

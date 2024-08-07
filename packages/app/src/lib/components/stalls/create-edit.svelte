@@ -131,9 +131,6 @@
 				//   newEvent.publish(),
 				checkIfUserExists(),
 			])
-			if (publishResult) {
-				console.log(publishResult)
-			}
 			if (await shouldRegister(allowRegister, userExists)) {
 				const nostrEvent = await newEvent.toNostrEvent()
 				await (stall?.id
