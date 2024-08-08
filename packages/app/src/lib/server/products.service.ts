@@ -2,6 +2,7 @@ import type { NostrEvent } from '@nostr-dev-kit/ndk'
 import type { ProductsFilter } from '$lib/schema'
 import { error } from '@sveltejs/kit'
 import { KindStalls, standardDisplayDateFormat } from '$lib/constants'
+import { createShippingCoordinates } from '$lib/nostrSubs/utils'
 import { productsFilterSchema } from '$lib/schema'
 import { getImagesByProductId } from '$lib/server/productImages.service'
 import { customTagValue, getEventCoordinates } from '$lib/utils'
@@ -252,25 +253,25 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 				if (insertProductImages?.length) {
 					await db.insert(productImages).values(insertProductImages).returning()
 				}
-				// FIXME (#191) Right now this is just a basic filtering
-				// if (parsedProduct.shipping?.length) {
-				// 	const validShipping = parsedProduct.shipping.filter((s) => s.id && s.id.trim() !== '')
-				// 	if (validShipping.length) {
-				// 		await db
-				// 			.insert(productShipping)
-				// 			.values(
-				// 				validShipping.map((s) => ({
-				// 					cost: s.cost!,
-				// 					shippingId: s.id!,
-				// 					productId: eventCoordinates!.coordinates!,
-				// 				})),
-				// 			)
-				// 			.execute()
-				// 	} else {
-				// 		console.log('No valid shipping entries to insert')
-				// 	}
-				// }
-
+				if (parsedProduct.shipping?.length) {
+					const validShipping = parsedProduct.shipping.filter((s) => s.id && parseFloat(String(s.cost)))
+					if (validShipping.length) {
+						for (const s of validShipping) {
+							try {
+								await db
+									.insert(productShipping)
+									.values({
+										cost: s.cost!,
+										shippingId: createShippingCoordinates(s.id, String(stallId.split(':').pop())),
+										productId: eventCoordinates!.coordinates!,
+									})
+									.returning()
+							} catch (e) {
+								console.warn('Catching error when inserting productShipping for:', eventCoordinates!.coordinates!, e)
+							}
+						}
+					}
+				}
 				if (productEvent.tags.length) {
 					await db
 						.insert(eventTags)
@@ -320,7 +321,9 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 	}
 
 	const parsedProductData = parsedProduct.data
-
+	const stallId = parsedProductData?.stallId?.startsWith(KindStalls.toString())
+		? parsedProductData?.stallId
+		: `${KindStalls}:${productEvent.pubkey}:${parsedProductData?.stallId}`
 	const insertProduct: Partial<Product> = {
 		id: productId,
 		description: parsedProductData?.description as string,
@@ -328,9 +331,7 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 		currency: parsedProductData?.currency,
 		price: parsedProductData?.price?.toString(),
 		extraCost: parsedProductData?.shipping?.length ? parsedProductData?.shipping[0].cost?.toString() : String(0),
-		stallId: parsedProductData?.stallId?.startsWith(KindStalls.toString())
-			? parsedProductData?.stallId
-			: `${KindStalls}:${productEvent.pubkey}:${parsedProductData?.stallId}`,
+		stallId,
 		productName: parsedProductData?.name,
 		quantity: parsedProductData?.quantity !== null ? parsedProductData?.quantity : undefined,
 	}
@@ -388,7 +389,7 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 				.insert(productShipping)
 				.values({
 					cost: shipping.cost!,
-					shippingId: shipping.id,
+					shippingId: createShippingCoordinates(shipping.id, String(stallId.split(':').pop())),
 					productId: productId,
 				})
 				.execute()

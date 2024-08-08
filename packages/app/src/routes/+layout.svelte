@@ -2,7 +2,7 @@
 	import Footer from '$lib/components/footer.svelte'
 	import Header from '$lib/components/header.svelte'
 	import { Toaster } from '$lib/components/ui/sonner'
-	import { onMount } from 'svelte'
+	import { onMount, tick } from 'svelte'
 	import { pwaInfo } from 'virtual:pwa-info'
 
 	import '@fontsource/ibm-plex-mono'
@@ -49,7 +49,9 @@
 	$: webManifestLink = pwaInfo ? pwaInfo.webManifest.linkTag : ''
 
 	onNavigate(() => {
-		processQueuedInsertions(allowRegister)
+		tick().then(() => {
+			processQueuedInsertions(allowRegister)
+		})
 	})
 </script>
 

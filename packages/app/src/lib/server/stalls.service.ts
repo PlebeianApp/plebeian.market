@@ -3,6 +3,7 @@ import type { EventCoordinates } from '$lib/interfaces'
 import type { StallsFilter } from '$lib/schema'
 import { error } from '@sveltejs/kit'
 import { KindStalls, standardDisplayDateFormat } from '$lib/constants'
+import { createShippingCoordinates } from '$lib/nostrSubs/utils'
 import { stallsFilterSchema } from '$lib/schema'
 import { customTagValue, getEventCoordinates } from '$lib/utils'
 import { format } from 'date-fns'
@@ -62,7 +63,7 @@ export type DisplayStall = {
 const createZone = (country: string | null, region: string | null, shippingResult: Shipping) => ({
 	countryCode: country,
 	regionCode: region,
-	shippingId: shippingResult?.id as string,
+	shippingId: shippingResult?.id,
 	shippingUserId: shippingResult.userId,
 	stallId: shippingResult.stallId,
 })
@@ -286,7 +287,7 @@ export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall 
 				db
 					.insert(shipping)
 					.values({
-						id: method?.id as string,
+						id: createShippingCoordinates(method.id, insertStall.identifier),
 						name: method?.name as string,
 						cost: String(method?.cost),
 						userId: insertStall.userId,
@@ -296,7 +297,6 @@ export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall 
 					.returning()
 					.then(([shippingResult]) => {
 						if (!shippingResult) return
-
 						const zonesToInsert = getZonesToInsert(shippingResult, method.regions, method.countries)
 						if (zonesToInsert.length > 0) {
 							return db.insert(shippingZones).values(zonesToInsert)
@@ -304,7 +304,6 @@ export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall 
 					}),
 			)
 		}
-
 		const results = await Promise.all(promises)
 
 		const stallResult = results[0] as Stall
@@ -443,7 +442,7 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
 					if (methodsToInsert.length > 0) {
 						await tx.insert(shipping).values(
 							methodsToInsert.map((method) => ({
-								id: method.id,
+								id: createShippingCoordinates(method.id, stallResult.identifier),
 								stallId: stallId,
 								userId: stallResult.userId,
 								name: method.name,
@@ -491,14 +490,14 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
 					const newZones =
 						parsedStall.shipping?.flatMap((method) => [
 							...(method.regions ?? []).map((region) => ({
-								shippingId: method.id,
+								shippingId: createShippingCoordinates(method.id, String(stallId.split(':').pop())),
 								shippingUserId: stallResult.userId,
 								stallId: stallId,
 								regionCode: region,
 								countryCode: null,
 							})),
 							...(method.countries ?? []).map((country) => ({
-								shippingId: method.id,
+								shippingId: createShippingCoordinates(method.id, String(stallId.split(':').pop())),
 								shippingUserId: stallResult.userId,
 								stallId: stallId,
 								regionCode: null,
