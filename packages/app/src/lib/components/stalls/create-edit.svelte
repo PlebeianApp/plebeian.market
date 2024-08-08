@@ -28,7 +28,7 @@
 	import { createId, createSlugId } from '@plebeian/database/utils'
 
 	import Spinner from '../assets/spinner.svelte'
-	import Leaflet from '../leaflet.svelte'
+	import Leaflet from '../leaflet/leaflet.svelte'
 
 	// TODO get geotag from db
 	// FIXME when try to add a geotag, caught (in promise) Error: Cannot have duplicate keys in a keyed each: Keys at index 0 and 1 with value 'undefined' are duplicates
@@ -60,6 +60,7 @@
 	const debouncedSearch = debounce(async () => {
 		isLoading = true
 		locationResults = await searchLocation(shippingFromInput)
+		console.log('LOCATION RESULT', locationResults)
 		isLoading = false
 	}, 300)
 
@@ -209,9 +210,9 @@
 						<Command.Input placeholder="Search location..." bind:value={shippingFromInput} />
 						<Command.Empty>No location found.</Command.Empty>
 						<Command.Group>
-							{#each locationResults as location (location.id)}
+							{#each locationResults as location (location.place_id)}
 								<Command.Item
-									value={location.display_name}
+									value={`${location.display_name}${location.place_id}`}
 									onSelect={() => {
 										handleLocationSelect(location)
 										locationSearchOpen = false

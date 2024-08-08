@@ -339,7 +339,7 @@ export const debounce = (func: (...args: unknown[]) => void, delay: number) => {
 }
 
 export interface Location {
-	id: string
+	place_id: string
 	display_name: string
 	lat: string
 	lon: string
@@ -353,9 +353,10 @@ export const searchLocation = async (query: string): Promise<Location[]> => {
 		{ parseResponse: JSON.parse },
 	)
 	if (!response || !Array.isArray(response)) return []
+	console.log(response[0])
 	return response.map(
 		(item: Location): Location => ({
-			id: item.id,
+			place_id: item.place_id,
 			display_name: item.display_name,
 			lat: item.lat,
 			lon: item.lon,
