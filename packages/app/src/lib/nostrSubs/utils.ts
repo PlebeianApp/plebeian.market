@@ -1,26 +1,22 @@
 import type { NDKEvent, NDKUserProfile } from '@nostr-dev-kit/ndk'
-import type { EventCoordinates } from '$lib/interfaces'
 import type { DisplayProduct } from '$lib/server/products.service'
 import type { RichShippingInfo } from '$lib/server/shipping.service'
 import type { RichStall } from '$lib/server/stalls.service'
 import { NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk'
 import { invalidateAll } from '$app/navigation'
 import { KindProducts, KindStalls, standardDisplayDateFormat } from '$lib/constants'
-import { queryClient } from '$lib/fetch/client'
 import { createProductsFromNostrMutation } from '$lib/fetch/products.mutations'
 import { createStallFromNostrEvent } from '$lib/fetch/stalls.mutations'
 import { userFromNostr } from '$lib/fetch/users.mutations'
 import ndkStore from '$lib/stores/ndk'
 import { addCachedEvent, getCachedEvent, updateCachedEvent } from '$lib/stores/session'
-import { getEventCoordinates, shouldRegister } from '$lib/utils'
+import { getEventCoordinates } from '$lib/utils'
 import { format } from 'date-fns'
-import { ofetch } from 'ofetch'
 import { get } from 'svelte/store'
 import { ZodError, ZodSchema } from 'zod'
 
 import type { ProductImage, ProductImagesType } from '@plebeian/database'
 
-import type { StallCheck } from '../../routes/stalls/[...stallId]/proxy+page.server'
 import { productEventSchema, shippingObjectSchema, stallEventSchema } from '../../schema/nostr-events'
 import { stallsSub } from './subs'
 
@@ -278,8 +274,4 @@ export async function normalizeProductsFromNostr(
 		toDisplayProducts: validProducts.map((p) => p.displayProduct),
 		stallProducts: new Set(validProducts.map((p) => p.event)),
 	}
-}
-
-export const createShippingCoordinates = (shippingId: string, stallIdentifier: string) => {
-	return `${shippingId}:${stallIdentifier.substring(0, 8)}`
 }
