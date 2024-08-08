@@ -46,6 +46,7 @@ export type RichStall = {
 	image?: string
 	identifier: string
 	shipping: Partial<RichShippingInfo>[]
+	geohash?: string
 }
 
 export type DisplayStall = {
@@ -117,6 +118,12 @@ const resolveStalls = async (stall: Stall): Promise<RichStall> => {
 		.where(and(eq(eventTags.eventId, stall.id), eq(eventTags.tagName, 'image')))
 		.execute()
 
+	const [geo] = await db
+		.select()
+		.from(eventTags)
+		.where(and(eq(eventTags.eventId, stall.id), eq(eventTags.tagName, 'g')))
+		.execute()
+
 	if (!ownerRes.userId) {
 		error(404, 'Not found')
 	}
@@ -144,6 +151,7 @@ const resolveStalls = async (stall: Stall): Promise<RichStall> => {
 		image: image?.tagValue ?? undefined,
 		identifier: stall.id.split(':')[2],
 		shipping: shippingInfo,
+		geohash: geo?.tagValue ?? undefined,
 	}
 }
 

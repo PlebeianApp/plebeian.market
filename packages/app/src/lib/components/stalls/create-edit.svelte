@@ -30,15 +30,11 @@
 	import Spinner from '../assets/spinner.svelte'
 	import Leaflet from '../leaflet/leaflet.svelte'
 
-	// TODO get geotag from db
-	// FIXME when try to add a geotag, caught (in promise) Error: Cannot have duplicate keys in a keyed each: Keys at index 0 and 1 with value 'undefined' are duplicates
-
 	interface GeoJSONWithBoundingBox extends GeoJSON.Feature<GeoJSON.Point> {
 		boundingbox: [number, number, number, number]
 	}
 
 	export let stall: Partial<RichStall> | null = null
-
 	const dispatch = createEventDispatcher<{ success: unknown; error: unknown }>()
 
 	const {
@@ -60,7 +56,6 @@
 	const debouncedSearch = debounce(async () => {
 		isLoading = true
 		locationResults = await searchLocation(shippingFromInput)
-		console.log('LOCATION RESULT', locationResults)
 		isLoading = false
 	}, 300)
 
@@ -152,6 +147,30 @@
 					? [new ShippingMethod(s.id, s.name, s.cost, s.regions, s.countries)]
 					: [],
 			) ?? []
+		// TODO Keep improving this
+		if (stall?.geohash) {
+			geohashOfSelectedGeometry = stall?.geohash
+			const decodedGeohash = geohash.decode(stall.geohash)
+			const boundGeohash = geohash.decode_bbox(stall.geohash)
+			const { latitude, longitude } = decodedGeohash
+			mapGeoJSON = {
+				type: 'Feature',
+				geometry: {
+					type: 'Point',
+					coordinates: [longitude, latitude],
+				},
+				properties: {},
+				boundingbox: boundGeohash,
+			}
+			geohashOfSelectedGeometry = stall.geohash
+			selectedLocation = {
+				place_id: '',
+				display_name: '',
+				lat: String(latitude),
+				lon: String(longitude),
+				boundingbox: boundGeohash,
+			}
+		}
 	})
 </script>
 
