@@ -253,7 +253,6 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 				if (insertProductImages?.length) {
 					await db.insert(productImages).values(insertProductImages).returning()
 				}
-				// FIXME (#191) Right now this is just a basic filtering
 				if (parsedProduct.shipping?.length) {
 					const validShipping = parsedProduct.shipping.filter((s) => s.id && parseFloat(String(s.cost)))
 					if (validShipping.length) {
@@ -271,8 +270,6 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 								console.warn('Catching error when inserting productShipping for:', eventCoordinates!.coordinates!, e)
 							}
 						}
-					} else {
-						console.log('No valid shipping entries to insert')
 					}
 				}
 				if (productEvent.tags.length) {
