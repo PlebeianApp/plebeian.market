@@ -16,6 +16,7 @@
 	import { createProductMutation, editProductMutation } from '$lib/fetch/products.mutations'
 	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
 	import ndkStore from '$lib/stores/ndk'
+	import { onMount } from 'svelte'
 	import { toast } from 'svelte-sonner'
 
 	import type { ProductImage } from '@plebeian/database'
@@ -27,8 +28,8 @@
 
 	export let product: Partial<DisplayProduct> | null = null
 	export let forStall: StallCoordinatesType | null = null
-	// TODO Categories are beign inserted in the db but they are not beign loaded when tring to edit/update a product
-	// FIXME Product shipping bug (#191)
+	// TODO Keep working on categories now we are just loading them and creating them, but not updating or removing
+	console.log(product?.categories)
 	let stall: Partial<RichStall> | null = null
 	let categories: Category[] = []
 	let images: Partial<ProductImage>[] = []
@@ -125,7 +126,15 @@
 			toast.error(`Failed to ${product ? 'update' : 'create'} product: ${error}`)
 		}
 	}
-
+	onMount(() => {
+		if (product?.categories?.length) {
+			categories = product.categories.map((categoryName) => ({
+				key: createId(),
+				name: categoryName,
+				checked: true,
+			}))
+		}
+	})
 	const activeTab =
 		'w-full font-bold border-b-2 border-black text-black data-[state=active]:border-b-primary data-[state=active]:text-primary'
 </script>

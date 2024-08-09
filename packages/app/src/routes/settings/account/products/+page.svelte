@@ -20,7 +20,6 @@
 		userId: activeUser?.id,
 		pageSize: 100,
 	})
-
 	$: productsMixture = mergeWithExisting($productsQuery?.data?.products ?? [], toDisplayProducts, 'id')
 	$: productsMode === 'list' ? $productsQuery?.refetch() : null
 

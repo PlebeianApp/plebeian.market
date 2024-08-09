@@ -1,4 +1,5 @@
 import type { NostrEvent } from '@nostr-dev-kit/ndk'
+import type { Category } from '$lib/fetch/products.mutations'
 import type { ProductsFilter } from '$lib/schema'
 import { error } from '@sveltejs/kit'
 import { KindStalls, standardDisplayDateFormat } from '$lib/constants'
@@ -38,6 +39,7 @@ export type DisplayProduct = Pick<Product, 'id' | 'description' | 'currency' | '
 	price: number
 	images: ProductImage[]
 	shipping: ProductShipping[]
+	categories?: string[]
 }
 
 export const toDisplayProduct = async (product: Product): Promise<DisplayProduct> => {
@@ -45,7 +47,11 @@ export const toDisplayProduct = async (product: Product): Promise<DisplayProduct
 	const userNip05 = await getNip05ByUserId(product.userId)
 
 	const shipping = await db.query.productShipping.findMany({
-		where: and(eq(productShipping.productId, product.id)),
+		where: eq(productShipping.productId, product.id),
+	})
+
+	const categories = await db.query.eventTags.findMany({
+		where: and(eq(eventTags.eventId, product.id), eq(eventTags.tagName, 't')),
 	})
 
 	return {
@@ -62,6 +68,7 @@ export const toDisplayProduct = async (product: Product): Promise<DisplayProduct
 		images: images,
 		stallId: product.stallId.startsWith(KindStalls.toString()) ? product.stallId.split(':')[2] : product.stallId,
 		shipping,
+		categories: categories.map((c) => c.tagValue),
 	}
 }
 
