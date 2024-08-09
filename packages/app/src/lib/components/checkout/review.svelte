@@ -1,8 +1,12 @@
 <script lang="ts">
+	import type { RichShippingInfo } from '$lib/server/shipping.service'
 	import type { RichStall } from '$lib/server/stalls.service'
 	import type { RichUser } from '$lib/server/users.service'
+	import { newAmount } from '@nostr-dev-kit/ndk'
+	import Order from '$lib/components/cart/order.svelte'
 	import { Button } from '$lib/components/ui/button/index.js'
 	import * as Collapsible from '$lib/components/ui/collapsible'
+	import { createShippingQuery } from '$lib/fetch/shipping.queries'
 	import { createStallQuery } from '$lib/fetch/stalls.queries'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
 	import { cart, userCartTotalInSats } from '$lib/stores/cart'
@@ -13,16 +17,23 @@
 	import Separator from '../ui/separator/separator.svelte'
 	import CheckoutForm from './form.svelte'
 
-	let stalls = derived<typeof cart, Record<string, RichStall>>(cart, ($cart, set) => {
+	const stalls = derived<typeof cart, Record<string, RichStall>>(cart, ($cart, set) => {
 		Promise.all(Object.keys($cart.stalls).map(async (id) => [id, await resolveQuery(() => createStallQuery(id))])).then((entries) =>
 			set(Object.fromEntries(entries)),
 		)
 	})
-	let users = derived<typeof cart, Record<string, RichUser>>(cart, ($cart, set) => {
+	const users = derived<typeof cart, Record<string, RichUser>>(cart, ($cart, set) => {
 		Promise.all(Object.keys($cart.users).map(async (id) => [id, await resolveQuery(() => createUserByIdQuery(id))])).then((entries) =>
 			set(Object.fromEntries(entries)),
 		)
 	})
+
+	const shippings = derived<typeof cart, Record<string, RichShippingInfo[]>>(cart, ($cart, set) => {
+		Promise.all(Object.keys($cart.stalls).map(async (id) => [id, await resolveQuery(() => createShippingQuery(id))])).then((entries) =>
+			set(Object.fromEntries(entries)),
+		)
+	})
+	$: console.log('methods', $shippings)
 </script>
 
 <div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-1 md:grid-cols-2">
@@ -43,6 +54,8 @@
 				</div>
 				<Collapsible.Content class="space-y-2 p-4 flex flex-col gap-6">
 					{#each merchant.stalls as stall}
+						{@const shippingMethodId = cart.getShippingMethod(merchant.pubkey, stall)}
+						{@const shipping = $shippings?.[stall]?.find((shipping) => shipping.id === shippingMethodId)}
 						<div class="flex flex-col gap-2">
 							<span class="font-semibold">{$stalls?.[stall].name}</span>
 							<Separator />
@@ -51,14 +64,54 @@
 									<li class="flex justify-between items-center">
 										<div class="flex justify-between items-center gap-4">
 											<Box />
-											<span>{$cart.products[product].name}</span>
+											<span
+												><button
+													on:click={() => {
+														console.log($cart.stalls[stall])
+														const newAmount = $cart.products[product].amount - 1
+														const action = newAmount === 0 ? 'remove' : 'decrement'
+														cart.handleProductUpdate(
+															new CustomEvent(action, {
+																detail: {
+																	action,
+																	userPubkey: merchant.pubkey,
+																	stallId: stall,
+																	productId: product,
+																	amount: $cart.products[product].amount - 1,
+																},
+															}),
+														)
+													}}>-</button
+												>
+												{$cart.products[product].amount}
+												<button
+													on:click={() =>
+														cart.handleProductUpdate(
+															new CustomEvent('increment', {
+																detail: {
+																	action: 'increment',
+																	userPubkey: merchant.pubkey,
+																	stallId: stall,
+																	productId: product,
+																	amount: $cart.products[product].amount + 1,
+																},
+															}),
+														)}>+</button
+												>
+
+												<span>
+													<span>{$cart.products[product].name}</span>
+												</span></span
+											>
 										</div>
 										<span>{$cart.products[product].price} {$cart.products[product].currency}</span>
 									</li>
 								{/each}
 							</ul>
 							<Separator />
-							<span>Shipping: Worldwide</span>
+							{#if shipping}
+								<span>Shipping: {shipping.name}</span>
+							{/if}
 						</div>
 					{/each}
 
