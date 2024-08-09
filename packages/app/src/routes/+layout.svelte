@@ -107,7 +107,9 @@
 			</section>
 			<Drawer />
 			<Footer />
-			<RelayWidget />
+			<section class="fixed bottom-0">
+				<RelayWidget />
+			</section>
 		</div>
 	{/if}
 </QueryClientProvider>

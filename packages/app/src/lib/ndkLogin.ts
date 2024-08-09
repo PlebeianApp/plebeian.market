@@ -1,6 +1,13 @@
 import type { NDKEvent, NDKUser, NDKUserProfile } from '@nostr-dev-kit/ndk'
 import type { BaseAccount } from '$lib/stores/session'
-import { NDKNip07Signer, NDKPrivateKeySigner, NDKRelay, NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk'
+import {
+	NDKNip07Signer,
+	NDKPrivateKeySigner,
+	NDKRelay,
+	NDKRelayAuthPolicies,
+	NDKSubscriptionCacheUsage,
+	normalizeRelayUrl,
+} from '@nostr-dev-kit/ndk'
 import { error } from '@sveltejs/kit'
 import { invalidateAll } from '$app/navigation'
 import { page } from '$app/stores'
@@ -44,20 +51,22 @@ const eventKindActions = new Map([
 					([_, permissions]) =>
 						(permissions as { read: boolean; write: boolean }).read && (permissions as { read: boolean; write: boolean }).write,
 				)
-				.map(([url]) => new NDKRelay(url, undefined, ndk))
+				.map(([url]) => new NDKRelay(normalizeRelayUrl(url), NDKRelayAuthPolicies.signIn(), ndk))
 				.forEach((relay) => ndk.pool.addRelay(relay, true))
 		},
 	],
 	[
 		10002,
 		(event: NDKEvent) => {
-			event.tags.map((url) => new NDKRelay(url[1], undefined, ndk)).forEach((relay) => ndk.pool.addRelay(relay, true))
+			event.tags
+				.map((url) => new NDKRelay(normalizeRelayUrl(url[1]), undefined, ndk))
+				.forEach((relay) => ndk.outboxPool?.addRelay(relay, true))
 		},
 	],
 	[
 		10006,
 		(event: NDKEvent) => {
-			event.tags.map((url) => url[1]).forEach((relay) => ndk.pool.removeRelay(relay))
+			event.tags.map((url) => url[1]).forEach((relay) => ndk.pool.removeRelay(normalizeRelayUrl(relay)))
 		},
 	],
 	[10007, (event) => console.log('Event kind 10007(Search relays list):', event)],
