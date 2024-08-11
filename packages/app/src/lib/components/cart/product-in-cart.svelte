@@ -47,7 +47,7 @@
 		</div>
 	{/if}
 	<div class="flex flex-col flex-grow justify-between">
-		<div class="font-bold">{product.name}</div>
+		<div class="font-bold w-1/2">{product.name}</div>
 
 		<div class="flex flex-row">
 			<Button class="border-2 border-black" size="icon" variant="outline" on:click={handleDecrement} disabled={product.amount <= 1}>

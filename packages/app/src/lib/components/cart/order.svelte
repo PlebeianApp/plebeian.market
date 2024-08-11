@@ -54,8 +54,10 @@
 	})
 </script>
 
-<div class="order">
-	<MiniUser userId={user.pubkey} />
+<div class="order p-2">
+	{#if mode !== 'checkout'}
+		<MiniUser userId={user.pubkey} />
+	{/if}
 
 	{#each user.stalls as stallId}
 		{@const stall = stalls[stallId]}
@@ -76,7 +78,7 @@
 	{/each}
 
 	{#if (mode === 'cart' || mode === 'checkout') && userTotal}
-		<div class="flex flex-col">
+		<div class="flex flex-col overflow-hidden">
 			<small>Shipping in sats: {userTotal.shippingInSats.toLocaleString()} sats</small>
 			<small>Total in sats: {userTotal.totalInSats.toLocaleString()} sats</small>
 		</div>
@@ -84,4 +86,7 @@
 		<Button on:click={() => console.log(formData)}>Send</Button>
 	{/if}
 </div>
-<Separator />
+
+{#if mode !== 'checkout'}
+	<Separator />
+{/if}
