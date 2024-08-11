@@ -366,9 +366,9 @@ export const cartTotalInSats = derived(cart, ($cart, set) => {
 	debouncedCalculate()
 })
 
-export const userCartTotalInSats = derived(cart, ($cart, set) => {
+export const userCartTotalInSats = derived<typeof cart, Record<string, number>>(cart, ($cart, set) => {
 	const calculateUserTotals = async () => {
-		const userTotals = []
+		const userTotals: Record<string, number> = {}
 		for (const user of Object.values($cart.users)) {
 			let userTotalSats = 0
 			for (const stallId of user.stalls) {
@@ -381,7 +381,7 @@ export const userCartTotalInSats = derived(cart, ($cart, set) => {
 				const stallTotalInSats = (await resolveQuery(() => createCurrencyConversionQuery(stall.currency, stallTotal))) || 0
 				userTotalSats += stallTotalInSats
 			}
-			userTotals.push({ userPubkey: user.pubkey, totalSats: userTotalSats })
+			userTotals[user.pubkey] = userTotalSats
 		}
 		set(userTotals)
 	}
