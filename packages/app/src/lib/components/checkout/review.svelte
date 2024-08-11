@@ -4,6 +4,7 @@
 	import * as Collapsible from '$lib/components/ui/collapsible'
 	import { cart } from '$lib/stores/cart'
 
+	import GrandTotalDisplay from '../cart/grand-total-display.svelte'
 	import MiniUser from '../cart/mini-user.svelte'
 	import CheckoutForm from './form.svelte'
 </script>
@@ -35,8 +36,8 @@
 				</Collapsible.Content>
 			</Collapsible.Root>
 		{/each}
+		<GrandTotalDisplay />
 	</div>
-
 	<div class="flex flex-col gap-2">
 		<h2>Order details</h2>
 		<CheckoutForm />
