@@ -23,7 +23,7 @@
 		<div class="flex items-center">
 			<div class="relative">
 				<div
-					class={`w-8 h-8 flex items-center justify-center rounded-full ${index < currentStep ? 'bg-green-500' : 'bg-gray-200'} ${index === currentStep ? 'ring-4 ring-green-200' : ''}`}
+					class={`w-8 h-8 flex items-center justify-center rounded-full ${index < currentStep ? 'bg-primary' : 'bg-secondary'} ${index === currentStep ? 'ring-4 ring-primary/20' : ''}`}
 				>
 					{index + 1}
 				</div>
