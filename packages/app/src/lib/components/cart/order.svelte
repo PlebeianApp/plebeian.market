@@ -78,7 +78,7 @@
 	{/each}
 
 	{#if (mode === 'cart' || mode === 'checkout') && userTotal}
-		<div class="flex flex-col overflow-hidden">
+		<div class="flex flex-col">
 			<small>Shipping in sats: {userTotal.shippingInSats.toLocaleString()} sats</small>
 			<small>Total in sats: {userTotal.totalInSats.toLocaleString()} sats</small>
 		</div>

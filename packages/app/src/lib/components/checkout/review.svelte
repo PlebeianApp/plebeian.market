@@ -1,21 +1,11 @@
 <script lang="ts">
-	import type { RichUser } from '$lib/server/users.service'
 	import Order from '$lib/components/cart/order.svelte'
 	import { Button } from '$lib/components/ui/button/index.js'
 	import * as Collapsible from '$lib/components/ui/collapsible'
-	import { createUserByIdQuery } from '$lib/fetch/users.queries'
 	import { cart } from '$lib/stores/cart'
-	import { resolveQuery } from '$lib/utils'
-	import { derived } from 'svelte/store'
 
 	import MiniUser from '../cart/mini-user.svelte'
 	import CheckoutForm from './form.svelte'
-
-	const users = derived<typeof cart, Record<string, RichUser>>(cart, ($cart, set) => {
-		Promise.all(Object.keys($cart.users).map(async (id) => [id, await resolveQuery(() => createUserByIdQuery(id))])).then((entries) =>
-			set(Object.fromEntries(entries)),
-		)
-	})
 </script>
 
 <div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-1 md:grid-cols-2">
