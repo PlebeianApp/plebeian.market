@@ -1,15 +1,14 @@
 <script lang="ts">
 	import { page } from '$app/stores'
+	import RelayWidget from '$lib/components/assets/relayWidget.svelte'
 	import * as Alert from '$lib/components/ui/alert/index.js'
 	import { Button } from '$lib/components/ui/button/index.js'
-	import ndkStore, { defaulRelaysUrls } from '$lib/stores/ndk'
 	import { nav_back } from '$lib/utils'
 
 	import type { PageData } from './$types'
 
 	export let data: PageData
 
-	$: relayUrls = [...new Set([...($ndkStore.activeUser?.relayUrls ?? []), ...defaulRelaysUrls])].map((u) => new URL(u))
 	const linkDetails = data.menuItems
 		.find((item) => item.value === 'account-settings')
 		?.links.find((item) => item.href === $page.url.pathname)
@@ -28,18 +27,13 @@
 
 	<Alert.Root class="bg-[var(--neo-blue)]">
 		<Alert.Description
-			>Your products are published to these relays (servers). You cannot modify this setting for now. Please let us know if you’d like to
-			add a relay.</Alert.Description
+			>Your products are published to these relays (servers). You can modify this settings, but you cannot persist them for now. Working on
+			it.</Alert.Description
 		>
 	</Alert.Root>
 
 	<h4 class="text-lg font-bold">Relays</h4>
 	<ul class="flex flex-col gap-2">
-		{#each relayUrls as url}
-			<li class="flex flex-col">
-				<a href={url.href} class="font-bold text-md">{url.hostname}</a>
-				<code class="text-sm">{url.href}</code>
-			</li>
-		{/each}
+		<RelayWidget mode={'settings'} />
 	</ul>
 </div>
