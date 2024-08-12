@@ -25,20 +25,23 @@
 		: (id as ProductCoordinatesType)
 	$: priceQuery = createCurrencyConversionQuery(String(currency), Number(price))
 	$: isMyProduct = $ndkStore.activeUser?.pubkey ? $ndkStore.activeUser.pubkey === userId : false
+	let imageLoadError = false
 </script>
 
 <Card.Root class="relative grid grid-rows-[1fr_auto] border-2 border-black bg-transparent text-black group">
-	{#if images?.length}
-		{@const mainImage = images[0]?.imageOrder ? images.find((image) => image.imageOrder == 0 || 1) : images[0]}
-
-		<div class="relative">
-			<div class=" flex items-center justify-center p-2">
-				<img class="h-[329px] object-cover transition-opacity duration-300 group-hover:opacity-70" src={mainImage?.imageUrl} alt="" />
-			</div>
+	{#if images?.length && !imageLoadError}
+		{@const mainImage = images.find((img) => img.imageOrder === 0 || img.imageOrder === 1) || images[0]}
+		<div class="relative flex items-center justify-center p-2">
+			<img
+				class="h-[329px] object-cover transition-opacity duration-300 group-hover:opacity-70"
+				src={mainImage.imageUrl}
+				alt=""
+				on:error={() => (imageLoadError = true)}
+			/>
 		</div>
 	{:else}
 		<div class="h-[329px] flex items-center justify-center p-2">
-			<span style={`color:${stringToHexColor(String(name || identifier))}`} class=" i-mdi-package-variant-closed w-16 h-16"></span>
+			<span style={`color:${stringToHexColor(String(name || identifier))}`} class="i-mdi-package-variant-closed w-16 h-16" />
 		</div>
 	{/if}
 	<a href={userNip05 ? `/products/${userNip05}/${identifier}` : `/products/${productCoordinates}`}>
