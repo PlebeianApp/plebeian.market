@@ -125,7 +125,7 @@
 			const [publishResult, userExists] = await Promise.all([
 				newEvent.sign(),
 				//   newEvent.publish(),
-				checkIfUserExists(),
+				checkIfUserExists($ndkStore.activeUser.pubkey),
 			])
 			if (await shouldRegister(allowRegister, userExists)) {
 				const nostrEvent = await newEvent.toNostrEvent()

@@ -242,334 +242,179 @@ export const getStallsByUserId = async (userId: string): Promise<RichStall[]> =>
 
 export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall | undefined> => {
 	try {
-		const { coordinates, tagD } = getEventCoordinates(stallEvent) as EventCoordinates
-		const stallEventContent = JSON.parse(stallEvent.content)
-		if (!stallEventContent) {
-			throw Error(`Error parsing stall event content`)
-		}
+		return await db.transaction(async (tx) => {
+			const { coordinates, tagD } = getEventCoordinates(stallEvent) as EventCoordinates
 
-		const { data, error: zodError } = stallEventSchema.safeParse({
-			id: stallEventContent.id,
-			...stallEventContent,
-		})
+			const { data, success } = stallEventSchema.safeParse({
+				id: coordinates,
+				...JSON.parse(stallEvent.content),
+			})
 
-		if (zodError) {
-			throw Error(`Invalid stall event data: ${zodError}`)
-		}
+			if (!success) throw Error(`Invalid stall event data`)
 
-		const imageTag = customTagValue(stallEvent.tags, 'image')[0]
-		const geoTag = customTagValue(stallEvent.tags, 'g')[0]
-
-		const insertStall: Stall = {
-			id: coordinates,
-			createdAt: new Date(stallEvent.created_at * 1000),
-			updatedAt: new Date(stallEvent.created_at * 1000),
-			name: data.name,
-			identifier: tagD,
-			description: data.description as string,
-			currency: data.currency,
-			userId: stallEvent.pubkey,
-		}
-
-		const promises: Promise<unknown>[] = []
-
-		promises.push(
-			db
-				.insert(stalls)
-				.values(insertStall)
-				.returning()
-				.then(([stallResult]) => {
-					if (!stallResult) {
-						throw Error('Error when inserting stall')
-					}
-					return stallResult
-				}),
-		)
-
-		for (const method of data.shipping) {
-			if (!method) {
-				continue
+			const insertStall: Stall = {
+				id: coordinates,
+				createdAt: new Date(stallEvent.created_at * 1000),
+				updatedAt: new Date(stallEvent.created_at * 1000),
+				name: data.name,
+				identifier: tagD,
+				description: data.description as string,
+				currency: data.currency,
+				userId: stallEvent.pubkey,
 			}
-			promises.push(
-				db
-					.insert(shipping)
-					.values({
-						id: createShippingCoordinates(method.id, insertStall.identifier),
-						name: method?.name as string,
-						cost: String(method?.cost),
-						userId: insertStall.userId,
-						stallId: insertStall.id,
-					})
-					.onConflictDoNothing({ target: shipping.id })
-					.returning()
-					.then(([shippingResult]) => {
-						if (!shippingResult) return
+
+			const [stallResult] = await tx.insert(stalls).values(insertStall).returning()
+			if (!stallResult) throw Error('Error when inserting stall')
+
+			// Insert shipping methods and zones
+			if (data.shipping?.length) {
+				for (const method of data.shipping) {
+					const [shippingResult] = await tx
+						.insert(shipping)
+						.values({
+							id: createShippingCoordinates(method.id, insertStall.identifier),
+							name: method.name as string,
+							cost: String(method.cost),
+							userId: insertStall.userId,
+							stallId: insertStall.id,
+						})
+						.returning()
+
+					if (shippingResult) {
 						const zonesToInsert = getZonesToInsert(shippingResult, method.regions, method.countries)
 						if (zonesToInsert.length > 0) {
-							return db.insert(shippingZones).values(zonesToInsert)
+							await tx.insert(shippingZones).values(zonesToInsert)
 						}
-					}),
-			)
-		}
-		const results = await Promise.all(promises)
+					}
+				}
+			}
 
-		const stallResult = results[0] as Stall
+			// Insert image and geo tags
+			const tagsToInsert = [
+				['image', customTagValue(stallEvent.tags, 'image')[0]],
+				['g', customTagValue(stallEvent.tags, 'g')[0]],
+			].filter(([, value]) => value) as [string, string][]
 
-		if (imageTag) {
-			await db.insert(eventTags).values({
+			if (tagsToInsert.length > 0) {
+				await tx.insert(eventTags).values(
+					tagsToInsert.map(([tagName, tagValue]) => ({
+						userId: stallResult.userId,
+						eventId: stallResult.id,
+						tagName,
+						tagValue,
+						eventKind: KindStalls,
+					})),
+				)
+			}
+
+			return {
+				id: stallResult.id,
+				name: stallResult.name,
+				description: stallResult.description,
+				currency: stallResult.currency,
+				createDate: format(stallResult.createdAt, standardDisplayDateFormat),
 				userId: stallResult.userId,
-				eventId: stallResult.id,
-				tagName: 'image',
-				tagValue: imageTag,
-				eventKind: KindStalls,
-			})
-		}
-
-		if (geoTag) {
-			await db.insert(eventTags).values({
-				userId: stallResult.userId,
-				eventId: stallResult.id,
-				tagName: 'g',
-				tagValue: geoTag,
-				eventKind: KindStalls,
-			})
-		}
-
-		return {
-			id: stallResult.id,
-			name: stallResult.name,
-			description: stallResult.description,
-			currency: stallResult.currency,
-			createDate: format(stallResult.createdAt, standardDisplayDateFormat),
-			userId: stallResult.userId,
-			shipping: data.shipping,
-		}
+				shipping: data.shipping,
+			}
+		})
 	} catch (e) {
-		error(500, `Failed to create stall ${e}`)
+		console.error(`Failed to create stall: ${e}`)
+		throw error(500, `Failed to create stall: ${e}`)
 	}
 }
 
 export const updateStall = async (stallId: string, stallEvent: NostrEvent): Promise<DisplayStall | null> => {
 	try {
-		const stallEventContent = JSON.parse(stallEvent.content)
-		const { data: parsedStall, success, error: parseError } = stallEventSchema.partial().safeParse({ id: stallId, ...stallEventContent })
-		if (!success) {
-			throw new Error(`Failed to parse stall event: ${parseError}`)
-		}
-
-		const insertStall: Partial<Stall> = {
-			updatedAt: new Date(),
-			name: parsedStall.name,
-			description: parsedStall.description,
-			currency: parsedStall.currency,
-		}
-
-		const [stallResult] = await db
-			.update(stalls)
-			.set({
-				...insertStall,
+		return await db.transaction(async (tx) => {
+			const { data: parsedStall, success } = stallEventSchema.partial().safeParse({
+				id: stallId,
+				...JSON.parse(stallEvent.content),
 			})
-			.where(eq(stalls.id, stallId))
-			.returning()
+			if (!success) throw new Error(`Failed to parse stall event`)
 
-		const [image] = await db
-			.select()
-			.from(eventTags)
-			.where(and(eq(eventTags.eventId, stallId), eq(eventTags.tagName, 'image')))
-			.execute()
-
-		const [geo] = await db
-			.select()
-			.from(eventTags)
-			.where(and(eq(eventTags.eventId, stallId), eq(eventTags.tagName, 'g')))
-			.execute()
-
-		const imageTag = customTagValue(stallEvent.tags, 'image')[0]
-		const geoTag = customTagValue(stallEvent.tags, 'g')[0]
-
-		if (imageTag) {
-			if (image && image?.tagValue !== imageTag) {
-				await db
-					.update(eventTags)
-					.set({
-						tagValue: imageTag,
-					})
-					.where(and(eq(eventTags.eventId, stallId), eq(eventTags.tagName, 'image')))
-					.execute()
-			} else if (!image) {
-				await db.insert(eventTags).values({
-					userId: stallResult.userId,
-					eventId: stallResult.id,
-					tagName: 'image',
-					tagValue: imageTag,
-					eventKind: KindStalls,
+			const [stallResult] = await tx
+				.update(stalls)
+				.set({
+					updatedAt: new Date(),
+					name: parsedStall.name,
+					description: parsedStall.description,
+					currency: parsedStall.currency,
 				})
+				.where(eq(stalls.id, stallId))
+				.returning()
+
+			if (!stallResult) throw new Error(`Stall not updated: ${stallId}`)
+
+			const tagUpdates = [
+				['image', customTagValue(stallEvent.tags, 'image')[0]],
+				['g', customTagValue(stallEvent.tags, 'g')[0]],
+			].filter(([, value]) => value) as [string, string][]
+
+			if (tagUpdates.length > 0) {
+				await tx.delete(eventTags).where(
+					and(
+						eq(eventTags.eventId, stallId),
+						inArray(
+							eventTags.tagName,
+							tagUpdates.map(([name]) => name),
+						),
+					),
+				)
+
+				await tx.insert(eventTags).values(
+					tagUpdates.map(([tagName, tagValue]) => ({
+						userId: stallResult.userId,
+						eventId: stallId,
+						tagName,
+						tagValue,
+						eventKind: KindStalls,
+					})),
+				)
 			}
-		}
 
-		if (geoTag) {
-			if (geo && geo?.tagValue !== geoTag) {
-				await db
-					.update(eventTags)
-					.set({
-						tagValue: geoTag,
-					})
-					.where(and(eq(eventTags.eventId, stallId), eq(eventTags.tagName, 'g')))
-					.execute()
-			} else if (!geo) {
-				await db.insert(eventTags).values({
-					userId: stallResult.userId,
-					eventId: stallResult.id,
-					tagName: 'g',
-					tagValue: geoTag,
-					eventKind: KindStalls,
-				})
-			}
-		}
+			if (parsedStall.shipping?.length) {
+				await tx.delete(shipping).where(eq(shipping.stallId, stallId))
 
-		if (!stallResult) {
-			throw new Error(`Stall not updated: ${stallId}`)
-		}
+				for (const method of parsedStall.shipping) {
+					const [shippingResult] = await tx
+						.insert(shipping)
+						.values({
+							id: createShippingCoordinates(method.id, stallResult.identifier),
+							stallId,
+							userId: stallResult.userId,
+							name: method.name,
+							cost: String(method.cost),
+						})
+						.returning()
 
-		if (parsedStall.shipping && parsedStall.shipping.length > 0) {
-			try {
-				await db.transaction(async (tx) => {
-					const existingShippingMethods = await tx.query.shipping.findMany({
-						where: and(eq(shipping.stallId, stallId), eq(shipping.userId, stallResult.userId)),
-					})
-
-					const newShippingMethodsMap = new Map(parsedStall.shipping?.map((method) => [method.id, method]))
-					const existingShippingMethodsMap = new Map(existingShippingMethods.map((method) => [method.id, method]))
-
-					const methodsToInsert = parsedStall.shipping?.filter((method) => !existingShippingMethodsMap.has(method.id)) ?? []
-					const methodsToUpdate = parsedStall.shipping?.filter((method) => existingShippingMethodsMap.has(method.id)) ?? []
-					const methodsToDelete = existingShippingMethods.filter((method) => !newShippingMethodsMap.has(method.id))
-
-					// Handle shipping methods
-					if (methodsToInsert.length > 0) {
-						await tx.insert(shipping).values(
-							methodsToInsert.map((method) => ({
-								id: createShippingCoordinates(method.id, stallResult.identifier),
-								stallId: stallId,
-								userId: stallResult.userId,
-								name: method.name,
-								cost: String(method.cost),
-							})),
-						)
-					}
-
-					if (methodsToUpdate.length > 0) {
-						for (const method of methodsToUpdate) {
-							await tx
-								.update(shipping)
-								.set({
-									name: method.name,
-									cost: method.cost,
-									updatedAt: new Date(),
-								})
-								.where(and(eq(shipping.id, method.id), eq(shipping.stallId, stallId), eq(shipping.userId, stallResult.userId)))
+					if (shippingResult) {
+						const zonesToInsert = getZonesToInsert(shippingResult, method.regions, method.countries)
+						if (zonesToInsert.length > 0) {
+							await tx.insert(shippingZones).values(zonesToInsert)
 						}
 					}
-
-					if (methodsToDelete.length > 0) {
-						await tx.delete(shipping).where(
-							and(
-								inArray(
-									shipping.id,
-									methodsToDelete.map((method) => method.id),
-								),
-								eq(shipping.stallId, stallId),
-								eq(shipping.userId, stallResult.userId),
-							),
-						)
-					}
-
-					// Handle shipping zones
-					const shippingMethodIds = parsedStall.shipping?.map((method) => method.id) ?? []
-
-					// Fetch existing zones for the current stall and shipping methods
-					const existingZones = await tx
-						.select()
-						.from(shippingZones)
-						.where(and(eq(shippingZones.stallId, stallId), inArray(shippingZones.shippingId, shippingMethodIds)))
-
-					// Prepare new zones
-					const newZones =
-						parsedStall.shipping?.flatMap((method) => [
-							...(method.regions ?? []).map((region) => ({
-								shippingId: createShippingCoordinates(method.id, String(stallId.split(':').pop())),
-								shippingUserId: stallResult.userId,
-								stallId: stallId,
-								regionCode: region,
-								countryCode: null,
-							})),
-							...(method.countries ?? []).map((country) => ({
-								shippingId: createShippingCoordinates(method.id, String(stallId.split(':').pop())),
-								shippingUserId: stallResult.userId,
-								stallId: stallId,
-								regionCode: null,
-								countryCode: country,
-							})),
-						]) ?? []
-
-					// Identify zones to delete (existing zones not in new zones)
-					const zonesToDelete = existingZones.filter(
-						(existingZone) =>
-							!newZones.some(
-								(newZone) =>
-									newZone.shippingId === existingZone.shippingId &&
-									newZone.stallId === existingZone.stallId &&
-									newZone.regionCode === existingZone.regionCode &&
-									newZone.countryCode === existingZone.countryCode,
-							),
-					)
-
-					// Identify zones to insert (new zones not in existing zones)
-					const zonesToInsert = newZones.filter(
-						(newZone) =>
-							!existingZones.some(
-								(existingZone) =>
-									newZone.shippingId === existingZone.shippingId &&
-									newZone.stallId === existingZone.stallId &&
-									newZone.regionCode === existingZone.regionCode &&
-									newZone.countryCode === existingZone.countryCode,
-							),
-					)
-
-					// Delete zones that are no longer present
-					if (zonesToDelete.length > 0) {
-						await tx.delete(shippingZones).where(
-							inArray(
-								shippingZones.id,
-								zonesToDelete.map((zone) => zone.id),
-							),
-						)
-					}
-
-					// Insert new zones
-					if (zonesToInsert.length > 0) {
-						await tx.insert(shippingZones).values(zonesToInsert)
-					}
-
-					console.log('Shipping method and zones sync completed')
-				})
-			} catch (e) {
-				console.error(`Error updating stall: ${e}`)
-				throw error(500, { message: `Error updating stall: ${e}` })
+				}
 			}
-		}
-		return {
-			id: stallResult.id,
-			name: stallResult.name,
-			description: stallResult.description,
-			currency: stallResult.currency,
-			createDate: format(stallResult.createdAt, standardDisplayDateFormat),
-			image: image?.tagValue ?? undefined,
-			userId: stallResult.userId,
-			shipping: parsedStall.shipping ?? [],
-		} as DisplayStall
+
+			const [image] = await tx
+				.select()
+				.from(eventTags)
+				.where(and(eq(eventTags.eventId, stallId), eq(eventTags.tagName, 'image')))
+				.limit(1)
+
+			return {
+				id: stallResult.id,
+				name: stallResult.name,
+				description: stallResult.description,
+				currency: stallResult.currency,
+				createDate: format(stallResult.createdAt, standardDisplayDateFormat),
+				image: image?.tagValue,
+				userId: stallResult.userId,
+				shipping: parsedStall.shipping ?? [],
+			} as DisplayStall
+		})
 	} catch (e) {
-		console.error(e)
+		console.error(`Error updating stall: ${e}`)
 		return null
 	}
 }

@@ -156,6 +156,7 @@ async function normalizeNostrData<T>(
 
 	try {
 		// TODO Review this we are not storing events with errors so we parse them all the time (#218)
+		// FIXME products from stalls with forbidden words are being displayed (#221)
 		const parsedContent = JSON.parse(event.content)
 		const { data, success, error: parseError } = schema.safeParse(parsedContent)
 		if (!success) return { data: null, error: parseError }
