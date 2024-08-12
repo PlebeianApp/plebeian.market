@@ -27,8 +27,7 @@
 
 	export let product: Partial<DisplayProduct> | null = null
 	export let forStall: StallCoordinatesType | null = null
-	// TODO Categories are beign inserted in the db but they are not beign loaded when tring to edit/update a product
-	// FIXME Product shipping bug (#191)
+	// TODO Categories are beign inserted in the db but they are not beign loaded when tring to edit/update a product (#217)
 	let stall: Partial<RichStall> | null = null
 	let categories: Category[] = []
 	let images: Partial<ProductImage>[] = []

@@ -19,7 +19,7 @@
 
 	import type { PageData } from './$types'
 
-	// TODO Allow paste your own nsec
+	// TODO Allow paste your own nsec (#220)
 	export let data: PageData
 	const { currencies, appSettings, adminUsers, instancePass } = data
 	let checked = true
