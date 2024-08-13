@@ -1,6 +1,13 @@
-import type { NDKUser, NDKUserProfile } from '@nostr-dev-kit/ndk'
+import type { NDKEvent, NDKUser, NDKUserProfile } from '@nostr-dev-kit/ndk'
 import type { BaseAccount } from '$lib/stores/session'
-import { NDKNip07Signer, NDKPrivateKeySigner, NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk'
+import {
+	NDKNip07Signer,
+	NDKPrivateKeySigner,
+	NDKRelay,
+	NDKRelayAuthPolicies,
+	NDKSubscriptionCacheUsage,
+	normalizeRelayUrl,
+} from '@nostr-dev-kit/ndk'
 import { error } from '@sveltejs/kit'
 import { invalidateAll } from '$app/navigation'
 import { page } from '$app/stores'
@@ -34,11 +41,55 @@ async function getAppSettings(): Promise<boolean> {
 	})
 }
 
+const eventKindActions = new Map([
+	[
+		3,
+		(event: NDKEvent) => {
+			const parsedContent = JSON.parse(event.content)
+			Object.entries(parsedContent)
+				.filter(
+					([_, permissions]) =>
+						(permissions as { read: boolean; write: boolean }).read && (permissions as { read: boolean; write: boolean }).write,
+				)
+				.map(([url]) => new NDKRelay(normalizeRelayUrl(url), NDKRelayAuthPolicies.signIn(), ndk))
+				.forEach((relay) => ndk.pool.addRelay(relay, true))
+		},
+	],
+	[
+		10002,
+		(event: NDKEvent) => {
+			event.tags
+				.map((url) => new NDKRelay(normalizeRelayUrl(url[1]), undefined, ndk))
+				.forEach((relay) => ndk.outboxPool?.addRelay(relay, true))
+		},
+	],
+	[
+		10006,
+		(event: NDKEvent) => {
+			event.tags.map((url) => url[1]).forEach((relay) => ndk.pool.removeRelay(normalizeRelayUrl(relay)))
+		},
+	],
+	[10007, (event) => console.log('Event kind 10007(Search relays list):', event)],
+	[10050, (event) => console.log('Event kind 10050(Relay list to receive DMs):', event)],
+])
+
+async function setUserRelays(userRelays: Set<NDKEvent>) {
+	for (const event of userRelays) {
+		const action = eventKindActions.get(event?.kind as number)
+		if (action) {
+			action(event)
+		} else {
+			console.log('Unknown event kind:', event)
+		}
+	}
+}
+
 export async function fetchActiveUserData(keyToLocalDb?: string): Promise<NDKUser | null> {
 	if (!ndk.signer) return null
 	console.log('Fetching profile')
 	const user = await ndk.signer.user()
 	await user.fetchProfile({ cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY })
+	setUserRelays(await ndk.fetchEvents({ authors: [user.pubkey], kinds: [3, 10002, 10006, 10007, 10050 as number] }))
 	ndkStore.set(ndk)
 
 	if (keyToLocalDb) {
@@ -157,7 +208,7 @@ export async function loginDb(user: NDKUser) {
 		if (e instanceof FetchError) {
 			if (e.status === 404) {
 				console.log('creating user')
-				const body: { id: string } & NDKUserProfile = userEventSchema.parse(unNullify({ id: user.pubkey, ...user.profile }))
+				const body: NDKUserProfile = userEventSchema.parse(unNullify({ id: user.pubkey, ...user.profile })) as NDKUserProfile
 				const res = await createRequest('POST /api/v1/users/', {
 					auth: true,
 					body: body,

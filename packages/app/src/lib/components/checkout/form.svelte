@@ -35,6 +35,18 @@
 
 <form on:submit|preventDefault={handleSubmit}>
 	<Label>
+		Name:
+		<Input type="text" bind:value={contactName} required />
+	</Label>
+	<Label>
+		Phone:
+		<Input type="tel" bind:value={contactPhone} />
+	</Label>
+	<Label>
+		Email:
+		<Input type="email" bind:value={contactEmail} />
+	</Label>
+	<Label>
 		Address:
 		<Input type="text" bind:value={address} required />
 	</Label>
@@ -55,21 +67,8 @@
 		<Input type="text" bind:value={region} />
 	</Label>
 	<Label>
-		Contact Name:
-		<Input type="text" bind:value={contactName} required />
-	</Label>
-	<Label>
-		Contact Phone:
-		<Input type="tel" bind:value={contactPhone} />
-	</Label>
-	<Label>
-		Contact Email:
-		<Input type="email" bind:value={contactEmail} />
-	</Label>
-	<Label>
 		Observations:
 		<Textarea bind:value={observations}></Textarea>
 	</Label>
-
-	<Button type="submit">Submit</Button>
+	<Button type="submit" class="w-full mt-6">Finish Review</Button>
 </form>

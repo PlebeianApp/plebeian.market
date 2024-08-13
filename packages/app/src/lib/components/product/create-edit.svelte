@@ -28,8 +28,7 @@
 
 	export let product: Partial<DisplayProduct> | null = null
 	export let forStall: StallCoordinatesType | null = null
-	// TODO Keep working on categories now we are just loading them and creating them, but not updating or removing
-	console.log(product?.categories)
+	// TODO Categories are beign inserted in the db but they are not beign loaded when tring to edit/update a product (#217)
 	let stall: Partial<RichStall> | null = null
 	let categories: Category[] = []
 	let images: Partial<ProductImage>[] = []

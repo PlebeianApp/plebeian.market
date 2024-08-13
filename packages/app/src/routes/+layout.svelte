@@ -10,6 +10,7 @@
 
 	import { QueryClientProvider } from '@tanstack/svelte-query'
 	import { goto, onNavigate } from '$app/navigation'
+	import RelayWidget from '$lib/components/assets/relayWidget.svelte'
 	import Drawer from '$lib/components/drawer.svelte'
 	import { queryClient } from '$lib/fetch/client'
 	import { processQueuedInsertions } from '$lib/nostrSubs/data-aggregator'
@@ -106,6 +107,9 @@
 			</section>
 			<Drawer />
 			<Footer />
+			<section class="fixed bottom-0">
+				<RelayWidget />
+			</section>
 		</div>
 	{/if}
 </QueryClientProvider>

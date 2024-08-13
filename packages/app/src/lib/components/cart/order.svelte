@@ -54,8 +54,10 @@
 	})
 </script>
 
-<div class="order">
-	<MiniUser userId={user.pubkey} />
+<div class="order p-2">
+	{#if mode !== 'checkout'}
+		<MiniUser userId={user.pubkey} />
+	{/if}
 
 	{#each user.stalls as stallId}
 		{@const stall = stalls[stallId]}
@@ -84,4 +86,7 @@
 		<Button on:click={() => console.log(formData)}>Send</Button>
 	{/if}
 </div>
-<Separator />
+
+{#if mode !== 'checkout'}
+	<Separator />
+{/if}
