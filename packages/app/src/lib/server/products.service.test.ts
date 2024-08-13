@@ -53,6 +53,7 @@ describe('products service', () => {
 			shipping: [],
 			images: [],
 			stallId: 'testStallId',
+			categories: expect.any(Array),
 		})
 	})
 
@@ -132,6 +133,7 @@ describe('products service', () => {
 			price: 133,
 			quantity: 6,
 			shipping: [],
+			categories: expect.any(Array),
 		})
 	})
 
@@ -167,6 +169,7 @@ describe('products service', () => {
 			price: targetProduct.price,
 			quantity: targetProduct.quantity,
 			shipping: [],
+			categories: expect.any(Array),
 		})
 	})
 })
