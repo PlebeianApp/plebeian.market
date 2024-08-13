@@ -47,12 +47,13 @@
 	}
 
 	$: {
+		// TODO With the new product shipping coordinates we can have foreign key problems if we do not set the correct 'shippingId', we should improve this.
 		currentShippings =
 			stall?.shipping
-				?.filter((s) => product?.shipping?.some((sh) => s.id == sh.shippingId.split(':').shift()))
+				?.filter((s) => product?.shipping?.some((sh) => s.id == sh.shippingId.split(':').shift() || s.id == sh.shippingId))
 				.map((s) => ({
 					shipping: s,
-					extraCost: product?.shipping?.find((sh) => s.id == sh.shippingId.split(':').shift())?.cost ?? '',
+					extraCost: product?.shipping?.find((sh) => s.id == sh.shippingId.split(':').shift() || s.id == sh.shippingId)?.cost ?? '',
 				})) ?? []
 	}
 

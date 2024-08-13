@@ -394,17 +394,30 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 			}
 
 			await tx.delete(productShipping).where(eq(productShipping.productId, productId))
+
 			if (parsedProductData.shipping && parsedProductData.shipping.length > 0) {
-				await tx.insert(productShipping).values(
-					parsedProductData.shipping.map((shipping) => ({
-						cost: shipping.cost!,
-						shippingId: createShippingCoordinates(shipping.id, String(stallId.split(':').pop())),
-						productId: productId,
-					})),
-				)
+				// TODO With the new product shipping coordinates we can have foreign key problems if we do not set the correct 'shippingId', we should improve this.
+				try {
+					await tx.insert(productShipping).values(
+						parsedProductData.shipping.map((shipping) => ({
+							cost: shipping.cost!,
+							shippingId: createShippingCoordinates(shipping.id, String(stallId.split(':').pop())),
+							productId: productId,
+						})),
+					)
+				} catch (e) {
+					await tx.insert(productShipping).values(
+						parsedProductData.shipping.map((shipping) => ({
+							cost: shipping.cost!,
+							shippingId: shipping.id,
+							productId: productId,
+						})),
+					)
+				}
 			}
 
 			await tx.delete(eventTags).where(eq(eventTags.eventId, eventCoordinates?.coordinates as string))
+
 			if (productEvent.tags.length > 0) {
 				await tx
 					.insert(eventTags)
@@ -424,9 +437,8 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 
 			return toDisplayProduct(updatedProduct)
 		})
-	} catch (error) {
-		console.error(`Error updating product ${productId}:`, error)
-		return null
+	} catch (e) {
+		error(500, { message: `${e}` })
 	}
 }
 

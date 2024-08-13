@@ -2,6 +2,7 @@
 	import type { CarouselAPI } from '$lib/components/ui/carousel/context'
 	import Spinner from '$lib/components/assets/spinner.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
+	import Badge from '$lib/components/ui/badge/badge.svelte'
 	import Button from '$lib/components/ui/button/button.svelte'
 	import * as Carousel from '$lib/components/ui/carousel'
 	import Input from '$lib/components/ui/input/input.svelte'
@@ -56,7 +57,7 @@
 
 {#if $productsQuery.data && user.id}
 	<div class="container">
-		<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+		<div class="grid grid-cols-1 gap-6 md:grid-cols-2 mb-4">
 			<div class="flex flex-col gap-1">
 				{#key $productsQuery.data.identifier}
 					{#if $productsQuery.data?.images?.length}
@@ -95,7 +96,7 @@
 					{/if}
 				{/key}
 			</div>
-			<div class="flex flex-col">
+			<div class="flex flex-col gap-2">
 				{#if isMyProduct}
 					<Button class="w-1/4" on:click={() => openDrawerForProduct(productRes.id)}>Edit product</Button>
 				{/if}
@@ -159,6 +160,14 @@
 						<p>
 							{truncateText($productsQuery.data.description)}
 						</p>
+					</article>
+				{/if}
+				{#if $productsQuery.data.categories}
+					<article>
+						<h4 class="font-bold">Categories</h4>
+						{#each $productsQuery.data.categories as category}
+							<Badge variant="secondary" class=" w-fit">{category}</Badge>
+						{/each}
 					</article>
 				{/if}
 			</div>
