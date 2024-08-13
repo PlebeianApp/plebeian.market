@@ -63,25 +63,34 @@
 
 	$: updateProductImages(product)
 
-	function updateProductImages(updatedProduct: Partial<DisplayProduct> | null) {
-		if (updatedProduct) {
-			images = updatedProduct.images ?? []
-		}
-	}
-
-	$: updateProductImages(product)
-
 	function handleNewImageAdded(e: CustomEvent) {
 		images = [
 			...images,
 			{
 				imageUrl: e.detail,
+				imageOrder: images.length,
 			},
-		]
+		].map((image, index) => ({ ...image, imageOrder: index }))
 	}
 
 	function handleImagRemoved(e: CustomEvent) {
-		images = images.filter((image) => image.imageUrl !== e.detail)
+		images = images.filter((image) => image.imageUrl !== e.detail).map((image, index) => ({ ...image, imageOrder: index }))
+	}
+
+	function handleSetMainImage(e: CustomEvent<Partial<ProductImage>>) {
+		const mainImage = e.detail
+		images = images.map((image, index) => ({
+			...image,
+			imageOrder: image.imageUrl === mainImage.imageUrl ? 0 : index + 1,
+		}))
+	}
+
+	function updateProductImages(updatedProduct: Partial<DisplayProduct> | null) {
+		if (updatedProduct) {
+			images = (updatedProduct.images ?? []).map((image, index) => ({
+				...image,
+			}))
+		}
 	}
 
 	function addCategory() {
@@ -89,6 +98,7 @@
 		categories = [...categories, { key, name: `category ${categories.length + 1}`, checked: true }]
 	}
 
+	$: sortedImages = [...images].sort((a, b) => (a.imageOrder ?? 0) - (b.imageOrder ?? 0))
 	async function handleSubmit(sEvent: SubmitEvent, stall: Partial<RichStall> | null) {
 		if (!stall) return
 		try {
@@ -96,7 +106,7 @@
 				await $editProductMutation.mutateAsync([
 					sEvent,
 					product,
-					images.map((image) => ({ imageUrl: image.imageUrl! })),
+					sortedImages,
 					shippingMethods.map((s) => ({
 						id: s.id,
 						name: s.name ?? '',
@@ -104,7 +114,7 @@
 						regions: s.regions ?? [],
 						countries: s.countries ?? [],
 					})),
-					categories,
+					categories.filter((c) => c.checked),
 				])
 			} else {
 				await $createProductMutation.mutateAsync([
@@ -249,7 +259,12 @@
 			</Tabs.Content>
 
 			<Tabs.Content value="images" class="flex flex-col">
-				<MultiImageEdit {images} on:imageAdded={(e) => handleNewImageAdded(e)} on:imageRemoved={(e) => handleImagRemoved(e)} />
+				<MultiImageEdit
+					images={sortedImages}
+					on:imageAdded={(e) => handleNewImageAdded(e)}
+					on:imageRemoved={(e) => handleImagRemoved(e)}
+					on:setMainImage={(e) => handleSetMainImage(e)}
+				/>
 			</Tabs.Content>
 
 			<Tabs.Content value="shipping" class="flex flex-col gap-2 p-2">

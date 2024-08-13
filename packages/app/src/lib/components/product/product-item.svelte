@@ -30,7 +30,7 @@
 
 <Card.Root class="relative grid grid-rows-[1fr_auto] border-2 border-black bg-transparent text-black group">
 	{#if images?.length && !imageLoadError}
-		{@const mainImage = images.find((img) => img.imageOrder === 0 || img.imageOrder === 1) || images[0]}
+		{@const mainImage = images.find((img) => img.imageOrder === 0) || images[0]}
 		<div class="relative flex items-center justify-center p-2">
 			<img
 				class="h-[329px] object-cover transition-opacity duration-300 group-hover:opacity-70"

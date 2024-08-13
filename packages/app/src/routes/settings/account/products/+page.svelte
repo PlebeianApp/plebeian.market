@@ -12,7 +12,7 @@
 	import type { PageData } from './$types'
 
 	export let data: PageData
-	const { userExist, activeUser } = data
+	const { activeUser } = data
 	let toDisplayProducts: Partial<DisplayProduct>[] = []
 	let productsMode: 'list' | 'create' | 'edit' = 'list'
 
@@ -35,7 +35,6 @@
 			currentProduct = updatedProduct
 		}
 	}
-
 	onMount(async () => {
 		if (!activeUser?.id) return
 		const { products: productsData } = await fetchUserProductData(activeUser.id)

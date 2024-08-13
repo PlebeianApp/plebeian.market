@@ -1,5 +1,4 @@
 import type { NostrEvent } from '@nostr-dev-kit/ndk'
-import type { Category } from '$lib/fetch/products.mutations'
 import type { ProductsFilter } from '$lib/schema'
 import { error } from '@sveltejs/kit'
 import { KindStalls, standardDisplayDateFormat } from '$lib/constants'
@@ -20,6 +19,8 @@ import {
 	events,
 	eventTags,
 	getTableColumns,
+	inArray,
+	PRODUCT_IMAGES_TYPE,
 	PRODUCT_META,
 	productImages,
 	productMeta,
@@ -314,119 +315,117 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 	}
 }
 
-export const updateProduct = async (productId: string, productEvent: NostrEvent): Promise<DisplayProduct> => {
-	const eventCoordinates = getEventCoordinates(productEvent)
-	const productEventContent = JSON.parse(productEvent.content)
-	const parsedProduct = productEventSchema.safeParse({
-		id: productId,
-		...productEventContent,
-	})
+export const updateProduct = async (productId: string, productEvent: NostrEvent): Promise<DisplayProduct | null> => {
+	try {
+		return await db.transaction(async (tx) => {
+			const eventCoordinates = getEventCoordinates(productEvent)
+			const productEventContent = JSON.parse(productEvent.content)
+			const parsedProduct = productEventSchema.safeParse({
+				id: productId,
+				...productEventContent,
+			})
+			if (!parsedProduct.success) {
+				throw new Error(`Bad product schema: ${parsedProduct.error}`)
+			}
 
-	if (!parsedProduct.success) {
-		error(500, `Bad product schema, ${parsedProduct.error}`)
-	}
+			const parsedProductData = parsedProduct.data
 
-	const parsedProductData = parsedProduct.data
-	const stallId = parsedProductData?.stallId?.startsWith(KindStalls.toString())
-		? parsedProductData?.stallId
-		: `${KindStalls}:${productEvent.pubkey}:${parsedProductData?.stallId}`
-	const insertProduct: Partial<Product> = {
-		id: productId,
-		description: parsedProductData?.description as string,
-		updatedAt: new Date(),
-		currency: parsedProductData?.currency,
-		price: parsedProductData?.price?.toString(),
-		extraCost: parsedProductData?.shipping?.length ? parsedProductData?.shipping[0].cost?.toString() : String(0),
-		stallId,
-		productName: parsedProductData?.name,
-		quantity: parsedProductData?.quantity !== null ? parsedProductData?.quantity : undefined,
-	}
-	const existingImages = await getImagesByProductId(productId)
+			const stallId = parsedProductData?.stallId?.startsWith(KindStalls.toString())
+				? parsedProductData?.stallId
+				: `${KindStalls}:${productEvent.pubkey}:${parsedProductData?.stallId}`
 
-	const newImages = parsedProductData?.images?.filter((img) => !existingImages.find((eImg) => eImg.imageUrl === img))
-	const removedImages = existingImages.map((img) => img.imageUrl).filter((img) => (img ? !parsedProductData?.images?.includes(img) : img))
+			const [updatedProduct] = await tx
+				.update(products)
+				.set({
+					description: parsedProductData.description,
+					updatedAt: new Date(),
+					currency: parsedProductData.currency,
+					price: parsedProductData.price?.toString(),
+					extraCost: parsedProductData.shipping?.length ? parsedProductData.shipping[0].cost?.toString() : '0',
+					stallId,
+					productName: parsedProductData.name,
+					quantity: parsedProductData.quantity ?? undefined,
+				})
+				.where(eq(products.id, productId))
+				.returning()
 
-	const removeProductImages = removedImages.map((imageUrl) => ({
-		productId,
-		imageUrl,
-	}))
+			if (!updatedProduct) {
+				throw new Error(`Failed to update product: ${productId}`)
+			}
 
-	if (newImages && newImages.length > 0) {
-		await Promise.all(
-			newImages.map((img) =>
-				db
-					.insert(productImages)
-					.values({
+			const existingImages = await tx.select().from(productImages).where(eq(productImages.productId, productId))
+			const newImages = parsedProductData.images?.filter((img) => !existingImages.find((eImg) => eImg.imageUrl === img)) ?? []
+			const removedImages = existingImages.filter((img) => img.imageUrl && !parsedProductData.images?.includes(img.imageUrl))
+
+			if (removedImages.length > 0) {
+				await tx.delete(productImages).where(
+					and(
+						eq(productImages.productId, productId),
+						inArray(
+							productImages.imageUrl,
+							removedImages.map((img) => img.imageUrl).filter((url): url is string => url !== null),
+						),
+					),
+				)
+			}
+
+			if (newImages.length > 0) {
+				const existingImagesCount = existingImages.length
+				await tx.insert(productImages).values(
+					newImages.map((img, index) => ({
 						createdAt: new Date(),
 						productId,
 						auctionId: null,
 						imageUrl: img,
-						imageType: 'gallery',
-						imageOrder: 0,
-					})
-					.returning(),
-			),
-		)
-	}
+						imageType: PRODUCT_IMAGES_TYPE.GALLERY,
+						imageOrder: existingImagesCount + index,
+					})),
+				)
+			}
 
-	if (removeProductImages.length) {
-		await Promise.all(
-			removeProductImages.map((img) =>
-				db
-					.delete(productImages)
-					.where(and(eq(productImages.productId, img.productId), img.imageUrl ? eq(productImages.imageUrl, img.imageUrl) : undefined))
-					.execute(),
-			),
-		)
-	}
+			// Update order of existing images
+			if (parsedProductData.images && parsedProductData.images.length > 0) {
+				for (let i = 0; i < parsedProductData.images.length; i++) {
+					const img = parsedProductData.images[i]
+					await tx
+						.update(productImages)
+						.set({ imageOrder: i })
+						.where(and(eq(productImages.productId, productId), eq(productImages.imageUrl, img)))
+				}
+			}
 
-	const productResult = await db
-		.update(products)
-		.set({
-			...insertProduct,
+			await tx.delete(productShipping).where(eq(productShipping.productId, productId))
+			if (parsedProductData.shipping && parsedProductData.shipping.length > 0) {
+				await tx.insert(productShipping).values(
+					parsedProductData.shipping.map((shipping) => ({
+						cost: shipping.cost!,
+						shippingId: createShippingCoordinates(shipping.id, String(stallId.split(':').pop())),
+						productId: productId,
+					})),
+				)
+			}
+
+			await tx.delete(eventTags).where(eq(eventTags.eventId, eventCoordinates?.coordinates as string))
+			if (productEvent.tags.length > 0) {
+				await tx.insert(eventTags).values(
+					productEvent.tags.map((tag) => ({
+						tagName: tag[0],
+						tagValue: tag[1],
+						secondTagValue: tag[2],
+						thirdTagValue: tag[3],
+						userId: productEvent.pubkey,
+						eventId: eventCoordinates?.coordinates as string,
+						eventKind: productEvent.kind!,
+					})),
+				)
+			}
+
+			return toDisplayProduct(updatedProduct)
 		})
-		.where(eq(products.id, productId))
-		.returning()
-
-	await db.transaction(async (tx) => {
-		await tx.delete(productShipping).where(eq(productShipping.productId, productId))
-		for (const shipping of parsedProductData.shipping ?? []) {
-			await tx
-				.insert(productShipping)
-				.values({
-					cost: shipping.cost!,
-					shippingId: createShippingCoordinates(shipping.id, String(stallId.split(':').pop())),
-					productId: productId,
-				})
-				.execute()
-		}
-	})
-
-	if (productEvent.tags.length) {
-		await db
-			.insert(eventTags)
-			.values(
-				productEvent.tags.map((tag) => ({
-					tagName: tag[0],
-					tagValue: tag[1],
-					secondTagValue: tag[2],
-					thirdTagValue: tag[3],
-					userId: productEvent.pubkey,
-					eventId: eventCoordinates?.coordinates as string,
-					eventKind: productEvent.kind!,
-				})),
-			)
-			.onConflictDoNothing({
-				target: [eventTags.tagName, eventTags.tagValue, eventTags.eventId],
-			})
-			.execute()
+	} catch (error) {
+		console.error(`Error updating product ${productId}:`, error)
+		return null
 	}
-
-	if (productResult.length > 0) {
-		return toDisplayProduct(productResult[0])
-	}
-
-	error(500, 'Failed to update product')
 }
 
 export const deleteProduct = async (productId: string, userId: string): Promise<string> => {
