@@ -4,6 +4,7 @@
 	import { Input } from '$lib/components/ui/input/index.js'
 	import { Label } from '$lib/components/ui/label/index.js'
 	import Textarea from '$lib/components/ui/textarea/textarea.svelte'
+	import { currentStep } from '$lib/stores/checkout'
 	import { createEventDispatcher } from 'svelte'
 
 	const dispatch = createEventDispatcher()
@@ -30,6 +31,7 @@
 			contactEmail,
 			observations,
 		})
+		currentStep.set($currentStep + 1)
 	}
 </script>
 
