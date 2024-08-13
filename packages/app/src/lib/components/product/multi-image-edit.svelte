@@ -26,12 +26,10 @@
 		handleImageRemove(oldImageUrl)
 		handleImageAdd(newImageUrl)
 	}
-
-	$: sortedImages = images.sort((a, b) => (a.imageOrder ?? 0) - (b.imageOrder ?? 0))
 </script>
 
 <div class="grid grid-cols-2 gap-4">
-	{#each sortedImages as image}
+	{#each images as image}
 		{#if image.imageUrl}
 			<div class="flex flex-col">
 				<EditableImage marketContext={true} src={image.imageUrl} on:save={(e) => handleSwapImageForNew(image.imageUrl ?? '', e.detail)} />

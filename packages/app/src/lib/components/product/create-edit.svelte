@@ -130,6 +130,7 @@
 			}
 
 			toast.success(`Product ${product ? 'updated' : 'created'}!`)
+			images = images.sort((a, b) => (a.imageOrder ?? 0) - (b.imageOrder ?? 0))
 			queryClient.invalidateQueries({ queryKey: ['products', $ndkStore.activeUser?.pubkey] })
 		} catch (error) {
 			toast.error(`Failed to ${product ? 'update' : 'create'} product: ${error}`)
@@ -143,6 +144,7 @@
 				checked: true,
 			}))
 		}
+		images = images.sort((a, b) => (a.imageOrder ?? 0) - (b.imageOrder ?? 0))
 	})
 	const activeTab =
 		'w-full font-bold border-b-2 border-black text-black data-[state=active]:border-b-primary data-[state=active]:text-primary'
@@ -260,7 +262,7 @@
 
 			<Tabs.Content value="images" class="flex flex-col">
 				<MultiImageEdit
-					images={sortedImages}
+					{images}
 					on:imageAdded={(e) => handleNewImageAdded(e)}
 					on:imageRemoved={(e) => handleImagRemoved(e)}
 					on:setMainImage={(e) => handleSetMainImage(e)}

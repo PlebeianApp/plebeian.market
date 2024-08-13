@@ -136,14 +136,12 @@ export const editProductMutation = createMutation(
 				return response
 			}
 		},
-		// TODO invalidate products query onSucess
 		onSuccess: (data: DisplayProduct | undefined) => {
 			if (data) {
 				const $ndkStore = get(ndkStore)
 				queryClient.invalidateQueries({ queryKey: ['shipping'] })
 				queryClient.invalidateQueries({ queryKey: ['categories'] })
 				queryClient.invalidateQueries({ queryKey: ['stalls'] })
-				queryClient.invalidateQueries({ queryKey: ['products', $ndkStore.activeUser?.pubkey] })
 			}
 		},
 	},
