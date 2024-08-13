@@ -383,7 +383,6 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 				)
 			}
 
-			// Update order of existing images
 			if (parsedProductData.images && parsedProductData.images.length > 0) {
 				for (let i = 0; i < parsedProductData.images.length; i++) {
 					const img = parsedProductData.images[i]
@@ -407,17 +406,20 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 
 			await tx.delete(eventTags).where(eq(eventTags.eventId, eventCoordinates?.coordinates as string))
 			if (productEvent.tags.length > 0) {
-				await tx.insert(eventTags).values(
-					productEvent.tags.map((tag) => ({
-						tagName: tag[0],
-						tagValue: tag[1],
-						secondTagValue: tag[2],
-						thirdTagValue: tag[3],
-						userId: productEvent.pubkey,
-						eventId: eventCoordinates?.coordinates as string,
-						eventKind: productEvent.kind!,
-					})),
-				)
+				await tx
+					.insert(eventTags)
+					.values(
+						productEvent.tags.map((tag) => ({
+							tagName: tag[0],
+							tagValue: tag[1],
+							secondTagValue: tag[2],
+							thirdTagValue: tag[3],
+							userId: productEvent.pubkey,
+							eventId: eventCoordinates?.coordinates as string,
+							eventKind: productEvent.kind!,
+						})),
+					)
+					.onConflictDoNothing({ target: [eventTags.tagName, eventTags.tagValue, eventTags.eventId] })
 			}
 
 			return toDisplayProduct(updatedProduct)

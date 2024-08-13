@@ -4,7 +4,6 @@
 	import type { RichShippingInfo } from '$lib/server/shipping.service'
 	import type { RichStall } from '$lib/server/stalls.service'
 	import type { StallCoordinatesType } from '$lib/stores/drawer-ui'
-	import { ShippingMethod } from '$lib/classes/shipping'
 	import Button from '$lib/components/ui/button/button.svelte'
 	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte'
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js'
@@ -28,112 +27,85 @@
 
 	export let product: Partial<DisplayProduct> | null = null
 	export let forStall: StallCoordinatesType | null = null
-	// TODO Categories are beign inserted in the db but they are not beign loaded when tring to edit/update a product (#217)
+
 	let stall: Partial<RichStall> | null = null
 	let categories: Category[] = []
 	let images: Partial<ProductImage>[] = []
-	let shippingMethods: ShippingMethod[] = []
+	let currentShippings: { shipping: Partial<RichShippingInfo> | null; extraCost: string }[] = []
 
 	$: stallsQuery = createStallsByFilterQuery({
 		userId: $ndkStore.activeUser?.pubkey,
 		pageSize: 999,
 	})
 
-	let currentShippings: { shipping: Partial<RichShippingInfo> | null; extraCost: string }[] | null = null
-
-	$: {
-		currentShippings ??=
-			stall?.shipping
-				?.filter((s) => product?.shipping?.some((sh) => sh.shippingId === s.id))
-				.map((s) => ({ shipping: s, extraCost: product?.shipping?.find((sh) => sh.shippingId === s.id)?.cost ?? '' })) ?? null
-	}
-
-	$: currentStallIdentifier =
-		forStall?.split(':')[2] || product?.stallId || ($stallsQuery.data?.stalls && $stallsQuery.data.stalls[0]?.identifier)
+	$: currentStallIdentifier = forStall?.split(':')[2] || product?.stallId || $stallsQuery.data?.stalls[0]?.identifier
 
 	$: {
 		if ($stallsQuery.data?.stalls.length) {
-			if (currentStallIdentifier) {
-				;[stall] = $stallsQuery.data.stalls.filter((pStall) => pStall.identifier === currentStallIdentifier)
-			} else {
-				stall = $stallsQuery.data?.stalls[0]
-			}
+			stall = $stallsQuery.data.stalls.find((s) => s.identifier === currentStallIdentifier) || $stallsQuery.data.stalls[0]
 		}
 	}
 
-	$: updateProductImages(product)
-
-	function handleNewImageAdded(e: CustomEvent) {
-		images = [
-			...images,
-			{
-				imageUrl: e.detail,
-				imageOrder: images.length,
-			},
-		].map((image, index) => ({ ...image, imageOrder: index }))
+	$: {
+		currentShippings =
+			stall?.shipping
+				?.filter((s) => product?.shipping?.some((sh) => s.id == sh.shippingId.split(':').shift()))
+				.map((s) => ({
+					shipping: s,
+					extraCost: product?.shipping?.find((sh) => s.id == sh.shippingId.split(':').shift())?.cost ?? '',
+				})) ?? []
 	}
 
-	function handleImagRemoved(e: CustomEvent) {
-		images = images.filter((image) => image.imageUrl !== e.detail).map((image, index) => ({ ...image, imageOrder: index }))
+	$: sortedImages = [...images].sort((a, b) => (a.imageOrder ?? 0) - (b.imageOrder ?? 0))
+
+	function updateImages(updatedImages: Partial<ProductImage>[]) {
+		images = updatedImages
+			.map((image, index) => ({ ...image, imageOrder: image.imageOrder ?? index }))
+			.sort((a, b) => (a.imageOrder ?? 0) - (b.imageOrder ?? 0))
+	}
+
+	function handleNewImageAdded(e: CustomEvent<string>) {
+		updateImages([...images, { imageUrl: e.detail, imageOrder: images.length }])
+	}
+
+	function handleImageRemoved(e: CustomEvent<string>) {
+		updateImages(images.filter((image) => image.imageUrl !== e.detail))
 	}
 
 	function handleSetMainImage(e: CustomEvent<Partial<ProductImage>>) {
 		const mainImage = e.detail
-		images = images.map((image, index) => ({
-			...image,
-			imageOrder: image.imageUrl === mainImage.imageUrl ? 0 : index + 1,
-		}))
-	}
-
-	function updateProductImages(updatedProduct: Partial<DisplayProduct> | null) {
-		if (updatedProduct) {
-			images = (updatedProduct.images ?? []).map((image, index) => ({
+		images = images
+			.map((image, index) => ({
 				...image,
+				imageOrder: image.imageUrl === mainImage.imageUrl ? 0 : index + 1,
 			}))
-		}
+			.sort((a, b) => (a.imageOrder ?? 0) - (b.imageOrder ?? 0))
 	}
 
 	function addCategory() {
-		const key = createId()
-		categories = [...categories, { key, name: `category ${categories.length + 1}`, checked: true }]
+		categories = [...categories, { key: createId(), name: `category ${categories.length + 1}`, checked: true }]
 	}
-
-	$: sortedImages = [...images].sort((a, b) => (a.imageOrder ?? 0) - (b.imageOrder ?? 0))
 	async function handleSubmit(sEvent: SubmitEvent, stall: Partial<RichStall> | null) {
 		if (!stall) return
+
 		try {
+			const shippingData = currentShippings
+				.filter((method) => method.shipping !== null && method.shipping.id !== undefined)
+				.map((method) => ({
+					id: method.shipping!.id!,
+					cost: method.extraCost,
+				}))
+
 			if (product) {
-				await $editProductMutation.mutateAsync([
-					sEvent,
-					product,
-					sortedImages,
-					shippingMethods.map((s) => ({
-						id: s.id,
-						name: s.name ?? '',
-						cost: s.cost ?? '',
-						regions: s.regions ?? [],
-						countries: s.countries ?? [],
-					})),
-					categories.filter((c) => c.checked),
-				])
+				await $editProductMutation.mutateAsync([sEvent, product, sortedImages, shippingData, categories.filter((c) => c.checked)] as const)
 			} else {
-				await $createProductMutation.mutateAsync([
-					sEvent,
-					stall,
-					images.map((image) => image.imageUrl!),
-					shippingMethods.map((s) => ({
-						id: s.id,
-						cost: s.cost ?? '',
-					})),
-					categories,
-				])
+				await $createProductMutation.mutateAsync([sEvent, stall, sortedImages, shippingData, categories] as const)
 			}
 
 			toast.success(`Product ${product ? 'updated' : 'created'}!`)
-			images = images.sort((a, b) => (a.imageOrder ?? 0) - (b.imageOrder ?? 0))
 			queryClient.invalidateQueries({ queryKey: ['products', $ndkStore.activeUser?.pubkey] })
 		} catch (error) {
-			toast.error(`Failed to ${product ? 'update' : 'create'} product: ${error}`)
+			toast.error(`Failed to ${product ? 'update' : 'create'} product: ${error instanceof Error ? error.message : String(error)}`)
 		}
 	}
 	onMount(() => {
@@ -144,7 +116,16 @@
 				checked: true,
 			}))
 		}
-		images = images.sort((a, b) => (a.imageOrder ?? 0) - (b.imageOrder ?? 0))
+		if (product?.shipping && stall?.shipping) {
+			currentShippings = product.shipping.map((sh) => {
+				const stallShipping = stall?.shipping?.find((s) => s.id == sh.shippingId.split(':').shift())
+				return {
+					shipping: stallShipping ?? null,
+					extraCost: sh.cost ?? '',
+				}
+			})
+		}
+		updateImages(product?.images ?? [])
 	})
 	const activeTab =
 		'w-full font-bold border-b-2 border-black text-black data-[state=active]:border-b-primary data-[state=active]:text-primary'
@@ -262,15 +243,15 @@
 
 			<Tabs.Content value="images" class="flex flex-col">
 				<MultiImageEdit
-					{images}
+					images={sortedImages}
 					on:imageAdded={(e) => handleNewImageAdded(e)}
-					on:imageRemoved={(e) => handleImagRemoved(e)}
+					on:imageRemoved={(e) => handleImageRemoved(e)}
 					on:setMainImage={(e) => handleSetMainImage(e)}
 				/>
 			</Tabs.Content>
 
 			<Tabs.Content value="shipping" class="flex flex-col gap-2 p-2">
-				{#each currentShippings ?? [] as shippingMethod}
+				{#each currentShippings as shippingMethod, index (index)}
 					<div class="grid w-full items-center gap-1.5">
 						<Label for="from" class="font-bold">Shipping Method</Label>
 						<DropdownMenu.Root>
@@ -282,16 +263,17 @@
 							<DropdownMenu.Content class="w-56">
 								<DropdownMenu.Label>Stall</DropdownMenu.Label>
 								<DropdownMenu.Separator />
-								<section class=" max-h-[350px] overflow-y-auto">
-									{#each stall?.shipping?.filter((s) => !currentShippings?.some((sh) => sh.shipping?.id === s.id)) ?? [] as item}
+								<section class="max-h-[350px] overflow-y-auto">
+									{#each stall?.shipping?.filter((s) => !currentShippings.some((sh, i) => i !== index && sh.shipping?.id === s.id)) ?? [] as item}
 										<DropdownMenu.CheckboxItem
-											checked={shippingMethod.shipping === item}
+											checked={shippingMethod.shipping?.id === item.id}
 											on:click={() => {
-												shippingMethod.shipping = item
+												currentShippings[index].shipping = item
+												currentShippings = [...currentShippings]
 											}}
 										>
 											<div>
-												<span class=" font-bold">{item.name}</span>, {item.cost}{stall?.currency}
+												<span class="font-bold">{item.name}</span>, {item.cost}{stall?.currency}
 											</div>
 										</DropdownMenu.CheckboxItem>
 									{/each}
@@ -301,12 +283,24 @@
 
 						<div class="grid w-full items-center gap-1.5">
 							<Label for="from" class="font-bold">Extra cost <small class="font-light">(in {stall?.currency})</small></Label>
-							<Input bind:value={shippingMethod.extraCost} required class="border-2 border-black" type="text" name="extra" />
+							<Input
+								value={shippingMethod.extraCost}
+								on:input={(e) => {
+									currentShippings[index].extraCost = e.currentTarget.value
+									currentShippings = [...currentShippings]
+								}}
+								required
+								class="border-2 border-black"
+								type="number"
+								name="extra"
+							/>
 						</div>
 					</div>
 
 					<Button
-						on:click={() => (currentShippings = currentShippings?.filter((sh) => sh !== shippingMethod) ?? null)}
+						on:click={() => {
+							currentShippings = currentShippings.filter((_, i) => i !== index)
+						}}
 						variant="outline"
 						class="font-bold text-red-500 border-0 h-full"><span class="i-tdesign-delete-1"></span></Button
 					>
@@ -315,8 +309,8 @@
 
 				<div class="grid gap-1.5">
 					<Button
-						on:click={() => (currentShippings = [...(currentShippings ?? []), { shipping: null, extraCost: '' }])}
-						disabled={currentShippings?.length === stall?.shipping?.length}
+						on:click={() => (currentShippings = [...currentShippings, { shipping: null, extraCost: '' }])}
+						disabled={currentShippings.length === stall?.shipping?.length}
 						variant="outline"
 						class="font-bold ml-auto">Add Shipping Method</Button
 					>

@@ -93,6 +93,10 @@
 		inputValue = e.detail
 		validateAndSetImage(inputValue)
 	}
+	$: if (!imageChoiceDialogOpen) {
+		localSrc = null
+		inputValue = ''
+	}
 </script>
 
 <div class="relative w-full h-full border-2 border-black">

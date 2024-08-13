@@ -162,7 +162,7 @@ describe('products service', () => {
 			stallId: stall.id.split(':')[2],
 			description: targetProduct.description,
 			images: expect.any(Array),
-			identifier: product.identifier,
+			identifier: product?.identifier,
 			name: 'Hello Product changed',
 			userId: devUser1.pk,
 			userNip05: expect.any(String),

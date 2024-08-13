@@ -6,11 +6,13 @@
 
 	const dispatch = createEventDispatcher()
 
-	const handleImageClick = (imageUrl: string) => {
+	const handleImageClick = (imageUrl: string | null) => {
+		if (!imageUrl) return
 		dispatch('imageClick', imageUrl)
 	}
 
-	const handleKeyPress = (event: KeyboardEvent, imageUrl: string) => {
+	const handleKeyPress = (event: KeyboardEvent, imageUrl: string | null) => {
+		if (!imageUrl) return
 		if (event.key === 'Enter' || event.key === ' ') {
 			handleImageClick(imageUrl)
 		}
@@ -21,7 +23,7 @@
 	{#if $productImagesForUserQuery.isLoading}
 		<Spinner />
 	{:else if $productImagesForUserQuery.data}
-		{#each $productImagesForUserQuery.data as image}
+		{#each $productImagesForUserQuery.data as image (image.imageUrl)}
 			<button
 				on:click={() => handleImageClick(image.imageUrl)}
 				on:keypress={(event) => handleKeyPress(event, image.imageUrl)}

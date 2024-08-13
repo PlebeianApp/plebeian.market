@@ -28,7 +28,7 @@ export const createProductMutation = createMutation(
 		mutationFn: async ([sEvent, stall, images, shippingMethods, categories]: [
 			SubmitEvent,
 			Partial<RichStall>,
-			string[],
+			Partial<ProductImage>[],
 			{
 				id: string
 				cost: string
@@ -43,12 +43,14 @@ export const createProductMutation = createMutation(
 			const productPrice = Number(formData.get('price'))
 			const productQty = Number(formData.get('quantity'))
 			const identifier = createSlugId(productTile)
+			const eventImages = images.map((image) => image.imageUrl).filter((url): url is string => url !== null && url !== undefined)
+
 			const evContent = {
 				id: identifier,
 				stall_id: stall?.id?.split(':').length == 3 ? stall.id.split(':')[2] : stall.id,
 				name: productTile,
 				description: productDescription,
-				images: images,
+				images: eventImages,
 				price: productPrice,
 				quantity: productQty,
 				shipping: shippingMethods,

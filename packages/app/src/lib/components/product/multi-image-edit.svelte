@@ -29,7 +29,7 @@
 </script>
 
 <div class="grid grid-cols-2 gap-4">
-	{#each images as image}
+	{#each images as image (image.imageUrl)}
 		{#if image.imageUrl}
 			<div class="flex flex-col">
 				<EditableImage marketContext={true} src={image.imageUrl} on:save={(e) => handleSwapImageForNew(image.imageUrl ?? '', e.detail)} />
