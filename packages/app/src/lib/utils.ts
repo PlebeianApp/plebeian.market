@@ -369,7 +369,3 @@ export function mergeWithExisting<T>(existing: T[], newItems: T[], key: keyof T)
 	const existingSet = new Set(existing.map((item) => item[key]))
 	return [...existing, ...newItems.filter((item) => !existingSet.has(item[key]))]
 }
-
-export const createShippingCoordinates = (shippingId: string, stallIdentifier: string) => {
-	return `${shippingId}:${stallIdentifier.substring(0, 8)}`
-}

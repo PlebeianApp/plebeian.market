@@ -1,9 +1,5 @@
 <script lang="ts">
-	import { queryClient } from '$lib/fetch/client'
-	import { editProductImageMutation } from '$lib/fetch/productImages.mutations'
-	import ndkStore from '$lib/stores/ndk'
 	import { createEventDispatcher } from 'svelte'
-	import { toast } from 'svelte-sonner'
 
 	import type { ProductImage } from '@plebeian/database'
 
@@ -14,14 +10,8 @@
 
 	const dispatch = createEventDispatcher()
 
-	const invalidateProductsQuery = () => {
-		queryClient.invalidateQueries({ queryKey: ['products', $ndkStore.activeUser?.pubkey] })
-	}
-
-	const handleSetMainImage = async (productId: string, imageUrl: string) => {
-		await $editProductImageMutation.mutateAsync({ productId, imageUrl, imageOrder: 0 })
-		invalidateProductsQuery()
-		toast.success('New image set as main image!')
+	const handleSetMainImage = async (image: Partial<ProductImage>) => {
+		dispatch('setMainImage', image)
 	}
 
 	const handleImageAdd = async (imageUrl: string) => {
@@ -36,22 +26,15 @@
 		handleImageRemove(oldImageUrl)
 		handleImageAdd(newImageUrl)
 	}
-
-	$: images = images.sort((a, b) => (a.imageOrder ?? 0) - (b.imageOrder ?? 0))
 </script>
 
 <div class="grid grid-cols-2 gap-4">
-	{#each images as image}
+	{#each images as image (image.imageUrl)}
 		{#if image.imageUrl}
 			<div class="flex flex-col">
 				<EditableImage marketContext={true} src={image.imageUrl} on:save={(e) => handleSwapImageForNew(image.imageUrl ?? '', e.detail)} />
 				<div class="border-r-2 border-b-2 border-l-2 border-black text-center">
-					<Button
-						on:click={() => handleSetMainImage(image.productId ?? '', image.imageUrl ?? '')}
-						size="icon"
-						variant="ghost"
-						class="border-0"
-					>
+					<Button on:click={() => handleSetMainImage(image)} size="icon" variant="ghost" class="border-0">
 						{#if image.imageOrder === 0}
 							<span class="i-mdi-star text-primary w-4 h-4" />
 						{:else}

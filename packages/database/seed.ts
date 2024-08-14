@@ -46,7 +46,7 @@ import {
 	User,
 	UserMeta,
 } from './types'
-import { createId } from './utils'
+import { createId, createShippingCoordinates } from './utils'
 
 const randomLengthArrayFromTo = (min: number, max: number) => {
 	return Array.from({ length: faker.number.int({ min, max }) })
@@ -214,7 +214,7 @@ const main = async () => {
 		return stallsByUser.map((stall) => {
 			const shippingMethods = randomLengthArrayFromTo(1, 3).map(() => {
 				return {
-					id: createId(),
+					id: createShippingCoordinates(createId(), stall.identifier),
 					stallId: stall.id,
 					userId: stall.userId,
 					name: 'shp mthd' + faker.commerce.productName(),

@@ -31,3 +31,7 @@ export const createSlugId = (name: string, wordLimit = 3, sufix?: string, separa
 	const uniqueId = sufix ?? createId()
 	return `${slugifiedName}${separator}${uniqueId}`
 }
+
+export const createShippingCoordinates = (shippingId: string, stallIdentifier: string) => {
+	return `${shippingId}:${stallIdentifier.substring(0, 8)}`
+}

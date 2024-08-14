@@ -28,7 +28,7 @@ export const createProductMutation = createMutation(
 		mutationFn: async ([sEvent, stall, images, shippingMethods, categories]: [
 			SubmitEvent,
 			Partial<RichStall>,
-			string[],
+			Partial<ProductImage>[],
 			{
 				id: string
 				cost: string
@@ -43,12 +43,14 @@ export const createProductMutation = createMutation(
 			const productPrice = Number(formData.get('price'))
 			const productQty = Number(formData.get('quantity'))
 			const identifier = createSlugId(productTile)
+			const eventImages = images.map((image) => image.imageUrl).filter((url): url is string => url !== null && url !== undefined)
+
 			const evContent = {
 				id: identifier,
 				stall_id: stall?.id?.split(':').length == 3 ? stall.id.split(':')[2] : stall.id,
 				name: productTile,
 				description: productDescription,
-				images: images,
+				images: eventImages,
 				price: productPrice,
 				quantity: productQty,
 				shipping: shippingMethods,
@@ -95,14 +97,15 @@ export const editProductMutation = createMutation(
 			Category[],
 		]) => {
 			const $ndkStore = get(ndkStore)
-			if (!$ndkStore.activeUser?.pubkey) return
+			if (!$ndkStore.activeUser?.pubkey || !product.id) return
 			const formData = new FormData(sEvent.currentTarget as HTMLFormElement)
 			const productTile = String(formData.get('title'))
 			const productDescription = String(formData.get('description'))
 			const productPrice = Number(formData.get('price'))
 			const productQty = Number(formData.get('quantity'))
-			const identifier = createSlugId(productTile)
-			const eventImages = images.map((image) => image.imageUrl)
+			const identifier = product.id.split(':')[2]
+			const eventImages = images.map((image) => image.imageUrl).filter((url): url is string => url !== null && url !== undefined)
+
 			const stallCoordinates =
 				product?.stallId?.split(':').length == 3 ? product?.stallId : `${KindStalls}:${product.userId}:${product?.stallId}`
 			const evContent = {
@@ -135,10 +138,9 @@ export const editProductMutation = createMutation(
 				return response
 			}
 		},
-		// TODO invalidate products query onSucess
 		onSuccess: (data: DisplayProduct | undefined) => {
 			if (data) {
-				queryClient.invalidateQueries({ queryKey: ['products'] })
+				const $ndkStore = get(ndkStore)
 				queryClient.invalidateQueries({ queryKey: ['shipping'] })
 				queryClient.invalidateQueries({ queryKey: ['categories'] })
 				queryClient.invalidateQueries({ queryKey: ['stalls'] })
