@@ -83,8 +83,10 @@
 			<div
 				class="flex flex-col gap-2 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-black font-bold opacity-0 transition-opacity duration-300 group-hover:opacity-100"
 			>
-				<Button class="bg-white" on:click={() => openDrawerForStall(stall.id)}>Edit stall</Button>
-				<Button class="bg-white" on:click={() => openDrawerForNewProductForStall(stall.id)}>Add product</Button>
+				{#if stall.id}
+					<Button class="bg-white" on:click={() => openDrawerForStall(String(stall.id))}>Edit stall</Button>
+					<Button class="bg-white" on:click={() => openDrawerForNewProductForStall(String(stall.id))}>Add product</Button>
+				{/if}
 			</div>
 		{/if}
 	</Card.Root>
