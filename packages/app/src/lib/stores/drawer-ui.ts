@@ -70,7 +70,10 @@ export const openDrawerForNewProduct = () => {
 	})
 }
 
-export const openDrawerForStall = (stallId: string) => {
+export const openDrawerForStall = (stallId?: string) => {
+	if (!stallId) {
+		return
+	}
 	const currentNdkStore = get(ndkStore)
 	if (!isUserLoggedIn(currentNdkStore)) {
 		handleUserNotLoggedIn('view a stall')
@@ -98,7 +101,10 @@ export const closeDrawer = () => {
 	})
 }
 
-export const openDrawerForNewProductForStall = (stallId: string) => {
+export const openDrawerForNewProductForStall = (stallId?: string) => {
+	if (!stallId) {
+		return
+	}
 	const currentNdkStore = get(ndkStore)
 	if (!isUserLoggedIn(currentNdkStore)) {
 		handleUserNotLoggedIn('create a product')

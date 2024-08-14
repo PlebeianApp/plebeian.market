@@ -89,13 +89,13 @@ export const stallEventSchema = z.object({
 		.string()
 		.trim()
 		.refine((name) => !forbiddenPattern.test(name), {
-			message: `Name cannot contain a forbidden word}`,
+			message: `forbidden_word`,
 		}),
 	description: z
 		.string()
 		.optional()
 		.refine((description) => description === undefined || !forbiddenPattern.test(description) || !description.trim().length, {
-			message: `Description cannot contain any forbidden word}`,
+			message: `forbidden_word`,
 		}),
 	currency: z.string(),
 	shipping: z.array(shippingObjectSchema),

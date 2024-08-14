@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { NormalizedData } from '$lib/nostrSubs/utils'
 	import type { DisplayProduct } from '$lib/server/products.service'
 	import type { RichStall } from '$lib/server/stalls.service'
 	import ProductItem from '$lib/components/product/product-item.svelte'
@@ -31,7 +32,7 @@
 	$: productsQuery = createProductsByFilterQuery({ userId: id })
 
 	$: stallsMixture = mergeWithExisting($stallsQuery?.data?.stalls ?? [], nostrStalls, 'id')
-	$: productsMixture = mergeWithExisting($productsQuery?.data?.products ?? [], toDisplayProducts, 'id')
+	$: productsMixture = stallsMixture.length ? mergeWithExisting($productsQuery?.data?.products ?? [], toDisplayProducts, 'id') : []
 
 	onMount(async () => {
 		if (!id) return
@@ -39,10 +40,9 @@
 
 		if (stallNostrRes) {
 			nostrStalls = (await Promise.all([...stallNostrRes].map(normalizeStallData)))
+				.filter((result): result is NormalizedData<RichStall> => result.data !== null && result.error == null)
 				.map(({ data }) => data as Partial<RichStall>)
-				.filter(Boolean)
 		}
-
 		if (productsData?.size) {
 			toDisplayProducts = (await normalizeProductsFromNostr(productsData, id))?.toDisplayProducts ?? []
 		}

@@ -51,16 +51,16 @@ export const createStallsByFilterQuery = (filter: Partial<StallsFilter>) =>
 				if (filter.stallId) {
 					const { stallNostrRes: stallData } = await fetchStallData(filter.stallId)
 					if (stallData) {
-						const normalizedStall = (await normalizeStallData(stallData)).data
-						if (normalizedStall) {
-							return { total: 1, stalls: [normalizedStall] }
+						const normalizedStall = await normalizeStallData(stallData)
+						if (normalizedStall.data && normalizedStall.error == null) {
+							return { total: 1, stalls: [normalizedStall.data] }
 						}
 					}
 				} else if (filter.userId) {
 					const { stallNostrRes: stallData } = await fetchUserStallsData(filter.userId)
 					if (stallData) {
 						const normalizedStallData = (await Promise.all(Array.from(stallData).map(normalizeStallData)))
-							.filter((result): result is NormalizedData<RichStall> => result.data !== null)
+							.filter((result): result is NormalizedData<RichStall> => result.data !== null && result.error == null)
 							.map((result) => result.data as Partial<RichStall>)
 						if (normalizedStallData.length) {
 							return { total: normalizedStallData.length, stalls: normalizedStallData }

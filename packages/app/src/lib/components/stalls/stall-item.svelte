@@ -20,8 +20,8 @@
 		if (!stallData) return
 
 		if ('kind' in stallData) {
-			const { data: parsedStall } = await normalizeStallData(stallData)
-			if (!parsedStall) return
+			const { data: parsedStall, error: parseError } = await normalizeStallData(stallData)
+			if (!parsedStall || parseError) return
 
 			const user = $ndkStore.getUser({ pubkey: stallData.author.pubkey })
 			const userProfile = await user.fetchProfile()
