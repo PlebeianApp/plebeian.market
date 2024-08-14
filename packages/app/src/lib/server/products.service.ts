@@ -4,7 +4,7 @@ import { error } from '@sveltejs/kit'
 import { KindStalls, standardDisplayDateFormat } from '$lib/constants'
 import { productsFilterSchema } from '$lib/schema'
 import { getImagesByProductId } from '$lib/server/productImages.service'
-import { createShippingCoordinates, customTagValue, getEventCoordinates } from '$lib/utils'
+import { customTagValue, getEventCoordinates } from '$lib/utils'
 import { format } from 'date-fns'
 
 import type { Product, ProductImage, ProductMeta, ProductShipping, ProductTypes } from '@plebeian/database'
@@ -13,6 +13,7 @@ import {
 	asc,
 	count,
 	createId,
+	createShippingCoordinates,
 	db,
 	desc,
 	eq,

@@ -47,17 +47,16 @@
 	}
 
 	$: {
-		// TODO With the new product shipping coordinates we can have foreign key problems if we do not set the correct 'shippingId', we should improve this.
 		currentShippings =
 			stall?.shipping
-				?.filter((s) => product?.shipping?.some((sh) => s.id == sh.shippingId.split(':').shift() || s.id == sh.shippingId))
+				?.filter((s) => product?.shipping?.some((sh) => s.id == sh.shippingId.split(':')[0] || s.id == sh.shippingId))
 				.map((s) => ({
 					shipping: s,
-					extraCost: product?.shipping?.find((sh) => s.id == sh.shippingId.split(':').shift() || s.id == sh.shippingId)?.cost ?? '',
+					extraCost: product?.shipping?.find((sh) => s.id == sh.shippingId.split(':')[0] || s.id == sh.shippingId)?.cost ?? '',
 				})) ?? []
 	}
 
-	$: sortedImages = [...images].sort((a, b) => (a.imageOrder ?? 0) - (b.imageOrder ?? 0))
+	$: sortedImages = [...images].toSorted((a, b) => (a.imageOrder ?? 0) - (b.imageOrder ?? 0))
 
 	function updateImages(updatedImages: Partial<ProductImage>[]) {
 		images = updatedImages
@@ -119,7 +118,7 @@
 		}
 		if (product?.shipping && stall?.shipping) {
 			currentShippings = product.shipping.map((sh) => {
-				const stallShipping = stall?.shipping?.find((s) => s.id == sh.shippingId.split(':').shift())
+				const stallShipping = stall?.shipping?.find((s) => s.id == sh.shippingId.split(':')[0])
 				return {
 					shipping: stallShipping ?? null,
 					extraCost: sh.cost ?? '',
@@ -252,7 +251,7 @@
 			</Tabs.Content>
 
 			<Tabs.Content value="shipping" class="flex flex-col gap-2 p-2">
-				{#each currentShippings as shippingMethod, index (index)}
+				{#each currentShippings as shippingMethod (shippingMethod.shipping?.id)}
 					<div class="grid w-full items-center gap-1.5">
 						<Label for="from" class="font-bold">Shipping Method</Label>
 						<DropdownMenu.Root>
@@ -265,11 +264,11 @@
 								<DropdownMenu.Label>Stall</DropdownMenu.Label>
 								<DropdownMenu.Separator />
 								<section class="max-h-[350px] overflow-y-auto">
-									{#each stall?.shipping?.filter((s) => !currentShippings.some((sh, i) => i !== index && sh.shipping?.id === s.id)) ?? [] as item}
+									{#each stall?.shipping?.filter((s) => !currentShippings.some((sh) => sh !== shippingMethod && sh.shipping?.id === s.id)) ?? [] as item}
 										<DropdownMenu.CheckboxItem
 											checked={shippingMethod.shipping?.id === item.id}
 											on:click={() => {
-												currentShippings[index].shipping = item
+												shippingMethod.shipping = item
 												currentShippings = [...currentShippings]
 											}}
 										>
@@ -287,7 +286,7 @@
 							<Input
 								value={shippingMethod.extraCost}
 								on:input={(e) => {
-									currentShippings[index].extraCost = e.currentTarget.value
+									shippingMethod.extraCost = e.currentTarget.value
 									currentShippings = [...currentShippings]
 								}}
 								required
@@ -300,7 +299,7 @@
 
 					<Button
 						on:click={() => {
-							currentShippings = currentShippings.filter((_, i) => i !== index)
+							currentShippings = currentShippings.filter((s) => s !== shippingMethod)
 						}}
 						variant="outline"
 						class="font-bold text-red-500 border-0 h-full"><span class="i-tdesign-delete-1"></span></Button

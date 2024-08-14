@@ -4,7 +4,7 @@ import type { StallsFilter } from '$lib/schema'
 import { error } from '@sveltejs/kit'
 import { KindStalls, standardDisplayDateFormat } from '$lib/constants'
 import { stallsFilterSchema } from '$lib/schema'
-import { createShippingCoordinates, customTagValue, getEventCoordinates } from '$lib/utils'
+import { customTagValue, getEventCoordinates } from '$lib/utils'
 import { format } from 'date-fns'
 
 import type { PaymentDetail, Shipping, Stall } from '@plebeian/database'
@@ -12,6 +12,7 @@ import {
 	and,
 	asc,
 	count,
+	createShippingCoordinates,
 	db,
 	desc,
 	eq,
