@@ -158,28 +158,24 @@ async function normalizeNostrData<T>(
 		const parsedContent = JSON.parse(event.content)
 		const { data, success, error: parseError } = schema.safeParse(parsedContent)
 
-		const transformedData = transformer(data, coordinates)
-		const result: NormalizedData<T> = { data: transformedData, error: parseError ?? null }
+		const result: NormalizedData<T> = {
+			data: success ? transformer(data, coordinates) : null,
+			error: parseError ?? null,
+		}
 
 		const cacheData = {
 			id: coordinates.coordinates,
 			createdAt: event.created_at as number,
-			insertedAt: Number(new Date()),
+			insertedAt: Date.now(),
 			kind: coordinates.kind,
 			pubkey: coordinates.pubkey,
 			data: result.data,
 			parseError: result.error,
 		}
 
-		if (cachedEvent) {
-			await updateCachedEvent(coordinates.coordinates, cacheData)
-		} else {
-			await addCachedEvent(cacheData)
-		}
-		if (success) {
-			return result
-		}
-		return { data: null, error: parseError }
+		await (cachedEvent ? updateCachedEvent(coordinates.coordinates, cacheData) : addCachedEvent(cacheData))
+
+		return result
 	} catch (error) {
 		console.error('Error processing data:', error)
 		return { data: null, error: error instanceof ZodError ? error : null }

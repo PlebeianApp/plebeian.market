@@ -48,13 +48,12 @@ export const createStallsByFilterQuery = (filter: Partial<StallsFilter>) =>
 					params: stallsFilterSchema.parse(filter),
 				})
 				if (response.stalls.length) return response
+
 				if (filter.stallId) {
 					const { stallNostrRes: stallData } = await fetchStallData(filter.stallId)
-					if (stallData) {
-						const normalizedStall = await normalizeStallData(stallData)
-						if (normalizedStall.data && normalizedStall.error == null) {
-							return { total: 1, stalls: [normalizedStall.data] }
-						}
+					const normalizedStall = stallData ? await normalizeStallData(stallData) : null
+					if (normalizedStall?.data && normalizedStall.error === null) {
+						return { total: 1, stalls: [normalizedStall.data] }
 					}
 				} else if (filter.userId) {
 					const { stallNostrRes: stallData } = await fetchUserStallsData(filter.userId)
