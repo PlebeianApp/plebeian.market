@@ -8,11 +8,10 @@
 	import { currentStep } from '$lib/stores/checkout'
 
 	$: exampleSteps = [
-		// {
-		// 	component: Review,
-		// 	props: {},
-		// },
-
+		{
+			component: Review,
+			props: {},
+		},
 		...Object.values($cart.users).flatMap((user) => [
 			{
 				component: Order,
