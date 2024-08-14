@@ -52,7 +52,9 @@
 			</div>
 		</section>
 		<div class="flex items-center gap-4">
-			<Button class="hidden sm:flex p-2 bg-[var(--neo-yellow)]" href="/"><span class="i-tdesign-mail text-black w-6 h-6"></span></Button>
+			<Button class="hidden sm:flex p-2 bg-[var(--neo-yellow)]" href="dash/messages"
+				><span class="i-tdesign-mail text-black w-6 h-6"></span></Button
+			>
 			<CartWithState />
 			<DropdownMenu.Root>
 				<DropdownMenu.Trigger id="menuButton">

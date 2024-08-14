@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { NDKKind } from '@nostr-dev-kit/ndk'
 	import { Button } from '$lib/components/ui/button/index.js'
 	import { Checkbox } from '$lib/components/ui/checkbox/index.js'
 	import * as Dialog from '$lib/components/ui/dialog/index.js'
@@ -7,6 +8,7 @@
 	import { Separator } from '$lib/components/ui/separator'
 	import * as Tabs from '$lib/components/ui/tabs/index.js'
 	import { login } from '$lib/ndkLogin'
+	import { dmKind04Sub } from '$lib/nostrSubs/subs'
 	import ndkStore from '$lib/stores/ndk'
 	import { type BaseAccount } from '$lib/stores/session'
 	import { copyToClipboard } from '$lib/utils'
@@ -22,7 +24,21 @@
 	let nsec: ReturnType<(typeof nip19)['nsecEncode']> | null = null
 
 	async function handleLogin(loginMethod: BaseAccount['type'], formData?: FormData, autoLogin?: boolean) {
-		;(await login(loginMethod, formData, autoLogin)) ? toast.success('Login sucess!') : toast.error('Login error!')
+		const loginResult = await login(loginMethod, formData, autoLogin)
+		if (loginResult) {
+			console.log(loginResult)
+			toast.success('Login sucess!')
+			setTimeout(() => {
+				console.log($ndkStore.activeUser, 'dddd')
+				if ($ndkStore.activeUser) {
+					dmKind04Sub.changeFilters([{ kinds: [NDKKind.EncryptedDirectMessage], limit: 50, '#p': [$ndkStore.activeUser.pubkey] }])
+					console.log(dmKind04Sub.filters)
+					dmKind04Sub.ref()
+				}
+			}, 5)
+		} else {
+			toast.error('Login error!')
+		}
 	}
 
 	async function handleSignUp(formData: FormData) {

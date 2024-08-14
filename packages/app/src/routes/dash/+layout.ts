@@ -21,6 +21,13 @@ export const load = async () => {
 				{ title: '🛍️ Purchases', href: '/dash/order/purchases', description: 'View your purchases' },
 			],
 		},
+		{
+			title: 'Messages',
+			description: 'View and manage your messages',
+			value: 'messages',
+			root: '/dash/messages',
+			links: [{ title: 'Messages', href: '/dash/messages', description: 'Manage your messages' }],
+		},
 		// {
 		//   title: '📍 Address Book',
 		//   description: 'Manage your addresses',

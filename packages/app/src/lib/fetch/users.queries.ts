@@ -67,6 +67,7 @@ export const createUserByIdQuery = (id: string) =>
 				}
 			},
 			enabled: !!id,
+			staleTime: 1000 * 60 * 30,
 		},
 		queryClient,
 	)

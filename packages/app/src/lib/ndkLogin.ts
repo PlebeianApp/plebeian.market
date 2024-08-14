@@ -22,6 +22,7 @@ import { get } from 'svelte/store'
 
 import { userEventSchema } from '../schema/nostr-events'
 import { createRequest, queryClient } from './fetch/client'
+import { dmKind04Sub } from './nostrSubs/subs'
 
 function unNullify<T extends object>(obj: T): T {
 	return Object.fromEntries(Object.entries(obj).filter(([_, v]) => v != null)) as unknown as T
@@ -161,6 +162,7 @@ export async function loginWithPrivateKey(key: string, password: string): Promis
 }
 
 export async function logout() {
+	dmKind04Sub.unref()
 	localStorage.clear()
 	location.reload()
 }
