@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { NormalizedData } from '$lib/nostrSubs/utils'
 	import type { DisplayProduct } from '$lib/server/products.service'
 	import type { RichStall } from '$lib/server/stalls.service'
 	import ProductItem from '$lib/components/product/product-item.svelte'
@@ -19,35 +20,32 @@
 
 	export let data: PageData
 	const { id } = data
-
 	let nostrStalls: Partial<RichStall>[] = []
 	let toDisplayProducts: Partial<DisplayProduct>[] = []
 	let following = false
 	let showFullAbout = false
-	$: isMe = $ndkStore.activeUser?.pubkey == id
 
+	$: isMe = $ndkStore.activeUser?.pubkey == id
 	$: userProfileQuery = createUserByIdQuery(id as string)
 	$: stallsQuery = createStallsByFilterQuery({ userId: id })
 	$: productsQuery = createProductsByFilterQuery({ userId: id })
-
 	$: stallsMixture = mergeWithExisting($stallsQuery?.data?.stalls ?? [], nostrStalls, 'id')
-	$: productsMixture = mergeWithExisting($productsQuery?.data?.products ?? [], toDisplayProducts, 'id')
+	$: productsMixture = stallsMixture.length ? mergeWithExisting($productsQuery?.data?.products ?? [], toDisplayProducts, 'id') : []
 
 	onMount(async () => {
 		if (!id) return
 		const [{ stallNostrRes }, { products: productsData }] = await Promise.all([fetchUserStallsData(id), fetchUserProductData(id)])
 
-		if (stallNostrRes) {
-			nostrStalls = (await Promise.all([...stallNostrRes].map(normalizeStallData)))
-				.map(({ data }) => data as Partial<RichStall>)
-				.filter(Boolean)
-		}
+		nostrStalls = stallNostrRes
+			? (await Promise.all([...stallNostrRes].map(normalizeStallData)))
+					.filter(
+						(result): result is NormalizedData<RichStall> & { data: Partial<RichStall> } => result.data !== null && result.error === null,
+					)
+					.map(({ data }) => data)
+			: []
 
-		if (productsData?.size) {
-			toDisplayProducts = (await normalizeProductsFromNostr(productsData, id))?.toDisplayProducts ?? []
-		}
+		toDisplayProducts = productsData?.size ? (await normalizeProductsFromNostr(productsData, id))?.toDisplayProducts ?? [] : []
 	})
-
 	const handleFollow = () => {
 		const user = $ndkStore.getUser({ pubkey: id })
 		// await user.follow();

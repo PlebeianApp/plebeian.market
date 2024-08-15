@@ -155,30 +155,25 @@ async function normalizeNostrData<T>(
 	}
 
 	try {
-		// TODO Review this we are not storing events with errors so we parse them all the time (#218)
-		// FIXME products from stalls with forbidden words are being displayed (#221)
 		const parsedContent = JSON.parse(event.content)
 		const { data, success, error: parseError } = schema.safeParse(parsedContent)
-		if (!success) return { data: null, error: parseError }
 
-		const transformedData = transformer(data, coordinates)
-		const result: NormalizedData<T> = { data: transformedData, error: null }
-		// Update cache
+		const result: NormalizedData<T> = {
+			data: success ? transformer(data, coordinates) : null,
+			error: parseError ?? null,
+		}
+
 		const cacheData = {
 			id: coordinates.coordinates,
 			createdAt: event.created_at as number,
-			insertedAt: Number(new Date()),
+			insertedAt: Date.now(),
 			kind: coordinates.kind,
 			pubkey: coordinates.pubkey,
 			data: result.data,
 			parseError: result.error,
 		}
 
-		if (cachedEvent) {
-			await updateCachedEvent(coordinates.coordinates, cacheData)
-		} else {
-			await addCachedEvent(cacheData)
-		}
+		await (cachedEvent ? updateCachedEvent(coordinates.coordinates, cacheData) : addCachedEvent(cacheData))
 
 		return result
 	} catch (error) {
