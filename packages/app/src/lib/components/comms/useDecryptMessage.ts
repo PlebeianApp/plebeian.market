@@ -8,7 +8,7 @@ export function useDecryptedMessage(message: NDKEvent, selectedPubkey: string) {
 		queryKey: ['decryptedMessage', message.id, selectedPubkey],
 		queryFn: async () => {
 			const ndk = get(ndkStore)
-			const recipient = ndk.getUser({ pubkey: selectedPubkey })
+			const recipient = ndk.getUser({ pubkey: message.pubkey === selectedPubkey ? message.pubkey : selectedPubkey })
 
 			try {
 				const decryptedContent = await ndk.signer?.decrypt(recipient, message.content)

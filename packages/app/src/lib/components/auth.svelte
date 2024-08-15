@@ -13,7 +13,7 @@
 	import { type BaseAccount } from '$lib/stores/session'
 	import { copyToClipboard } from '$lib/utils'
 	import { generateSecretKey } from 'nostr-tools'
-	import * as nip19 from 'nostr-tools/nip19'
+	import { nsecEncode } from 'nostr-tools/nip19'
 	import { toast } from 'svelte-sonner'
 
 	import Pattern from './Pattern.svelte'
@@ -21,18 +21,19 @@
 	let checked = false
 	let authDialogOpen = false
 	let createDialogOpen = false
-	let nsec: ReturnType<(typeof nip19)['nsecEncode']> | null = null
+	let nsec: ReturnType<typeof nsecEncode> | null = null
 
 	async function handleLogin(loginMethod: BaseAccount['type'], formData?: FormData, autoLogin?: boolean) {
 		const loginResult = await login(loginMethod, formData, autoLogin)
 		if (loginResult) {
-			console.log(loginResult)
 			toast.success('Login sucess!')
 			setTimeout(() => {
 				console.log($ndkStore.activeUser, 'dddd')
 				if ($ndkStore.activeUser) {
-					dmKind04Sub.changeFilters([{ kinds: [NDKKind.EncryptedDirectMessage], limit: 50, '#p': [$ndkStore.activeUser.pubkey] }])
-					console.log(dmKind04Sub.filters)
+					dmKind04Sub.changeFilters([
+						{ kinds: [NDKKind.EncryptedDirectMessage], limit: 50, '#p': [$ndkStore.activeUser.pubkey] },
+						{ kinds: [NDKKind.EncryptedDirectMessage], limit: 50, authors: [$ndkStore.activeUser.pubkey] },
+					])
 					dmKind04Sub.ref()
 				}
 			}, 5)
@@ -43,7 +44,7 @@
 
 	async function handleSignUp(formData: FormData) {
 		const key = generateSecretKey()
-		nsec = nip19.nsecEncode(key)
+		nsec = nsecEncode(key)
 		formData.append('key', nsec)
 		await handleLogin('NSEC', formData)
 		authDialogOpen = false

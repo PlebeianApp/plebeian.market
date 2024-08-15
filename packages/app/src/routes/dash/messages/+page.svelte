@@ -3,7 +3,7 @@
 	import Chat from '$lib/components/comms/chat.svelte'
 	import ConversationListItem from '$lib/components/comms/conversation-list-item.svelte'
 	import { Button } from '$lib/components/ui/button'
-	import { groupedDMs } from '$lib/nostrSubs/subs'
+	import { activeUserDMs, groupedDMs } from '$lib/nostrSubs/subs'
 	import { nav_back } from '$lib/utils'
 	import { ArrowLeft } from 'lucide-svelte'
 
@@ -42,8 +42,8 @@
 						<ArrowLeft size={24} />
 					</Button>
 				</div>
-				<div class="flex-1 overflow-hidden">
-					<Chat messages={$groupedDMs[selectedPubkey]} {selectedPubkey} />
+				<div class="flex-1 overflow-hidden mx-auto">
+					<Chat messages={$groupedDMs[selectedPubkey]} activeUserMessages={$activeUserDMs[selectedPubkey]} {selectedPubkey} />
 				</div>
 			</div>
 		{:else}

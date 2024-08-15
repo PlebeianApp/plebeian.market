@@ -9,18 +9,13 @@
 	import ChatBubble from './chat-bubble.svelte'
 
 	export let messages: NDKEvent[] = []
+	export let activeUserMessages: NDKEvent[] = []
 	export let selectedPubkey: string
-
+	$: messageMixture = [...messages, ...activeUserMessages].sort((a, b) => (a.created_at ?? 0) - (b.created_at ?? 0))
 	let messagesContainerRef: HTMLDivElement
 	let message = ''
 
 	let userProfileQuery = createUserByIdQuery(selectedPubkey)
-
-	afterUpdate(() => {
-		if (messagesContainerRef) {
-			messagesContainerRef.scrollTop = messagesContainerRef.scrollHeight
-		}
-	})
 
 	const handleSend = () => {
 		if (message.trim()) {
@@ -30,6 +25,7 @@
 			document.querySelector<HTMLTextAreaElement>('textarea[name="message"]')?.focus()
 		}
 	}
+
 	function scrollToBottom() {
 		if (messagesContainerRef) {
 			messagesContainerRef.scrollTop = messagesContainerRef.scrollHeight
@@ -42,6 +38,7 @@
 			handleSend()
 		}
 	}
+
 	afterUpdate(() => {
 		scrollToBottom()
 	})
@@ -52,18 +49,18 @@
 </script>
 
 <div class="flex flex-col h-full">
-	<div class="p-4 border-b flex items-center shrink-0">
+	<div class="p-4 border-b flex items-center">
 		<CAvatar pubkey={selectedPubkey} profile={$userProfileQuery?.data} />
 		<div class="overflow-hidden">
 			<h2 class="font-semibold truncate">{$userProfileQuery?.data?.displayName}</h2>
 			{#if $userProfileQuery?.data?.about}
-				<p class="text-sm text-muted-foreground truncate">{$userProfileQuery?.data?.about}</p>
+				<p class="text-sm text-muted-foreground break-all">{$userProfileQuery?.data?.about}</p>
 			{/if}
 		</div>
 	</div>
 
 	<div bind:this={messagesContainerRef} class="flex-grow overflow-y-auto p-4 space-y-4">
-		{#each messages as message (message.id)}
+		{#each messageMixture as message (message.id)}
 			<ChatBubble {message} {selectedPubkey} isCurrentUser={message.pubkey !== selectedPubkey} />
 		{/each}
 	</div>
