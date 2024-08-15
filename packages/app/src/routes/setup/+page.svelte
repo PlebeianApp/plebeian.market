@@ -40,7 +40,7 @@
 		newInstanceNpub = nip19.npubEncode(newPk)
 	}
 
-	let generatedNpub: string = '' // New variable to store the generated npub
+	let generatedNpub: string = ''
 
 	function handleNpubNsecInput(event: Event) {
 		const inputValue = (event.target as HTMLInputElement).value
