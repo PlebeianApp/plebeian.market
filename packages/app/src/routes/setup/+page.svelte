@@ -40,6 +40,19 @@
 		newInstanceNpub = nip19.npubEncode(newPk)
 	}
 
+	let generatedNpub: string = ''; // New variable to store the generated npub
+
+	function handleNpubNsecInput(event: Event) {
+		const inputValue = (event.target as HTMLInputElement).value;
+
+		if (inputValue.startsWith('nsec')) {
+			const newPk = getPublicKey(generateSecretKey());
+			generatedNpub = nip19.npubEncode(newPk);
+		} else {
+			generatedNpub = "";
+		}
+	}
+
 	async function handleSubmit(event: SubmitEvent) {
 		event.preventDefault()
 		const formData = new FormData(event.currentTarget as HTMLFormElement)
@@ -101,15 +114,16 @@
 					<Separator class=" my-2" />
 					<form on:submit|preventDefault={handleSubmit} class="max-w-2xl flex flex-col gap-3">
 						<h3>Identity</h3>
-						<Label class="truncate font-bold">Instance npub</Label>
+						<Label class="truncate font-bold">Instance npub/nsec</Label>
 						<div class="flex flex-row gap-2">
 							<Input
 								required
 								bind:value={newInstanceNpub}
 								class=" border-black border-2"
 								name="instancePk"
-								placeholder="instance npub"
+								placeholder="instance npub or nsec"
 								type="text"
+								on:input={handleNpubNsecInput} 
 							/>
 							<Button
 								on:click={() => {
@@ -118,7 +132,7 @@
 							>
 						</div>
 
-						{#if newInstanceNsec}
+						{#if newInstanceNsec && !generatedNpub}
 							<Label class="truncate font-bold">New nsec</Label>
 							<div class="flex flex-row gap-2">
 								<Input class="border-black border-2" value={newInstanceNsec} readonly name="instanceSk" />
@@ -128,6 +142,11 @@
 									}}><span class="i-mingcute-clipboard-fill text-black w-6 h-6"></span></Button
 								>
 							</div>
+						{/if}
+
+						{#if generatedNpub && newInstanceNsec.startsWith('nsec')}
+							<Label class="truncate font-bold">Generated npub</Label>
+							<Input class="border-black border-2" value={generatedNpub} readonly />
 						{/if}
 
 						<Label class="truncate font-bold">Owner npub</Label>
