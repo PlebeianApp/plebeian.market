@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/stores'
 	import Chat from '$lib/components/comms/chat.svelte'
-	import ConversationList from '$lib/components/comms/conversation-list.svelte'
+	import ConversationListItem from '$lib/components/comms/conversation-list-item.svelte'
 	import { Button } from '$lib/components/ui/button'
 	import { groupedDMs } from '$lib/nostrSubs/subs'
 	import { nav_back } from '$lib/utils'
@@ -48,7 +48,11 @@
 			</div>
 		{:else}
 			<div class="h-full overflow-y-auto">
-				<ConversationList onSelectConversation={selectConversation} />
+				<div class="divide-y divide-border">
+					{#each Object.entries($groupedDMs) as [pubkey, messages]}
+						<ConversationListItem {pubkey} {messages} onSelect={selectConversation} />
+					{/each}
+				</div>
 			</div>
 		{/if}
 	</div>

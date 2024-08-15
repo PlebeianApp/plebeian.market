@@ -3,9 +3,7 @@
 	import { truncateString } from '$lib/utils'
 	import { npubEncode } from 'nostr-tools/nip19'
 
-	import AvatarFallback from '../ui/avatar/avatar-fallback.svelte'
-	import AvatarImage from '../ui/avatar/avatar-image.svelte'
-	import Avatar from '../ui/avatar/avatar.svelte'
+	import CAvatar from '../ui/custom-components/c-avatar.svelte'
 	import { Skeleton } from '../ui/skeleton'
 
 	export let userId: string
@@ -20,20 +18,13 @@
 		<a href={`/p/${$userProfileQuery.data.id}`}>
 			<div class="py-1 flex flex-row items-center gap-2">
 				{#if $userProfileQuery.data.image}
-					<Avatar class="w-6 h-6">
-						<AvatarImage src={$userProfileQuery.data.image} alt="pfp" />
-						<AvatarFallback style={`background-color: #${String($userProfileQuery.data.id).substring(0, 6)}`}
-							><span class="i-tdesign-user-1 w-8 h-8" /></AvatarFallback
-						>
-					</Avatar>
+					<CAvatar pubkey={userId} profile={$userProfileQuery.data} />
 				{:else}
 					<span class=" i-tdesign-user w-6 h-6" />
 				{/if}
-				{#if $userProfileQuery.data.name || $userProfileQuery.data.displayName || $userProfileQuery.data.id}
+				{#if $userProfileQuery.data.name || $userProfileQuery.data.displayName || userId}
 					<span class=" font-bold"
-						>{truncateString(
-							$userProfileQuery.data.name || $userProfileQuery.data.displayName || npubEncode($userProfileQuery.data.id),
-						)}</span
+						>{truncateString($userProfileQuery.data.name || $userProfileQuery.data.displayName || npubEncode(userId))}</span
 					>
 				{/if}
 			</div>
