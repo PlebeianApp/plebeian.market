@@ -40,16 +40,17 @@
 		newInstanceNpub = nip19.npubEncode(newPk)
 	}
 
-	let generatedNpub: string = ''; // New variable to store the generated npub
+	let generatedNpub: string = '' // New variable to store the generated npub
 
 	function handleNpubNsecInput(event: Event) {
-		const inputValue = (event.target as HTMLInputElement).value;
+		const inputValue = (event.target as HTMLInputElement).value
 
 		if (inputValue.startsWith('nsec')) {
-			const newPk = getPublicKey(generateSecretKey());
-			generatedNpub = nip19.npubEncode(newPk);
+			const newPk = getPublicKey(generateSecretKey())
+			generatedNpub = nip19.npubEncode(newPk)
+			newInstanceNsec = inputValue
 		} else {
-			generatedNpub = "";
+			generatedNpub = ''
 		}
 	}
 
@@ -62,6 +63,8 @@
 			const processedData = processAppSettings(
 				{
 					...formObject,
+					instanceNpub: generatedNpub || newInstanceNpub,
+					instanceNsec: newInstanceNsec,
 					allowRegister: checked,
 					defaultCurrency: selectedCurrency.value,
 					logoUrl: logoUrl || undefined,
@@ -123,7 +126,7 @@
 								name="instancePk"
 								placeholder="instance npub or nsec"
 								type="text"
-								on:input={handleNpubNsecInput} 
+								on:input={handleNpubNsecInput}
 							/>
 							<Button
 								on:click={() => {
@@ -146,7 +149,14 @@
 
 						{#if generatedNpub && newInstanceNsec.startsWith('nsec')}
 							<Label class="truncate font-bold">Generated npub</Label>
-							<Input class="border-black border-2" value={generatedNpub} readonly />
+							<div class="flex flex-row gap-2">
+								<Input class="border-black border-2" value={generatedNpub} readonly />
+								<Button
+									on:click={() => {
+										copyToClipboard(generatedNpub)
+									}}><span class="i-mingcute-clipboard-fill text-black w-6 h-6"></span></Button
+								>
+							</div>
 						{/if}
 
 						<Label class="truncate font-bold">Owner npub</Label>
