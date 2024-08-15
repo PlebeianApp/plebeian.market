@@ -75,6 +75,33 @@ export async function fetchUserData(
 	return { userProfile }
 }
 
+export async function fetchUserRelays(
+	userId: string,
+	subCacheUsage?: NDKSubscriptionCacheUsage,
+): Promise<{
+	userRelays: Record<number, NDKEvent[]>
+}> {
+	const $ndkStore = get(ndkStore)
+
+	const events = await $ndkStore.fetchEvents({
+		authors: [userId],
+		kinds: [3, 10002, 10006, 10007, 10050 as number],
+	})
+
+	const userRelays: Record<number, NDKEvent[]> = {}
+
+	for (const event of events) {
+		const kind = event.kind
+		if (!kind) continue
+		if (!userRelays[kind]) {
+			userRelays[kind] = []
+		}
+		userRelays[kind].push(event)
+	}
+
+	return { userRelays }
+}
+
 export async function fetchUserProductData(
 	userId: string,
 	identifier?: string,

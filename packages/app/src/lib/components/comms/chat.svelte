@@ -1,17 +1,17 @@
 <script lang="ts">
-	import { NDKEvent } from '@nostr-dev-kit/ndk'
-	import { createUserByIdQuery } from '$lib/fetch/users.queries'
+	import { NDKEvent, NDKRelay, NDKRelayAuthPolicies, normalizeRelayUrl } from '@nostr-dev-kit/ndk'
+	import { createUserByIdQuery, createUserRelaysByIdQuery } from '$lib/fetch/users.queries'
 	import { activeUserDMs, groupedDMs } from '$lib/nostrSubs/subs'
 	import ndkStore from '$lib/stores/ndk'
 	import { SendHorizontal } from 'lucide-svelte'
-	import { afterUpdate, onMount } from 'svelte'
+	import { onMount } from 'svelte'
 
 	import CAvatar from '../ui/custom-components/c-avatar.svelte'
 	import Textarea from '../ui/textarea/textarea.svelte'
 	import ChatBubble from './chat-bubble.svelte'
 
 	export let selectedPubkey: string
-
+	// TODO Incorporate user relays (wip)
 	$: messages = $groupedDMs[selectedPubkey] || []
 	$: activeUserMessages = $activeUserDMs[selectedPubkey] || []
 
@@ -25,7 +25,7 @@
 	let message = ''
 
 	let userProfileQuery = createUserByIdQuery(selectedPubkey)
-
+	let userRelays = createUserRelaysByIdQuery(selectedPubkey)
 	const handleSend = async () => {
 		if (message.trim()) {
 			const recipient = $ndkStore.getUser({ pubkey: selectedPubkey })
@@ -52,6 +52,54 @@
 		}
 	}
 
+	const eventKindActions = new Map([
+		[
+			3,
+			(event: NDKEvent) => {
+				console.log('where here', event)
+				const parsedContent = JSON.parse(event.content)
+				Object.entries(parsedContent)
+					.filter(
+						([_, permissions]) =>
+							(permissions as { read: boolean; write: boolean }).read && (permissions as { read: boolean; write: boolean }).write,
+					)
+					.map(([url]) => new NDKRelay(normalizeRelayUrl(url), NDKRelayAuthPolicies.signIn(), $ndkStore))
+					.forEach((relay) => $ndkStore.pool.addRelay(relay, true))
+			},
+		],
+		[
+			10002,
+			(event: NDKEvent) => {
+				event.tags
+					.map((url) => new NDKRelay(normalizeRelayUrl(url[1]), undefined, $ndkStore))
+					.forEach((relay) => $ndkStore.outboxPool?.addRelay(relay, true))
+			},
+		],
+		[
+			10006,
+			(event: NDKEvent) => {
+				event.tags.map((url) => url[1]).forEach((relay) => $ndkStore.pool.removeRelay(normalizeRelayUrl(relay)))
+			},
+		],
+		[10007, (event) => console.log('Event kind 10007(Search relays list):', event)],
+		[10050, (event) => console.log('Event kind 10050(Relay list to receive DMs):', event)],
+	])
+
+	async function setUserRelays(userRelays: NDKEvent[]) {
+		for (const event of userRelays) {
+			const action = eventKindActions.get(event?.kind as number)
+			if (action) {
+				action(event)
+			} else {
+				console.log('Unknown event kind:', event)
+			}
+		}
+	}
+	$: {
+		if ($userRelays.data) {
+			setUserRelays($userRelays.data[3])
+		}
+	}
 	onMount(() => {
 		scrollToBottom()
 	})
