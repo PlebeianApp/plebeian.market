@@ -62,9 +62,6 @@
 		<CAvatar pubkey={selectedPubkey} profile={$userProfileQuery?.data} />
 		<div class="overflow-hidden flex-1">
 			<h3 class="text-xl font-semibold truncate">{$userProfileQuery?.data?.displayName}</h3>
-			{#if $userProfileQuery?.data?.about}
-				<p class="text-sm text-muted-foreground truncate">{$userProfileQuery?.data?.about}</p>
-			{/if}
 		</div>
 	</div>
 

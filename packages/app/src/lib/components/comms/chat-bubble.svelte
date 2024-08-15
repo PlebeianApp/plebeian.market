@@ -10,6 +10,11 @@
 	export let isCurrentUser: boolean
 	let userProfileQuery = createUserByIdQuery(message.pubkey)
 	let decryptedContent = useDecryptedMessage(message, selectedPubkey)
+
+	function formatMessage(content: string) {
+		const urlRegex = /(https?:\/\/[^\s]+)/g
+		return content.replace(urlRegex, (url) => `<span class="break-all">${url}</span>`)
+	}
 </script>
 
 <div class="flex {isCurrentUser ? 'justify-end' : 'justify-start'}">
@@ -18,8 +23,14 @@
 			<CAvatar pubkey={message.pubkey} profile={$userProfileQuery.data} />
 		{/if}
 		{#if $decryptedContent.data}
-			<div class="bg-accent p-3 rounded-lg break-words {isCurrentUser ? 'rounded-br-none' : 'rounded-bl-none'}">
-				<p class="text-sm">{$decryptedContent.data}</p>
+			<div
+				class="bg-accent p-3 rounded-lg break-words overflow-hidden {isCurrentUser
+					? 'rounded-br-none'
+					: 'rounded-bl-none'} max-w-[calc(100%-3rem)]"
+			>
+				<p class="text-sm whitespace-pre-wrap">
+					{@html formatMessage($decryptedContent.data)}
+				</p>
 				{#if message.created_at}
 					<p class="text-xs text-muted-foreground mt-1">
 						{new Date(Number(message.created_at) * 1000).toLocaleString()}

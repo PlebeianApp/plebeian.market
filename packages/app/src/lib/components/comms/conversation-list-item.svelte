@@ -1,5 +1,4 @@
 <script lang="ts">
-	import type { NDKEvent } from '@nostr-dev-kit/ndk'
 	import { Button } from '$lib/components/ui/button'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
 	import { truncateString } from '$lib/utils'
@@ -13,7 +12,7 @@
 	$: userProfileQuery = createUserByIdQuery(pubkey)
 </script>
 
-<Button variant="ghost" class="w-full justify-start py-4 px-6 border-0 gap-2 hover:bg-accent" on:click={() => onSelect(pubkey)}>
+<Button variant="ghost" class="w-full justify-start py-6 px-6 border-0 gap-2 hover:bg-accent" on:click={() => onSelect(pubkey)}>
 	<CAvatar {pubkey} profile={$userProfileQuery.data} />
 	<div class="flex flex-col items-start overflow-hidden">
 		<span class="font-semibold truncate"
