@@ -52,7 +52,7 @@
 			</div>
 		</section>
 		<div class="flex items-center gap-4">
-			<Button class="hidden sm:flex p-2 bg-[var(--neo-yellow)]" href="dash/messages"
+			<Button class="hidden sm:flex p-2 bg-[var(--neo-yellow)]" href="/dash/messages"
 				><span class="i-tdesign-mail text-black w-6 h-6"></span></Button
 			>
 			<CartWithState />
