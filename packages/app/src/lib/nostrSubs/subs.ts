@@ -25,7 +25,7 @@ export const stallsSub: NDKEventStore<ExtendedBaseType<NDKEvent>> = ndk.storeSub
 	{ closeOnEose: true, autoStart: false },
 )
 
-export const dmKind04Sub: NDKEventStore<ExtendedBaseType<NDKEvent>> = ndk.storeSubscribe({}, { closeOnEose: true, autoStart: false })
+export const dmKind04Sub: NDKEventStore<ExtendedBaseType<NDKEvent>> = ndk.storeSubscribe({}, { closeOnEose: false, autoStart: false })
 
 export const groupedDMs = derived(dmKind04Sub, ($dmKind04Sub) => {
 	const groups: Record<string, NDKEvent[]> = {}
@@ -38,11 +38,6 @@ export const groupedDMs = derived(dmKind04Sub, ($dmKind04Sub) => {
 		}
 		groups[pubkey].push(event)
 	}
-
-	// Sort messages within each group by timestamp
-	// for (const pubkey in groups) {
-	// 	groups[pubkey].sort((a, b) => (a.created_at || 0) - (b.created_at || 0))
-	// }
 
 	return groups
 })
@@ -60,11 +55,6 @@ export const activeUserDMs = derived(dmKind04Sub, ($dmKind04Sub) => {
 			groups[pubkey].push(event)
 		}
 	}
-
-	// Sort messages within each group by timestamp
-	// for (const pubkey in groups) {
-	// 	groups[pubkey].sort((a, b) => (a.created_at || 0) - (b.created_at || 0))
-	// }
 
 	return groups
 })

@@ -1,6 +1,8 @@
 <script lang="ts">
-	import type { NDKEvent } from '@nostr-dev-kit/ndk'
+	import { NDKEvent } from '@nostr-dev-kit/ndk'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
+	import { activeUserDMs, groupedDMs } from '$lib/nostrSubs/subs'
+	import ndkStore from '$lib/stores/ndk'
 	import { SendHorizontal } from 'lucide-svelte'
 	import { afterUpdate, onMount } from 'svelte'
 
@@ -8,19 +10,30 @@
 	import Textarea from '../ui/textarea/textarea.svelte'
 	import ChatBubble from './chat-bubble.svelte'
 
-	export let messages: NDKEvent[] = []
-	export let activeUserMessages: NDKEvent[] = []
 	export let selectedPubkey: string
-	$: messageMixture = [...messages, ...activeUserMessages].sort((a, b) => (a.created_at ?? 0) - (b.created_at ?? 0))
+
+	$: messages = $groupedDMs[selectedPubkey] || []
+	$: activeUserMessages = $activeUserDMs[selectedPubkey] || []
+
+	let messageMixture: NDKEvent[] = []
+	$: {
+		messageMixture = [...messages, ...activeUserMessages].sort((a, b) => (a.created_at ?? 0) - (b.created_at ?? 0))
+		scrollToBottom()
+	}
+
 	let messagesContainerRef: HTMLDivElement
 	let message = ''
 
 	let userProfileQuery = createUserByIdQuery(selectedPubkey)
 
-	const handleSend = () => {
+	const handleSend = async () => {
 		if (message.trim()) {
-			// TODO: Implement Nostr message sending
-			console.log('Sending message:', message)
+			const recipient = $ndkStore.getUser({ pubkey: selectedPubkey })
+			const dm = new NDKEvent($ndkStore)
+			dm.kind = 4
+			dm.content = (await $ndkStore.signer?.encrypt(recipient, message)) ?? ''
+			dm.tags = [['p', recipient.pubkey]]
+			await dm.publish()
 			message = ''
 			document.querySelector<HTMLTextAreaElement>('textarea[name="message"]')?.focus()
 		}
@@ -39,22 +52,18 @@
 		}
 	}
 
-	afterUpdate(() => {
-		scrollToBottom()
-	})
-
 	onMount(() => {
 		scrollToBottom()
 	})
 </script>
 
-<div class="flex flex-col h-full">
-	<div class="p-4 border-b flex items-center">
+<div class="flex flex-col h-full max-w-4xl mx-auto">
+	<div class="p-4 border-b flex items-center gap-2">
 		<CAvatar pubkey={selectedPubkey} profile={$userProfileQuery?.data} />
-		<div class="overflow-hidden">
-			<h2 class="font-semibold truncate">{$userProfileQuery?.data?.displayName}</h2>
+		<div class="overflow-hidden flex-1">
+			<h3 class="text-xl font-semibold truncate">{$userProfileQuery?.data?.displayName}</h3>
 			{#if $userProfileQuery?.data?.about}
-				<p class="text-sm text-muted-foreground break-all">{$userProfileQuery?.data?.about}</p>
+				<p class="text-sm text-muted-foreground truncate">{$userProfileQuery?.data?.about}</p>
 			{/if}
 		</div>
 	</div>

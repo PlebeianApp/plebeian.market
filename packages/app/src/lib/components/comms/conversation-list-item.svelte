@@ -7,23 +7,18 @@
 	import CAvatar from '../ui/custom-components/c-avatar.svelte'
 
 	export let pubkey: string
-	export let messages: NDKEvent[]
+	export let lastMessagets: number
 	export let onSelect: (pubkey: string) => void
 
 	$: userProfileQuery = createUserByIdQuery(pubkey)
-
-	function getLastMessage(messages: NDKEvent[]) {
-		const lastMessage = messages[messages.length - 1]
-		return lastMessage ? lastMessage.content.slice(0, 30) + '...' : 'No messages'
-	}
-
-	$: lastMessage = getLastMessage(messages)
 </script>
 
-<Button variant="ghost" class="w-full justify-start p-4 hover:bg-accent" on:click={() => onSelect(pubkey)}>
+<Button variant="ghost" class="w-full justify-start py-4 px-6 border-0 gap-2 hover:bg-accent" on:click={() => onSelect(pubkey)}>
 	<CAvatar {pubkey} profile={$userProfileQuery.data} />
-	<div class="flex flex-col items-start">
-		<span class="font-semibold">{$userProfileQuery?.data?.displayName || $userProfileQuery?.data?.name || truncateString(pubkey)}</span>
-		<span class="text-sm text-muted-foreground truncate">{lastMessage}</span>
+	<div class="flex flex-col items-start overflow-hidden">
+		<span class="font-semibold truncate"
+			>{$userProfileQuery?.data?.displayName || $userProfileQuery?.data?.name || truncateString(pubkey)}</span
+		>
+		<span class="text-sm text-muted-foreground truncate w-full">Last message: {new Date(lastMessagets * 1000).toLocaleString()}</span>
 	</div>
 </Button>
