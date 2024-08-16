@@ -4,7 +4,7 @@ import type { RichShippingInfo } from '$lib/server/shipping.service'
 import type { RichStall } from '$lib/server/stalls.service'
 import { NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk'
 import { invalidateAll } from '$app/navigation'
-import { KindProducts, KindStalls, standardDisplayDateFormat } from '$lib/constants'
+import { KindProducts, KindsRelays, KindStalls, standardDisplayDateFormat } from '$lib/constants'
 import { createProductsFromNostrMutation } from '$lib/fetch/products.mutations'
 import { createStallFromNostrEvent } from '$lib/fetch/stalls.mutations'
 import { userFromNostr } from '$lib/fetch/users.mutations'
@@ -79,25 +79,14 @@ export async function fetchUserRelays(
 	userId: string,
 	subCacheUsage?: NDKSubscriptionCacheUsage,
 ): Promise<{
-	userRelays: Record<number, NDKEvent[]>
+	userRelays: Set<NDKEvent>
 }> {
 	const $ndkStore = get(ndkStore)
 
-	const events = await $ndkStore.fetchEvents({
+	const userRelays = await $ndkStore.fetchEvents({
 		authors: [userId],
-		kinds: [3, 10002, 10006, 10007, 10050 as number],
+		kinds: KindsRelays,
 	})
-
-	const userRelays: Record<number, NDKEvent[]> = {}
-
-	for (const event of events) {
-		const kind = event.kind
-		if (!kind) continue
-		if (!userRelays[kind]) {
-			userRelays[kind] = []
-		}
-		userRelays[kind].push(event)
-	}
 
 	return { userRelays }
 }

@@ -28,7 +28,6 @@
 		if (loginResult) {
 			toast.success('Login sucess!')
 			setTimeout(() => {
-				console.log($ndkStore.activeUser, 'dddd')
 				if ($ndkStore.activeUser) {
 					dmKind04Sub.changeFilters([
 						{ kinds: [NDKKind.EncryptedDirectMessage], limit: 50, '#p': [$ndkStore.activeUser.pubkey] },

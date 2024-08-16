@@ -5,6 +5,7 @@
 	import Button from '../ui/button/button.svelte'
 	import Input from '../ui/input/input.svelte'
 	import Label from '../ui/label/label.svelte'
+	import ScrollArea from '../ui/scroll-area/scroll-area.svelte'
 	import RelayList from './relayList.svelte'
 
 	export let mode: 'widget' | 'settings' = 'widget'
@@ -35,28 +36,30 @@
 	{/if}
 
 	{#if isOpen}
-		<div class={`bg-white flex flex-col gap-2 ${mode == 'widget' && 'w-fit p-2 border-black border-2 max-w-[25vw]'}`}>
+		<div class={`bg-white flex flex-col gap-2 ${mode == 'widget' && 'w-fit p-2 border-black border-2'}`}>
 			{#if $ndkStore.pool?.relays.size}
 				<section>
-					Explicit relays:
-					{#each $ndkStore.pool.relays.values() as relay (relay.url)}
-						<RelayList {relay} relayType="kind3" />
-					{/each}
+					Explicit relays ({$ndkStore.pool?.relays.size}):
+					<ScrollArea class={`${$ndkStore.pool?.relays.size > 10 ? 'h-72' : ''}`}>
+						{#each $ndkStore.pool.relays.values() as relay (relay.url)}
+							<RelayList {relay} relayType="kind3" />
+						{/each}
+					</ScrollArea>
 				</section>
 			{:else}
 				<div class="flex flex-col gap-2">
 					You are not connected to any relay
 					<Button on:click={handleConnectToDefaultRelays}>Use default relays</Button>
-
-					<!-- <small>*You can configure your relays in the <a href="/settings/account/network">settings</a> </small> -->
 				</div>
 			{/if}
 			{#if $ndkStore.outboxPool?.relays.size}
 				<section>
-					Outbox relays:
-					{#each $ndkStore.outboxPool.relays.values() as relay (relay.url)}
-						<RelayList {relay} relayType="outbox" />
-					{/each}
+					Outbox relays ({$ndkStore.outboxPool?.relays.size}):
+					<ScrollArea class={`${$ndkStore.outboxPool?.relays.size > 10 ? 'h-72' : ''}`}>
+						{#each $ndkStore.outboxPool.relays.values() as relay (relay.url)}
+							<RelayList {relay} relayType="outbox" />
+						{/each}
+					</ScrollArea>
 				</section>
 			{/if}
 			<form on:submit|preventDefault={handleAddRelay} class="flex flex-row gap-2 items-end w-full">

@@ -1,17 +1,10 @@
-import type { NDKEvent, NDKUser, NDKUserProfile } from '@nostr-dev-kit/ndk'
+import type { NDKUser, NDKUserProfile } from '@nostr-dev-kit/ndk'
 import type { BaseAccount } from '$lib/stores/session'
-import {
-	NDKNip07Signer,
-	NDKPrivateKeySigner,
-	NDKRelay,
-	NDKRelayAuthPolicies,
-	NDKSubscriptionCacheUsage,
-	normalizeRelayUrl,
-} from '@nostr-dev-kit/ndk'
+import { NDKNip07Signer, NDKPrivateKeySigner, NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk'
 import { error } from '@sveltejs/kit'
 import { invalidateAll } from '$app/navigation'
 import { page } from '$app/stores'
-import { HEX_KEYS_REGEX } from '$lib/constants'
+import { HEX_KEYS_REGEX, KindsRelays } from '$lib/constants'
 import ndkStore, { ndk } from '$lib/stores/ndk'
 import { addAccount, getAccount, updateAccount } from '$lib/stores/session'
 import { bytesToHex, checkIfUserExists, createNcryptSec, hexToBytes, shouldRegister } from '$lib/utils'
@@ -23,6 +16,7 @@ import { get } from 'svelte/store'
 import { userEventSchema } from '../schema/nostr-events'
 import { createRequest, queryClient } from './fetch/client'
 import { dmKind04Sub } from './nostrSubs/subs'
+import { manageUserRelays } from './nostrSubs/userRelayManager'
 
 function unNullify<T extends object>(obj: T): T {
 	return Object.fromEntries(Object.entries(obj).filter(([_, v]) => v != null)) as unknown as T
@@ -42,55 +36,13 @@ async function getAppSettings(): Promise<boolean> {
 	})
 }
 
-const eventKindActions = new Map([
-	[
-		3,
-		(event: NDKEvent) => {
-			const parsedContent = JSON.parse(event.content)
-			Object.entries(parsedContent)
-				.filter(
-					([_, permissions]) =>
-						(permissions as { read: boolean; write: boolean }).read && (permissions as { read: boolean; write: boolean }).write,
-				)
-				.map(([url]) => new NDKRelay(normalizeRelayUrl(url), NDKRelayAuthPolicies.signIn(), ndk))
-				.forEach((relay) => ndk.pool.addRelay(relay, true))
-		},
-	],
-	[
-		10002,
-		(event: NDKEvent) => {
-			event.tags
-				.map((url) => new NDKRelay(normalizeRelayUrl(url[1]), undefined, ndk))
-				.forEach((relay) => ndk.outboxPool?.addRelay(relay, true))
-		},
-	],
-	[
-		10006,
-		(event: NDKEvent) => {
-			event.tags.map((url) => url[1]).forEach((relay) => ndk.pool.removeRelay(normalizeRelayUrl(relay)))
-		},
-	],
-	[10007, (event) => console.log('Event kind 10007(Search relays list):', event)],
-	[10050, (event) => console.log('Event kind 10050(Relay list to receive DMs):', event)],
-])
-
-async function setUserRelays(userRelays: Set<NDKEvent>) {
-	for (const event of userRelays) {
-		const action = eventKindActions.get(event?.kind as number)
-		if (action) {
-			action(event)
-		} else {
-			console.log('Unknown event kind:', event)
-		}
-	}
-}
-
 export async function fetchActiveUserData(keyToLocalDb?: string): Promise<NDKUser | null> {
 	if (!ndk.signer) return null
 	console.log('Fetching profile')
 	const user = await ndk.signer.user()
 	await user.fetchProfile({ cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY })
-	setUserRelays(await ndk.fetchEvents({ authors: [user.pubkey], kinds: [3, 10002, 10006, 10007, 10050 as number] }))
+	const userRelays = await ndk.fetchEvents({ authors: [user.pubkey], kinds: KindsRelays })
+	manageUserRelays(userRelays, 'add')
 	ndkStore.set(ndk)
 
 	if (keyToLocalDb) {
@@ -175,14 +127,12 @@ export async function loginLocalDb(userPk: string, loginMethod: BaseAccount['typ
 				await addAccount({
 					hexPubKey: userPk,
 					lastLogged: +new Date(),
-					relays: [],
 					type: 'NIP07',
 				})
 			} else if (loginMethod == 'NSEC' && cSk) {
 				await addAccount({
 					hexPubKey: userPk,
 					lastLogged: +new Date(),
-					relays: [],
 					type: 'NSEC',
 					cSk: cSk,
 				})

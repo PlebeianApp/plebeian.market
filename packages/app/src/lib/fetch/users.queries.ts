@@ -79,7 +79,6 @@ export const createUserRelaysByIdQuery = (id: string) =>
 			queryFn: async () => {
 				const { userRelays } = await fetchUserRelays(id)
 				if (userRelays) {
-					console.log(userRelays)
 					return userRelays
 				}
 			},
