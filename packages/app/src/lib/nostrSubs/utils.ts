@@ -83,11 +83,27 @@ export async function fetchUserRelays(
 }> {
 	const $ndkStore = get(ndkStore)
 
-	const userRelays = await $ndkStore.fetchEvents({
-		authors: [userId],
-		kinds: KindsRelays,
-	})
-
+	const userRelays = await $ndkStore.fetchEvents(
+		{
+			authors: [userId],
+			kinds: KindsRelays,
+		},
+		{
+			cacheUsage: subCacheUsage ?? NDKSubscriptionCacheUsage.PARALLEL,
+		},
+	)
+	if (subCacheUsage == NDKSubscriptionCacheUsage.ONLY_CACHE && !userRelays) {
+		const userRelays = await $ndkStore.fetchEvents(
+			{
+				authors: [userId],
+				kinds: KindsRelays,
+			},
+			{
+				cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY,
+			},
+		)
+		return { userRelays }
+	}
 	return { userRelays }
 }
 

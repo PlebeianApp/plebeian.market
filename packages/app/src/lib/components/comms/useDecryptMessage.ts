@@ -18,7 +18,7 @@ export function useDecryptedMessage(message: NDKEvent, selectedPubkey: string) {
 				return 'Decryption failed'
 			}
 		},
-		staleTime: 1000 * 60 * 5, // 10 minutes
+		staleTime: 1000 * 60 * 10,
 		enabled: !!message && !!get(ndkStore).signer,
 	})
 }

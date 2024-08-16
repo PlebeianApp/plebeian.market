@@ -86,7 +86,7 @@ const handleEvent = async (event: NDKEvent, action: RelayAction) => {
 const eventKindActions = new Map([
 	[3, handleEvent],
 	[10002, handleEvent],
-	[10006, handleEvent],
+	// [10006, handleEvent],
 	// [10007, async (event: NDKEvent) => console.log('Event kind 10007(Search relays list):', event)],
 	// [10050, async (event: NDKEvent) => console.log('Event kind 10050(Relay list to receive DMs):', event)],
 ])
