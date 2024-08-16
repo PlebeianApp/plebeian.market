@@ -1,6 +1,8 @@
 <script lang="ts">
 	import type { DisplayProduct } from '$lib/server/products.service'
 	import type { RichStall } from '$lib/server/stalls.service'
+	import { goto } from '$app/navigation'
+	import { page } from '$app/stores'
 	import ProductItem from '$lib/components/product/product-item.svelte'
 	import StallItem from '$lib/components/stalls/stall-item.svelte'
 	import Button from '$lib/components/ui/button/button.svelte'
@@ -67,7 +69,7 @@
 
 	const handleSendMessage = () => {
 		const user = $ndkStore.getUser({ pubkey: id })
-		// await user.sendMessage();
+		goto(`/dash/messages/${$page.params.id}`)
 	}
 </script>
 

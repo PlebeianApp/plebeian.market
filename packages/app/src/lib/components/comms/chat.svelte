@@ -4,6 +4,7 @@
 	import { activeUserDMs, groupedDMs } from '$lib/nostrSubs/subs'
 	import { manageUserRelays } from '$lib/nostrSubs/userRelayManager'
 	import ndkStore from '$lib/stores/ndk'
+	import { truncateString } from '$lib/utils'
 	import { SendHorizontal } from 'lucide-svelte'
 	import { onDestroy, onMount } from 'svelte'
 
@@ -71,7 +72,9 @@
 	<div class="p-4 border-b flex items-center gap-2">
 		<CAvatar pubkey={selectedPubkey} profile={$userProfileQuery?.data} />
 		<div class="overflow-hidden flex-1">
-			<h3 class="text-xl font-semibold truncate">{$userProfileQuery?.data?.displayName}</h3>
+			<h3 class="text-xl font-semibold truncate">
+				{$userProfileQuery?.data?.name || $userProfileQuery?.data?.displayName || truncateString(selectedPubkey)}
+			</h3>
 		</div>
 	</div>
 
