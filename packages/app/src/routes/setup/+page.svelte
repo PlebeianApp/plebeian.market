@@ -2,6 +2,10 @@
 	import type { Selected } from 'bits-ui'
 	import { goto } from '$app/navigation'
 	import { processAppSettings, submitAppSettings } from '$lib/appSettings'
+	import { Accordion } from '$lib/components/ui/accordion'
+	import AccordionContent from '$lib/components/ui/accordion/accordion-content.svelte'
+	import AccordionItem from '$lib/components/ui/accordion/accordion-item.svelte'
+	import AccordionTrigger from '$lib/components/ui/accordion/accordion-trigger.svelte'
 	import Button from '$lib/components/ui/button/button.svelte'
 	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte'
 	import * as Command from '$lib/components/ui/command/index.js'
@@ -18,10 +22,6 @@
 	import { toast } from 'svelte-sonner'
 
 	import type { PageData } from './$types'
-	import AccordionItem from '$lib/components/ui/accordion/accordion-item.svelte'
-	import AccordionTrigger from '$lib/components/ui/accordion/accordion-trigger.svelte'
-	import { Accordion } from '$lib/components/ui/accordion'
-	import AccordionContent from '$lib/components/ui/accordion/accordion-content.svelte'
 
 	export let data: PageData
 	const { currencies, appSettings, adminUsers, instancePass } = data
@@ -36,8 +36,8 @@
 	let open = false
 
 	function setGeneratedSk() {
-		generatedNpub = '';
-		(document.querySelector('input[name="customInstanceSk"]') as HTMLInputElement).value = ''
+		generatedNpub = ''
+		;(document.querySelector('input[name="customInstanceSk"]') as HTMLInputElement).value = ''
 		const sk = generateSecretKey()
 		const newPk = getPublicKey(sk)
 
@@ -53,11 +53,10 @@
 		if (inputValue.startsWith('nsec')) {
 			const newPk = getPublicKey(generateSecretKey())
 			generatedNpub = nip19.npubEncode(newPk)
-			newInstanceNsec = inputValue;
-			(document.querySelector('input[name="instancePk"]') as HTMLInputElement).value = ''
+			newInstanceNsec = inputValue
+			;(document.querySelector('input[name="instancePk"]') as HTMLInputElement).value = ''
 		} else {
-			generatedNpub = '';
-			
+			generatedNpub = ''
 		}
 	}
 
@@ -144,9 +143,7 @@
 
 						<Accordion>
 							<AccordionItem value="advanced-options">
-								<AccordionTrigger>
-									Advanced Options
-								</AccordionTrigger>
+								<AccordionTrigger>Advanced Options</AccordionTrigger>
 								<AccordionContent>
 									<Label class="truncate font-bold">Instance nsec</Label>
 									<Input
