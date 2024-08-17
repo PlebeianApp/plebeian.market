@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { NDKUserProfile } from '@nostr-dev-kit/ndk'
 	import { truncateString } from '$lib/utils'
-	import { npubEncode } from 'nostr-tools/lib/types/nip19'
+	import { npubEncode } from 'nostr-tools/nip19'
 
 	import CAvatar from '../ui/custom-components/c-avatar.svelte'
 
