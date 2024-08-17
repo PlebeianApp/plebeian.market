@@ -18,8 +18,11 @@
 	import { toast } from 'svelte-sonner'
 
 	import type { PageData } from './$types'
+	import AccordionItem from '$lib/components/ui/accordion/accordion-item.svelte'
+	import AccordionTrigger from '$lib/components/ui/accordion/accordion-trigger.svelte'
+	import { Accordion } from '$lib/components/ui/accordion'
+	import AccordionContent from '$lib/components/ui/accordion/accordion-content.svelte'
 
-	// TODO Allow paste your own nsec (#220)
 	export let data: PageData
 	const { currencies, appSettings, adminUsers, instancePass } = data
 	let checked = true
@@ -33,6 +36,8 @@
 	let open = false
 
 	function setGeneratedSk() {
+		generatedNpub = '';
+		(document.querySelector('input[name="customInstanceSk"]') as HTMLInputElement).value = ''
 		const sk = generateSecretKey()
 		const newPk = getPublicKey(sk)
 
@@ -48,9 +53,11 @@
 		if (inputValue.startsWith('nsec')) {
 			const newPk = getPublicKey(generateSecretKey())
 			generatedNpub = nip19.npubEncode(newPk)
-			newInstanceNsec = inputValue
+			newInstanceNsec = inputValue;
+			(document.querySelector('input[name="instancePk"]') as HTMLInputElement).value = ''
 		} else {
-			generatedNpub = ''
+			generatedNpub = '';
+			
 		}
 	}
 
@@ -63,8 +70,8 @@
 			const processedData = processAppSettings(
 				{
 					...formObject,
-					instanceNpub: generatedNpub || newInstanceNpub,
-					instanceNsec: newInstanceNsec,
+					instancePk: generatedNpub || newInstanceNpub,
+					instanceSk: newInstanceNsec,
 					allowRegister: checked,
 					defaultCurrency: selectedCurrency.value,
 					logoUrl: logoUrl || undefined,
@@ -117,14 +124,14 @@
 					<Separator class=" my-2" />
 					<form on:submit|preventDefault={handleSubmit} class="max-w-2xl flex flex-col gap-3">
 						<h3>Identity</h3>
-						<Label class="truncate font-bold">Instance npub/nsec</Label>
-						<div class="flex flex-row gap-2">
+						<Label class="truncate font-bold">Instance npub</Label>
+						<div class="flex items-center gap-2">
 							<Input
-								required
+								required={!generatedNpub}
 								bind:value={newInstanceNpub}
 								class=" border-black border-2"
 								name="instancePk"
-								placeholder="instance npub or nsec"
+								placeholder="instance npub"
 								type="text"
 								on:input={handleNpubNsecInput}
 							/>
@@ -134,6 +141,24 @@
 								}}>Generate</Button
 							>
 						</div>
+
+						<Accordion>
+							<AccordionItem value="advanced-options">
+								<AccordionTrigger>
+									Advanced Options
+								</AccordionTrigger>
+								<AccordionContent>
+									<Label class="truncate font-bold">Instance nsec</Label>
+									<Input
+										class="border-black border-2"
+										placeholder="Paste your nsec here"
+										name="customInstanceSk"
+										type="text"
+										on:input={handleNpubNsecInput}
+									/>
+								</AccordionContent>
+							</AccordionItem>
+						</Accordion>
 
 						{#if newInstanceNsec && !generatedNpub}
 							<Label class="truncate font-bold">New nsec</Label>
