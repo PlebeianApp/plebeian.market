@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Chat from '$lib/components/comms/chat.svelte'
+	import Chat from '$lib/components/chat/chat.svelte'
 	import { Button } from '$lib/components/ui/button'
 	import { nav_back } from '$lib/utils'
 

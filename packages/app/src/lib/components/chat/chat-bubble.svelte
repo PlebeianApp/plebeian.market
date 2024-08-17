@@ -3,13 +3,13 @@
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
 
 	import CAvatar from '../ui/custom-components/c-avatar.svelte'
-	import { useDecryptedMessage } from './useDecryptMessage'
+	import { createDecryptedMessage } from './useDecryptMessage'
 
 	export let message: NDKEvent
 	export let selectedPubkey: string
 	export let isCurrentUser: boolean
 	let userProfileQuery = createUserByIdQuery(message.pubkey)
-	let decryptedContent = useDecryptedMessage(message, selectedPubkey)
+	let decryptedContent = createDecryptedMessage(message, selectedPubkey)
 
 	function formatMessage(content: string) {
 		const urlRegex = /(https?:\/\/[^\s]+)/g

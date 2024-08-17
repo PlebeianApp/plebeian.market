@@ -3,7 +3,7 @@ import { createQuery } from '@tanstack/svelte-query'
 import ndkStore from '$lib/stores/ndk'
 import { get } from 'svelte/store'
 
-export function useDecryptedMessage(message: NDKEvent, selectedPubkey: string) {
+export function createDecryptedMessage(message: NDKEvent, selectedPubkey: string) {
 	return createQuery({
 		queryKey: ['decryptedMessage', message.id, selectedPubkey],
 		queryFn: async () => {

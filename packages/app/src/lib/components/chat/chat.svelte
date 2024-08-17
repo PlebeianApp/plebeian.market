@@ -25,8 +25,8 @@
 	let messagesContainerRef: HTMLDivElement
 	let message = ''
 
-	let userProfileQuery = createUserByIdQuery(selectedPubkey)
-	let userRelays = createUserRelaysByIdQuery(selectedPubkey)
+	const userProfileQuery = createUserByIdQuery(selectedPubkey)
+	const userRelays = createUserRelaysByIdQuery(selectedPubkey)
 	const handleSend = async () => {
 		if (message.trim()) {
 			const recipient = $ndkStore.getUser({ pubkey: selectedPubkey })
