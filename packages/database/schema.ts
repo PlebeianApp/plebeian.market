@@ -413,9 +413,8 @@ export const invoices = sqliteTable('invoices', {
 	invoiceStatus: text('invoice_status', { enum: Object.values(INVOICE_STATUS) as NonEmptyArray<InvoiceStatus> })
 		.notNull()
 		.default('pending'),
-	paymentDetails: text('payment_details_id')
-		.notNull()
-		.references(() => paymentDetails.id),
+	paymentDetails: text('payment_details_id').references(() => paymentDetails.id),
+	concept: text('concept'),
 })
 
 // App Settings
