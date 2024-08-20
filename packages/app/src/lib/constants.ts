@@ -7,6 +7,10 @@ export const standardDisplayDateFormat = 'dd-MM-yyyy'
 export const KindAuctionProduct = 30020
 export const KindProducts: NDKKind = 30018 as const
 export const KindStalls: NDKKind = 30017 as const
+export const KindsRelays: NDKKind[] = [
+	3, 10002, 10006,
+	// 10007, 10050 as number
+]
 export const KindBids = 1021
 export const KindHttpAuth = 27235
 export const HEX_KEYS_REGEX = /^(?:[0-9a-fA-F]{64})$/

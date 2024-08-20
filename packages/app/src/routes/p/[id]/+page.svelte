@@ -2,10 +2,12 @@
 	import type { NormalizedData } from '$lib/nostrSubs/utils'
 	import type { DisplayProduct } from '$lib/server/products.service'
 	import type { RichStall } from '$lib/server/stalls.service'
+	import { goto } from '$app/navigation'
+	import { page } from '$app/stores'
 	import ProductItem from '$lib/components/product/product-item.svelte'
 	import StallItem from '$lib/components/stalls/stall-item.svelte'
-	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar'
 	import Button from '$lib/components/ui/button/button.svelte'
+	import CAvatar from '$lib/components/ui/custom-components/c-avatar.svelte'
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
 	import { createProductsByFilterQuery } from '$lib/fetch/products.queries'
 	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
@@ -65,7 +67,7 @@
 
 	const handleSendMessage = () => {
 		const user = $ndkStore.getUser({ pubkey: id })
-		// await user.sendMessage();
+		goto(`/dash/messages/${$page.params.id}`)
 	}
 </script>
 
@@ -82,12 +84,7 @@
 
 				<div class="grid lg:grid-cols-[auto_1fr_auto] grid-rows-[auto_1fr_auto] gap-4 mt-8 justify-between">
 					<div class="px-2">
-						<Avatar class="border-black border-2 h-24 w-24">
-							<AvatarImage src={image} alt="pfp" />
-							<AvatarFallback style={`background-color: #${id?.substring(0, 6)}`}>
-								<span class="i-tdesign-user-1 w-8 h-8" />
-							</AvatarFallback>
-						</Avatar>
+						<CAvatar pubkey={id} profile={$userProfileQuery.data} />
 					</div>
 					<div class="flex flex-col">
 						<h1 class="text-3xl">{name ?? `Unnamed user`}</h1>

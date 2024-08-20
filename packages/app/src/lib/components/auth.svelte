@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { NDKKind } from '@nostr-dev-kit/ndk'
 	import { Button } from '$lib/components/ui/button/index.js'
 	import { Checkbox } from '$lib/components/ui/checkbox/index.js'
 	import * as Dialog from '$lib/components/ui/dialog/index.js'
@@ -7,11 +8,12 @@
 	import { Separator } from '$lib/components/ui/separator'
 	import * as Tabs from '$lib/components/ui/tabs/index.js'
 	import { login } from '$lib/ndkLogin'
+	import { dmKind04Sub } from '$lib/nostrSubs/subs'
 	import ndkStore from '$lib/stores/ndk'
 	import { type BaseAccount } from '$lib/stores/session'
 	import { copyToClipboard } from '$lib/utils'
 	import { generateSecretKey } from 'nostr-tools'
-	import * as nip19 from 'nostr-tools/nip19'
+	import { nsecEncode } from 'nostr-tools/nip19'
 	import { toast } from 'svelte-sonner'
 
 	import Pattern from './Pattern.svelte'
@@ -19,15 +21,29 @@
 	let checked = false
 	let authDialogOpen = false
 	let createDialogOpen = false
-	let nsec: ReturnType<(typeof nip19)['nsecEncode']> | null = null
+	let nsec: ReturnType<typeof nsecEncode> | null = null
 
 	async function handleLogin(loginMethod: BaseAccount['type'], formData?: FormData, autoLogin?: boolean) {
-		;(await login(loginMethod, formData, autoLogin)) ? toast.success('Login sucess!') : toast.error('Login error!')
+		const loginResult = await login(loginMethod, formData, autoLogin)
+		if (loginResult) {
+			toast.success('Login sucess!')
+			setTimeout(() => {
+				if ($ndkStore.activeUser) {
+					dmKind04Sub.changeFilters([
+						{ kinds: [NDKKind.EncryptedDirectMessage], limit: 50, '#p': [$ndkStore.activeUser.pubkey] },
+						{ kinds: [NDKKind.EncryptedDirectMessage], limit: 50, authors: [$ndkStore.activeUser.pubkey] },
+					])
+					dmKind04Sub.ref()
+				}
+			}, 5)
+		} else {
+			toast.error('Login error!')
+		}
 	}
 
 	async function handleSignUp(formData: FormData) {
 		const key = generateSecretKey()
-		nsec = nip19.nsecEncode(key)
+		nsec = nsecEncode(key)
 		formData.append('key', nsec)
 		await handleLogin('NSEC', formData)
 		authDialogOpen = false

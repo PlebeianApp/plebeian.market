@@ -2,8 +2,8 @@ import { decodeNpub, isValidHexKey, isValidNip05, isValidNpub, processNip05 } fr
 
 import type { PageServerLoad } from './$types'
 
-export const load: PageServerLoad = async ({ params }): Promise<{ id: string }> => {
-	const { id: inputId } = params
+export const load: PageServerLoad = async ({ params }): Promise<{ userId: string }> => {
+	const { userId: inputId } = params
 
 	try {
 		let processedUserId = ''
@@ -16,9 +16,9 @@ export const load: PageServerLoad = async ({ params }): Promise<{ id: string }> 
 			processedUserId = inputId
 		}
 
-		return { id: processedUserId }
+		return { userId: processedUserId }
 	} catch (e) {
 		console.error('Error processing user data:', e)
-		return { id: '' }
+		return { userId: '' }
 	}
 }

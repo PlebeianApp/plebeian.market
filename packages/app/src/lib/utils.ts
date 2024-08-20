@@ -268,19 +268,18 @@ export function stringToHexColor(input: string): string {
 	return color
 }
 
-export async function resolveQuery<T>(queryFn: () => CreateQueryResult<T, Error>): Promise<T> {
+export async function resolveQuery<T>(queryFn: () => CreateQueryResult<T, Error>, maxRetries?: number, retryDelay?: number): Promise<T> {
 	const queryPromise = queryFn()
 	let retryCount = 0
-	const maxRetries = 10
 
 	return new Promise((resolve, reject) => {
 		const check = async () => {
 			const currentQuery = get(queryPromise)
 			if (currentQuery.isFetched && currentQuery.data !== undefined) {
 				resolve(currentQuery.data)
-			} else if (retryCount < maxRetries) {
+			} else if (retryCount < (maxRetries ?? 10)) {
 				retryCount++
-				setTimeout(check, 250)
+				setTimeout(check, retryDelay ?? 250)
 			} else {
 				reject(new Error('Max retries exceeded'))
 			}

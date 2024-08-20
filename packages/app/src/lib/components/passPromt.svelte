@@ -14,10 +14,8 @@
 	import { toast } from 'svelte-sonner'
 
 	import Pattern from './Pattern.svelte'
-	import AvatarFallback from './ui/avatar/avatar-fallback.svelte'
-	import AvatarImage from './ui/avatar/avatar-image.svelte'
-	import Avatar from './ui/avatar/avatar.svelte'
 	import Checkbox from './ui/checkbox/checkbox.svelte'
+	import CAvatar from './ui/custom-components/c-avatar.svelte'
 	import Label from './ui/label/label.svelte'
 
 	export let dialogOpen = false
@@ -65,12 +63,7 @@
 						</div>
 					</div>
 				{:else if $userQuery?.data}
-					<Avatar>
-						<AvatarImage src={$userQuery.data?.image} alt="pfp" />
-						<AvatarFallback style={`background-color: #${String($userQuery.data?.userId).substring(0, 6)}`}
-							><span class="i-tdesign-user-1 w-8 h-8" /></AvatarFallback
-						>
-					</Avatar>
+					<CAvatar pubkey={accointInfo.hexPubKey} profile={$userQuery.data} />
 					<section class="flex flex-col">
 						<span class="font-bold">{$userQuery.data?.name ?? $userQuery.data?.displayName ?? ''}</span>
 						<span>{npubEncode(accointInfo.hexPubKey).substring(0, 16)}...</span>

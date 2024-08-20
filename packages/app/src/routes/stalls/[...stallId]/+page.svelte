@@ -2,9 +2,9 @@
 	import type { Selected } from 'bits-ui'
 	import ProductItem from '$lib/components/product/product-item.svelte'
 	import * as Accordion from '$lib/components/ui/accordion'
-	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar'
 	import Badge from '$lib/components/ui/badge/badge.svelte'
 	import { Button } from '$lib/components/ui/button'
+	import CAvatar from '$lib/components/ui/custom-components/c-avatar.svelte'
 	import * as Select from '$lib/components/ui/select'
 	import Skeleton from '$lib/components/ui/skeleton/skeleton.svelte'
 	import { createProductsByFilterQuery } from '$lib/fetch/products.queries'
@@ -83,21 +83,12 @@
 				<section class="w-fit">
 					{#if $userProfileQuery.data?.name || $userProfileQuery.data?.displayName}
 						<a href={`/p/${$userProfileQuery.data?.nip05 ? $userProfileQuery.data?.nip05 : user.id}`} class="flex flex-col items-center">
-							<Avatar>
-								<AvatarImage src={$userProfileQuery.data?.image} alt="@shadcn" />
-								<AvatarFallback style={`background-color: #${user.id?.substring(0, 6)}`}
-									><span class="i-tdesign-user-1 w-8 h-8" /></AvatarFallback
-								>
-							</Avatar>
+							<CAvatar pubkey={String(user.id)} profile={$userProfileQuery.data} />
 							<span>{truncateText(String($userProfileQuery.data?.name || $userProfileQuery.data?.displayName), 15)}</span>
 						</a>
 					{:else if $userProfileQuery.data?.id}
 						<a href={`/p/${$userProfileQuery.data?.id}`} class="flex flex-col items-center">
-							<Avatar>
-								<AvatarFallback style={`background-color: #${String($userProfileQuery.data?.id).substring(0, 6)}`}
-									><span class="i-tdesign-user-1 w-8 h-8" /></AvatarFallback
-								>
-							</Avatar>
+							<CAvatar pubkey={String(user.id)} profile={$userProfileQuery.data} />
 							<span>Unnamed user</span>
 						</a>
 					{:else}

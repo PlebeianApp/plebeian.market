@@ -1,5 +1,12 @@
 import type { ZodError } from 'zod'
+import { deserialize, NDKEvent } from '@nostr-dev-kit/ndk'
+import { db as ndkCache } from '@nostr-dev-kit/ndk-cache-dexie'
+import { createQuery } from '@tanstack/svelte-query'
+import { queryClient } from '$lib/fetch/client'
 import Dexie from 'dexie'
+import { get } from 'svelte/store'
+
+import ndkStore from './ndk'
 
 class SessionDexie extends Dexie {
 	accounts: Dexie.Table<Account, string>
@@ -8,7 +15,7 @@ class SessionDexie extends Dexie {
 	constructor() {
 		super('plebeian.session')
 		this.version(2).stores({
-			accounts: 'hexPubKey, type, lastLogged, relays, cSk',
+			accounts: 'hexPubKey, type, lastLogged, cSk',
 			cachedEvents: 'id, createdAt, insertedAt',
 		})
 		this.accounts = this.table('accounts')
@@ -22,7 +29,6 @@ export type BaseAccount = {
 	hexPubKey: string
 	type: 'NIP07' | 'NSEC' | 'NIP46'
 	lastLogged: number
-	relays: string[]
 }
 
 type Nip07Account = BaseAccount & {
@@ -131,4 +137,39 @@ export function cleanupCachedEvents(maxEntries: number = 1000, maxAgeMs: number 
 			console.error('Error during cache cleanup:', error)
 		}
 	})
+}
+
+// NDK Cache handler
+interface EventQueryParams {
+	userId: string
+	kinds: number[]
+}
+
+export function useCachedEventsByUserIdAndKind({ userId, kinds }: EventQueryParams) {
+	return createQuery<Set<NDKEvent>, Error>(
+		{
+			queryKey: ['cachedEvents', userId, ...kinds],
+			queryFn: async (): Promise<Set<NDKEvent>> => {
+				const events = await ndkCache.events
+					.where('kind')
+					.anyOf(kinds)
+					.filter((event) => event.pubkey === userId)
+					.reverse()
+					.toArray()
+
+				const latestEventMap = new Map<number, NDKEvent>()
+
+				for (const event of events) {
+					if (!latestEventMap.has(event.kind)) {
+						const ndkEvent = new NDKEvent(get(ndkStore), deserialize(event.event))
+						latestEventMap.set(event.kind, ndkEvent)
+					}
+				}
+
+				return new Set(latestEventMap.values())
+			},
+			staleTime: 1000 * 60 * 10,
+		},
+		queryClient,
+	)
 }

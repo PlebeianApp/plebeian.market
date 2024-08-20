@@ -1,10 +1,10 @@
-import type { NDKUserProfile } from '@nostr-dev-kit/ndk'
+import type { NDKRelaySet, NDKUserProfile } from '@nostr-dev-kit/ndk'
 import type { UsersFilter } from '$lib/schema'
 import type { RichUser } from '$lib/server/users.service'
 import { createQuery } from '@tanstack/svelte-query'
 import { invalidateAll } from '$app/navigation'
 import { aggregatorAddUser, checkIfOldProfile } from '$lib/nostrSubs/data-aggregator'
-import { fetchUserData } from '$lib/nostrSubs/utils'
+import { fetchUserData, fetchUserRelays } from '$lib/nostrSubs/utils'
 import { usersFilterSchema } from '$lib/schema'
 import ndkStore from '$lib/stores/ndk'
 import { derived } from 'svelte/store'
@@ -67,6 +67,23 @@ export const createUserByIdQuery = (id: string) =>
 				}
 			},
 			enabled: !!id,
+			staleTime: 1000 * 60 * 30,
+		},
+		queryClient,
+	)
+
+export const createUserRelaysByIdQuery = (id: string) =>
+	createQuery(
+		{
+			queryKey: ['usersRelays', id],
+			queryFn: async () => {
+				const { userRelays } = await fetchUserRelays(id)
+				if (userRelays) {
+					return userRelays
+				}
+			},
+			enabled: !!id,
+			staleTime: 1000 * 60 * 30,
 		},
 		queryClient,
 	)

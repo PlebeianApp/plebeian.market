@@ -4,7 +4,7 @@ import type { RichShippingInfo } from '$lib/server/shipping.service'
 import type { RichStall } from '$lib/server/stalls.service'
 import { NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk'
 import { invalidateAll } from '$app/navigation'
-import { KindProducts, KindStalls, standardDisplayDateFormat } from '$lib/constants'
+import { KindProducts, KindsRelays, KindStalls, standardDisplayDateFormat } from '$lib/constants'
 import { createProductsFromNostrMutation } from '$lib/fetch/products.mutations'
 import { createStallFromNostrEvent } from '$lib/fetch/stalls.mutations'
 import { userFromNostr } from '$lib/fetch/users.mutations'
@@ -73,6 +73,38 @@ export async function fetchUserData(
 	const userProfile = await ndkUser.fetchProfile({ cacheUsage: subCacheUsage ?? NDKSubscriptionCacheUsage.ONLY_RELAY })
 
 	return { userProfile }
+}
+
+export async function fetchUserRelays(
+	userId: string,
+	subCacheUsage?: NDKSubscriptionCacheUsage,
+): Promise<{
+	userRelays: Set<NDKEvent>
+}> {
+	const $ndkStore = get(ndkStore)
+
+	const userRelays = await $ndkStore.fetchEvents(
+		{
+			authors: [userId],
+			kinds: KindsRelays,
+		},
+		{
+			cacheUsage: subCacheUsage ?? NDKSubscriptionCacheUsage.PARALLEL,
+		},
+	)
+	if (subCacheUsage == NDKSubscriptionCacheUsage.ONLY_CACHE && !userRelays) {
+		const userRelays = await $ndkStore.fetchEvents(
+			{
+				authors: [userId],
+				kinds: KindsRelays,
+			},
+			{
+				cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY,
+			},
+		)
+		return { userRelays }
+	}
+	return { userRelays }
 }
 
 export async function fetchUserProductData(

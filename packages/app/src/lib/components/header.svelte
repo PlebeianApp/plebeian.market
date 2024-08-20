@@ -3,7 +3,6 @@
 	import { page } from '$app/stores'
 	import Auth from '$lib/components/auth.svelte'
 	import PassPromt from '$lib/components/passPromt.svelte'
-	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar'
 	import { Button } from '$lib/components/ui/button/index.js'
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
 	import { login, logout } from '$lib/ndkLogin'
@@ -13,6 +12,7 @@
 
 	import type { PageData } from '../../routes/$types'
 	import CartWithState from './cart/cart-with-state.svelte'
+	import CAvatar from './ui/custom-components/c-avatar.svelte'
 
 	$: ({ appSettings } = $page.data as PageData)
 
@@ -52,7 +52,9 @@
 			</div>
 		</section>
 		<div class="flex items-center gap-4">
-			<Button class="hidden sm:flex p-2 bg-[var(--neo-yellow)]" href="/"><span class="i-tdesign-mail text-black w-6 h-6"></span></Button>
+			<Button class="hidden sm:flex p-2 bg-[var(--neo-yellow)]" href="/dash/messages"
+				><span class="i-tdesign-mail text-black w-6 h-6"></span></Button
+			>
 			<CartWithState />
 			<DropdownMenu.Root>
 				<DropdownMenu.Trigger id="menuButton">
@@ -94,12 +96,7 @@
 				</DropdownMenu.Content>
 			</DropdownMenu.Root>
 			{#if $ndkStore.activeUser}
-				<Avatar>
-					<AvatarImage src={$ndkStore.activeUser.profile?.image} alt="pfp" />
-					<AvatarFallback style={`background-color: #${$ndkStore.activeUser?.pubkey?.substring(0, 6)}`}
-						><span class="i-tdesign-user-1 w-8 h-8" /></AvatarFallback
-					>
-				</Avatar>
+				<CAvatar pubkey={$ndkStore.activeUser.pubkey} profile={$ndkStore.activeUser.profile} />
 			{/if}
 		</div>
 	</div>
