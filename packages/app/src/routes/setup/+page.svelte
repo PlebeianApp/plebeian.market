@@ -27,6 +27,7 @@
 	const { currencies, appSettings, adminUsers, instancePass } = data
 	let checked = true
 	let selectedCurrency: Selected<string> = { value: currencies[0], label: currencies[0] }
+	let manualNsec = false
 	let newInstanceNsec = ''
 	let newInstanceNpub = ''
 	let adminsList: string[] = adminUsers.map((user) => npubEncode(user))
@@ -36,7 +37,7 @@
 	let open = false
 
 	function setGeneratedSk() {
-		generatedNpub = ''
+		manualNsec = false
 		;(document.querySelector('input[name="customInstanceSk"]') as HTMLInputElement).value = ''
 		const sk = generateSecretKey()
 		const newPk = getPublicKey(sk)
@@ -45,18 +46,17 @@
 		newInstanceNpub = nip19.npubEncode(newPk)
 	}
 
-	let generatedNpub: string = ''
-
 	function handleNpubNsecInput(event: Event) {
 		const inputValue = (event.target as HTMLInputElement).value
 
 		if (inputValue.startsWith('nsec')) {
+			manualNsec = true
 			const newPk = getPublicKey(generateSecretKey())
-			generatedNpub = nip19.npubEncode(newPk)
+			newInstanceNpub = nip19.npubEncode(newPk)
 			newInstanceNsec = inputValue
 			;(document.querySelector('input[name="instancePk"]') as HTMLInputElement).value = ''
 		} else {
-			generatedNpub = ''
+			manualNsec = false
 		}
 	}
 
@@ -69,7 +69,7 @@
 			const processedData = processAppSettings(
 				{
 					...formObject,
-					instancePk: generatedNpub || newInstanceNpub,
+					instancePk: newInstanceNpub,
 					instanceSk: newInstanceNsec,
 					allowRegister: checked,
 					defaultCurrency: selectedCurrency.value,
@@ -126,7 +126,6 @@
 						<Label class="truncate font-bold">Instance npub</Label>
 						<div class="flex items-center gap-2">
 							<Input
-								required={!generatedNpub}
 								bind:value={newInstanceNpub}
 								class=" border-black border-2"
 								name="instancePk"
@@ -157,25 +156,13 @@
 							</AccordionItem>
 						</Accordion>
 
-						{#if newInstanceNsec && !generatedNpub}
+						{#if newInstanceNsec && !manualNsec}
 							<Label class="truncate font-bold">New nsec</Label>
 							<div class="flex flex-row gap-2">
 								<Input class="border-black border-2" value={newInstanceNsec} readonly name="instanceSk" />
 								<Button
 									on:click={() => {
 										copyToClipboard(newInstanceNsec)
-									}}><span class="i-mingcute-clipboard-fill text-black w-6 h-6"></span></Button
-								>
-							</div>
-						{/if}
-
-						{#if generatedNpub && newInstanceNsec.startsWith('nsec')}
-							<Label class="truncate font-bold">Generated npub</Label>
-							<div class="flex flex-row gap-2">
-								<Input class="border-black border-2" value={generatedNpub} readonly />
-								<Button
-									on:click={() => {
-										copyToClipboard(generatedNpub)
 									}}><span class="i-mingcute-clipboard-fill text-black w-6 h-6"></span></Button
 								>
 							</div>
