@@ -38,7 +38,6 @@
 
 	function setGeneratedSk() {
 		manualNsec = false
-		;(document.querySelector('input[name="customInstanceSk"]') as HTMLInputElement).value = ''
 		const sk = generateSecretKey()
 		const newPk = getPublicKey(sk)
 
@@ -50,11 +49,20 @@
 		const inputValue = (event.target as HTMLInputElement).value
 
 		if (inputValue.startsWith('nsec')) {
-			manualNsec = true
-			const newPk = getPublicKey(generateSecretKey())
-			newInstanceNpub = nip19.npubEncode(newPk)
-			newInstanceNsec = inputValue
-			;(document.querySelector('input[name="instancePk"]') as HTMLInputElement).value = ''
+			try {
+				const { type, data } = nip19.decode(inputValue)
+				if (type === 'nsec') {
+					manualNsec = true
+					newInstanceNsec = inputValue
+					const newPk = getPublicKey(data as Uint8Array)
+					newInstanceNpub = nip19.npubEncode(newPk)
+				} else {
+					throw new Error('Invalid nsec')
+				}
+			} catch (error) {
+				console.error('Invalid nsec:', error)
+				toast.error('Invalid nsec provided')
+			}
 		} else {
 			manualNsec = false
 		}
@@ -127,17 +135,13 @@
 						<div class="flex items-center gap-2">
 							<Input
 								bind:value={newInstanceNpub}
-								class=" border-black border-2"
+								class="border-black border-2"
 								name="instancePk"
 								placeholder="instance npub"
 								type="text"
-								on:input={handleNpubNsecInput}
+								readonly
 							/>
-							<Button
-								on:click={() => {
-									setGeneratedSk()
-								}}>Generate</Button
-							>
+							<Button on:click={setGeneratedSk}>Generate</Button>
 						</div>
 
 						<Accordion>
@@ -151,20 +155,19 @@
 										name="customInstanceSk"
 										type="text"
 										on:input={handleNpubNsecInput}
+										bind:value={newInstanceNsec}
 									/>
 								</AccordionContent>
 							</AccordionItem>
 						</Accordion>
 
-						{#if newInstanceNsec && !manualNsec}
+						{#if newInstanceNsec}
 							<Label class="truncate font-bold">New nsec</Label>
 							<div class="flex flex-row gap-2">
 								<Input class="border-black border-2" value={newInstanceNsec} readonly name="instanceSk" />
-								<Button
-									on:click={() => {
-										copyToClipboard(newInstanceNsec)
-									}}><span class="i-mingcute-clipboard-fill text-black w-6 h-6"></span></Button
-								>
+								<Button on:click={() => copyToClipboard(newInstanceNsec)}>
+									<span class="i-mingcute-clipboard-fill text-black w-6 h-6"></span>
+								</Button>
 							</div>
 						{/if}
 
