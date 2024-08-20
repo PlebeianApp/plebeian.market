@@ -88,7 +88,8 @@ CREATE TABLE `invoices` (
 	`order_id` text NOT NULL,
 	`total_amount` numeric NOT NULL,
 	`invoice_status` text DEFAULT 'pending' NOT NULL,
-	`payment_details_id` text NOT NULL,
+	`payment_details_id` text,
+	`concept` text,
 	FOREIGN KEY (`order_id`) REFERENCES `orders`(`id`) ON UPDATE cascade ON DELETE cascade,
 	FOREIGN KEY (`payment_details_id`) REFERENCES `payment_details`(`id`) ON UPDATE no action ON DELETE no action
 );
