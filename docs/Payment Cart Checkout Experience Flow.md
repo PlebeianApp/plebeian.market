@@ -1,7 +1,12 @@
-## Step by step high level checkout experience flow
+## checkout experience flow
 
 > Prototype: [figma](https://www.figma.com/design/qddIrt9LUqwr3HVPJvL19K/Untitled?node-id=0-1&t=ZoOKfLxJ5y36dzBE-1)
 
+> Flow diagram: [figmaJam](https://www.figma.com/board/8G14J3u7waBkBUnxqfd2GS/Checkout-flow-diagram?node-id=0-1&t=n3a6CdQrPJft1mzU-1)
+
+> Libs:  [js-lightning-tools](https://github.com/getAlby/js-lightning-tools), [scure-bip32](https://github.com/paulmillr/scure-bip32) to derive new addresses from xpub, NDK to manage NWC strings [docs](https://github.com/nostr-dev-kit/ndk/tree/master/ndk/src/nwc)
+
+### High level overview
 **Step 1: Cart Summary**  
   
 * A user fills their cart with products from multiple merchants.  
@@ -23,23 +28,25 @@
   
 * Once the user has reviewed their orders, they can initiate communication with each merchant.  
 * Payment Options:  
-	• If the merchant has valid payment details, the user can pay directly.  
+	• If the merchant has valid payment details(*), the user can pay directly.  
 	• If the merchant lacks valid payment details, direct payment is not possible.  
 	• Even if the merchant has valid payment details, the user can choose not to pay immediately and instead contact the merchant to ask questions or clarify details.  
-* After completing checkout, a new direct message is sent from the user to the merchant.  
+* After completing payment/order placement, a new direct message is sent from the user to the merchant.
+
+> (*) Valid payment details are those explicitly set by the merchant, excluding profile payment details in kind:0. Merchants have the option to allow the platform to request invoices using their profile payment details to set them as a valid payment details.
   
 **Step 5: Order Management**  
   
 * Order Entry Creation:  
 	• If both parties are registered and non-paranoid users on the platform, a new entry is created in the orders table with the order details.  
-	• The order status is set to "pending" if not paid, or "paid" if payment is successful.  
+	• The order status will be set to "pending" if payment has not been made, "partiallyPaid" if not all required payments (order and v4v) have been made, or "paid" if all payments have been made successfully. 
 * Exceptions:  
 	• If both users are unregistered or paranoid, no order entry is created.  
-	• However, if the seller are registered and non-paranoid, but the buyer is paranoid or non-registered, an order entry is still created, in case of paranoid user the `buyer_user_id` public key can be encrypted using the merchant's key.  
+	• However, if the seller is registered independently of `trust_lvl`, but the buyer is paranoid or unregistered, an order will still be created; in the case of a paranoid user, the `buyer_user_id` public key can be encrypted using the merchant's key.  
 * Order Management:  
 	• If an order entry is created:  
 	- The user and merchant can then view communication and order details/status in their dashboard.  
-	• If no order entry is created, users can still maintain their communication in direct messages, but there is no order entry to manage.  
+	• If no order entry is created, users can still maintain their communication in direct messages, but there is no order entry to manage. We will improve this in further development.
   
 **Step 6: Merchant Order Management**  
   
