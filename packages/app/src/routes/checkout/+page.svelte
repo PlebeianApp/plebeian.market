@@ -21,7 +21,9 @@
 			},
 			{
 				component: Pay,
-				props: {},
+				props: {
+					merchant: user,
+				},
 			},
 			{
 				component: Success,

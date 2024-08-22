@@ -16,11 +16,11 @@ export const GET: RequestHandler = async ({ request, url: { searchParams } }) =>
 		error(400, 'Invalid request')
 	}
 
-	try {
-		await authorize(request, userId, 'GET')
-	} catch (e) {
-		error(401, 'Unauthorized')
-	}
+	// try {
+	// 	await authorize(request, userId, 'GET')
+	// } catch (e) {
+	// 	error(401, 'Unauthorized')
+	// }
 
 	const paymentDetails = await getPaymentDetailsByUserId(userId)
 	return json(paymentDetails)
