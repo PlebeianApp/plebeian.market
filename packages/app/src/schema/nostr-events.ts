@@ -115,3 +115,20 @@ export const userEventSchema = z.object({
 	displayName: z.string().optional().nullable(),
 	image: z.string().optional().nullable(),
 })
+
+export const orderEventSchema = z.object({
+	id: z.string(),
+	sellerUserId: z.string(),
+	buyerUserId: z.string(),
+	shippingId: z.string().optional(),
+	stallId: z.string(),
+	address: z.string(),
+	zip: z.string(),
+	city: z.string(),
+	country: z.string(),
+	region: z.string(),
+	contactName: z.string(),
+	contactPhone: z.string(),
+	contactEmail: z.string(),
+	observations: z.string(),
+})
