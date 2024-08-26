@@ -6,6 +6,7 @@
 	$: orderList = createOrdersQuery({ userId: $ndkStore.activeUser?.pubkey, role: 'seller' })
 </script>
 
+<!-- {#key $orderList.data} -->
 {#if $orderList.isLoading}
 	<div>Loading...</div>
 {:else if $orderList.data && $orderList.data.orders.length > 0}
@@ -16,3 +17,4 @@
 {:else}
 	<div>You have no orders yet.</div>
 {/if}
+<!-- {/key} -->

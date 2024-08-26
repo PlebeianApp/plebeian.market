@@ -13,7 +13,7 @@
 	{:else if $stallQuery.data}
 		<a href={`/stalls/${stallId}`} class="flex flex-row gap-1">
 			<span class="i-tdesign-store w-6 h-6" />
-			<span>{$stallQuery.data.name}</span>
+			<span>{$stallQuery.data.stall?.name}</span>
 		</a>
 	{:else}
 		<div>Stall not found</div>

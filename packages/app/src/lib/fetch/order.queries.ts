@@ -28,7 +28,7 @@ export const createOrderQuery = (orderId: string) =>
 export const createOrdersQuery = (filter: Partial<OrdersFilter> = ordersFilterSchema.parse({})) =>
 	createQuery<{ total: number; orders: DisplayOrder[] }>(
 		{
-			queryKey: ['orders', filter],
+			queryKey: ['orders', ...Object.values(filter)],
 			queryFn: async () => {
 				return await createRequest('GET /api/v1/orders', {
 					auth: true,
