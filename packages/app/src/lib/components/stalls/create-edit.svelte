@@ -180,7 +180,7 @@
 	<Collapsible.Root>
 		<Collapsible.Trigger asChild let:builder>
 			<Button builders={[builder]} variant="ghost" size="sm" class="w-full p-0">
-				<Label for="userImage" class="font-bold">Header image (Optional)</Label>
+				<Label for="userImage" class="font-bold">Header image (Recommended)</Label>
 				<span class="i-ion-chevron-expand" />
 			</Button>
 		</Collapsible.Trigger>

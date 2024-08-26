@@ -159,7 +159,7 @@
 				</div>
 
 				<div class="grid w-full items-center gap-1.5">
-					<Label for="description" class="font-bold">Description (Optional)</Label>
+					<Label for="description" class="font-bold">Description (Recommended)</Label>
 					<Textarea value={product?.description ?? ''} class="border-2 border-black" placeholder="Description" name="description" />
 				</div>
 
