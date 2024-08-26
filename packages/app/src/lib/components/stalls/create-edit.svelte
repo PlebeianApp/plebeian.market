@@ -96,6 +96,7 @@
 	}
 
 	async function create(event: Event) {
+		isLoading = true
 		event.preventDefault()
 		if (!$ndkStore.activeUser?.pubkey) return
 
@@ -139,6 +140,7 @@
 			console.error('Error creating or updating stall:', error)
 			dispatch('error', error)
 		}
+		isLoading = false
 	}
 	onMount(() => {
 		shippingMethods =
@@ -363,5 +365,5 @@
 		<Button on:click={() => addShipping()} variant="outline" class="font-bold ml-auto">Add Shipping Method</Button>
 	</div>
 
-	<Button id="stall-save-button" type="submit" class="w-full font-bold">Save</Button>
+	<Button id="stall-save-button" type="submit" disabled={isLoading} class="w-full font-bold">Save</Button>
 </form>
