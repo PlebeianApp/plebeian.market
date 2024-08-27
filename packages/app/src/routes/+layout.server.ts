@@ -34,7 +34,7 @@ const fetchInitialPrices = async () => {
 	// Fetch new data and update the cache
 	const data = [
 		...(await Promise.all(CURRENCIES.slice(2).map(async (c) => [c, await btcToCurrency(c)] as const))),
-		['SATS', 1e+8],
+		['SATS', 1e8],
 		['BTC', 1],
 	]
 
