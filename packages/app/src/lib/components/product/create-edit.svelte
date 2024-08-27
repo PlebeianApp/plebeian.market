@@ -15,7 +15,7 @@
 	import { createProductMutation, editProductMutation } from '$lib/fetch/products.mutations'
 	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
 	import ndkStore from '$lib/stores/ndk'
-	import { onMount } from 'svelte'
+	import { onMount, createEventDispatcher } from 'svelte'
 	import { toast } from 'svelte-sonner'
 
 	import type { ProductImage } from '@plebeian/database'
@@ -25,9 +25,11 @@
 	import Separator from '../ui/separator/separator.svelte'
 	import MultiImageEdit from './multi-image-edit.svelte'
 
+	const dispatch = createEventDispatcher<{ success: unknown; error: unknown }>()
 	export let product: Partial<DisplayProduct> | null = null
 	export let forStall: StallCoordinatesType | null = null
 
+	let isLoading = false
 	let stall: Partial<RichStall> | null = null
 	let categories: Category[] = []
 	let images: Partial<ProductImage>[] = []
@@ -87,6 +89,7 @@
 	}
 	async function handleSubmit(sEvent: SubmitEvent, stall: Partial<RichStall> | null) {
 		if (!stall) return
+		isLoading = true
 
 		try {
 			const shippingData = currentShippings
@@ -104,9 +107,12 @@
 
 			toast.success(`Product ${product ? 'updated' : 'created'}!`)
 			queryClient.invalidateQueries({ queryKey: ['products', $ndkStore.activeUser?.pubkey] })
+			dispatch('success', null)
 		} catch (error) {
 			toast.error(`Failed to ${product ? 'update' : 'create'} product: ${error instanceof Error ? error.message : String(error)}`)
+			dispatch('error', error)
 		}
+		isLoading = false
 	}
 	onMount(() => {
 		if (product?.categories?.length) {
@@ -317,7 +323,7 @@
 				</div>
 			</Tabs.Content>
 
-			<Button type="submit" class="w-full font-bold my-4">Save</Button>
+			<Button disabled={isLoading} type="submit" class="w-full font-bold my-4">Save</Button>
 		</Tabs.Root>
 	</form>
 {/if}
