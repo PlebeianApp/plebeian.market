@@ -97,24 +97,12 @@
 				}))
 
 			if (product) {
-				const updatedProduct = await $editProductMutation.mutateAsync([
-					sEvent,
-					product,
-					sortedImages,
-					shippingData,
-					categories.filter((c) => c.checked),
-				] as const)
-				if (updatedProduct) {
-					toast.success('Product updated!')
-				}
+				await $editProductMutation.mutateAsync([sEvent, product, sortedImages, shippingData, categories.filter((c) => c.checked)] as const)
 			} else {
-				const newProduct = await $createProductMutation.mutateAsync([sEvent, stall, sortedImages, shippingData, categories] as const)
-				if (newProduct) {
-					product = newProduct[0]
-					toast.success('Product created!')
-				}
+				await $createProductMutation.mutateAsync([sEvent, stall, sortedImages, shippingData, categories] as const)
 			}
 
+			toast.success(`Product ${product ? 'updated' : 'created'}!`)
 			queryClient.invalidateQueries({ queryKey: ['products', $ndkStore.activeUser?.pubkey] })
 		} catch (error) {
 			toast.error(`Failed to ${product ? 'update' : 'create'} product: ${error instanceof Error ? error.message : String(error)}`)
