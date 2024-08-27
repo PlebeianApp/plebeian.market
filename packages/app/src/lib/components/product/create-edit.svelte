@@ -15,7 +15,7 @@
 	import { createProductMutation, editProductMutation } from '$lib/fetch/products.mutations'
 	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
 	import ndkStore from '$lib/stores/ndk'
-	import { onMount, createEventDispatcher } from 'svelte'
+	import { createEventDispatcher, onMount } from 'svelte'
 	import { toast } from 'svelte-sonner'
 
 	import type { ProductImage } from '@plebeian/database'
