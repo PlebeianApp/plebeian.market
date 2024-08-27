@@ -88,10 +88,10 @@ CREATE TABLE `invoices` (
 	`order_id` text NOT NULL,
 	`total_amount` numeric NOT NULL,
 	`invoice_status` text DEFAULT 'pending' NOT NULL,
-	`payment_details_id` text,
-	`concept` text,
+	`payment_details_id` text NOT NULL,
+	`proof` text,
 	FOREIGN KEY (`order_id`) REFERENCES `orders`(`id`) ON UPDATE cascade ON DELETE cascade,
-	FOREIGN KEY (`payment_details_id`) REFERENCES `payment_details`(`id`) ON UPDATE no action ON DELETE no action
+	FOREIGN KEY (`payment_details_id`) REFERENCES `payment_details`(`id`) ON UPDATE cascade ON DELETE cascade
 );
 --> statement-breakpoint
 CREATE TABLE `meta_types` (

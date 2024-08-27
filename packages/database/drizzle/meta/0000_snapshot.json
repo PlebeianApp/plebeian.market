@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "1ecd47c4-f2d5-4008-87eb-55d8b9e2ffee",
+  "id": "82f76aca-26e3-497f-ad5e-1a4a98ea081c",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "app_settings": {
@@ -644,11 +644,11 @@
           "name": "payment_details_id",
           "type": "text",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false
         },
-        "concept": {
-          "name": "concept",
+        "proof": {
+          "name": "proof",
           "type": "text",
           "primaryKey": false,
           "notNull": false,
@@ -680,8 +680,8 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
         }
       },
       "compositePrimaryKeys": {},
