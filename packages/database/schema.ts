@@ -413,8 +413,10 @@ export const invoices = sqliteTable('invoices', {
 	invoiceStatus: text('invoice_status', { enum: Object.values(INVOICE_STATUS) as NonEmptyArray<InvoiceStatus> })
 		.notNull()
 		.default('pending'),
-	paymentDetails: text('payment_details_id').references(() => paymentDetails.id),
-	concept: text('concept'),
+	paymentDetails: text('payment_details_id')
+		.notNull()
+		.references(() => paymentDetails.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
+	proof: text('proof'),
 })
 
 // App Settings
