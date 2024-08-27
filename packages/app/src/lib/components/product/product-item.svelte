@@ -28,7 +28,7 @@
 	let imageLoadError = false
 </script>
 
-<Card.Root class="relative grid grid-rows-[1fr_auto] border-2 border-black bg-transparent text-black group">
+<Card.Root class="relative grid grid-rows-[1fr_auto] border-2 border-black bg-transparent text-black group min-w-44">
 	{#if images?.length && !imageLoadError}
 		{@const mainImage = images.find((img) => img.imageOrder === 0) || images[0]}
 		<div class="relative flex items-center justify-center p-2">
