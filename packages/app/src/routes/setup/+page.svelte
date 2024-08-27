@@ -2,6 +2,10 @@
 	import type { Selected } from 'bits-ui'
 	import { goto } from '$app/navigation'
 	import { processAppSettings, submitAppSettings } from '$lib/appSettings'
+	import { Accordion } from '$lib/components/ui/accordion'
+	import AccordionContent from '$lib/components/ui/accordion/accordion-content.svelte'
+	import AccordionItem from '$lib/components/ui/accordion/accordion-item.svelte'
+	import AccordionTrigger from '$lib/components/ui/accordion/accordion-trigger.svelte'
 	import Button from '$lib/components/ui/button/button.svelte'
 	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte'
 	import * as Command from '$lib/components/ui/command/index.js'
@@ -19,11 +23,11 @@
 
 	import type { PageData } from './$types'
 
-	// TODO Allow paste your own nsec (#220)
 	export let data: PageData
 	const { currencies, appSettings, adminUsers, instancePass } = data
 	let checked = true
 	let selectedCurrency: Selected<string> = { value: currencies[0], label: currencies[0] }
+	let manualNsec = false
 	let newInstanceNsec = ''
 	let newInstanceNpub = ''
 	let adminsList: string[] = adminUsers.map((user) => npubEncode(user))
@@ -33,11 +37,35 @@
 	let open = false
 
 	function setGeneratedSk() {
+		manualNsec = false
 		const sk = generateSecretKey()
 		const newPk = getPublicKey(sk)
 
 		newInstanceNsec = nip19.nsecEncode(sk)
 		newInstanceNpub = nip19.npubEncode(newPk)
+	}
+
+	function handleNpubNsecInput(event: Event) {
+		const inputValue = (event.target as HTMLInputElement).value
+
+		if (inputValue.startsWith('nsec')) {
+			try {
+				const { type, data } = nip19.decode(inputValue)
+				if (type === 'nsec') {
+					manualNsec = true
+					newInstanceNsec = inputValue
+					const newPk = getPublicKey(data as Uint8Array)
+					newInstanceNpub = nip19.npubEncode(newPk)
+				} else {
+					throw new Error('Invalid nsec')
+				}
+			} catch (error) {
+				console.error('Invalid nsec:', error)
+				toast.error('Invalid nsec provided')
+			}
+		} else {
+			manualNsec = false
+		}
 	}
 
 	async function handleSubmit(event: SubmitEvent) {
@@ -49,6 +77,8 @@
 			const processedData = processAppSettings(
 				{
 					...formObject,
+					instancePk: newInstanceNpub,
+					instanceSk: newInstanceNsec,
 					allowRegister: checked,
 					defaultCurrency: selectedCurrency.value,
 					logoUrl: logoUrl || undefined,
@@ -102,31 +132,42 @@
 					<form on:submit|preventDefault={handleSubmit} class="max-w-2xl flex flex-col gap-3">
 						<h3>Identity</h3>
 						<Label class="truncate font-bold">Instance npub</Label>
-						<div class="flex flex-row gap-2">
+						<div class="flex items-center gap-2">
 							<Input
-								required
 								bind:value={newInstanceNpub}
-								class=" border-black border-2"
+								class="border-black border-2"
 								name="instancePk"
 								placeholder="instance npub"
 								type="text"
+								readonly
 							/>
-							<Button
-								on:click={() => {
-									setGeneratedSk()
-								}}>Generate</Button
-							>
+							<Button on:click={setGeneratedSk}>Generate</Button>
 						</div>
+
+						<Accordion>
+							<AccordionItem value="advanced-options">
+								<AccordionTrigger>Advanced Options</AccordionTrigger>
+								<AccordionContent>
+									<Label class="truncate font-bold">Instance nsec</Label>
+									<Input
+										class="border-black border-2"
+										placeholder="Paste your nsec here"
+										name="customInstanceSk"
+										type="text"
+										on:input={handleNpubNsecInput}
+										bind:value={newInstanceNsec}
+									/>
+								</AccordionContent>
+							</AccordionItem>
+						</Accordion>
 
 						{#if newInstanceNsec}
 							<Label class="truncate font-bold">New nsec</Label>
 							<div class="flex flex-row gap-2">
 								<Input class="border-black border-2" value={newInstanceNsec} readonly name="instanceSk" />
-								<Button
-									on:click={() => {
-										copyToClipboard(newInstanceNsec)
-									}}><span class="i-mingcute-clipboard-fill text-black w-6 h-6"></span></Button
-								>
+								<Button on:click={() => copyToClipboard(newInstanceNsec)}>
+									<span class="i-mingcute-clipboard-fill text-black w-6 h-6"></span>
+								</Button>
 							</div>
 						{/if}
 
