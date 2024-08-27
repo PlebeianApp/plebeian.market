@@ -1,5 +1,5 @@
 import { getAppSettings } from '$lib/server/setup.service'
-import { currencyToBtc } from '$lib/utils'
+import { btcToCurrency } from '$lib/utils'
 
 import { AppSettings, CURRENCIES, PAYMENT_DETAILS_METHOD, PaymentDetailsMethod } from '@plebeian/database'
 
@@ -33,8 +33,8 @@ const fetchInitialPrices = async () => {
 
 	// Fetch new data and update the cache
 	const data = [
-		...(await Promise.all(CURRENCIES.slice(2).map(async (c) => [c, await currencyToBtc(c.toLowerCase(), 1)] as const))),
-		['SATS', 1e-8],
+		...(await Promise.all(CURRENCIES.slice(2).map(async (c) => [c, await btcToCurrency(c)] as const))),
+		['SATS', 1e+8],
 		['BTC', 1],
 	]
 

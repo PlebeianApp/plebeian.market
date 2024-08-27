@@ -60,7 +60,7 @@
 					<span class=" font-bold">
 						{#if $priceQuery?.isLoading}
 							<Spinner />
-						{:else if $priceQuery?.data}
+						{:else if typeof $priceQuery?.data === 'number'}
 							{$priceQuery.data.toLocaleString('en-US', {
 								maximumFractionDigits: 2,
 							})}

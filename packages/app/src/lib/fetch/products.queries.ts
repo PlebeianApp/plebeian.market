@@ -5,7 +5,7 @@ import { numSatsInBtc } from '$lib/constants'
 import { aggregatorAddProducts } from '$lib/nostrSubs/data-aggregator'
 import { fetchUserProductData, normalizeProductsFromNostr } from '$lib/nostrSubs/utils'
 import { productsFilterSchema } from '$lib/schema'
-import { currencyToBtc } from '$lib/utils'
+import { btcToCurrency } from '$lib/utils'
 import { get } from 'svelte/store'
 
 import { CURRENCIES } from '@plebeian/database/constants'
@@ -62,7 +62,7 @@ for (const c of CURRENCIES) {
 		{
 			queryKey: ['currency-conversion', c],
 			queryFn: async () => {
-				return currencyToBtc(c, 1, true)
+				return btcToCurrency(c)
 			},
 			staleTime: 1000 * 60 * 60,
 		},
@@ -79,7 +79,7 @@ export const createCurrencyConversionQuery = (fromCurrency: string, amount: numb
 				const price = await queryClient.fetchQuery<number>({
 					queryKey: ['currency-conversion', fromCurrency],
 				})
-				const result = price * amount * numSatsInBtc
+				const result = (amount / price) * numSatsInBtc
 				return result
 			},
 			enabled: amount > 0,
