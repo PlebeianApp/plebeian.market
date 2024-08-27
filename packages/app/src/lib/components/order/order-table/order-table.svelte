@@ -6,6 +6,7 @@
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
 	import * as Table from '$lib/components/ui/table'
 	import { updateOrderStatusMutation } from '$lib/fetch/order.mutations'
+	import { createEventDispatcher } from 'svelte'
 	import { createTable, Render, Subscribe } from 'svelte-headless-table'
 	import { addPagination, addSortBy } from 'svelte-headless-table/plugins'
 	import { toast } from 'svelte-sonner'
@@ -13,10 +14,13 @@
 
 	export let orders: DisplayOrder[] = []
 	export let orderMode: 'list' | 'sale' | 'purchase'
+	export let currentPage: number = 0
+
+	const dispatch = createEventDispatcher()
 
 	const table = createTable(readable(orders), {
 		sort: addSortBy({ disableMultiSort: true }),
-		page: addPagination(),
+		page: addPagination({ pageSize: 10, initialPageIndex: currentPage }),
 	})
 
 	const columns = table.createColumns([
@@ -54,6 +58,10 @@
 
 	const { headerRows, pageRows, tableAttrs, tableBodyAttrs, pluginStates } = table.createViewModel(columns)
 	const { hasNextPage, hasPreviousPage, pageIndex, pageCount } = pluginStates.page
+
+	pageIndex.subscribe((page: number) => {
+		dispatch('pageChange', page)
+	})
 
 	function getCellWidth(columnId: string) {
 		switch (columnId) {
