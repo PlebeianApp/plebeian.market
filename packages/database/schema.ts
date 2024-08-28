@@ -415,7 +415,8 @@ export const invoices = sqliteTable('invoices', {
 		.default('pending'),
 	paymentDetails: text('payment_details_id')
 		.notNull()
-		.references(() => paymentDetails.id),
+		.references(() => paymentDetails.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
+	proof: text('proof'),
 })
 
 // App Settings

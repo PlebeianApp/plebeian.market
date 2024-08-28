@@ -203,6 +203,7 @@ export type BidStatus = ObjectValues<typeof BID_STATUS>
 
 export const ORDER_STATUS = {
 	PENDING: 'pending',
+	PARTIALLY_PAID: 'partiallyPaid',
 	PAID: 'paid',
 	CONFIRMED: 'confirmed',
 	SHIPPED: 'shipped',
