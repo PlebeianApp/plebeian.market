@@ -2,14 +2,13 @@
 	import OrderTable from '$lib/components/order/order-table/order-table.svelte'
 	import { createOrdersByUserAndRoleQuery } from '$lib/fetch/order.queries'
 	import ndkStore from '$lib/stores/ndk'
-	import { writable } from 'svelte/store'
 
-	let currentPage = writable(0)
+	let currentPage: number
 
 	$: orderList = createOrdersByUserAndRoleQuery($ndkStore.activeUser?.pubkey ?? '', 'seller')
 
 	function handlePageChange(page: number) {
-		currentPage.set(page)
+		currentPage = page
 	}
 </script>
 
@@ -21,7 +20,7 @@
 			<h2>Your Sales</h2>
 			<OrderTable
 				orders={$orderList.data.orders}
-				currentPage={$currentPage}
+				{currentPage}
 				orderMode="sale"
 				on:pageChange={(event) => handlePageChange(event.detail)}
 			/>

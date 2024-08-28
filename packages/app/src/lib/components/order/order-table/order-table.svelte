@@ -59,9 +59,7 @@
 	const { headerRows, pageRows, tableAttrs, tableBodyAttrs, pluginStates } = table.createViewModel(columns)
 	const { hasNextPage, hasPreviousPage, pageIndex, pageCount } = pluginStates.page
 
-	pageIndex.subscribe((page: number) => {
-		dispatch('pageChange', page)
-	})
+	$: dispatch('pageChange', $pageIndex)
 
 	function getCellWidth(columnId: string) {
 		switch (columnId) {

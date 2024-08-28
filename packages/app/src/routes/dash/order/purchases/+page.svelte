@@ -4,12 +4,12 @@
 	import ndkStore from '$lib/stores/ndk'
 	import { writable } from 'svelte/store'
 
-	let currentPage = writable(0)
+	let currentPage: number
 
 	$: orderList = createOrdersByUserAndRoleQuery($ndkStore.activeUser?.pubkey ?? '', 'buyer')
 
 	function handlePageChange(page: number) {
-		currentPage.set(page)
+		currentPage = page
 	}
 </script>
 
@@ -21,7 +21,7 @@
 			<h2>Your Orders</h2>
 			<OrderTable
 				orders={$orderList.data.orders}
-				currentPage={$currentPage}
+				{currentPage}
 				orderMode="purchase"
 				on:pageChange={(event) => handlePageChange(event.detail)}
 			/>
