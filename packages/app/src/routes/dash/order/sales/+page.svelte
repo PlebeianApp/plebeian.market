@@ -1,21 +1,18 @@
 <script lang="ts">
-	import { page } from '$app/stores'
-	import { Button } from '$lib/components/ui/button/index.js'
-	import { nav_back } from '$lib/utils'
+	import OrderTable from '$lib/components/order/order-table/order-table.svelte'
+	import { createOrdersByUserAndRoleQuery } from '$lib/fetch/order.queries'
+	import ndkStore from '$lib/stores/ndk'
 
-	import type { PageData } from './$types'
-
-	export let data: PageData
-
-	const linkDetails = data.menuItems.find((item) => item.value === 'orders')?.links.find((item) => item.href === $page.url.pathname)
+	$: orderQuery = createOrdersByUserAndRoleQuery($ndkStore.activeUser?.pubkey ?? '', 'seller')
 </script>
 
-<div class=" flex items-center gap-1">
-	<Button size="icon" variant="outline" class=" border-none" on:click={() => nav_back()}>
-		<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
-	</Button>
-	<section>
-		<h3 class="text-lg font-bold">{linkDetails?.title}</h3>
-		<p class="text-gray-600">{linkDetails?.description}</p>
-	</section>
-</div>
+{#if $orderQuery.isLoading}
+	<div>Loading...</div>
+{:else if $orderQuery.data?.orders?.length}
+	<div>
+		<h2>Your Sales</h2>
+		<OrderTable orders={$orderQuery.data.orders} orderMode="sale" />
+	</div>
+{:else}
+	<div>You have no orders yet.</div>
+{/if}

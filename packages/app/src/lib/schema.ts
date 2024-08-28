@@ -76,3 +76,12 @@ export const postProductImageSchema = z.object({
 })
 
 export type PostProductImageFilter = z.infer<typeof postProductImageSchema>
+
+export const ordersFilterSchema = generalFilterSchema.extend({
+	orderBy: z.enum(['createdAt', 'updatedAt']).default('createdAt'),
+	userId: z.string().optional(),
+	orderId: z.string().optional(),
+	role: z.enum(['buyer', 'seller']).optional(),
+})
+
+export type OrdersFilter = z.infer<typeof ordersFilterSchema>
