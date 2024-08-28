@@ -3,14 +3,17 @@
 	import MiniUser from '$lib/components/cart/mini-user.svelte'
 	import StallName from '$lib/components/stalls/stall-name.svelte'
 	import Button from '$lib/components/ui/button/button.svelte'
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
 	import * as Table from '$lib/components/ui/table'
 	import { updateOrderStatusMutation } from '$lib/fetch/order.mutations'
 	import { createEventDispatcher } from 'svelte'
 	import { createTable, Render, Subscribe } from 'svelte-headless-table'
 	import { addPagination, addSortBy } from 'svelte-headless-table/plugins'
 	import { toast } from 'svelte-sonner'
-	import { readable } from 'svelte/store'
+	import { writable } from 'svelte/store'
+
+	import type { OrderStatus } from '@plebeian/database'
+
+	import StatusCell from './status-cell.svelte'
 
 	export let orders: DisplayOrder[] = []
 	export let orderMode: 'list' | 'sale' | 'purchase'
@@ -18,7 +21,9 @@
 
 	const dispatch = createEventDispatcher()
 
-	const table = createTable(readable(orders), {
+	const ordersStore = writable(orders)
+
+	const table = createTable(ordersStore, {
 		sort: addSortBy({ disableMultiSort: true }),
 		page: addPagination({ pageSize: 10, initialPageIndex: currentPage }),
 	})
@@ -61,45 +66,36 @@
 
 	$: dispatch('pageChange', $pageIndex)
 
-	function getCellWidth(columnId: string) {
-		switch (columnId) {
-			case 'id':
-				return 'w-32'
-			case 'sellerUserId':
-			case 'buyerUserId':
-				return 'w-48'
-			case 'status':
-				return 'w-24'
-			case 'region':
-				return 'w-32'
-			case 'stallId':
-				return 'w-40'
-			case 'createdAt':
-				return 'w-auto'
-			default:
-				return 'w-auto'
+	function getCellWidth(columnId: string): string {
+		const widths: Record<string, string> = {
+			id: 'w-32',
+			sellerUserId: 'w-48',
+			buyerUserId: 'w-48',
+			status: 'w-24',
+			region: 'w-32',
+			stallId: 'w-40',
+			createdAt: 'w-auto',
+		}
+		return widths[columnId] || 'w-auto'
+	}
+
+	async function updateOrderStatus(order: DisplayOrder, newStatus: OrderStatus): Promise<void> {
+		try {
+			const updateOrder = await $updateOrderStatusMutation.mutateAsync({ orderId: order.id, status: newStatus })
+			if (updateOrder) {
+				ordersStore.update((orders) => orders.map((o) => (o.id === order.id ? { ...o, status: newStatus } : o)))
+				toast.success(`Order ${newStatus}`)
+			}
+		} catch (error) {
+			console.error('Failed to update order status:', error)
+			toast.error('Failed to update order status')
 		}
 	}
 
-	const handleConfirmOrder = async (order: DisplayOrder): Promise<void> => {
-		await $updateOrderStatusMutation.mutate({ orderId: order.id, status: 'confirmed' })
-		toast.success('Order confirmed')
-	}
-
-	const handleMarkAsShipped = async (order: DisplayOrder): Promise<void> => {
-		await $updateOrderStatusMutation.mutate({ orderId: order.id, status: 'shipped' })
-		toast.success('Order marked as shipped')
-	}
-
-	const handleMarkAsReceived = async (order: DisplayOrder): Promise<void> => {
-		await $updateOrderStatusMutation.mutate({ orderId: order.id, status: 'completed' })
-		toast.success('Order marked as received')
-	}
-
-	const handleCancelOrder = async (order: DisplayOrder): Promise<void> => {
-		await $updateOrderStatusMutation.mutate({ orderId: order.id, status: 'cancelled' })
-		toast.success('Order cancelled')
-	}
+	const handleConfirmOrder = (order: DisplayOrder) => updateOrderStatus(order, 'confirmed')
+	const handleMarkAsShipped = (order: DisplayOrder) => updateOrderStatus(order, 'shipped')
+	const handleMarkAsReceived = (order: DisplayOrder) => updateOrderStatus(order, 'completed')
+	const handleCancelOrder = (order: DisplayOrder) => updateOrderStatus(order, 'cancelled')
 </script>
 
 <Table.Root {...$tableAttrs}>
@@ -138,41 +134,14 @@
 								{:else if cell.column.id === 'sellerUserId' || cell.column.id === 'buyerUserId'}
 									<MiniUser userId={cell.render().toString()} />
 								{:else if cell.column.id === 'status'}
-									{#if orderMode === 'sale' && (cell.render() === 'pending' || cell.render() === 'confirmed')}
-										<DropdownMenu.Root>
-											<DropdownMenu.Trigger asChild let:builder>
-												<Button size="sm" variant="secondary" builders={[builder]}>
-													<Render of={cell.render()} />
-												</Button>
-											</DropdownMenu.Trigger>
-											<DropdownMenu.Content>
-												{#if cell.render() === 'pending'}
-													<DropdownMenu.Item on:click={() => handleConfirmOrder(cell.row.original)}>Confirm Order</DropdownMenu.Item>
-													<DropdownMenu.Item on:click={() => handleCancelOrder(cell.row.original)}>Cancel Order</DropdownMenu.Item>
-												{:else if cell.render() === 'confirmed'}
-													<DropdownMenu.Item on:click={() => handleMarkAsShipped(cell.row.original)}>Mark as Shipped</DropdownMenu.Item>
-													<DropdownMenu.Item on:click={() => handleCancelOrder(cell.row.original)}>Cancel Order</DropdownMenu.Item>
-												{/if}
-											</DropdownMenu.Content>
-										</DropdownMenu.Root>
-									{:else if orderMode !== 'sale' && (cell.render() === 'pending' || cell.render() === 'paid' || cell.render() === 'confirmed' || cell.render() === 'shipped')}
-										<DropdownMenu.Root>
-											<DropdownMenu.Trigger asChild let:builder>
-												<Button size="sm" variant="secondary" builders={[builder]}>
-													<Render of={cell.render()} />
-												</Button>
-											</DropdownMenu.Trigger>
-											<DropdownMenu.Content>
-												{#if cell.render() === 'pending' || cell.render() === 'paid' || cell.render() === 'confirmed'}
-													<DropdownMenu.Item on:click={() => handleCancelOrder(cell.row.original)}>Cancel Order</DropdownMenu.Item>
-												{:else if cell.render() === 'shipped'}
-													<DropdownMenu.Item on:click={() => handleMarkAsReceived(cell.row.original)}>Mark as Received</DropdownMenu.Item>
-												{/if}
-											</DropdownMenu.Content>
-										</DropdownMenu.Root>
-									{:else}
-										<Render of={cell.render()} />
-									{/if}
+									<StatusCell
+										order={cell.row.original}
+										{orderMode}
+										{handleConfirmOrder}
+										{handleMarkAsShipped}
+										{handleMarkAsReceived}
+										{handleCancelOrder}
+									/>
 								{:else if cell.column.id === 'stallId'}
 									<StallName stallId={cell.render().toString()} />
 								{:else}
