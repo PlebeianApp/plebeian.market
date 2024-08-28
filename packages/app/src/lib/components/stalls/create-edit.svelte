@@ -96,6 +96,7 @@
 	}
 
 	async function create(event: Event) {
+		isLoading = true
 		event.preventDefault()
 		if (!$ndkStore.activeUser?.pubkey) return
 
@@ -139,6 +140,7 @@
 			console.error('Error creating or updating stall:', error)
 			dispatch('error', error)
 		}
+		isLoading = false
 	}
 	onMount(() => {
 		shippingMethods =
@@ -178,7 +180,7 @@
 	<Collapsible.Root>
 		<Collapsible.Trigger asChild let:builder>
 			<Button builders={[builder]} variant="ghost" size="sm" class="w-full p-0">
-				<Label for="userImage" class="font-bold">Header image (Optional)</Label>
+				<Label for="userImage" class="font-bold">Header image (Recommended)</Label>
 				<span class="i-ion-chevron-expand" />
 			</Button>
 		</Collapsible.Trigger>
@@ -363,5 +365,5 @@
 		<Button on:click={() => addShipping()} variant="outline" class="font-bold ml-auto">Add Shipping Method</Button>
 	</div>
 
-	<Button id="stall-save-button" type="submit" class="w-full font-bold">Save</Button>
+	<Button id="stall-save-button" type="submit" disabled={isLoading} class="w-full font-bold">Save</Button>
 </form>
