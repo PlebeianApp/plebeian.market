@@ -18,7 +18,7 @@
 	import * as Popover from '$lib/components/ui/popover'
 	import { Textarea } from '$lib/components/ui/textarea'
 	import { KindStalls } from '$lib/constants'
-	import { createStallFromNostrEvent, updateStallFromNostrEvent } from '$lib/fetch/stalls.mutations'
+	import { createStallFromNostrEvent, deleteStallMutation, updateStallFromNostrEvent } from '$lib/fetch/stalls.mutations'
 	import ndkStore from '$lib/stores/ndk'
 	import { calculateGeohashAccuracy, checkIfUserExists, debounce, searchLocation, shouldRegister, unixTimeNow } from '$lib/utils'
 	import geohash from 'ngeohash'
@@ -175,8 +175,17 @@
 			}
 		}
 	})
+
+	async function handleDelete() {
+		if (!stall?.id) return
+		await $deleteStallMutation.mutateAsync(stall.id)
+		dispatch('success', null)
+	}
 </script>
 
+{#if stall?.id}
+	<Button on:click={handleDelete}>Delete</Button>
+{/if}
 <form class="flex flex-col gap-4 grow" on:submit={create}>
 	<Collapsible.Root>
 		<Collapsible.Trigger asChild let:builder>

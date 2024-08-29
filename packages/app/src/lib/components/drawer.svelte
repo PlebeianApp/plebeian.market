@@ -22,7 +22,7 @@
 	$: if ($drawerUI.drawerType && $drawerUI.id) {
 		initializeData()
 	}
-	$: console.log($drawerUI)
+
 	async function initializeData() {
 		if ($drawerUI.drawerType === 'product') {
 			productQuery = createProductQuery($drawerUI.id!)
