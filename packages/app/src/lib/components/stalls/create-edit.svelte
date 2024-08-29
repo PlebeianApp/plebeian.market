@@ -29,6 +29,7 @@
 
 	import Spinner from '../assets/spinner.svelte'
 	import Leaflet from '../leaflet/leaflet.svelte'
+	import Separator from '../ui/separator/separator.svelte'
 
 	interface GeoJSONWithBoundingBox extends GeoJSON.Feature<GeoJSON.Point> {
 		boundingbox: [number, number, number, number]
@@ -190,19 +191,19 @@
 	</Collapsible.Root>
 
 	<div class="grid w-full items-center gap-1.5">
-		<Label for="title" class="font-bold">Title</Label>
+		<Label for="title" class="font-bold required-mark">Title</Label>
 		<Input value={stall?.name} required class="border-2 border-black" type="text" name="title" placeholder="e.g. Fancy Wears" />
 	</div>
 
 	<div class="grid w-full items-center gap-1.5">
-		<Label for="description" class="font-bold">Description (Optional)</Label>
+		<Label for="description" class="font-bold">Description (Recommended)</Label>
 		<Textarea value={stall?.description} class="border-2 border-black" placeholder="Description" name="description" />
 	</div>
 
 	<Collapsible.Root>
 		<Collapsible.Trigger asChild let:builder>
 			<Button builders={[builder]} variant="ghost" size="sm" class="w-full p-0">
-				<Label for="from" class="font-bold">Shipping From (Optional)</Label>
+				<Label for="from" class="font-bold">Shipping From (Recommended)</Label>
 				<span class="i-ion-chevron-expand" />
 			</Button>
 		</Collapsible.Trigger>
@@ -271,9 +272,10 @@
 	</div>
 
 	{#each shippingMethods as item, i (item.id)}
-		<div class="grid grid-cols-[1fr_1fr_1fr_auto] w-full items-end gap-2">
+		<Separator />
+		<div class="grid sm:grid-cols-[1fr_1fr_1fr_auto] w-full items-end gap-2">
 			<div>
-				<Label for={`shipping-name-${i}`} class="font-bold">{i + 1}. Shipping Name</Label>
+				<Label for={`shipping-name-${i}`} class="font-bold required-mark">{i + 1}. Shipping Name</Label>
 				<Input
 					required
 					bind:value={item.name}

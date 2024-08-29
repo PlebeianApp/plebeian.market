@@ -86,7 +86,7 @@
 						Other Details
 					{/if}
 				</label>
-				<Input required bind:value={newPaymentDetails} id="paymentDetails" placeholder="Enter payment details" />
+				<Input required bind:value={newPaymentDetails} class="required-mark" id="paymentDetails" placeholder="Enter payment details" />
 				<div class="flex flex-row w-full items-center gap-2">
 					<div class="flex flex-col gap-1 flex-grow items-start">
 						<Label class="truncate font-bold">Select stall</Label>
@@ -108,7 +108,7 @@
 					</div>
 
 					<div class="flex flex-col items-center gap-3">
-						<Label class="truncate font-bold">Default</Label>
+						<Label class="truncate font-bold required-mark">Default</Label>
 						<Checkbox required class="border-black border-2" name="allowRegister" bind:disabled={isDisabled} bind:checked={isDefault} />
 					</div>
 				</div>

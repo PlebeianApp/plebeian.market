@@ -38,6 +38,6 @@ export const DELETE: RequestHandler = async ({ request, params }) => {
 		const userId = await authorizeUserless(request, 'DELETE')
 		return json(await deleteStall(params.stallId, userId))
 	} catch (e) {
-		error(401, 'Unauthorized')
+		error(500, `${e}`)
 	}
 }

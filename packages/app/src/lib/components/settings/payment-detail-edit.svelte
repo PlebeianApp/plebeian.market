@@ -151,7 +151,7 @@
 					</SelectContent>
 				</Select>
 				<div class="flex flex-col items-center gap-1">
-					<Label class="truncate font-bold">Default</Label>
+					<Label class="truncate font-bold required-mark">Default</Label>
 					<Checkbox
 						required
 						class="border-black border-2"
@@ -161,7 +161,7 @@
 					/>
 				</div>
 			</div>
-			<Label class="truncate font-bold">Payment details</Label>
+			<Label class="truncate font-bold required-mark">Payment details</Label>
 			<Input required bind:value={paymentDetailEdit.paymentDetails} class="border-black border-2" placeholder="payment details" />
 		</Collapsible.Content>
 	</Collapsible.Root>

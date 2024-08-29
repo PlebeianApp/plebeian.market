@@ -187,7 +187,7 @@
 							</Button>
 						</div>
 						<div class=" flex-grow">
-							<Label class="truncate font-bold">Instance name</Label>
+							<Label class="truncate font-bold required-mark">Instance name</Label>
 							<Input required class="border-black border-2" name="instanceName" placeholder="instance name" type="text" />
 						</div>
 
@@ -282,8 +282,8 @@
 
 						<Separator class=" my-2" />
 						<h3>Miscellanea</h3>
-						<div class="flex flex-row items-center justify-center gap-4">
-							<div class="flex-grow">
+						<div class="flex flex-col gap-4">
+							<div>
 								<Label class="truncate font-bold">Default currency</Label>
 								<Select bind:selected={selectedCurrency} name="defaultCurrency">
 									<SelectTrigger class="border-black border-2">
@@ -296,8 +296,8 @@
 									</SelectContent>
 								</Select>
 							</div>
-							<div class="flex flex-col items-center justify-center gap-3">
-								<Label class="truncate font-bold">Allow register</Label>
+							<div class=" inline-flex gap-3">
+								<Label class="truncate font-bold required-mark">Allow register</Label>
 								<Checkbox required class="border-black border-2" name="allowRegister" bind:checked placeholder="allow register" />
 							</div>
 						</div>

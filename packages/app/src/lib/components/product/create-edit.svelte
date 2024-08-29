@@ -153,7 +153,7 @@
 
 			<Tabs.Content value="basic" class="flex flex-col gap-2">
 				<div class="grid w-full items-center gap-1.5">
-					<Label for="title" class="font-bold">Title</Label>
+					<Label for="title" class="font-bold required-mark">Title</Label>
 					<Input
 						value={product?.name ?? ''}
 						required
@@ -184,7 +184,7 @@
 					</div>
 
 					<div class="grid w-full items-center gap-1.5">
-						<Label title="quantity" for="quantity" class="font-bold">Quantity</Label>
+						<Label title="quantity" for="quantity" class="font-bold required-mark">Quantity</Label>
 						<Input value={product?.quantity ?? ''} required class="border-2 border-black" type="number" name="quantity" placeholder="10" />
 					</div>
 				</div>
@@ -288,7 +288,7 @@
 						</DropdownMenu.Root>
 
 						<div class="grid w-full items-center gap-1.5">
-							<Label for="from" class="font-bold">Extra cost <small class="font-light">(in {stall?.currency})</small></Label>
+							<Label for="from" class="font-bold required-mark">Extra cost <small class="font-light">(in {stall?.currency})</small></Label>
 							<Input
 								value={shippingMethod.extraCost}
 								on:input={(e) => {
