@@ -62,7 +62,7 @@
 	{#each user.stalls as stallId}
 		{@const stall = stalls[stallId]}
 		<div class="stall">
-			<MiniStall stallId={stallId.split(':').length !== 3 ? `${KindStalls}:${user.pubkey}:${stallId}` : stallId} userPubkey={user.pubkey} />
+			<MiniStall stallId={stallId.split(':').length !== 3 ? `${KindStalls}:${user.pubkey}:${stallId}` : stallId} />
 
 			{#each stall.products as productId}
 				{@const product = products[productId]}
@@ -79,8 +79,11 @@
 
 	{#if (mode === 'cart' || mode === 'checkout') && userTotal}
 		<div class="flex flex-col">
+			{#each Object.entries(userTotal.currencyTotals) as [currency, amounts]}
+				<small>{currency} Total: {(amounts.total + amounts.shipping).toLocaleString()} </small>
+			{/each}
 			<small>Shipping in sats: {userTotal.shippingInSats.toLocaleString()} sats</small>
-			<small>Total in sats: {userTotal.totalInSats.toLocaleString()} sats</small>
+			<small><strong>Total in sats:</strong> {userTotal.totalInSats.toLocaleString()} sats</small>
 		</div>
 	{:else if mode === 'payment' && hasFormData}
 		<Button on:click={() => console.log(formData)}>Send</Button>

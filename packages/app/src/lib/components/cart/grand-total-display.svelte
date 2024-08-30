@@ -33,14 +33,6 @@
 			</CollapsibleTrigger>
 			<CollapsibleContent>
 				<div class="mt-4 space-y-2">
-					{#each Object.entries(grandTotal.currencyTotals) as [currency, amounts]}
-						<div class="flex justify-between">
-							<span>{currency} Total:</span>
-							<span>
-								{(amounts.total + amounts.shipping).toLocaleString(undefined, { style: 'currency', currency })}
-							</span>
-						</div>
-					{/each}
 					<div class="flex justify-between mb-2">
 						<span>Subtotal:</span>
 						<span>{grandTotal.grandSubtotalInSats.toLocaleString()} sats</span>
