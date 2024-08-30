@@ -121,10 +121,11 @@ export const APP_SETTINGS_META: Record<string, MetaInterface<'blossom_server' | 
 
 export type AppSettingsMetaName = ObjectValues<typeof APP_SETTINGS_META>
 
-export const USER_META: Record<string, MetaInterface<'trust_lvl' | 'role' | 'v4v_share'>> = {
+export const USER_META: Record<string, MetaInterface<'trust_lvl' | 'role' | 'v4v_share' | 'wallet_details'>> = {
 	TRUST_LVL: { value: 'trust_lvl', dataType: 'text' },
 	ROLE: { value: 'role', dataType: 'text' },
 	V4V_SHARE: { value: 'v4v_share', dataType: 'numeric' },
+	WALLET_DETAILS: { value: 'wallet_details', dataType: 'text' },
 } as const
 
 export type UserMetaName = ObjectValues<typeof USER_META>
@@ -158,6 +159,12 @@ export const USER_TRUST_LEVEL = {
 } as const
 
 export type UserTrustLevel = ObjectValues<typeof USER_TRUST_LEVEL> | null
+
+export const WALLET_TYPE = {
+	NWC: 'nwc',
+} as const
+
+export type WalletType = ObjectValues<typeof WALLET_TYPE> | null
 
 export const PAYMENT_DETAILS_METHOD = {
 	LIGHTNING_NETWORK: 'ln',

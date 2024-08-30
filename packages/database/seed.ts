@@ -2,12 +2,15 @@ import { faker } from '@faker-js/faker'
 import { sql } from 'drizzle-orm'
 
 import { KindAuctionProduct, KindBids, KindProducts, KindStalls } from '../app/src/lib/constants'
+import { defaulRelaysUrls } from './../app/src/lib/stores/ndk'
 import {
-	CURRENCIES,
 	APP_SETTINGS_META,
+	AppSettingsMetaName,
 	AUCTION_STATUS,
 	BID_STATUS,
+	CURRENCIES,
 	DIGITAL_PRODUCT_META,
+	DigitalProductMetaName,
 	GENERAL_META,
 	INVOICE_STATUS,
 	META_NAMES,
@@ -15,13 +18,12 @@ import {
 	PAYMENT_DETAILS_METHOD,
 	PRODUCT_META,
 	PRODUCT_TYPES,
-	USER_TRUST_LEVEL,
+	ProductMetaName,
 	USER_META,
 	USER_ROLES,
-	AppSettingsMetaName,
-	ProductMetaName,
-	DigitalProductMetaName,
+	USER_TRUST_LEVEL,
 	UserMetaName,
+	WALLET_TYPE,
 } from './constants'
 import { db } from './database'
 import { devInstance, devUser1, devUser2, devUser3, devUser4, devUser5 } from './fixtures'
@@ -61,7 +63,6 @@ const randomHexValue = () => {
 }
 
 const main = async () => {
-
 	const appSettings = {
 		instancePk: devInstance.pk,
 		instanceSk: devInstance.sk,
@@ -94,19 +95,38 @@ const main = async () => {
 	const metaTypeData = Object.values(META_NAMES).map((metaName) => {
 		let scope: string
 
-		if (Object.values(PRODUCT_META).map((meta) => meta.value).includes(metaName as ProductMetaName['value']) || Object.values(DIGITAL_PRODUCT_META).map((meta) => meta.value).includes(metaName as DigitalProductMetaName['value'])) {
+		if (
+			Object.values(PRODUCT_META)
+				.map((meta) => meta.value)
+				.includes(metaName as ProductMetaName['value']) ||
+			Object.values(DIGITAL_PRODUCT_META)
+				.map((meta) => meta.value)
+				.includes(metaName as DigitalProductMetaName['value'])
+		) {
 			scope = 'products'
-		} else if (Object.values(APP_SETTINGS_META).map((meta) => meta.value).includes(metaName as AppSettingsMetaName['value'])) {
+		} else if (
+			Object.values(APP_SETTINGS_META)
+				.map((meta) => meta.value)
+				.includes(metaName as AppSettingsMetaName['value'])
+		) {
 			scope = 'app_settings'
-		} else if (Object.values(USER_META).map((meta) => meta.value).includes(metaName as UserMetaName['value'])) {
+		} else if (
+			Object.values(USER_META)
+				.map((meta) => meta.value)
+				.includes(metaName as UserMetaName['value'])
+		) {
 			scope = 'users'
 		} else {
 			scope = 'products'
 		}
 
-		const metaTypes = [...Object.entries(PRODUCT_META), ...Object.entries(DIGITAL_PRODUCT_META), ...Object.entries(APP_SETTINGS_META), ...Object.entries(USER_META), ...Object.entries(GENERAL_META)].map(
-			([_, { value, dataType }]) => ({ value, dataType }),
-		)
+		const metaTypes = [
+			...Object.entries(PRODUCT_META),
+			...Object.entries(DIGITAL_PRODUCT_META),
+			...Object.entries(APP_SETTINGS_META),
+			...Object.entries(USER_META),
+			...Object.entries(GENERAL_META),
+		].map(([_, { value, dataType }]) => ({ value, dataType }))
 		const findMetaType = metaTypes.find((meta) => meta.value === metaName)
 		const dataType = findMetaType?.dataType || 'text'
 
@@ -121,39 +141,50 @@ const main = async () => {
 	})
 
 	const userMetaData = userIds.flatMap((userId) => {
-		return metaTypeData.flat(2).filter((metaType) => metaType.scope === 'users').map((metaType) => {
-			const { name } = metaType
-			let valueText: string | null = null
-			let valueBoolean: boolean | null = null
-			let valueNumeric: number | null = null
-			let key: string | null = null
+		return metaTypeData
+			.flat(2)
+			.filter((metaType) => metaType.scope === 'users')
+			.map((metaType) => {
+				const { name } = metaType
+				let valueText: string | null = null
+				let valueBoolean: boolean | null = null
+				let valueNumeric: number | null = null
+				let key: string | null = null
 
-			if (name == USER_META.TRUST_LVL.value) {
-				valueText = faker.helpers.arrayElement(Object.values(USER_TRUST_LEVEL))
-			} else if (name == USER_META.ROLE.value) {
-				valueText = faker.helpers.arrayElement(Object.values(USER_ROLES))
-			} else if (name == USER_META.V4V_SHARE.value) {
-				valueNumeric = parseFloat(faker.finance.amount({
-					min: 0.01,
-					max: 0.2
-				}))
-				key = 'platform'
-			}
+				if (name == USER_META.TRUST_LVL.value) {
+					valueText = faker.helpers.arrayElement(Object.values(USER_TRUST_LEVEL))
+				} else if (name == USER_META.ROLE.value) {
+					valueText = faker.helpers.arrayElement(Object.values(USER_ROLES))
+				} else if (name == USER_META.V4V_SHARE.value) {
+					valueNumeric = parseFloat(
+						faker.finance.amount({
+							min: 0.01,
+							max: 0.2,
+						}),
+					)
+					key = 'platform'
+				} else if (name == USER_META.WALLET_DETAILS.value) {
+					const randomRelay = faker.helpers.arrayElement(['wss://relay.nostr.band', 'wss://nos.lol', 'wss://relay.nostr.net'])
+					const encodedRelay = encodeURIComponent(randomRelay)
+					valueText = `nostr+walletconnect://${userId.id}?relay=${encodedRelay}&secret=${randomHexValue()}`
+					valueBoolean = faker.datatype.boolean()
+					key = WALLET_TYPE.NWC
+				}
 
-			const userMeta = {
-				id: createId(),
-				userId: userId.id,
-				metaName: name,
-				valueText: valueText,
-				valueBoolean: valueBoolean,
-				valueNumeric: valueNumeric,
-				key: key,
-				createdAt: faker.date.recent(),
-				updatedAt: faker.date.future(),
-			} as UserMeta
+				const userMeta = {
+					id: createId(),
+					userId: userId.id,
+					metaName: name,
+					valueText: valueText,
+					valueBoolean: valueBoolean,
+					valueNumeric: valueNumeric,
+					key: key,
+					createdAt: faker.date.recent(),
+					updatedAt: faker.date.future(),
+				} as UserMeta
 
-			return userMeta
-		})
+				return userMeta
+			})
 	})
 
 	const userStalls = userIds.map((user) => {
@@ -230,17 +261,17 @@ const main = async () => {
 
 	const shippingZonesData = shippingData.flatMap((shippingMethods) => {
 		return shippingMethods.flatMap((shipping) => {
-			const uniqueCombinations = new Set();
+			const uniqueCombinations = new Set()
 
 			return randomLengthArrayFromTo(2, 4).map(() => {
-				let regionCode, countryCode;
+				let regionCode, countryCode
 
 				do {
-					regionCode = faker.location.countryCode();
-					countryCode = faker.location.countryCode();
-				} while (uniqueCombinations.has(`${regionCode}-${countryCode}`));
+					regionCode = faker.location.countryCode()
+					countryCode = faker.location.countryCode()
+				} while (uniqueCombinations.has(`${regionCode}-${countryCode}`))
 
-				uniqueCombinations.add(`${regionCode}-${countryCode}`);
+				uniqueCombinations.add(`${regionCode}-${countryCode}`)
 
 				return {
 					id: createId(),
@@ -255,10 +286,8 @@ const main = async () => {
 	})
 
 	const uniqueShippingZonesData = Array.from(
-		new Map(shippingZonesData.flat().map(zone =>
-			[`${zone.shippingId}-${zone.regionCode}-${zone.countryCode}`, zone]
-		)).values()
-	);
+		new Map(shippingZonesData.flat().map((zone) => [`${zone.shippingId}-${zone.regionCode}-${zone.countryCode}`, zone])).values(),
+	)
 
 	const auctionsData = userStalls.map((stallByUser) => {
 		return stallByUser.map((stall) => {
@@ -358,7 +387,7 @@ const main = async () => {
 		userId: flatProductData[i].userId,
 		eventId: flatProductData[i].id,
 		eventKind: KindProducts,
-		tagName: "t",
+		tagName: 't',
 		tagValue: v,
 	}))
 
@@ -366,7 +395,7 @@ const main = async () => {
 		userId: stall.userId,
 		eventId: stall.id,
 		eventKind: KindStalls,
-		tagName: "image",
+		tagName: 'image',
 		tagValue: faker.image.urlLoremFlickr({
 			category: 'product',
 		}),
