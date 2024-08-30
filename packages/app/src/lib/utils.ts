@@ -368,3 +368,9 @@ export function mergeWithExisting<T>(existing: T[], newItems: T[], key: keyof T)
 	const existingSet = new Set(existing.map((item) => item[key]))
 	return [...existing, ...newItems.filter((item) => !existingSet.has(item[key]))]
 }
+
+export function createChangeTracker<T extends Record<string, unknown>>(initialValues: T) {
+	const stringify = (obj: Record<string, unknown>): string => JSON.stringify(obj, (_, v) => (typeof v === 'function' ? v.toString() : v))
+	const initialString = stringify(initialValues)
+	return (currentValues: Partial<T>): boolean => stringify({ ...initialValues, ...currentValues }) !== initialString
+}
