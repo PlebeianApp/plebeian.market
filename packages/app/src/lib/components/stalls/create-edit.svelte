@@ -318,7 +318,7 @@
 							{item.countries.length ? item.countries.join(', ') : 'Select'}
 						</Button>
 					</Popover.Trigger>
-					<Popover.Content class="w-[200px] max-h-[350px] overflow-y-auto p-0">
+					<Popover.Content class="w-[250px] max-h-[350px] overflow-y-auto p-0">
 						<Command.Root>
 							<Command.Input placeholder="Search country..." />
 							<Command.Empty>No country found.</Command.Empty>
@@ -327,29 +327,30 @@
 									if (item.countries.includes(a.iso3) && item.countries.includes(b.iso3)) return 0
 									if (item.countries.includes(a.iso3)) return -1
 									if (item.countries.includes(b.iso3)) return 1
-									return 0
+									return a.name.localeCompare(b.name)
 								}) as country (country.iso3)}
 									<Command.Item
-										value={country.iso3}
+										value={`${country.iso3} ${country.name}`}
 										onSelect={(currentValue) => {
-											if (item.countries.includes(country.iso3)) {
-												item.removeCountry(currentValue)
+											const iso3 = currentValue.split(' ')[0]
+											if (item.countries.includes(iso3)) {
+												item.removeCountry(iso3)
 											} else {
-												item.addCountry(currentValue)
+												item.addCountry(iso3)
 											}
 											shippingMethods = shippingMethods
 											document.getElementById(ids.trigger)?.focus()
 										}}
 									>
-										<section class="flex flex-col">
-											<div class="flex gap-2">
+										<div class="flex items-center justify-between w-full">
+											<div class="flex items-center gap-2">
 												{#if item.countries.includes(country.iso3)}
-													<span class="i-tdesign-check"> </span>
+													<span class="i-tdesign-check text-green-500"></span>
 												{/if}
-												<span>{country.iso3}</span>
+												<span class="font-semibold">{country.iso3}</span>
+												<span class="text-sm text-gray-600">{country.name}</span>
 											</div>
-											<small>({country.name})</small>
-										</section>
+										</div>
 									</Command.Item>
 								{/each}
 							</Command.Group>
