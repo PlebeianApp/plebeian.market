@@ -356,16 +356,17 @@ export const orders = sqliteTable('orders', {
 		.notNull()
 		.default(sql`(unixepoch())`),
 	sellerUserId: text('seller_user_id')
-		.notNull()
-		.references(() => users.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
+		.notNull(),
+		// .references(() => users.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
 	buyerUserId: text('buyer_user_id').notNull(), // This can be encrypted with the seller's key in case buyer its paranoid
 	status: text('status', { enum: Object.values(ORDER_STATUS) as NonEmptyArray<OrderStatus> })
 		.notNull()
 		.default('pending'),
-	shippingId: text('shipping_id').references(() => shipping.id, { onDelete: 'set null' }),
+	shippingId: text('shipping_id'),
+	// .references(() => shipping.id, { onDelete: 'set null' }),
 	stallId: text('stall_id')
-		.notNull()
-		.references(() => stalls.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
+		.notNull(),
+		// .references(() => stalls.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
 	address: text('address').notNull(), // Can be encrypted
 	zip: text('zip').notNull(), // Can be encrypted
 	city: text('city').notNull(), // Can be encrypted

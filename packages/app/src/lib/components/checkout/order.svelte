@@ -9,23 +9,31 @@
 	import { get } from 'svelte/store'
 
 	import Button from '../ui/button/button.svelte'
+	import { toast } from 'svelte-sonner'
 
 	export let merchant: CartUser
 
 	$: paymentDetails = createPaymentsForUserQuery(merchant.pubkey)
 
+	$: console.log(merchant)
 	async function placeOrder() {
 		const $ndkStore = get(ndkStore)
-		await $createOrderMutation.mutate({
+		const stall = $cart.stalls[merchant.stalls[0]] 
+		if (!stall.shippingMethodId) {
+			throw toast.error("Make sure you specify the shipping method!")
+		}
+		await $createOrderMutation.mutateAsync({
 			address: '',
 			city: '',
 			contactName: '',
 			items: [],
-			shippingId: '',
-			stallId: '',
+			shippingId: stall.shippingMethodId,
+			stallId: stall.id,
 			type: 0,
 			buyerUserId: $ndkStore.activeUser!.pubkey,
 			sellerUserId: merchant.pubkey,
+			zip: '',
+			country: 'iran'
 		})
 	}
 </script>
@@ -36,14 +44,16 @@
 		<Button
 			variant="ghost"
 			class="w-full"
-			on:click={() => {
+			on:click={async () => {
+				await placeOrder()
 				currentStep.set($paymentDetails.data?.length ? $currentStep + 2 : $currentStep + 1)
 			}}>Order</Button
 		>
 		{#if $paymentDetails.data?.length}
 			<Button
 				class="w-full"
-				on:click={() => {
+				on:click={async () => {
+					await placeOrder()
 					currentStep.set($currentStep + 1)
 				}}>Order & Pay</Button
 			>

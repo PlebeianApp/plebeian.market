@@ -1,12 +1,13 @@
 <script lang="ts">
 	import { NDKRelay, NDKRelayAuthPolicies, normalizeRelayUrl } from '@nostr-dev-kit/ndk'
-	import ndkStore, { defaulRelaysUrls } from '$lib/stores/ndk'
+	import ndkStore from '$lib/stores/ndk'
 
 	import Button from '../ui/button/button.svelte'
 	import Input from '../ui/input/input.svelte'
 	import Label from '../ui/label/label.svelte'
 	import ScrollArea from '../ui/scroll-area/scroll-area.svelte'
 	import RelayList from './relayList.svelte'
+	import { defaulRelaysUrls } from '$lib/constants'
 
 	export let mode: 'widget' | 'settings' = 'widget'
 	let isOpen = mode == 'settings'

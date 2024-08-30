@@ -1,3 +1,4 @@
+import { defaulRelaysUrls } from '$lib/constants'
 import type { NDKCacheAdapter, NostrEvent } from '@nostr-dev-kit/ndk'
 import { NDKEvent } from '@nostr-dev-kit/ndk'
 import NDKCacheAdapterDexie from '@nostr-dev-kit/ndk-cache-dexie'
@@ -12,8 +13,6 @@ if (typeof window !== 'undefined') {
 		dbName: 'plebeian.ndk.v0',
 	})
 }
-
-export const defaulRelaysUrls: string[] = ['wss://relay.nostr.band', 'wss://nos.lol', 'wss://relay.nostr.net']
 
 export const relayBlackList: string[] = []
 

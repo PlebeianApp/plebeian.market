@@ -127,10 +127,7 @@ CREATE TABLE `orders` (
 	`contact_name` text NOT NULL,
 	`contact_phone` text,
 	`contact_email` text,
-	`observations` text,
-	FOREIGN KEY (`seller_user_id`) REFERENCES `users`(`id`) ON UPDATE cascade ON DELETE cascade,
-	FOREIGN KEY (`shipping_id`) REFERENCES `shipping`(`id`) ON UPDATE no action ON DELETE set null,
-	FOREIGN KEY (`stall_id`) REFERENCES `stalls`(`id`) ON UPDATE cascade ON DELETE cascade
+	`observations` text
 );
 --> statement-breakpoint
 CREATE TABLE `payment_details` (

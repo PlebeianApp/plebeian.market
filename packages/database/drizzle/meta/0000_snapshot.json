@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "82f76aca-26e3-497f-ad5e-1a4a98ea081c",
+  "id": "fe34cba4-6a8f-42ce-86c8-f2bbac9573b5",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "app_settings": {
@@ -916,47 +916,7 @@
         }
       },
       "indexes": {},
-      "foreignKeys": {
-        "orders_seller_user_id_users_id_fk": {
-          "name": "orders_seller_user_id_users_id_fk",
-          "tableFrom": "orders",
-          "tableTo": "users",
-          "columnsFrom": [
-            "seller_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "cascade"
-        },
-        "orders_shipping_id_shipping_id_fk": {
-          "name": "orders_shipping_id_shipping_id_fk",
-          "tableFrom": "orders",
-          "tableTo": "shipping",
-          "columnsFrom": [
-            "shipping_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        },
-        "orders_stall_id_stalls_id_fk": {
-          "name": "orders_stall_id_stalls_id_fk",
-          "tableFrom": "orders",
-          "tableTo": "stalls",
-          "columnsFrom": [
-            "stall_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "cascade"
-        }
-      },
+      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },

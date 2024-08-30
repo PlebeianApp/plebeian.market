@@ -1,4 +1,4 @@
-import { OrderFilter } from "$lib/schema";
+import type { OrderFilter } from "$lib/schema";
 import { createMutation } from "@tanstack/svelte-query";
 import { createRequest, queryClient } from './client'
 

@@ -34,3 +34,5 @@ export const availabeLogos = [
 ] as const
 type LogoValue = (typeof availabeLogos)[number]['value']
 export const validUrls = Object.values(availabeLogos).map((logo) => logo.value) as NonEmptyArray<LogoValue>
+
+export const defaulRelaysUrls: string[] = ['wss://relay.nostr.band', 'wss://nos.lol', 'wss://relay.nostr.net']

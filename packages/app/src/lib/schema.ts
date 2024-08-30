@@ -87,7 +87,7 @@ export const orderSchema = z.object({
   address: z.string(),
   zip: z.string(),
   city: z.string(),
-  country: z.string().optional(),
+  country: z.string(),
   region: z.string().optional(),
   contactName: z.string(),
   contactPhone: z.string().optional(),
