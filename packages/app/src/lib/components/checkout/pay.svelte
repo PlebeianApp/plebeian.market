@@ -2,12 +2,16 @@
 	import type { CartUser } from '$lib/stores/cart'
 	import QrCode from '@castlenine/svelte-qrcode'
 	import { Invoice, LightningAddress } from '@getalby/lightning-tools'
+	import { NDKEvent } from '@nostr-dev-kit/ndk'
 	import { createPaymentsForUserQuery } from '$lib/fetch/payments.queries'
-	import { cart, userCartTotalInSats } from '$lib/stores/cart'
+	import { userCartTotalInSats } from '$lib/stores/cart'
 	import { currentStep } from '$lib/stores/checkout'
+	import ndkStore from '$lib/stores/ndk'
 	import { truncateText } from '$lib/utils'
 	import { onDestroy } from 'svelte'
-	import { derived } from 'svelte/store'
+
+	import { INVOICE_STATUS } from '@plebeian/database/constants'
+	import { createId } from '@plebeian/database/utils'
 
 	import type { FormInputEvent } from '../ui/input'
 	import Button from '../ui/button/button.svelte'
@@ -20,13 +24,14 @@
 
 	let invoice: Invoice | null = null
 
+	$: info = $paymentDetails.data?.find((info) => info.paymentMethod === 'ln')
 	$: (async () => {
-		const info = $paymentDetails.data?.find((info) => info.paymentMethod === 'ln')
 		if (info && total) {
 			const ln = new LightningAddress(info.paymentDetails)
 			await ln.fetch()
 
-			invoice = await ln.requestInvoice({ satoshi: total })
+			invoice = await ln.requestInvoice({ satoshi: 100 })
+			sendPaymentDetails()
 		}
 	})()
 
@@ -58,8 +63,46 @@
 		if (paid) clearInterval(intervalId)
 	}
 
+	async function sendMessage(message: string) {
+		const testPubkey = '9e77eabc6b7c575a619ab7ce235b3d99443ff33b8b9d805eacc5ec3a38a48976'
+		const recipient = $ndkStore.getUser({ pubkey: testPubkey })
+		const dm = new NDKEvent($ndkStore)
+		dm.kind = 4
+		dm.content = (await $ndkStore.signer?.encrypt(recipient, message)) ?? ''
+		dm.tags = [['p', recipient.pubkey]]
+		await dm.publish()
+	}
+
+	async function sendPaymentDetails() {
+		const message = JSON.stringify({
+			orderId: '',
+			type: 1,
+			message: null,
+			payment_options: $paymentDetails.data?.map(({ paymentDetails, paymentMethod }) => ({
+				method: paymentMethod,
+				details: paymentDetails,
+			})),
+		})
+		await sendMessage(message)
+	}
+
+	async function sendInvoice() {
+		const message = JSON.stringify({
+			id: createId(),
+			orderId: '',
+			method: info?.paymentMethod,
+			details: info?.paymentDetails, // e.g chosen btc address, ln invoice, etc
+			invoiceStatus: INVOICE_STATUS.PAID, // e.g “pending” (one of the values in INVOICE_STATUS constant)
+			proof: '',
+		})
+		await sendMessage(message)
+	}
+
 	async function onPreimageInput(e: FormInputEvent<InputEvent>) {
 		paid = (await invoice!.validatePreimage(e.currentTarget.value)) ?? paid
+		if (paid) {
+			await sendInvoice()
+		}
 	}
 </script>
 

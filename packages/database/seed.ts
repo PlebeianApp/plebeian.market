@@ -200,12 +200,13 @@ const main = async () => {
 
 	const paymentDetailsData = userStalls.map((stallsByUser) => {
 		return stallsByUser.map((stall) => {
+			const paymentMethod = faker.helpers.arrayElement(Object.values(PAYMENT_DETAILS_METHOD)) 
 			return {
 				id: createId(),
 				userId: stall.userId,
 				stallId: stall.id,
-				paymentMethod: faker.helpers.arrayElement(Object.values(PAYMENT_DETAILS_METHOD)),
-				paymentDetails: faker.finance.creditCardNumber(),
+				paymentMethod,
+				paymentDetails: paymentMethod === 'ln' ? 'npub1nem740rt03t45cv6kl8zxkean9zrluem3wwcqh4vchkr5w9y39mqrt43h9@npub.cash' : faker.finance.creditCardNumber(),
 			} as PaymentDetail
 		})
 	})
