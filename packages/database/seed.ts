@@ -1,8 +1,7 @@
 import { faker } from '@faker-js/faker'
 import { sql } from 'drizzle-orm'
 
-import { KindAuctionProduct, KindBids, KindProducts, KindStalls } from '../app/src/lib/constants'
-import { defaulRelaysUrls } from './../app/src/lib/stores/ndk'
+import { defaulRelaysUrls, KindAuctionProduct, KindBids, KindProducts, KindStalls } from '../app/src/lib/constants'
 import {
 	APP_SETTINGS_META,
 	AppSettingsMetaName,
