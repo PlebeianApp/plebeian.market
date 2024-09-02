@@ -36,7 +36,7 @@
 </script>
 
 <form on:submit|preventDefault={handleSubmit}>
-	<Label>
+	<Label class="required-mark">
 		Name:
 		<Input type="text" bind:value={contactName} required />
 	</Label>
@@ -48,19 +48,19 @@
 		Email:
 		<Input type="email" bind:value={contactEmail} />
 	</Label>
-	<Label>
+	<Label class="required-mark">
 		Address:
 		<Input type="text" bind:value={address} required />
 	</Label>
-	<Label>
+	<Label class="required-mark">
 		ZIP:
 		<Input type="text" bind:value={zip} required />
 	</Label>
-	<Label>
+	<Label class="required-mark">
 		City:
 		<Input type="text" bind:value={city} required />
 	</Label>
-	<Label>
+	<Label class="required-mark">
 		Country:
 		<Input type="text" bind:value={country} required />
 	</Label>

@@ -211,7 +211,7 @@ CREATE TABLE `shipping` (
 	`name` text,
 	`base_cost` numeric NOT NULL,
 	`default` integer DEFAULT false NOT NULL,
-	FOREIGN KEY (`stall_id`) REFERENCES `stalls`(`id`) ON UPDATE cascade ON DELETE no action,
+	FOREIGN KEY (`stall_id`) REFERENCES `stalls`(`id`) ON UPDATE cascade ON DELETE cascade,
 	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE cascade ON DELETE cascade
 );
 --> statement-breakpoint

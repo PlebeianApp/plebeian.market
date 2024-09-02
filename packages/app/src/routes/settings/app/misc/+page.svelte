@@ -122,7 +122,7 @@
 							type="text"
 						/>
 						<div class=" flex-grow">
-							<Label class="truncate font-bold">Instance name</Label>
+							<Label class="truncate font-bold required-mark">Instance name</Label>
 							<Input
 								value={appSettings.instanceName}
 								class="border-black border-2"
@@ -246,7 +246,7 @@
 								</Select>
 							</div>
 							<div class="flex flex-col items-center justify-center gap-3">
-								<Label class="truncate font-bold">Allow register</Label>
+								<Label class="truncate font-bold required-mark">Allow register</Label>
 								<Checkbox required class="border-black border-2" name="allowRegister" bind:checked placeholder="allow register" />
 							</div>
 						</div>

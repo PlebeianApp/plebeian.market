@@ -1,4 +1,5 @@
 import type { DisplayProduct } from '$lib/server/products.service'
+import type { RichShippingInfo } from '$lib/server/shipping.service'
 import { createCurrencyConversionQuery } from '$lib/fetch/products.queries'
 import { debounce, resolveQuery } from '$lib/utils'
 import { toast } from 'svelte-sonner'
@@ -22,6 +23,7 @@ export interface CartStall {
 	products: string[]
 	currency: string
 	shippingMethodId: string | null
+	shippingMethodName: string | null
 	shippingCost: number
 }
 
@@ -116,7 +118,7 @@ function createCart() {
 			totalInSats: _stallTotalInSats + _shippingInSats + _extraShippingInSats,
 			subtotalInCurrency: stallTotalInCurrency,
 			shippingInCurrency: stallShippingCost + stallExtraShippingCost,
-			totalInCurrency: stallTotalInCurrency + stallShippingCost + stallExtraShippingCost,
+			totalInCurrency: stallTotalInCurrency,
 			currency: stall.currency,
 		}
 	}
@@ -253,12 +255,13 @@ function createCart() {
 				return cart
 			}),
 
-		setShippingMethod: (userPubkey: string, stallId: string, shippingMethodId: string, shippingCost: number) =>
+		setShippingMethod: (stallId: string, shipping: Partial<RichShippingInfo>) =>
 			update((cart) => {
 				const stall = cart.stalls[stallId]
-				if (stall) {
-					stall.shippingMethodId = shippingMethodId
-					stall.shippingCost = shippingCost
+				if (stall && shipping.id) {
+					stall.shippingMethodId = shipping.id
+					stall.shippingCost = Number(shipping.cost)
+					stall.shippingMethodName = shipping.name ?? null
 				}
 				batchUpdate(cart)
 				return cart

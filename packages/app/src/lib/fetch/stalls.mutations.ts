@@ -40,10 +40,8 @@ export const createStallFromNostrEvent = createMutation(
 		onSuccess: (data: DisplayStall | null) => {
 			if (data) {
 				console.log('Stall inserted in db successfully', data)
-				queryClient.invalidateQueries({
-					queryKey: ['stalls', ...Object.values(stallsFilterSchema.safeParse({ userId: data.userId }).data as Partial<StallsFilter>)],
-				})
-				queryClient.invalidateQueries({ queryKey: ['shipping', data.id] })
+				queryClient.invalidateQueries({ queryKey: ['stalls', data.userId] })
+				queryClient.invalidateQueries({ queryKey: ['shippings', data.userId] })
 			}
 		},
 	},

@@ -1,6 +1,5 @@
 <script lang="ts">
 	import type { NDKTag } from '@nostr-dev-kit/ndk'
-	import type { FormDataWithEntries } from '$lib/interfaces'
 	import type { RichStall } from '$lib/server/stalls.service'
 	import type { Location } from '$lib/utils'
 	import type { GeoJSON } from 'geojson'
@@ -9,18 +8,26 @@
 	import { page } from '$app/stores'
 	import { ShippingMethod } from '$lib/classes/shipping'
 	import SingleImage from '$lib/components/settings/editable-image.svelte'
-	import { Button } from '$lib/components/ui/button/index.js'
+	import { Button } from '$lib/components/ui/button'
 	import * as Collapsible from '$lib/components/ui/collapsible'
 	import * as Command from '$lib/components/ui/command'
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
-	import { Input } from '$lib/components/ui/input/index.js'
-	import { Label } from '$lib/components/ui/label/index.js'
+	import { Input } from '$lib/components/ui/input'
+	import { Label } from '$lib/components/ui/label'
 	import * as Popover from '$lib/components/ui/popover'
 	import { Textarea } from '$lib/components/ui/textarea'
 	import { KindStalls } from '$lib/constants'
-	import { createStallFromNostrEvent, updateStallFromNostrEvent } from '$lib/fetch/stalls.mutations'
+	import { createStallFromNostrEvent, deleteStallMutation, updateStallFromNostrEvent } from '$lib/fetch/stalls.mutations'
 	import ndkStore from '$lib/stores/ndk'
-	import { calculateGeohashAccuracy, checkIfUserExists, debounce, searchLocation, shouldRegister, unixTimeNow } from '$lib/utils'
+	import {
+		calculateGeohashAccuracy,
+		checkIfUserExists,
+		createChangeTracker,
+		debounce,
+		searchLocation,
+		shouldRegister,
+		unixTimeNow,
+	} from '$lib/utils'
 	import geohash from 'ngeohash'
 	import { createEventDispatcher, onMount } from 'svelte'
 
@@ -29,28 +36,31 @@
 
 	import Spinner from '../assets/spinner.svelte'
 	import Leaflet from '../leaflet/leaflet.svelte'
-
-	interface GeoJSONWithBoundingBox extends GeoJSON.Feature<GeoJSON.Point> {
-		boundingbox: [number, number, number, number]
-	}
+	import Separator from '../ui/separator/separator.svelte'
 
 	export let stall: Partial<RichStall> | null = null
 	const dispatch = createEventDispatcher<{ success: unknown; error: unknown }>()
-
 	const {
 		appSettings: { allowRegister, defaultCurrency },
 	} = $page.data
 
-	let currency = stall?.currency ?? defaultCurrency ?? CURRENCIES[0]
-	let headerImage = stall?.image
-	let shippingMethods: ShippingMethod[] = []
+	const initialValues = {
+		name: stall?.name ?? '',
+		description: stall?.description ?? '',
+		currency: stall?.currency ?? defaultCurrency ?? CURRENCIES[0],
+		image: stall?.image ?? '',
+		geohash: stall?.geohash ?? null,
+		shipping: stall?.shipping ?? [],
+	}
+
+	let { name, description, currency, image: headerImage, geohash: geohashOfSelectedGeometry } = initialValues
+	let shippingMethods = initialValues.shipping.map((s) => new ShippingMethod(s.id, s.name, s.cost, s.regions, s.countries))
 
 	let locationSearchOpen = false
 	let shippingFromInput = ''
 	let selectedLocation: Location | null = null
-	let geohashOfSelectedGeometry: string | null = null
 	let locationResults: Location[] = []
-	let mapGeoJSON: GeoJSONWithBoundingBox | null = null
+	let mapGeoJSON: (GeoJSON.Feature<GeoJSON.Point> & { boundingbox: [number, number, number, number] }) | null = null
 	let isLoading = false
 
 	const debouncedSearch = debounce(async () => {
@@ -59,9 +69,20 @@
 		isLoading = false
 	}, 300)
 
-	$: if (browser && shippingFromInput) {
-		debouncedSearch(shippingFromInput)
+	$: if (browser && shippingFromInput) debouncedSearch(shippingFromInput)
+
+	const hasChanges = createChangeTracker(initialValues)
+
+	$: currentValues = {
+		name,
+		description,
+		currency,
+		image: headerImage,
+		geohash: geohashOfSelectedGeometry,
+		shipping: shippingMethods.map((s) => s.json),
 	}
+
+	$: changed = hasChanges(currentValues)
 
 	function addShipping(id?: string) {
 		const newMethod = id
@@ -76,34 +97,31 @@
 
 	function handleLocationSelect(location: Location) {
 		shippingFromInput = location.display_name
+		const [lon, lat] = [parseFloat(location.lon), parseFloat(location.lat)]
+		const boundingbox = location.boundingbox.map(Number) as [number, number, number, number]
 		mapGeoJSON = {
 			type: 'Feature',
-			geometry: {
-				type: 'Point',
-				coordinates: [parseFloat(location.lon), parseFloat(location.lat)],
-			},
+			geometry: { type: 'Point', coordinates: [lon, lat] },
 			properties: {},
-			boundingbox: location.boundingbox.map(Number) as [number, number, number, number],
+			boundingbox,
 		}
 
-		const [minLat, maxLat, minLon, maxLon] = mapGeoJSON.boundingbox
+		const [minLat, maxLat, minLon, maxLon] = boundingbox
 		const centerLat = (minLat + maxLat) / 2
 		const centerLon = (minLon + maxLon) / 2
-		const accuracy = calculateGeohashAccuracy(mapGeoJSON.boundingbox)
+		const accuracy = calculateGeohashAccuracy(boundingbox)
 
 		geohashOfSelectedGeometry = geohash.encode(centerLat, centerLon, accuracy)
 		selectedLocation = location
 	}
 
 	async function create(event: Event) {
+		if (!changed) return
 		isLoading = true
 		event.preventDefault()
 		if (!$ndkStore.activeUser?.pubkey) return
 
-		const formData = new FormData(event.currentTarget as HTMLFormElement) as FormDataWithEntries
-		const formObject = Object.fromEntries(formData.entries())
-		const identifier = stall?.identifier ?? createSlugId(String(formObject.title))
-
+		const identifier = stall?.identifier ?? createSlugId(name)
 		const tags: NDKTag[] = [['d', identifier]]
 		if (headerImage) tags.push(['image', headerImage])
 		if (geohashOfSelectedGeometry) tags.push(['g', geohashOfSelectedGeometry])
@@ -113,8 +131,8 @@
 			pubkey: $ndkStore.activeUser.pubkey,
 			content: JSON.stringify({
 				id: identifier,
-				name: formObject.title,
-				description: formObject.description,
+				name,
+				description,
 				currency,
 				shipping: shippingMethods.map((s) => s.json),
 			}),
@@ -123,18 +141,13 @@
 		})
 
 		try {
-			const [publishResult, userExists] = await Promise.all([
-				newEvent.sign(),
-				//   newEvent.publish(),
-				checkIfUserExists($ndkStore.activeUser.pubkey),
-			])
+			const [, userExists] = await Promise.all([newEvent.sign(), checkIfUserExists($ndkStore.activeUser.pubkey)])
 			if (await shouldRegister(allowRegister, userExists)) {
 				const nostrEvent = await newEvent.toNostrEvent()
 				await (stall?.id
 					? $updateStallFromNostrEvent.mutateAsync([stall.id, nostrEvent])
 					: $createStallFromNostrEvent.mutateAsync(nostrEvent))
 			}
-
 			dispatch('success', null)
 		} catch (error) {
 			console.error('Error creating or updating stall:', error)
@@ -142,38 +155,33 @@
 		}
 		isLoading = false
 	}
+
 	onMount(() => {
-		shippingMethods =
-			stall?.shipping?.flatMap((s) =>
-				s?.id && s?.name && s?.cost && Array.isArray(s?.regions) && Array.isArray(s?.countries)
-					? [new ShippingMethod(s.id, s.name, s.cost, s.regions, s.countries)]
-					: [],
-			) ?? []
-		// TODO Keep improving this
 		if (stall?.geohash) {
-			geohashOfSelectedGeometry = stall?.geohash
-			const decodedGeohash = geohash.decode(stall.geohash)
-			const boundGeohash = geohash.decode_bbox(stall.geohash)
-			const { latitude, longitude } = decodedGeohash
+			geohashOfSelectedGeometry = stall.geohash
+			const { latitude, longitude } = geohash.decode(stall.geohash)
+			const boundingbox = geohash.decode_bbox(stall.geohash)
 			mapGeoJSON = {
 				type: 'Feature',
-				geometry: {
-					type: 'Point',
-					coordinates: [longitude, latitude],
-				},
+				geometry: { type: 'Point', coordinates: [longitude, latitude] },
 				properties: {},
-				boundingbox: boundGeohash,
+				boundingbox,
 			}
-			geohashOfSelectedGeometry = stall.geohash
 			selectedLocation = {
 				place_id: '',
 				display_name: '',
 				lat: String(latitude),
 				lon: String(longitude),
-				boundingbox: boundGeohash,
+				boundingbox,
 			}
 		}
 	})
+
+	async function handleDelete() {
+		if (!stall?.id) return
+		await $deleteStallMutation.mutateAsync(stall.id)
+		dispatch('success', null)
+	}
 </script>
 
 <form class="flex flex-col gap-4 grow" on:submit={create}>
@@ -185,24 +193,24 @@
 			</Button>
 		</Collapsible.Trigger>
 		<Collapsible.Content>
-			<SingleImage src={headerImage || stall?.image || ''} on:save={({ detail }) => (headerImage = detail)} />
+			<SingleImage src={headerImage} on:save={({ detail }) => (headerImage = detail)} />
 		</Collapsible.Content>
 	</Collapsible.Root>
 
 	<div class="grid w-full items-center gap-1.5">
-		<Label for="title" class="font-bold">Title</Label>
-		<Input value={stall?.name} required class="border-2 border-black" type="text" name="title" placeholder="e.g. Fancy Wears" />
+		<Label for="title" class="font-bold required-mark">Title</Label>
+		<Input bind:value={name} required class="border-2 border-black" type="text" name="title" placeholder="e.g. Fancy Wears" />
 	</div>
 
 	<div class="grid w-full items-center gap-1.5">
-		<Label for="description" class="font-bold">Description (Optional)</Label>
-		<Textarea value={stall?.description} class="border-2 border-black" placeholder="Description" name="description" />
+		<Label for="description" class="font-bold">Description (Recommended)</Label>
+		<Textarea bind:value={description} class="border-2 border-black" placeholder="Description" name="description" />
 	</div>
 
 	<Collapsible.Root>
 		<Collapsible.Trigger asChild let:builder>
 			<Button builders={[builder]} variant="ghost" size="sm" class="w-full p-0">
-				<Label for="from" class="font-bold">Shipping From (Optional)</Label>
+				<Label for="from" class="font-bold">Shipping From (Recommended)</Label>
 				<span class="i-ion-chevron-expand" />
 			</Button>
 		</Collapsible.Trigger>
@@ -271,9 +279,10 @@
 	</div>
 
 	{#each shippingMethods as item, i (item.id)}
-		<div class="grid grid-cols-[1fr_1fr_1fr_auto] w-full items-end gap-2">
+		<Separator />
+		<div class="grid sm:grid-cols-[1fr_1fr_1fr_auto] w-full items-end gap-2">
 			<div>
-				<Label for={`shipping-name-${i}`} class="font-bold">{i + 1}. Shipping Name</Label>
+				<Label for={`shipping-name-${i}`} class="font-bold required-mark">{i + 1}. Shipping Name</Label>
 				<Input
 					required
 					bind:value={item.name}
@@ -309,7 +318,7 @@
 							{item.countries.length ? item.countries.join(', ') : 'Select'}
 						</Button>
 					</Popover.Trigger>
-					<Popover.Content class="w-[200px] max-h-[350px] overflow-y-auto p-0">
+					<Popover.Content class="w-[250px] max-h-[350px] overflow-y-auto p-0">
 						<Command.Root>
 							<Command.Input placeholder="Search country..." />
 							<Command.Empty>No country found.</Command.Empty>
@@ -318,29 +327,30 @@
 									if (item.countries.includes(a.iso3) && item.countries.includes(b.iso3)) return 0
 									if (item.countries.includes(a.iso3)) return -1
 									if (item.countries.includes(b.iso3)) return 1
-									return 0
+									return a.name.localeCompare(b.name)
 								}) as country (country.iso3)}
 									<Command.Item
-										value={country.iso3}
+										value={`${country.iso3} ${country.name}`}
 										onSelect={(currentValue) => {
-											if (item.countries.includes(country.iso3)) {
-												item.removeCountry(currentValue)
+											const iso3 = currentValue.split(' ')[0]
+											if (item.countries.includes(iso3)) {
+												item.removeCountry(iso3)
 											} else {
-												item.addCountry(currentValue)
+												item.addCountry(iso3)
 											}
 											shippingMethods = shippingMethods
 											document.getElementById(ids.trigger)?.focus()
 										}}
 									>
-										<section class="flex flex-col">
-											<div class="flex gap-2">
+										<div class="flex items-center justify-between w-full">
+											<div class="flex items-center gap-2">
 												{#if item.countries.includes(country.iso3)}
-													<span class="i-tdesign-check"> </span>
+													<span class="i-tdesign-check text-green-500"></span>
 												{/if}
-												<span>{country.iso3}</span>
+												<span class="font-semibold">{country.iso3}</span>
+												<span class="text-sm text-gray-600">{country.name}</span>
 											</div>
-											<small>({country.name})</small>
-										</section>
+										</div>
 									</Command.Item>
 								{/each}
 							</Command.Group>
@@ -365,5 +375,8 @@
 		<Button on:click={() => addShipping()} variant="outline" class="font-bold ml-auto">Add Shipping Method</Button>
 	</div>
 
-	<Button id="stall-save-button" type="submit" disabled={isLoading} class="w-full font-bold">Save</Button>
+	<Button id="stall-save-button" type="submit" disabled={isLoading || !changed} class="w-full font-bold">Save</Button>
+	{#if stall?.id}
+		<Button type="button" variant="destructive" on:click={handleDelete}>Delete</Button>
+	{/if}
 </form>

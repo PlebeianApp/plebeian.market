@@ -164,7 +164,7 @@
 			{/if}
 		</div>
 	{:else}
-		<div class=" flex gap-4">
+		<div class="flex gap-4 mt-6">
 			{#each [...Array(3)] as _, i}
 				<Skeleton class=" h-80 w-full border-4 border-black text-black group" />
 			{/each}

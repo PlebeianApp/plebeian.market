@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "82f76aca-26e3-497f-ad5e-1a4a98ea081c",
+  "id": "ac7db537-11b9-4886-b850-61640f9f51df",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "app_settings": {
@@ -1556,7 +1556,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "cascade"
         },
         "shipping_user_id_users_id_fk": {

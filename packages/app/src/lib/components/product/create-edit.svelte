@@ -12,7 +12,7 @@
 	import * as Tabs from '$lib/components/ui/tabs/index.js'
 	import Textarea from '$lib/components/ui/textarea/textarea.svelte'
 	import { queryClient } from '$lib/fetch/client'
-	import { createProductMutation, editProductMutation } from '$lib/fetch/products.mutations'
+	import { createProductMutation, deleteProductMutation, editProductMutation } from '$lib/fetch/products.mutations'
 	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
 	import ndkStore from '$lib/stores/ndk'
 	import { createEventDispatcher, onMount } from 'svelte'
@@ -135,6 +135,12 @@
 	})
 	const activeTab =
 		'w-full font-bold border-b-2 border-black text-black data-[state=active]:border-b-primary data-[state=active]:text-primary'
+
+	async function handleDelete() {
+		if (!product?.id) return
+		await $deleteProductMutation.mutateAsync(product.id)
+		dispatch('success', null)
+	}
 </script>
 
 {#if $stallsQuery.isLoading}
@@ -153,7 +159,7 @@
 
 			<Tabs.Content value="basic" class="flex flex-col gap-2">
 				<div class="grid w-full items-center gap-1.5">
-					<Label for="title" class="font-bold">Title</Label>
+					<Label for="title" class="font-bold required-mark">Title</Label>
 					<Input
 						value={product?.name ?? ''}
 						required
@@ -171,7 +177,7 @@
 
 				<div class="flex gap-1.5">
 					<div class="grid w-full items-center gap-1.5">
-						<Label for="price" class="font-bold">Price</Label>
+						<Label for="price" class="font-bold required-mark">Price</Label>
 						<Input
 							class="border-2 border-black"
 							min={0}
@@ -179,12 +185,13 @@
 							pattern="^(?!.*\\.\\.)[0-9]*([.][0-9]+)?"
 							name="price"
 							placeholder="e.g. $30"
+							required
 							value={product?.price ?? ''}
 						/>
 					</div>
 
 					<div class="grid w-full items-center gap-1.5">
-						<Label title="quantity" for="quantity" class="font-bold">Quantity</Label>
+						<Label title="quantity" for="quantity" class="font-bold required-mark">Quantity</Label>
 						<Input value={product?.quantity ?? ''} required class="border-2 border-black" type="number" name="quantity" placeholder="10" />
 					</div>
 				</div>
@@ -288,7 +295,7 @@
 						</DropdownMenu.Root>
 
 						<div class="grid w-full items-center gap-1.5">
-							<Label for="from" class="font-bold">Extra cost <small class="font-light">(in {stall?.currency})</small></Label>
+							<Label for="from" class="font-bold required-mark">Extra cost <small class="font-light">(in {stall?.currency})</small></Label>
 							<Input
 								value={shippingMethod.extraCost}
 								on:input={(e) => {
@@ -324,6 +331,9 @@
 			</Tabs.Content>
 
 			<Button disabled={isLoading} type="submit" class="w-full font-bold my-4">Save</Button>
+			{#if product?.id}
+				<Button type="button" variant="destructive" class="w-full" on:click={handleDelete}>Delete</Button>
+			{/if}
 		</Tabs.Root>
 	</form>
 {/if}

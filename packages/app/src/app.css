@@ -75,6 +75,13 @@
 	}
 }
 
+@layer base {
+	.required-mark::after {
+		content: '*';
+		color: red;
+		margin-left: 0.25rem;
+	}
+}
 /* Box shadow */
 .box {
 	box-shadow: var(--box-shadow-base);

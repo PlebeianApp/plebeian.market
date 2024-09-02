@@ -194,7 +194,7 @@ export const shipping = sqliteTable('shipping', {
 	updatedAt: integer('updated_at', { mode: 'timestamp' })
 		.notNull()
 		.default(sql`(unixepoch())`),
-	stallId: text('stall_id').references(() => stalls.id, { onUpdate: 'cascade' }),
+	stallId: text('stall_id').references(() => stalls.id, { onUpdate: 'cascade', onDelete: 'cascade' }),
 	userId: text('user_id')
 		.notNull()
 		.references(() => users.id, { onDelete: 'cascade', onUpdate: 'cascade' }),

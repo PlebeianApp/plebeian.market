@@ -165,9 +165,11 @@
 				{#if $productsQuery.data.categories}
 					<article>
 						<h4 class="font-bold">Categories</h4>
-						{#each $productsQuery.data.categories as category}
-							<Badge variant="secondary" class=" w-fit">{category}</Badge>
-						{/each}
+						<div class=" inline-flex gap-2">
+							{#each $productsQuery.data.categories as category}
+								<Badge variant="secondary" class=" w-fit">{category}</Badge>
+							{/each}
+						</div>
 					</article>
 				{/if}
 			</div>

@@ -78,13 +78,13 @@
 			>
 				<Input
 					required
-					class="border-black border-2 hidden"
+					class="border-black border-2 hidden required-mark"
 					name="key"
 					placeholder="Private key (nsec1...)"
 					type="password"
 					value={accointInfo.cSk}
 				/>
-				<Input required class="border-black border-2" name="password" placeholder="Password" type="password" />
+				<Input required class="border-black border-2 required-mark" name="password" placeholder="Password" type="password" />
 				<Button type="submit">Sign in</Button>
 			</form>
 			<div class="flex items-center space-x-2">

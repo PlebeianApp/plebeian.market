@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { RichShippingInfo } from '$lib/server/shipping.service'
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
 	import { createStallQuery } from '$lib/fetch/stalls.queries'
 	import { cart } from '$lib/stores/cart'
@@ -8,7 +9,6 @@
 	import { Button } from '../ui/button'
 
 	export let stallId: string
-	export let userPubkey: string
 
 	$: stallQuery = createStallQuery(stallId)
 	$: currentShippingMethodId = $cart.stalls[stallId]?.shippingMethodId || null
@@ -16,11 +16,19 @@
 	function handleShippingMethodSelect(methodId: string) {
 		const selectedMethod = $stallQuery.data?.stall?.shipping?.find((m) => m.id === methodId)
 		if (selectedMethod) {
-			cart.setShippingMethod(userPubkey, stallId, methodId, Number(selectedMethod.cost))
+			cart.setShippingMethod(stallId, selectedMethod)
 		}
 	}
 
-	// TODO Keep improving visualization of the sipping methods
+	function getMethodDisplayName(method: Partial<RichShippingInfo>) {
+		return (
+			method?.name ||
+			(method?.countries?.length && method.countries.join(',')) ||
+			(method?.regions?.length && method.regions.join(',')) ||
+			(method?.id && truncateString(String(method.id))) ||
+			'Select shipping method'
+		)
+	}
 </script>
 
 <div class="flex flex-col justify-between gap-2">
@@ -37,13 +45,10 @@
 				<Button variant="secondary" class="border-2 border-black h-8" builders={[builder]}>
 					{#if $stallQuery.data?.stall?.shipping?.length && currentShippingMethodId}
 						{@const method = $stallQuery.data?.stall?.shipping?.find((m) => m.id === currentShippingMethodId)}
-						{method?.name || method?.countries?.length
-							? method?.countries?.join(',')
-							: '' || method?.regions?.length
-								? method?.regions?.join(',')
-								: '' || method?.id
-									? truncateString(String(method?.id))
-									: 'Select shipping method'}
+						{#if method}
+							{getMethodDisplayName(method)}
+							<span>{method.cost}</span>
+						{/if}
 					{:else}
 						Select shipping method
 					{/if}
@@ -60,15 +65,12 @@
 								on:click={() => handleShippingMethodSelect(String(method?.id))}
 							>
 								<section class="flex items-center w-full justify-between">
-									<span>
-										{method?.name || method?.countries?.length
-											? method?.countries?.join(',')
-											: '' || method?.regions?.length
-												? method?.regions?.join(',')
-												: '' || method?.id
-													? truncateString(String(method?.id))
-													: 'Select shipping method'}</span
-									>
+									{#if method}
+										<span>
+											{getMethodDisplayName(method)}
+											<span>{method.cost}</span>
+										</span>
+									{/if}
 									<span>{method.cost}</span>
 								</section>
 							</DropdownMenu.CheckboxItem>
