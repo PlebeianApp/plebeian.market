@@ -1,4 +1,3 @@
-import type { NWCUri } from '$lib/utils'
 import { error } from '@sveltejs/kit'
 import { nwcUriToWalletDetails, walletDetailsToNWCUri } from '$lib/utils'
 
@@ -7,7 +6,7 @@ import { and, db, eq, USER_META, userMeta, WALLET_TYPE } from '@plebeian/databas
 
 export type NWCWallet = {
 	walletPubKey: string
-	walletRelay: string
+	walletRelays: string[]
 	walletSecret: string
 }
 
@@ -24,22 +23,21 @@ export const getWalletsByUserId = async (userId: string) => {
 		.from(userMeta)
 		.where(and(eq(userMeta.metaName, USER_META.WALLET_DETAILS.value), eq(userMeta.userId, userId)))
 		.execute()
-
 	return userWallets.map((wallet) => {
 		if (wallet.key === 'nwc') {
-			const details = nwcUriToWalletDetails(wallet.valueText as NWCUri)
+			const details = nwcUriToWalletDetails(wallet.valueText as string)
 			return {
 				id: wallet.id,
-				userId: wallet.userId,
+				wallet: wallet.userId,
 				walletType: WALLET_TYPE.NWC,
-				walletDetails: nwcUriToWalletDetails(wallet.valueText as NWCUri),
+				walletDetails: nwcUriToWalletDetails(wallet.valueText as string),
 			}
 		}
 	})
 }
 
 export const postWalletForUser = async (walletType: WalletType, userId: string, walletDetails: NWCWallet) => {
-	const constructedNwc = `nostr+walletconnect://${walletDetails.walletPubKey}?relay=${encodeURIComponent(walletDetails.walletRelay)}&secret=${walletDetails.walletSecret}`
+	const constructedNwc = walletDetailsToNWCUri(walletDetails) //`nostr+walletconnect://${walletDetails.walletPubKey}?relay=${encodeURIComponent(walletDetails.walletRelays[0])}&secret=${walletDetails.walletSecret}`
 	try {
 		const [result] = await db
 			.insert(userMeta)

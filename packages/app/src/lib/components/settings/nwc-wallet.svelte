@@ -1,11 +1,11 @@
 <script lang="ts">
-	import type { DisplayWallet, NWCWallet } from '$lib/server/wallet.service'
+	import type { DisplayWallet } from '$lib/server/wallet.service'
 	import { Button } from '$lib/components/ui/button/index.js'
 	import * as Collapsible from '$lib/components/ui/collapsible'
 	import { Input } from '$lib/components/ui/input'
 	import { Label } from '$lib/components/ui/label/index.js'
 	import { deleteWalletMutation, persistWalletMutation, updateWalletMutation } from '$lib/fetch/wallets.mutations'
-	import { copyToClipboard, nwcUriToWalletDetails } from '$lib/utils'
+	import { nwcUriToWalletDetails } from '$lib/utils'
 	import { createEventDispatcher, onMount } from 'svelte'
 	import { toast } from 'svelte-sonner'
 
@@ -16,11 +16,10 @@
 	let persistNwcToDB: boolean
 
 	let walletPubKey = ''
-	let walletRelay = ''
+	let walletRelays: string[] = []
 	let walletSecret = ''
 	let initialPersistNwcToDB: boolean
 	let hasChanged = false
-
 	const dispatch = createEventDispatcher()
 
 	onMount(() => {
@@ -28,7 +27,7 @@
 		initialPersistNwcToDB = persistNwcToDB
 		if (nwcWallet) {
 			walletPubKey = nwcWallet.walletDetails.walletPubKey
-			walletRelay = nwcWallet.walletDetails.walletRelay
+			walletRelays = nwcWallet.walletDetails.walletRelays
 			walletSecret = nwcWallet.walletDetails.walletSecret
 		}
 	})
@@ -37,17 +36,16 @@
 		if (nwcWallet) {
 			hasChanged =
 				walletPubKey !== nwcWallet.walletDetails.walletPubKey ||
-				walletRelay !== nwcWallet.walletDetails.walletRelay ||
 				walletSecret !== nwcWallet.walletDetails.walletSecret ||
 				persistNwcToDB !== initialPersistNwcToDB
 		} else {
-			hasChanged = walletPubKey !== '' || walletRelay !== '' || walletSecret !== '' || persistNwcToDB !== initialPersistNwcToDB
+			hasChanged = walletPubKey !== '' || walletRelays.length > 0 || walletSecret !== '' || persistNwcToDB !== initialPersistNwcToDB
 		}
 	}
 
 	async function onSubmit(event: SubmitEvent) {
 		event.preventDefault()
-		const wallet = { walletPubKey, walletRelay, walletSecret }
+		const wallet = { walletPubKey, walletRelays, walletSecret }
 
 		if (!persistNwcToDB) {
 			const localWallets = JSON.parse(localStorage.getItem('nwc-wallets') || '{}')
@@ -115,16 +113,21 @@
 
 	const handlePasteNWCUri = () => {
 		navigator.clipboard.readText().then((text) => {
-			try {
-				const { walletPubKey: wp, walletRelay: wr, walletSecret: ws } = nwcUriToWalletDetails(text)
-
-				walletPubKey = wp
-				walletRelay = wr
-				walletSecret = ws
-			} catch (e) {
-				toast.error('Invalid NWC URI in clipboard')
+			const wallet = nwcUriToWalletDetails(text)
+			if (wallet) {
+				walletPubKey = wallet.walletPubKey
+				walletRelays = wallet.walletRelays
+				walletSecret = wallet.walletSecret
 			}
 		})
+	}
+
+	const handleRelayChange = (event: Event) => {
+		const target = event.target as HTMLInputElement
+		walletRelays = target.value
+			.split(',')
+			.map((relay) => relay.trim())
+			.filter((relay) => relay !== '')
 	}
 </script>
 
@@ -133,8 +136,8 @@
 		<Collapsible.Trigger class="flex flex-row w-full items-center justify-between gap-2">
 			<div class="flex items-center gap-2 font-bold">
 				<span class="i-mdi-purse w-6 h-6" />
-				{#if nwcWallet?.walletDetails}
-					<span>{nwcWallet?.walletDetails.walletRelay}</span>
+				{#if nwcWallet?.id || nwcWallet?.walletDetails.walletRelays}
+					<span>{nwcWallet?.id || nwcWallet?.walletDetails.walletRelays[0]}</span>
 				{:else}
 					<span>New wallet</span>
 				{/if}
@@ -159,8 +162,8 @@
 				</div>
 
 				<div class="grid w-full items-center gap-1.5">
-					<Label for="nwc-relay" class="font-bold">Wallet connect relay</Label>
-					<Input bind:value={walletRelay} type="url" id={`nwcRelay=${nwcWallet?.id}`} name="nwc-relay" />
+					<Label for="nwc-relay" class="font-bold">Wallet connect relays</Label>
+					<Input value={walletRelays} on:input={handleRelayChange} type="text" id={`nwcRelay=${nwcWallet?.id}`} name="nwc-relay" />
 				</div>
 				<div class="grid w-full items-center gap-1.5">
 					<Label for="nwc-secret" class="font-bold">Wallet connect secret</Label>
@@ -182,7 +185,6 @@
 						{nwcWallet ? 'Update' : 'Save'} Wallet
 					</Button>
 					<div class="grid w-full items-center gap-1.5 text-sm">
-						<!-- <Label for="persist-nwc-locally" class="font-bold">Persist NWC only locally</Label> -->
 						<div class="flex items-center gap-2">
 							<Checkbox id={`persistNwcToDB=${nwcWallet?.id}`} name="persist-nwc-locally" bind:checked={persistNwcToDB} />
 							<p>Store wallet on server.</p>

@@ -6,7 +6,7 @@ import { createRequest, queryClient } from './client'
 
 export type NWCWalletDTO = {
 	walletPubKey: string
-	walletRelay: string
+	walletRelays: string[]
 	walletSecret: string
 }
 
