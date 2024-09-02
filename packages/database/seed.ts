@@ -164,11 +164,26 @@ const main = async () => {
 					)
 					key = 'platform'
 				} else if (name == USER_META.WALLET_DETAILS.value) {
-					const randomRelay = faker.helpers.arrayElement(['wss://relay.nostr.band', 'wss://nos.lol', 'wss://relay.nostr.net'])
-					const encodedRelay = encodeURIComponent(randomRelay)
-					valueText = `nostr+walletconnect://${userId.id}?relay=${encodedRelay}&secret=${randomHexValue()}`
-					valueBoolean = faker.datatype.boolean()
-					key = WALLET_TYPE.NWC
+					return Array.from({ length: 3 }).map(() => {
+						const randomRelay = faker.helpers.arrayElement(defaulRelaysUrls)
+						const encodedRelay = encodeURIComponent(randomRelay)
+						valueText = `nostr+walletconnect://${userId.id}?relay=${encodedRelay}&secret=${randomHexValue()}`
+						valueBoolean = faker.datatype.boolean()
+						key = WALLET_TYPE.NWC
+						const userMeta = {
+							id: createId(),
+							userId: userId.id,
+							metaName: name,
+							valueText: valueText,
+							valueBoolean: valueBoolean,
+							valueNumeric: valueNumeric,
+							key: key,
+							createdAt: faker.date.recent(),
+							updatedAt: faker.date.future(),
+						} as UserMeta
+
+						return userMeta
+					})
 				}
 
 				const userMeta = {
