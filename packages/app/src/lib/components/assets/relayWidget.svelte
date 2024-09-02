@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { NDKRelay, NDKRelayAuthPolicies, normalizeRelayUrl } from '@nostr-dev-kit/ndk'
-	import ndkStore, { defaulRelaysUrls } from '$lib/stores/ndk'
+	import { defaulRelaysUrls } from '$lib/constants'
+	import ndkStore from '$lib/stores/ndk'
 
 	import Button from '../ui/button/button.svelte'
 	import Input from '../ui/input/input.svelte'

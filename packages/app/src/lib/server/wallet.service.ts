@@ -1,4 +1,6 @@
+import type { NWCUri } from '$lib/utils'
 import { error } from '@sveltejs/kit'
+import { nwcUriToWalletDetails, walletDetailsToNWCUri } from '$lib/utils'
 
 import type { WalletType } from '@plebeian/database'
 import { and, db, eq, USER_META, userMeta, WALLET_TYPE } from '@plebeian/database'
@@ -16,20 +18,6 @@ export type DisplayWallet = {
 	walletDetails: NWCWallet
 }
 
-const walletDetailsToNWCWallet = (walletDetails: string): NWCWallet => {
-	const walletData = walletDetails.split('://')[1]
-	const [walletPubKey, relayAndSecret] = walletData.split('?')
-	const [relay, secret] = relayAndSecret.split('&')
-
-	const decodedRelay = decodeURIComponent(relay.split('=')[1])
-
-	return {
-		walletPubKey,
-		walletRelay: decodedRelay,
-		walletSecret: secret.split('=')[1],
-	}
-}
-
 export const getWalletsByUserId = async (userId: string) => {
 	const userWallets = await db
 		.select()
@@ -39,12 +27,12 @@ export const getWalletsByUserId = async (userId: string) => {
 
 	return userWallets.map((wallet) => {
 		if (wallet.key === 'nwc') {
-			const details = walletDetailsToNWCWallet(wallet.valueText ?? '')
+			const details = nwcUriToWalletDetails(wallet.valueText as NWCUri)
 			return {
 				id: wallet.id,
 				userId: wallet.userId,
 				walletType: WALLET_TYPE.NWC,
-				walletDetails: walletDetailsToNWCWallet(wallet.valueText ?? ''),
+				walletDetails: nwcUriToWalletDetails(wallet.valueText as NWCUri),
 			}
 		}
 	})
@@ -75,12 +63,11 @@ export const postWalletForUser = async (walletType: WalletType, userId: string, 
 }
 
 export const updateWalletForUser = async (walletId: string, userId: string, walletDetails: NWCWallet) => {
-	const constructedNwc = `nostr+walletconnect://${walletDetails.walletPubKey}?relay=${encodeURIComponent(walletDetails.walletRelay)}&secret=${walletDetails.walletSecret}`
 	try {
 		const [result] = await db
 			.update(userMeta)
 			.set({
-				valueText: constructedNwc,
+				valueText: walletDetailsToNWCUri(walletDetails),
 			})
 			.where(and(eq(userMeta.metaName, USER_META.WALLET_DETAILS.value), eq(userMeta.userId, userId), eq(userMeta.id, walletId)))
 			.returning()

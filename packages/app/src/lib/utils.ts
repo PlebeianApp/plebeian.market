@@ -16,6 +16,7 @@ import { get } from 'svelte/store'
 import { twMerge } from 'tailwind-merge'
 
 import type { EventCoordinates } from './interfaces'
+import type { NWCWallet } from './server/wallet.service'
 import { numSatsInBtc } from './constants'
 import { createProductExistsQuery } from './fetch/products.queries'
 import { createStallExistsQuery } from './fetch/stalls.queries'
@@ -373,4 +374,24 @@ export function createChangeTracker<T extends Record<string, unknown>>(initialVa
 	const stringify = (obj: Record<string, unknown>): string => JSON.stringify(obj, (_, v) => (typeof v === 'function' ? v.toString() : v))
 	const initialString = stringify(initialValues)
 	return (currentValues: Partial<T>): boolean => stringify({ ...initialValues, ...currentValues }) !== initialString
+}
+
+export type NWCUri = `nostr+walletconnect://${string}?relay=${string}&secret=${string}`
+
+export const walletDetailsToNWCUri = (walletDetails: NWCWallet): NWCUri => {
+	return `nostr+walletconnect://${walletDetails.walletPubKey}?relay=${encodeURIComponent(walletDetails.walletRelay)}&secret=${walletDetails.walletSecret}`
+}
+
+export const nwcUriToWalletDetails = (nwcUri: NWCUri): NWCWallet => {
+	const walletData = nwcUri.split('://')[1]
+	const [walletPubKey, relayAndSecret] = walletData.split('?')
+	const [relay, secret] = relayAndSecret.split('&')
+
+	const decodedRelay = decodeURIComponent(relay.split('=')[1])
+
+	return {
+		walletPubKey,
+		walletRelay: decodedRelay,
+		walletSecret: secret.split('=')[1],
+	}
 }
