@@ -376,8 +376,6 @@ export function createChangeTracker<T extends Record<string, unknown>>(initialVa
 	return (currentValues: Partial<T>): boolean => stringify({ ...initialValues, ...currentValues }) !== initialString
 }
 
-// export type NWCUri = `nostr+walletconnect://${string}?relay=${string}${string}&secret=${string}`;
-
 export const walletDetailsToNWCUri = (walletDetails: NWCWallet): string => {
 	const baseUri = `nostr+walletconnect://${walletDetails.walletPubKey}`
 

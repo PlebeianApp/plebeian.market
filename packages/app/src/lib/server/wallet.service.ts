@@ -37,7 +37,7 @@ export const getWalletsByUserId = async (userId: string) => {
 }
 
 export const postWalletForUser = async (walletType: WalletType, userId: string, walletDetails: NWCWallet) => {
-	const constructedNwc = walletDetailsToNWCUri(walletDetails) //`nostr+walletconnect://${walletDetails.walletPubKey}?relay=${encodeURIComponent(walletDetails.walletRelays[0])}&secret=${walletDetails.walletSecret}`
+	const constructedNwc = walletDetailsToNWCUri(walletDetails)
 	try {
 		const [result] = await db
 			.insert(userMeta)
