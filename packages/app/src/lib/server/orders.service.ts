@@ -1,8 +1,8 @@
 import { OrderFilter, orderSchema } from "$lib/schema";
-import { defaulRelaysUrls } from "$lib/constants";
 import { createId, db, orders } from "@plebeian/database";
 import { getAppSettings } from "./setup.service";
-import NDK, {NDKEvent, NDKPrivateKeySigner} from '@nostr-dev-kit/ndk'
+import { NDKEvent, NDKPrivateKeySigner } from '@nostr-dev-kit/ndk'
+import { ndk } from "$lib/stores/ndk";
 
 export const createOrder = async (orderFilter: OrderFilter) => {
   const { data, success } = orderSchema.safeParse({
@@ -17,7 +17,7 @@ export const createOrder = async (orderFilter: OrderFilter) => {
   const {instanceSk} = await getAppSettings()
 
   const signer = new NDKPrivateKeySigner(instanceSk)
-  const ndk = new NDK({signer, explicitRelayUrls: defaulRelaysUrls,}) 
+  ndk.signer = signer
 
   await ndk.connect()
 
@@ -29,5 +29,3 @@ export const createOrder = async (orderFilter: OrderFilter) => {
 	dm.content = await signer.encrypt(recipient, JSON.stringify(data))
 	dm.tags = [['p', recipient.pubkey]]
 	await dm.publish()
-  console.log('publish')
-};

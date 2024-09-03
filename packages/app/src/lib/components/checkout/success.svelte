@@ -1,9 +1,21 @@
 <script lang="ts">
 	import Button from '$lib/components/ui/button/button.svelte'
 	import { currentStep } from '$lib/stores/checkout'
+	import { sendCheckoutMessage } from '$lib/utils'
+	import { ORDER_STATUS } from '@plebeian/database/constants'
 	import { CheckCircle } from 'lucide-svelte'
 
 	export let variant: 'success' | 'sent' = 'success'
+
+	$: if (variant === 'sent') {
+		// no valid payment details
+		const message = JSON.stringify({
+			orderId: '',
+			type: 2,
+			status: ORDER_STATUS.PENDING,
+		})
+		sendCheckoutMessage(message)
+	}
 </script>
 
 <div class="flex flex-col items-center justify-center h-full gap-8">

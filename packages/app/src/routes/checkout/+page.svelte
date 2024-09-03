@@ -26,7 +26,6 @@
 		{} as Record<string, RichPaymentDetail[]>,
 	)
 
-	$: console.log('payment', $paymentDetailsForMerchants)
 	$: exampleSteps = [
 		{
 			component: Review,

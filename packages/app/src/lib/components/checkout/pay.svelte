@@ -7,10 +7,10 @@
 	import { userCartTotalInSats } from '$lib/stores/cart'
 	import { currentStep } from '$lib/stores/checkout'
 	import ndkStore from '$lib/stores/ndk'
-	import { truncateText } from '$lib/utils'
+	import { sendCheckoutMessage, truncateText } from '$lib/utils'
 	import { onDestroy } from 'svelte'
 
-	import { INVOICE_STATUS } from '@plebeian/database/constants'
+	import { INVOICE_STATUS, ORDER_STATUS } from '@plebeian/database/constants'
 	import { createId } from '@plebeian/database/utils'
 
 	import type { FormInputEvent } from '../ui/input'
@@ -45,6 +45,7 @@
 			if (invoice?.verify) {
 				paid = await invoice.isPaid()
 				if (paid) clearInterval(intervalId)
+				await sendInvoice()
 			}
 		}
 
@@ -63,16 +64,6 @@
 		if (paid) clearInterval(intervalId)
 	}
 
-	async function sendMessage(message: string) {
-		const testPubkey = '9e77eabc6b7c575a619ab7ce235b3d99443ff33b8b9d805eacc5ec3a38a48976'
-		const recipient = $ndkStore.getUser({ pubkey: testPubkey })
-		const dm = new NDKEvent($ndkStore)
-		dm.kind = 4
-		dm.content = (await $ndkStore.signer?.encrypt(recipient, message)) ?? ''
-		dm.tags = [['p', recipient.pubkey]]
-		await dm.publish()
-	}
-
 	async function sendPaymentDetails() {
 		const message = JSON.stringify({
 			orderId: '',
@@ -83,7 +74,7 @@
 				details: paymentDetails,
 			})),
 		})
-		await sendMessage(message)
+		await sendCheckoutMessage(message)
 	}
 
 	async function sendInvoice() {
@@ -91,11 +82,20 @@
 			id: createId(),
 			orderId: '',
 			method: info?.paymentMethod,
-			details: info?.paymentDetails, // e.g chosen btc address, ln invoice, etc
-			invoiceStatus: INVOICE_STATUS.PAID, // e.g “pending” (one of the values in INVOICE_STATUS constant)
+			details: info?.paymentDetails,
+			invoiceStatus: INVOICE_STATUS.PAID,
 			proof: '',
 		})
-		await sendMessage(message)
+		await sendCheckoutMessage(message)
+	}
+
+	async function sendCancellation() {
+		const message = JSON.stringify({
+			orderId: '',
+			type: 2,
+			status: ORDER_STATUS.CANCELLED,
+		})
+		await sendCheckoutMessage(message)
 	}
 
 	async function onPreimageInput(e: FormInputEvent<InputEvent>) {
@@ -128,8 +128,13 @@
 				>Open in app <span class="i-mdi-external-link" /></Button
 			>
 
-			<Button variant="ghost" class="flex items-center gap-2" on:click={() => currentStep.set($currentStep + 1)}
-				>Skip <span class="i-mdi-arrow-right" /></Button
+			<Button
+				variant="ghost"
+				class="flex items-center gap-2"
+				on:click={async () => {
+					await sendCancellation()
+					currentStep.set($currentStep + 1)
+				}}>Skip <span class="i-mdi-arrow-right" /></Button
 			>
 		</div>
 		{#if paid}

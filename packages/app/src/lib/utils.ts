@@ -2,7 +2,7 @@ import type { CreateQueryResult } from '@tanstack/svelte-query'
 import type { ClassValue } from 'clsx'
 import type { VerifiedEvent } from 'nostr-tools'
 import type { TransitionConfig } from 'svelte/transition'
-import { type NDKEvent, type NDKKind, type NDKTag, type NDKUserProfile, type NostrEvent } from '@nostr-dev-kit/ndk'
+import { NDKEvent, type NDKKind, type NDKTag, type NDKUserProfile, type NostrEvent } from '@nostr-dev-kit/ndk'
 import { page } from '$app/stores'
 import ndkStore from '$lib/stores/ndk'
 import { clsx } from 'clsx'
@@ -367,4 +367,17 @@ export const searchLocation = async (query: string): Promise<Location[]> => {
 export function mergeWithExisting<T>(existing: T[], newItems: T[], key: keyof T) {
 	const existingSet = new Set(existing.map((item) => item[key]))
 	return [...existing, ...newItems.filter((item) => !existingSet.has(item[key]))]
+}
+
+export async function sendCheckoutMessage(message: string) {
+	if (typeof window !== 'undefined') {
+		const ndk = get(ndkStore)
+  	const testPubkey = '9e77eabc6b7c575a619ab7ce235b3d99443ff33b8b9d805eacc5ec3a38a48976'
+  	const recipient = ndk.getUser({ pubkey: testPubkey })
+  	const dm = new NDKEvent(ndk)
+  	dm.kind = 4
+  	dm.content = (await ndk.signer?.encrypt(recipient, message)) ?? ''
+  	dm.tags = [['p', recipient.pubkey]]
+  	await dm.publish()
+	}
 }
