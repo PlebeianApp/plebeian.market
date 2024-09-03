@@ -6,7 +6,6 @@ import { aggregatorAddProducts } from '$lib/nostrSubs/data-aggregator'
 import { fetchUserProductData, normalizeProductsFromNostr } from '$lib/nostrSubs/utils'
 import { productsFilterSchema } from '$lib/schema'
 import { btcToCurrency } from '$lib/utils'
-import { get } from 'svelte/store'
 
 import { CURRENCIES } from '@plebeian/database/constants'
 
@@ -61,9 +60,6 @@ for (const c of CURRENCIES) {
 	createQuery(
 		{
 			queryKey: ['currency-conversion', c],
-			queryFn: async () => {
-				return btcToCurrency(c)
-			},
 			staleTime: 1000 * 60 * 60,
 		},
 		queryClient,
@@ -75,10 +71,15 @@ export const createCurrencyConversionQuery = (fromCurrency: string, amount: numb
 		{
 			queryKey: ['currency-conversion', fromCurrency, amount],
 			queryFn: async () => {
+				console.log('createCurrencyConversionQuery', fromCurrency, amount)
 				if (!fromCurrency || !amount) return null
-				const price = await queryClient.fetchQuery<number>({
-					queryKey: ['currency-conversion', fromCurrency],
-				})
+				console.log('fetch')
+				const price = await queryClient.fetchQuery(
+				{queryKey: ['currency-conversion', fromCurrency],
+					queryFn: () => btcToCurrency(fromCurrency) }
+					
+				)
+				console.log('price', fromCurrency, price)
 				const result = (amount / price) * numSatsInBtc
 				return result
 			},
