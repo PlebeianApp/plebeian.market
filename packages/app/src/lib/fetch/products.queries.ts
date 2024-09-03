@@ -74,11 +74,10 @@ export const createCurrencyConversionQuery = (fromCurrency: string, amount: numb
 				console.log('createCurrencyConversionQuery', fromCurrency, amount)
 				if (!fromCurrency || !amount) return null
 				console.log('fetch')
-				const price = await queryClient.fetchQuery(
-				{queryKey: ['currency-conversion', fromCurrency],
-					queryFn: () => btcToCurrency(fromCurrency) }
-					
-				)
+				const price = await queryClient.fetchQuery({
+					queryKey: ['currency-conversion', fromCurrency],
+					queryFn: () => btcToCurrency(fromCurrency),
+				})
 				console.log('price', fromCurrency, price)
 				const result = (amount / price) * numSatsInBtc
 				return result
