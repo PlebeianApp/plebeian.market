@@ -30,6 +30,7 @@ export const load = async () => {
 			links: [
 				{ title: '👤 Profile', href: '/settings/account/profile', description: 'Edit your profile', public: true },
 				{ title: '💸 Payments', href: '/settings/account/payments', description: 'Manage payment methods', public: false },
+				{ title: '👝 Wallets', href: '/settings/account/wallets', description: 'Manage your connected wallets', public: false },
 				{ title: '📦 Products', href: '/settings/account/products', description: 'View and manage your products', public: true },
 				{ title: '🏮 Stalls', href: '/settings/account/stalls', description: 'Manage your stalls', public: true },
 				{

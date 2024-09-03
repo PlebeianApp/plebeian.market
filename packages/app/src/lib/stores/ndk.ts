@@ -3,6 +3,7 @@ import { NDKEvent } from '@nostr-dev-kit/ndk'
 import NDKCacheAdapterDexie from '@nostr-dev-kit/ndk-cache-dexie'
 import NDKSvelte from '@nostr-dev-kit/ndk-svelte'
 import { type NostrSigner } from '@nostrify/nostrify'
+import { defaulRelaysUrls } from '$lib/constants'
 import { writable } from 'svelte/store'
 
 let cacheAdapter: NDKCacheAdapter | undefined = undefined
@@ -12,8 +13,6 @@ if (typeof window !== 'undefined') {
 		dbName: 'plebeian.ndk.v0',
 	})
 }
-
-export const defaulRelaysUrls: string[] = ['wss://relay.nostr.band', 'wss://nos.lol', 'wss://relay.nostr.net']
 
 export const relayBlackList: string[] = []
 

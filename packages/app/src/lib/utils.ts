@@ -16,7 +16,8 @@ import { get } from 'svelte/store'
 import { twMerge } from 'tailwind-merge'
 
 import type { EventCoordinates } from './interfaces'
-import { numSatsInBtc } from './constants'
+import type { NWCWallet } from './server/wallet.service'
+import { HEX_KEYS_REGEX, numSatsInBtc } from './constants'
 import { createProductExistsQuery } from './fetch/products.queries'
 import { createStallExistsQuery } from './fetch/stalls.queries'
 import { createUserExistsQuery } from './fetch/users.queries'
@@ -373,4 +374,36 @@ export function createChangeTracker<T extends Record<string, unknown>>(initialVa
 	const stringify = (obj: Record<string, unknown>): string => JSON.stringify(obj, (_, v) => (typeof v === 'function' ? v.toString() : v))
 	const initialString = stringify(initialValues)
 	return (currentValues: Partial<T>): boolean => stringify({ ...initialValues, ...currentValues }) !== initialString
+}
+
+export const walletDetailsToNWCUri = (walletDetails: NWCWallet): string => {
+	const baseUri = `nostr+walletconnect://${walletDetails.walletPubKey}`
+
+	const relayParams = walletDetails.walletRelays.map((relay) => `relay=${encodeURIComponent(relay)}`).join('&')
+
+	const secretParam = `secret=${walletDetails.walletSecret}`
+
+	return `${baseUri}?${relayParams}&${secretParam}`
+}
+
+export function nwcUriToWalletDetails(uri: string): NWCWallet | null {
+	try {
+		const url = new URL(uri)
+
+		if (url.protocol !== 'nostr+walletconnect:') throw new Error('Invalid protocol')
+
+		const walletPubKey = url.pathname.slice(2) || url.host
+		if (!HEX_KEYS_REGEX.test(walletPubKey)) throw new Error('Invalid public key' + walletPubKey)
+
+		const walletRelays = url.searchParams.getAll('relay')
+		if (walletRelays.length === 0) throw new Error('Missing relay parameter')
+
+		const walletSecret = url.searchParams.get('secret')
+		if (!walletSecret) throw new Error('Missing secret parameter')
+		return { walletPubKey, walletRelays, walletSecret }
+	} catch (error) {
+		console.log(error)
+		toast.error('Failed to parse NWC URI:' + error)
+		return null
+	}
 }
