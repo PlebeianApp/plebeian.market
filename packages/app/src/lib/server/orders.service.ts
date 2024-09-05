@@ -29,3 +29,6 @@ export const createOrder = async (orderFilter: OrderFilter) => {
 	dm.content = await signer.encrypt(recipient, JSON.stringify(data))
 	dm.tags = [['p', recipient.pubkey]]
 	await dm.publish()
+
+  return data
+}

@@ -1,4 +1,5 @@
 import type { OrderFilter } from "$lib/schema";
+import type { Order } from "@plebeian/database";
 import { createMutation } from "@tanstack/svelte-query";
 import { createRequest, queryClient } from './client'
 
@@ -9,7 +10,7 @@ declare module "./client" {
       "POST",
       never,
       OrderFilter,
-      never,
+      Order,
       never
     >;
   }
@@ -19,7 +20,7 @@ export const createOrderMutation = createMutation(
   {
     mutationKey: [],
     mutationFn: async (orderFilter: OrderFilter) => {
-      await createRequest(`POST /api/v1/orders`, {
+      return createRequest(`POST /api/v1/orders`, {
         auth: true,
         body: orderFilter,
       });

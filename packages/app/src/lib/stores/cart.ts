@@ -1,10 +1,12 @@
 import type { DisplayProduct } from '$lib/server/products.service'
+import { createOrderMutation } from '$lib/fetch/orders.mutations'
 import { createCurrencyConversionQuery } from '$lib/fetch/products.queries'
 import { debounce, resolveQuery } from '$lib/utils'
 import { toast } from 'svelte-sonner'
 import { derived, get, writable } from 'svelte/store'
 
 import type { ProductImage, ProductShipping } from '@plebeian/database'
+import ndkStore from './ndk'
 
 export interface CartProduct {
 	id: string
@@ -30,10 +32,18 @@ export interface CartUser {
 	stalls: string[]
 }
 
+export interface CartOrder {
+	id: string,
+	merchant: string
+	stallId: string,
+	proof: null | string
+}
+
 interface NormalizedCart {
 	users: Record<string, CartUser>
 	stalls: Record<string, CartStall>
 	products: Record<string, CartProduct>
+	orders: Record<string, CartOrder>
 }
 
 function createCart() {
@@ -62,7 +72,7 @@ function createCart() {
 				return JSON.parse(storedCart)
 			}
 		}
-		return { users: {}, stalls: {}, products: {} }
+		return { users: {}, stalls: {}, products: {}, orders: {} }
 	}
 
 	const findOrCreateUserStallProduct = (cart: NormalizedCart, userPubkey: string, stallId: string, productId?: string) => {
@@ -315,6 +325,42 @@ function createCart() {
 		},
 		calculateUserTotal,
 		calculateGrandTotal,
+		async placeOrders(merchant: string) {
+			const $ndkStore = get(ndkStore)
+			const $cart = get(cart)
+			const { stalls, pubkey: sellerUserId } = $cart.users[merchant]
+			for (const stallId of stalls) {
+				const stall = $cart.stalls[stallId]
+				if (!stall.shippingMethodId) {
+					throw toast.error('Make sure you specify the shipping method!')
+				}
+				const order = await get(createOrderMutation).mutateAsync({
+					address: '',
+					city: '',
+					contactName: '',
+					items: stall.products.map((p) => ({ product_id: p, quantity: $cart.products[p].amount })),
+					shippingId: stall.shippingMethodId,
+					stallId: stall.id,
+					type: 0,
+					buyerUserId: $ndkStore.activeUser!.pubkey,
+					sellerUserId,
+					zip: '',
+					country: 'iran',
+				})
+				update((cart) => {
+					cart.orders = {
+						...cart.orders,
+						[order.id]: {
+							id: order.id,
+							merchant: order.sellerUserId,
+							stallId: order.stallId,
+							proof: null
+						}
+					}
+					return cart
+				})
+			}
+		}
 	}
 }
 

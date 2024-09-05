@@ -4,7 +4,7 @@
 	import { Invoice, LightningAddress } from '@getalby/lightning-tools'
 	import { NDKEvent } from '@nostr-dev-kit/ndk'
 	import { createPaymentsForUserQuery } from '$lib/fetch/payments.queries'
-	import { userCartTotalInSats } from '$lib/stores/cart'
+	import { cart, userCartTotalInSats } from '$lib/stores/cart'
 	import { currentStep } from '$lib/stores/checkout'
 	import ndkStore from '$lib/stores/ndk'
 	import { sendCheckoutMessage, truncateText } from '$lib/utils'
@@ -22,6 +22,7 @@
 	$: total = $userCartTotalInSats?.[merchant.pubkey]
 	$: paymentDetails = createPaymentsForUserQuery(merchant.pubkey)
 
+	let isLoading = false
 	let invoice: Invoice | null = null
 
 	$: info = $paymentDetails.data?.find((info) => info.paymentMethod === 'ln')
@@ -45,7 +46,8 @@
 			if (invoice?.verify) {
 				paid = await invoice.isPaid()
 				if (paid) clearInterval(intervalId)
-				await sendInvoice()
+				markAsPaid(invoice.preimage!)
+				await sendInvoice(invoice.preimage!)
 			}
 		}
 
@@ -61,47 +63,85 @@
 		await window.webln!.enable()
 		const response = await window.webln!.sendPayment(invoice!.paymentRequest)
 		paid = (await invoice?.validatePreimage(response.preimage)) ?? paid
-		if (paid) clearInterval(intervalId)
+		const preimage = response.preimage
+		paid = true
+		if (paid) {
+			clearInterval(intervalId)
+			markAsPaid(preimage)
+			await sendInvoice(preimage)
+		}
+	}
+
+	function markAsPaid(proof: string) {
+		for (const order of Object.values($cart.orders)) {
+			if (order.merchant !== merchant.pubkey) {
+				continue
+			}
+			$cart.orders = { ...$cart.orders, [order.id]: { ...order, proof: proof } }
+		}
 	}
 
 	async function sendPaymentDetails() {
-		const message = JSON.stringify({
-			orderId: '',
-			type: 1,
-			message: null,
-			payment_options: $paymentDetails.data?.map(({ paymentDetails, paymentMethod }) => ({
-				method: paymentMethod,
-				details: paymentDetails,
-			})),
-		})
-		await sendCheckoutMessage(message)
+		isLoading = true
+		for (const order of Object.values($cart.orders)) {
+			if (order.merchant !== merchant.pubkey) {
+				continue
+			}
+			const message = JSON.stringify({
+				orderId: order.id,
+				type: 1,
+				message: null,
+				payment_options: $paymentDetails.data?.map(({ paymentDetails, paymentMethod }) => ({
+					method: paymentMethod,
+					details: paymentDetails,
+				})),
+			})
+			await sendCheckoutMessage(message)
+		}
+		isLoading = false
 	}
 
-	async function sendInvoice() {
-		const message = JSON.stringify({
-			id: createId(),
-			orderId: '',
-			method: info?.paymentMethod,
-			details: info?.paymentDetails,
-			invoiceStatus: INVOICE_STATUS.PAID,
-			proof: '',
-		})
-		await sendCheckoutMessage(message)
+	async function sendInvoice(proof: string) {
+		isLoading = true
+		for (const order of Object.values($cart.orders)) {
+			if (order.merchant !== merchant.pubkey) {
+				continue
+			}
+			const message = JSON.stringify({
+				id: createId(),
+				orderId: order.id,
+				method: info?.paymentMethod,
+				details: info?.paymentDetails,
+				invoiceStatus: INVOICE_STATUS.PAID,
+				proof,
+			})
+			await sendCheckoutMessage(message)
+		}
+		currentStep.set($currentStep + 1)
+		isLoading = false
 	}
 
 	async function sendCancellation() {
-		const message = JSON.stringify({
-			orderId: '',
-			type: 2,
-			status: ORDER_STATUS.CANCELLED,
-		})
-		await sendCheckoutMessage(message)
+		isLoading = true
+		for (const order of Object.values($cart.orders)) {
+			if (order.merchant !== merchant.pubkey) {
+				continue
+			}
+			const message = JSON.stringify({
+				orderId: order.id,
+				type: 2,
+				status: ORDER_STATUS.CANCELLED,
+			})
+			await sendCheckoutMessage(message)
+		}
+		isLoading = false
 	}
 
 	async function onPreimageInput(e: FormInputEvent<InputEvent>) {
-		paid = (await invoice!.validatePreimage(e.currentTarget.value)) ?? paid
+		const preimage = e.currentTarget.value
+		paid = (await invoice!.validatePreimage(preimage)) ?? paid
 		if (paid) {
-			await sendInvoice()
+			await sendInvoice(preimage)
 		}
 	}
 </script>
@@ -120,15 +160,16 @@
 
 		<div class="flex gap-2 mx-auto">
 			{#if window.webln}
-				<Button class="flex items-center gap-2" on:click={onWeblnPay}>
+				<Button disabled={isLoading} class="flex items-center gap-2" on:click={onWeblnPay}>
 					Pay <span class="i-mdi-cash" />
 				</Button>
 			{/if}
-			<Button class="flex items-center gap-2" on:click={() => window.open(url, '_blank')}
+			<Button disabled={isLoading} class="flex items-center gap-2" on:click={() => window.open(url, '_blank')}
 				>Open in app <span class="i-mdi-external-link" /></Button
 			>
 
 			<Button
+				disabled={isLoading}
 				variant="ghost"
 				class="flex items-center gap-2"
 				on:click={async () => {
