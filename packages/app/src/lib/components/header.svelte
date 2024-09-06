@@ -7,6 +7,7 @@
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
 	import { login, logout } from '$lib/ndkLogin'
 	import ndkStore from '$lib/stores/ndk'
+	import { balanceOfWorkingNWCs } from '$lib/stores/nwc'
 	import { getAccount } from '$lib/stores/session'
 	import { onMount } from 'svelte'
 
@@ -66,6 +67,11 @@
 							<Auth />
 							{#if $ndkStore.activeUser}
 								My account
+							{/if}
+						</DropdownMenu.Label>
+						<DropdownMenu.Label>
+							{#if $balanceOfWorkingNWCs}
+								NWC balance: {$balanceOfWorkingNWCs} sats
 							{/if}
 						</DropdownMenu.Label>
 						{#if $ndkStore.activeUser}

@@ -14,6 +14,7 @@
 	import Drawer from '$lib/components/drawer.svelte'
 	import { queryClient } from '$lib/fetch/client'
 	import { processQueuedInsertions } from '$lib/nostrSubs/data-aggregator'
+	import { initNdkNWCs } from '$lib/stores/nwc'
 	import { cleanupCachedEvents } from '$lib/stores/session'
 
 	import type { LayoutData } from './$types'
@@ -49,6 +50,7 @@
 			})
 		}
 		cleanupCachedEvents()
+		await initNdkNWCs()
 	})
 
 	$: webManifestLink = pwaInfo ? pwaInfo.webManifest.linkTag : ''
