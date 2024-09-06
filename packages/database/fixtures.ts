@@ -3,6 +3,8 @@ export const devInstance = {
 	sk: '782cda4f3432101f07360ea30a10b228097e2b63e9e30806c510868b83ff5f52',
 }
 
+// devUser1 can receive zaps at totaldaybed859@minibits.cash
+
 export const devUser1 = {
 	pk: '86a82cab18b293f53cbaaae8cdcbee3f7ec427fdf9f9c933db77800bb5ef38a0',
 	sk: '5c81bffa8303bbd7726d6a5a1170f3ee46de2addabefd6a735845166af01f5c0',
