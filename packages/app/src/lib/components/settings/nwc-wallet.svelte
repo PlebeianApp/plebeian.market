@@ -10,6 +10,8 @@
 	import { toast } from 'svelte-sonner'
 
 	import { Checkbox } from '../ui/checkbox'
+	import MiniBalance from './mini-balance.svelte'
+	import QrDialog from './qr-dialog.svelte'
 
 	export let nwcWallet: DisplayWallet | undefined
 	let showSecret = false
@@ -20,9 +22,10 @@
 	let walletSecret = ''
 	let initialPersistNwcToDB: boolean
 	let hasChanged = false
+
 	const dispatch = createEventDispatcher()
 
-	onMount(() => {
+	onMount(async () => {
 		persistNwcToDB = Boolean(nwcWallet && !nwcWallet.id.startsWith('local-'))
 		initialPersistNwcToDB = persistNwcToDB
 		if (nwcWallet) {
@@ -122,6 +125,15 @@
 		})
 	}
 
+	const handleQrScanToNWCUri = (e: CustomEvent) => {
+		const wallet = e.detail
+		if (wallet) {
+			walletPubKey = wallet.walletPubKey
+			walletRelays = wallet.walletRelays
+			walletSecret = wallet.walletSecret
+		}
+	}
+
 	const handleRelayChange = (event: Event) => {
 		const target = event.target as HTMLInputElement
 		walletRelays = target.value
@@ -133,7 +145,7 @@
 
 <Collapsible.Root class="border-black border p-2" open={!nwcWallet?.walletDetails}>
 	<div class="flex flex-row">
-		<Collapsible.Trigger class="flex flex-row w-full items-center justify-between gap-2">
+		<Collapsible.Trigger class="flex flex-row w-full items-center justify-between gap-2 mr-4">
 			<div class="flex items-center gap-2 font-bold">
 				<span class="i-mdi-purse w-6 h-6" />
 				{#if nwcWallet?.id || nwcWallet?.walletDetails.walletRelays}
@@ -144,6 +156,9 @@
 			</div>
 			<span class="i-mdi-keyboard-arrow-down w-6 h-6" />
 		</Collapsible.Trigger>
+		{#if nwcWallet?.walletDetails}
+			<MiniBalance wallet={nwcWallet?.walletDetails} />
+		{/if}
 	</div>
 
 	<Collapsible.Content class="flex flex-col gap-4 py-4">
@@ -152,9 +167,12 @@
 				<div class="flex items-center justify-between">
 					<h3 class="text-lg font-bold">Wallet Connect</h3>
 
-					<Button on:click={handlePasteNWCUri} size="icon" variant="ghost" class="text-destructive border-0">
-						<span class="i-mingcute-clipboard-fill text-black w-6 h-6"></span>
-					</Button>
+					<div class="flex">
+						<QrDialog on:validQrScanned={(e) => handleQrScanToNWCUri(e)} />
+						<Button on:click={handlePasteNWCUri} size="icon" variant="ghost" class="text-destructive border-0">
+							<span class="i-mingcute-clipboard-fill text-black w-6 h-6"></span>
+						</Button>
+					</div>
 				</div>
 				<div class="grid w-full items-center gap-1.5">
 					<Label for="nwc-pubkey" class="font-bold">Wallet connect pubkey</Label>

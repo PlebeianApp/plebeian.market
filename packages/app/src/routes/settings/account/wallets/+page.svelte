@@ -28,6 +28,7 @@
 		showEmptyWallet = false
 		queryClient.invalidateQueries({ queryKey: ['walletDetails'] })
 		loadLocalWallets()
+		showEmptyWallet = false
 	}
 
 	function handleWalletDeleted(event: CustomEvent<string>) {
