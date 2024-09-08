@@ -1,3 +1,5 @@
+import type { OrderStatus }  from "@plebeian/database/constants"
+import { ORDER_STATUS } from "@plebeian/database/constants";
 import { z } from "zod";
 
 import { validUrls } from "./constants";
@@ -77,6 +79,8 @@ export const postProductImageSchema = z.object({
 
 export type PostProductImageFilter = z.infer<typeof postProductImageSchema>;
 
+type NonEmptyArray<T> = [T, ...T[]]
+
 export const orderSchema = z.object({
   id: z.string().optional(),
   type: z.number(),
@@ -84,6 +88,7 @@ export const orderSchema = z.object({
   buyerUserId: z.string(),
   shippingId: z.string(),
   stallId: z.string(),
+  status: z.enum(Object.values(ORDER_STATUS) as NonEmptyArray<OrderStatus>),
   address: z.string(),
   zip: z.string(),
   city: z.string(),

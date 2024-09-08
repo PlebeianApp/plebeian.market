@@ -3,6 +3,7 @@
 	import QrCode from '@castlenine/svelte-qrcode'
 	import { Invoice, LightningAddress } from '@getalby/lightning-tools'
 	import { NDKEvent } from '@nostr-dev-kit/ndk'
+	import { updateOrderMutation, updateOrderStatusMutation } from '$lib/fetch/orders.mutations'
 	import { createPaymentsForUserQuery } from '$lib/fetch/payments.queries'
 	import { cart, userCartTotalInSats } from '$lib/stores/cart'
 	import { currentStep } from '$lib/stores/checkout'
@@ -115,7 +116,9 @@
 				invoiceStatus: INVOICE_STATUS.PAID,
 				proof,
 			})
+			// TODO: create invoice mutation
 			await sendCheckoutMessage(message)
+			await $updateOrderMutation.mutateAsync([order.id, { status: ORDER_STATUS.PAID }])
 		}
 		currentStep.set($currentStep + 1)
 		isLoading = false

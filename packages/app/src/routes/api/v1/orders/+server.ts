@@ -1,8 +1,6 @@
 import type { OrderFilter } from "$lib/schema";
 import { createOrder } from "$lib/server/orders.service";
-import type { NostrEvent } from "@nostr-dev-kit/ndk";
 import { error, json, type RequestHandler } from "@sveltejs/kit";
-
 
 export const POST: RequestHandler = async ({ request, url: { searchParams } }) => {
 	try {
