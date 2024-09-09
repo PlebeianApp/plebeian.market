@@ -60,12 +60,14 @@
 					<span class=" font-bold">
 						{#if $priceQuery?.isLoading}
 							<Spinner />
-						{:else if typeof $priceQuery?.data === 'number'}
+						{:else if typeof $priceQuery?.data === 'number' && !Number.isNaN($priceQuery.data)}
 							{$priceQuery.data.toLocaleString('en-US', {
 								maximumFractionDigits: 2,
 							})}
+							sats
+						{:else}
+							<i class="text-lg">price ({price} {currency}) could not be converted</i>
 						{/if}
-						sats
 					</span>
 				</div>
 			</div>
