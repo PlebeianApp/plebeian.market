@@ -82,8 +82,17 @@
 			{#each Object.entries(userTotal.currencyTotals) as [currency, amounts]}
 				<small>{currency} Total: {(amounts.total + amounts.shipping).toLocaleString()} </small>
 			{/each}
-			<small>Shipping in sats: {userTotal.shippingInSats.toLocaleString()} sats</small>
-			<small><strong>Total in sats:</strong> {userTotal.totalInSats.toLocaleString()} sats</small>
+			<small
+				>Shipping in sats: {userTotal.shippingInSats.toLocaleString(undefined, {
+					maximumFractionDigits: 0,
+				})} sats</small
+			>
+			<small
+				><strong>Total in sats:</strong>
+				{userTotal.totalInSats.toLocaleString(undefined, {
+					maximumFractionDigits: 0,
+				})} sats</small
+			>
 		</div>
 	{:else if mode === 'payment' && hasFormData}
 		<Button on:click={() => console.log(formData)}>Send</Button>
