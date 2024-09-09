@@ -72,6 +72,9 @@ export const createCurrencyConversionQuery = (fromCurrency: string, amount: numb
 			queryKey: ['currency-conversion', fromCurrency, amount],
 			queryFn: async () => {
 				if (!fromCurrency || !amount) return null
+				if (['sats', 'sat'].includes(fromCurrency.toLowerCase())) {
+					return amount
+				}
 				const price = await queryClient.fetchQuery({
 					queryKey: ['currency-conversion', fromCurrency],
 					queryFn: () => btcToCurrency(fromCurrency),
