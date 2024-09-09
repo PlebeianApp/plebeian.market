@@ -2,6 +2,7 @@
 	import type { NWCWallet } from '$lib/server/wallet.service'
 	import { NDKNwc } from '@nostr-dev-kit/ndk'
 	import ndkStore from '$lib/stores/ndk'
+	import { NWC_TIMEOUT } from '$lib/stores/nwc'
 	import { onDestroy, onMount } from 'svelte'
 
 	import Spinner from '../assets/spinner.svelte'
@@ -22,14 +23,12 @@
 			secret: wallet.walletSecret,
 		})
 
-		await nwc.blockUntilReady()
-
 		const getBalanceWithTimeout = async () => {
 			try {
 				const balanceRes = await Promise.race([
 					nwc.getBalance(),
 					new Promise((_, reject) => {
-						timeoutId = setTimeout(() => reject(new Error('Timeout')), 5000) as unknown as number
+						timeoutId = setTimeout(() => reject(new Error('Timeout')), NWC_TIMEOUT) as unknown as number
 					}),
 				])
 

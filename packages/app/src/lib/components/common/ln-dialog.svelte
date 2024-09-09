@@ -36,7 +36,7 @@
 </script>
 
 <Dialog.Root bind:open={qrDialogOpen}>
-	<Dialog.Content class="max-w-[425px] gap-0 p-0 text-black">
+	<Dialog.Content class="max-w-[425px] text-black">
 		<Dialog.Header>
 			<Dialog.Title>Lightning invoice for {zapAmountSats} sats</Dialog.Title>
 			<Dialog.Description class="text-black">

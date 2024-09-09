@@ -52,9 +52,7 @@
 					console.error('Invalid QR code data:', error)
 				}
 			},
-			(errorMessage: string) => {
-				console.log(errorMessage)
-			},
+			(errorMessage: string) => {},
 		)
 	}
 

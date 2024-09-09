@@ -60,7 +60,7 @@
 		following = false
 	}
 
-	const handleZap = () => {
+	const handleThreeDots = () => {
 		const user = $ndkStore.getUser({ pubkey: id })
 		// await user.zap();
 	}
@@ -113,7 +113,7 @@
 									</DropdownMenu.Content>
 								</DropdownMenu.Root>
 							{/if}
-							<Button size="icon" variant="secondary" on:click={handleZap}>
+							<Button size="icon" variant="secondary" on:click={handleThreeDots}>
 								<span class="i-mdi-dots-horizontal w-6 h-6" />
 							</Button>
 							<InteractiveZapButton userIdToZap={id} />
