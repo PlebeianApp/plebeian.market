@@ -104,12 +104,14 @@
 				<h2 class=" inline-flex items-center text-2xl">
 					{#if $priceQuery?.isLoading}
 						<Spinner />
-					{:else if $priceQuery?.data}
+					{:else if typeof $priceQuery?.data === 'number' && !Number.isNaN($priceQuery.data)}
 						{$priceQuery.data.toLocaleString('en-US', {
 							maximumFractionDigits: 2,
 						})}
+						sats
+					{:else}
+						<i class="text-lg">price ({$productsQuery.data?.price} {$productsQuery.data?.currency}) could not be converted</i>
 					{/if}
-					sats
 				</h2>
 				{#if $productsQuery.data.price && $productsQuery.data.currency && !['sat', 'sats', 'btc'].includes($productsQuery.data.currency.toLowerCase())}
 					<h3 class=" text-lg font-normal">

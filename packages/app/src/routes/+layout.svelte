@@ -23,6 +23,10 @@
 		appSettings: { isFirstTimeRunning, allowRegister },
 	} = data)
 
+	for (const [currency, price] of data.prices) {
+		queryClient.setQueryData(['currency-conversion', currency], price)
+	}
+
 	onMount(async () => {
 		if (isFirstTimeRunning) {
 			goto('/setup', { invalidateAll: true })

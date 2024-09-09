@@ -1,10 +1,13 @@
 import type { ProductsFilter } from '$lib/schema'
 import type { DisplayProduct } from '$lib/server/products.service'
 import { createQuery } from '@tanstack/svelte-query'
+import { numSatsInBtc } from '$lib/constants'
 import { aggregatorAddProducts } from '$lib/nostrSubs/data-aggregator'
 import { fetchUserProductData, normalizeProductsFromNostr } from '$lib/nostrSubs/utils'
 import { productsFilterSchema } from '$lib/schema'
-import { currencyToBtc } from '$lib/utils'
+import { btcToCurrency } from '$lib/utils'
+
+import { CURRENCIES } from '@plebeian/database/constants'
 
 import { createRequest, queryClient } from './client'
 
@@ -53,13 +56,27 @@ export const createProductQuery = (productId: string) =>
 		queryClient,
 	)
 
+for (const c of CURRENCIES) {
+	createQuery(
+		{
+			queryKey: ['currency-conversion', c],
+			staleTime: 1000 * 60 * 60,
+		},
+		queryClient,
+	)
+}
+
 export const createCurrencyConversionQuery = (fromCurrency: string, amount: number) =>
 	createQuery<number | null>(
 		{
 			queryKey: ['currency-conversion', fromCurrency, amount],
 			queryFn: async () => {
 				if (!fromCurrency || !amount) return null
-				const result = await currencyToBtc(fromCurrency, amount, true)
+				const price = await queryClient.fetchQuery({
+					queryKey: ['currency-conversion', fromCurrency],
+					queryFn: () => btcToCurrency(fromCurrency),
+				})
+				const result = (amount / price) * numSatsInBtc
 				return result
 			},
 			enabled: amount > 0,
