@@ -61,8 +61,8 @@
 						{#if $priceQuery?.isLoading}
 							<Spinner />
 						{:else if typeof $priceQuery?.data === 'number' && !Number.isNaN($priceQuery.data)}
-							{$priceQuery.data.toLocaleString('en-US', {
-								maximumFractionDigits: 2,
+							{$priceQuery.data.toLocaleString(undefined, {
+								maximumFractionDigits: 0,
 							})}
 							sats
 						{:else}

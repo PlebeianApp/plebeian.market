@@ -20,7 +20,11 @@
 		<div class="flex justify-between items-center mb-4">
 			<span class="text-xl font-bold">Total:</span>
 			<div class="text-right">
-				<div class="text-2xl font-bold">{grandTotal.grandTotalInSats.toLocaleString()} sats</div>
+				<div class="text-2xl font-bold">
+					{grandTotal.grandTotalInSats.toLocaleString(undefined, {
+						maximumFractionDigits: 0,
+					})} sats
+				</div>
 			</div>
 		</div>
 
@@ -35,15 +39,27 @@
 				<div class="mt-4 space-y-2">
 					<div class="flex justify-between mb-2">
 						<span>Subtotal:</span>
-						<span>{grandTotal.grandSubtotalInSats.toLocaleString()} sats</span>
+						<span
+							>{grandTotal.grandSubtotalInSats.toLocaleString(undefined, {
+								maximumFractionDigits: 0,
+							})} sats</span
+						>
 					</div>
 					<div class="flex justify-between mb-2">
 						<span>Shipping:</span>
-						<span>{grandTotal.grandShippingInSats.toLocaleString()} sats</span>
+						<span
+							>{grandTotal.grandShippingInSats.toLocaleString(undefined, {
+								maximumFractionDigits: 0,
+							})} sats</span
+						>
 					</div>
 					<div class="flex justify-between font-bold text-lg">
 						<span>Grand Total:</span>
-						<span>{grandTotal.grandTotalInSats.toLocaleString()} sats</span>
+						<span
+							>{grandTotal.grandTotalInSats.toLocaleString(undefined, {
+								maximumFractionDigits: 0,
+							})} sats</span
+						>
 					</div>
 				</div>
 			</CollapsibleContent>
