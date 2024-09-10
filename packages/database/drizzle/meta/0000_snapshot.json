@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "fe34cba4-6a8f-42ce-86c8-f2bbac9573b5",
+  "id": "9894c77e-e94f-4fa9-8826-5d0427c93646",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "app_settings": {
@@ -656,34 +656,7 @@
         }
       },
       "indexes": {},
-      "foreignKeys": {
-        "invoices_order_id_orders_id_fk": {
-          "name": "invoices_order_id_orders_id_fk",
-          "tableFrom": "invoices",
-          "tableTo": "orders",
-          "columnsFrom": [
-            "order_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "cascade"
-        },
-        "invoices_payment_details_id_payment_details_id_fk": {
-          "name": "invoices_payment_details_id_payment_details_id_fk",
-          "tableFrom": "invoices",
-          "tableTo": "payment_details",
-          "columnsFrom": [
-            "payment_details_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "cascade"
-        }
-      },
+      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },

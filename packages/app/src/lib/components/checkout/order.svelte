@@ -12,6 +12,7 @@
 	let isLoading = false
 
 	$: paymentDetails = createPaymentsForUserQuery(merchant.pubkey)
+	$: console.log('paymentDetails', $paymentDetails.data)
 </script>
 
 <div class="w-1/2 mx-auto flex flex-col gap-4">
@@ -23,8 +24,12 @@
 			disabled={isLoading}
 			on:click={async () => {
 				isLoading = true
-				await cart.placeOrders(merchant.pubkey)
-				currentStep.set($paymentDetails.data?.length ? $currentStep + 2 : $currentStep + 1)
+				try {
+					await cart.placeOrders(merchant.pubkey)
+					currentStep.set($paymentDetails.data?.length ? $currentStep + 2 : $currentStep + 1)
+				} catch (e) {
+					console.log(e)
+				}
 				isLoading = false
 			}}>Order</Button
 		>
@@ -34,8 +39,12 @@
 				disabled={isLoading}
 				on:click={async () => {
 					isLoading = true
-					await cart.placeOrders(merchant.pubkey)
-					currentStep.set($currentStep + 1)
+					try {
+						await cart.placeOrders(merchant.pubkey)
+						currentStep.set($currentStep + 1)
+					} catch (e) {
+						console.log(e)
+					}
 					isLoading = false
 				}}>Order & Pay</Button
 			>

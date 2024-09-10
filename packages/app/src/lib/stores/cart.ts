@@ -5,8 +5,10 @@ import { debounce, resolveQuery } from '$lib/utils'
 import { toast } from 'svelte-sonner'
 import { derived, get, writable } from 'svelte/store'
 
+import { ORDER_STATUS } from '@plebeian/database/constants'
 import type { ProductImage, ProductShipping } from '@plebeian/database'
 import ndkStore from './ndk'
+import { createInvoiceMutation } from '$lib/fetch/invoices.mutations'
 
 export interface CartProduct {
 	id: string
@@ -36,6 +38,13 @@ export interface CartOrder {
 	id: string,
 	merchant: string
 	stallId: string,
+	invoiceId: string
+	proof: null | string
+}
+
+export interface CartInvoice {
+	id: string,
+	orderId: string,
 	proof: null | string
 }
 
@@ -44,6 +53,7 @@ interface NormalizedCart {
 	stalls: Record<string, CartStall>
 	products: Record<string, CartProduct>
 	orders: Record<string, CartOrder>
+	invoices: Record<string, CartInvoice>
 }
 
 function createCart() {
@@ -334,11 +344,13 @@ function createCart() {
 				if (!stall.shippingMethodId) {
 					throw toast.error('Make sure you specify the shipping method!')
 				}
+				console.log(sellerUserId, $ndkStore.activeUser!.pubkey)
 				const order = await get(createOrderMutation).mutateAsync({
 					address: '',
 					city: '',
 					contactName: '',
 					items: stall.products.map((p) => ({ product_id: p, quantity: $cart.products[p].amount })),
+					status: ORDER_STATUS.PENDING,
 					shippingId: stall.shippingMethodId,
 					stallId: stall.id,
 					type: 0,
@@ -347,6 +359,19 @@ function createCart() {
 					zip: '',
 					country: 'iran',
 				})
+
+				const stallTotal =
+					stall.products.reduce((total, productId) => {
+						const product = $cart.products[productId]
+						return total + product.price * product.amount
+					}, 0) + (stall.shippingCost || 0)
+				const stallTotalInSats = (await resolveQuery(() => createCurrencyConversionQuery(stall.currency, stallTotal))) || 0
+				console.log('invoice')
+				const invoice = await get(createInvoiceMutation).mutateAsync({
+					orderId: order.id,
+					totalAmount: `${stallTotalInSats}`,
+					paymentDetails: ''
+				})
 				update((cart) => {
 					cart.orders = {
 						...cart.orders,
@@ -354,6 +379,15 @@ function createCart() {
 							id: order.id,
 							merchant: order.sellerUserId,
 							stallId: order.stallId,
+							invoiceId: invoice.id,
+							proof: null
+						}
+					}
+					cart.invoices = {
+						...cart.invoices,
+						[invoice.id]: {
+							id: invoice.id,
+							orderId: order.id,
 							proof: null
 						}
 					}

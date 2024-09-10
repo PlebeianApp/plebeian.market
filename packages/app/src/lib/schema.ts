@@ -1,5 +1,5 @@
-import type { OrderStatus }  from "@plebeian/database/constants"
-import { ORDER_STATUS } from "@plebeian/database/constants";
+import type { InvoiceStatus, OrderStatus } from "@plebeian/database/constants";
+import { ORDER_STATUS, INVOICE_STATUS } from "@plebeian/database/constants";
 import { z } from "zod";
 
 import { validUrls } from "./constants";
@@ -79,7 +79,7 @@ export const postProductImageSchema = z.object({
 
 export type PostProductImageFilter = z.infer<typeof postProductImageSchema>;
 
-type NonEmptyArray<T> = [T, ...T[]]
+type NonEmptyArray<T> = [T, ...T[]];
 
 export const orderSchema = z.object({
   id: z.string().optional(),
@@ -106,4 +106,22 @@ export const orderSchema = z.object({
   ),
 });
 
-export type OrderFilter = z.infer<typeof orderSchema>
+export type OrderFilter = z.infer<typeof orderSchema>;
+
+export const createInvoiceFilter = z.object({
+  orderId: z.string(),
+  totalAmount: z.string(),
+  paymentDetails: z.string(),
+});
+
+export type CreateInvoiceFilter = z.infer<typeof createInvoiceFilter>;
+
+export const updateInvoiceFilter = z.object({
+  invoiceStatus: z.enum(
+    Object.values(INVOICE_STATUS) as NonEmptyArray<InvoiceStatus>,
+  ),
+  paymentDetails: z.string(),
+  proof: z.string(),
+});
+
+export type UpdateInvoiceFilter = z.infer<typeof updateInvoiceFilter>;

@@ -408,15 +408,15 @@ export const invoices = sqliteTable('invoices', {
 		.notNull()
 		.default(sql`(unixepoch())`),
 	orderId: text('order_id')
-		.notNull()
-		.references(() => orders.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
+		.notNull(),
+		// .references(() => orders.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
 	totalAmount: numeric('total_amount').notNull(),
 	invoiceStatus: text('invoice_status', { enum: Object.values(INVOICE_STATUS) as NonEmptyArray<InvoiceStatus> })
 		.notNull()
 		.default('pending'),
 	paymentDetails: text('payment_details_id')
-		.notNull()
-		.references(() => paymentDetails.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
+		.notNull(),
+		// .references(() => paymentDetails.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
 	proof: text('proof'),
 })
 

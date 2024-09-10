@@ -2,12 +2,11 @@
 	import type { CartUser } from '$lib/stores/cart'
 	import QrCode from '@castlenine/svelte-qrcode'
 	import { Invoice, LightningAddress } from '@getalby/lightning-tools'
-	import { NDKEvent } from '@nostr-dev-kit/ndk'
-	import { updateOrderMutation, updateOrderStatusMutation } from '$lib/fetch/orders.mutations'
+	import { updateInvoiceMutation } from '$lib/fetch/invoices.mutations'
+	import { updateOrderMutation } from '$lib/fetch/orders.mutations'
 	import { createPaymentsForUserQuery } from '$lib/fetch/payments.queries'
 	import { cart, userCartTotalInSats } from '$lib/stores/cart'
 	import { currentStep } from '$lib/stores/checkout'
-	import ndkStore from '$lib/stores/ndk'
 	import { sendCheckoutMessage, truncateText } from '$lib/utils'
 	import { onDestroy } from 'svelte'
 
@@ -118,11 +117,16 @@
 			})
 			// TODO: create invoice mutation
 			await sendCheckoutMessage(message)
+			await $updateInvoiceMutation.mutateAsync([
+				order.invoiceId,
+				{ invoiceStatus: INVOICE_STATUS.PAID, paymentDetails: info?.paymentDetails, proof },
+			])
 			await $updateOrderMutation.mutateAsync([order.id, { status: ORDER_STATUS.PAID }])
 		}
 		currentStep.set($currentStep + 1)
 		isLoading = false
 	}
+	sendInvoice('proof')
 
 	async function sendCancellation() {
 		isLoading = true

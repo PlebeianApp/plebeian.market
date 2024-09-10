@@ -11,7 +11,6 @@ export const createOrder = async (orderFilter: OrderFilter) => {
     id: createId(),
     ...orderFilter,
   });
-  console.log(data, success);
 
   if (!success) throw Error(`Invalid stall event data`);
   await db.insert(orders).values(data);
@@ -44,7 +43,7 @@ export const updateOrder = async (
   const [{ sellerUserId, buyerUserId }] = await db
     .select({
       sellerUserId: orders.sellerUserId,
-      buyerUserId: orders.sellerUserId,
+      buyerUserId: orders.buyerUserId,
     })
     .from(orders)
     .where(eq(orders.id, orderId));
