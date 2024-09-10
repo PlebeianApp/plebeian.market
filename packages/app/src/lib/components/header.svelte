@@ -71,7 +71,11 @@
 						</DropdownMenu.Label>
 						<DropdownMenu.Label>
 							{#if $balanceOfWorkingNWCs}
-								NWC balance: {$balanceOfWorkingNWCs} sats
+								<div class="flex flex-col">
+									<section class=" inline-flex items-center">
+										<span class=" i-bitcoin-icons-satoshi-v1-outline w-6 h-6" />{$balanceOfWorkingNWCs} sats
+									</section>
+								</div>
 							{/if}
 						</DropdownMenu.Label>
 						{#if $ndkStore.activeUser}

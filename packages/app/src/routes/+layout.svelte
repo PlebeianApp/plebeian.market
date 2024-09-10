@@ -14,7 +14,7 @@
 	import Drawer from '$lib/components/drawer.svelte'
 	import { queryClient } from '$lib/fetch/client'
 	import { processQueuedInsertions } from '$lib/nostrSubs/data-aggregator'
-	import { initNdkNWCs, setupNdkStoreListener } from '$lib/stores/nwc'
+	import { setupNdkStoreListener } from '$lib/stores/nwc'
 	import { cleanupCachedEvents } from '$lib/stores/session'
 
 	import type { LayoutData } from './$types'

@@ -58,6 +58,8 @@
 	"dependencies": {
 		"@castlenine/svelte-qrcode": "^2.2.0",
 		"@fontsource/ibm-plex-mono": "^5.0.13",
+		"@gandlaf21/bolt11-decode": "^3.1.1",
+		"@iconify-json/bitcoin-icons": "^1.2.0",
 		"@internationalized/date": "^3.5.4",
 		"@nostr-dev-kit/ndk": "^2.10.0",
 		"@nostr-dev-kit/ndk-cache-dexie": "^2.5.1",
@@ -79,6 +81,7 @@
 		"html5-qrcode": "^2.3.8",
 		"jsonwebtoken": "^9.0.2",
 		"leaflet": "^1.9.4",
+		"light-bolt11-decoder": "^3.1.1",
 		"lucide-svelte": "^0.372.0",
 		"mode-watcher": "^0.3.0",
 		"ngeohash": "^0.6.3",

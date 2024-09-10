@@ -18,7 +18,6 @@
 	export let nwcWallet: DisplayWallet | undefined
 	let showSecret = false
 	let persistNwcToDB: boolean
-
 	let walletPubKey = ''
 	let walletRelays: string[] = []
 	let walletSecret = ''
@@ -54,37 +53,9 @@
 		const wallet = { walletPubKey, walletRelays, walletSecret }
 
 		if (!persistNwcToDB) {
-			const localWallets = JSON.parse(localStorage.getItem(`nwc-wallets-${$ndkStore.activeUser.pubkey}`) || '{}')
-			if (nwcWallet && nwcWallet.id.startsWith('local-')) {
-				localWallets[nwcWallet.id] = wallet
-				localStorage.setItem(`nwc-wallets-${$ndkStore.activeUser.pubkey}`, JSON.stringify(localWallets))
-				toast.success('Local wallet updated')
-				dispatch('walletAdded', { id: nwcWallet.id, wallet })
-			} else {
-				if (nwcWallet && !nwcWallet.id.startsWith('local-')) {
-					await $deleteWalletMutation.mutateAsync(nwcWallet.id)
-				}
-				const newId = `local-${Date.now()}`
-				localWallets[newId] = wallet
-				localStorage.setItem(`nwc-wallets-${$ndkStore.activeUser.pubkey}`, JSON.stringify(localWallets))
-				toast.success('Wallet saved locally')
-				dispatch('walletAdded', { id: newId, wallet })
-			}
+			await handleLocalStorage(wallet)
 		} else {
-			if (nwcWallet && nwcWallet.id.startsWith('local-')) {
-				const localWallets = JSON.parse(localStorage.getItem(`nwc-wallets-${$ndkStore.activeUser.pubkey}`) || '{}')
-				delete localWallets[nwcWallet.id]
-				localStorage.setItem(`nwc-wallets-${$ndkStore.activeUser.pubkey}`, JSON.stringify(localWallets))
-				await $persistWalletMutation.mutateAsync({ walletType: 'nwc', walletDetails: wallet })
-				toast.success('Wallet moved to database')
-			} else if (nwcWallet) {
-				await $updateWalletMutation.mutateAsync({ walletId: nwcWallet.id, walletDetails: { walletType: 'nwc', walletDetails: wallet } })
-				toast.success('Wallet updated')
-			} else {
-				await $persistWalletMutation.mutateAsync({ walletType: 'nwc', walletDetails: wallet })
-				toast.success('Wallet saved')
-			}
-			dispatch('walletAdded')
+			await handleDatabase(wallet)
 		}
 
 		if (nwcWallet) {
@@ -95,30 +66,65 @@
 		initNdkNWCs()
 	}
 
-	const handleDelete = () => {
+	async function handleLocalStorage(wallet: { walletPubKey: string; walletRelays: string[]; walletSecret: string }) {
+		const localWallets = JSON.parse(localStorage.getItem(`nwc-wallets-${$ndkStore.activeUser?.pubkey}`) || '{}')
+		if (nwcWallet && nwcWallet.id.startsWith('local-')) {
+			localWallets[nwcWallet.id] = wallet
+			localStorage.setItem(`nwc-wallets-${$ndkStore.activeUser?.pubkey}`, JSON.stringify(localWallets))
+			toast.success('Local wallet updated')
+			dispatch('walletAdded', { id: nwcWallet.id, wallet })
+		} else {
+			if (nwcWallet && !nwcWallet.id.startsWith('local-')) {
+				await $deleteWalletMutation.mutateAsync(nwcWallet.id)
+			}
+			const newId = `local-${Date.now()}`
+			localWallets[newId] = wallet
+			localStorage.setItem(`nwc-wallets-${$ndkStore.activeUser?.pubkey}`, JSON.stringify(localWallets))
+			toast.success('Wallet saved locally')
+			dispatch('walletAdded', { id: newId, wallet })
+		}
+	}
+
+	async function handleDatabase(wallet: { walletPubKey: string; walletRelays: string[]; walletSecret: string }) {
+		if (nwcWallet && nwcWallet.id.startsWith('local-')) {
+			const localWallets = JSON.parse(localStorage.getItem(`nwc-wallets-${$ndkStore.activeUser?.pubkey}`) || '{}')
+			delete localWallets[nwcWallet.id]
+			localStorage.setItem(`nwc-wallets-${$ndkStore.activeUser?.pubkey}`, JSON.stringify(localWallets))
+			await $persistWalletMutation.mutateAsync({ walletType: 'nwc', walletDetails: wallet })
+			toast.success('Wallet moved to database')
+		} else if (nwcWallet) {
+			await $updateWalletMutation.mutateAsync({ walletId: nwcWallet.id, walletDetails: { walletType: 'nwc', walletDetails: wallet } })
+			toast.success('Wallet updated')
+		} else {
+			await $persistWalletMutation.mutateAsync({ walletType: 'nwc', walletDetails: wallet })
+			toast.success('Wallet saved')
+		}
+		dispatch('walletAdded')
+	}
+
+	function handleDelete() {
 		if (!nwcWallet || !nwcWallet.id) return
 		if (nwcWallet.id.startsWith('local-')) {
-			const localWallets = JSON.parse(localStorage.getItem(`nwc-wallets-${$ndkStore.activeUser.pubkey}`) || '{}')
+			const localWallets = JSON.parse(localStorage.getItem(`nwc-wallets-${$ndkStore.activeUser?.pubkey}`) || '{}')
 			delete localWallets[nwcWallet.id]
-			localStorage.setItem(`nwc-wallets-${$ndkStore.activeUser.pubkey}`, JSON.stringify(localWallets))
+			localStorage.setItem(`nwc-wallets-${$ndkStore.activeUser?.pubkey}`, JSON.stringify(localWallets))
 			resetForm()
 			toast.success('NWC Wallet deleted locally')
 		} else {
 			$deleteWalletMutation.mutateAsync(nwcWallet.id)
-			dispatch('walletDeleted', nwcWallet.id)
 			toast.success('NWC Wallet deleted')
 		}
 		dispatch('walletDeleted', nwcWallet.id)
 	}
 
-	const resetForm = () => {
+	function resetForm() {
 		const form = document.querySelector('form')
 		if (form) {
 			form.reset()
 		}
 	}
 
-	const handlePasteNWCUri = () => {
+	function handlePasteNWCUri() {
 		navigator.clipboard.readText().then((text) => {
 			const wallet = nwcUriToWalletDetails(text)
 			if (wallet) {
@@ -129,7 +135,7 @@
 		})
 	}
 
-	const handleQrScanToNWCUri = (e: CustomEvent) => {
+	function handleQrScanToNWCUri(e: CustomEvent) {
 		const wallet = e.detail
 		if (wallet) {
 			walletPubKey = wallet.walletPubKey
@@ -138,7 +144,7 @@
 		}
 	}
 
-	const handleRelayChange = (event: Event) => {
+	function handleRelayChange(event: Event) {
 		const target = event.target as HTMLInputElement
 		walletRelays = target.value
 			.split(',')
@@ -161,7 +167,7 @@
 			<span class="i-mdi-keyboard-arrow-down w-6 h-6" />
 		</Collapsible.Trigger>
 		{#if nwcWallet?.walletDetails}
-			<MiniBalance wallet={nwcWallet?.walletDetails} />
+			<MiniBalance wallet={nwcWallet?.walletDetails} walletId={nwcWallet?.id} />
 		{/if}
 	</div>
 
@@ -185,7 +191,13 @@
 
 				<div class="grid w-full items-center gap-1.5">
 					<Label for="nwc-relay" class="font-bold">Wallet connect relays</Label>
-					<Input value={walletRelays} on:input={handleRelayChange} type="text" id={`nwcRelay=${nwcWallet?.id}`} name="nwc-relay" />
+					<Input
+						value={walletRelays.join(', ')}
+						on:input={handleRelayChange}
+						type="text"
+						id={`nwcRelay=${nwcWallet?.id}`}
+						name="nwc-relay"
+					/>
 				</div>
 				<div class="grid w-full items-center gap-1.5">
 					<Label for="nwc-secret" class="font-bold">Wallet connect secret</Label>
