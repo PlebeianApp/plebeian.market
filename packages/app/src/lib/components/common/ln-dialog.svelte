@@ -1,10 +1,10 @@
 <script lang="ts">
 	import QrCode from '@castlenine/svelte-qrcode'
-	import { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk'
+	import { NDKEvent, NDKKind, NDKSubscription } from '@nostr-dev-kit/ndk'
 	import * as Dialog from '$lib/components/ui/dialog/index.js'
 	import ndkStore from '$lib/stores/ndk'
 	import { copyToClipboard } from '$lib/utils'
-	import { createEventDispatcher, onMount } from 'svelte'
+	import { createEventDispatcher, onDestroy, onMount } from 'svelte'
 	import { toast } from 'svelte-sonner'
 
 	import Button from '../ui/button/button.svelte'
@@ -16,22 +16,31 @@
 
 	const dispatch = createEventDispatcher()
 
-	onMount(async () => {
-		console.log('subscruption start:', userIdToZap)
-		$ndkStore
-			.subscribe({
-				kinds: [NDKKind.Zap],
-				'#p': [userIdToZap],
-				since: Math.round(Date.now() / 1000),
-			})
-			.on('event', (event: NDKEvent) => {
-				const bolt11Tag = event.tagValue('bolt11')
+	let unsubscribe: NDKSubscription | undefined
 
-				if (bolt11Tag && bolt11Tag === lightningInvoiceData) {
-					toast.success('Zap successful')
-					dispatch('zapSuccess', event)
-				}
-			})
+	$: if (qrDialogOpen) {
+		const subscription = $ndkStore.subscribe({
+			kinds: [NDKKind.Zap],
+			'#p': [userIdToZap],
+			since: Math.round(Date.now() / 1000),
+		})
+
+		unsubscribe = subscription.on('event', (event: NDKEvent) => {
+			const bolt11Tag = event.tagValue('bolt11')
+			if (bolt11Tag && bolt11Tag === lightningInvoiceData) {
+				toast.success('LN Zap successful')
+				dispatch('zapSuccess', event)
+			}
+		})
+	} else if (unsubscribe) {
+		unsubscribe.stop()
+		unsubscribe = undefined
+	}
+
+	onDestroy(() => {
+		if (unsubscribe) {
+			unsubscribe.stop()
+		}
 	})
 </script>
 

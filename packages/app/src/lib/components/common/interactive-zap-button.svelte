@@ -39,6 +39,9 @@
 	let zapMessage: string = 'Zap from Plebeian'
 	let zapDialogOpen: boolean = false
 	let nwcSpinnerShown = false
+
+	let zapSubscription: (() => void) | undefined
+
 	$: zapAmountMSats = zapAmountSats * 1000
 
 	onMount(async () => {
@@ -47,12 +50,18 @@
 
 	const checkTargetUserHasLightningAddress = async () => {
 		const user = $ndkStore.getUser({ pubkey: userIdToZap })
-		const zapInfo = await user.getZapInfo()
-		return zapInfo
+
+		try {
+			const zapInfo = await user.getZapInfo()
+			return zapInfo
+		} catch (error) {
+			console.error('Failed to get zap info:', error)
+			return []
+		}
 	}
 
 	const startZapSubscription = () => {
-		$ndkStore
+		const subscription = $ndkStore
 			.subscribe({
 				kinds: [NDKKind.Zap],
 				'#p': [userIdToZap],
@@ -61,18 +70,24 @@
 			.on('event', (event: NDKEvent) => {
 				const bolt11Tag = event.tagValue('bolt11')
 
-				console.log('event:', event)
-				console.log('startZapSubscription:', bolt11Tag, lightningInvoiceData)
-
 				if (bolt11Tag && bolt11Tag === lightningInvoiceData) {
 					toast.success('Zap successful')
 					nwcSpinnerShown = false
+
+					if (zapSubscription) {
+						zapSubscription()
+						zapSubscription = undefined
+					}
 
 					setTimeout(() => {
 						zapDialogOpen = false
 					}, 200)
 				}
 			})
+
+		return () => {
+			subscription.stop()
+		}
 	}
 
 	const handleZapForType = async (zapType: NDKZapMethodInfo, invoiceInterface: InvoiceInterface) => {
@@ -98,13 +113,8 @@
 			qrDialogOpen = true
 		} else if (invoiceInterface === 'nwc') {
 			nwcSpinnerShown = true
-			startZapSubscription()
-			const result = await payInvoiceWithFirstWorkingNWC(zapRes)
-			if (!result.error) {
-				toast.success('Zap successful')
-			} else {
-				toast.error(`Zap failed: ${result.error}`)
-			}
+			zapSubscription = startZapSubscription()
+			await payInvoiceWithFirstWorkingNWC(zapRes)
 		}
 	}
 
@@ -130,19 +140,19 @@
 			</Dialog.Description>
 		</Dialog.Header>
 
-		<div class="grid grid-cols-2 gap-2 p-4">
+		<div class="grid grid-cols-2 gap-2">
 			{#each defaultZapAmounts as { displayText, amount }}
-				<Button variant="outline" class="rounded-full" on:click={() => handleZapAmountClick(amount)}>
+				<Button variant="outline" class="border-2 border-black" on:click={() => handleZapAmountClick(amount)}>
 					{displayText}
 				</Button>
 			{/each}
 		</div>
 
-		<Label for="zapMessage" class="font-bold">Manual zap amount</Label>
-		<Input bind:value={zapAmountSats} type="number" id={`zapAmount`} />
+		<Label for="zapMessage" class="font-bold ">Manual zap amount</Label>
+		<Input bind:value={zapAmountSats} class="border-2 border-black" type="number" id={`zapAmount`} />
 
 		<Label for="zapMessage" class="font-bold">Message</Label>
-		<Input bind:value={zapMessage} type="text" class="w-full" id={`zapMessage`} />
+		<Input bind:value={zapMessage} class="border-2 border-black" type="text" id={`zapMessage`} />
 
 		{#each userCanBeZapped as zapTarget}
 			<div class="flex flex-row justify-between">
