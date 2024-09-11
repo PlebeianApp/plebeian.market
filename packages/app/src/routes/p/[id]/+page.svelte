@@ -4,6 +4,7 @@
 	import type { RichStall } from '$lib/server/stalls.service'
 	import { goto } from '$app/navigation'
 	import { page } from '$app/stores'
+	import InteractiveZapButton from '$lib/components/common/interactive-zap-button.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
 	import StallItem from '$lib/components/stalls/stall-item.svelte'
 	import Button from '$lib/components/ui/button/button.svelte'
@@ -59,7 +60,7 @@
 		following = false
 	}
 
-	const handleZap = () => {
+	const handleThreeDots = () => {
 		const user = $ndkStore.getUser({ pubkey: id })
 		// await user.zap();
 	}
@@ -112,12 +113,10 @@
 									</DropdownMenu.Content>
 								</DropdownMenu.Root>
 							{/if}
-							<Button size="icon" variant="secondary" on:click={handleZap}>
+							<Button size="icon" variant="secondary" on:click={handleThreeDots}>
 								<span class="i-mdi-dots-horizontal w-6 h-6" />
 							</Button>
-							<Button size="icon" variant="secondary" on:click={handleZap}>
-								<span class="i-mingcute-lightning-line w-6 h-6" />
-							</Button>
+							<InteractiveZapButton userIdToZap={id} />
 							<Button size="icon" variant="secondary" on:click={handleSendMessage}>
 								<span class="i-mdi-message-bubble w-6 h-6" />
 							</Button>

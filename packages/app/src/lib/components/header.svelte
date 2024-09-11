@@ -7,6 +7,7 @@
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
 	import { login, logout } from '$lib/ndkLogin'
 	import ndkStore from '$lib/stores/ndk'
+	import { balanceOfWorkingNWCs } from '$lib/stores/nwc'
 	import { getAccount } from '$lib/stores/session'
 	import { onMount } from 'svelte'
 
@@ -66,6 +67,15 @@
 							<Auth />
 							{#if $ndkStore.activeUser}
 								My account
+							{/if}
+						</DropdownMenu.Label>
+						<DropdownMenu.Label>
+							{#if $balanceOfWorkingNWCs}
+								<div class="flex flex-col">
+									<section class=" inline-flex items-center">
+										<span class=" i-bitcoin-icons-satoshi-v1-outline w-6 h-6" />{$balanceOfWorkingNWCs} sats
+									</section>
+								</div>
 							{/if}
 						</DropdownMenu.Label>
 						{#if $ndkStore.activeUser}

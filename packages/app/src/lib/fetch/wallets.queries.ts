@@ -1,3 +1,4 @@
+import type { NDKNwc } from '@nostr-dev-kit/ndk'
 import type { DisplayWallet } from '$lib/server/wallet.service'
 import { createQuery } from '@tanstack/svelte-query'
 import ndkStore from '$lib/stores/ndk'
@@ -26,3 +27,16 @@ export const userWalletQuery = createQuery(
 	})),
 	queryClient,
 )
+
+export const createWalletBalanceQuery = (nwc: NDKNwc, walletId: string) =>
+	createQuery(
+		{
+			queryKey: ['wallet-balance', nwc.walletService.pubkey, walletId],
+			queryFn: async () => {
+				const balance = await nwc.getBalance()
+				return balance.result?.balance
+			},
+			staleTime: 1000 * 60 * 5,
+		},
+		queryClient,
+	)

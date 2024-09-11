@@ -5,6 +5,7 @@
 	import { Button } from '$lib/components/ui/button/index.js'
 	import { queryClient } from '$lib/fetch/client'
 	import { userWalletQuery } from '$lib/fetch/wallets.queries'
+	import ndkStore from '$lib/stores/ndk'
 	import { nav_back } from '$lib/utils'
 	import { onMount } from 'svelte'
 
@@ -28,6 +29,7 @@
 		showEmptyWallet = false
 		queryClient.invalidateQueries({ queryKey: ['walletDetails'] })
 		loadLocalWallets()
+		showEmptyWallet = false
 	}
 
 	function handleWalletDeleted(event: CustomEvent<string>) {
@@ -39,7 +41,7 @@
 		}
 	}
 	function loadLocalWallets() {
-		const nwcWalletsString = localStorage.getItem('nwc-wallets')
+		const nwcWalletsString = localStorage.getItem(`nwc-wallets-${$ndkStore.activeUser.pubkey}`)
 		if (nwcWalletsString) {
 			const nwcWallets = JSON.parse(nwcWalletsString) as Record<string, DisplayWallet['walletDetails']>
 			localWallets = Object.entries(nwcWallets).map(([id, walletDetails]) => ({
