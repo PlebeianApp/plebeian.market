@@ -103,22 +103,22 @@
 }
 
 #tooltip {
-  display: none;
-  width: max-content;
-  position: absolute;
-  background: #333;
-  color: white;
-  font-weight: bold;
-  padding: 5px;
-  border-radius: 4px;
-  font-size: 90%;
+	display: none;
+	width: max-content;
+	position: absolute;
+	background: #333;
+	color: white;
+	font-weight: bold;
+	padding: 5px;
+	border-radius: 4px;
+	font-size: 90%;
 	z-index: 999999;
 }
 
 #arrow {
-  position: absolute;
-  background: #333;
-  width: 8px;
-  height: 8px;
-  transform: rotate(45deg);
+	position: absolute;
+	background: #333;
+	width: 8px;
+	height: 8px;
+	transform: rotate(45deg);
 }
