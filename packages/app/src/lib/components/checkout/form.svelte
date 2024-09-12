@@ -1,76 +1,108 @@
-<!-- src/components/CheckoutForm.svelte -->
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button/index.js'
-	import { Input } from '$lib/components/ui/input/index.js'
-	import { Label } from '$lib/components/ui/label/index.js'
+	import type { CheckoutFormData } from '$lib/schema'
+	import { Button } from '$lib/components/ui/button'
+	import { Input } from '$lib/components/ui/input'
+	import { Label } from '$lib/components/ui/label'
 	import Textarea from '$lib/components/ui/textarea/textarea.svelte'
-	import { currentStep } from '$lib/stores/checkout'
-	import { createEventDispatcher } from 'svelte'
+	import { checkoutFormSchema } from '$lib/schema'
+	import { checkoutFormStore } from '$lib/stores/checkout'
+	import { createEventDispatcher, onMount } from 'svelte'
 
-	const dispatch = createEventDispatcher()
+	const dispatch = createEventDispatcher<{
+		validate: { valid: boolean }
+	}>()
 
-	let address = ''
-	let zip = ''
-	let city = ''
-	let country = ''
-	let region = ''
-	let contactName = ''
-	let contactPhone = ''
-	let contactEmail = ''
-	let observations = ''
+	let formData: CheckoutFormData = {
+		contactName: '',
+		contactPhone: '',
+		contactEmail: '',
+		address: '',
+		zip: '',
+		city: '',
+		country: '',
+		region: '',
+		observations: '',
+	}
+
+	let errors: Partial<Record<keyof CheckoutFormData, string>> = {}
+
+	function validateForm(): boolean {
+		const result = checkoutFormSchema.safeParse(formData)
+		if (result.success) {
+			checkoutFormStore.set(result.data)
+			errors = {}
+			return true
+		} else {
+			errors = result.error.issues.reduce(
+				(acc, issue) => {
+					acc[issue.path[0] as keyof CheckoutFormData] = issue.message
+					return acc
+				},
+				{} as Partial<Record<keyof CheckoutFormData, string>>,
+			)
+			return false
+		}
+	}
 
 	function handleSubmit() {
-		dispatch('submit', {
-			address,
-			zip,
-			city,
-			country,
-			region,
-			contactName,
-			contactPhone,
-			contactEmail,
-			observations,
-		})
-		currentStep.set($currentStep + 1)
+		const isValid = validateForm()
+		if (isValid) {
+			dispatch('validate', { valid: true })
+		}
 	}
+
+	onMount(() => {
+		if ($checkoutFormStore) {
+			formData = $checkoutFormStore
+		}
+	})
 </script>
 
 <form on:submit|preventDefault={handleSubmit}>
-	<Label class="required-mark">
+	<Label>
 		Name:
-		<Input type="text" bind:value={contactName} required />
+		<Input type="text" bind:value={formData.contactName} required />
+		{#if errors.contactName}<span class="text-red-500">{errors.contactName}</span>{/if}
 	</Label>
 	<Label>
 		Phone:
-		<Input type="tel" bind:value={contactPhone} />
+		<Input type="tel" bind:value={formData.contactPhone} />
+		{#if errors.contactPhone}<span class="text-red-500">{errors.contactPhone}</span>{/if}
 	</Label>
 	<Label>
 		Email:
-		<Input type="email" bind:value={contactEmail} />
+		<Input type="email" bind:value={formData.contactEmail} required />
+		{#if errors.contactEmail}<span class="text-red-500">{errors.contactEmail}</span>{/if}
 	</Label>
-	<Label class="required-mark">
+	<Label>
 		Address:
-		<Input type="text" bind:value={address} required />
+		<Input type="text" bind:value={formData.address} required />
+		{#if errors.address}<span class="text-red-500">{errors.address}</span>{/if}
 	</Label>
-	<Label class="required-mark">
+	<Label>
 		ZIP:
-		<Input type="text" bind:value={zip} required />
+		<Input type="text" bind:value={formData.zip} required />
+		{#if errors.zip}<span class="text-red-500">{errors.zip}</span>{/if}
 	</Label>
-	<Label class="required-mark">
+	<Label>
 		City:
-		<Input type="text" bind:value={city} required />
+		<Input type="text" bind:value={formData.city} required />
+		{#if errors.city}<span class="text-red-500">{errors.city}</span>{/if}
 	</Label>
-	<Label class="required-mark">
+	<Label>
 		Country:
-		<Input type="text" bind:value={country} required />
+		<Input type="text" bind:value={formData.country} required />
+		{#if errors.country}<span class="text-red-500">{errors.country}</span>{/if}
 	</Label>
 	<Label>
 		Region:
-		<Input type="text" bind:value={region} />
+		<Input type="text" bind:value={formData.region} />
+		{#if errors.region}<span class="text-red-500">{errors.region}</span>{/if}
 	</Label>
 	<Label>
 		Observations:
-		<Textarea bind:value={observations}></Textarea>
+		<Textarea bind:value={formData.observations}></Textarea>
+		{#if errors.observations}<span class="text-red-500">{errors.observations}</span>{/if}
 	</Label>
 	<Button type="submit" class="w-full mt-6">Finish Review</Button>
 </form>

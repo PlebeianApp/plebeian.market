@@ -1,5 +1,8 @@
 import { z } from 'zod'
 
+import type { InvoiceStatus, OrderStatus } from '@plebeian/database/constants'
+import { INVOICE_STATUS, ORDER_STATUS } from '@plebeian/database/constants'
+
 import { validUrls } from './constants'
 
 export const generalFilterSchema = z.object({
@@ -85,3 +88,62 @@ export const ordersFilterSchema = generalFilterSchema.extend({
 })
 
 export type OrdersFilter = z.infer<typeof ordersFilterSchema>
+
+export const orderSchema = z.object({
+	id: z.string().optional(),
+	type: z.number(),
+	sellerUserId: z.string(),
+	buyerUserId: z.string(),
+	shippingId: z.string(),
+	stallId: z.string(),
+	status: z.enum(Object.values(ORDER_STATUS) as NonEmptyArray<OrderStatus>),
+	address: z.string(),
+	zip: z.string(),
+	city: z.string(),
+	country: z.string(),
+	region: z.string().optional(),
+	contactName: z.string(),
+	contactPhone: z.string().optional(),
+	contactEmail: z.string().optional(),
+	observations: z.string().optional(),
+	items: z.array(
+		z.object({
+			product_id: z.string(),
+			quantity: z.number(),
+		}),
+	),
+})
+
+export type OrderFilter = z.infer<typeof orderSchema>
+
+export const createInvoiceFilter = z.object({
+	orderId: z.string(),
+	totalAmount: z.string(),
+	paymentDetails: z.string(),
+})
+
+export type CreateInvoiceFilter = z.infer<typeof createInvoiceFilter>
+
+type NonEmptyArray<T> = [T, ...T[]]
+
+export const updateInvoiceFilter = z.object({
+	invoiceStatus: z.enum(Object.values(INVOICE_STATUS) as NonEmptyArray<InvoiceStatus>),
+	paymentDetails: z.string(),
+	proof: z.string(),
+})
+
+export type UpdateInvoiceFilter = z.infer<typeof updateInvoiceFilter>
+
+export const checkoutFormSchema = z.object({
+	contactName: z.string().min(1, 'Name is required'),
+	contactPhone: z.string().optional(),
+	contactEmail: z.string().email('Invalid email').optional(),
+	address: z.string().min(1, 'Address is required'),
+	zip: z.string().min(1, 'ZIP is required'),
+	city: z.string().min(1, 'City is required'),
+	country: z.string().min(1, 'Country is required'),
+	region: z.string().optional(),
+	observations: z.string().optional(),
+})
+
+export type CheckoutFormData = z.infer<typeof checkoutFormSchema>

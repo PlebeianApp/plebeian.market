@@ -1,9 +1,14 @@
 <script lang="ts">
 	import Button from '$lib/components/ui/button/button.svelte'
+	import { cart } from '$lib/stores/cart'
 	import { currentStep } from '$lib/stores/checkout'
 	import { CheckCircle } from 'lucide-svelte'
+	import { onMount } from 'svelte'
 
 	export let variant: 'success' | 'sent' = 'success'
+	onMount(() => {
+		console.log($cart.orders)
+	})
 </script>
 
 <div class="flex flex-col items-center justify-center h-full gap-8">

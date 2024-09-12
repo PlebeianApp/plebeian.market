@@ -24,7 +24,6 @@ const authorizeUserless = async (request: Request, method: string): Promise<stri
 
 const authorize = async (request: Request, userId: string, method: string) => {
 	const authorizationHeader = request.headers.get('Authorization')
-
 	if (!authorizationHeader) {
 		throw error(401, 'Authorization header missing')
 	}
@@ -33,7 +32,6 @@ const authorize = async (request: Request, userId: string, method: string) => {
 	if (token.pubkey === userId && findCustomTags(token.tags, 'method')[0] === method) {
 		return true
 	}
-
 	throw error(401, 'Invalid Token')
 }
 

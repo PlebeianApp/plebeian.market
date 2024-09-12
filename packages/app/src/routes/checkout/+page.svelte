@@ -1,13 +1,13 @@
 <script lang="ts">
+	import type { Step } from '$lib/components/checkout/types'
 	import Order from '$lib/components/checkout/order.svelte'
 	import Pay from '$lib/components/checkout/pay.svelte'
 	import Review from '$lib/components/checkout/review.svelte'
 	import Success from '$lib/components/checkout/success.svelte'
 	import Stepper from '$lib/components/stepper.svelte'
 	import { cart } from '$lib/stores/cart'
-	import { currentStep } from '$lib/stores/checkout'
 
-	$: exampleSteps = [
+	let checkoutSteps: Step[] = [
 		{
 			component: Review,
 			props: {},
@@ -15,13 +15,11 @@
 		...Object.values($cart.users).flatMap((user) => [
 			{
 				component: Order,
-				props: {
-					merchant: user,
-				},
+				props: { merchant: user },
 			},
 			{
 				component: Pay,
-				props: {},
+				props: { merchant: user },
 			},
 			{
 				component: Success,
@@ -32,14 +30,13 @@
 		]),
 		{
 			component: Success,
-			props: {
-				variant: 'success',
-			},
+			props: { variant: 'success' },
 		},
 	]
 </script>
 
 <div class="container py-6">
 	<h2>Checkout</h2>
-	<Stepper steps={exampleSteps} {currentStep} />
+
+	<Stepper steps={checkoutSteps} />
 </div>

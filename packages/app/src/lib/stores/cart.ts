@@ -1,3 +1,4 @@
+import type { OrderFilter } from '$lib/schema'
 import type { DisplayProduct } from '$lib/server/products.service'
 import type { RichShippingInfo } from '$lib/server/shipping.service'
 import { createCurrencyConversionQuery } from '$lib/fetch/products.queries'
@@ -32,10 +33,18 @@ export interface CartUser {
 	stalls: string[]
 }
 
+export interface CartInvoice {
+	id: string
+	orderId: string
+	proof: null | string
+}
+
 interface NormalizedCart {
 	users: Record<string, CartUser>
 	stalls: Record<string, CartStall>
 	products: Record<string, CartProduct>
+	orders: Record<string, OrderFilter>
+	invoices: Record<string, CartInvoice>
 }
 
 function createCart() {
@@ -64,7 +73,7 @@ function createCart() {
 				return JSON.parse(storedCart)
 			}
 		}
-		return { users: {}, stalls: {}, products: {} }
+		return { users: {}, stalls: {}, products: {}, orders: {}, invoices: {} }
 	}
 
 	const findOrCreateUserStallProduct = (cart: NormalizedCart, userPubkey: string, stallId: string, productId?: string) => {
@@ -273,7 +282,7 @@ function createCart() {
 		},
 
 		clear: () => {
-			set({ users: {}, stalls: {}, products: {} })
+			set({ users: {}, stalls: {}, products: {}, orders: {}, invoices: {} })
 			if (typeof sessionStorage !== 'undefined') {
 				sessionStorage.removeItem('cart')
 			}
@@ -318,6 +327,15 @@ function createCart() {
 		},
 		calculateUserTotal,
 		calculateGrandTotal,
+		updateOrder(order: OrderFilter) {
+			update((cart) => {
+				cart.orders = {
+					...cart.orders,
+					[order.id as string]: order,
+				}
+				return cart
+			})
+		},
 	}
 }
 

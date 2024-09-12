@@ -1,5 +1,5 @@
 import { error, json } from '@sveltejs/kit'
-import { authorize } from '$lib/auth'
+import { authorize, authorizeUserless } from '$lib/auth'
 import {
 	createPaymentDetail,
 	deletePaymentDetail,
@@ -11,17 +11,16 @@ import type { RequestHandler } from './$types'
 
 export const GET: RequestHandler = async ({ request, url: { searchParams } }) => {
 	const userId = searchParams.get('userId')
-
 	if (!userId) {
 		error(400, 'Invalid request')
 	}
-
-	try {
-		await authorize(request, userId, 'GET')
-	} catch (e) {
-		error(401, 'Unauthorized')
+	if (request.headers.has('Authorization')) {
+		try {
+			await authorizeUserless(request, 'GET')
+		} catch (e) {
+			error(401, 'Unauthorized')
+		}
 	}
-
 	const paymentDetails = await getPaymentDetailsByUserId(userId)
 	return json(paymentDetails)
 }

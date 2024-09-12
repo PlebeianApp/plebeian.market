@@ -1,31 +1,33 @@
 <script lang="ts">
-	import type { SvelteComponent } from 'svelte'
-	import type { Writable } from 'svelte/store'
-	import { writable } from 'svelte/store'
-
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	type Constructor<T> = new (...args: any[]) => T
-
-	type OmitContext<T> = Omit<T, 'context' | 'currentStepIndex'>
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	type Props<T> = T extends SvelteComponent<infer P, any, any> ? OmitContext<P> : never
-	type PropsOrUndefined<T> = Props<T> extends Record<string, never> ? undefined : Props<T>
-
-	type Step<T extends SvelteComponent = SvelteComponent> = {
-		component: Constructor<T>
-		props: PropsOrUndefined<T>
-	}
+	import type { Step } from '$lib/components/checkout/types'
+	import { currentStep } from '$lib/stores/checkout'
+	import { createEventDispatcher } from 'svelte'
 
 	export let steps: Step[] = []
-	export let currentStep: Writable<number> = writable(0)
+
+	let canProceed = true
+	const dispatch = createEventDispatcher()
+
+	function goToNextStep() {
+		if ($currentStep < steps.length - 1 && canProceed) {
+			$currentStep += 1
+			canProceed = false
+			dispatch('stepChange', { step: $currentStep })
+		}
+	}
+
+	function handleStepValidation(event: CustomEvent) {
+		canProceed = event.detail.valid
+		if (canProceed) goToNextStep()
+	}
 </script>
 
 <div class="w-full bg-gray-200 rounded-full h-2.5 mt-4">
-	<div class="bg-green-500 h-2.5 rounded-full" style="width: {($currentStep / (steps.length - 1)) * 100}%"></div>
+	<div class="bg-green-500 h-2.5 rounded-full" style="width: {($currentStep / (steps.length - 1)) * 100}%" />
 </div>
 
 <div class="mt-8">
 	{#if steps[$currentStep]?.component}
-		<svelte:component this={steps[$currentStep].component} {...steps[$currentStep].props} />
+		<svelte:component this={steps[$currentStep].component} {...steps[$currentStep].props} on:validate={handleStepValidation} />
 	{/if}
 </div>

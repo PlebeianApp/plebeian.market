@@ -1,12 +1,19 @@
 <script lang="ts">
 	import Order from '$lib/components/cart/order.svelte'
-	import { Button } from '$lib/components/ui/button/index.js'
+	import { Button } from '$lib/components/ui/button'
 	import * as Collapsible from '$lib/components/ui/collapsible'
 	import { cart } from '$lib/stores/cart'
+	import { createEventDispatcher } from 'svelte'
 
 	import GrandTotalDisplay from '../cart/grand-total-display.svelte'
 	import MiniUser from '../cart/mini-user.svelte'
 	import CheckoutForm from './form.svelte'
+
+	const dispatch = createEventDispatcher()
+
+	function handleFormValidation(event: CustomEvent) {
+		dispatch('validate', { valid: event.detail.valid })
+	}
 </script>
 
 <div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-1 md:grid-cols-2">
@@ -40,6 +47,6 @@
 	</div>
 	<div class="flex flex-col gap-2">
 		<h2>Order details</h2>
-		<CheckoutForm />
+		<CheckoutForm on:validate={handleFormValidation} />
 	</div>
 </div>
