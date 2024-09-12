@@ -31,7 +31,7 @@
 
 <div class="flex flex-col" class:gap-4={mode === 'settings'}>
 	{#if mode === 'widget'}
-		<Button size="icon" variant="secondary" class="border border-gray" on:click={() => (isOpen = !isOpen)}>
+		<Button data-tooltip="Manage your nostr relays!" size="icon" variant="secondary" class="border border-gray" on:click={() => (isOpen = !isOpen)}>
 			<span class="i-mdi-connection w-5 h-5" />
 		</Button>
 	{/if}
