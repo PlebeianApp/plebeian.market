@@ -104,7 +104,6 @@
 		}
 
 		function showTooltip(element: HTMLElement) {
-			console.log('here')
 			tooltipContent.textContent = element.getAttribute('data-tooltip')
 			tooltip.style.display = 'block'
 			activeElement = element
