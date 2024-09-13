@@ -10,7 +10,7 @@
 	import { queryClient } from '$lib/fetch/client'
 	import ndkStore from '$lib/stores/ndk'
 	import { payInvoiceWithFirstWorkingNWC } from '$lib/stores/nwc'
-	import { onMount } from 'svelte'
+	import { onMount, tick } from 'svelte'
 	import { toast } from 'svelte-sonner'
 
 	import LnDialog from './ln-dialog.svelte'
@@ -22,6 +22,7 @@
 	let zapAmountSats = 0
 	let zapMessage = 'Zap from Plebeian'
 	let userCanBeZapped: NDKZapMethodInfo[] = []
+	let isLoading = true
 	let lightningInvoiceData: string | undefined
 	let qrDialogOpen = false
 	let zapDialogOpen = false
@@ -32,7 +33,18 @@
 	let zapSubscription: (() => void) | undefined
 
 	onMount(async () => {
+		const checkZapInfoTimeout = setTimeout(() => {
+			if (userCanBeZapped.length === 0) {
+				isLoading = false
+			}
+		}, 5000)
+
 		userCanBeZapped = await checkTargetUserHasLightningAddress()
+		clearTimeout(checkZapInfoTimeout)
+		isLoading = false
+
+		// Ensure the component updates after setting isLoading
+		await tick()
 	})
 
 	async function checkTargetUserHasLightningAddress(): Promise<NDKZapMethodInfo[]> {
@@ -157,12 +169,16 @@
 	</Dialog.Content>
 </Dialog.Root>
 
-{#if userCanBeZapped.length > 0}
+{#if isLoading}
+	<Button size="icon" variant="secondary" disabled>
+		<Spinner />
+	</Button>
+{:else if userCanBeZapped.length > 0}
 	<Button size="icon" variant="secondary" on:click={() => (zapDialogOpen = true)} disabled={!$ndkStore.activeUser}>
 		<span class="i-mingcute-lightning-line w-6 h-6" />
 	</Button>
 {:else}
-	<Button size="icon" variant="secondary" disabled>
-		<Spinner />
+	<Button data-tooltip="User cannot be zapped." size="icon" variant="secondary" disabled>
+		<span class="i-mingcute-lightning-line w-6 h-6" />
 	</Button>
 {/if}
