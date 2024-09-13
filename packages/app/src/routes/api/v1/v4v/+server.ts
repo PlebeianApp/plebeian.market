@@ -1,4 +1,4 @@
-import { error, json } from '@sveltejs/kit'
+import { error, isHttpError, json } from '@sveltejs/kit'
 import { authorizeUserless } from '$lib/auth'
 import { getV4VPlatformShareForUserByTarget, setV4VPlatformShareForUserByTarget } from '$lib/server/v4v.service'
 import { z } from 'zod'
@@ -14,7 +14,11 @@ export async function GET({ request, url: { searchParams } }) {
 	try {
 		return json(await getV4VPlatformShareForUserByTarget(userId, target))
 	} catch (e) {
-		error(500, JSON.stringify(e))
+		if (isHttpError(e)) {
+			error(e.status, e.body)
+		} else {
+			error(500, 'Internal Server Error')
+		}
 	}
 }
 

@@ -11,6 +11,7 @@
 	import ndkStore from '$lib/stores/ndk'
 	import { payInvoiceWithFirstWorkingNWC } from '$lib/stores/nwc'
 	import { onMount, tick } from 'svelte'
+	import { checkTargetUserHasLightningAddress } from '$lib/utils'
 	import { toast } from 'svelte-sonner'
 
 	import LnDialog from './ln-dialog.svelte'
@@ -33,29 +34,8 @@
 	let zapSubscription: (() => void) | undefined
 
 	onMount(async () => {
-		const checkZapInfoTimeout = setTimeout(() => {
-			if (userCanBeZapped.length === 0) {
-				isLoading = false
-			}
-		}, 5000)
-
-		userCanBeZapped = await checkTargetUserHasLightningAddress()
-		clearTimeout(checkZapInfoTimeout)
-		isLoading = false
-
-		// Ensure the component updates after setting isLoading
-		await tick()
+        userCanBeZapped = await checkTargetUserHasLightningAddress(userIdToZap)
 	})
-
-	async function checkTargetUserHasLightningAddress(): Promise<NDKZapMethodInfo[]> {
-		const user = $ndkStore.getUser({ pubkey: userIdToZap })
-		try {
-			return await user.getZapInfo()
-		} catch (error) {
-			console.error('Failed to get zap info:', error)
-			return []
-		}
-	}
 
 	function startZapSubscription() {
 		const subscription = $ndkStore

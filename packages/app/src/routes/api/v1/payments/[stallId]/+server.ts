@@ -8,7 +8,7 @@ export const GET: RequestHandler = async ({ params, request }) => {
 	const stallId = params.stallId
 
 	try {
-		const userId = await authorizeUserless(request, 'GET')
+		await authorizeUserless(request, 'GET')
 	} catch (e) {
 		error(401, 'Unauthorized')
 	}

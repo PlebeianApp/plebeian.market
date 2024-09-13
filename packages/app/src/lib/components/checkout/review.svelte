@@ -19,7 +19,7 @@
 <div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-1 md:grid-cols-2">
 	<div class="flex flex-col gap-6">
 		{#each Object.values($cart.users) as merchant, i (merchant.pubkey)}
-			<Collapsible.Root class="w-full space-y-2 border-black border-2 p-2">
+			<Collapsible.Root class="w-full space-y-2 border-black border-2 p-2" open={Object.keys($cart.users).length == 1}>
 				<div class="flex items-center justify-between space-x-4 px-4">
 					<MiniUser userId={merchant.pubkey} />
 					<Collapsible.Trigger asChild let:builder>

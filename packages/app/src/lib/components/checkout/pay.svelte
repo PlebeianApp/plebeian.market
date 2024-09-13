@@ -1,24 +1,58 @@
 <script lang="ts">
-	import QrCode from '@castlenine/svelte-qrcode'
+	import type { CartUser } from '$lib/stores/cart'
+	import { Button } from '$lib/components/ui/button'
+	import { createPaymentsForUserQuery } from '$lib/fetch/payments.queries'
+	import { cart } from '$lib/stores/cart'
 	import { currentStep } from '$lib/stores/checkout'
 
-	import Button from '../ui/button/button.svelte'
+	import OrderPayment from '../cart/orderPayment.svelte'
+
+	export let merchant: CartUser
+
+	const paymentDetails = createPaymentsForUserQuery(merchant.pubkey)
+
+	let completedPayments: string[] = []
+	let currentOrderIndex = 0
+
+	$: relevantOrders = Object.entries($cart.orders).filter(([_, order]) => order.sellerUserId === merchant.pubkey)
+
+	$: currentOrder = relevantOrders[currentOrderIndex]
+
+	function handlePaymentComplete(event: CustomEvent<{ orderId: string }>) {
+		completedPayments = [...completedPayments, event.detail.orderId]
+		if (currentOrderIndex < relevantOrders.length - 1) {
+			currentOrderIndex++
+		} else {
+			// All payments are complete, move to the next step
+			currentStep.set($currentStep + 1)
+		}
+	}
+
+	function handleSkip() {
+		if (currentOrderIndex < relevantOrders.length - 1) {
+			currentOrderIndex++
+		} else {
+			// All orders skipped, move to the next step
+			currentStep.set($currentStep + 1)
+		}
+	}
 </script>
 
-<div class="w-1/2 mx-auto flex flex-col gap-4">
-	<span class="mx-auto">Waiting for payment: 14.99 seconds left</span>
-	<div class="mx-auto flex gap-2">
-		<Button variant="ghost" class="truncate">lnbc500n1pn2vehkpp5m22vruwkcvvru...</Button>
-		<Button><span class="i-tdesign-copy" /></Button>
-	</div>
-	<div class="flex justify-center">
-		<QrCode data="https://github.com/" logoPath="/logo.svg" />
-	</div>
+<div class="w-full mx-auto flex flex-col gap-4">
+	<h2 class="text-2xl font-bold text-center">Payment for {merchant.pubkey}</h2>
+	<p class="text-center">Order {currentOrderIndex + 1} of {relevantOrders.length}</p>
 
-	<div class="flex gap-2 mx-auto">
-		<Button class="flex items-center gap-2">Open in app <span class="i-mdi-external-link" /></Button>
-		<Button variant="ghost" class="flex items-center gap-2" on:click={() => currentStep.set($currentStep + 1)}
-			>Skip <span class="i-mdi-arrow-right" /></Button
-		>
+	{#if currentOrder}
+		<OrderPayment
+			order={currentOrder[1]}
+			stall={$cart.stalls[currentOrder[1].stallId]}
+			products={$cart.products}
+			on:paymentComplete={handlePaymentComplete}
+		/>
+	{/if}
+
+	<div class="flex justify-center mt-4 gap-4">
+		<Button variant="ghost" on:click={handleSkip}>Skip this payment</Button>
+		<Button variant="ghost" on:click={() => currentStep.set($currentStep + 1)}>Skip all payments</Button>
 	</div>
 </div>

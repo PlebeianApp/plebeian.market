@@ -2,7 +2,7 @@ import type { CreateQueryResult } from '@tanstack/svelte-query'
 import type { ClassValue } from 'clsx'
 import type { VerifiedEvent } from 'nostr-tools'
 import type { TransitionConfig } from 'svelte/transition'
-import { type NDKEvent, type NDKKind, type NDKSigner, type NDKTag, type NDKUserProfile, type NostrEvent } from '@nostr-dev-kit/ndk'
+import { type NDKEvent, type NDKKind, type NDKTag, type NDKUserProfile, type NDKZapMethodInfo, type NostrEvent } from '@nostr-dev-kit/ndk'
 import { page } from '$app/stores'
 import ndkStore from '$lib/stores/ndk'
 import { clsx } from 'clsx'
@@ -401,6 +401,16 @@ export function nwcUriToWalletDetails(uri: string): NWCWallet | null {
 		toast.error('Failed to parse NWC URI:' + error)
 		return null
 	}
+}
+
+export async function checkTargetUserHasLightningAddress(userIdToZap: string): Promise<NDKZapMethodInfo[]> {
+    const user = get(ndkStore).getUser({ pubkey: userIdToZap })
+    try {
+        return await user.getZapInfo()
+    } catch (error) {
+        console.error('Failed to get zap info:', error)
+        return []
+    }
 }
 
 export class EncryptedStorage {

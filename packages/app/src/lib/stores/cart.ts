@@ -326,8 +326,9 @@ function createCart() {
 			})
 		},
 		calculateUserTotal,
+		calculateStallTotal,
 		calculateGrandTotal,
-		updateOrder(order: OrderFilter) {
+		addOrder(order: OrderFilter) {
 			update((cart) => {
 				cart.orders = {
 					...cart.orders,

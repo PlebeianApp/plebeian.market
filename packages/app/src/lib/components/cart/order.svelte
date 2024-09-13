@@ -18,7 +18,7 @@
 	export let mode: 'cart' | 'checkout' | 'payment' = 'cart'
 	export let formData: Partial<Order> = {}
 
-	let userTotal: Awaited<ReturnType<typeof cart.calculateUserTotal>> | null = null
+	export let userTotal: Awaited<ReturnType<typeof cart.calculateUserTotal>> | null = null
 
 	$: hasFormData = Object.keys(formData).length > 0
 	const dispatch = createEventDispatcher()
@@ -46,8 +46,6 @@
 	$: if ($cart) {
 		updateUserTotal()
 	}
-
-	onMount(updateUserTotal)
 
 	onDestroy(() => {
 		dispatch('orderTotalUpdate', { userPubkey: user.pubkey, totalInSats: 0, shippingInSats: 0 })
