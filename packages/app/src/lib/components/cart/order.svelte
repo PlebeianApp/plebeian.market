@@ -3,6 +3,7 @@
 	import { Button } from '$lib/components/ui/button/index.js'
 	import { KindStalls } from '$lib/constants'
 	import { cart } from '$lib/stores/cart'
+	import { formatSats } from '$lib/utils'
 	import { createEventDispatcher, onDestroy, onMount } from 'svelte'
 
 	import type { Order } from '@plebeian/database'
@@ -80,16 +81,10 @@
 			{#each Object.entries(userTotal.currencyTotals) as [currency, amounts]}
 				<small>{currency} Total: {(amounts.total + amounts.shipping).toLocaleString()} </small>
 			{/each}
-			<small
-				>Shipping in sats: {userTotal.shippingInSats.toLocaleString(undefined, {
-					maximumFractionDigits: 0,
-				})} sats</small
-			>
+			<small>Shipping in sats: {formatSats(userTotal.shippingInSats)} sats</small>
 			<small
 				><strong>Total in sats:</strong>
-				{userTotal.totalInSats.toLocaleString(undefined, {
-					maximumFractionDigits: 0,
-				})} sats</small
+				{formatSats(userTotal.totalInSats)} sats</small
 			>
 		</div>
 	{:else if mode === 'payment' && hasFormData}

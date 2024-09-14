@@ -8,6 +8,7 @@
 	import { cart } from '$lib/stores/cart'
 	import { checkoutFormStore, currentStep } from '$lib/stores/checkout'
 	import ndkStore from '$lib/stores/ndk'
+	import { formatSats } from '$lib/utils'
 	import { createEventDispatcher } from 'svelte'
 	import { toast } from 'svelte-sonner'
 
@@ -39,7 +40,7 @@
 		for (const stallId of stalls) {
 			const stall = $cart.stalls[stallId]
 			if (!stall.shippingMethodId) {
-				toast.error(`Make sure you specify the shipping method for stall ${stallId}!`)
+				// toast.error(`Make sure you specify the shipping method for stall ${stallId}!`)
 				throw new Error('Missing shipping method')
 			}
 
@@ -73,12 +74,8 @@
 			if (orderResult?.orders.length) {
 				console.log($cart.orders)
 				toast.success('Order placed successfully')
-				if (merchantV4vPlatformShares) {
-					dispatch('validate', { valid: true })
-				} else {
-					dispatch('validate', { valid: true })
-					$currentStep + 1
-				}
+				dispatch('validate', { valid: true })
+				dispatch('validate', { valid: true })
 			}
 		} catch (e) {
 			console.error(e)
@@ -96,7 +93,7 @@
 			dispatch('validate', { valid: true })
 		} catch (e) {
 			console.error(e)
-			toast.error('Failed to place order and initiate payment. Please try again.')
+			e instanceof Error && toast.error(`Failed to place order: ${e.message}`)
 		} finally {
 			isLoading = false
 		}
@@ -157,9 +154,7 @@
 							<div class="flex justify-between items-center pt-2">
 								<span class="text-muted-foreground font-semibold">Total in Sats:</span>
 								<span class="text-2xl font-bold">
-									{userTotal.totalInSats.toLocaleString(undefined, {
-										maximumFractionDigits: 0,
-									})} sats
+									{formatSats(userTotal.totalInSats)} sats
 								</span>
 							</div>
 							<!-- <div class="flex justify-between items-center">

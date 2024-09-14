@@ -11,7 +11,7 @@
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
 	import { handleAddToCart } from '$lib/stores/cart'
 	import { openDrawerForProduct } from '$lib/stores/drawer-ui'
-	import { cn, stringToHexColor, truncateText } from '$lib/utils'
+	import { cn, formatSats, stringToHexColor, truncateText } from '$lib/utils'
 
 	import type { PageData } from './$types'
 
@@ -105,9 +105,7 @@
 					{#if $priceQuery?.isLoading}
 						<Spinner />
 					{:else if typeof $priceQuery?.data === 'number' && !Number.isNaN($priceQuery.data)}
-						{$priceQuery.data.toLocaleString(undefined, {
-							maximumFractionDigits: 0,
-						})}
+						{formatSats($priceQuery.data)}
 						sats
 					{:else}
 						<i class="text-lg">price ({$productsQuery.data?.price} {$productsQuery.data?.currency}) could not be converted</i>

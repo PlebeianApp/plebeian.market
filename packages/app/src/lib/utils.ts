@@ -443,3 +443,7 @@ export class EncryptedStorage {
 		return `${key}:${pubkey}`
 	}
 }
+
+export function formatSats(amount: number) {
+	return amount.toLocaleString(undefined, { maximumFractionDigits: 0 })
+}

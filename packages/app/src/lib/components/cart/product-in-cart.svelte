@@ -75,6 +75,10 @@
 					<span class="i-mdi-delete w-4 h-4"></span>
 				</Button>
 			</div>
+		{:else if mode === 'payment'}
+			<div>
+				Amount: {product.amount}
+			</div>
 		{/if}
 	</div>
 	<div class="flex flex-col justify-between text-right">
