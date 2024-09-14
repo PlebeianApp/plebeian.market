@@ -122,3 +122,7 @@
 	height: 8px;
 	transform: rotate(45deg);
 }
+
+[data-tooltip] {
+	pointer-events: all!important;
+}
