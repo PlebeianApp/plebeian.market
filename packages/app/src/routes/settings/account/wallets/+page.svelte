@@ -40,10 +40,10 @@
 			queryClient.invalidateQueries({ queryKey: ['walletDetails'] })
 		}
 	}
-	$: encryptedStorage = $ndkStore.signer ? new EncryptedStorage($ndkStore.signer) : null
+	$: encryptedStorage = new EncryptedStorage($ndkStore.signer!)
 
 	async function loadLocalWallets() {
-		const nwcWalletsString = await encryptedStorage!.getItem(`nwc-wallets`)
+		const nwcWalletsString = await encryptedStorage.getItem(`nwc-wallets`)
 		if (nwcWalletsString) {
 			const nwcWallets = JSON.parse(nwcWalletsString) as Record<string, DisplayWallet['walletDetails']>
 			localWallets = Object.entries(nwcWallets).map(([id, walletDetails]) => ({
