@@ -2,7 +2,7 @@ import type { NDKNwcResponse } from '@nostr-dev-kit/ndk'
 import type { DisplayWallet } from '$lib/server/wallet.service'
 import { NDKNwc } from '@nostr-dev-kit/ndk'
 import { createWalletBalanceQuery } from '$lib/fetch/wallets.queries'
-import { resolveQuery } from '$lib/utils'
+import { EncryptedStorage, resolveQuery } from '$lib/utils'
 import { get, writable } from 'svelte/store'
 
 import $ndkStore from './ndk'
@@ -19,7 +19,8 @@ async function initializeNdkNWCs(): Promise<{ nwc: NDKNwc; id: string }[]> {
 
 	console.log('Initializing NWCs...', `nwc-wallets-${$ndk.activeUser.pubkey}`)
 
-	const nwcWalletsString = localStorage.getItem(`nwc-wallets-${$ndk.activeUser.pubkey}`)
+	const encryptedStorage = new EncryptedStorage($ndk.signer!)
+	const nwcWalletsString = await encryptedStorage.getItem(`nwc-wallets-`)
 	const localWallets = nwcWalletsString ? (JSON.parse(nwcWalletsString) as Record<string, DisplayWallet['walletDetails']>) : {}
 
 	const nwcs = Object.entries(localWallets).map(([id, walletDetails]) => ({

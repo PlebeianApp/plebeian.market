@@ -6,7 +6,7 @@
 	import { queryClient } from '$lib/fetch/client'
 	import { userWalletQuery } from '$lib/fetch/wallets.queries'
 	import ndkStore from '$lib/stores/ndk'
-	import { nav_back } from '$lib/utils'
+	import { EncryptedStorage, nav_back } from '$lib/utils'
 	import { onMount } from 'svelte'
 
 	import type { PageData } from './$types'
@@ -40,8 +40,10 @@
 			queryClient.invalidateQueries({ queryKey: ['walletDetails'] })
 		}
 	}
-	function loadLocalWallets() {
-		const nwcWalletsString = localStorage.getItem(`nwc-wallets-${$ndkStore.activeUser.pubkey}`)
+	$: encryptedStorage = $ndkStore.signer ? new EncryptedStorage($ndkStore.signer) : null
+
+	async function loadLocalWallets() {
+		const nwcWalletsString = await encryptedStorage!.getItem(`nwc-wallets`)
 		if (nwcWalletsString) {
 			const nwcWallets = JSON.parse(nwcWalletsString) as Record<string, DisplayWallet['walletDetails']>
 			localWallets = Object.entries(nwcWallets).map(([id, walletDetails]) => ({
