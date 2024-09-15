@@ -419,7 +419,7 @@ export class EncryptedStorage {
 
 	async getItem(key: string): Promise<string | null> {
 		key = await this.deriveKey(key)
-		let value = localStorage.getItem(key)
+		const value = localStorage.getItem(key)
 
 		if (value) {
 			return this.signer.decrypt(await this.signer.user(), value)
