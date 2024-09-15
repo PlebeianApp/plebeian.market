@@ -10,7 +10,7 @@
 	import { queryClient } from '$lib/fetch/client'
 	import ndkStore from '$lib/stores/ndk'
 	import { payInvoiceWithFirstWorkingNWC } from '$lib/stores/nwc'
-	import { onMount, tick } from 'svelte'
+	import { onMount, tick, onDestroy } from 'svelte'
 	import { checkTargetUserHasLightningAddress } from '$lib/utils'
 	import { toast } from 'svelte-sonner'
 
@@ -28,17 +28,16 @@
 	let qrDialogOpen = false
 	let zapDialogOpen = false
 	let nwcSpinnerShown = false
+	let zapSubscription: ReturnType<typeof $ndkStore.subscribe> | undefined
 
 	$: zapAmountMSats = zapAmountSats * 1000
 
-	let zapSubscription: (() => void) | undefined
-
 	onMount(async () => {
-        userCanBeZapped = await checkTargetUserHasLightningAddress(userIdToZap)
+		userCanBeZapped = await checkTargetUserHasLightningAddress(userIdToZap)
 	})
 
 	function startZapSubscription() {
-		const subscription = $ndkStore
+		zapSubscription = $ndkStore
 			.subscribe({
 				kinds: [NDKKind.Zap],
 				'#p': [userIdToZap],
@@ -49,15 +48,12 @@
 				if (bolt11Tag && bolt11Tag === lightningInvoiceData) {
 					toast.success('Zap successful')
 					nwcSpinnerShown = false
-					if (zapSubscription) {
-						zapSubscription()
-						zapSubscription = undefined
-					}
+					zapSubscription?.stop()
 					setTimeout(() => (zapDialogOpen = false), 200)
 				}
 			})
 
-		return () => subscription.stop()
+		return () => zapSubscription?.stop()
 	}
 
 	async function handleZapForType(zapType: NDKZapMethodInfo, invoiceInterface: InvoiceInterface) {
@@ -83,7 +79,7 @@
 			qrDialogOpen = true
 		} else if (invoiceInterface === 'nwc') {
 			nwcSpinnerShown = true
-			zapSubscription = startZapSubscription()
+			startZapSubscription()
 			const paidInvoice = await payInvoiceWithFirstWorkingNWC(zapRes)
 			if (!paidInvoice.error) {
 				// TODO: invlaidating can be improved
@@ -97,6 +93,10 @@
 		console.log('handleNip61Zap:', info)
 		// TODO: Implementation needed
 	}
+
+	onDestroy(() => {
+		zapSubscription?.stop()
+	})
 </script>
 
 <LnDialog
