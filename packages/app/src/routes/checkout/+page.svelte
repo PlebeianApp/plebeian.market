@@ -7,7 +7,10 @@
 	import Stepper from '$lib/components/stepper.svelte'
 	import { cart } from '$lib/stores/cart'
 
-	let checkoutSteps: Step[] = [
+	$: hasMultipleUsers = Object.keys($cart.users).length > 1
+
+	let checkoutSteps: Step[]
+	$: checkoutSteps = [
 		{
 			component: Review,
 			props: {},
@@ -25,13 +28,18 @@
 				component: Success,
 				props: {
 					variant: 'sent',
+					merchant: user,
 				},
 			},
 		]),
-		{
-			component: Success,
-			props: { variant: 'success' },
-		},
+		...(hasMultipleUsers
+			? [
+					{
+						component: Success,
+						props: { variant: 'success' },
+					},
+				]
+			: []),
 	]
 </script>
 

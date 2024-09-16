@@ -1,7 +1,10 @@
 import type { OrderFilter } from '$lib/schema'
+import type { DisplayOrder } from '$lib/server/orders.service'
 import { createMutation } from '@tanstack/svelte-query'
+import ndkStore from '$lib/stores/ndk'
+import { get } from 'svelte/store'
 
-import type { Order } from '@plebeian/database'
+import type { Order, OrderStatus } from '@plebeian/database'
 
 import { createRequest, queryClient } from './client'
 
@@ -33,6 +36,30 @@ export const updateOrderMutation = createMutation(
 				auth: true,
 				body: orderFilter,
 			})
+		},
+	},
+	queryClient,
+)
+export const updateOrderStatusMutation = createMutation(
+	{
+		mutationKey: [],
+		mutationFn: async ({ orderId, status }: { orderId: string; status: OrderStatus }) => {
+			const $ndkStore = get(ndkStore)
+
+			if ($ndkStore.activeUser?.pubkey) {
+				const updatedOrder = await createRequest(`PUT /api/v1/orders/${orderId}/status`, {
+					auth: true,
+					body: { status },
+				})
+				return updatedOrder
+			}
+			return null
+		},
+		onSuccess: () => {
+			const $ndkStore = get(ndkStore)
+			queryClient.invalidateQueries({ queryKey: ['orders', $ndkStore.activeUser?.pubkey] })
+			queryClient.invalidateQueries({ queryKey: ['orders', $ndkStore.activeUser?.pubkey, 'buyer'] })
+			queryClient.invalidateQueries({ queryKey: ['orders', $ndkStore.activeUser?.pubkey, 'seller'] })
 		},
 	},
 	queryClient,

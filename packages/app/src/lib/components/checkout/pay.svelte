@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { CartUser } from '$lib/stores/cart'
+	import type { CartInvoice, CartUser } from '$lib/stores/cart'
 	import { Button } from '$lib/components/ui/button'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
 	import { cart } from '$lib/stores/cart'
@@ -11,28 +11,16 @@
 
 	export let merchant: CartUser
 
-	let completedPayments: string[] = []
 	let currentOrderIndex = 0
 
 	$: relevantOrders = Object.entries($cart.orders).filter(([_, order]) => order.sellerUserId === merchant.pubkey)
 	$: currentOrder = relevantOrders[currentOrderIndex]
 
 	$: merchantProfile = createUserByIdQuery(merchant.pubkey)
-	function handlePaymentComplete(event: CustomEvent<{ orderId: string }>) {
-		completedPayments = [...completedPayments, event.detail.orderId]
+	function handleValidPayment() {
 		if (currentOrderIndex < relevantOrders.length - 1) {
 			currentOrderIndex++
 		} else {
-			// All payments are complete, move to the next step
-			currentStep.set($currentStep + 1)
-		}
-	}
-
-	function handleSkip() {
-		if (currentOrderIndex < relevantOrders.length - 1) {
-			currentOrderIndex++
-		} else {
-			// All orders skipped, move to the next step
 			currentStep.set($currentStep + 1)
 		}
 	}
@@ -52,12 +40,7 @@
 			order={currentOrder[1]}
 			stall={$cart.stalls[currentOrder[1].stallId]}
 			products={$cart.products}
-			on:paymentComplete={handlePaymentComplete}
+			on:valid={handleValidPayment}
 		/>
 	{/if}
-
-	<div class="flex justify-center mt-4 gap-4">
-		<Button variant="ghost" on:click={handleSkip}>Skip this payment</Button>
-		<Button variant="ghost" on:click={() => currentStep.set($currentStep + 1)}>Skip all payments</Button>
-	</div>
 </div>

@@ -10,7 +10,7 @@
 	import { Input } from '$lib/components/ui/input'
 	import ndkStore, { GenericKeySigner } from '$lib/stores/ndk'
 	import { balanceOfWorkingNWCs, payInvoiceWithFirstWorkingNWC } from '$lib/stores/nwc'
-	import { copyToClipboard, truncateText } from '$lib/utils'
+	import { copyToClipboard, formatSats, truncateText } from '$lib/utils'
 	import { addSeconds, differenceInSeconds, format } from 'date-fns'
 	import { NIP05_REGEX } from 'nostr-tools/nip05'
 	import { createEventDispatcher, onDestroy, onMount } from 'svelte'
@@ -19,11 +19,15 @@
 	export let paymentDetail: RichPaymentDetail
 	export let amountSats: number
 
-	const dispatch = createEventDispatcher()
+	const dispatch = createEventDispatcher<{
+		paymentComplete: { paymentRequest: string; preimage: string }
+		paymentExpired: { paymentRequest: string; preimage: string | null }
+		paymentCanceled: { paymentRequest: string; preimage: string | null }
+	}>()
 	const RELAYS = ['wss://relay.damus.io', 'wss://relay.nostr.band', 'wss://nos.lol', 'wss://relay.nostr.net', 'wss://relay.minibits.cash']
 
 	let invoice: Invoice | null = null
-	let paymentStatus: 'pending' | 'success' | 'failed' = 'pending'
+	let paymentStatus: 'pending' | 'success' | 'failed' | 'canceled' = 'pending'
 	let preimageInput = ''
 	let showPreimageInput = false
 	let isLoading = false
@@ -51,8 +55,7 @@
 
 				addRelaysToNDKPool()
 
-				invoice = allowsNostr ? await generateZapInvoice() : await ln.requestInvoice({ satoshi: amountSats.toFixed(0) })
-
+				invoice = allowsNostr ? await generateZapInvoice() : await ln.requestInvoice({ satoshi: Number(amountSats.toFixed(0)) })
 				if (allowsNostr) {
 					ln.domain === 'getalby.com' ? startZapCheck() : startZapSubscription()
 				}
@@ -76,7 +79,7 @@
 	}
 
 	async function generateZapInvoice() {
-		const zapArgs = { satoshi: amountSats, relays: RELAYS }
+		const zapArgs = { satoshi: formatSats(amountSats, false), relays: RELAYS }
 		return await ln!.zapInvoice(zapArgs, { nostr: new GenericKeySigner() })
 	}
 
@@ -121,7 +124,7 @@
 				} catch (error) {
 					console.error('Error checking zap payment:', error)
 				}
-			}, 1000)
+			}, 750)
 			startManualVerificationTimer()
 		}
 	}
@@ -129,12 +132,12 @@
 	function startManualVerificationTimer() {
 		manualVerificationTimeout = setTimeout(() => {
 			showManualVerification = true
-		}, 10000) // 10 seconds
+		}, 10000)
 	}
 	function handleZapEvent(event: NDKEvent) {
 		const bolt11Tag = event.tagValue('bolt11')
 		if (bolt11Tag && bolt11Tag === invoice?.paymentRequest) {
-			handleSuccessfulPayment(event.tagValue('preimage') || '')
+			handleSuccessfulPayment(event.tagValue('preimage') || 'No preimage present')
 		}
 	}
 
@@ -142,7 +145,7 @@
 		cleanupIntervals()
 		remainingTime = 'Expired'
 		toast.error('Invoice expired')
-		dispatch('paymentExpired')
+		dispatch('paymentExpired', { paymentRequest: invoice!.paymentRequest, preimage: null })
 	}
 
 	async function verifyPayment() {
@@ -166,8 +169,14 @@
 	function handleSuccessfulPayment(preimage: string) {
 		paymentStatus = 'success'
 		toast.success('Payment successful')
-		dispatch('paymentComplete', { preimage })
+		dispatch('paymentComplete', { paymentRequest: invoice!.paymentRequest, preimage })
 		cleanupIntervals()
+	}
+
+	function handleSkipPayment() {
+		paymentStatus = 'canceled'
+		cleanupIntervals()
+		dispatch('paymentCanceled', { paymentRequest: invoice!.paymentRequest, preimage: null })
 	}
 
 	async function handleWeblnPay() {
@@ -257,6 +266,7 @@
 				<Button on:click={handleNWCPay} disabled={paymentStatus !== 'pending'}>Pay with NWC</Button>
 			{/if}
 			<Button variant="ghost" on:click={() => window.open(url, '_blank')}>Open in wallet</Button>
+			<Button variant="outline" on:click={handleSkipPayment}>Skip Payment</Button>
 		</div>
 
 		<Collapsible.Root open={showPreimageInput}>

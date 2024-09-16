@@ -416,6 +416,7 @@ export const invoices = sqliteTable('invoices', {
 	paymentDetails: text('payment_details_id')
 		.notNull()
 		.references(() => paymentDetails.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
+	paymentRequest: text('payment_request'),
 	proof: text('proof'),
 })
 

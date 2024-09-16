@@ -40,7 +40,6 @@
 		for (const stallId of stalls) {
 			const stall = $cart.stalls[stallId]
 			if (!stall.shippingMethodId) {
-				// toast.error(`Make sure you specify the shipping method for stall ${stallId}!`)
 				throw new Error('Missing shipping method')
 			}
 

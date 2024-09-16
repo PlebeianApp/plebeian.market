@@ -223,6 +223,7 @@ export type OrderStatus = ObjectValues<typeof ORDER_STATUS>
 export const INVOICE_STATUS = {
 	PENDING: 'pending',
 	PAID: 'paid',
+	EXPIRED: 'expired',
 	CANCELED: 'canceled',
 	REFUNDED: 'refunded',
 } as const

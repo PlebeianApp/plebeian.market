@@ -1,13 +1,13 @@
 <script lang="ts">
 	import type { OrderFilter } from '$lib/schema'
-	import type { CartProduct, CartStall } from '$lib/stores/cart'
-	import QrCode from '@castlenine/svelte-qrcode'
-	import { Button } from '$lib/components/ui/button'
+	import type { CartInvoice, CartProduct, CartStall } from '$lib/stores/cart'
 	import * as Select from '$lib/components/ui/select'
 	import { createPaymentsForUserQuery } from '$lib/fetch/payments.queries'
 	import { cart } from '$lib/stores/cart'
 	import { formatSats } from '$lib/utils'
 	import { createEventDispatcher } from 'svelte'
+
+	import { createId } from '@plebeian/database/utils'
 
 	import ProductInCart from '../cart/product-in-cart.svelte'
 	import Separator from '../ui/separator/separator.svelte'
@@ -17,7 +17,9 @@
 	export let stall: CartStall
 	export let products: Record<string, CartProduct>
 
-	const dispatch = createEventDispatcher()
+	const dispatch = createEventDispatcher<{
+		valid: boolean
+	}>()
 
 	const paymentDetails = createPaymentsForUserQuery(order.sellerUserId)
 	$: relevantPaymentDetails = $paymentDetails.data?.filter((payment) => payment.stallId === order.stallId || payment.stallId === null) ?? []
@@ -28,17 +30,67 @@
 		value: selectedPaymentDetail,
 	}
 
-	$: orderTotal = cart.calculateStallTotal(stall, products)
+	let orderTotal: Awaited<ReturnType<typeof cart.calculateStallTotal>>
 
-	const paymentRequest = 'lnbc500n1pn2vehkpp5m22vruwkcvvru...'
-
-	function handlePaymentComplete(event: CustomEvent<{ preimage: string }>) {
-		console.log('Payment event in orderPayment', event.detail)
-		// dispatch('paymentComplete', { orderId: order.id })
+	function handlePaymentComplete(event: CustomEvent<{ paymentRequest: string; preimage: string | null }>) {
+		try {
+			const invoice: CartInvoice = {
+				id: createId(),
+				createdAt: Date.now(),
+				updatedAt: Date.now(),
+				orderId: order.id!,
+				totalAmount: formatSats(orderTotal.totalInSats, false),
+				invoiceStatus: 'paid',
+				paymentDetails: selectedPaymentDetail.id,
+				paymentRequest: event.detail.paymentRequest,
+				proof: event.detail.preimage,
+			}
+			cart.addInvoice(invoice)
+			dispatch('valid', true)
+		} catch (e) {
+			console.warn('Error handling complete payment', `${e}`)
+		}
 	}
-	function handlePaymentExpired() {
-		// selectedPaymentDetail = null;
-		// You might want to add additional logic here
+	function handlePaymentExpired(event: CustomEvent<{ paymentRequest: string; preimage: string | null }>) {
+		const invoice: CartInvoice = {
+			id: createId(),
+			createdAt: Date.now(),
+			updatedAt: Date.now(),
+			orderId: order.id!,
+			totalAmount: formatSats(orderTotal.totalInSats, false),
+			invoiceStatus: 'expired',
+			paymentDetails: selectedPaymentDetail.id,
+			paymentRequest: event.detail.paymentRequest,
+			proof: event.detail.preimage,
+		}
+
+		cart.addInvoice(invoice)
+		dispatch('valid', true)
+	}
+
+	function handlePaymentCanceled(event: CustomEvent<{ paymentRequest: string; preimage: string | null }>) {
+		const invoice: CartInvoice = {
+			id: createId(),
+			createdAt: Date.now(),
+			updatedAt: Date.now(),
+			orderId: order.id!,
+			totalAmount: formatSats(orderTotal.totalInSats, false),
+			invoiceStatus: 'canceled',
+			paymentDetails: selectedPaymentDetail.id,
+			paymentRequest: event.detail.paymentRequest,
+			proof: event.detail.preimage,
+		}
+		console.log('a canceled invoice', invoice)
+		cart.addInvoice(invoice)
+		dispatch('valid', true)
+	}
+
+	async function calculateOrderTotal() {
+		orderTotal = await cart.calculateStallTotal(stall, products)
+	}
+	$: {
+		order
+		calculateOrderTotal()
 	}
 </script>
 
@@ -52,18 +104,16 @@
 
 		<Separator />
 
-		{#await orderTotal}
-			<div class="text-center">Calculating total...</div>
-		{:then total}
+		{#if orderTotal}
 			<div class="flex flex-col gap-2">
-				{#each [{ label: 'Subtotal', value: total.subtotalInSats }, { label: 'Shipping', value: total.shippingInSats }, { label: 'Total', value: total.totalInSats, bold: true }] as { label, value, bold }}
+				{#each [{ label: 'Subtotal', value: orderTotal.subtotalInSats }, { label: 'Shipping', value: orderTotal.shippingInSats }, { label: 'Total', value: orderTotal.totalInSats, bold: true }] as { label, value, bold }}
 					<div class="flex justify-between" class:font-bold={bold}>
 						<span>{label}:</span>
 						<span>{formatSats(value)} sats</span>
 					</div>
 				{/each}
 			</div>
-		{/await}
+		{/if}
 	</div>
 
 	<div class="w-1/2 flex flex-col items-center gap-4">
@@ -84,46 +134,16 @@
 			</Select.Content>
 		</Select.Root>
 
-		<!-- {#if selectedPaymentDetail}
-			<div class="text-center">
-				<h3 class="font-bold">{selectedPaymentDetail.id}</h3>
-				<p>{selectedPaymentDetail.paymentMethod}</p>
-				{#if selectedPaymentDetail.paymentDetails}
-					<p class="text-sm break-all">{selectedPaymentDetail.paymentDetails}</p>
-				{/if}
-			</div>
-
-
-		<div class="flex justify-center">
-			<QrCode data={paymentRequest} logoPath="/logo.svg" />
-		</div>
-
-		<div class="flex gap-2 justify-center">
-			{#await orderTotal}
-				<Button disabled>Calculating total...</Button>
-			{:then total}
-				<Button class="flex items-center gap-2" on:click={handlePaymentComplete}>
-					Pay {formatSats(total.totalInSats)} sats
-				</Button>
-			{/await}
-			<Button variant="ghost" class="flex items-center gap-2">
-				Open in app <span class="i-mdi-external-link" />
-			</Button>
-		</div>
-		{/if} -->
-		{#if selectedPaymentDetail}
-			{#await orderTotal}
-				<p>Calculating total...</p>
-			{:then total}
-				{#key selectedPaymentDetail}
-					<PaymentProcessor
-						paymentDetail={selectedPaymentDetail}
-						amountSats={10}
-						on:paymentComplete={handlePaymentComplete}
-						on:paymentExpired={handlePaymentExpired}
-					/>
-				{/key}
-			{/await}
+		{#if selectedPaymentDetail && orderTotal}
+			{#key selectedPaymentDetail}
+				<PaymentProcessor
+					paymentDetail={selectedPaymentDetail}
+					amountSats={orderTotal.totalInSats}
+					on:paymentComplete={handlePaymentComplete}
+					on:paymentExpired={handlePaymentExpired}
+					on:paymentCanceled={handlePaymentCanceled}
+				/>
+			{/key}
 		{/if}
 	</div>
 </div>

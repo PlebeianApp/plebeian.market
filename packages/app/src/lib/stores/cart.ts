@@ -6,7 +6,7 @@ import { debounce, resolveQuery } from '$lib/utils'
 import { toast } from 'svelte-sonner'
 import { derived, get, writable } from 'svelte/store'
 
-import type { ProductImage, ProductShipping } from '@plebeian/database'
+import type { InvoiceStatus, ProductImage, ProductShipping } from '@plebeian/database'
 
 export interface CartProduct {
 	id: string
@@ -35,8 +35,14 @@ export interface CartUser {
 
 export interface CartInvoice {
 	id: string
+	createdAt: number
+	updatedAt: number
 	orderId: string
-	proof: null | string
+	totalAmount: number
+	invoiceStatus: InvoiceStatus
+	paymentDetails: string
+	paymentRequest: string
+	proof: string | null
 }
 
 interface NormalizedCart {
@@ -333,6 +339,15 @@ function createCart() {
 				cart.orders = {
 					...cart.orders,
 					[order.id as string]: order,
+				}
+				return cart
+			})
+		},
+		addInvoice(invoice: CartInvoice) {
+			update((cart) => {
+				cart.invoices = {
+					...cart.invoices,
+					[invoice.id]: invoice,
 				}
 				return cart
 			})

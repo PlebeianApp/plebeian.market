@@ -444,6 +444,11 @@ export class EncryptedStorage {
 	}
 }
 
-export function formatSats(amount: number) {
-	return amount.toLocaleString(undefined, { maximumFractionDigits: 0 })
+export function formatSats(amount: number): string
+export function formatSats(amount: number, toDisplay: false): number
+export function formatSats(amount: number, toDisplay?: boolean): string | number {
+	const formattedAmount =
+		toDisplay === undefined || toDisplay ? amount.toLocaleString(undefined, { maximumFractionDigits: 0 }) : Math.floor(amount)
+
+	return formattedAmount
 }

@@ -16,7 +16,7 @@
 	export let user: CartUser
 	export let stalls: Record<string, CartStall>
 	export let products: Record<string, CartProduct>
-	export let mode: 'cart' | 'checkout' | 'payment' = 'cart'
+	export let mode: 'cart' | 'checkout' | 'payment' | 'success' = 'cart'
 	export let formData: Partial<Order> = {}
 
 	export let userTotal: Awaited<ReturnType<typeof cart.calculateUserTotal>> | null = null
@@ -61,12 +61,16 @@
 	{#each user.stalls as stallId}
 		{@const stall = stalls[stallId]}
 		<div class="stall">
-			<MiniStall stallId={stallId.split(':').length !== 3 ? `${KindStalls}:${user.pubkey}:${stallId}` : stallId} />
+			<MiniStall
+				stallId={stallId.split(':').length !== 3 ? `${KindStalls}:${user.pubkey}:${stallId}` : stallId}
+				mode={mode === 'success' ? 'view' : undefined}
+			/>
 
 			{#each stall.products as productId}
 				{@const product = products[productId]}
 				<ProductInCart
 					{product}
+					mode={mode === 'success' ? 'payment' : undefined}
 					on:increment={(e) => handleProductUpdate(e, stallId, productId)}
 					on:decrement={(e) => handleProductUpdate(e, stallId, productId)}
 					on:setAmount={(e) => handleProductUpdate(e, stallId, productId)}
