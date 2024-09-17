@@ -10,8 +10,8 @@
 	import { queryClient } from '$lib/fetch/client'
 	import ndkStore from '$lib/stores/ndk'
 	import { payInvoiceWithFirstWorkingNWC } from '$lib/stores/nwc'
-	import { onMount, tick, onDestroy } from 'svelte'
 	import { checkTargetUserHasLightningAddress } from '$lib/utils'
+	import { onDestroy, onMount, tick } from 'svelte'
 	import { toast } from 'svelte-sonner'
 
 	import LnDialog from './ln-dialog.svelte'

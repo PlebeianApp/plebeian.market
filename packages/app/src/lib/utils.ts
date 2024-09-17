@@ -404,13 +404,13 @@ export function nwcUriToWalletDetails(uri: string): NWCWallet | null {
 }
 
 export async function checkTargetUserHasLightningAddress(userIdToZap: string): Promise<NDKZapMethodInfo[]> {
-    const user = get(ndkStore).getUser({ pubkey: userIdToZap })
-    try {
-        return await user.getZapInfo()
-    } catch (error) {
-        console.error('Failed to get zap info:', error)
-        return []
-    }
+	const user = get(ndkStore).getUser({ pubkey: userIdToZap })
+	try {
+		return await user.getZapInfo()
+	} catch (error) {
+		console.error('Failed to get zap info:', error)
+		return []
+	}
 }
 
 export class EncryptedStorage {
