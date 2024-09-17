@@ -2,7 +2,7 @@ import type { CreateQueryResult } from '@tanstack/svelte-query'
 import type { ClassValue } from 'clsx'
 import type { VerifiedEvent } from 'nostr-tools'
 import type { TransitionConfig } from 'svelte/transition'
-import { type NDKEvent, type NDKKind, type NDKTag, type NDKUserProfile, type NostrEvent } from '@nostr-dev-kit/ndk'
+import { type NDKEvent, type NDKKind, type NDKSigner, type NDKTag, type NDKUserProfile, type NostrEvent } from '@nostr-dev-kit/ndk'
 import { page } from '$app/stores'
 import ndkStore from '$lib/stores/ndk'
 import { clsx } from 'clsx'
@@ -400,5 +400,36 @@ export function nwcUriToWalletDetails(uri: string): NWCWallet | null {
 		console.log(error)
 		toast.error('Failed to parse NWC URI:' + error)
 		return null
+	}
+}
+
+export class EncryptedStorage {
+	signer: NDKSigner
+
+	constructor(signer: NDKSigner) {
+		this.signer = signer
+	}
+
+	async setItem(key: string, value: string): Promise<void> {
+		key = await this.deriveKey(key)
+		value = await this.signer.encrypt(await this.signer.user(), value)
+
+		localStorage.setItem(key, value)
+	}
+
+	async getItem(key: string): Promise<string | null> {
+		key = await this.deriveKey(key)
+		const value = localStorage.getItem(key)
+
+		if (value) {
+			return this.signer.decrypt(await this.signer.user(), value)
+		}
+
+		return null
+	}
+
+	private async deriveKey(key: string) {
+		const { pubkey } = await this.signer.user()
+		return `${key}:${pubkey}`
 	}
 }

@@ -7,7 +7,7 @@
 	import { deleteWalletMutation, persistWalletMutation, updateWalletMutation } from '$lib/fetch/wallets.mutations'
 	import ndkStore from '$lib/stores/ndk'
 	import { initNdkNWCs } from '$lib/stores/nwc'
-	import { nwcUriToWalletDetails } from '$lib/utils'
+	import { EncryptedStorage, nwcUriToWalletDetails } from '$lib/utils'
 	import { createEventDispatcher, onMount } from 'svelte'
 	import { toast } from 'svelte-sonner'
 
@@ -66,11 +66,13 @@
 		initNdkNWCs()
 	}
 
+	$: encryptedStorage = new EncryptedStorage($ndkStore.signer!)
+
 	async function handleLocalStorage(wallet: { walletPubKey: string; walletRelays: string[]; walletSecret: string }) {
-		const localWallets = JSON.parse(localStorage.getItem(`nwc-wallets-${$ndkStore.activeUser?.pubkey}`) || '{}')
+		const localWallets = JSON.parse((await encryptedStorage.getItem(`nwc-wallets`)) || '{}')
 		if (nwcWallet && nwcWallet.id.startsWith('local-')) {
 			localWallets[nwcWallet.id] = wallet
-			localStorage.setItem(`nwc-wallets-${$ndkStore.activeUser?.pubkey}`, JSON.stringify(localWallets))
+			await encryptedStorage.setItem(`nwc-wallets`, JSON.stringify(localWallets))
 			toast.success('Local wallet updated')
 			dispatch('walletAdded', { id: nwcWallet.id, wallet })
 		} else {
@@ -79,7 +81,7 @@
 			}
 			const newId = `local-${Date.now()}`
 			localWallets[newId] = wallet
-			localStorage.setItem(`nwc-wallets-${$ndkStore.activeUser?.pubkey}`, JSON.stringify(localWallets))
+			await encryptedStorage.setItem(`nwc-wallets`, JSON.stringify(localWallets))
 			toast.success('Wallet saved locally')
 			dispatch('walletAdded', { id: newId, wallet })
 		}
@@ -87,9 +89,9 @@
 
 	async function handleDatabase(wallet: { walletPubKey: string; walletRelays: string[]; walletSecret: string }) {
 		if (nwcWallet && nwcWallet.id.startsWith('local-')) {
-			const localWallets = JSON.parse(localStorage.getItem(`nwc-wallets-${$ndkStore.activeUser?.pubkey}`) || '{}')
+			const localWallets = JSON.parse((await encryptedStorage.getItem(`nwc-wallets`)) || '{}')
 			delete localWallets[nwcWallet.id]
-			localStorage.setItem(`nwc-wallets-${$ndkStore.activeUser?.pubkey}`, JSON.stringify(localWallets))
+			await encryptedStorage.setItem(`nwc-wallets`, JSON.stringify(localWallets))
 			await $persistWalletMutation.mutateAsync({ walletType: 'nwc', walletDetails: wallet })
 			toast.success('Wallet moved to database')
 		} else if (nwcWallet) {
@@ -102,12 +104,12 @@
 		dispatch('walletAdded')
 	}
 
-	function handleDelete() {
+	async function handleDelete() {
 		if (!nwcWallet || !nwcWallet.id) return
 		if (nwcWallet.id.startsWith('local-')) {
-			const localWallets = JSON.parse(localStorage.getItem(`nwc-wallets-${$ndkStore.activeUser?.pubkey}`) || '{}')
+			const localWallets = JSON.parse((await encryptedStorage!.getItem(`nwc-wallets`)) || '{}')
 			delete localWallets[nwcWallet.id]
-			localStorage.setItem(`nwc-wallets-${$ndkStore.activeUser?.pubkey}`, JSON.stringify(localWallets))
+			await encryptedStorage.setItem(`nwc-wallets`, JSON.stringify(localWallets))
 			resetForm()
 			toast.success('NWC Wallet deleted locally')
 		} else {
