@@ -20,7 +20,7 @@
 	export let amountSats: number
 
 	const dispatch = createEventDispatcher<{
-		paymentComplete: { paymentRequest: string; preimage: string }
+		paymentComplete: { paymentRequest: string; preimage: string | null }
 		paymentExpired: { paymentRequest: string; preimage: string | null }
 		paymentCanceled: { paymentRequest: string; preimage: string | null }
 	}>()
@@ -55,8 +55,10 @@
 
 				addRelaysToNDKPool()
 
-				invoice = allowsNostr ? await generateZapInvoice() : await ln.requestInvoice({ satoshi: Number(amountSats.toFixed(0)) })
+				invoice = allowsNostr ? await generateZapInvoice() : await ln.requestInvoice({ satoshi: formatSats(amountSats, false) })
 				if (allowsNostr) {
+					// TODO: Look for verify flag as alby does to have a more generic detection
+					console.log(ln)
 					ln.domain === 'getalby.com' ? startZapCheck() : startZapSubscription()
 				}
 			} else {

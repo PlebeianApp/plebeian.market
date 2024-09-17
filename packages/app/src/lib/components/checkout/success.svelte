@@ -18,6 +18,11 @@
 	$: invoices = merchant
 		? Object.values($cart.invoices).filter((invoice) => orders.some((order) => order.id === invoice.orderId))
 		: Object.values($cart.invoices)
+
+	// TODO handle insert orders and invoices in the db in a single tx. Show a spinner instead of a check icon util the insertion its beign done,
+	// also dont show the continue button, and use loading text
+
+	// TODO handle continue button. Clear cart by instantiating a new one, remove things from local storage, and go to stall browser
 </script>
 
 <div class="flex flex-col items-center justify-center w-full max-w-3xl mx-auto gap-8 py-8">

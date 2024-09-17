@@ -6,7 +6,7 @@
 	import { createPaymentsForUserQuery } from '$lib/fetch/payments.queries'
 	import { platformV4VForUserQuery } from '$lib/fetch/v4v.queries'
 	import { cart } from '$lib/stores/cart'
-	import { checkoutFormStore, currentStep } from '$lib/stores/checkout'
+	import { checkoutFormStore } from '$lib/stores/checkout'
 	import ndkStore from '$lib/stores/ndk'
 	import { formatSats } from '$lib/utils'
 	import { createEventDispatcher } from 'svelte'
@@ -61,6 +61,8 @@
 
 			cart.addOrder(order)
 			orders.push(order)
+
+			// TODO: Before pass to the next step we should send the dm to the merchant with the order
 		}
 		ableToPlaceOrder = false
 		return { pubkey, orders }
@@ -70,8 +72,8 @@
 		isLoading = true
 		try {
 			const orderResult = await placeOrder()
+			//TODO: (improve) If the user dont want to pay or skip the payment we should create the corresponding invoices and jump to success screen.
 			if (orderResult?.orders.length) {
-				console.log($cart.orders)
 				toast.success('Order placed successfully')
 				dispatch('validate', { valid: true })
 				dispatch('validate', { valid: true })

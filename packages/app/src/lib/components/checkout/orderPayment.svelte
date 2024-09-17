@@ -31,7 +31,7 @@
 	}
 
 	let orderTotal: Awaited<ReturnType<typeof cart.calculateStallTotal>>
-
+	// TODO: once the payment is complete (succesful or not send the invoice as dm)
 	function handlePaymentComplete(event: CustomEvent<{ paymentRequest: string; preimage: string | null }>) {
 		try {
 			const invoice: CartInvoice = {
@@ -88,6 +88,7 @@
 	async function calculateOrderTotal() {
 		orderTotal = await cart.calculateStallTotal(stall, products)
 	}
+
 	$: {
 		order
 		calculateOrderTotal()
@@ -136,9 +137,10 @@
 
 		{#if selectedPaymentDetail && orderTotal}
 			{#key selectedPaymentDetail}
+				<!-- use orderTotal.totalInSats in amountSats prop -->
 				<PaymentProcessor
 					paymentDetail={selectedPaymentDetail}
-					amountSats={orderTotal.totalInSats}
+					amountSats={5}
 					on:paymentComplete={handlePaymentComplete}
 					on:paymentExpired={handlePaymentExpired}
 					on:paymentCanceled={handlePaymentCanceled}

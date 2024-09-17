@@ -3,8 +3,8 @@
 	import { Button } from '$lib/components/ui/button'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
 	import { cart } from '$lib/stores/cart'
-	import { currentStep } from '$lib/stores/checkout'
 	import { truncateString } from '$lib/utils'
+	import { createEventDispatcher } from 'svelte'
 
 	import MiniStall from '../cart/mini-stall.svelte'
 	import OrderPayment from './orderPayment.svelte'
@@ -12,16 +12,18 @@
 	export let merchant: CartUser
 
 	let currentOrderIndex = 0
+	const dispatch = createEventDispatcher()
 
 	$: relevantOrders = Object.entries($cart.orders).filter(([_, order]) => order.sellerUserId === merchant.pubkey)
 	$: currentOrder = relevantOrders[currentOrderIndex]
 
 	$: merchantProfile = createUserByIdQuery(merchant.pubkey)
-	function handleValidPayment() {
+	function handleValidPayment(event: CustomEvent) {
+		console.log(event.detail)
 		if (currentOrderIndex < relevantOrders.length - 1) {
 			currentOrderIndex++
 		} else {
-			currentStep.set($currentStep + 1)
+			dispatch('validate', { valid: true })
 		}
 	}
 </script>

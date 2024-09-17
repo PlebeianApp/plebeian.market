@@ -287,6 +287,7 @@ function createCart() {
 			return cart.stalls[stallId]?.shippingMethodId || null
 		},
 
+		// TODO, add clear related session storage when using clear method
 		clear: () => {
 			set({ users: {}, stalls: {}, products: {}, orders: {}, invoices: {} })
 			if (typeof sessionStorage !== 'undefined') {
@@ -334,6 +335,7 @@ function createCart() {
 		calculateUserTotal,
 		calculateStallTotal,
 		calculateGrandTotal,
+		// TODO: Add orders and invoices to sessionStorage for more robustness
 		addOrder(order: OrderFilter) {
 			update((cart) => {
 				cart.orders = {

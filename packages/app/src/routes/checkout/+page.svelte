@@ -10,6 +10,7 @@
 	$: hasMultipleUsers = Object.keys($cart.users).length > 1
 
 	let checkoutSteps: Step[]
+	// FIXME: If users go out at the middle of a checkout and add new products they will not appear.
 	$: checkoutSteps = [
 		{
 			component: Review,
@@ -41,10 +42,14 @@
 				]
 			: []),
 	]
+
+	function handleStepChange(event: CustomEvent) {
+		console.log(event)
+	}
 </script>
 
 <div class="container py-6">
 	<h2>Checkout</h2>
 
-	<Stepper steps={checkoutSteps} />
+	<Stepper steps={checkoutSteps} on:stepChange={handleStepChange} />
 </div>
