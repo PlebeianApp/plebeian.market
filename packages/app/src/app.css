@@ -124,5 +124,5 @@
 }
 
 [data-tooltip] {
-	pointer-events: all!important;
+	pointer-events: all !important;
 }
