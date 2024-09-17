@@ -9,11 +9,11 @@
 	import { checkoutFormStore } from '$lib/stores/checkout'
 	import ndkStore from '$lib/stores/ndk'
 	import { formatSats } from '$lib/utils'
+	import { createOrderMessage, sendDM } from '$lib/utils/utils.dm'
 	import { createEventDispatcher } from 'svelte'
 	import { toast } from 'svelte-sonner'
 
-	import { ORDER_STATUS } from '@plebeian/database/constants'
-	import { createId } from '@plebeian/database/utils'
+	import { type OrderMessage } from '@plebeian/database/constants'
 
 	import CardContent from '../ui/card/card-content.svelte'
 	import CardHeader from '../ui/card/card-header.svelte'
@@ -32,38 +32,48 @@
 	let userTotal: Awaited<ReturnType<typeof cart.calculateUserTotal>> | null = null
 
 	async function placeOrder() {
-		if (!$checkoutFormStore) return null
+		if (!$checkoutFormStore) {
+			toast.error('Checkout form is not filled')
+			return null
+		}
 
 		const { stalls, pubkey } = $cart.users[merchant.pubkey]
 		const orders: OrderFilter[] = []
 
 		for (const stallId of stalls) {
-			const stall = $cart.stalls[stallId]
-			if (!stall.shippingMethodId) {
-				throw new Error('Missing shipping method')
+			try {
+				const stall = $cart.stalls[stallId]
+				if (!stall.shippingMethodId) {
+					throw new Error('Missing shipping method')
+				}
+
+				const order: OrderMessage = createOrderMessage($checkoutFormStore, stall, $cart, $ndkStore.activeUser?.pubkey as string, pubkey)
+				console.log(order)
+				try {
+					cart.addOrder(order)
+				} catch (error) {
+					console.error('Failed to add order to cart:', error)
+					throw new Error('Failed to add order to cart')
+				}
+
+				try {
+					await sendDM(order, pubkey)
+				} catch (error) {
+					console.error('Failed to send order DM:', error)
+					throw new Error('Failed to send order DM to merchant')
+				}
+
+				orders.push(order)
+			} catch (error) {
+				console.error(`Error processing order for stall ${stallId}:`, error)
 			}
-
-			const order: OrderFilter = {
-				id: createId(),
-				address: $checkoutFormStore.address,
-				city: $checkoutFormStore.city,
-				contactName: $checkoutFormStore.contactName,
-				items: stall.products.map((p) => ({ product_id: p, quantity: $cart.products[p].amount })),
-				status: ORDER_STATUS.PENDING,
-				shippingId: stall.shippingMethodId,
-				stallId: stall.id,
-				type: 0,
-				buyerUserId: $ndkStore.activeUser!.pubkey,
-				sellerUserId: pubkey,
-				zip: $checkoutFormStore.zip,
-				country: $checkoutFormStore.country,
-			}
-
-			cart.addOrder(order)
-			orders.push(order)
-
-			// TODO: Before pass to the next step we should send the dm to the merchant with the order
 		}
+
+		if (orders.length === 0) {
+			toast.error('No orders were successfully placed')
+			return null
+		}
+
 		ableToPlaceOrder = false
 		return { pubkey, orders }
 	}
@@ -72,6 +82,7 @@
 		isLoading = true
 		try {
 			const orderResult = await placeOrder()
+
 			//TODO: (improve) If the user dont want to pay or skip the payment we should create the corresponding invoices and jump to success screen.
 			if (orderResult?.orders.length) {
 				toast.success('Order placed successfully')
@@ -158,12 +169,6 @@
 									{formatSats(userTotal.totalInSats)} sats
 								</span>
 							</div>
-							<!-- <div class="flex justify-between items-center">
-							<span class="text-muted-foreground">Shipping</span> 
-							<span class="text-sm">{userTotal.shippingInSats.toLocaleString(undefined, {
-								maximumFractionDigits: 0,
-							})} sats</span>
-						</div> -->
 						</div>
 					</div>
 				{/if}

@@ -215,10 +215,51 @@ export const ORDER_STATUS = {
 	CONFIRMED: 'confirmed',
 	SHIPPED: 'shipped',
 	COMPLETED: 'completed',
-	CANCELLED: 'cancelled',
+	CANCELED: 'canceled',
 } as const
 
 export type OrderStatus = ObjectValues<typeof ORDER_STATUS>
+
+export interface OrderMessageItem {
+	product_id: string
+	quantity: number
+}
+
+export interface OrderMessage {
+	id?: string
+	createdAt?: number
+	updatedAt?: number
+	type: number
+	sellerUserId: string
+	buyerUserId: string
+	shippingId: string
+	stallId: string
+	status: OrderStatus
+	address: string
+	zip: string
+	city: string
+	country: string
+	region?: string
+	contactName: string
+	contactPhone?: string
+	contactEmail?: string
+	observations?: string
+	items: OrderMessageItem[]
+}
+
+export interface PaymentOption {
+	type: string
+	link: string
+	paymentRequest: string
+}
+
+export interface PaymentRequestMessage {
+	id: string
+	payment_id: string
+	type: number
+	message: string
+	payment_options: PaymentOption[]
+}
 
 export const INVOICE_STATUS = {
 	PENDING: 'pending',

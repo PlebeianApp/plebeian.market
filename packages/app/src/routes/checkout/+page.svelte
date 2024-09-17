@@ -44,7 +44,7 @@
 	]
 
 	function handleStepChange(event: CustomEvent) {
-		console.log(event)
+		// console.log(event)
 	}
 </script>
 

@@ -6,7 +6,7 @@ import { debounce, resolveQuery } from '$lib/utils'
 import { toast } from 'svelte-sonner'
 import { derived, get, writable } from 'svelte/store'
 
-import type { InvoiceStatus, ProductImage, ProductShipping } from '@plebeian/database'
+import type { InvoiceStatus, OrderMessage, OrderStatus, ProductImage, ProductShipping } from '@plebeian/database'
 
 export interface CartProduct {
 	id: string
@@ -40,7 +40,7 @@ export interface CartInvoice {
 	orderId: string
 	totalAmount: number
 	invoiceStatus: InvoiceStatus
-	paymentDetails: string
+	paymentId: string
 	paymentRequest: string
 	proof: string | null
 }
@@ -49,7 +49,7 @@ interface NormalizedCart {
 	users: Record<string, CartUser>
 	stalls: Record<string, CartStall>
 	products: Record<string, CartProduct>
-	orders: Record<string, OrderFilter>
+	orders: Record<string, OrderMessage>
 	invoices: Record<string, CartInvoice>
 }
 
@@ -350,6 +350,19 @@ function createCart() {
 				cart.invoices = {
 					...cart.invoices,
 					[invoice.id]: invoice,
+				}
+				return cart
+			})
+		},
+		updateOrderStatus(orderId: string, status: OrderStatus) {
+			update((cart) => {
+				if (cart.orders[orderId]) {
+					cart.orders[orderId] = {
+						...cart.orders[orderId],
+						status: status,
+					}
+				} else {
+					console.warn(`Attempted to update non-existent order: ${orderId}`)
 				}
 				return cart
 			})

@@ -5,8 +5,12 @@
 	import { createPaymentsForUserQuery } from '$lib/fetch/payments.queries'
 	import { cart } from '$lib/stores/cart'
 	import { formatSats } from '$lib/utils'
-	import { createEventDispatcher } from 'svelte'
+	import { sendDM } from '$lib/utils/utils.dm'
+	import { createEventDispatcher, tick } from 'svelte'
+	import { toast } from 'svelte-sonner'
 
+	import type { OrderStatus, PaymentRequestMessage } from '@plebeian/database/constants'
+	import { ORDER_STATUS } from '@plebeian/database/constants'
 	import { createId } from '@plebeian/database/utils'
 
 	import ProductInCart from '../cart/product-in-cart.svelte'
@@ -31,58 +35,93 @@
 	}
 
 	let orderTotal: Awaited<ReturnType<typeof cart.calculateStallTotal>>
-	// TODO: once the payment is complete (succesful or not send the invoice as dm)
-	function handlePaymentComplete(event: CustomEvent<{ paymentRequest: string; preimage: string | null }>) {
+	type PaymentStatus = 'paid' | 'expired' | 'canceled'
+	async function handlePaymentEvent(event: CustomEvent<{ paymentRequest: string; preimage: string | null }>, status: PaymentStatus) {
 		try {
+			if (!order || !order.id) {
+				throw new Error('Invalid order: Order or order ID is missing')
+			}
+
+			if (!selectedPaymentDetail || !selectedPaymentDetail.id) {
+				throw new Error('Invalid payment details: Payment detail or ID is missing')
+			}
+
+			const paymentRequestMessage: PaymentRequestMessage = {
+				id: order.id,
+				payment_id: selectedPaymentDetail.id,
+				type: 1,
+				message: `Payment request for order ${order.id}, payment detail id: ${selectedPaymentDetail.id}, type: ${selectedPaymentDetail.paymentMethod}`,
+				payment_options: [
+					{
+						type: selectedPaymentDetail.paymentMethod,
+						link: event.detail.paymentRequest,
+						paymentRequest: event.detail.paymentRequest,
+					},
+				],
+			}
+
 			const invoice: CartInvoice = {
 				id: createId(),
 				createdAt: Date.now(),
 				updatedAt: Date.now(),
-				orderId: order.id!,
+				orderId: order.id,
 				totalAmount: formatSats(orderTotal.totalInSats, false),
-				invoiceStatus: 'paid',
-				paymentDetails: selectedPaymentDetail.id,
+				invoiceStatus: status,
+				paymentId: selectedPaymentDetail.id,
 				paymentRequest: event.detail.paymentRequest,
 				proof: event.detail.preimage,
 			}
-			cart.addInvoice(invoice)
+
+			try {
+				cart.addInvoice(invoice)
+			} catch (error) {
+				console.error('Failed to add invoice to cart:', error)
+				throw new Error('Failed to add invoice to cart')
+			}
+
+			const statusMapping: Record<PaymentStatus, OrderStatus> = {
+				paid: ORDER_STATUS.PAID,
+				expired: ORDER_STATUS.CANCELED,
+				canceled: ORDER_STATUS.CANCELED,
+			}
+
+			const newOrderStatus = statusMapping[status] || ORDER_STATUS.PENDING
+
+			try {
+				await sendDM(paymentRequestMessage, order.sellerUserId)
+				await tick()
+				await new Promise((resolve) => setTimeout(resolve, 1000))
+				await sendDM(invoice, order.sellerUserId)
+				if ($cart.orders[order.id].status !== newOrderStatus) {
+					cart.updateOrderStatus(order.id, newOrderStatus)
+					await new Promise((resolve) => setTimeout(resolve, 1000))
+					await sendDM($cart.orders[order.id], order.sellerUserId)
+				}
+			} catch (error) {
+				console.error('Failed to send payment request or invoice DM:', error)
+				throw new Error('Failed to send payment request or invoice DM to seller')
+			}
+
 			dispatch('valid', true)
 		} catch (e) {
-			console.warn('Error handling complete payment', `${e}`)
+			if (e instanceof Error) {
+				toast.error(`Failed to process ${status} payment: ${e.message}`)
+			}
+			console.error(`Error handling ${status} payment:`, e)
+			dispatch('valid', false)
 		}
 	}
-	function handlePaymentExpired(event: CustomEvent<{ paymentRequest: string; preimage: string | null }>) {
-		const invoice: CartInvoice = {
-			id: createId(),
-			createdAt: Date.now(),
-			updatedAt: Date.now(),
-			orderId: order.id!,
-			totalAmount: formatSats(orderTotal.totalInSats, false),
-			invoiceStatus: 'expired',
-			paymentDetails: selectedPaymentDetail.id,
-			paymentRequest: event.detail.paymentRequest,
-			proof: event.detail.preimage,
-		}
 
-		cart.addInvoice(invoice)
-		dispatch('valid', true)
+	function handlePaymentComplete(event: CustomEvent<{ paymentRequest: string; preimage: string | null }>) {
+		handlePaymentEvent(event, 'paid')
+	}
+
+	function handlePaymentExpired(event: CustomEvent<{ paymentRequest: string; preimage: string | null }>) {
+		handlePaymentEvent(event, 'expired')
 	}
 
 	function handlePaymentCanceled(event: CustomEvent<{ paymentRequest: string; preimage: string | null }>) {
-		const invoice: CartInvoice = {
-			id: createId(),
-			createdAt: Date.now(),
-			updatedAt: Date.now(),
-			orderId: order.id!,
-			totalAmount: formatSats(orderTotal.totalInSats, false),
-			invoiceStatus: 'canceled',
-			paymentDetails: selectedPaymentDetail.id,
-			paymentRequest: event.detail.paymentRequest,
-			proof: event.detail.preimage,
-		}
-		console.log('a canceled invoice', invoice)
-		cart.addInvoice(invoice)
-		dispatch('valid', true)
+		handlePaymentEvent(event, 'canceled')
 	}
 
 	async function calculateOrderTotal() {
