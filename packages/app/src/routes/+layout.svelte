@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { arrow, autoUpdate, computePosition, flip, offset, shift } from '@floating-ui/dom'
 	import Footer from '$lib/components/footer.svelte'
 	import Header from '$lib/components/header.svelte'
 	import { Toaster } from '$lib/components/ui/sonner'
@@ -61,6 +62,75 @@
 			processQueuedInsertions(allowRegister)
 		})
 	})
+
+	// Tooltips on elements with the tooltip attribute
+	onMount(() => {
+		const tooltip = document.querySelector('#tooltip') as HTMLDivElement
+		const tooltipContent = document.querySelector('#tooltip-content') as HTMLDivElement
+		const arrowElement = document.querySelector('#arrow') as HTMLDivElement
+		let activeElement: HTMLElement | null = null
+
+		function updateTooltip() {
+			if (!activeElement) return
+
+			computePosition(activeElement, tooltip, {
+				placement: 'top',
+				middleware: [
+					offset(6), // Distance between element and tooltip
+					flip(), // Auto-flip if there's no space
+					shift({ padding: 5 }), // Shift tooltip to avoid screen edges
+					arrow({ element: arrowElement }), // Position the arrow
+				],
+			}).then(({ x, y, placement, middlewareData }) => {
+				Object.assign(tooltip.style, {
+					left: `${x}px`,
+					top: `${y}px`,
+				})
+
+				const { x: arrowX, y: arrowY } = middlewareData.arrow!
+				const staticSide = {
+					top: 'bottom',
+					right: 'left',
+					bottom: 'top',
+					left: 'right',
+				}[placement.split('-')[0]]!
+
+				Object.assign(arrowElement.style, {
+					left: arrowX != null ? `${arrowX}px` : '',
+					top: arrowY != null ? `${arrowY}px` : '',
+					[staticSide]: '-4px',
+				})
+			})
+		}
+
+		function showTooltip(element: HTMLElement) {
+			tooltipContent.textContent = element.getAttribute('data-tooltip')
+			tooltip.style.display = 'block'
+			activeElement = element
+			updateTooltip()
+
+			autoUpdate(element, tooltip, updateTooltip) // Keep updated on resize/scroll
+		}
+
+		function hideTooltip() {
+			tooltip.style.display = 'none'
+			activeElement = null
+		}
+
+		document.body.addEventListener('mouseover', (event) => {
+			const target = (event.target as HTMLElement).closest('[data-tooltip]') as HTMLElement
+			if (target) {
+				showTooltip(target)
+			}
+		})
+
+		document.body.addEventListener('mouseout', (event) => {
+			const relatedTarget = event.relatedTarget as HTMLElement
+			if (!relatedTarget || !relatedTarget.closest('#tooltip')) {
+				hideTooltip()
+			}
+		})
+	})
 </script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -103,6 +173,7 @@
 		href="/apple-splash-landscape-dark-2048x1536.png"
 	/>
 </svelte:head>
+
 <QueryClientProvider client={queryClient}>
 	{#if isFirstTimeRunning}
 		<slot />
@@ -120,6 +191,11 @@
 		</div>
 	{/if}
 </QueryClientProvider>
+
+<div id="tooltip" role="tooltip">
+	<div id="tooltip-content"></div>
+	<div id="arrow"></div>
+</div>
 
 <style>
 	:global(body) {

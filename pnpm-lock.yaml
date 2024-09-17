@@ -26,6 +26,9 @@ importers:
       '@castlenine/svelte-qrcode':
         specifier: ^2.2.0
         version: 2.2.0(svelte@4.2.17)
+      '@floating-ui/dom':
+        specifier: ^1.6.10
+        version: 1.6.10
       '@fontsource/ibm-plex-mono':
         specifier: ^5.0.13
         version: 5.0.13
@@ -1612,11 +1615,11 @@ packages:
   '@floating-ui/core@1.6.2':
     resolution: {integrity: sha512-+2XpQV9LLZeanU4ZevzRnGFg2neDeKHgFLjP6YLW+tly0IvrhqT4u8enLGjLH3qeh85g19xY5rsAusfwTdn5lg==}
 
-  '@floating-ui/dom@1.6.5':
-    resolution: {integrity: sha512-Nsdud2X65Dz+1RHjAIP0t8z5e2ff/IRbei6BqFrl1urT8sDVzM1HMQ+R0XcU5ceRfyO3I6ayeqIfh+6Wb8LGTw==}
+  '@floating-ui/dom@1.6.10':
+    resolution: {integrity: sha512-fskgCFv8J8OamCmyun8MfjB1Olfn+uZKjOKZ0vhYF3gRmEUXcGOjxWL8bBr7i4kIuPZ2KD2S3EUIOxnjC8kl2A==}
 
-  '@floating-ui/utils@0.2.2':
-    resolution: {integrity: sha512-J4yDIIthosAsRZ5CPYP/jQvUAQtlZTTD/4suA08/FEnlxqW3sKS9iAhgsa9VYLZ6vDHn/ixJgIqRQPotoBjxIw==}
+  '@floating-ui/utils@0.2.7':
+    resolution: {integrity: sha512-X8R8Oj771YRl/w+c1HqAC1szL8zWQRwFvgDwT129k9ACdBoud/+/rX9V0qiMl6LWUdP9voC2nDVZYPMQQsb6eA==}
 
   '@fontsource/ibm-plex-mono@5.0.13':
     resolution: {integrity: sha512-gtlMmvk//2AgDEZDFsoL5z9mgW3ZZg/9SC7pIfDwNKp5DtZpApgqd1Fua3HhPwYRIHrT76IQ1tMTzQKLEGtJGQ==}
@@ -2176,7 +2179,7 @@ packages:
   '@vitest/ui@1.6.0':
     resolution: {integrity: sha512-k3Lyo+ONLOgylctiGovRKy7V4+dIN2yxstX3eY5cWFXH6WP+ooVX79YSyi0GagdTQzLmT43BF27T0s6dOIPBXA==}
     peerDependencies:
-      vitest: 1.6.0
+      vitest: workspace:*
 
   '@vitest/utils@1.6.0':
     resolution: {integrity: sha512-21cPiuGMoMZwiOHa2i4LXkMkMkCGzA+MVFV70jRwHo95dL4x/ts5GZhML1QWuy7yfp3WzK3lRvZi3JnXTYqrBw==}
@@ -6438,14 +6441,14 @@ snapshots:
 
   '@floating-ui/core@1.6.2':
     dependencies:
-      '@floating-ui/utils': 0.2.2
+      '@floating-ui/utils': 0.2.7
 
-  '@floating-ui/dom@1.6.5':
+  '@floating-ui/dom@1.6.10':
     dependencies:
       '@floating-ui/core': 1.6.2
-      '@floating-ui/utils': 0.2.2
+      '@floating-ui/utils': 0.2.7
 
-  '@floating-ui/utils@0.2.2': {}
+  '@floating-ui/utils@0.2.7': {}
 
   '@fontsource/ibm-plex-mono@5.0.13': {}
 
@@ -6616,7 +6619,7 @@ snapshots:
   '@melt-ui/svelte@0.61.2(svelte@4.2.17)':
     dependencies:
       '@floating-ui/core': 1.6.2
-      '@floating-ui/dom': 1.6.5
+      '@floating-ui/dom': 1.6.10
       '@internationalized/date': 3.5.4
       dequal: 2.0.3
       focus-trap: 7.5.4
@@ -6626,7 +6629,7 @@ snapshots:
   '@melt-ui/svelte@0.76.2(svelte@4.2.17)':
     dependencies:
       '@floating-ui/core': 1.6.2
-      '@floating-ui/dom': 1.6.5
+      '@floating-ui/dom': 1.6.10
       '@internationalized/date': 3.5.4
       dequal: 2.0.3
       focus-trap: 7.5.4
