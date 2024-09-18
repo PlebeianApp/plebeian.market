@@ -7,14 +7,14 @@
 	import { cart } from '$lib/stores/cart'
 	import { formatSats } from '$lib/utils'
 	import { CheckCircle } from 'lucide-svelte'
-	import { onMount } from 'svelte'
+	import { createEventDispatcher, onMount } from 'svelte'
 
 	import Spinner from '../assets/spinner.svelte'
 	import Order from '../cart/order.svelte'
 
 	export let variant: 'success' | 'sent' = 'success'
 	export let merchant: CartUser | null = null
-
+	const dispatch = createEventDispatcher()
 	$: orders = merchant ? Object.values($cart.orders).filter((order) => order.sellerUserId === merchant.pubkey) : Object.values($cart.orders)
 
 	$: invoices = merchant
@@ -59,14 +59,18 @@
 	}
 
 	function handleContinue() {
-		cart.clear()
-		localStorage.removeItem('cart')
-		goto('/category')
+		// cart.clear()
+		// localStorage.removeItem('cart')
+		goto('/')
+		dispatch('checkoutComplete', true)
 	}
 
 	onMount(async () => {
-		const result = await handlePersist()
-		console.log('Persistence result:', result)
+		// TODO: add policy check for persisting
+		if (!persistenceComplete) {
+			const result = await handlePersist()
+			console.log('Persistence result:', result)
+		}
 	})
 </script>
 
@@ -95,6 +99,7 @@
 
 				<h3 class="text-lg font-semibold mb-4">Orders</h3>
 				{#if merchant}
+					<span>Order id: {orders[0].id}</span>
 					<Order user={merchant} stalls={$cart.stalls} products={$cart.products} mode="success" />
 				{:else}
 					{#each Object.values($cart.users) as user (user.pubkey)}

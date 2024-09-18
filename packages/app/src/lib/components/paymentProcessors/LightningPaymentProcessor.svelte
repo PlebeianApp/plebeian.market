@@ -13,17 +13,13 @@
 	import { copyToClipboard, formatSats, truncateText } from '$lib/utils'
 	import { addSeconds, differenceInSeconds, format } from 'date-fns'
 	import { NIP05_REGEX } from 'nostr-tools/nip05'
-	import { createEventDispatcher, onDestroy, onMount } from 'svelte'
+	import { afterUpdate, createEventDispatcher, onDestroy } from 'svelte'
 	import { toast } from 'svelte-sonner'
 
 	export let paymentDetail: RichPaymentDetail
 	export let amountSats: number
 
-	const dispatch = createEventDispatcher<{
-		paymentComplete: { paymentRequest: string; preimage: string | null }
-		paymentExpired: { paymentRequest: string; preimage: string | null }
-		paymentCanceled: { paymentRequest: string; preimage: string | null }
-	}>()
+	const dispatch = createEventDispatcher()
 	const RELAYS = ['wss://relay.damus.io', 'wss://relay.nostr.band', 'wss://nos.lol', 'wss://relay.nostr.net', 'wss://relay.minibits.cash']
 
 	let invoice: Invoice | null = null
@@ -32,38 +28,41 @@
 	let showPreimageInput = false
 	let isLoading = false
 	let expiryTime: Date | null = null
-	let remainingTime: string = 'Calculating...'
-	let countdownInterval: ReturnType<typeof setInterval> | undefined
-	let paymentCheckInterval: ReturnType<typeof setInterval> | undefined
-	let allowsNostr: boolean | null = null
-	let ln: LightningAddress | null = null
-	let zapSubscription: ReturnType<typeof $ndkStore.subscribe> | undefined
+	let remainingTime = 'Calculating...'
 	let isCheckingPayment = false
 	let showManualVerification = false
-	let manualVerificationTimeout: ReturnType<typeof setTimeout> | undefined
 
 	$: url = 'lightning://' + invoice?.paymentRequest
 	$: canPayWithNWC = $balanceOfWorkingNWCs >= amountSats
-	// FIXME: if you skip the payment it the paymentdetail gets fetched multiple times `await ln.fetch()`
+
+	let prevPaymentDetail: RichPaymentDetail | null = null
+	let prevAmountSats: number | null = null
+
+	const cleanupFunctions: (() => void)[] = []
+
 	async function generateInvoice() {
+		if (isLoading || invoice) return
 		isLoading = true
 		try {
-			if (NIP05_REGEX.test(paymentDetail.paymentDetails)) {
-				ln = new LightningAddress(paymentDetail.paymentDetails)
-				await ln.fetch()
-				allowsNostr = ln.lnurlpData?.allowsNostr ?? false
+			if (paymentDetail.paymentMethod === 'ln') {
+				if (NIP05_REGEX.test(paymentDetail.paymentDetails)) {
+					const ln = new LightningAddress(paymentDetail.paymentDetails)
+					await ln.fetch()
+					const allowsNostr = ln.lnurlpData?.allowsNostr ?? false
+					addRelaysToNDKPool()
 
-				addRelaysToNDKPool()
+					invoice = allowsNostr ? await generateZapInvoice(ln) : await ln.requestInvoice({ satoshi: formatSats(amountSats, false) })
 
-				invoice = allowsNostr ? await generateZapInvoice() : await ln.requestInvoice({ satoshi: formatSats(amountSats, false) })
-				if (allowsNostr) {
-					console.log(ln)
-					ln.domain === 'getalby.com' ? startZapCheck() : startZapSubscription()
+					if (allowsNostr) {
+						ln.domain === 'getalby.com' ? startZapCheck() : startZapSubscription()
+					}
+				} else {
+					invoice = new Invoice({ pr: paymentDetail.paymentDetails })
 				}
-			} else {
-				invoice = new Invoice({ pr: paymentDetail.paymentDetails })
+				setupExpiryCountdown()
+			} else if (paymentDetail.paymentMethod === 'on-chain') {
+				console.log(paymentDetail)
 			}
-			setupExpiryCountdown()
 		} catch (error) {
 			console.error('Error generating invoice:', error)
 			toast.error('Failed to generate invoice')
@@ -79,17 +78,17 @@
 		})
 	}
 
-	async function generateZapInvoice() {
+	async function generateZapInvoice(ln: LightningAddress) {
 		const zapArgs = { satoshi: formatSats(amountSats, false), relays: RELAYS }
-		return await ln!.zapInvoice(zapArgs, { nostr: new GenericKeySigner() })
+		return await ln.zapInvoice(zapArgs, { nostr: new GenericKeySigner() })
 	}
 
 	function setupExpiryCountdown() {
 		if (invoice?.paymentRequest && invoice.expiry) {
 			expiryTime = addSeconds(new Date(), invoice.expiry)
 			updateRemainingTime()
-			clearInterval(countdownInterval)
-			countdownInterval = setInterval(updateRemainingTime, 1000)
+			const interval = setInterval(updateRemainingTime, 1000)
+			cleanupFunctions.push(() => clearInterval(interval))
 		} else {
 			remainingTime = 'No expiry set'
 			toast.warning('This invoice does not have an expiry time set.')
@@ -110,15 +109,16 @@
 	function startZapSubscription() {
 		if (invoice?.paymentRequest) {
 			isCheckingPayment = true
-			zapSubscription = $ndkStore.subscribe({ kinds: [NDKKind.Zap], since: Math.round(Date.now() / 1000) }).on('event', handleZapEvent)
+			const subscription = $ndkStore.subscribe({ kinds: [NDKKind.Zap], since: Math.round(Date.now() / 1000) }).on('event', handleZapEvent)
+			cleanupFunctions.push(() => subscription.stop())
 			startManualVerificationTimer()
 		}
 	}
 
 	function startZapCheck() {
-		if (allowsNostr && invoice) {
+		if (invoice) {
 			isCheckingPayment = true
-			paymentCheckInterval = setInterval(async () => {
+			const interval = setInterval(async () => {
 				try {
 					const paid = await invoice?.isPaid()
 					if (paid && invoice?.preimage) handleSuccessfulPayment(invoice.preimage)
@@ -126,15 +126,18 @@
 					console.error('Error checking zap payment:', error)
 				}
 			}, 750)
+			cleanupFunctions.push(() => clearInterval(interval))
 			startManualVerificationTimer()
 		}
 	}
 
 	function startManualVerificationTimer() {
-		manualVerificationTimeout = setTimeout(() => {
+		const timeout = setTimeout(() => {
 			showManualVerification = true
-		}, 10000)
+		}, 15000)
+		cleanupFunctions.push(() => clearTimeout(timeout))
 	}
+
 	function handleZapEvent(event: NDKEvent) {
 		const bolt11Tag = event.tagValue('bolt11')
 		if (bolt11Tag && bolt11Tag === invoice?.paymentRequest) {
@@ -143,7 +146,7 @@
 	}
 
 	function handleExpiry() {
-		cleanupIntervals()
+		cleanupFunctions.forEach((fn) => fn())
 		remainingTime = 'Expired'
 		toast.error('Invoice expired')
 		dispatch('paymentExpired', { paymentRequest: invoice!.paymentRequest, preimage: null })
@@ -171,12 +174,12 @@
 		paymentStatus = 'success'
 		toast.success('Payment successful')
 		dispatch('paymentComplete', { paymentRequest: invoice!.paymentRequest, preimage })
-		cleanupIntervals()
+		cleanupFunctions.forEach((fn) => fn())
 	}
 
 	function handleSkipPayment() {
 		paymentStatus = 'canceled'
-		cleanupIntervals()
+		cleanupFunctions.forEach((fn) => fn())
 		dispatch('paymentCanceled', { paymentRequest: invoice!.paymentRequest, preimage: null })
 	}
 
@@ -223,16 +226,33 @@
 		}
 	}
 
-	function cleanupIntervals() {
-		clearInterval(countdownInterval)
-		clearInterval(paymentCheckInterval)
-		zapSubscription?.stop()
-		isCheckingPayment = false
-		showManualVerification = false
+	function reset() {
+		invoice = null
+		paymentStatus = 'pending'
+		isLoading = false
+		cleanupFunctions.forEach((fn) => fn())
+		cleanupFunctions.length = 0
 	}
 
-	onMount(generateInvoice)
-	onDestroy(cleanupIntervals)
+	function shouldUpdateInvoice() {
+		if (!prevPaymentDetail || !prevAmountSats) return true
+		return (
+			prevPaymentDetail.paymentMethod !== paymentDetail.paymentMethod ||
+			prevPaymentDetail.paymentDetails !== paymentDetail.paymentDetails ||
+			prevAmountSats !== amountSats
+		)
+	}
+
+	afterUpdate(() => {
+		if (shouldUpdateInvoice()) {
+			reset()
+			generateInvoice()
+			prevPaymentDetail = { ...paymentDetail }
+			prevAmountSats = amountSats
+		}
+	})
+
+	onDestroy(() => cleanupFunctions.forEach((fn) => fn()))
 </script>
 
 <div class="flex flex-col items-center gap-4">
@@ -257,7 +277,7 @@
 		{/if}
 
 		<div class="flex gap-2">
-			{#if allowsNostr === false || showManualVerification}
+			{#if showManualVerification}
 				<Button on:click={() => (showPreimageInput = true)} class="w-full mb-4">I've already paid</Button>
 			{/if}
 			{#if 'webln' in window}

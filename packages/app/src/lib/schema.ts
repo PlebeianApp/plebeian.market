@@ -90,7 +90,7 @@ export const ordersFilterSchema = generalFilterSchema.extend({
 export type OrdersFilter = z.infer<typeof ordersFilterSchema>
 
 export const orderSchema = z.object({
-	id: z.string().optional(),
+	id: z.string(),
 	type: z.number(),
 	sellerUserId: z.string(),
 	buyerUserId: z.string(),

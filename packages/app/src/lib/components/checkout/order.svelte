@@ -28,7 +28,7 @@
 	let isLoading = false
 	let ableToPlaceOrder = true
 	const paymentDetails = createPaymentsForUserQuery(merchant.pubkey)
-	const merchantV4vPlatformShares = platformV4VForUserQuery('platform', merchant.pubkey)
+	// const merchantV4vPlatformShares = platformV4VForUserQuery('platform', merchant.pubkey)
 	let userTotal: Awaited<ReturnType<typeof cart.calculateUserTotal>> | null = null
 
 	async function placeOrder() {
@@ -48,7 +48,6 @@
 				}
 
 				const order: OrderMessage = createOrderMessage($checkoutFormStore, stall, $cart, $ndkStore.activeUser?.pubkey as string, pubkey)
-				console.log(order)
 				try {
 					cart.addOrder(order)
 				} catch (error) {
@@ -66,12 +65,10 @@
 				orders.push(order)
 			} catch (error) {
 				console.error(`Error processing order for stall ${stallId}:`, error)
-			}
-		}
+				error instanceof Error && toast.error(`Error processing order: ${error.message}`)
 
-		if (orders.length === 0) {
-			toast.error('No orders were successfully placed')
-			return null
+				return null
+			}
 		}
 
 		ableToPlaceOrder = false

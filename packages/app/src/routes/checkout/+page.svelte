@@ -42,14 +42,9 @@
 				]
 			: []),
 	]
-
-	function handleStepChange(event: CustomEvent) {
-		// console.log(event)
-	}
 </script>
 
 <div class="container py-6">
 	<h2>Checkout</h2>
-
-	<Stepper steps={checkoutSteps} on:stepChange={handleStepChange} />
+	<Stepper steps={checkoutSteps} />
 </div>

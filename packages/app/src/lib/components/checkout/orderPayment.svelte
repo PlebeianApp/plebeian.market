@@ -14,16 +14,14 @@
 	import { createId } from '@plebeian/database/utils'
 
 	import ProductInCart from '../cart/product-in-cart.svelte'
+	import PaymentProcessor from '../paymentProcessors/paymentProcessor.svelte'
 	import Separator from '../ui/separator/separator.svelte'
-	import PaymentProcessor from './paymentProcessor.svelte'
 
 	export let order: OrderFilter
 	export let stall: CartStall
 	export let products: Record<string, CartProduct>
 
-	const dispatch = createEventDispatcher<{
-		valid: boolean
-	}>()
+	const dispatch = createEventDispatcher<{ valid: boolean }>()
 
 	const paymentDetails = createPaymentsForUserQuery(order.sellerUserId)
 	$: relevantPaymentDetails = $paymentDetails.data?.filter((payment) => payment.stallId === order.stallId || payment.stallId === null) ?? []
@@ -35,94 +33,85 @@
 	}
 
 	let orderTotal: Awaited<ReturnType<typeof cart.calculateStallTotal>>
+
 	type PaymentStatus = 'paid' | 'expired' | 'canceled'
-	async function handlePaymentEvent(event: CustomEvent<{ paymentRequest: string; preimage: string | null }>, status: PaymentStatus) {
+	const statusMapping: Record<PaymentStatus, OrderStatus> = {
+		paid: ORDER_STATUS.PAID,
+		expired: ORDER_STATUS.PENDING,
+		canceled: ORDER_STATUS.PENDING,
+	}
+	const paymentEventToStatus: Record<string, PaymentStatus> = {
+		paymentComplete: 'paid',
+		paymentExpired: 'expired',
+		paymentCanceled: 'canceled',
+	}
+
+	async function handlePaymentEvent(event: CustomEvent<{ paymentRequest: string; preimage: string | null }>) {
+		const status = paymentEventToStatus[event.type]
+		if (!status) {
+			console.error(`Unknown payment event type: ${event.type}`)
+			return dispatch('valid', false)
+		}
+
+		if (!order?.id || !selectedPaymentDetail?.id) {
+			toast.error(`Invalid order or payment details`)
+			return dispatch('valid', false)
+		}
+
 		try {
-			if (!order || !order.id) {
-				throw new Error('Invalid order: Order or order ID is missing')
-			}
-
-			if (!selectedPaymentDetail || !selectedPaymentDetail.id) {
-				throw new Error('Invalid payment details: Payment detail or ID is missing')
-			}
-
-			const paymentRequestMessage: PaymentRequestMessage = {
-				id: order.id,
-				payment_id: selectedPaymentDetail.id,
-				type: 1,
-				message: `Payment request for order ${order.id}, payment detail id: ${selectedPaymentDetail.id}, type: ${selectedPaymentDetail.paymentMethod}`,
-				payment_options: [
-					{
-						type: selectedPaymentDetail.paymentMethod,
-						link: event.detail.paymentRequest,
-						paymentRequest: event.detail.paymentRequest,
-					},
-				],
-			}
-
-			const invoice: CartInvoice = {
-				id: createId(),
-				createdAt: Date.now(),
-				updatedAt: Date.now(),
-				orderId: order.id,
-				totalAmount: formatSats(orderTotal.totalInSats, false),
-				invoiceStatus: status,
-				paymentId: selectedPaymentDetail.id,
-				paymentRequest: event.detail.paymentRequest,
-				proof: event.detail.preimage,
-			}
-
-			try {
-				cart.addInvoice(invoice)
-			} catch (error) {
-				console.error('Failed to add invoice to cart:', error)
-				throw new Error('Failed to add invoice to cart')
-			}
-
-			// TODO: should we add a skiped status?
-			const statusMapping: Record<PaymentStatus, OrderStatus> = {
-				paid: ORDER_STATUS.PAID,
-				expired: ORDER_STATUS.PENDING,
-				canceled: ORDER_STATUS.PENDING,
-			}
-
-			const newOrderStatus = statusMapping[status] || ORDER_STATUS.PENDING
-
-			try {
-				// await sendDM(paymentRequestMessage, order.sellerUserId)
-				await tick()
-				await new Promise((resolve) => setTimeout(resolve, 1000))
-				// await sendDM(invoice, order.sellerUserId)
-				if ($cart.orders[order.id].status !== newOrderStatus) {
-					cart.updateOrderStatus(order.id, newOrderStatus)
-					await new Promise((resolve) => setTimeout(resolve, 1000))
-					// await sendDM($cart.orders[order.id], order.sellerUserId)
-				}
-			} catch (error) {
-				console.error('Failed to send payment request or invoice DM:', error)
-				throw new Error('Failed to send payment request or invoice DM to seller')
-			}
-
+			const invoice = createInvoice(event.detail, status)
+			await processPayment(invoice, status)
 			dispatch('valid', true)
-		} catch (e) {
-			if (e instanceof Error) {
-				toast.error(`Failed to process ${status} payment: ${e.message}`)
-			}
-			console.error(`Error handling ${status} payment:`, e)
+		} catch (error) {
+			console.error(`Error handling ${status} payment:`, error)
+			toast.error(`Failed to process ${status} payment: ${error instanceof Error ? error.message : 'Unknown error'}`)
 			dispatch('valid', false)
 		}
 	}
 
-	function handlePaymentComplete(event: CustomEvent<{ paymentRequest: string; preimage: string | null }>) {
-		handlePaymentEvent(event, 'paid')
+	function createInvoice(detail: { paymentRequest: string; preimage: string | null }, status: PaymentStatus): CartInvoice {
+		return {
+			id: createId(),
+			createdAt: Date.now(),
+			updatedAt: Date.now(),
+			orderId: order.id,
+			totalAmount: formatSats(orderTotal.totalInSats, false),
+			invoiceStatus: status,
+			paymentId: selectedPaymentDetail!.id,
+			paymentRequest: detail.paymentRequest,
+			proof: detail.preimage,
+		}
 	}
 
-	function handlePaymentExpired(event: CustomEvent<{ paymentRequest: string; preimage: string | null }>) {
-		handlePaymentEvent(event, 'expired')
-	}
+	async function processPayment(invoice: CartInvoice, status: PaymentStatus) {
+		cart.addInvoice(invoice)
 
-	function handlePaymentCanceled(event: CustomEvent<{ paymentRequest: string; preimage: string | null }>) {
-		handlePaymentEvent(event, 'canceled')
+		const paymentRequestMessage: PaymentRequestMessage = {
+			id: order.id,
+			payment_id: selectedPaymentDetail!.id,
+			type: 1,
+			message: `Payment request for order ${order.id}, payment detail id: ${selectedPaymentDetail!.id}, type: ${selectedPaymentDetail!.paymentMethod}`,
+			payment_options: [
+				{
+					type: selectedPaymentDetail!.paymentMethod,
+					link: invoice.paymentRequest,
+					paymentRequest: invoice.paymentRequest,
+				},
+			],
+		}
+
+		// Simulate sending DMs (commented out for now)
+		await tick()
+		await new Promise((resolve) => setTimeout(resolve, 1000))
+		// await sendDM(paymentRequestMessage, order.sellerUserId)
+		// await sendDM(invoice, order.sellerUserId)
+
+		const newOrderStatus = statusMapping[status]
+		if ($cart.orders[order.id].status !== newOrderStatus) {
+			cart.updateOrderStatus(order.id, newOrderStatus)
+			await new Promise((resolve) => setTimeout(resolve, 1000))
+			// await sendDM($cart.orders[order.id], order.sellerUserId)
+		}
 	}
 
 	async function calculateOrderTotal() {
@@ -176,16 +165,13 @@
 		</Select.Root>
 
 		{#if selectedPaymentDetail && orderTotal}
-			{#key selectedPaymentDetail}
-				<!-- use orderTotal.totalInSats in amountSats prop -->
-				<PaymentProcessor
-					paymentDetail={selectedPaymentDetail}
-					amountSats={5}
-					on:paymentComplete={handlePaymentComplete}
-					on:paymentExpired={handlePaymentExpired}
-					on:paymentCanceled={handlePaymentCanceled}
-				/>
-			{/key}
+			<PaymentProcessor
+				paymentDetail={selectedPaymentDetail}
+				amountSats={orderTotal.totalInSats}
+				on:paymentComplete={handlePaymentEvent}
+				on:paymentExpired={handlePaymentEvent}
+				on:paymentCanceled={handlePaymentEvent}
+			/>
 		{/if}
 	</div>
 </div>

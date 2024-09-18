@@ -1,24 +1,28 @@
 <script lang="ts">
 	import type { Step } from '$lib/components/checkout/types'
+	import { cart } from '$lib/stores/cart'
 	import { currentStep } from '$lib/stores/checkout'
-	import { createEventDispatcher } from 'svelte'
 
 	export let steps: Step[] = []
 
 	let canProceed = true
-	const dispatch = createEventDispatcher()
 
 	function goToNextStep() {
 		if ($currentStep < steps.length - 1 && canProceed) {
 			$currentStep += 1
 			canProceed = false
-			dispatch('stepChange', { step: $currentStep })
 		}
 	}
 
 	function handleStepValidation(event: CustomEvent) {
-		canProceed = event.detail.valid
-		if (canProceed) goToNextStep()
+		if (event.type === 'validate') {
+			canProceed = event.detail.valid ?? false
+			if (canProceed) goToNextStep()
+		} else if (event.type === 'checkoutComplete') {
+			setTimeout(() => {
+				cart.clear()
+			}, 500)
+		}
 	}
 </script>
 
@@ -28,6 +32,11 @@
 
 <div class="mt-8">
 	{#if steps[$currentStep]?.component}
-		<svelte:component this={steps[$currentStep].component} {...steps[$currentStep].props} on:validate={handleStepValidation} />
+		<svelte:component
+			this={steps[$currentStep].component}
+			{...steps[$currentStep].props}
+			on:validate={handleStepValidation}
+			on:checkoutComplete={handleStepValidation}
+		/>
 	{/if}
 </div>

@@ -54,7 +54,6 @@ export const actions = {
 					const orderInDb = convertToOrderInDb(order)
 					const insertedOrder = await tx.insert(orders).values(orderInDb)
 					insertedOrders.push(insertedOrder)
-
 					const orderItemsInDb = convertToOrderItemsInDb(orderInDb.id!, order)
 					const insertedOrderItem = await tx.insert(orderItems).values(orderItemsInDb)
 					insertedOrderItems.push(insertedOrderItem)
@@ -75,7 +74,7 @@ export const actions = {
 			return { success: true, result }
 		} catch (err) {
 			console.error('Error persisting orders and invoices:', err)
-			throw error(500, 'Failed to persist orders and invoices')
+			throw error(500, { message: `Failed to persist orders and invoices: ${err}` })
 		}
 	},
 } satisfies Actions

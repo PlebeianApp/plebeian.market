@@ -18,7 +18,7 @@ export const getShippingMethodById = async (methodId: string): Promise<RichShipp
 	})
 
 	const shippingInfos: RichShippingInfo[] = shippingResult.map((shipping) => ({
-		id: String(shipping.id.split(':')[0]),
+		id: String(shipping.id),
 		name: shipping.name as string,
 		cost: shipping.cost,
 		isDefault: shipping.isDefault,
@@ -37,7 +37,7 @@ export const getShippingByStallId = async (stallId: string): Promise<RichShippin
 	})
 
 	const shippingInfos: RichShippingInfo[] = shippingResult.map((shipping) => ({
-		id: String(shipping.id.split(':')[0]),
+		id: String(shipping.id),
 		name: shipping.name as string,
 		cost: shipping.cost,
 		isDefault: shipping.isDefault,
