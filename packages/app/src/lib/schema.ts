@@ -147,3 +147,45 @@ export const checkoutFormSchema = z.object({
 })
 
 export type CheckoutFormData = z.infer<typeof checkoutFormSchema>
+
+export const OrderInDbSchema = z.object({
+	id: z.string().optional(),
+	createdAt: z.date().optional(),
+	updatedAt: z.date().optional(),
+	sellerUserId: z.string(),
+	buyerUserId: z.string(),
+	status: z.enum(Object.values(ORDER_STATUS) as NonEmptyArray<OrderStatus>),
+	shippingId: z.string().nullable(),
+	stallId: z.string(),
+	address: z.string(),
+	zip: z.string(),
+	city: z.string(),
+	country: z.string(),
+	region: z.string().nullable(),
+	contactName: z.string(),
+	contactPhone: z.string().nullable(),
+	contactEmail: z.string().nullable(),
+	observations: z.string().nullable(),
+})
+
+export const OrderItemInDbSchema = z.object({
+	orderId: z.string(),
+	productId: z.string(),
+	qty: z.number().int().positive(),
+})
+
+export const InvoiceInDbSchema = z.object({
+	id: z.string().optional(),
+	createdAt: z.date().optional(),
+	updatedAt: z.date().optional(),
+	orderId: z.string(),
+	totalAmount: z.number(),
+	invoiceStatus: z.enum(Object.values(INVOICE_STATUS) as NonEmptyArray<InvoiceStatus>),
+	paymentDetails: z.string(),
+	paymentRequest: z.string().nullable(),
+	proof: z.string().nullable(),
+})
+
+export type OrderInDb = z.infer<typeof OrderInDbSchema>
+export type OrderItemInDb = z.infer<typeof OrderItemInDbSchema>
+export type InvoiceInDb = z.infer<typeof InvoiceInDbSchema>

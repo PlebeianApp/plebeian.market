@@ -79,23 +79,24 @@
 				throw new Error('Failed to add invoice to cart')
 			}
 
+			// TODO: should we add a skiped status?
 			const statusMapping: Record<PaymentStatus, OrderStatus> = {
 				paid: ORDER_STATUS.PAID,
-				expired: ORDER_STATUS.CANCELED,
-				canceled: ORDER_STATUS.CANCELED,
+				expired: ORDER_STATUS.PENDING,
+				canceled: ORDER_STATUS.PENDING,
 			}
 
 			const newOrderStatus = statusMapping[status] || ORDER_STATUS.PENDING
 
 			try {
-				await sendDM(paymentRequestMessage, order.sellerUserId)
+				// await sendDM(paymentRequestMessage, order.sellerUserId)
 				await tick()
 				await new Promise((resolve) => setTimeout(resolve, 1000))
-				await sendDM(invoice, order.sellerUserId)
+				// await sendDM(invoice, order.sellerUserId)
 				if ($cart.orders[order.id].status !== newOrderStatus) {
 					cart.updateOrderStatus(order.id, newOrderStatus)
 					await new Promise((resolve) => setTimeout(resolve, 1000))
-					await sendDM($cart.orders[order.id], order.sellerUserId)
+					// await sendDM($cart.orders[order.id], order.sellerUserId)
 				}
 			} catch (error) {
 				console.error('Failed to send payment request or invoice DM:', error)

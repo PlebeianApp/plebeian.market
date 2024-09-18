@@ -45,7 +45,7 @@ export interface CartInvoice {
 	proof: string | null
 }
 
-interface NormalizedCart {
+export interface NormalizedCart {
 	users: Record<string, CartUser>
 	stalls: Record<string, CartStall>
 	products: Record<string, CartProduct>

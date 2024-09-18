@@ -1,13 +1,15 @@
 <script lang="ts">
 	import type { CartUser } from '$lib/stores/cart'
+	import { goto } from '$app/navigation'
 	import { Button } from '$lib/components/ui/button'
 	import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '$lib/components/ui/card'
 	import { Separator } from '$lib/components/ui/separator'
 	import { cart } from '$lib/stores/cart'
-	import { currentStep } from '$lib/stores/checkout'
 	import { formatSats } from '$lib/utils'
 	import { CheckCircle } from 'lucide-svelte'
+	import { onMount } from 'svelte'
 
+	import Spinner from '../assets/spinner.svelte'
 	import Order from '../cart/order.svelte'
 
 	export let variant: 'success' | 'sent' = 'success'
@@ -19,14 +21,63 @@
 		? Object.values($cart.invoices).filter((invoice) => orders.some((order) => order.id === invoice.orderId))
 		: Object.values($cart.invoices)
 
-	// TODO handle insert orders and invoices in the db in a single tx. Show a spinner instead of a check icon util the insertion its beign done,
-	// also dont show the continue button, and use loading text
+	let isPersisting = false
+	let error: string | null = null
+	let persistenceComplete = false
 
-	// TODO handle continue button. Clear cart by instantiating a new one, remove things from local storage, and go to stall browser
+	async function handlePersist() {
+		if (persistenceComplete) return true
+
+		isPersisting = true
+		error = null
+
+		try {
+			const cartData = JSON.stringify($cart)
+			const formData = new FormData()
+			formData.append('cartData', cartData)
+			const response = await fetch('?/persistOrdersAndInvoices', {
+				method: 'POST',
+				body: formData,
+			})
+
+			const result = await response.json()
+
+			if (response.ok) {
+				console.log('Orders and invoices persisted successfully')
+				persistenceComplete = true
+				return true
+			} else {
+				throw new Error(result.message || 'Failed to persist orders and invoices')
+			}
+		} catch (err) {
+			console.error('Error:', err)
+			error = err instanceof Error ? err.message : 'An unexpected error occurred'
+			return false
+		} finally {
+			isPersisting = false
+		}
+	}
+
+	function handleContinue() {
+		cart.clear()
+		localStorage.removeItem('cart')
+		goto('/category')
+	}
+
+	onMount(async () => {
+		const result = await handlePersist()
+		console.log('Persistence result:', result)
+	})
 </script>
 
 <div class="flex flex-col items-center justify-center w-full max-w-3xl mx-auto gap-8 py-8">
-	<CheckCircle class="w-24 h-24 text-green-500" />
+	{#if isPersisting}
+		<Spinner size={95} />
+	{:else if error}
+		<div class="text-red-500">{error}</div>
+	{:else}
+		<CheckCircle class="w-24 h-24 text-green-500" />
+	{/if}
 
 	<Card class="w-full">
 		<CardHeader>
@@ -69,8 +120,8 @@
 			</CardContent>
 		{/if}
 		<CardFooter>
-			<Button class="w-full" on:click={() => (variant === 'sent' ? currentStep.set($currentStep + 1) : null)}>
-				Continue <span class="ml-2 i-tdesign-arrow-right"></span>
+			<Button class="w-full" on:click={handleContinue} disabled={isPersisting || !persistenceComplete}>
+				{isPersisting ? 'Saving...' : 'Continue to Browse'}
 			</Button>
 		</CardFooter>
 	</Card>

@@ -44,7 +44,7 @@
 
 	$: url = 'lightning://' + invoice?.paymentRequest
 	$: canPayWithNWC = $balanceOfWorkingNWCs >= amountSats
-
+	// FIXME: if you skip the payment it the paymentdetail gets fetched multiple times `await ln.fetch()`
 	async function generateInvoice() {
 		isLoading = true
 		try {
@@ -57,7 +57,6 @@
 
 				invoice = allowsNostr ? await generateZapInvoice() : await ln.requestInvoice({ satoshi: formatSats(amountSats, false) })
 				if (allowsNostr) {
-					// TODO: Look for verify flag as alby does to have a more generic detection
 					console.log(ln)
 					ln.domain === 'getalby.com' ? startZapCheck() : startZapSubscription()
 				}
