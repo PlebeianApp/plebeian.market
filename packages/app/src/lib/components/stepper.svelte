@@ -7,21 +7,32 @@
 
 	let canProceed = true
 
-	function goToNextStep() {
+	function goToNextStep(times: number = 1) {
 		if ($currentStep < steps.length - 1 && canProceed) {
-			$currentStep += 1
+			$currentStep += times
 			canProceed = false
 		}
 	}
 
+	function skipToSuccess() {
+		goToNextStep(2)
+	}
+
 	function handleStepValidation(event: CustomEvent) {
-		if (event.type === 'validate') {
-			canProceed = event.detail.valid ?? false
-			if (canProceed) goToNextStep()
-		} else if (event.type === 'checkoutComplete') {
-			setTimeout(() => {
-				cart.clear()
-			}, 500)
+		switch (event.type) {
+			case 'validate':
+				canProceed = event.detail.valid ?? false
+				if (canProceed) goToNextStep()
+				break
+			case 'placeOrderOnly':
+				canProceed = event.detail.valid ?? false
+				skipToSuccess()
+				break
+			case 'checkoutComplete':
+				setTimeout(() => {
+					cart.clear()
+				}, 500)
+				break
 		}
 	}
 </script>
@@ -37,6 +48,7 @@
 			{...steps[$currentStep].props}
 			on:validate={handleStepValidation}
 			on:checkoutComplete={handleStepValidation}
+			on:placeOrderOnly={handleStepValidation}
 		/>
 	{/if}
 </div>

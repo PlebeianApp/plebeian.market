@@ -1,4 +1,3 @@
-import type { OrderFilter } from '$lib/schema'
 import type { DisplayProduct } from '$lib/server/products.service'
 import type { RichShippingInfo } from '$lib/server/shipping.service'
 import { createCurrencyConversionQuery } from '$lib/fetch/products.queries'
@@ -7,6 +6,8 @@ import { toast } from 'svelte-sonner'
 import { derived, get, writable } from 'svelte/store'
 
 import type { InvoiceStatus, OrderMessage, OrderStatus, ProductImage, ProductShipping } from '@plebeian/database'
+
+import { checkoutFormStore, currentStep } from './checkout'
 
 export interface CartProduct {
 	id: string
@@ -33,7 +34,7 @@ export interface CartUser {
 	stalls: string[]
 }
 
-export interface CartInvoice {
+export interface InvoiceMessage {
 	id: string
 	createdAt: number
 	updatedAt: number
@@ -50,7 +51,7 @@ export interface NormalizedCart {
 	stalls: Record<string, CartStall>
 	products: Record<string, CartProduct>
 	orders: Record<string, OrderMessage>
-	invoices: Record<string, CartInvoice>
+	invoices: Record<string, InvoiceMessage>
 }
 
 function createCart() {
@@ -287,12 +288,22 @@ function createCart() {
 			return cart.stalls[stallId]?.shippingMethodId || null
 		},
 
-		// TODO, add clear related session storage when using clear method
 		clear: () => {
 			set({ users: {}, stalls: {}, products: {}, orders: {}, invoices: {} })
 			if (typeof sessionStorage !== 'undefined') {
 				sessionStorage.removeItem('cart')
 			}
+			currentStep.set(0)
+			checkoutFormStore.set(null)
+		},
+		clearKeys: (keys: (keyof NormalizedCart)[]) => {
+			update((cart) => {
+				keys.forEach((key) => {
+					cart[key] = {}
+				})
+				batchUpdate(cart)
+				return cart
+			})
 		},
 		handleProductUpdate: (event: CustomEvent) => {
 			const { action, userPubkey, stallId, productId, amount } = event.detail
@@ -335,22 +346,23 @@ function createCart() {
 		calculateUserTotal,
 		calculateStallTotal,
 		calculateGrandTotal,
-		// TODO: Add orders and invoices to sessionStorage for more robustness
-		addOrder(order: OrderFilter) {
+		addOrder(order: OrderMessage) {
 			update((cart) => {
 				cart.orders = {
 					...cart.orders,
 					[order.id as string]: order,
 				}
+				batchUpdate(cart)
 				return cart
 			})
 		},
-		addInvoice(invoice: CartInvoice) {
+		addInvoice(invoice: InvoiceMessage) {
 			update((cart) => {
 				cart.invoices = {
 					...cart.invoices,
 					[invoice.id]: invoice,
 				}
+				batchUpdate(cart)
 				return cart
 			})
 		},
@@ -364,6 +376,7 @@ function createCart() {
 				} else {
 					console.warn(`Attempted to update non-existent order: ${orderId}`)
 				}
+				batchUpdate(cart)
 				return cart
 			})
 		},

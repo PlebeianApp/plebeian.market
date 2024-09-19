@@ -1,6 +1,6 @@
 // src/routes/checkout/+page.server.ts
 import type { InvoiceInDb, OrderInDb, OrderItemInDb } from '$lib/schema'
-import type { CartInvoice, NormalizedCart } from '$lib/stores/cart'
+import type { InvoiceMessage, NormalizedCart } from '$lib/stores/cart'
 import { error } from '@sveltejs/kit'
 import { InvoiceInDbSchema, OrderInDbSchema, OrderItemInDbSchema } from '$lib/schema'
 
@@ -31,7 +31,7 @@ function convertToOrderItemsInDb(orderId: string, order: OrderMessage): OrderIte
 	)
 }
 
-function convertToInvoiceInDb(invoice: CartInvoice): InvoiceInDb {
+function convertToInvoiceInDb(invoice: InvoiceMessage): InvoiceInDb {
 	return InvoiceInDbSchema.parse({
 		...invoice,
 		createdAt: new Date(invoice.createdAt),

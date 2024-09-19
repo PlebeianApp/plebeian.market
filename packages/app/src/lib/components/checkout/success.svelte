@@ -5,7 +5,7 @@
 	import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '$lib/components/ui/card'
 	import { Separator } from '$lib/components/ui/separator'
 	import { cart } from '$lib/stores/cart'
-	import { formatSats } from '$lib/utils'
+	import { checkIfUserExists, formatSats, shouldRegister } from '$lib/utils'
 	import { CheckCircle } from 'lucide-svelte'
 	import { createEventDispatcher, onMount } from 'svelte'
 
@@ -32,9 +32,11 @@
 		error = null
 
 		try {
-			const cartData = JSON.stringify($cart)
+			const cartData = JSON.stringify({ orders, invoices })
+
 			const formData = new FormData()
 			formData.append('cartData', cartData)
+
 			const response = await fetch('?/persistOrdersAndInvoices', {
 				method: 'POST',
 				body: formData,
@@ -59,15 +61,21 @@
 	}
 
 	function handleContinue() {
-		// cart.clear()
-		// localStorage.removeItem('cart')
-		goto('/')
-		dispatch('checkoutComplete', true)
+		if (merchant) {
+			dispatch('validate', { valid: true })
+		} else {
+			goto('/')
+			dispatch('checkoutComplete', true)
+		}
 	}
 
 	onMount(async () => {
-		// TODO: add policy check for persisting
-		if (!persistenceComplete) {
+		if (!merchant) return
+
+		const userExists = await checkIfUserExists(merchant.pubkey)
+		const shouldPersist = await shouldRegister(undefined, userExists)
+
+		if (shouldPersist && !persistenceComplete) {
 			const result = await handlePersist()
 			console.log('Persistence result:', result)
 		}
@@ -126,7 +134,7 @@
 		{/if}
 		<CardFooter>
 			<Button class="w-full" on:click={handleContinue} disabled={isPersisting || !persistenceComplete}>
-				{isPersisting ? 'Saving...' : 'Continue to Browse'}
+				{isPersisting ? 'Saving...' : 'Continue'}
 			</Button>
 		</CardFooter>
 	</Card>

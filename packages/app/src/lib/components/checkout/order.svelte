@@ -1,10 +1,8 @@
 <script lang="ts">
-	import type { OrderFilter } from '$lib/schema'
 	import type { CartUser } from '$lib/stores/cart'
 	import Order from '$lib/components/cart/order.svelte'
 	import { Button } from '$lib/components/ui/button'
 	import { createPaymentsForUserQuery } from '$lib/fetch/payments.queries'
-	import { platformV4VForUserQuery } from '$lib/fetch/v4v.queries'
 	import { cart } from '$lib/stores/cart'
 	import { checkoutFormStore } from '$lib/stores/checkout'
 	import ndkStore from '$lib/stores/ndk'
@@ -22,13 +20,15 @@
 	import Separator from '../ui/separator/separator.svelte'
 	import { FormLabels } from './types'
 
-	const dispatch = createEventDispatcher()
+	const dispatch = createEventDispatcher<{
+		validate: { valid: boolean }
+		placeOrderOnly: { valid: boolean }
+	}>()
 	export let merchant: CartUser
 
 	let isLoading = false
 	let ableToPlaceOrder = true
 	const paymentDetails = createPaymentsForUserQuery(merchant.pubkey)
-	// const merchantV4vPlatformShares = platformV4VForUserQuery('platform', merchant.pubkey)
 	let userTotal: Awaited<ReturnType<typeof cart.calculateUserTotal>> | null = null
 
 	async function placeOrder() {
@@ -38,7 +38,7 @@
 		}
 
 		const { stalls, pubkey } = $cart.users[merchant.pubkey]
-		const orders: OrderFilter[] = []
+		const orders: OrderMessage[] = []
 
 		for (const stallId of stalls) {
 			try {
@@ -79,12 +79,9 @@
 		isLoading = true
 		try {
 			const orderResult = await placeOrder()
-
-			//TODO: (improve) If the user dont want to pay or skip the payment we should create the corresponding invoices and jump to success screen.
 			if (orderResult?.orders.length) {
 				toast.success('Order placed successfully')
-				dispatch('validate', { valid: true })
-				dispatch('validate', { valid: true })
+				dispatch('placeOrderOnly', { valid: true })
 			}
 		} catch (e) {
 			console.error(e)
@@ -173,9 +170,7 @@
 				<Separator />
 
 				<div class="flex flex-col gap-4">
-					<Button variant="outline" class="w-full" disabled={!ableToPlaceOrder || isLoading} on:click={handleOrderPlacement}>
-						Place Order
-					</Button>
+					<Button variant="outline" class="w-full" on:click={handleOrderPlacement}>Place Order</Button>
 					{#if $paymentDetails.data?.length}
 						<Button class="w-full" disabled={!ableToPlaceOrder || isLoading} on:click={handleOrderAndPayment}>Place Order & Pay</Button>
 					{/if}

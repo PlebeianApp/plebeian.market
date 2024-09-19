@@ -1,6 +1,5 @@
 <script lang="ts">
-	import type { CartInvoice, CartUser } from '$lib/stores/cart'
-	import { Button } from '$lib/components/ui/button'
+	import type { CartUser } from '$lib/stores/cart'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
 	import { cart } from '$lib/stores/cart'
 	import { truncateString } from '$lib/utils'
@@ -18,6 +17,7 @@
 	$: currentOrder = relevantOrders[currentOrderIndex]
 
 	$: merchantProfile = createUserByIdQuery(merchant.pubkey)
+
 	function handleValidPayment(event: CustomEvent) {
 		console.log(event.detail)
 		if (currentOrderIndex < relevantOrders.length - 1) {

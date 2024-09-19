@@ -226,7 +226,7 @@ export interface OrderMessageItem {
 }
 
 export interface OrderMessage {
-	id?: string
+	id: string
 	createdAt?: number
 	updatedAt?: number
 	type: number

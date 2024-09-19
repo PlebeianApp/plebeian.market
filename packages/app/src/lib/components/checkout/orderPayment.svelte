@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { OrderFilter } from '$lib/schema'
-	import type { CartInvoice, CartProduct, CartStall } from '$lib/stores/cart'
+	import type { CartProduct, CartStall, InvoiceMessage } from '$lib/stores/cart'
 	import * as Select from '$lib/components/ui/select'
 	import { createPaymentsForUserQuery } from '$lib/fetch/payments.queries'
 	import { cart } from '$lib/stores/cart'
@@ -69,7 +69,7 @@
 		}
 	}
 
-	function createInvoice(detail: { paymentRequest: string; preimage: string | null }, status: PaymentStatus): CartInvoice {
+	function createInvoice(detail: { paymentRequest: string; preimage: string | null }, status: PaymentStatus): InvoiceMessage {
 		return {
 			id: createId(),
 			createdAt: Date.now(),
@@ -83,7 +83,7 @@
 		}
 	}
 
-	async function processPayment(invoice: CartInvoice, status: PaymentStatus) {
+	async function processPayment(invoice: InvoiceMessage, status: PaymentStatus) {
 		cart.addInvoice(invoice)
 
 		const paymentRequestMessage: PaymentRequestMessage = {

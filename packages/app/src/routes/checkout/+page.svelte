@@ -6,11 +6,13 @@
 	import Success from '$lib/components/checkout/success.svelte'
 	import Stepper from '$lib/components/stepper.svelte'
 	import { cart } from '$lib/stores/cart'
+	import { checkoutFormStore, currentStep } from '$lib/stores/checkout'
+	import { onDestroy } from 'svelte'
 
 	$: hasMultipleUsers = Object.keys($cart.users).length > 1
 
 	let checkoutSteps: Step[]
-	// FIXME: If users go out at the middle of a checkout and add new products they will not appear.
+
 	$: checkoutSteps = [
 		{
 			component: Review,
@@ -28,7 +30,7 @@
 			{
 				component: Success,
 				props: {
-					variant: 'sent',
+					variant: hasMultipleUsers ? 'sent' : 'success',
 					merchant: user,
 				},
 			},
@@ -42,6 +44,15 @@
 				]
 			: []),
 	]
+
+	// Clear orphan orders and invoices if there is not checkoutForm data
+	if ($cart.orders || ($cart.invoices && !$checkoutFormStore)) {
+		cart.clearKeys(['orders', 'invoices'])
+	}
+	// Avoid conflicts when users leaving the checkout, updating checkoutSteps, and coming back
+	onDestroy(() => {
+		currentStep.set(0)
+	})
 </script>
 
 <div class="container py-6">
