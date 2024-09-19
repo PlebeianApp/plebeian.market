@@ -23,7 +23,7 @@
 
 	let isPersisting = false
 	let error: string | null = null
-	let persistenceComplete = false
+	let persistenceComplete: boolean | null = null
 
 	async function handlePersist() {
 		if (persistenceComplete) return true
@@ -114,26 +114,27 @@
 						<Order {user} stalls={$cart.stalls} products={$cart.products} mode="success" />
 					{/each}
 				{/if}
-
-				<h3 class="text-lg font-semibold mt-6 mb-4">Invoices</h3>
-				{#each invoices as invoice (invoice.id)}
-					<div class="mb-4 p-4 bg-gray-100 rounded-lg">
-						<div class="flex justify-between">
-							<span class="font-medium">Invoice ID: {invoice.id}</span>
-							<span class="capitalize font-medium {invoice.invoiceStatus === 'paid' ? 'text-green-600' : 'text-yellow-600'}">
-								{invoice.invoiceStatus}
-							</span>
+				{#if invoices.length}
+					<h3 class="text-lg font-semibold mt-6 mb-4">Invoices</h3>
+					{#each invoices as invoice (invoice.id)}
+						<div class="mb-4 p-4 bg-gray-100 rounded-lg">
+							<div class="flex justify-between">
+								<span class="font-medium">Invoice ID: {invoice.id}</span>
+								<span class="capitalize font-medium {invoice.invoiceStatus === 'paid' ? 'text-green-600' : 'text-yellow-600'}">
+									{invoice.invoiceStatus}
+								</span>
+							</div>
+							<div class="flex justify-between text-sm text-gray-600 mt-2">
+								<span class="font-bold">Amount: {formatSats(invoice.totalAmount)} sats</span>
+								<span>Date: {new Date(invoice.createdAt).toLocaleString()}</span>
+							</div>
 						</div>
-						<div class="flex justify-between text-sm text-gray-600 mt-2">
-							<span class="font-bold">Amount: {formatSats(invoice.totalAmount)} sats</span>
-							<span>Date: {new Date(invoice.createdAt).toLocaleString()}</span>
-						</div>
-					</div>
-				{/each}
+					{/each}
+				{/if}
 			</CardContent>
 		{/if}
 		<CardFooter>
-			<Button class="w-full" on:click={handleContinue} disabled={isPersisting || !persistenceComplete}>
+			<Button class="w-full" on:click={handleContinue} disabled={isPersisting || (persistenceComplete != null && !persistenceComplete)}>
 				{isPersisting ? 'Saving...' : 'Continue'}
 			</Button>
 		</CardFooter>
