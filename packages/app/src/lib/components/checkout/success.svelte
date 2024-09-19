@@ -45,7 +45,6 @@
 			const result = await response.json()
 
 			if (response.ok) {
-				console.log('Orders and invoices persisted successfully')
 				persistenceComplete = true
 				return true
 			} else {

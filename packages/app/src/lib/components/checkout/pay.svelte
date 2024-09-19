@@ -19,7 +19,6 @@
 	$: merchantProfile = createUserByIdQuery(merchant.pubkey)
 
 	function handleValidPayment(event: CustomEvent) {
-		console.log(event.detail)
 		if (currentOrderIndex < relevantOrders.length - 1) {
 			currentOrderIndex++
 		} else {

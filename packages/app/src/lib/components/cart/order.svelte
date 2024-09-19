@@ -91,8 +91,6 @@
 				{formatSats(userTotal.totalInSats)} sats</small
 			>
 		</div>
-	{:else if mode === 'payment' && hasFormData}
-		<Button on:click={() => console.log(formData)}>Send</Button>
 	{/if}
 </div>
 
