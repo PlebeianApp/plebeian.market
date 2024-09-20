@@ -1,12 +1,12 @@
 {
-  "version": "7",
+  "version": "0",
   "dialect": "sqlite",
   "entries": [
     {
       "idx": 0,
       "version": "6",
-      "when": 1726657895454,
-      "tag": "0000_chief_ser_duncan",
+      "when": 1726822621423,
+      "tag": "0000_gorgeous_tattoo",
       "breakpoints": true
     }
   ]
