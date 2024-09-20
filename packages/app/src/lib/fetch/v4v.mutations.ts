@@ -2,48 +2,39 @@ import { createMutation } from '@tanstack/svelte-query'
 import ndkStore from '$lib/stores/ndk'
 import { get } from 'svelte/store'
 
+import type { V4VDTO } from './v4v.queries'
 import { createRequest, queryClient } from './client'
 
-interface V4VFilter {
-	amount: string
-	target: string
-}
-
-interface V4VSearchParams {
+interface V4VPosthParams {
 	userId: string
-	v4vPlatformShare: string
-	target: string
 }
-type V4VURL = `/api/v1/v4v?userId=${string}&v4vPlatformShare=${string}&target=${string}`
+type V4VURL = `/api/v1/v4v?userId=${string}`
 
-function buildV4VURL(params: V4VSearchParams): V4VURL {
+function buildV4VURL(params: V4VPosthParams): V4VURL {
 	const searchParams = new URLSearchParams({
 		userId: params.userId,
-		v4vPlatformShare: params.v4vPlatformShare,
-		target: params.target,
 	})
 	return `/api/v1/v4v?${searchParams.toString()}` as V4VURL
 }
 
 declare module './client' {
 	interface Endpoints {
-		[k: `PUT ${V4VURL}`]: Operation<string, 'PUT', never, V4VFilter, number, never>
+		[k: `PUT ${V4VURL}`]: Operation<string, 'PUT', never, V4VDTO[], number, never>
 	}
 }
 
 export const setV4VForUserMutation = createMutation(
 	{
 		mutationKey: [],
-		mutationFn: async (v4vFilter: V4VFilter) => {
+		mutationFn: async (v4vFilter: V4VDTO[]) => {
 			const $ndkStore = get(ndkStore)
 			if ($ndkStore.activeUser?.pubkey) {
-				const params: V4VSearchParams = {
+				const params: V4VPosthParams = {
 					userId: $ndkStore.activeUser.pubkey,
-					v4vPlatformShare: v4vFilter.amount,
-					target: v4vFilter.target,
 				}
 				const setAmount = await createRequest(`PUT ${buildV4VURL(params)}`, {
 					auth: true,
+					body: v4vFilter,
 				})
 				return setAmount
 			}

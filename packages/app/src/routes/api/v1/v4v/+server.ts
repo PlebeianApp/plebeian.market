@@ -1,18 +1,18 @@
+import type { V4VShare } from '$lib/server/v4v.service'
 import { error, isHttpError, json } from '@sveltejs/kit'
 import { authorizeUserless } from '$lib/auth'
-import { getV4VPlatformShareForUserByTarget, setV4VPlatformShareForUserByTarget } from '$lib/server/v4v.service'
+import { getV4VPlatformShareForUser, setV4VSharesForUser } from '$lib/server/v4v.service'
 import { z } from 'zod'
 
 export async function GET({ request, url: { searchParams } }) {
 	const userId = searchParams.get('userId')
-	const target = searchParams.get('target')
 
-	if (!userId || !target) {
+	if (!userId) {
 		error(400, 'Invalid request')
 	}
 
 	try {
-		return json(await getV4VPlatformShareForUserByTarget(userId, target))
+		return json(await getV4VPlatformShareForUser(userId))
 	} catch (e) {
 		if (isHttpError(e)) {
 			error(e.status, e.body)
@@ -23,25 +23,24 @@ export async function GET({ request, url: { searchParams } }) {
 }
 
 export async function PUT({ request, url: { searchParams } }) {
-	const v4vPlatformShare = searchParams.get('v4vPlatformShare')
-	const target = searchParams.get('target')
-
-	if (!v4vPlatformShare || !target) {
-		error(400, 'Invalid request: userId and v4vPlatformShare are required')
-	}
+	const body = (await request.json()) as V4VShare[]
 
 	try {
 		const parseResult = z
-			.number()
-			.min(0, 'V4V platform share must be at least 0')
-			.max(1, 'V4V platform share must be at most 1')
-			.safeParse(parseFloat(v4vPlatformShare))
+			.array(
+				z.object({
+					amount: z.number().min(0, 'V4V platform share must be at least 0').max(1, 'V4V platform share must be at most 1'),
+					target: z.string(),
+				}),
+			)
+			.safeParse(body)
+
 		if (!parseResult.success) {
 			error(400, `Invalid v4vPlatformShare: ${parseResult.error.message}`)
 		}
 		const parsedV4VPlatformShare = parseResult.data
 		const userId = await authorizeUserless(request, 'PUT')
-		const amount = await setV4VPlatformShareForUserByTarget(parsedV4VPlatformShare, userId, target)
+		const amount = await setV4VSharesForUser(userId, parsedV4VPlatformShare)
 
 		return json(amount)
 	} catch (e) {
