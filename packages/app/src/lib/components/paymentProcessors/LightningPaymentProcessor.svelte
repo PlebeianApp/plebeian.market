@@ -149,7 +149,7 @@
 		cleanupFunctions.forEach((fn) => fn())
 		remainingTime = 'Expired'
 		toast.error('Invoice expired')
-		dispatch('paymentExpired', { paymentRequest: invoice!.paymentRequest, preimage: null })
+		dispatch('paymentExpired', { paymentRequest: invoice!.paymentRequest, preimage: null, amountSats })
 	}
 
 	async function verifyPayment() {
@@ -173,14 +173,14 @@
 	function handleSuccessfulPayment(preimage: string) {
 		paymentStatus = 'success'
 		toast.success('Payment successful')
-		dispatch('paymentComplete', { paymentRequest: invoice!.paymentRequest, preimage })
+		dispatch('paymentComplete', { paymentRequest: invoice!.paymentRequest, preimage, amountSats })
 		cleanupFunctions.forEach((fn) => fn())
 	}
 
 	function handleSkipPayment() {
 		paymentStatus = 'canceled'
 		cleanupFunctions.forEach((fn) => fn())
-		dispatch('paymentCanceled', { paymentRequest: invoice!.paymentRequest, preimage: null })
+		dispatch('paymentCanceled', { paymentRequest: invoice!.paymentRequest, preimage: null, amountSats })
 	}
 
 	async function handleWeblnPay() {
@@ -257,7 +257,7 @@
 
 <div class="flex flex-col items-center gap-4">
 	<h3 class="font-bold">{paymentDetail.paymentMethod}</h3>
-	<p>{paymentDetail.paymentDetails}</p>
+	<p class="text-ellipsis overflow-hidden ...">{paymentDetail.paymentDetails}</p>
 
 	{#if isLoading}
 		<Spinner />

@@ -1,10 +1,10 @@
 <script lang="ts">
 	import type { CartProduct, CartStall, CartUser } from '$lib/stores/cart'
-	import { Button } from '$lib/components/ui/button/index.js'
 	import { KindStalls } from '$lib/constants'
+	import { v4VForUserQuery } from '$lib/fetch/v4v.queries'
 	import { cart } from '$lib/stores/cart'
 	import { formatSats } from '$lib/utils'
-	import { createEventDispatcher, onDestroy, onMount } from 'svelte'
+	import { createEventDispatcher, onDestroy } from 'svelte'
 
 	import type { Order } from '@plebeian/database'
 
@@ -18,6 +18,7 @@
 	export let products: Record<string, CartProduct>
 	export let mode: 'cart' | 'checkout' | 'payment' | 'success' = 'cart'
 	export let formData: Partial<Order> = {}
+	let v4vTotalPercentage: number | null = null
 
 	export let userTotal: Awaited<ReturnType<typeof cart.calculateUserTotal>> | null = null
 
@@ -42,6 +43,17 @@
 
 	function updateUserTotal() {
 		cart.calculateUserTotal(user.pubkey).then((result) => (userTotal = result))
+	}
+
+	$: v4vQuery = v4VForUserQuery(user.pubkey)
+
+	$: {
+		if ($v4vQuery.data) {
+			const total = $v4vQuery.data.reduce((sum, item) => {
+				return sum + item.amount
+			}, 0)
+			v4vTotalPercentage = total
+		}
 	}
 
 	$: if ($cart) {
@@ -81,15 +93,34 @@
 	{/each}
 
 	{#if (mode === 'cart' || mode === 'checkout') && userTotal}
-		<div class="flex flex-col">
+		<div class="flex flex-col gap-2">
 			{#each Object.entries(userTotal.currencyTotals) as [currency, amounts]}
 				<small>{currency} Total: {(amounts.total + amounts.shipping).toLocaleString()} </small>
 			{/each}
 			<small>Shipping in sats: {formatSats(userTotal.shippingInSats)} sats</small>
-			<small
+			<small class="underline"
 				><strong>Total in sats:</strong>
 				{formatSats(userTotal.totalInSats)} sats</small
 			>
+			<Separator />
+			{#if v4vTotalPercentage}
+				<div class="flex flex-col justify-end">
+					<small>
+						{formatSats(userTotal.subtotalInSats * (1 - (v4vTotalPercentage ?? 0)))} sats ({(1 - (v4vTotalPercentage ?? 0)) * 100}% of
+						subtotal)</small
+					>
+					<small> + {formatSats(userTotal.shippingInSats)} sats shipping</small>
+					<span class="underline"
+						>Merchant share: {formatSats(userTotal.subtotalInSats * (1 - v4vTotalPercentage) + userTotal.shippingInSats)} sats</span
+					>
+				</div>
+				<div class="flex items-center">
+					<small class="text-muted-foreground font-semibold"
+						>V4V 🤙 share ({(v4vTotalPercentage * 100).toFixed(2)}%):
+						{formatSats(userTotal.subtotalInSats * v4vTotalPercentage)} sats
+					</small>
+				</div>
+			{/if}
 		</div>
 	{/if}
 </div>
