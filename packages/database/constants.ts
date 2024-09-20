@@ -182,6 +182,13 @@ export const PRODUCT_IMAGES_TYPE = {
 
 export type ProductImagesType = ObjectValues<typeof PRODUCT_IMAGES_TYPE>
 
+export const INVOICE_TYPE = {
+	V4V: 'v4v',
+	MERCHANT: 'merchant',
+} as const
+
+export type InvoiceType = ObjectValues<typeof INVOICE_TYPE>
+
 export const PRODUCT_TYPES = {
 	SIMPLE: 'simple',
 	VARIABLE: 'variable',
@@ -1775,6 +1782,12 @@ export const COUNTRIES_ISO = {
 		iso3: 'ZWE',
 	},
 } as const
+
+export const V4V_DEFAULT_RECIPIENTS = [
+	'npub1ks6gyyhh8nvmzwssqul3yvw3gptevrcmxlmn93kdvatns6uh3cxqc26vrm',
+	'npub10pensatlcfwktnvjjw2dtem38n6rvw8g6fv73h84cuacxn4c28eqyfn34f',
+	'npub180cvv07tjdrrgpa0j7j7tmnyl2yr6yr7l8j4s3evf6u64th6gkwsyjh6w6',
+]
 
 export type ISO3 = (typeof COUNTRIES_ISO)[keyof typeof COUNTRIES_ISO]['iso3']
 

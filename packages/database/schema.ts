@@ -1,4 +1,4 @@
-import type { AnySQLiteColumn, PrimaryKeyBuilder } from 'drizzle-orm/sqlite-core'
+import type { AnySQLiteColumn } from 'drizzle-orm/sqlite-core'
 import { relations, sql } from 'drizzle-orm'
 import { foreignKey, integer, numeric, primaryKey, sqliteTable, text, unique } from 'drizzle-orm/sqlite-core'
 
@@ -8,7 +8,9 @@ import {
 	BID_STATUS,
 	BidStatus,
 	INVOICE_STATUS,
+	INVOICE_TYPE,
 	InvoiceStatus,
+	InvoiceType,
 	META_DATA_TYPES,
 	META_NAMES,
 	META_SCOPES,
@@ -410,12 +412,11 @@ export const invoices = sqliteTable('invoices', {
 		.notNull()
 		.references(() => orders.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
 	totalAmount: numeric('total_amount').notNull(),
+	type: text('type', { enum: Object.values(INVOICE_TYPE) as NonEmptyArray<InvoiceType> }).notNull(),
 	invoiceStatus: text('invoice_status', { enum: Object.values(INVOICE_STATUS) as NonEmptyArray<InvoiceStatus> })
 		.notNull()
 		.default('pending'),
-	paymentDetails: text('payment_details_id')
-		.notNull()
-		.references(() => paymentDetails.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
+	paymentDetails: text('payment_details_id').notNull(),
 	paymentRequest: text('payment_request'),
 	proof: text('proof'),
 })

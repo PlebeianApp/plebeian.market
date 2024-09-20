@@ -87,12 +87,12 @@ CREATE TABLE `invoices` (
 	`updated_at` integer DEFAULT (unixepoch()) NOT NULL,
 	`order_id` text NOT NULL,
 	`total_amount` numeric NOT NULL,
+	`type` text NOT NULL,
 	`invoice_status` text DEFAULT 'pending' NOT NULL,
 	`payment_details_id` text NOT NULL,
 	`payment_request` text,
 	`proof` text,
-	FOREIGN KEY (`order_id`) REFERENCES `orders`(`id`) ON UPDATE cascade ON DELETE cascade,
-	FOREIGN KEY (`payment_details_id`) REFERENCES `payment_details`(`id`) ON UPDATE cascade ON DELETE cascade
+	FOREIGN KEY (`order_id`) REFERENCES `orders`(`id`) ON UPDATE cascade ON DELETE cascade
 );
 --> statement-breakpoint
 CREATE TABLE `meta_types` (
