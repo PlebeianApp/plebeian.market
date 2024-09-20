@@ -62,47 +62,47 @@
 
 <form on:submit|preventDefault={handleSubmit}>
 	<Label>
-		{FormLabels.contactName}:
+		{FormLabels.contactName}*
 		<Input type="text" bind:value={formData.contactName} required />
 		{#if errors.contactName}<span class="text-red-500">{errors.contactName}</span>{/if}
 	</Label>
 	<Label>
-		{FormLabels.contactPhone}:
+		{FormLabels.contactPhone}
 		<Input type="tel" bind:value={formData.contactPhone} />
 		{#if errors.contactPhone}<span class="text-red-500">{errors.contactPhone}</span>{/if}
 	</Label>
 	<Label>
-		{FormLabels.contactEmail}:
+		{FormLabels.contactEmail}*
 		<Input type="email" bind:value={formData.contactEmail} required />
 		{#if errors.contactEmail}<span class="text-red-500">{errors.contactEmail}</span>{/if}
 	</Label>
 	<Label>
-		{FormLabels.address}:
+		{FormLabels.address}*
 		<Input type="text" bind:value={formData.address} required />
 		{#if errors.address}<span class="text-red-500">{errors.address}</span>{/if}
 	</Label>
 	<Label>
-		{FormLabels.zip}:
+		{FormLabels.zip}*
 		<Input type="text" bind:value={formData.zip} required />
 		{#if errors.zip}<span class="text-red-500">{errors.zip}</span>{/if}
 	</Label>
 	<Label>
-		{FormLabels.city}:
+		{FormLabels.city}*
 		<Input type="text" bind:value={formData.city} required />
 		{#if errors.city}<span class="text-red-500">{errors.city}</span>{/if}
 	</Label>
 	<Label>
-		{FormLabels.country}:
+		{FormLabels.country}*
 		<Input type="text" bind:value={formData.country} required />
 		{#if errors.country}<span class="text-red-500">{errors.country}</span>{/if}
 	</Label>
 	<Label>
-		{FormLabels.region}:
+		{FormLabels.region}
 		<Input type="text" bind:value={formData.region} />
 		{#if errors.region}<span class="text-red-500">{errors.region}</span>{/if}
 	</Label>
 	<Label>
-		{FormLabels.observations}:
+		{FormLabels.observations}
 		<Textarea bind:value={formData.observations}></Textarea>
 		{#if errors.observations}<span class="text-red-500">{errors.observations}</span>{/if}
 	</Label>

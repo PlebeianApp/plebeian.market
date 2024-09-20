@@ -13,7 +13,7 @@
 	}
 </script>
 
-<div>
+<div class="flex flex-col gap-2">
 	<h3>On-Chain Payment Processor</h3>
 	<p>This feature is not yet implemented.</p>
 	<p>Payment Method: {paymentDetail.paymentMethod}</p>

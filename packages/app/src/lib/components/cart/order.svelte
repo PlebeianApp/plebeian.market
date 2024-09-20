@@ -53,7 +53,7 @@
 	})
 </script>
 
-<div class="order p-2">
+<div class="order p-2 flex flex-col gap-2">
 	{#if mode !== 'checkout'}
 		<MiniUser userId={user.pubkey} />
 	{/if}

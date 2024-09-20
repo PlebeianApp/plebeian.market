@@ -81,7 +81,7 @@
 			</div>
 		{/if}
 	</div>
-	<div class="flex flex-col justify-between text-right">
+	<div class="truncate flex flex-col justify-between text-right">
 		<div>{formatPrice(product.price * product.amount)}({product?.currency ?? product.currency})</div>
 	</div>
 </div>

@@ -13,6 +13,7 @@
 	import { ORDER_STATUS } from '@plebeian/database/constants'
 	import { createId } from '@plebeian/database/utils'
 
+	import MiniStall from '../cart/mini-stall.svelte'
 	import ProductInCart from '../cart/product-in-cart.svelte'
 	import PaymentProcessor from '../paymentProcessors/paymentProcessor.svelte'
 	import Separator from '../ui/separator/separator.svelte'
@@ -124,7 +125,8 @@
 	}
 </script>
 
-<div class="flex gap-8">
+<div class="flex flex-col items-center gap-4">
+	<MiniStall stallId={order.stallId} mode="view" />
 	<div class="w-1/2 flex flex-col gap-4">
 		<div class="flex flex-col gap-2">
 			{#each stall.products as productId}
@@ -143,10 +145,11 @@
 					</div>
 				{/each}
 			</div>
+			<Separator />
 		{/if}
 	</div>
 
-	<div class="w-1/2 flex flex-col items-center gap-4">
+	<div class="w-1/2 mt-4 flex flex-col items-center gap-4">
 		<Select.Root
 			selected={selectedPaymentValue ?? undefined}
 			onSelectedChange={(s) => {

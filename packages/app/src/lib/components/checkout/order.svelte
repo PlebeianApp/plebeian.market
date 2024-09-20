@@ -30,6 +30,7 @@
 	let ableToPlaceOrder = true
 	const paymentDetails = createPaymentsForUserQuery(merchant.pubkey)
 	let userTotal: Awaited<ReturnType<typeof cart.calculateUserTotal>> | null = null
+	$: filledShippingMethods = $cart.users[merchant.pubkey].stalls.every((id) => $cart.stalls[id].shippingMethodId)
 
 	async function placeOrder() {
 		if (!$checkoutFormStore) {
@@ -65,7 +66,9 @@
 				orders.push(order)
 			} catch (error) {
 				console.error(`Error processing order for stall ${stallId}:`, error)
-				error instanceof Error && toast.error(`Error processing order: ${error.message}`)
+				if (error instanceof Error) {
+					toast.error(`Error processing order: ${error.message}`)
+				}
 
 				return null
 			}
@@ -165,15 +168,19 @@
 							</div>
 						</div>
 					</div>
+					<Separator />
 				{/if}
 
-				<Separator />
-
-				<div class="flex flex-col gap-4">
-					<Button variant="outline" class="w-full" on:click={handleOrderPlacement}>Place Order</Button>
+				<div
+					data-tooltip={!filledShippingMethods ? 'Make sure you choose shipping methods for every stall ' : null}
+					class="flex flex-col gap-4"
+				>
 					{#if $paymentDetails.data?.length}
-						<Button class="w-full" disabled={!ableToPlaceOrder || isLoading} on:click={handleOrderAndPayment}>Place Order & Pay</Button>
+						<Button class="w-full" disabled={!filledShippingMethods || !ableToPlaceOrder || isLoading} on:click={handleOrderAndPayment}
+							>Place Order & Pay</Button
+						>
 					{/if}
+					<Button disabled={!filledShippingMethods} variant="outline" class="w-full" on:click={handleOrderPlacement}>Place Order</Button>
 				</div>
 			</div>
 		</CardContent>

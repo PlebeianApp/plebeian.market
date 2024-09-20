@@ -5,7 +5,6 @@
 	import { truncateString } from '$lib/utils'
 	import { createEventDispatcher } from 'svelte'
 
-	import MiniStall from '../cart/mini-stall.svelte'
 	import OrderPayment from './orderPayment.svelte'
 
 	export let merchant: CartUser
@@ -18,7 +17,7 @@
 
 	$: merchantProfile = createUserByIdQuery(merchant.pubkey)
 
-	function handleValidPayment(event: CustomEvent) {
+	function handleValidPayment() {
 		if (currentOrderIndex < relevantOrders.length - 1) {
 			currentOrderIndex++
 		} else {
@@ -36,7 +35,6 @@
 	<p class="text-center">Order {currentOrderIndex + 1} of {relevantOrders.length}</p>
 
 	{#if currentOrder}
-		<MiniStall stallId={currentOrder[1].stallId} mode="view" />
 		<OrderPayment
 			order={currentOrder[1]}
 			stall={$cart.stalls[currentOrder[1].stallId]}
