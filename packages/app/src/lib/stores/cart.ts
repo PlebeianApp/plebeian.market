@@ -1,6 +1,8 @@
+import type { V4VDTO } from '$lib/fetch/v4v.queries'
 import type { DisplayProduct } from '$lib/server/products.service'
 import type { RichShippingInfo } from '$lib/server/shipping.service'
 import { createCurrencyConversionQuery } from '$lib/fetch/products.queries'
+import { v4VForUserQuery } from '$lib/fetch/v4v.queries'
 import { debounce, resolveQuery } from '$lib/utils'
 import { toast } from 'svelte-sonner'
 import { derived, get, writable } from 'svelte/store'
@@ -32,6 +34,7 @@ export interface CartStall {
 export interface CartUser {
 	pubkey: string
 	stalls: string[]
+	v4vShares: V4VDTO[]
 }
 
 export interface InvoiceMessage {
@@ -41,6 +44,7 @@ export interface InvoiceMessage {
 	orderId: string
 	totalAmount: number
 	invoiceStatus: InvoiceStatus
+	type: 'v4v' | 'merchant'
 	paymentId: string
 	paymentRequest: string
 	proof: string | null
@@ -384,6 +388,32 @@ function createCart() {
 }
 
 export const cart = createCart()
+
+export const v4vShares = derived(
+	cart,
+	($cart, set) => {
+		const fetchV4VShares = async () => {
+			const shares: Record<string, V4VDTO[]> = {}
+
+			for (const userPubkey of Object.keys($cart.users)) {
+				try {
+					const userShares = await resolveQuery(() => v4VForUserQuery(userPubkey))
+					shares[userPubkey] = userShares || []
+				} catch (error) {
+					console.error(`Failed to fetch v4v shares for user ${userPubkey}:`, error)
+					shares[userPubkey] = []
+				}
+			}
+			set(shares)
+		}
+
+		const debouncedFetch = debounce(fetchV4VShares, 250)
+		debouncedFetch()
+
+		return () => {}
+	},
+	{} as Record<string, V4VDTO[]>,
+)
 
 export const cartTotal = derived(cart, ($cart) =>
 	Object.values($cart.stalls).reduce(
