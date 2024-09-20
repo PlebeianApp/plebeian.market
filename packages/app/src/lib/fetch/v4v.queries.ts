@@ -4,42 +4,36 @@ import { derived } from 'svelte/store'
 
 import { createRequest, queryClient } from './client'
 
-type V4VURL = `/api/v1/v4v?userId=${string}&target=${string}`
+type V4VURL = `/api/v1/v4v?userId=${string}`
 
 interface V4VQueryParams {
 	userId: string
+}
+
+export type V4VDTO = {
+	amount: number
 	target: string
 }
 
-function buildV4VURL({ userId, target }: V4VQueryParams): V4VURL {
-	return `/api/v1/v4v?userId=${encodeURIComponent(userId)}&target=${encodeURIComponent(target)}`
+function buildV4VURL({ userId }: V4VQueryParams): V4VURL {
+	return `/api/v1/v4v?userId=${encodeURIComponent(userId)}`
 }
 
 declare module './client' {
 	interface Endpoints {
-		[k: `GET ${V4VURL}`]: Operation<
-			string,
-			'GET',
-			never,
-			{
-				amount: string
-				target: string
-			},
-			number,
-			never
-		>
+		[k: `GET ${V4VURL}`]: Operation<string, 'GET', never, V4VDTO[], V4VDTO[], never>
 	}
 }
 
-export const platformV4VForUserQuery = (target: string, userId: string) =>
-	createQuery<number>(
+export const v4VForUserQuery = (userId: string) =>
+	createQuery<V4VDTO[]>(
 		{
 			queryKey: ['v4v', userId],
 			queryFn: async () => {
 				try {
-					return await createRequest(`GET ${buildV4VURL({ userId, target })}`, { auth: false })
+					return await createRequest(`GET ${buildV4VURL({ userId })}`, { auth: false })
 				} catch (e) {
-					return 0
+					return []
 				}
 			},
 		},

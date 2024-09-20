@@ -1,58 +1,44 @@
-import { error } from '@sveltejs/kit'
-
 import { and, db, eq, USER_META, userMeta } from '@plebeian/database'
 
-export const setV4VPlatformShareForUserByTarget = async (v4vShare: number, userId: string, shareTarget: string) => {
-	try {
-		const existingRecord = await db
-			.select()
-			.from(userMeta)
-			.where(and(eq(userMeta.metaName, USER_META.V4V_SHARE.value), eq(userMeta.userId, userId), eq(userMeta.key, shareTarget)))
-			.execute()
-
-		let result
-
-		if (existingRecord.length > 0) {
-			result = await db
-				.update(userMeta)
-				.set({
-					valueNumeric: v4vShare.toString(),
-				})
-				.where(and(eq(userMeta.metaName, USER_META.V4V_SHARE.value), eq(userMeta.userId, userId), eq(userMeta.key, shareTarget)))
-				.returning()
-		} else {
-			result = await db
-				.insert(userMeta)
-				.values({
-					userId: userId,
-					metaName: USER_META.V4V_SHARE.value,
-					key: shareTarget,
-					valueNumeric: v4vShare.toString(),
-				})
-				.returning()
-		}
-
-		if (result.length === 0) {
-			throw new Error('Failed to insert or update platform share')
-		}
-
-		return result[0].valueNumeric
-	} catch (e) {
-		console.error(e)
-		throw error(500, `Failed to set platform share for user ${userId}. Reason: ${e}`)
-	}
+export type V4VShare = {
+	amount: number
+	target: string
 }
 
-export const getV4VPlatformShareForUserByTarget = async (decodedOwnerPk: string, target: string) => {
-	const [platformShare] = await db
+export const getV4VPlatformShareForUser = async (decodedOwnerPk: string) => {
+	const platformShares = await db
 		.select()
 		.from(userMeta)
-		.where(and(eq(userMeta.metaName, USER_META.V4V_SHARE.value), eq(userMeta.userId, decodedOwnerPk), eq(userMeta.key, target)))
+		.where(and(eq(userMeta.metaName, USER_META.V4V_SHARE.value), eq(userMeta.userId, decodedOwnerPk)))
 		.execute()
 
-	if (!platformShare) {
-		throw error(404, `Platform share not found for user ${decodedOwnerPk} and target ${target}`)
-	}
+	return platformShares.map((platformShare) => ({
+		amount: platformShare.valueNumeric,
+		target: platformShare.key,
+	}))
+}
 
-	return platformShare.valueNumeric
+export const setV4VSharesForUser = async (decodedOwnerPk: string, shares: V4VShare[]) => {
+	try {
+		await db.transaction(async (trx) => {
+			await trx
+				.delete(userMeta)
+				.where(and(eq(userMeta.userId, decodedOwnerPk), eq(userMeta.metaName, USER_META.V4V_SHARE.value)))
+				.execute()
+
+			const newShares = shares.map((share) => ({
+				userId: decodedOwnerPk,
+				metaName: USER_META.V4V_SHARE.value,
+				valueNumeric: share.amount,
+				key: share.target,
+			}))
+
+			await trx.insert(userMeta).values(newShares).execute()
+		})
+
+		return shares.reduce((sum, share) => sum + share.amount, 0)
+	} catch (e) {
+		console.error('Error in setV4VSharesForUser:', e)
+		throw e
+	}
 }
