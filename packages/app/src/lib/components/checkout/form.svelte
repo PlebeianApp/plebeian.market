@@ -62,49 +62,49 @@
 
 <form on:submit|preventDefault={handleSubmit}>
 	<Label>
-		{FormLabels.contactName}*
-		<Input type="text" bind:value={formData.contactName} required />
+		<span class="required-mark">{FormLabels.contactName}</span>
 		{#if errors.contactName}<span class="text-red-500">{errors.contactName}</span>{/if}
+		<Input type="text" bind:value={formData.contactName} required />
 	</Label>
 	<Label>
 		{FormLabels.contactPhone}
-		<Input type="tel" bind:value={formData.contactPhone} />
 		{#if errors.contactPhone}<span class="text-red-500">{errors.contactPhone}</span>{/if}
+		<Input type="tel" bind:value={formData.contactPhone} />
 	</Label>
 	<Label>
-		{FormLabels.contactEmail}*
-		<Input type="email" bind:value={formData.contactEmail} required />
+		<span class="required-mark">{FormLabels.contactEmail}</span>
 		{#if errors.contactEmail}<span class="text-red-500">{errors.contactEmail}</span>{/if}
+		<Input type="email" bind:value={formData.contactEmail} required />
 	</Label>
 	<Label>
-		{FormLabels.address}*
-		<Input type="text" bind:value={formData.address} required />
+		<span class="required-mark">{FormLabels.address}</span>
 		{#if errors.address}<span class="text-red-500">{errors.address}</span>{/if}
+		<Input type="text" bind:value={formData.address} required />
 	</Label>
 	<Label>
-		{FormLabels.zip}*
-		<Input type="text" bind:value={formData.zip} required />
+		<span class="required-mark">{FormLabels.zip}</span>
 		{#if errors.zip}<span class="text-red-500">{errors.zip}</span>{/if}
+		<Input type="text" bind:value={formData.zip} required />
 	</Label>
 	<Label>
-		{FormLabels.city}*
-		<Input type="text" bind:value={formData.city} required />
+		<span class="required-mark">{FormLabels.city}</span>
 		{#if errors.city}<span class="text-red-500">{errors.city}</span>{/if}
+		<Input type="text" bind:value={formData.city} required />
 	</Label>
 	<Label>
-		{FormLabels.country}*
-		<Input type="text" bind:value={formData.country} required />
+		<span class="required-mark">{FormLabels.country}</span>
 		{#if errors.country}<span class="text-red-500">{errors.country}</span>{/if}
+		<Input type="text" bind:value={formData.country} required />
 	</Label>
 	<Label>
 		{FormLabels.region}
-		<Input type="text" bind:value={formData.region} />
 		{#if errors.region}<span class="text-red-500">{errors.region}</span>{/if}
+		<Input type="text" bind:value={formData.region} />
 	</Label>
 	<Label>
 		{FormLabels.observations}
-		<Textarea bind:value={formData.observations}></Textarea>
 		{#if errors.observations}<span class="text-red-500">{errors.observations}</span>{/if}
+		<Textarea bind:value={formData.observations}></Textarea>
 	</Label>
 	<Button type="submit" class="w-full mt-6">Finish Review</Button>
 </form>

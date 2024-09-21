@@ -125,56 +125,60 @@
 	}
 </script>
 
-<div class="flex flex-col items-center gap-4">
-	<MiniStall stallId={order.stallId} mode="view" />
-	<div class="w-1/2 flex flex-col gap-4">
-		<div class="flex flex-col gap-2">
-			{#each stall.products as productId}
-				<ProductInCart product={products[productId]} mode="payment" />
-			{/each}
-		</div>
-
-		<Separator />
-
-		{#if orderTotal}
+<div class="flex items-center flex-col gap-4">
+	<div>
+		<MiniStall stallId={order.stallId} mode="view" />
+	</div>
+	<div class="flex gap-4 w-full">
+		<div class="w-1/2 flex flex-col gap-4">
 			<div class="flex flex-col gap-2">
-				{#each [{ label: 'Subtotal', value: orderTotal.subtotalInSats }, { label: 'Shipping', value: orderTotal.shippingInSats }, { label: 'Total', value: orderTotal.totalInSats, bold: true }] as { label, value, bold }}
-					<div class="flex justify-between" class:font-bold={bold}>
-						<span>{label}:</span>
-						<span>{formatSats(value)} sats</span>
-					</div>
+				{#each stall.products as productId}
+					<ProductInCart product={products[productId]} mode="payment" />
 				{/each}
 			</div>
+
 			<Separator />
-		{/if}
-	</div>
 
-	<div class="w-1/2 mt-4 flex flex-col items-center gap-4">
-		<Select.Root
-			selected={selectedPaymentValue ?? undefined}
-			onSelectedChange={(s) => {
-				if (!s) return
-				selectedPaymentDetail = s.value
-			}}
-		>
-			<Select.Trigger class="w-full">
-				<Select.Value placeholder="Select a payment method" />
-			</Select.Trigger>
-			<Select.Content>
-				{#each relevantPaymentDetails as paymentDetail}
-					<Select.Item value={paymentDetail} label={`${paymentDetail.paymentMethod} - ${paymentDetail.paymentDetails}`} />
-				{/each}
-			</Select.Content>
-		</Select.Root>
+			{#if orderTotal}
+				<div class="flex flex-col gap-2">
+					{#each [{ label: 'Subtotal', value: orderTotal.subtotalInSats }, { label: 'Shipping', value: orderTotal.shippingInSats }, { label: 'Total', value: orderTotal.totalInSats, bold: true }] as { label, value, bold }}
+						<div class="flex justify-between" class:font-bold={bold}>
+							<span>{label}:</span>
+							<span>{formatSats(value)} sats</span>
+						</div>
+					{/each}
+				</div>
+				<Separator />
+			{/if}
+		</div>
 
-		{#if selectedPaymentDetail && orderTotal}
-			<PaymentProcessor
-				paymentDetail={selectedPaymentDetail}
-				amountSats={orderTotal.totalInSats}
-				on:paymentComplete={handlePaymentEvent}
-				on:paymentExpired={handlePaymentEvent}
-				on:paymentCanceled={handlePaymentEvent}
-			/>
-		{/if}
+		<div class="w-1/2 mt-4 flex flex-col items-center gap-4">
+			<Select.Root
+				selected={selectedPaymentValue ?? undefined}
+				onSelectedChange={(s) => {
+					if (!s) return
+					selectedPaymentDetail = s.value
+				}}
+			>
+				<Select.Trigger class="w-full">
+					<Select.Value placeholder="Select a payment method" />
+				</Select.Trigger>
+				<Select.Content>
+					{#each relevantPaymentDetails as paymentDetail}
+						<Select.Item value={paymentDetail} label={`${paymentDetail.paymentMethod} - ${paymentDetail.paymentDetails}`} />
+					{/each}
+				</Select.Content>
+			</Select.Root>
+
+			{#if selectedPaymentDetail && orderTotal}
+				<PaymentProcessor
+					paymentDetail={selectedPaymentDetail}
+					amountSats={orderTotal.totalInSats}
+					on:paymentComplete={handlePaymentEvent}
+					on:paymentExpired={handlePaymentEvent}
+					on:paymentCanceled={handlePaymentEvent}
+				/>
+			{/if}
+		</div>
 	</div>
 </div>

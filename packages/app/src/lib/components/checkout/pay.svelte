@@ -32,8 +32,9 @@
 			Payment for {$merchantProfile.data.name || $merchantProfile.data.displayName || truncateString(merchant.pubkey)}
 		</h2>
 	{/if}
-	<p class="text-center">Order {currentOrderIndex + 1} of {relevantOrders.length}</p>
-
+	{#if relevantOrders.length > 1}
+		<p class="text-center">Order {currentOrderIndex + 1} of {relevantOrders.length}</p>
+	{/if}
 	{#if currentOrder}
 		<OrderPayment
 			order={currentOrder[1]}
