@@ -7,7 +7,7 @@
 	import { handleAddToCart } from '$lib/stores/cart'
 	import { openDrawerForProduct } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
-	import { stringToHexColor } from '$lib/utils'
+	import { formatSats, stringToHexColor } from '$lib/utils'
 
 	import Spinner from '../assets/spinner.svelte'
 	import { Button } from '../ui/button'
@@ -61,9 +61,7 @@
 						{#if $priceQuery?.isLoading}
 							<Spinner />
 						{:else if typeof $priceQuery?.data === 'number' && !Number.isNaN($priceQuery.data)}
-							{$priceQuery.data.toLocaleString(undefined, {
-								maximumFractionDigits: 0,
-							})}
+							{formatSats($priceQuery.data)}
 							sats
 						{:else}
 							<i class="text-lg">price ({price} {currency}) could not be converted</i>

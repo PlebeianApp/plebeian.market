@@ -2,7 +2,7 @@
 	import { Button } from '$lib/components/ui/button'
 	import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '$lib/components/ui/collapsible'
 	import { cart } from '$lib/stores/cart'
-	import { debounce } from '$lib/utils'
+	import { debounce, formatSats } from '$lib/utils'
 
 	export let showActions = false
 
@@ -21,9 +21,7 @@
 			<span class="text-xl font-bold">Total:</span>
 			<div class="text-right">
 				<div class="text-2xl font-bold">
-					{grandTotal.grandTotalInSats.toLocaleString(undefined, {
-						maximumFractionDigits: 0,
-					})} sats
+					{formatSats(grandTotal.grandTotalInSats)} sats
 				</div>
 			</div>
 		</div>
@@ -39,27 +37,15 @@
 				<div class="mt-4 space-y-2">
 					<div class="flex justify-between mb-2">
 						<span>Subtotal:</span>
-						<span
-							>{grandTotal.grandSubtotalInSats.toLocaleString(undefined, {
-								maximumFractionDigits: 0,
-							})} sats</span
-						>
+						{formatSats(grandTotal.grandSubtotalInSats)} sats
 					</div>
 					<div class="flex justify-between mb-2">
 						<span>Shipping:</span>
-						<span
-							>{grandTotal.grandShippingInSats.toLocaleString(undefined, {
-								maximumFractionDigits: 0,
-							})} sats</span
-						>
+						{formatSats(grandTotal.grandShippingInSats)} sats
 					</div>
 					<div class="flex justify-between font-bold text-lg">
 						<span>Grand Total:</span>
-						<span
-							>{grandTotal.grandTotalInSats.toLocaleString(undefined, {
-								maximumFractionDigits: 0,
-							})} sats</span
-						>
+						{formatSats(grandTotal.grandTotalInSats)} sats
 					</div>
 				</div>
 			</CollapsibleContent>

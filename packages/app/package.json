@@ -60,6 +60,7 @@
 		"@floating-ui/dom": "^1.6.10",
 		"@fontsource/ibm-plex-mono": "^5.0.13",
 		"@gandlaf21/bolt11-decode": "^3.1.1",
+		"@getalby/lightning-tools": "^5.0.3",
 		"@iconify-json/bitcoin-icons": "^1.2.0",
 		"@internationalized/date": "^3.5.4",
 		"@nostr-dev-kit/ndk": "^2.10.0",

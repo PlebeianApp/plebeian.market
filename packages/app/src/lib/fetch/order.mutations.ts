@@ -1,18 +1,45 @@
+import type { OrderFilter } from '$lib/schema'
 import type { DisplayOrder } from '$lib/server/orders.service'
 import { createMutation } from '@tanstack/svelte-query'
 import ndkStore from '$lib/stores/ndk'
 import { get } from 'svelte/store'
 
-import type { OrderStatus } from '@plebeian/database'
+import type { Order, OrderStatus } from '@plebeian/database'
 
 import { createRequest, queryClient } from './client'
 
 declare module './client' {
 	interface Endpoints {
-		[k: `PUT /api/v1/orders/${string}/status`]: Operation<string, 'PUT', never, { status: OrderStatus }, DisplayOrder, never>
+		'POST /api/v1/orders': Operation<string, 'POST', never, OrderFilter, Order, never>
+		[k: `PUT /api/v1/orders/${string}`]: Operation<string, 'PUT', never, Partial<OrderFilter>, Order, never>
 	}
 }
 
+export const createOrderMutation = createMutation(
+	{
+		mutationKey: [],
+		mutationFn: async (orderFilter: OrderFilter) => {
+			return createRequest(`POST /api/v1/orders`, {
+				auth: true,
+				body: orderFilter,
+			})
+		},
+	},
+	queryClient,
+)
+
+export const updateOrderMutation = createMutation(
+	{
+		mutationKey: [],
+		mutationFn: async ([orderId, orderFilter]: [string, Partial<OrderFilter>]) => {
+			return createRequest(`PUT /api/v1/orders/${orderId}`, {
+				auth: true,
+				body: orderFilter,
+			})
+		},
+	},
+	queryClient,
+)
 export const updateOrderStatusMutation = createMutation(
 	{
 		mutationKey: [],
@@ -28,13 +55,11 @@ export const updateOrderStatusMutation = createMutation(
 			}
 			return null
 		},
-		onSuccess: (updatedOrder: DisplayOrder | null) => {
-			if (updatedOrder) {
-				const $ndkStore = get(ndkStore)
-				queryClient.invalidateQueries({ queryKey: ['orders', $ndkStore.activeUser?.pubkey] })
-				queryClient.invalidateQueries({ queryKey: ['orders', $ndkStore.activeUser?.pubkey, 'buyer'] })
-				queryClient.invalidateQueries({ queryKey: ['orders', $ndkStore.activeUser?.pubkey, 'seller'] })
-			}
+		onSuccess: () => {
+			const $ndkStore = get(ndkStore)
+			queryClient.invalidateQueries({ queryKey: ['orders', $ndkStore.activeUser?.pubkey] })
+			queryClient.invalidateQueries({ queryKey: ['orders', $ndkStore.activeUser?.pubkey, 'buyer'] })
+			queryClient.invalidateQueries({ queryKey: ['orders', $ndkStore.activeUser?.pubkey, 'seller'] })
 		},
 	},
 	queryClient,

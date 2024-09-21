@@ -5,7 +5,9 @@ import { debounce, resolveQuery } from '$lib/utils'
 import { toast } from 'svelte-sonner'
 import { derived, get, writable } from 'svelte/store'
 
-import type { ProductImage, ProductShipping } from '@plebeian/database'
+import type { InvoiceStatus, OrderMessage, OrderStatus, ProductImage, ProductShipping } from '@plebeian/database'
+
+import { checkoutFormStore, currentStep } from './checkout'
 
 export interface CartProduct {
 	id: string
@@ -32,10 +34,24 @@ export interface CartUser {
 	stalls: string[]
 }
 
-interface NormalizedCart {
+export interface InvoiceMessage {
+	id: string
+	createdAt: number
+	updatedAt: number
+	orderId: string
+	totalAmount: number
+	invoiceStatus: InvoiceStatus
+	paymentId: string
+	paymentRequest: string
+	proof: string | null
+}
+
+export interface NormalizedCart {
 	users: Record<string, CartUser>
 	stalls: Record<string, CartStall>
 	products: Record<string, CartProduct>
+	orders: Record<string, OrderMessage>
+	invoices: Record<string, InvoiceMessage>
 }
 
 function createCart() {
@@ -64,7 +80,7 @@ function createCart() {
 				return JSON.parse(storedCart)
 			}
 		}
-		return { users: {}, stalls: {}, products: {} }
+		return { users: {}, stalls: {}, products: {}, orders: {}, invoices: {} }
 	}
 
 	const findOrCreateUserStallProduct = (cart: NormalizedCart, userPubkey: string, stallId: string, productId?: string) => {
@@ -273,10 +289,21 @@ function createCart() {
 		},
 
 		clear: () => {
-			set({ users: {}, stalls: {}, products: {} })
+			set({ users: {}, stalls: {}, products: {}, orders: {}, invoices: {} })
 			if (typeof sessionStorage !== 'undefined') {
 				sessionStorage.removeItem('cart')
 			}
+			currentStep.set(0)
+			checkoutFormStore.set(null)
+		},
+		clearKeys: (keys: (keyof NormalizedCart)[]) => {
+			update((cart) => {
+				keys.forEach((key) => {
+					cart[key] = {}
+				})
+				batchUpdate(cart)
+				return cart
+			})
 		},
 		handleProductUpdate: (event: CustomEvent) => {
 			const { action, userPubkey, stallId, productId, amount } = event.detail
@@ -317,7 +344,42 @@ function createCart() {
 			})
 		},
 		calculateUserTotal,
+		calculateStallTotal,
 		calculateGrandTotal,
+		addOrder(order: OrderMessage) {
+			update((cart) => {
+				cart.orders = {
+					...cart.orders,
+					[order.id as string]: order,
+				}
+				batchUpdate(cart)
+				return cart
+			})
+		},
+		addInvoice(invoice: InvoiceMessage) {
+			update((cart) => {
+				cart.invoices = {
+					...cart.invoices,
+					[invoice.id]: invoice,
+				}
+				batchUpdate(cart)
+				return cart
+			})
+		},
+		updateOrderStatus(orderId: string, status: OrderStatus) {
+			update((cart) => {
+				if (cart.orders[orderId]) {
+					cart.orders[orderId] = {
+						...cart.orders[orderId],
+						status: status,
+					}
+				} else {
+					console.warn(`Attempted to update non-existent order: ${orderId}`)
+				}
+				batchUpdate(cart)
+				return cart
+			})
+		},
 	}
 }
 

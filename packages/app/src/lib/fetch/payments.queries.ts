@@ -30,6 +30,20 @@ export const paymentsQuery = createQuery(
 	queryClient,
 )
 
+export const createPaymentsForUserQuery = (userId: string) =>
+	createQuery<RichPaymentDetail[]>(
+		{
+			queryKey: ['paymentDetails', userId],
+			queryFn: async () => {
+				const paymentDetails = await createRequest(`GET /api/v1/payments/?userId=${userId}`, {
+					auth: true,
+				})
+				return paymentDetails
+			},
+		},
+		queryClient,
+	)
+
 export const paymentsForStallQuery = (stallId: string) =>
 	createQuery<RichPaymentDetail[]>(
 		{

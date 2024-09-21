@@ -10,7 +10,8 @@
 	import { queryClient } from '$lib/fetch/client'
 	import ndkStore from '$lib/stores/ndk'
 	import { payInvoiceWithFirstWorkingNWC } from '$lib/stores/nwc'
-	import { onMount, tick } from 'svelte'
+	import { checkTargetUserHasLightningAddress } from '$lib/utils'
+	import { onDestroy, onMount, tick } from 'svelte'
 	import { toast } from 'svelte-sonner'
 
 	import LnDialog from './ln-dialog.svelte'
@@ -27,38 +28,16 @@
 	let qrDialogOpen = false
 	let zapDialogOpen = false
 	let nwcSpinnerShown = false
+	let zapSubscription: ReturnType<typeof $ndkStore.subscribe> | undefined
 
 	$: zapAmountMSats = zapAmountSats * 1000
 
-	let zapSubscription: (() => void) | undefined
-
 	onMount(async () => {
-		const checkZapInfoTimeout = setTimeout(() => {
-			if (userCanBeZapped.length === 0) {
-				isLoading = false
-			}
-		}, 5000)
-
-		userCanBeZapped = await checkTargetUserHasLightningAddress()
-		clearTimeout(checkZapInfoTimeout)
-		isLoading = false
-
-		// Ensure the component updates after setting isLoading
-		await tick()
+		userCanBeZapped = await checkTargetUserHasLightningAddress(userIdToZap)
 	})
 
-	async function checkTargetUserHasLightningAddress(): Promise<NDKZapMethodInfo[]> {
-		const user = $ndkStore.getUser({ pubkey: userIdToZap })
-		try {
-			return await user.getZapInfo()
-		} catch (error) {
-			console.error('Failed to get zap info:', error)
-			return []
-		}
-	}
-
 	function startZapSubscription() {
-		const subscription = $ndkStore
+		zapSubscription = $ndkStore
 			.subscribe({
 				kinds: [NDKKind.Zap],
 				'#p': [userIdToZap],
@@ -69,15 +48,12 @@
 				if (bolt11Tag && bolt11Tag === lightningInvoiceData) {
 					toast.success('Zap successful')
 					nwcSpinnerShown = false
-					if (zapSubscription) {
-						zapSubscription()
-						zapSubscription = undefined
-					}
+					zapSubscription?.stop()
 					setTimeout(() => (zapDialogOpen = false), 200)
 				}
 			})
 
-		return () => subscription.stop()
+		return () => zapSubscription?.stop()
 	}
 
 	async function handleZapForType(zapType: NDKZapMethodInfo, invoiceInterface: InvoiceInterface) {
@@ -103,7 +79,7 @@
 			qrDialogOpen = true
 		} else if (invoiceInterface === 'nwc') {
 			nwcSpinnerShown = true
-			zapSubscription = startZapSubscription()
+			startZapSubscription()
 			const paidInvoice = await payInvoiceWithFirstWorkingNWC(zapRes)
 			if (!paidInvoice.error) {
 				// TODO: invlaidating can be improved
@@ -117,6 +93,10 @@
 		console.log('handleNip61Zap:', info)
 		// TODO: Implementation needed
 	}
+
+	onDestroy(() => {
+		zapSubscription?.stop()
+	})
 </script>
 
 <LnDialog

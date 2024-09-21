@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation'
 	import { cart } from '$lib/stores/cart'
+	import { closeDrawer } from '$lib/stores/drawer-ui'
 
 	import Button from '../ui/button/button.svelte'
 	import ScrollArea from '../ui/scroll-area/scroll-area.svelte'
@@ -26,7 +27,12 @@
 		<GrandTotalDisplay showActions={true}>
 			<div slot="actions" class="flex justify-between mt-4">
 				<Button variant="outline" on:click={clearCart}>Clear Cart</Button>
-				<Button on:click={() => goto('/checkout')}>Proceed to Checkout</Button>
+				<Button
+					on:click={() => {
+						goto('/checkout')
+						closeDrawer()
+					}}>Proceed to Checkout</Button
+				>
 			</div>
 		</GrandTotalDisplay>
 	</div>

@@ -1,7 +1,7 @@
 import { error } from '@sveltejs/kit'
 
 import type { PaymentDetail } from '@plebeian/database'
-import { and, db, eq, paymentDetails } from '@plebeian/database'
+import { and, db, eq, isNull, or, paymentDetails } from '@plebeian/database'
 
 export type RichPaymentDetail = PaymentDetail & {
 	stallName: string
@@ -95,7 +95,7 @@ export const deletePaymentDetail = async (paymentDetailId: string): Promise<bool
 
 export const getPaymentDetailsByStallId = async (stallId: string): Promise<RichPaymentDetail[]> => {
 	const paymentDetailsForStall = await db.query.paymentDetails.findMany({
-		where: eq(paymentDetails.stallId, stallId),
+		where: or(eq(paymentDetails.stallId, stallId), isNull(paymentDetails.stallId)),
 	})
 	return await Promise.all(paymentDetailsForStall.map(enrichWithStallName))
 }
