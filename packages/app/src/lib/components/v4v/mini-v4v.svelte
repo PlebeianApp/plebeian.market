@@ -71,7 +71,7 @@
 			</div>
 			<div class="flex gap-2 items-center">
 				<small>{formatSats(amountSats)} sats</small>
-				<small>({percentage * 100}% of Subtotal)</small>
+				<small>({(percentage * 100).toFixed(2)}% of Subtotal)</small>
 			</div>
 		</div>
 	</div>

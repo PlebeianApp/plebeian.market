@@ -18,6 +18,7 @@
 
 	export let paymentDetail: RichPaymentDetail
 	export let amountSats: number
+	export let paymentId: string
 
 	const dispatch = createEventDispatcher()
 	const RELAYS = ['wss://relay.damus.io', 'wss://relay.nostr.band', 'wss://nos.lol', 'wss://relay.nostr.net', 'wss://relay.minibits.cash']
@@ -50,9 +51,7 @@
 					await ln.fetch()
 					const allowsNostr = ln.lnurlpData?.allowsNostr ?? false
 					addRelaysToNDKPool()
-
 					invoice = allowsNostr ? await generateZapInvoice(ln) : await ln.requestInvoice({ satoshi: formatSats(amountSats, false) })
-
 					if (allowsNostr) {
 						ln.domain === 'getalby.com' ? startZapCheck() : startZapSubscription()
 					}
@@ -149,7 +148,7 @@
 		cleanupFunctions.forEach((fn) => fn())
 		remainingTime = 'Expired'
 		toast.error('Invoice expired')
-		dispatch('paymentExpired', { paymentRequest: invoice!.paymentRequest, preimage: null, amountSats })
+		dispatch('paymentExpired', { paymentRequest: invoice!.paymentRequest, preimage: null, amountSats, paymentId })
 	}
 
 	async function verifyPayment() {
@@ -173,14 +172,20 @@
 	function handleSuccessfulPayment(preimage: string) {
 		paymentStatus = 'success'
 		toast.success('Payment successful')
-		dispatch('paymentComplete', { paymentRequest: invoice!.paymentRequest, preimage, amountSats })
+		dispatch('paymentComplete', { paymentRequest: invoice!.paymentRequest, preimage, amountSats, paymentId })
 		cleanupFunctions.forEach((fn) => fn())
 	}
 
 	function handleSkipPayment() {
 		paymentStatus = 'canceled'
 		cleanupFunctions.forEach((fn) => fn())
-		dispatch('paymentCanceled', { paymentRequest: invoice!.paymentRequest, preimage: null, amountSats })
+		dispatch('paymentCanceled', { paymentRequest: invoice!.paymentRequest, preimage: null, amountSats, paymentId })
+	}
+
+	function handleSkipInvalidPayment() {
+		paymentStatus = 'canceled'
+		cleanupFunctions.forEach((fn) => fn())
+		dispatch('paymentCanceled', { paymentRequest: '', preimage: null, amountSats, paymentId })
 	}
 
 	async function handleWeblnPay() {
@@ -276,7 +281,7 @@
 			</div>
 		{/if}
 
-		<div class="flex gap-2">
+		<div class="grid grid-cols-3 col gap-2">
 			{#if showManualVerification}
 				<Button on:click={() => (showPreimageInput = true)} class="w-full mb-4">I've already paid</Button>
 			{/if}
@@ -300,6 +305,7 @@
 		</Collapsible.Root>
 	{:else}
 		<p>Generating invoice...</p>
+		<Button variant="outline" on:click={handleSkipInvalidPayment}>Skip Payment</Button>
 	{/if}
 
 	{#if paymentStatus === 'success'}

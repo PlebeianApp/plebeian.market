@@ -2,17 +2,19 @@
 	import type { CarouselAPI } from '$lib/components/ui/carousel/context.js'
 	import type { V4VDTO } from '$lib/fetch/v4v.queries'
 	import type { OrderFilter } from '$lib/schema'
+	import type { RichPaymentDetail } from '$lib/server/paymentDetails.service'
 	import type { CartProduct, CartStall, InvoiceMessage } from '$lib/stores/cart'
+	import type { Writable } from 'svelte/store'
 	import * as Carousel from '$lib/components/ui/carousel/index.js'
 	import * as Select from '$lib/components/ui/select'
-	import { createInvoiceMutation } from '$lib/fetch/invoices.mutations'
 	import { createPaymentsForUserQuery } from '$lib/fetch/payments.queries'
 	import { v4VForUserQuery } from '$lib/fetch/v4v.queries'
 	import { cart } from '$lib/stores/cart'
 	import ndkStore from '$lib/stores/ndk'
 	import { checkTargetUserHasLightningAddress, decodePk, formatSats } from '$lib/utils'
-	import { createEventDispatcher, tick } from 'svelte'
+	import { createEventDispatcher, onMount, tick } from 'svelte'
 	import { toast } from 'svelte-sonner'
+	import { writable } from 'svelte/store'
 
 	import type { OrderStatus, PaymentRequestMessage } from '@plebeian/database/constants'
 	import { ORDER_STATUS } from '@plebeian/database/constants'
@@ -32,6 +34,30 @@
 
 	let carouselCount = 0
 	let carouselCurrent = 0
+	let paymentStatuses: Writable<
+		{
+			id: string
+			status: PaymentStatus | undefined
+		}[]
+	> = writable([])
+	let allPaymentsPaid = false
+
+	$: {
+		if (orderTotal && v4vShares && v4vShares.length > 0 && $paymentStatuses.length === 0) {
+			paymentStatuses.set([{ id: 'merchant', status: undefined }, ...v4vShares.map((share) => ({ id: share.target, status: undefined }))])
+		}
+	}
+
+	$: {
+		if (paymentStatuses) {
+			allPaymentsPaid = $paymentStatuses.every((status) => {
+				return status.status === 'paid' || status.status === 'expired' || status.status === 'canceled'
+			})
+			if (allPaymentsPaid) {
+				dispatch('valid', true)
+			}
+		}
+	}
 
 	$: if (api) {
 		carouselCount = api.scrollSnapList().length
@@ -39,6 +65,16 @@
 		api.on('select', () => {
 			carouselCurrent = api.selectedScrollSnap() + 1
 		})
+	}
+
+	const v4vPaymentDetail: RichPaymentDetail = {
+		id: 'v4v',
+		paymentMethod: 'ln',
+		isDefault: false,
+		paymentDetails: '',
+		stallId: order.stallId,
+		stallName: '',
+		userId: order.sellerUserId,
 	}
 
 	const dispatch = createEventDispatcher<{ valid: boolean }>()
@@ -54,17 +90,19 @@
 
 	let orderTotal: Awaited<ReturnType<typeof cart.calculateStallTotal>>
 
-	type ShareWithInvoice = V4VDTO & { invoice: string; canReceive: boolean; max: number; min: number }
+	type ShareWithInvoice = V4VDTO & { canReceive: boolean; max: number; min: number; paymentDetail: RichPaymentDetail }
 
 	let v4vShares: ShareWithInvoice[] = []
 	let v4vTotalPercentage: number | null = null
 
 	$: v4vQuery = v4VForUserQuery(order.sellerUserId)
-	$: if ($v4vQuery.data) {
+
+	onMount(() => {
+		if (!$v4vQuery.data) return
+
 		Promise.all(
 			$v4vQuery.data.map(async (v4v) => {
 				const res = await checkTargetUserHasLightningAddress(decodePk(v4v.target))
-				console.log('res', res)
 				const canBeZappedRes = res.filter((method) => {
 					const amount = v4v.amount * orderTotal.subtotalInSats
 					const max = method.data.maxSendable / 1000
@@ -73,21 +111,21 @@
 					return canReceive
 				})
 
-				console.log('canBeZappedRes', canBeZappedRes)
-
 				const user = $ndkStore.getUser({ npub: v4v.target })
-				const zapRes = canBeZappedRes.length > 0 ? await user.zap(v4v.amount * 1000) : ''
-
-				if (typeof zapRes !== 'string') {
-					return { ...v4v, invoice: '' } as ShareWithInvoice
-				}
-
-				return { ...v4v, invoice: zapRes } as ShareWithInvoice
+				const userProfile = await user.fetchProfile()
+				return {
+					...v4v,
+					paymentDetail: {
+						...v4vPaymentDetail,
+						paymentDetails: userProfile?.lud16,
+					},
+				} as ShareWithInvoice
 			}),
 		).then((results) => {
 			v4vShares = results
+			v4vTotalPercentage = results.reduce((sum, item) => sum + item.amount, 0)
 		})
-	}
+	})
 
 	type PaymentStatus = 'paid' | 'expired' | 'canceled'
 	const statusMapping: Record<PaymentStatus, OrderStatus> = {
@@ -101,28 +139,48 @@
 		paymentCanceled: 'canceled',
 	}
 
+	function moveToNextPaymentProcessor() {
+		if (api) {
+			const nextIndex = api.selectedScrollSnap() + 1
+			if (nextIndex < carouselCount) {
+				api.scrollTo(nextIndex)
+			} else {
+				api.scrollTo(0)
+			}
+		}
+	}
+
 	async function handlePaymentEvent(
-		event: CustomEvent<{ paymentRequest: string; preimage: string | null; amount: number; isV4V?: boolean }>,
+		event: CustomEvent<{ paymentRequest: string; preimage: string | null; amount: number; isV4V: boolean; paymentId: string }>,
 	) {
 		const status = paymentEventToStatus[event.type]
 		if (!status) {
 			console.error(`Unknown payment event type: ${event.type}`)
-			return dispatch('valid', false)
+			return
 		}
 
 		if (!order?.id || !selectedPaymentDetail?.id) {
 			toast.error(`Invalid order or payment details`)
-			return dispatch('valid', false)
+			return
 		}
 
 		try {
 			const invoice = createInvoice(event.detail, status, event.detail.amount, event.detail.isV4V)
 			await processPayment(invoice, status)
-			dispatch('valid', true)
+			moveToNextPaymentProcessor()
+
+			// payment is indentided by the paymentId, is either 'merchant' or the target npub
+
+			const paymentIndex = paymentStatuses.update((statuses) => {
+				const index = statuses.findIndex((status) => status.id === event.detail.paymentId)
+				if (index !== -1) {
+					statuses[index].status = status
+				}
+				return statuses
+			})
 		} catch (error) {
 			console.error(`Error handling ${status} payment:`, error)
 			toast.error(`Failed to process ${status} payment: ${error instanceof Error ? error.message : 'Unknown error'}`)
-			dispatch('valid', false)
 		}
 	}
 
@@ -163,10 +221,6 @@
 			],
 		}
 
-		// TODO: are we creating the invoices here?
-
-		// await $createInvoiceMutation.mutate(invoice)
-
 		// Simulate sending DMs (commented out for now)
 		await tick()
 		await new Promise((resolve) => setTimeout(resolve, 1000))
@@ -191,9 +245,9 @@
 	}
 </script>
 
-<div class="flex flex-col items-center gap-4">
-	<MiniStall stallId={order.stallId} mode="view" />
+<div class="flex flex-row gap-8">
 	<div class="w-1/2 flex flex-col gap-4">
+		<MiniStall stallId={order.stallId} mode="view" />
 		<div class="flex flex-col gap-2">
 			{#each stall.products as productId}
 				<ProductInCart product={products[productId]} mode="payment" />
@@ -217,7 +271,7 @@
 				<div class="flex flex-col gap-2">
 					<h3 class="font-semibold">Shares:</h3>
 					<div
-						class="flex justify-between font-bold border-black border p-2 hover:bg-gray-100"
+						class="flex justify-between font-bold border-black items-center border p-2 hover:bg-gray-100"
 						class:border-l-8={carouselCurrent === 1}
 						role="button"
 						tabindex="0"
@@ -237,23 +291,26 @@
 								)} sats</span
 							>
 						</div>
+						{#if !$paymentStatuses.find((status) => status.id === 'merchant')?.status}
+							<span class="i-mdi-timer-sand text-black w-6 h-6 animate-pulse"> </span>
+						{/if}
 					</div>
 					{#each v4vShares as share, index}
-						{#if share.invoice}
-							<div
-								class:border-l-8={carouselCurrent === index + 1}
-								class="border-black border hover:bg-gray-100"
-								role="button"
-								tabindex="0"
-								on:click={() => api?.scrollTo(index + 1)}
-								on:keydown={(e) => e.key === 'Enter' && api?.scrollTo(index + 1)}
-							>
-								<MiniV4v npub={share.target} percentage={share.amount} amountSats={orderTotal.subtotalInSats * share.amount} />
-							</div>
-						{:else}
-							<div class="border-black border" data-tooltip="This v4 recipient cant be zapped.">
-								<MiniV4v npub={share.target} percentage={share.amount} amountSats={orderTotal.subtotalInSats * share.amount} />
-							</div>{/if}
+						{@const status = $paymentStatuses.find((status) => status.id === share.target)?.status}
+						<div
+							class:border-l-8={carouselCurrent === index + 2}
+							class="border-black border hover:bg-gray-100 flex items-center justify-between p-2"
+							role="button"
+							tabindex="0"
+							on:click={() => api?.scrollTo(index + 1)}
+							on:keydown={(e) => e.key === 'Enter' && api?.scrollTo(index + 1)}
+						>
+							<MiniV4v npub={share.target} percentage={share.amount} amountSats={orderTotal.subtotalInSats * share.amount} />
+
+							{#if !status}
+								<span class="i-mdi-timer-sand text-black w-6 h-6 animate-pulse"> </span>
+							{/if}
+						</div>
 					{/each}
 				</div>
 			{/if}
@@ -286,7 +343,8 @@
 							<div class="p-1">
 								<PaymentProcessor
 									paymentDetail={selectedPaymentDetail}
-									amountSats={orderTotal.totalInSats}
+									amountSats={orderTotal.subtotalInSats * (1 - (v4vTotalPercentage ?? 0)) + orderTotal.shippingInSats}
+									paymentId="merchant"
 									on:paymentComplete={handlePaymentEvent}
 									on:paymentExpired={handlePaymentEvent}
 									on:paymentCanceled={handlePaymentEvent}
@@ -294,28 +352,19 @@
 							</div>
 						</Carousel.Item>
 
-						{#each v4vShares as share}
-							{#if share.invoice}
-								<Carousel.Item>
-									<div class="p-1">
-										<PaymentProcessor
-											paymentDetail={{
-												id: 'v4v',
-												paymentMethod: 'ln',
-												isDefault: false,
-												paymentDetails: share.invoice,
-												stallId: order.stallId,
-												stallName: '',
-												userId: order.sellerUserId,
-											}}
-											amountSats={orderTotal.subtotalInSats * share.amount}
-											on:paymentComplete={handlePaymentEvent}
-											on:paymentExpired={handlePaymentEvent}
-											on:paymentCanceled={handlePaymentEvent}
-										/>
-									</div>
-								</Carousel.Item>
-							{/if}
+						{#each v4vShares as share, index}
+							<Carousel.Item>
+								<div class="p-1">
+									<PaymentProcessor
+										paymentDetail={share.paymentDetail}
+										amountSats={orderTotal.subtotalInSats * share.amount}
+										paymentId={share.target}
+										on:paymentComplete={handlePaymentEvent}
+										on:paymentExpired={handlePaymentEvent}
+										on:paymentCanceled={handlePaymentEvent}
+									/>
+								</div>
+							</Carousel.Item>
 						{/each}
 					</Carousel.Content>
 					<Carousel.Previous />
@@ -326,6 +375,7 @@
 			<PaymentProcessor
 				paymentDetail={selectedPaymentDetail}
 				amountSats={orderTotal.totalInSats}
+				paymentId="merchant"
 				on:paymentComplete={handlePaymentEvent}
 				on:paymentExpired={handlePaymentEvent}
 				on:paymentCanceled={handlePaymentEvent}
