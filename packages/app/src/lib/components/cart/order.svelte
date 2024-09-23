@@ -102,8 +102,8 @@
 				><strong>Total in sats:</strong>
 				{formatSats(userTotal.totalInSats)} sats</small
 			>
-			<Separator />
 			{#if v4vTotalPercentage}
+				<Separator />
 				<div class="flex flex-col justify-end">
 					<small>
 						{formatSats(userTotal.subtotalInSats * (1 - (v4vTotalPercentage ?? 0)))} sats ({(1 - (v4vTotalPercentage ?? 0)) * 100}% of

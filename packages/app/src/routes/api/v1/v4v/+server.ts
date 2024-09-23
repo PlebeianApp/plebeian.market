@@ -33,6 +33,7 @@ export async function PUT({ request, url: { searchParams } }) {
 					target: z.string(),
 				}),
 			)
+			.min(0)
 			.safeParse(body)
 
 		if (!parseResult.success) {

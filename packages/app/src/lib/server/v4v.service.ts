@@ -33,6 +33,10 @@ export const setV4VSharesForUser = async (decodedOwnerPk: string, shares: V4VSha
 				key: share.target,
 			}))
 
+			if (newShares.length === 0) {
+				return []
+			}
+
 			await trx.insert(userMeta).values(newShares).execute()
 		})
 

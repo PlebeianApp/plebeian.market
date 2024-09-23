@@ -198,10 +198,10 @@
 										{formatSats(userTotal.subtotalInSats * v4vTotalPercentage)} sats
 									</small>
 								</div>
+								<Separator />
 							{/if}
 						</div>
 					</div>
-					<Separator />
 				{/if}
 
 				<div

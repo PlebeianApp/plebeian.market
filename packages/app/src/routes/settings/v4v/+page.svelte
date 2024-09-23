@@ -9,6 +9,7 @@
 	import { setV4VForUserMutation } from '$lib/fetch/v4v.mutations'
 	import { v4VForUserQuery } from '$lib/fetch/v4v.queries'
 	import { decimalToPercentage, nav_back, stringToHexColor } from '$lib/utils'
+	import { toast } from 'svelte-sonner'
 
 	import type { PageData } from './$types'
 
@@ -114,6 +115,7 @@
 		}))
 
 		await $setV4VForUserMutation.mutate(adjustedRecipients)
+		toast.success('V4V values successfully updated')
 	}
 </script>
 
