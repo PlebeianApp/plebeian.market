@@ -1,12 +1,12 @@
 <script lang="ts">
 	import type { NDKSubscription } from '@nostr-dev-kit/ndk'
 	import QrCode from '@castlenine/svelte-qrcode'
-	import { decode } from '@gandlaf21/bolt11-decode'
+	import { Invoice } from '@getalby/lightning-tools'
 	import { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk'
 	import * as Dialog from '$lib/components/ui/dialog/index.js'
 	import ndkStore from '$lib/stores/ndk'
 	import { copyToClipboard, truncateText } from '$lib/utils'
-	import { createEventDispatcher, onDestroy } from 'svelte'
+	import { createEventDispatcher, onDestroy, onMount } from 'svelte'
 	import { toast } from 'svelte-sonner'
 
 	import Button from '../ui/button/button.svelte'
@@ -14,8 +14,12 @@
 	export let userIdToZap: string
 	export let qrDialogOpen = false
 	export let zapAmountSats = 0
-	export let lightningInvoiceData: string | undefined
+	export let bolt11String: string
+	let lnInvoice: Invoice
 
+	onMount(() => {
+		lnInvoice = new Invoice({ pr: bolt11String })
+	})
 	const dispatch = createEventDispatcher()
 
 	let subscription: NDKSubscription | undefined
@@ -23,9 +27,8 @@
 	let timeLeft: number | null = null
 	let interval: ReturnType<typeof setInterval> | undefined
 
-	$: if (qrDialogOpen && lightningInvoiceData) {
-		const decodedInvoice = decode(lightningInvoiceData)
-		expiryTimestamp = Date.now() / 1000 + decodedInvoice.expiry
+	$: if (qrDialogOpen && lnInvoice?.expiry) {
+		expiryTimestamp = Date.now() / 1000 + lnInvoice.expiry
 		setupCountdown()
 		setupSubscription()
 	} else {
@@ -68,7 +71,7 @@
 	}
 
 	function handleZapEvent(event: NDKEvent) {
-		if (event.tagValue('bolt11') === lightningInvoiceData) {
+		if (event.tagValue('bolt11') === lnInvoice?.paymentRequest) {
 			toast.success('LN Zap successful')
 			dispatch('zapSuccess', event)
 		}
@@ -80,8 +83,8 @@
 	}
 
 	function handleCopyClick() {
-		if (lightningInvoiceData) {
-			copyToClipboard(lightningInvoiceData)
+		if (lnInvoice) {
+			copyToClipboard(lnInvoice.paymentRequest)
 			toast.success('Invoice copied to clipboard')
 		}
 	}
@@ -103,10 +106,10 @@
 			<Dialog.Description class="text-black">Scan this invoice with your favourite lightning network wallet.</Dialog.Description>
 		</Dialog.Header>
 		<div class="flex flex-col items-center gap-2">
-			{#if lightningInvoiceData}
-				<QrCode data={lightningInvoiceData} logoPath="/logo.svg" />
+			{#if lnInvoice}
+				<QrCode data={lnInvoice.paymentRequest} logoPath="/logo.svg" />
 				<Button variant="secondary" class="relative overflow-auto flex flex-row gap-2 bg-transparent" on:click={handleCopyClick}>
-					<code>{truncateText(lightningInvoiceData, 30)}</code>
+					<code>{truncateText(lnInvoice.paymentRequest, 30)}</code>
 					<span class="i-tdesign-copy" style="width: 1rem; height: 1rem; color: black;"></span>
 				</Button>
 				<p class="text-sm text-gray-500">

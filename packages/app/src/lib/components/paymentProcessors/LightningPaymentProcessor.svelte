@@ -8,8 +8,9 @@
 	import { Button } from '$lib/components/ui/button'
 	import * as Collapsible from '$lib/components/ui/collapsible'
 	import { Input } from '$lib/components/ui/input'
+	import { queryClient } from '$lib/fetch/client'
 	import ndkStore, { GenericKeySigner } from '$lib/stores/ndk'
-	import { balanceOfWorkingNWCs, payInvoiceWithFirstWorkingNWC } from '$lib/stores/nwc'
+	import { canPayWithNWC, payInvoiceWithNWC, updateBalanceOfWorkingNWCs } from '$lib/stores/nwc'
 	import { copyToClipboard, formatSats, truncateText } from '$lib/utils'
 	import { addSeconds, differenceInSeconds, format } from 'date-fns'
 	import { NIP05_REGEX } from 'nostr-tools/nip05'
@@ -33,7 +34,7 @@
 	let showManualVerification = false
 
 	$: url = 'lightning://' + invoice?.paymentRequest
-	$: canPayWithNWC = $balanceOfWorkingNWCs >= amountSats
+	$: canUseNWC = canPayWithNWC(amountSats)
 
 	let prevPaymentDetail: RichPaymentDetail | null = null
 	let prevAmountSats: number | null = null
@@ -56,8 +57,6 @@
 					if (allowsNostr) {
 						ln.domain === 'getalby.com' ? startZapCheck() : startZapSubscription()
 					}
-				} else {
-					invoice = new Invoice({ pr: paymentDetail.paymentDetails })
 				}
 				setupExpiryCountdown()
 			} else if (paymentDetail.paymentMethod === 'on-chain') {
@@ -205,9 +204,11 @@
 
 		isLoading = true
 		try {
-			const paidInvoice = await payInvoiceWithFirstWorkingNWC(invoice.paymentRequest)
+			const paidInvoice = await payInvoiceWithNWC(invoice.paymentRequest, invoice.satoshi)
 			if (!paidInvoice.error && paidInvoice.result?.preimage) {
 				handleSuccessfulPayment(paidInvoice.result.preimage)
+				await queryClient.resetQueries({ queryKey: ['wallet-balance'] })
+				updateBalanceOfWorkingNWCs()
 			} else {
 				throw new Error(`${paidInvoice.error}`)
 			}
@@ -283,7 +284,7 @@
 			{#if 'webln' in window}
 				<Button on:click={handleWeblnPay} disabled={paymentStatus !== 'pending'}>Pay with WebLN</Button>
 			{/if}
-			{#if canPayWithNWC}
+			{#if canUseNWC}
 				<Button on:click={handleNWCPay} disabled={paymentStatus !== 'pending'}>Pay with NWC</Button>
 			{/if}
 			<Button variant="ghost" on:click={() => window.open(url, '_blank')}>Open in wallet</Button>

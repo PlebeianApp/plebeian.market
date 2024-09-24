@@ -18,7 +18,7 @@
 		relayUrls: wallet.walletRelays,
 		secret: wallet.walletSecret,
 	})
-	let walletBalanceQuery = createWalletBalanceQuery(nwc, walletId)
+	const walletBalanceQuery = createWalletBalanceQuery(nwc, walletId)
 
 	function toggleFormat() {
 		if (displayFormat === 'sats') displayFormat = 'btc'

@@ -7,7 +7,7 @@
 	import { checkoutFormStore } from '$lib/stores/checkout'
 	import ndkStore from '$lib/stores/ndk'
 	import { formatSats } from '$lib/utils'
-	import { createOrderMessage, sendDM } from '$lib/utils/utils.dm'
+	import { createOrderMessage, sendDM } from '$lib/utils/dm.utils'
 	import { createEventDispatcher } from 'svelte'
 	import { toast } from 'svelte-sonner'
 

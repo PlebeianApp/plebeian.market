@@ -3,80 +3,69 @@ import type { DisplayWallet } from '$lib/server/wallet.service'
 import { NDKNwc } from '@nostr-dev-kit/ndk'
 import { createWalletBalanceQuery } from '$lib/fetch/wallets.queries'
 import { EncryptedStorage, resolveQuery } from '$lib/utils'
-import { get, writable } from 'svelte/store'
+import { derived, get, writable } from 'svelte/store'
 
-import $ndkStore from './ndk'
+import ndkStore from './ndk'
 
-export const NWC_TIMEOUT = 5000
+const NWC_TIMEOUT = 2500
+const MAX_RETRIES = 3
 
-let ndkNWCs: { nwc: NDKNwc; id: string }[] = []
+type NWCWallet = {
+	nwc: NDKNwc
+	id: string
+	balance: number
+}
 
-export const balanceOfWorkingNWCs = writable<number>(0)
+const ndkNWCs = writable<NWCWallet[]>([])
 
-async function initializeNdkNWCs(): Promise<{ nwc: NDKNwc; id: string }[]> {
-	const $ndk = get($ndkStore)
-	if (!$ndk.activeUser) return []
+export const balanceOfWorkingNWCs = derived(ndkNWCs, ($ndkNWCs) => $ndkNWCs.reduce((total, wallet) => total + wallet.balance, 0) / 1000)
 
-	console.log('Initializing NWCs...', `nwc-wallets-${$ndk.activeUser.pubkey}`)
+async function initializeNdkNWCs(): Promise<NWCWallet[]> {
+	const $ndk = get(ndkStore)
+	if (!$ndk.activeUser || !$ndk.signer) return []
 
-	const encryptedStorage = new EncryptedStorage($ndk.signer!)
-	const nwcWalletsString = await encryptedStorage.getItem(`nwc-wallets-`)
-	const localWallets = nwcWalletsString ? (JSON.parse(nwcWalletsString) as Record<string, DisplayWallet['walletDetails']>) : {}
+	const pubkey = $ndk.activeUser.pubkey
+	console.log('Initializing NWCs...', `nwc-wallets:${pubkey}`)
 
-	const nwcs = Object.entries(localWallets).map(([id, walletDetails]) => ({
-		nwc: new NDKNwc({
+	const storedWallets = localStorage.getItem(`nwc-wallets:${pubkey}`)
+	if (!storedWallets) {
+		console.log('No NWC wallets found in local storage')
+		return []
+	}
+
+	const encryptedStorage = new EncryptedStorage($ndk.signer)
+	const nwcWalletsString = await encryptedStorage.getItem('nwc-wallets')
+	if (!nwcWalletsString) {
+		console.log('No encrypted NWC wallets found')
+		return []
+	}
+
+	const localWallets = JSON.parse(nwcWalletsString) as Record<string, DisplayWallet['walletDetails']>
+
+	const initializeWallet = async ([id, walletDetails]: [string, DisplayWallet['walletDetails']]): Promise<NWCWallet | null> => {
+		const nwc = new NDKNwc({
 			ndk: $ndk,
 			pubkey: walletDetails.walletPubKey,
 			relayUrls: walletDetails.walletRelays,
 			secret: walletDetails.walletSecret,
-		}),
-		id,
-	}))
+		})
 
-	await Promise.all(
-		nwcs.map(async ({ nwc }) => {
-			try {
-				await Promise.race([
-					nwc.blockUntilReady(NWC_TIMEOUT),
-					new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), NWC_TIMEOUT)),
-				])
-			} catch (error) {
-				console.error('Error initializing NWC:', error)
-			}
-		}),
-	)
-
-	return nwcs
-}
-
-export function setupNdkStoreListener() {
-	return $ndkStore.subscribe(async ($ndk) => {
-		if ($ndk.activeUser) {
-			console.log('NDK store changed, reinitializing NWCs...')
-			ndkNWCs = await initializeNdkNWCs()
-			updateBalanceOfWorkingNWCs()
+		try {
+			await Promise.race([
+				nwc.blockUntilReady(NWC_TIMEOUT),
+				new Promise((_, reject) => setTimeout(() => reject(new Error('NWC initialization timeout')), NWC_TIMEOUT)),
+			])
+			const balance = await getBalanceWithTimeout(nwc, id, NWC_TIMEOUT)
+			return { nwc, id, balance }
+		} catch (error) {
+			console.error(`Error initializing NWC ${id}:`, error)
+			return null
 		}
-	})
-}
-
-export const getMainNWCWallet = () => {
-	let retries = 0
-	const maxRetries = 3
-
-	const tryGetWallet = async (): Promise<NDKNwc | null> => {
-		if (ndkNWCs.length === 0 && retries < maxRetries) {
-			retries++
-			console.log(`Attempting to initialize NWCs (attempt ${retries}/${maxRetries})`)
-			await initNdkNWCs()
-			return tryGetWallet()
-		}
-
-		return ndkNWCs[0]?.nwc || null
 	}
 
-	return tryGetWallet()
+	const nwcs = await Promise.all(Object.entries(localWallets).map(initializeWallet))
+	return nwcs.filter((wallet): wallet is NWCWallet => wallet !== null)
 }
-
 async function getBalanceWithTimeout(nwc: NDKNwc, walletId: string, timeout: number): Promise<number> {
 	try {
 		const balancePromise = await resolveQuery(() => createWalletBalanceQuery(nwc, walletId), timeout)
@@ -87,34 +76,57 @@ async function getBalanceWithTimeout(nwc: NDKNwc, walletId: string, timeout: num
 	}
 }
 
-export async function payInvoiceWithFirstWorkingNWC(invoice: string): Promise<NDKNwcResponse<{ preimage: string }>> {
-	const maxRetries = 3
+export async function payInvoiceWithNWC(invoice: string, amountSats: number): Promise<NDKNwcResponse<{ preimage: string }>> {
 	let retries = 0
 
 	const tryPayInvoice = async (): Promise<NDKNwcResponse<{ preimage: string }>> => {
-		if (ndkNWCs.length === 0) {
-			if (retries < maxRetries) {
+		const currentNWCs = get(ndkNWCs)
+		const suitableWallet = currentNWCs.find((wallet) => wallet.balance >= amountSats * 1000 + 10000)
+
+		if (!suitableWallet) {
+			if (retries < MAX_RETRIES) {
 				retries++
-				console.log(`Payment attempt failed. Retrying (${retries}/${maxRetries})...`)
+				console.log(`No suitable wallet found. Retrying (${retries}/${MAX_RETRIES})...`)
 				await initNdkNWCs()
 				return tryPayInvoice()
 			}
-			throw new Error('No NWCs available')
+			throw new Error('No suitable NWC wallet available for this payment')
 		}
-		return (await ndkNWCs[0].nwc.payInvoice(invoice)) as NDKNwcResponse<{ preimage: string }>
+
+		console.log(`Attempting payment with wallet ID: ${suitableWallet.id}`)
+		try {
+			const result = (await suitableWallet.nwc.payInvoice(invoice)) as NDKNwcResponse<{ preimage: string }>
+			if (result.error) {
+				console.error(`Payment failed with wallet ${suitableWallet.id}:`, result.error)
+				throw new Error(`Payment failed with wallet ${suitableWallet.id}: ${result.error}`)
+			}
+			return result
+		} catch (error) {
+			console.error(`Error during payment with wallet ${suitableWallet.id}:`, error)
+			throw error
+		}
 	}
 
 	return tryPayInvoice()
 }
 
-async function updateBalanceOfWorkingNWCs() {
-	const balances = await Promise.all(ndkNWCs.map(({ nwc, id }) => getBalanceWithTimeout(nwc, id, NWC_TIMEOUT)))
-	console.log('Balances:', balances)
-	const totalBalance = balances.reduce((sum, balance) => sum + balance, 0)
-	balanceOfWorkingNWCs.set(totalBalance / 1000)
+export async function updateBalanceOfWorkingNWCs() {
+	const currentNWCs = get(ndkNWCs)
+	const updatedNWCs = await Promise.all(
+		currentNWCs.map(async (wallet) => ({
+			...wallet,
+			balance: await getBalanceWithTimeout(wallet.nwc, wallet.id, NWC_TIMEOUT),
+		})),
+	)
+	ndkNWCs.set(updatedNWCs)
 }
 
 export async function initNdkNWCs() {
-	ndkNWCs = await initializeNdkNWCs()
-	updateBalanceOfWorkingNWCs()
+	const nwcs = await initializeNdkNWCs()
+	ndkNWCs.set(nwcs)
+}
+
+export function canPayWithNWC(amountSats: number): boolean {
+	// We add 10000 msats, or 10 sats to ensure that the wallet can pay fees
+	return get(ndkNWCs).some((wallet) => wallet.balance >= amountSats * 1000 + 10000)
 }

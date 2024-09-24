@@ -5,7 +5,7 @@
 	import { createPaymentsForUserQuery } from '$lib/fetch/payments.queries'
 	import { cart } from '$lib/stores/cart'
 	import { formatSats } from '$lib/utils'
-	import { sendDM } from '$lib/utils/utils.dm'
+	import { sendDM } from '$lib/utils/dm.utils'
 	import { createEventDispatcher, tick } from 'svelte'
 	import { toast } from 'svelte-sonner'
 
