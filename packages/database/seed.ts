@@ -12,6 +12,7 @@ import {
 	DigitalProductMetaName,
 	GENERAL_META,
 	INVOICE_STATUS,
+	INVOICE_TYPE,
 	META_NAMES,
 	ORDER_STATUS,
 	PAYMENT_DETAILS_METHOD,
@@ -22,6 +23,7 @@ import {
 	USER_ROLES,
 	USER_TRUST_LEVEL,
 	UserMetaName,
+	V4V_DEFAULT_RECIPIENTS,
 	WALLET_TYPE,
 } from './constants'
 import { db } from './database'
@@ -31,7 +33,6 @@ import {
 	Auction,
 	Bid,
 	Event,
-	EventTag,
 	Invoice,
 	MetaType,
 	NewEventTag,
@@ -45,7 +46,7 @@ import {
 	ShippingZone,
 	Stall,
 	User,
-	UserMeta,
+	UserMeta
 } from './types'
 import { createId, createShippingCoordinates } from './utils'
 
@@ -155,13 +156,27 @@ const main = async () => {
 				} else if (name == USER_META.ROLE.value) {
 					valueText = faker.helpers.arrayElement(Object.values(USER_ROLES))
 				} else if (name == USER_META.V4V_SHARE.value) {
-					valueNumeric = parseFloat(
-						faker.finance.amount({
-							min: 0.01,
-							max: 0.2,
-						}),
-					)
-					key = 'platform'
+					return V4V_DEFAULT_RECIPIENTS.map((value) => {
+						valueNumeric = parseFloat(
+							faker.finance.amount({
+								min: 0.01,
+								max: 0.05,
+							}),
+						)
+						const userMeta = {
+							id: createId(),
+							userId: userId.id,
+							metaName: name,
+							valueText: value,
+							valueBoolean: valueBoolean,
+							valueNumeric: valueNumeric,
+							key: value,
+							createdAt: faker.date.recent(),
+							updatedAt: faker.date.future(),
+						} as UserMeta
+
+						return userMeta
+					})
 				} else if (name == USER_META.WALLET_DETAILS.value) {
 					return Array.from({ length: 3 }).map(() => {
 						const randomRelay = faker.helpers.arrayElement(defaulRelaysUrls)
@@ -387,6 +402,7 @@ const main = async () => {
 				createdAt: faker.date.recent(),
 				updatedAt: faker.date.future(),
 				totalAmount: faker.finance.amount(),
+				type: faker.helpers.arrayElement(Object.values(INVOICE_TYPE)),
 				invoiceStatus: faker.helpers.arrayElement(Object.values(INVOICE_STATUS)),
 				paymentMethod: faker.helpers.arrayElement(Object.values(PAYMENT_DETAILS_METHOD)),
 				paymentDetails: faker.finance.creditCardNumber(),

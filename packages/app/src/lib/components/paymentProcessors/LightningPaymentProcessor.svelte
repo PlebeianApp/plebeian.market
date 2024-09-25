@@ -16,14 +16,22 @@
 	import { afterUpdate, createEventDispatcher, onDestroy } from 'svelte'
 	import { toast } from 'svelte-sonner'
 
+	import type { CheckoutPaymentEvent, PaymentStatus } from '../checkout/types'
+
 	export let paymentDetail: RichPaymentDetail
 	export let amountSats: number
+	export let paymentType: string
 
-	const dispatch = createEventDispatcher()
+	const dispatch = createEventDispatcher<{
+		paymentComplete: CheckoutPaymentEvent
+		paymentExpired: CheckoutPaymentEvent
+		paymentCanceled: CheckoutPaymentEvent
+	}>()
+
 	const RELAYS = ['wss://relay.damus.io', 'wss://relay.nostr.band', 'wss://nos.lol', 'wss://relay.nostr.net', 'wss://relay.minibits.cash']
 
 	let invoice: Invoice | null = null
-	let paymentStatus: 'pending' | 'success' | 'failed' | 'canceled' = 'pending'
+	let paymentStatus: PaymentStatus = 'pending'
 	let preimageInput = ''
 	let showPreimageInput = false
 	let isLoading = false
@@ -31,6 +39,7 @@
 	let remainingTime = 'Calculating...'
 	let isCheckingPayment = false
 	let showManualVerification = false
+	let normalizedAmount = formatSats(amountSats, false)
 
 	$: url = 'lightning://' + invoice?.paymentRequest
 	$: canPayWithNWC = $balanceOfWorkingNWCs >= amountSats
@@ -44,25 +53,19 @@
 		if (isLoading || invoice) return
 		isLoading = true
 		try {
-			if (paymentDetail.paymentMethod === 'ln') {
-				if (NIP05_REGEX.test(paymentDetail.paymentDetails)) {
-					const ln = new LightningAddress(paymentDetail.paymentDetails)
-					await ln.fetch()
-					const allowsNostr = ln.lnurlpData?.allowsNostr ?? false
-					addRelaysToNDKPool()
-
-					invoice = allowsNostr ? await generateZapInvoice(ln) : await ln.requestInvoice({ satoshi: formatSats(amountSats, false) })
-
-					if (allowsNostr) {
-						ln.domain === 'getalby.com' ? startZapCheck() : startZapSubscription()
-					}
-				} else {
-					invoice = new Invoice({ pr: paymentDetail.paymentDetails })
+			if (NIP05_REGEX.test(paymentDetail.paymentDetails)) {
+				const ln = new LightningAddress(paymentDetail.paymentDetails)
+				await ln.fetch()
+				const allowsNostr = ln.lnurlpData?.allowsNostr ?? false
+				addRelaysToNDKPool()
+				invoice = allowsNostr ? await generateZapInvoice(ln) : await ln.requestInvoice({ satoshi: normalizedAmount })
+				if (allowsNostr) {
+					ln.domain === 'getalby.com' ? startZapCheck() : startZapSubscription()
 				}
-				setupExpiryCountdown()
-			} else if (paymentDetail.paymentMethod === 'on-chain') {
-				console.log(paymentDetail)
+			} else {
+				invoice = new Invoice({ pr: paymentDetail.paymentDetails })
 			}
+			setupExpiryCountdown()
 		} catch (error) {
 			console.error('Error generating invoice:', error)
 			toast.error('Failed to generate invoice')
@@ -145,13 +148,6 @@
 		}
 	}
 
-	function handleExpiry() {
-		cleanupFunctions.forEach((fn) => fn())
-		remainingTime = 'Expired'
-		toast.error('Invoice expired')
-		dispatch('paymentExpired', { paymentRequest: invoice!.paymentRequest, preimage: null })
-	}
-
 	async function verifyPayment() {
 		if (!invoice || !preimageInput) {
 			toast.error('Please enter a preimage to verify the payment.')
@@ -173,14 +169,47 @@
 	function handleSuccessfulPayment(preimage: string) {
 		paymentStatus = 'success'
 		toast.success('Payment successful')
-		dispatch('paymentComplete', { paymentRequest: invoice!.paymentRequest, preimage })
+		dispatch('paymentComplete', {
+			paymentRequest: invoice!.paymentRequest,
+			preimage,
+			amountSats: normalizedAmount,
+			paymentType,
+		})
 		cleanupFunctions.forEach((fn) => fn())
+	}
+
+	function handleExpiry() {
+		cleanupFunctions.forEach((fn) => fn())
+		remainingTime = 'Expired'
+		toast.error('Invoice expired')
+		dispatch('paymentExpired', {
+			paymentRequest: invoice!.paymentRequest,
+			preimage: null,
+			amountSats: normalizedAmount,
+			paymentType,
+		})
 	}
 
 	function handleSkipPayment() {
 		paymentStatus = 'canceled'
 		cleanupFunctions.forEach((fn) => fn())
-		dispatch('paymentCanceled', { paymentRequest: invoice!.paymentRequest, preimage: null })
+		dispatch('paymentCanceled', {
+			paymentRequest: invoice!.paymentRequest,
+			preimage: null,
+			amountSats: normalizedAmount,
+			paymentType,
+		})
+	}
+
+	function handleSkipInvalidPayment() {
+		paymentStatus = 'canceled'
+		cleanupFunctions.forEach((fn) => fn())
+		dispatch('paymentCanceled', {
+			paymentRequest: null,
+			preimage: null,
+			amountSats: normalizedAmount,
+			paymentType,
+		})
 	}
 
 	async function handleWeblnPay() {
@@ -239,7 +268,7 @@
 		return (
 			prevPaymentDetail.paymentMethod !== paymentDetail.paymentMethod ||
 			prevPaymentDetail.paymentDetails !== paymentDetail.paymentDetails ||
-			prevAmountSats !== amountSats
+			prevAmountSats !== normalizedAmount
 		)
 	}
 
@@ -248,7 +277,7 @@
 			reset()
 			generateInvoice()
 			prevPaymentDetail = { ...paymentDetail }
-			prevAmountSats = amountSats
+			prevAmountSats = normalizedAmount
 		}
 	})
 
@@ -257,7 +286,7 @@
 
 <div class="flex flex-col items-center gap-4">
 	<h3 class="font-bold">{paymentDetail.paymentMethod}</h3>
-	<p>{paymentDetail.paymentDetails}</p>
+	<p class="text-ellipsis overflow-hidden ...">{paymentDetail.paymentDetails}</p>
 
 	{#if isLoading}
 		<Spinner />
@@ -276,7 +305,7 @@
 			</div>
 		{/if}
 
-		<div class="flex gap-2">
+		<div class="flex gap-2 justify-center">
 			{#if showManualVerification}
 				<Button on:click={() => (showPreimageInput = true)} class="w-full mb-4">I've already paid</Button>
 			{/if}
@@ -300,6 +329,7 @@
 		</Collapsible.Root>
 	{:else}
 		<p>Generating invoice...</p>
+		<Button variant="outline" on:click={handleSkipInvalidPayment}>Skip Payment</Button>
 	{/if}
 
 	{#if paymentStatus === 'success'}

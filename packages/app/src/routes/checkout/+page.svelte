@@ -30,7 +30,7 @@
 			{
 				component: Success,
 				props: {
-					variant: hasMultipleUsers ? 'sent' : 'success',
+					variant: hasMultipleUsers ? 'multiMerchant' : 'singleMerchant',
 					merchant: user,
 				},
 			},

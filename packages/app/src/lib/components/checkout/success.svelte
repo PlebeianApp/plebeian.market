@@ -12,14 +12,21 @@
 	import Spinner from '../assets/spinner.svelte'
 	import Order from '../cart/order.svelte'
 
-	export let variant: 'success' | 'sent' = 'success'
+	export let variant: 'singleMerchant' | 'multiMerchant'
 	export let merchant: CartUser | null = null
 	const dispatch = createEventDispatcher()
+
 	$: orders = merchant ? Object.values($cart.orders).filter((order) => order.sellerUserId === merchant.pubkey) : Object.values($cart.orders)
 
 	$: invoices = merchant
 		? Object.values($cart.invoices).filter((invoice) => orders.some((order) => order.id === invoice.orderId))
 		: Object.values($cart.invoices)
+
+	$: sortedInvoices = invoices.sort((a, b) => {
+		if (a.type === 'merchant' && b.type !== 'merchant') return -1
+		if (a.type !== 'merchant' && b.type === 'merchant') return 1
+		return 0
+	})
 
 	let isPersisting = false
 	let error: string | null = null
@@ -33,7 +40,6 @@
 
 		try {
 			const cartData = JSON.stringify({ orders, invoices })
-
 			const formData = new FormData()
 			formData.append('cartData', cartData)
 
@@ -60,7 +66,7 @@
 	}
 
 	function handleContinue() {
-		if (merchant) {
+		if (variant === 'multiMerchant') {
 			dispatch('validate', { valid: true })
 		} else {
 			goto('/')
@@ -75,27 +81,39 @@
 		const shouldPersist = await shouldRegister(undefined, userExists)
 
 		if (shouldPersist && !persistenceComplete) {
-			const result = await handlePersist()
-			console.log('Persistence result:', result)
+			await handlePersist()
 		}
 	})
+
+	function getInvoiceStatusColor(status: string): string {
+		switch (status) {
+			case 'paid':
+				return 'text-green-600'
+			case 'pending':
+				return 'text-yellow-600'
+			default:
+				return 'text-gray-600'
+		}
+	}
 </script>
 
 <div class="flex flex-col items-center justify-center w-full max-w-3xl mx-auto gap-8 py-8">
 	{#if isPersisting}
 		<Spinner size={95} />
 	{:else if error}
-		<div class="text-red-500">{error}</div>
+		<div class="text-red-500 bg-red-100 p-4 rounded-lg">{error}</div>
 	{:else}
 		<CheckCircle class="w-24 h-24 text-green-500" />
 	{/if}
 
 	<Card class="w-full">
 		<CardHeader>
-			<CardTitle>
-				{#if variant === 'success'}
+			<CardTitle class="text-2xl text-center text-green-700">
+				{#if error}
+					...
+				{:else if variant === 'singleMerchant'}
 					All your orders have been placed successfully!
-				{:else if variant === 'sent'}
+				{:else if variant === 'multiMerchant'}
 					Your order{orders.length > 1 ? 's have' : ' has'} been sent to the merchant{orders.length > 1 ? 's' : ''}!
 				{/if}
 			</CardTitle>
@@ -104,36 +122,44 @@
 			<CardContent>
 				<Separator class="my-6" />
 
-				<h3 class="text-lg font-semibold mb-4">Orders</h3>
+				<h3 class="text-xl font-semibold mb-4">Orders</h3>
 				{#if merchant}
-					<span>Order id: {orders[0].id}</span>
+					<div class="mb-2 text-sm text-gray-600">Order ID: {orders[0].id}</div>
 					<Order user={merchant} stalls={$cart.stalls} products={$cart.products} mode="success" />
 				{:else}
 					{#each Object.values($cart.users) as user (user.pubkey)}
 						<Order {user} stalls={$cart.stalls} products={$cart.products} mode="success" />
 					{/each}
 				{/if}
-				{#if invoices.length}
-					<h3 class="text-lg font-semibold mt-6 mb-4">Invoices</h3>
-					{#each invoices as invoice (invoice.id)}
-						<div class="mb-4 p-4 bg-gray-100 rounded-lg">
-							<div class="flex justify-between">
-								<span class="font-medium">Invoice ID: {invoice.id}</span>
-								<span class="capitalize font-medium {invoice.invoiceStatus === 'paid' ? 'text-green-600' : 'text-yellow-600'}">
-									{invoice.invoiceStatus}
-								</span>
+
+				{#if sortedInvoices.length}
+					<h3 class="text-xl font-semibold mt-8 mb-4">Invoices</h3>
+					<div class="space-y-4">
+						{#each sortedInvoices as invoice (invoice.id)}
+							<div class="flex justify-between items-start p-4 bg-gray-50 rounded-lg shadow transition-all duration-200">
+								<div class="flex flex-col">
+									<span class="text-sm font-medium text-gray-500 uppercase">{invoice.type}</span>
+									<span class="font-medium">Invoice ID: {invoice.id}</span>
+									<span class="capitalize font-medium {getInvoiceStatusColor(invoice.invoiceStatus)}">
+										{invoice.invoiceStatus}
+									</span>
+								</div>
+								<div class="flex flex-col text-sm text-right">
+									<span class="font-bold text-lg">{formatSats(invoice.totalAmount)} sats</span>
+									<span class="text-gray-600">{new Date(invoice.createdAt).toLocaleString()}</span>
+								</div>
 							</div>
-							<div class="flex justify-between text-sm text-gray-600 mt-2">
-								<span class="font-bold">Amount: {formatSats(invoice.totalAmount)} sats</span>
-								<span>Date: {new Date(invoice.createdAt).toLocaleString()}</span>
-							</div>
-						</div>
-					{/each}
+						{/each}
+					</div>
 				{/if}
 			</CardContent>
 		{/if}
 		<CardFooter>
-			<Button class="w-full" on:click={handleContinue} disabled={isPersisting || (persistenceComplete != null && !persistenceComplete)}>
+			<Button
+				class="w-full text-lg py-3"
+				on:click={handleContinue}
+				disabled={isPersisting || (persistenceComplete != null && !persistenceComplete)}
+			>
 				{isPersisting ? 'Saving...' : 'Continue'}
 			</Button>
 		</CardFooter>

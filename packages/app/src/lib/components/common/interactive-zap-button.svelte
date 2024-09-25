@@ -34,6 +34,7 @@
 
 	onMount(async () => {
 		userCanBeZapped = await checkTargetUserHasLightningAddress(userIdToZap)
+		isLoading = false
 	})
 
 	function startZapSubscription() {

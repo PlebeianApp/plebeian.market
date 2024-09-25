@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "85ecc4e3-4eec-4a62-803e-4ed92a784191",
+  "id": "e5ff8530-bb5a-4393-b430-b12d9673e3d4",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "app_settings": {
@@ -632,6 +632,13 @@
           "notNull": true,
           "autoincrement": false
         },
+        "type": {
+          "name": "type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
         "invoice_status": {
           "name": "invoice_status",
           "type": "text",
@@ -670,19 +677,6 @@
           "tableTo": "orders",
           "columnsFrom": [
             "order_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "cascade"
-        },
-        "invoices_payment_details_id_payment_details_id_fk": {
-          "name": "invoices_payment_details_id_payment_details_id_fk",
-          "tableFrom": "invoices",
-          "tableTo": "payment_details",
-          "columnsFrom": [
-            "payment_details_id"
           ],
           "columnsTo": [
             "id"

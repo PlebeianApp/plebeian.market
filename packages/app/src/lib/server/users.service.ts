@@ -249,7 +249,9 @@ export const createUser = async (
 			throw Error('Failed to create user')
 		}
 
-		await setV4VPlatformShareForUserByTarget(INITIAL_V4V_PLATFORM_SHARE_PERCENTAGE, userMetaData.id, 'platform')
+		// TODO: we need the platforms pubkey. users start out with no v4v share for now
+
+		// await setV4VPlatformShareForUserByTarget(INITIAL_V4V_PLATFORM_SHARE_PERCENTAGE, userMetaData.id, 'platform')
 
 		return userResult
 	} catch (e) {

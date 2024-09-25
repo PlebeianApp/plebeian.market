@@ -264,6 +264,11 @@ export function stringToHexColor(input: string): string {
 	return color
 }
 
+export function getHexColorFingerprintFromHexPubkey(input: string): string {
+	const hexpub = input.startsWith('npub') ? decodePk(input) : input
+	return `#${hexpub.slice(0, 6)}`
+}
+
 export async function resolveQuery<T>(queryFn: () => CreateQueryResult<T, Error>, maxRetries?: number, retryDelay?: number): Promise<T> {
 	const queryPromise = queryFn()
 	let retryCount = 0

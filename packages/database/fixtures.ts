@@ -1,3 +1,5 @@
+// dev instance nsec nsec10qkd5ne5xggp7pekp63s5y9j9qyhu2mra83sspk9zzrghqlltafqphjmjv
+
 export const devInstance = {
 	pk: 'b4348212f73cd9b13a10073f1231d14057960f1b37f732c6cd6757386b978e0c',
 	sk: '782cda4f3432101f07360ea30a10b228097e2b63e9e30806c510868b83ff5f52',

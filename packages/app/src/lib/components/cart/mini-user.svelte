@@ -23,7 +23,7 @@
 					<span class=" i-tdesign-user w-6 h-6" />
 				{/if}
 				{#if $userProfileQuery.data.name || $userProfileQuery.data.displayName || userId}
-					<span class=" font-bold"
+					<span class="text-sm font-bold"
 						>{truncateString($userProfileQuery.data.name || $userProfileQuery.data.displayName || npubEncode(userId))}</span
 					>
 				{/if}
