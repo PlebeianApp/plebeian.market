@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { CarouselAPI } from '$lib/components/ui/carousel/context'
+	import type { StallCoordinatesType } from '$lib/stores/drawer-ui'
 	import Spinner from '$lib/components/assets/spinner.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
 	import Badge from '$lib/components/ui/badge/badge.svelte'
@@ -7,6 +8,7 @@
 	import * as Carousel from '$lib/components/ui/carousel'
 	import Input from '$lib/components/ui/input/input.svelte'
 	import * as Tabs from '$lib/components/ui/tabs/index.js'
+	import { KindStalls } from '$lib/constants'
 	import { createCurrencyConversionQuery, createProductQuery, createProductsByFilterQuery } from '$lib/fetch/products.queries'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
 	import { handleAddToCart } from '$lib/stores/cart'
@@ -29,6 +31,9 @@
 
 	$: productsQuery = createProductQuery(productRes.id)
 	$: userProfileQuery = user.id ? createUserByIdQuery(user.id) : null
+	$: stallCoordinates = !$productsQuery.data?.stallId?.startsWith(String(KindStalls))
+		? (`${KindStalls}:${user.id}:${$productsQuery.data?.stallId}` as StallCoordinatesType)
+		: ($productsQuery.data?.stallId as StallCoordinatesType)
 
 	$: priceQuery = createCurrencyConversionQuery($productsQuery.data?.currency as string, $productsQuery.data?.price as number)
 
@@ -140,9 +145,7 @@
 					>
 						<span class="i-mdi-plus w-4 h-4"></span>
 					</Button>
-					<Button
-						class="ml-2"
-						on:click={() => handleAddToCart(String($productsQuery.data?.userId), String($productsQuery.data?.stallId), $productsQuery.data)}
+					<Button class="ml-2" on:click={() => handleAddToCart(String($productsQuery.data?.userId), stallCoordinates, $productsQuery.data)}
 						>Add to cart</Button
 					>
 				</div>

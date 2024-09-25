@@ -13,6 +13,8 @@
 
 	import type { PageData } from './$types'
 
+	// TODO: add percentage bar and refine ui/ux, now it jumps and glitches some times.
+	// TODO: If a user removes all v4v shares the percentage get stucked and have to go out and come back to see it well
 	export let data: PageData
 	const { appSettings, activeUser } = data
 	let v4vTotal = [0]
@@ -28,7 +30,7 @@
 	$: shouldShake = v4vTotal[0] > 0.09
 	$: shouldGlow = v4vTotal[0] > 0.14
 	$: emojiClass = shouldGlow ? 'wiggle-shake-glow' : shouldShake ? 'wiggle-shake' : shouldWiggle ? 'wiggle' : ''
-
+	$: emoji = v4vTotal[0] > 0.14 ? '🤙' : v4vTotal[0] > 0.09 ? '🤙' : v4vTotal[0] > 0.04 ? '🤙' : v4vTotal[0] < 0.01 ? '💩' : '🎁'
 	$: v4vByUser = v4VForUserQuery(activeUser?.id ?? '')
 	let v4vRecipients: V4VDTO[] = []
 
@@ -106,7 +108,6 @@
 	}
 
 	$: displayValue = decimalToPercentage(v4vTotal[0])
-
 	const handleSetV4VAmounts = async () => {
 		const totalPercentage = v4vTotal[0]
 		const adjustedRecipients = v4vRecipients.map((recipient) => ({
@@ -114,12 +115,11 @@
 			amount: recipient.amount * totalPercentage,
 		}))
 
-		await $setV4VForUserMutation.mutate(adjustedRecipients)
+		await $setV4VForUserMutation.mutateAsync(adjustedRecipients)
 		toast.success('V4V values successfully updated')
 	}
 </script>
 
-s
 <div class="pb-4 space-y-6">
 	<div>
 		<div class="flex items-center gap-1">
@@ -148,7 +148,7 @@ s
 			class="p-4 rounded-full bg-[var(--neo-gray)] inline-flex items-center justify-center {emojiClass}"
 			style="font-size: {emojiSize}px; width: {emojiSize * 1.5}px; height: {emojiSize * 1.5}px;"
 		>
-			🤙
+			{emoji}
 		</span>
 	</div>
 
@@ -192,7 +192,7 @@ s
 	</div>
 
 	{#if $v4vByUser.data}
-		{#each v4vRecipients as v4v}
+		{#each v4vRecipients as v4v (v4v.target)}
 			<div class={hoveredRecipient === v4v.target ? 'highlight-edit' : ''}>
 				<V4vRecipientEdit
 					npub={v4v.target}

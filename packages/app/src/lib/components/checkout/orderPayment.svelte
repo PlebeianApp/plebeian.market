@@ -149,9 +149,9 @@
 			}
 		}
 	}
-
+	// TODO improve type-safety of CustomEvents
 	async function handlePaymentEvent(
-		event: CustomEvent<{ paymentRequest: string; preimage: string | null; amount: number; isV4V: boolean; paymentId: string }>,
+		event: CustomEvent<{ paymentRequest: string; preimage: string | null; amountSats: number; isV4V: boolean; paymentType: string }>,
 	) {
 		const status = paymentEventToStatus[event.type]
 		if (!status) {
@@ -165,14 +165,14 @@
 		}
 
 		try {
-			const invoice = createInvoice(event.detail, status, event.detail.amount, event.detail.isV4V)
+			const invoice = createInvoice(event.detail, status, event.detail.amountSats, event.detail.paymentType)
 			await processPayment(invoice, status)
 			moveToNextPaymentProcessor()
 
-			// payment is indentided by the paymentId, is either 'merchant' or the target npub
+			// payment is indentided by the paymentType, is either 'merchant' or the target npub
 
 			const paymentIndex = paymentStatuses.update((statuses) => {
-				const index = statuses.findIndex((status) => status.id === event.detail.paymentId)
+				const index = statuses.findIndex((status) => status.id === event.detail.paymentType)
 				if (index !== -1) {
 					statuses[index].status = status
 				}
@@ -188,7 +188,7 @@
 		detail: { paymentRequest: string; preimage: string | null },
 		status: PaymentStatus,
 		amount: number,
-		isV4V: boolean = false,
+		paymentType: string,
 	): InvoiceMessage {
 		return {
 			id: createId(),
@@ -196,9 +196,9 @@
 			updatedAt: Date.now(),
 			orderId: order.id,
 			totalAmount: formatSats(amount, false),
-			type: isV4V ? 'v4v' : 'merchant',
+			type: paymentType === 'merchant' ? 'merchant' : 'v4v',
 			invoiceStatus: status,
-			paymentId: selectedPaymentDetail!.id,
+			paymentId: paymentType === 'merchant' ? selectedPaymentDetail?.id : paymentType,
 			paymentRequest: detail.paymentRequest,
 			proof: detail.preimage,
 		}
@@ -337,14 +337,14 @@
 
 		{#if v4vShares.length > 0}
 			{#if selectedPaymentDetail && orderTotal}
-				<Carousel.Root class="w-ful w-[80%]  h-60" bind:api>
+				<Carousel.Root class="h-full w-[80%]" bind:api>
 					<Carousel.Content>
 						<Carousel.Item>
 							<div class="p-1">
 								<PaymentProcessor
 									paymentDetail={selectedPaymentDetail}
 									amountSats={orderTotal.subtotalInSats * (1 - (v4vTotalPercentage ?? 0)) + orderTotal.shippingInSats}
-									paymentId="merchant"
+									paymentType="merchant"
 									on:paymentComplete={handlePaymentEvent}
 									on:paymentExpired={handlePaymentEvent}
 									on:paymentCanceled={handlePaymentEvent}
@@ -352,13 +352,13 @@
 							</div>
 						</Carousel.Item>
 
-						{#each v4vShares as share, index}
+						{#each v4vShares as share (share.target)}
 							<Carousel.Item>
 								<div class="p-1">
 									<PaymentProcessor
 										paymentDetail={share.paymentDetail}
 										amountSats={orderTotal.subtotalInSats * share.amount}
-										paymentId={share.target}
+										paymentType={share.target}
 										on:paymentComplete={handlePaymentEvent}
 										on:paymentExpired={handlePaymentEvent}
 										on:paymentCanceled={handlePaymentEvent}
@@ -375,7 +375,7 @@
 			<PaymentProcessor
 				paymentDetail={selectedPaymentDetail}
 				amountSats={orderTotal.totalInSats}
-				paymentId="merchant"
+				paymentType="merchant"
 				on:paymentComplete={handlePaymentEvent}
 				on:paymentExpired={handlePaymentEvent}
 				on:paymentCanceled={handlePaymentEvent}

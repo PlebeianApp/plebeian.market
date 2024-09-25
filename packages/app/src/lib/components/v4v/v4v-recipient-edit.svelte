@@ -23,7 +23,7 @@
 	let userProfile: NDKUserProfile | null = null
 
 	async function fetchUserProfile() {
-		if (npub) {
+		if (npub && npub.startsWith('npub')) {
 			const user = $ndkStore.getUser({ npub })
 			userProfile = await user.fetchProfile()
 			recipientCanReceiveSats = await checkTargetUserHasLightningAddress(user.pubkey)
@@ -54,7 +54,7 @@
 	}
 
 	$: {
-		if (npub && npub !== previousNpub) {
+		if (npub && npub.startsWith('npub') && npub !== previousNpub) {
 			fetchUserProfile()
 			previousNpub = npub
 		} else if (!npub) {

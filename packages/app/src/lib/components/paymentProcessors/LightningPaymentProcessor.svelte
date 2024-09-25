@@ -18,8 +18,7 @@
 
 	export let paymentDetail: RichPaymentDetail
 	export let amountSats: number
-	export let paymentId: string
-
+	export let paymentType: string
 	const dispatch = createEventDispatcher()
 	const RELAYS = ['wss://relay.damus.io', 'wss://relay.nostr.band', 'wss://nos.lol', 'wss://relay.nostr.net', 'wss://relay.minibits.cash']
 
@@ -32,6 +31,7 @@
 	let remainingTime = 'Calculating...'
 	let isCheckingPayment = false
 	let showManualVerification = false
+	let normalizedAmount = formatSats(amountSats, false)
 
 	$: url = 'lightning://' + invoice?.paymentRequest
 	$: canPayWithNWC = $balanceOfWorkingNWCs >= amountSats
@@ -51,7 +51,7 @@
 					await ln.fetch()
 					const allowsNostr = ln.lnurlpData?.allowsNostr ?? false
 					addRelaysToNDKPool()
-					invoice = allowsNostr ? await generateZapInvoice(ln) : await ln.requestInvoice({ satoshi: formatSats(amountSats, false) })
+					invoice = allowsNostr ? await generateZapInvoice(ln) : await ln.requestInvoice({ satoshi: normalizedAmount })
 					if (allowsNostr) {
 						ln.domain === 'getalby.com' ? startZapCheck() : startZapSubscription()
 					}
@@ -148,7 +148,7 @@
 		cleanupFunctions.forEach((fn) => fn())
 		remainingTime = 'Expired'
 		toast.error('Invoice expired')
-		dispatch('paymentExpired', { paymentRequest: invoice!.paymentRequest, preimage: null, amountSats, paymentId })
+		dispatch('paymentExpired', { paymentRequest: invoice!.paymentRequest, preimage: null, normalizedAmount, paymentType })
 	}
 
 	async function verifyPayment() {
@@ -172,20 +172,20 @@
 	function handleSuccessfulPayment(preimage: string) {
 		paymentStatus = 'success'
 		toast.success('Payment successful')
-		dispatch('paymentComplete', { paymentRequest: invoice!.paymentRequest, preimage, amountSats, paymentId })
+		dispatch('paymentComplete', { paymentRequest: invoice!.paymentRequest, preimage, amountSats: normalizedAmount, paymentType })
 		cleanupFunctions.forEach((fn) => fn())
 	}
 
 	function handleSkipPayment() {
 		paymentStatus = 'canceled'
 		cleanupFunctions.forEach((fn) => fn())
-		dispatch('paymentCanceled', { paymentRequest: invoice!.paymentRequest, preimage: null, amountSats, paymentId })
+		dispatch('paymentCanceled', { paymentRequest: invoice!.paymentRequest, preimage: null, amountSats: normalizedAmount, paymentType })
 	}
 
 	function handleSkipInvalidPayment() {
 		paymentStatus = 'canceled'
 		cleanupFunctions.forEach((fn) => fn())
-		dispatch('paymentCanceled', { paymentRequest: '', preimage: null, amountSats, paymentId })
+		dispatch('paymentCanceled', { paymentRequest: '', preimage: null, amountSats: normalizedAmount, paymentType })
 	}
 
 	async function handleWeblnPay() {
@@ -244,7 +244,7 @@
 		return (
 			prevPaymentDetail.paymentMethod !== paymentDetail.paymentMethod ||
 			prevPaymentDetail.paymentDetails !== paymentDetail.paymentDetails ||
-			prevAmountSats !== amountSats
+			prevAmountSats !== normalizedAmount
 		)
 	}
 
@@ -253,7 +253,7 @@
 			reset()
 			generateInvoice()
 			prevPaymentDetail = { ...paymentDetail }
-			prevAmountSats = amountSats
+			prevAmountSats = normalizedAmount
 		}
 	})
 

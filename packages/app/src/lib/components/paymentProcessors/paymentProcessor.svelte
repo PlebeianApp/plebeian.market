@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { RichPaymentDetail } from '$lib/server/paymentDetails.service'
 	import { Button } from '$lib/components/ui/button'
+	import { formatSats } from '$lib/utils'
 	import { createEventDispatcher } from 'svelte'
 
 	import type { PaymentProcessorMap } from './paymentProcessor'
@@ -9,7 +10,7 @@
 
 	export let paymentDetail: RichPaymentDetail
 	export let amountSats: number
-	export let paymentId: string
+	export let paymentType: string
 
 	const dispatch = createEventDispatcher()
 
@@ -39,7 +40,7 @@
 	}
 
 	function handleSkipPayment() {
-		dispatch('paymentCanceled', { paymentRequest: '', preimage: null, amountSats, paymentId })
+		dispatch('paymentCanceled', { paymentRequest: '', preimage: null, amountSats, paymentType })
 	}
 </script>
 
@@ -48,7 +49,7 @@
 		this={currentProcessor.component}
 		{paymentDetail}
 		{amountSats}
-		{paymentId}
+		{paymentType}
 		{...currentProcessor.props}
 		on:paymentComplete={handlePaymentEvent}
 		on:paymentExpired={handlePaymentEvent}

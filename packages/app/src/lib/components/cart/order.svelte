@@ -102,6 +102,7 @@
 				><strong>Total in sats:</strong>
 				{formatSats(userTotal.totalInSats)} sats</small
 			>
+			<!-- TODO: improve this visualization -->
 			{#if v4vTotalPercentage}
 				<Separator />
 				<div class="flex flex-col justify-end">
