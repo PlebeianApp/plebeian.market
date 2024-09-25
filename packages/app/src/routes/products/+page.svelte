@@ -2,11 +2,11 @@
 	import type { Selected } from 'bits-ui'
 	import CatMenu from '$lib/components/category/cat-menu.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
+	import Input from '$lib/components/ui/input/input.svelte'
 	import * as Pagination from '$lib/components/ui/pagination'
 	import * as Select from '$lib/components/ui/select'
 	import { Skeleton } from '$lib/components/ui/skeleton'
 	import { createProductsByFilterQuery } from '$lib/fetch/products.queries'
-	import Input from '$lib/components/ui/input/input.svelte'
 	import { reactiveDebounce } from '$lib/utils'
 	import { writable } from 'svelte/store'
 
@@ -19,7 +19,7 @@
 	function onSortSelectedChange(v?: typeof sort) {
 		sort = v!
 	}
-	let search = writable("")
+	let search = writable('')
 
 	$: debouncedSearch = reactiveDebounce(search, 600)
 	$: productsQuery = createProductsByFilterQuery({ pageSize, page, order: sort.value ?? 'desc', search: $debouncedSearch })
@@ -34,12 +34,7 @@
 					<h2>Products</h2>
 
 					<div class="flex gap-6">
-						<Input
-							class=""
-							type="search"
-							placeholder="Search..."
-							bind:value={$search}
-						/>
+						<Input class="" type="search" placeholder="Search..." bind:value={$search} />
 						<Select.Root selected={sort} onSelectedChange={onSortSelectedChange}>
 							<Select.Trigger class="w-[100px]">
 								<Select.Value placeholder="Sort" />
