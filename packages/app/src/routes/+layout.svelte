@@ -13,8 +13,10 @@
 	import { goto, onNavigate } from '$app/navigation'
 	import RelayWidget from '$lib/components/assets/relayWidget.svelte'
 	import Drawer from '$lib/components/drawer.svelte'
+	import SellStuffAdvert from '$lib/components/sell-stuff-advert.svelte'
 	import { queryClient } from '$lib/fetch/client'
 	import { processQueuedInsertions } from '$lib/nostrSubs/data-aggregator'
+	import ndkStore from '$lib/stores/ndk'
 	import { setupNdkStoreListener } from '$lib/stores/nwc'
 	import { cleanupCachedEvents } from '$lib/stores/session'
 
@@ -28,6 +30,8 @@
 	for (const [currency, price] of data.prices) {
 		queryClient.setQueryData(['currency-conversion', currency], price)
 	}
+
+	$: isLoggedIn = $ndkStore.activeUser
 
 	onMount(async () => {
 		if (isFirstTimeRunning) {
@@ -184,6 +188,9 @@
 				<slot />
 			</section>
 			<Drawer />
+			{#if !isLoggedIn}
+				<SellStuffAdvert />
+			{/if}
 			<Footer />
 			<section class="fixed bottom-0">
 				<RelayWidget />
