@@ -47,7 +47,7 @@ export interface InvoiceMessage {
 	invoiceStatus: InvoiceStatus
 	type: 'v4v' | 'merchant'
 	paymentId: string
-	paymentRequest: string
+	paymentRequest: string | null
 	proof: string | null
 }
 

@@ -4,22 +4,22 @@
 	import type { OrderFilter } from '$lib/schema'
 	import type { RichPaymentDetail } from '$lib/server/paymentDetails.service'
 	import type { CartProduct, CartStall, InvoiceMessage } from '$lib/stores/cart'
-	import type { Writable } from 'svelte/store'
 	import * as Carousel from '$lib/components/ui/carousel/index.js'
 	import * as Select from '$lib/components/ui/select'
 	import { createPaymentsForUserQuery } from '$lib/fetch/payments.queries'
+	import { createUserByIdQuery } from '$lib/fetch/users.queries'
 	import { v4VForUserQuery } from '$lib/fetch/v4v.queries'
 	import { cart } from '$lib/stores/cart'
 	import ndkStore from '$lib/stores/ndk'
-	import { checkTargetUserHasLightningAddress, decodePk, formatSats } from '$lib/utils'
-	import { createEventDispatcher, onMount, tick } from 'svelte'
+	import { formatSats, resolveQuery } from '$lib/utils'
+	import { createEventDispatcher, onMount } from 'svelte'
 	import { toast } from 'svelte-sonner'
-	import { writable } from 'svelte/store'
 
 	import type { OrderStatus, PaymentRequestMessage } from '@plebeian/database/constants'
 	import { ORDER_STATUS } from '@plebeian/database/constants'
 	import { createId } from '@plebeian/database/utils'
 
+	import type { CheckoutPaymentEvent } from './types'
 	import MiniStall from '../cart/mini-stall.svelte'
 	import ProductInCart from '../cart/product-in-cart.svelte'
 	import PaymentProcessor from '../paymentProcessors/paymentProcessor.svelte'
@@ -30,41 +30,52 @@
 	export let stall: CartStall
 	export let products: Record<string, CartProduct>
 
-	let api: CarouselAPI
+	const dispatch = createEventDispatcher<{ valid: boolean }>()
 
+	type PaymentStatus = 'paid' | 'expired' | 'canceled' | null
+	type ShareWithInvoice = V4VDTO & { canReceive: boolean; max: number; min: number; paymentDetail: RichPaymentDetail }
+
+	let api: CarouselAPI
 	let carouselCount = 0
 	let carouselCurrent = 0
-	let paymentStatuses: Writable<
-		{
-			id: string
-			status: PaymentStatus | undefined
-		}[]
-	> = writable([])
-	let allPaymentsPaid = false
+	let paymentStatuses: { id: string; status: PaymentStatus }[] = []
+	let orderTotal: Awaited<ReturnType<typeof cart.calculateStallTotal>>
+	let v4vShares: ShareWithInvoice[] = []
+	let v4vTotalPercentage: number | null = null
+
+	const paymentDetails = createPaymentsForUserQuery(order.sellerUserId)
+	const v4vQuery = v4VForUserQuery(order.sellerUserId)
+	$: console.log(paymentStatuses)
+	$: relevantPaymentDetails = $paymentDetails.data?.filter((payment) => payment.stallId === order.stallId || payment.stallId === null) ?? []
+	$: selectedPaymentDetail = relevantPaymentDetails[0] ?? null
+
+	$: selectedPaymentValue = selectedPaymentDetail && {
+		label: `${selectedPaymentDetail.paymentMethod} - ${selectedPaymentDetail.paymentDetails}`,
+		value: selectedPaymentDetail,
+	}
+
+	$: allPaymentsPaid = paymentStatuses.every((status) => ['paid', 'expired', 'canceled'].includes(status.status ?? ''))
 
 	$: {
-		if (orderTotal && v4vShares && v4vShares.length > 0 && $paymentStatuses.length === 0) {
-			paymentStatuses.set([{ id: 'merchant', status: undefined }, ...v4vShares.map((share) => ({ id: share.target, status: undefined }))])
+		if (allPaymentsPaid && paymentStatuses.length > 0) {
+			dispatch('valid', true)
 		}
 	}
 
 	$: {
-		if (paymentStatuses) {
-			allPaymentsPaid = $paymentStatuses.every((status) => {
-				return status.status === 'paid' || status.status === 'expired' || status.status === 'canceled'
-			})
-			if (allPaymentsPaid) {
-				dispatch('valid', true)
-			}
+		if (orderTotal && v4vShares.length > 0 && paymentStatuses.length === 0) {
+			paymentStatuses = [{ id: 'merchant', status: null }, ...v4vShares.map((share) => ({ id: share.target, status: null }))]
 		}
 	}
 
-	$: if (api) {
-		carouselCount = api.scrollSnapList().length
-		carouselCurrent = api.selectedScrollSnap() + 1
-		api.on('select', () => {
+	$: {
+		if (api) {
+			carouselCount = api.scrollSnapList().length
 			carouselCurrent = api.selectedScrollSnap() + 1
-		})
+			api.on('select', () => {
+				carouselCurrent = api.selectedScrollSnap() + 1
+			})
+		}
 	}
 
 	const v4vPaymentDetail: RichPaymentDetail = {
@@ -77,42 +88,12 @@
 		userId: order.sellerUserId,
 	}
 
-	const dispatch = createEventDispatcher<{ valid: boolean }>()
-
-	const paymentDetails = createPaymentsForUserQuery(order.sellerUserId)
-	$: relevantPaymentDetails = $paymentDetails.data?.filter((payment) => payment.stallId === order.stallId || payment.stallId === null) ?? []
-	$: selectedPaymentDetail = relevantPaymentDetails[0] ?? null
-
-	$: selectedPaymentValue = selectedPaymentDetail && {
-		label: `${selectedPaymentDetail.paymentMethod} - ${selectedPaymentDetail.paymentDetails}`,
-		value: selectedPaymentDetail,
-	}
-
-	let orderTotal: Awaited<ReturnType<typeof cart.calculateStallTotal>>
-
-	type ShareWithInvoice = V4VDTO & { canReceive: boolean; max: number; min: number; paymentDetail: RichPaymentDetail }
-
-	let v4vShares: ShareWithInvoice[] = []
-	let v4vTotalPercentage: number | null = null
-
-	$: v4vQuery = v4VForUserQuery(order.sellerUserId)
-
-	onMount(() => {
+	onMount(async () => {
 		if (!$v4vQuery.data) return
-
-		Promise.all(
+		const results = await Promise.all(
 			$v4vQuery.data.map(async (v4v) => {
-				const res = await checkTargetUserHasLightningAddress(decodePk(v4v.target))
-				const canBeZappedRes = res.filter((method) => {
-					const amount = v4v.amount * orderTotal.subtotalInSats
-					const max = method.data.maxSendable / 1000
-					const min = method.data.minSendable / 1000
-					const canReceive = amount >= min && amount <= max
-					return canReceive
-				})
-
 				const user = $ndkStore.getUser({ npub: v4v.target })
-				const userProfile = await user.fetchProfile()
+				const userProfile = await resolveQuery(() => createUserByIdQuery(user.pubkey))
 				return {
 					...v4v,
 					paymentDetail: {
@@ -121,19 +102,19 @@
 					},
 				} as ShareWithInvoice
 			}),
-		).then((results) => {
-			v4vShares = results
-			v4vTotalPercentage = results.reduce((sum, item) => sum + item.amount, 0)
-		})
+		)
+
+		v4vShares = results
+		v4vTotalPercentage = results.reduce((sum, item) => sum + item.amount, 0)
 	})
 
-	type PaymentStatus = 'paid' | 'expired' | 'canceled'
-	const statusMapping: Record<PaymentStatus, OrderStatus> = {
+	const statusMapping: Record<NonNullable<PaymentStatus>, OrderStatus> = {
 		paid: ORDER_STATUS.PAID,
 		expired: ORDER_STATUS.PENDING,
 		canceled: ORDER_STATUS.PENDING,
 	}
-	const paymentEventToStatus: Record<string, PaymentStatus> = {
+
+	const paymentEventToStatus: Record<string, NonNullable<PaymentStatus>> = {
 		paymentComplete: 'paid',
 		paymentExpired: 'expired',
 		paymentCanceled: 'canceled',
@@ -149,13 +130,14 @@
 			}
 		}
 	}
-	// TODO improve type-safety of CustomEvents
-	async function handlePaymentEvent(
-		event: CustomEvent<{ paymentRequest: string; preimage: string | null; amountSats: number; isV4V: boolean; paymentType: string }>,
-	) {
-		const status = paymentEventToStatus[event.type]
+
+	function handlePaymentEvent(event: CustomEvent<CheckoutPaymentEvent>) {
+		const { type } = event
+		const { paymentRequest, preimage, amountSats, paymentType } = event.detail
+
+		const status = paymentEventToStatus[type]
 		if (!status) {
-			console.error(`Unknown payment event type: ${event.type}`)
+			console.error(`Unknown payment event type: ${type}`)
 			return
 		}
 
@@ -165,28 +147,20 @@
 		}
 
 		try {
-			const invoice = createInvoice(event.detail, status, event.detail.amountSats, event.detail.paymentType)
-			await processPayment(invoice, status)
+			const invoice = createInvoice(paymentRequest, preimage, status, amountSats, paymentType)
+			processPayment(invoice, status)
 			moveToNextPaymentProcessor()
 
-			// payment is indentided by the paymentType, is either 'merchant' or the target npub
-
-			const paymentIndex = paymentStatuses.update((statuses) => {
-				const index = statuses.findIndex((status) => status.id === event.detail.paymentType)
-				if (index !== -1) {
-					statuses[index].status = status
-				}
-				return statuses
-			})
+			paymentStatuses = paymentStatuses.map((s) => (s.id === paymentType ? { ...s, status } : s))
 		} catch (error) {
 			console.error(`Error handling ${status} payment:`, error)
 			toast.error(`Failed to process ${status} payment: ${error instanceof Error ? error.message : 'Unknown error'}`)
 		}
 	}
-
 	function createInvoice(
-		detail: { paymentRequest: string; preimage: string | null },
-		status: PaymentStatus,
+		paymentRequest: string | null,
+		preimage: string | null,
+		status: NonNullable<PaymentStatus>,
 		amount: number,
 		paymentType: string,
 	): InvoiceMessage {
@@ -199,19 +173,19 @@
 			type: paymentType === 'merchant' ? 'merchant' : 'v4v',
 			invoiceStatus: status,
 			paymentId: paymentType === 'merchant' ? selectedPaymentDetail?.id : paymentType,
-			paymentRequest: detail.paymentRequest,
-			proof: detail.preimage,
+			paymentRequest: paymentRequest,
+			proof: preimage,
 		}
 	}
 
-	async function processPayment(invoice: InvoiceMessage, status: PaymentStatus) {
+	async function processPayment(invoice: InvoiceMessage, status: NonNullable<PaymentStatus>) {
 		cart.addInvoice(invoice)
 
 		const paymentRequestMessage: PaymentRequestMessage = {
 			id: order.id,
-			payment_id: selectedPaymentDetail!.id,
+			payment_id: invoice.paymentId,
 			type: 1,
-			message: `Payment request for order ${order.id}, payment detail id: ${selectedPaymentDetail!.id}, type: ${selectedPaymentDetail!.paymentMethod}`,
+			message: `Payment request for order ${order.id}, payment detail id: ${invoice.paymentId}`,
 			payment_options: [
 				{
 					type: selectedPaymentDetail!.paymentMethod,
@@ -222,7 +196,6 @@
 		}
 
 		// Simulate sending DMs (commented out for now)
-		await tick()
 		await new Promise((resolve) => setTimeout(resolve, 1000))
 		// await sendDM(paymentRequestMessage, order.sellerUserId)
 		// await sendDM(invoice, order.sellerUserId)
@@ -235,13 +208,9 @@
 		}
 	}
 
-	async function calculateOrderTotal() {
-		orderTotal = await cart.calculateStallTotal(stall, products)
-	}
-
 	$: {
 		order
-		calculateOrderTotal()
+		cart.calculateStallTotal(stall, products).then((total) => (orderTotal = total))
 	}
 </script>
 
@@ -291,12 +260,12 @@
 								)} sats</span
 							>
 						</div>
-						{#if !$paymentStatuses.find((status) => status.id === 'merchant')?.status}
+						{#if !paymentStatuses.find((status) => status.id === 'merchant')?.status}
 							<span class="i-mdi-timer-sand text-black w-6 h-6 animate-pulse"> </span>
 						{/if}
 					</div>
 					{#each v4vShares as share, index}
-						{@const status = $paymentStatuses.find((status) => status.id === share.target)?.status}
+						{@const status = paymentStatuses.find((status) => status.id === share.target)?.status}
 						<div
 							class:border-l-8={carouselCurrent === index + 2}
 							class="border-black border hover:bg-gray-100 flex items-center justify-between p-2"

@@ -256,8 +256,8 @@ export interface OrderMessage {
 
 export interface PaymentOption {
 	type: string
-	link: string
-	paymentRequest: string
+	link: string | null
+	paymentRequest: string | null
 }
 
 export interface PaymentRequestMessage {

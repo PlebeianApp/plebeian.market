@@ -1,6 +1,4 @@
 import { createQuery } from '@tanstack/svelte-query'
-import ndkStore from '$lib/stores/ndk'
-import { derived } from 'svelte/store'
 
 import { createRequest, queryClient } from './client'
 
