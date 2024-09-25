@@ -5,10 +5,11 @@
 	import { Label } from '$lib/components/ui/label/index.js'
 	import Separator from '$lib/components/ui/separator/separator.svelte'
 	import { Slider } from '$lib/components/ui/slider/index.js'
+	import * as Tooltip from '$lib/components/ui/tooltip/index.js'
 	import V4vRecipientEdit from '$lib/components/v4v/v4v-recipient-edit.svelte'
 	import { setV4VForUserMutation } from '$lib/fetch/v4v.mutations'
 	import { v4VForUserQuery } from '$lib/fetch/v4v.queries'
-	import { decimalToPercentage, nav_back, stringToHexColor } from '$lib/utils'
+	import { decimalToPercentage, decodePk, getHexColorFingerprintFromHexPubkey, nav_back } from '$lib/utils'
 	import { toast } from 'svelte-sonner'
 
 	import type { PageData } from './$types'
@@ -44,22 +45,6 @@
 				amount: total > 0 ? item.amount / total : 0,
 			}))
 		}
-	}
-
-	function handleMouseEnter(npub: string) {
-		hoveredRecipient = npub
-	}
-
-	function handleMouseLeave() {
-		hoveredRecipient = null
-	}
-
-	function handleV4VMouseEnter() {
-		v4vHovered = true
-	}
-
-	function handleV4VMouseLeave() {
-		v4vHovered = false
 	}
 
 	function handleSetAllEqual() {
@@ -118,6 +103,13 @@
 		await $setV4VForUserMutation.mutateAsync(adjustedRecipients)
 		toast.success('V4V values successfully updated')
 	}
+	function getContrastColor(hexColor: string) {
+		const r = parseInt(hexColor.slice(1, 3), 16)
+		const g = parseInt(hexColor.slice(3, 5), 16)
+		const b = parseInt(hexColor.slice(5, 7), 16)
+		const yiq = (r * 299 + g * 587 + b * 114) / 1000
+		return yiq >= 128 ? 'black' : 'white'
+	}
 </script>
 
 <div class="pb-4 space-y-6">
@@ -157,35 +149,49 @@
 	<div class="space-y-8">
 		<div>
 			<Label class="font-bold">V4V share</Label>
-			<div class="flex w-full h-16 gap-1">
-				<div class="border-4 h-full bg-white border-green-400 flex items-center justify-center" style="width: {(1 - v4vTotal[0]) * 100}%;">
-					<span>you</span>
-				</div>
-				<div
-					on:mouseenter={handleV4VMouseEnter}
-					on:mouseleave={handleV4VMouseLeave}
-					role="button"
-					tabindex="0"
-					class="border-4 h-full bg-white right-0 border-blue-500 flex items-center justify-center"
-					style="width: {v4vTotal[0] * 100}%;"
-				>
-					<span>v4v</span>
-				</div>
+			<div class="relative w-full h-5 bg-gray-200 rounded-lg overflow-hidden">
+				<Tooltip.Root>
+					<Tooltip.Trigger
+						class="absolute inset-y-0 left-0 bg-green-400 flex items-center justify-center"
+						style="width: {(1 - v4vTotal[0]) * 100}%;"
+					>
+						<span class="text-current">You</span>
+					</Tooltip.Trigger>
+					<Tooltip.Content>Your share: {((1 - v4vTotal[0]) * 100).toFixed(2)}%</Tooltip.Content>
+				</Tooltip.Root>
+
+				<Tooltip.Root>
+					<Tooltip.Trigger
+						class="absolute inset-y-0 right-0 bg-blue-500 flex items-center justify-center"
+						style="width: {v4vTotal[0] * 100}%;"
+					>
+						<span class="text-current">V4V</span>
+					</Tooltip.Trigger>
+					<Tooltip.Content>V4V share: {(v4vTotal[0] * 100).toFixed(2)}%</Tooltip.Content>
+				</Tooltip.Root>
 			</div>
 		</div>
+
 		<div>
-			<Label class="font-bold ">Distribution of v4v share among recipients</Label>
-			<div class={'flex w-full h-16 gap-1'}>
-				{#each v4vRecipients as v4v}
-					<div
-						class={v4vHovered ? 'highlight-edit w-full border-4 bg-white' : 'w-full border-4 bg-white'}
-						style="width: {v4v.amount * 100}%; border-color: {stringToHexColor(v4v.target)}"
-						title="{v4v.target}: {(v4v.amount * 100).toFixed(2)}%"
-						on:mouseenter={() => handleMouseEnter(v4v.target)}
-						on:mouseleave={handleMouseLeave}
-						role="button"
-						tabindex="0"
-					></div>
+			<Label class="font-bold">Distribution of v4v share among recipients</Label>
+			<div class="relative w-full h-10 bg-gray-200 rounded-lg overflow-hidden">
+				{#each v4vRecipients as v4v, index}
+					{@const color = getHexColorFingerprintFromHexPubkey(v4v.target)}
+					{@const textColor = getContrastColor(color)}
+					{@const leftPosition = v4vRecipients.slice(0, index).reduce((sum, r) => sum + r.amount, 0) * 100}
+					<Tooltip.Root>
+						<Tooltip.Trigger
+							class="absolute inset-y-0 flex items-center justify-center"
+							style="left: {leftPosition}%; width: {v4v.amount * 100}%; background-color: {color};"
+						>
+							<span class="font-semibold text-xs" style="color: {textColor}">
+								{(v4v.amount * 100).toFixed(1)}%
+							</span>
+						</Tooltip.Trigger>
+						<Tooltip.Content>
+							{v4v.target}: {(v4v.amount * 100).toFixed(2)}%
+						</Tooltip.Content>
+					</Tooltip.Root>
 				{/each}
 			</div>
 		</div>
