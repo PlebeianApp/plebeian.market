@@ -6,6 +6,9 @@
 	import * as Select from '$lib/components/ui/select'
 	import { Skeleton } from '$lib/components/ui/skeleton'
 	import { createProductsByFilterQuery } from '$lib/fetch/products.queries'
+	import Input from '$lib/components/ui/input/input.svelte'
+	import { reactiveDebounce } from '$lib/utils'
+	import { writable } from 'svelte/store'
 
 	const pageSize = 10
 	let page = 1
@@ -16,7 +19,10 @@
 	function onSortSelectedChange(v?: typeof sort) {
 		sort = v!
 	}
-	$: productsQuery = createProductsByFilterQuery({ pageSize, page, order: sort.value ?? 'desc' })
+	let search = writable("")
+
+	$: debouncedSearch = reactiveDebounce(search, 600)
+	$: productsQuery = createProductsByFilterQuery({ pageSize, page, order: sort.value ?? 'desc', search: $debouncedSearch })
 </script>
 
 <div class="flex min-h-screen w-full flex-col">
@@ -27,15 +33,23 @@
 					<CatMenu />
 					<h2>Products</h2>
 
-					<Select.Root selected={sort} onSelectedChange={onSortSelectedChange}>
-						<Select.Trigger class="w-[100px]">
-							<Select.Value placeholder="Sort" />
-						</Select.Trigger>
-						<Select.Content>
-							<Select.Item value="desc">Latest</Select.Item>
-							<Select.Item value="asc">Oldest</Select.Item>
-						</Select.Content>
-					</Select.Root>
+					<div class="flex gap-6">
+						<Input
+							class=""
+							type="search"
+							placeholder="Search..."
+							bind:value={$search}
+						/>
+						<Select.Root selected={sort} onSelectedChange={onSortSelectedChange}>
+							<Select.Trigger class="w-[100px]">
+								<Select.Value placeholder="Sort" />
+							</Select.Trigger>
+							<Select.Content>
+								<Select.Item value="desc">Latest</Select.Item>
+								<Select.Item value="asc">Oldest</Select.Item>
+							</Select.Content>
+						</Select.Root>
+					</div>
 
 					{#if $productsQuery.error}
 						<p>{JSON.stringify($productsQuery.error)}</p>
@@ -43,7 +57,7 @@
 
 					{#if $productsQuery.isLoading}
 						<div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-							{#each [...Array(6)] as _, i}
+							{#each [...Array(2)] as _, i}
 								<Skeleton class="h-4 w-[200px]" />
 							{/each}
 						</div>

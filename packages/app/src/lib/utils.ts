@@ -12,7 +12,8 @@ import { encrypt } from 'nostr-tools/nip49'
 import { ofetch } from 'ofetch'
 import { toast } from 'svelte-sonner'
 import { cubicOut } from 'svelte/easing'
-import { get } from 'svelte/store'
+import type { Readable } from 'svelte/store'
+import { get, derived } from 'svelte/store'
 import { twMerge } from 'tailwind-merge'
 
 import type { EventCoordinates } from './interfaces'
@@ -452,3 +453,19 @@ export function formatSats(amount: number, toDisplay?: boolean): string | number
 
 	return formattedAmount
 }
+
+export function reactiveDebounce<T>(value: Readable<T>, delayMs = 300) {
+  let timer: ReturnType<typeof setTimeout> | null = null
+  return derived(
+    value,
+    ($value, set) => {
+      if (timer) clearTimeout(timer)
+      timer = setTimeout(() => {
+        set($value)
+        timer = null
+      }, delayMs)
+    },
+    get(value),
+  )
+}
+
