@@ -1,13 +1,7 @@
 <script>
-	import Button from './ui/button/button.svelte'
 </script>
 
 <div>
-	<div class="w-full bg-primary py-12 text-center text-white">
-		<span class="mb-8 text-3xl text-black">Join in on the fun!</span>
-		<h1 class="text-black">Sell stuff for sats</h1>
-		<Button class="p-6 text-xl font-bold">List my stuff</Button>
-	</div>
 	<footer class="sticky top-0 bg-black p-4 font-bold text-white lg:px-12">
 		<div class="container flex justify-between items-center flex-col gap-4 md:gap-0 md:flex-row">
 			<div class="flex gap-4 flex-col md:flex-row items-center">
