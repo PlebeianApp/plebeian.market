@@ -62,7 +62,7 @@
 						<p>Error: {$productsQuery.error}</p>
 					{/if}
 
-					{#if $productsQuery.data}
+					{#if $productsQuery.data?.products}
 						<div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
 							{#each $productsQuery.data.products as item (item.id)}
 								<ProductItem product={item} />
@@ -91,6 +91,8 @@
 								</Pagination.Item>
 							</Pagination.Content>
 						</Pagination.Root>
+					{:else}
+						No results for your query :)
 					{/if}
 				</div>
 			</div>

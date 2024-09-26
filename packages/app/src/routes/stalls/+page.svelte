@@ -62,7 +62,7 @@
 						<p>Error: {$stallsQuery.error}</p>
 					{/if}
 
-					{#if $stallsQuery.data}
+					{#if $stallsQuery.data?.stalls}
 						<div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
 							{#each $stallsQuery.data.stalls as item (item.id)}
 								<StallItem stallData={item} />
@@ -91,6 +91,8 @@
 								</Pagination.Item>
 							</Pagination.Content>
 						</Pagination.Root>
+					{:else}
+						No results for your query :)
 					{/if}
 				</div>
 			</div>
