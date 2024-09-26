@@ -10,11 +10,10 @@
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
 	import { v4VForUserQuery } from '$lib/fetch/v4v.queries'
 	import { cart } from '$lib/stores/cart'
-	import { sendDM } from '$lib/utils/dm.utils'
 	import ndkStore from '$lib/stores/ndk'
 	import { formatSats, resolveQuery } from '$lib/utils'
+	import { sendDM } from '$lib/utils/dm.utils'
 	import { createEventDispatcher, onMount, tick } from 'svelte'
-
 	import { toast } from 'svelte-sonner'
 
 	import type { OrderStatus, PaymentRequestMessage } from '@plebeian/database/constants'
@@ -47,7 +46,6 @@
 
 	const paymentDetails = createPaymentsForUserQuery(order.sellerUserId)
 	const v4vQuery = v4VForUserQuery(order.sellerUserId)
-	$: console.log(paymentStatuses)
 	$: relevantPaymentDetails = $paymentDetails.data?.filter((payment) => payment.stallId === order.stallId || payment.stallId === null) ?? []
 	$: selectedPaymentDetail = relevantPaymentDetails[0] ?? null
 
@@ -56,17 +54,11 @@
 		value: selectedPaymentDetail,
 	}
 
-	$: allPaymentsPaid = paymentStatuses.every((status) => ['paid', 'expired', 'canceled'].includes(status.status ?? ''))
-
+	$: allPaymentsPaid =
+		paymentStatuses.length > 0 && paymentStatuses.every((status) => ['paid', 'expired', 'canceled'].includes(status.status ?? ''))
 	$: {
-		if (allPaymentsPaid && paymentStatuses.length > 0) {
+		if (allPaymentsPaid) {
 			dispatch('valid', true)
-		}
-	}
-
-	$: {
-		if (orderTotal && v4vShares.length > 0 && paymentStatuses.length === 0) {
-			paymentStatuses = [{ id: 'merchant', status: null }, ...v4vShares.map((share) => ({ id: share.target, status: null }))]
 		}
 	}
 
@@ -108,7 +100,13 @@
 
 		v4vShares = results
 		v4vTotalPercentage = results.reduce((sum, item) => sum + item.amount, 0)
+		await initializePaymentStatuses()
 	})
+
+	async function initializePaymentStatuses() {
+		await tick()
+		paymentStatuses = [{ id: 'merchant', status: null }, ...v4vShares.map((share) => ({ id: share.target, status: null }))]
+	}
 
 	const statusMapping: Record<NonNullable<PaymentStatus>, OrderStatus> = {
 		paid: ORDER_STATUS.PAID,
@@ -151,9 +149,8 @@
 		try {
 			const invoice = createInvoice(paymentRequest, preimage, status, amountSats, paymentType)
 			processPayment(invoice, status)
-			moveToNextPaymentProcessor()
-
 			paymentStatuses = paymentStatuses.map((s) => (s.id === paymentType ? { ...s, status } : s))
+			moveToNextPaymentProcessor()
 		} catch (error) {
 			console.error(`Error handling ${status} payment:`, error)
 			toast.error(`Failed to process ${status} payment: ${error instanceof Error ? error.message : 'Unknown error'}`)

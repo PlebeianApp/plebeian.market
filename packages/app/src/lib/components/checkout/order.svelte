@@ -71,8 +71,8 @@
 				}
 
 				try {
-					// await 
-          (order, pubkey)
+					// await
+					order, pubkey
 				} catch (error) {
 					console.error('Failed to send order DM:', error)
 					throw new Error('Failed to send order DM to merchant')
