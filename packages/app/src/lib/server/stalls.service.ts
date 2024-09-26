@@ -7,7 +7,6 @@ import { stallsFilterSchema } from '$lib/schema'
 import { customTagValue, getEventCoordinates } from '$lib/utils'
 import { format } from 'date-fns'
 
-import type { PaymentDetail, Shipping, Stall } from '@plebeian/database'
 import {
 	and,
 	asc,
@@ -19,11 +18,15 @@ import {
 	eventTags,
 	getTableColumns,
 	inArray,
+	like,
+	PaymentDetail,
 	paymentDetails,
 	products,
+	Shipping,
 	shipping,
 	shippingZones,
 	sql,
+	Stall,
 	stalls,
 	users,
 } from '@plebeian/database'
@@ -167,13 +170,25 @@ export const getAllStalls = async (filter: StallsFilter = stallsFilterSchema.par
 		.limit(filter.pageSize)
 		.offset((filter.page - 1) * filter.pageSize)
 		.orderBy(filter.order === 'asc' ? asc(orderBy) : desc(orderBy))
-		.where(and(filter.userId ? eq(stalls.userId, filter.userId) : undefined, filter.stallId ? eq(stalls.id, filter.stallId) : undefined))
+		.where(
+			and(
+				filter.userId ? eq(stalls.userId, filter.userId) : undefined,
+				filter.stallId ? eq(stalls.id, filter.stallId) : undefined,
+				filter.search ? like(stalls.name, `%${filter.search.replaceAll(' ', '%')}%`) : undefined,
+			),
+		)
 		.execute()
 
 	const [{ count: total } = { count: 0 }] = await db
 		.select({ count: count() })
 		.from(stalls)
-		.where(and(filter.userId ? eq(stalls.userId, filter.userId) : undefined, filter.stallId ? eq(stalls.id, filter.stallId) : undefined))
+		.where(
+			and(
+				filter.userId ? eq(stalls.userId, filter.userId) : undefined,
+				filter.stallId ? eq(stalls.id, filter.stallId) : undefined,
+				filter.search ? like(stalls.name, `%${filter.search.replaceAll(' ', '%')}%`) : undefined,
+			),
+		)
 		.execute()
 	const richStalls = await Promise.all(
 		stallsResult.map(async (stall) => {

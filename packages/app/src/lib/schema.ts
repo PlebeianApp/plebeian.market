@@ -6,6 +6,7 @@ import { INVOICE_STATUS, INVOICE_TYPE, ORDER_STATUS } from '@plebeian/database/c
 import { validUrls } from './constants'
 
 export const generalFilterSchema = z.object({
+	search: z.string().optional(),
 	pageSize: z.coerce.number().min(1).default(10),
 	page: z.coerce.number().min(1).default(1),
 	order: z.enum(['asc', 'desc']).default('asc'),

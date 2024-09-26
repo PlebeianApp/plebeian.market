@@ -48,7 +48,7 @@
 		<a href={stallUrl}>
 			<Card.Header class="p-0">
 				{#if stall.image}
-					<img src={stall.image} alt="stall" class="object-cover w-full h-[25vh]" />
+					<img src={stall.image} alt="" class="object-cover w-full h-[25vh]" />
 				{:else}
 					<div style={`background-color: ${stringToHexColor(stall.id)}`} class="h-[5vh]" />
 				{/if}

@@ -7,7 +7,6 @@ import { getImagesByProductId } from '$lib/server/productImages.service'
 import { customTagValue, getEventCoordinates } from '$lib/utils'
 import { format } from 'date-fns'
 
-import type { Product, ProductImage, ProductMeta, ProductShipping, ProductTypes } from '@plebeian/database'
 import {
 	and,
 	asc,
@@ -21,12 +20,18 @@ import {
 	eventTags,
 	getTableColumns,
 	inArray,
+	like,
+	Product,
 	PRODUCT_IMAGES_TYPE,
 	PRODUCT_META,
+	ProductImage,
 	productImages,
+	ProductMeta,
 	productMeta,
 	products,
+	ProductShipping,
 	productShipping,
+	ProductTypes,
 	sql,
 } from '@plebeian/database'
 
@@ -130,13 +135,21 @@ export const getAllProducts = async (filter: ProductsFilter = productsFilterSche
 		limit: filter.pageSize,
 		offset: (filter.page - 1) * filter.pageSize,
 		orderBy: (products, { asc, desc }) => (filter.order === 'asc' ? asc(orderBy) : desc(orderBy)),
-		where: and(filter.userId ? eq(products.userId, filter.userId) : undefined),
+		where: and(
+			filter.userId ? eq(products.userId, filter.userId) : undefined,
+			filter.search ? like(products.productName, `%${filter.search.replaceAll(' ', '%')}%`) : undefined,
+		),
 	})
 
 	const [{ count: total } = { count: 0 }] = await db
 		.select({ count: count() })
 		.from(products)
-		.where(and(filter.userId ? eq(products.userId, filter.userId) : undefined))
+		.where(
+			and(
+				filter.userId ? eq(products.userId, filter.userId) : undefined,
+				filter.search ? like(products.productName, `%${filter.search.replaceAll(' ', '%')}%`) : undefined,
+			),
+		)
 
 	const displayProducts: DisplayProduct[] = await Promise.all(productsResult.map(toDisplayProduct))
 

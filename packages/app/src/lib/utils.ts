@@ -1,6 +1,7 @@
 import type { CreateQueryResult } from '@tanstack/svelte-query'
 import type { ClassValue } from 'clsx'
 import type { VerifiedEvent } from 'nostr-tools'
+import type { Readable } from 'svelte/store'
 import type { TransitionConfig } from 'svelte/transition'
 import { type NDKEvent, type NDKKind, type NDKTag, type NDKUserProfile, type NDKZapMethodInfo, type NostrEvent } from '@nostr-dev-kit/ndk'
 import { page } from '$app/stores'
@@ -12,7 +13,7 @@ import { encrypt } from 'nostr-tools/nip49'
 import { ofetch } from 'ofetch'
 import { toast } from 'svelte-sonner'
 import { cubicOut } from 'svelte/easing'
-import { get } from 'svelte/store'
+import { derived, get } from 'svelte/store'
 import { twMerge } from 'tailwind-merge'
 
 import type { EventCoordinates } from './interfaces'
@@ -456,4 +457,19 @@ export function formatSats(amount: number, toDisplay?: boolean): string | number
 		toDisplay === undefined || toDisplay ? amount.toLocaleString(undefined, { maximumFractionDigits: 0 }) : Math.floor(amount)
 
 	return formattedAmount
+}
+
+export function reactiveDebounce<T>(value: Readable<T>, delayMs = 300) {
+	let timer: ReturnType<typeof setTimeout> | null = null
+	return derived(
+		value,
+		($value, set) => {
+			if (timer) clearTimeout(timer)
+			timer = setTimeout(() => {
+				set($value)
+				timer = null
+			}, delayMs)
+		},
+		get(value),
+	)
 }
