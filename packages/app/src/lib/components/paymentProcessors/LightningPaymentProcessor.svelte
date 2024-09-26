@@ -15,10 +15,10 @@
 		formatTime,
 		handleNWCPayment,
 		handleWebLNPayment,
+		LN_ADDRESS_REGEX,
 		setupExpiryCountdown,
 		setupZapSubscription,
 	} from '$lib/utils/zap.utils'
-	import { NIP05_REGEX } from 'nostr-tools/nip05'
 	import { afterUpdate, createEventDispatcher, onDestroy } from 'svelte'
 	import { toast } from 'svelte-sonner'
 
@@ -66,7 +66,7 @@
 		if (isLoading || invoice) return
 		isLoading = true
 		try {
-			if (NIP05_REGEX.test(paymentDetail.paymentDetails)) {
+			if (LN_ADDRESS_REGEX.test(paymentDetail.paymentDetails)) {
 				const ln = new LightningAddress(paymentDetail.paymentDetails)
 				await ln.fetch()
 				const allowsNostr = ln.lnurlpData?.allowsNostr ?? false

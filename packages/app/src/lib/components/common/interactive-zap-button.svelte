@@ -3,6 +3,7 @@
 	import { NDKPrivateKeySigner } from '@nostr-dev-kit/ndk'
 	import Spinner from '$lib/components/assets/spinner.svelte'
 	import { Button } from '$lib/components/ui/button'
+	import * as Collapsible from '$lib/components/ui/collapsible'
 	import * as Dialog from '$lib/components/ui/dialog'
 	import { Input } from '$lib/components/ui/input'
 	import { Label } from '$lib/components/ui/label'
@@ -28,7 +29,6 @@
 	export let userIdToZap: string
 	export let profile: NDKUserProfile
 
-	let zapAmountSats = 0
 	let zapMessage = 'Zap from Plebeian'
 	let zapMethods: NDKZapMethodInfo[] = []
 	let isLoading = true
@@ -36,24 +36,27 @@
 	let lightningInvoiceData: string | undefined
 	let qrDialogOpen = false
 	let zapDialogOpen = false
-	let nwcSpinnerShown = false
+	let spinnerShown = false
+	let advancedSettingsOpen = false
+	let canUseWebln = 'webln' in window
 
+	$: zapAmountSats = 21
 	$: user = $ndkStore.getUser({ pubkey: userIdToZap })
-	$: user.profile = profile
 	$: zapAmountMSats = zapAmountSats * 1000
-	$: userCanBeZapped = user.profile?.lud16 && LN_ADDRESS_REGEX.test(user.profile.lud16)
-	$: canUseNWC = canPayWithNWC(zapAmountSats)
-	$: canUseWebln = 'webln' in window
+	$: userCanBeZapped = profile?.lud16 && LN_ADDRESS_REGEX.test(profile?.lud16)
+	let canUseNWC = canPayWithNWC(zapAmountSats)
+	$: if (zapDialogOpen) canUseNWC = canPayWithNWC(zapAmountSats)
 
 	const zapSubscription = setupZapSubscription((event) => {
 		const invoice = createInvoiceObject(lightningInvoiceData!)
 		handleZapEvent(event, invoice, () => {
-			nwcSpinnerShown = false
+			spinnerShown = false
 			zapDialogOpen = false
 		})
 	})
 
 	async function handleZap(invoiceInterface: 'qr' | 'nwc' | 'webln') {
+		spinnerShown = true
 		const zapRes = (await user.zap(
 			zapAmountMSats,
 			zapMessage,
@@ -81,7 +84,7 @@
 
 	async function handleNwcPayment(invoice: string) {
 		if (!invoice) return
-		nwcSpinnerShown = true
+		spinnerShown = true
 		isLoading = true
 		const invoiceObject = createInvoiceObject(invoice)
 
@@ -89,7 +92,7 @@
 			invoiceObject,
 			async (preimage) => {
 				toast.success('Payment success!')
-				nwcSpinnerShown = false
+				spinnerShown = false
 				zapDialogOpen = false
 			},
 			(error) => {
@@ -98,7 +101,7 @@
 		)
 
 		isLoading = false
-		nwcSpinnerShown = false
+		spinnerShown = false
 	}
 	async function handleWeblnPayment(invoice: string) {
 		const invoiceObject = createInvoiceObject(invoice)
@@ -116,56 +119,84 @@
 	}
 
 	onMount(async () => {
-		if (user.profile && userCanBeZapped) {
+		if (profile && userCanBeZapped) {
 			zapMethods = await checkTargetUserHasLightningAddress(userIdToZap)
 		}
 		isLoading = false
 	})
 
-	onDestroy(() => zapSubscription.stop())
+	onDestroy(() => {
+		zapSubscription.stop()
+		spinnerShown = false
+	})
 </script>
 
 <Dialog.Root bind:open={zapDialogOpen}>
 	<Dialog.Content class="max-w-[425px] text-black">
 		<Dialog.Header>
-			<Dialog.Title>Zap <small>({user.profile?.lud16})</small></Dialog.Title>
-			<Dialog.Description class="text-black">Select an amount to zap.</Dialog.Description>
+			<Dialog.Title>Zap <small>({profile?.lud16})</small></Dialog.Title>
+			<Dialog.Description class="text-black">
+				Amount: <span class="font-bold">{zapAmountSats} sats</span>
+			</Dialog.Description>
 		</Dialog.Header>
 
-		<div class="grid grid-cols-2 gap-2">
+		<div class="grid grid-cols-2 gap-2 mb-4">
 			{#each DEFAULT_ZAP_AMOUNTS as { displayText, amount }}
-				<Button variant="outline" class="border-2 border-black" on:click={() => (zapAmountSats = amount)}>
+				<Button
+					variant={amount === zapAmountSats ? 'default' : 'outline'}
+					class="border-2 border-black"
+					on:click={() => (zapAmountSats = amount)}
+					disabled={spinnerShown}
+				>
 					{displayText}
 				</Button>
 			{/each}
 		</div>
+		<Label for="zapMessage" class="font-bold mt-4">Message</Label>
+		<Input bind:value={zapMessage} class="border-2 border-black" type="text" id="zapMessage" disabled={spinnerShown} />
+		<Collapsible.Root bind:open={advancedSettingsOpen}>
+			<Collapsible.Trigger asChild let:builder>
+				<Button variant="outline" class="w-full mb-2" builders={[builder]} disabled={spinnerShown}>
+					Advanced Settings
+					<span class="i-lucide-chevron-down ml-2" />
+				</Button>
+			</Collapsible.Trigger>
+			<Collapsible.Content>
+				<div class="space-y-2 mt-2 flex flex-col">
+					<Label for="zapAmount" class="font-bold">Manual zap amount</Label>
+					<Input bind:value={zapAmountSats} class="border-2 border-black" type="number" id="zapAmount" min={0} disabled={spinnerShown} />
 
-		<Label for="zapAmount" class="font-bold">Manual zap amount</Label>
-		<Input bind:value={zapAmountSats} class="border-2 border-black" type="number" id="zapAmount" min={0} />
+					<Label for="isAnonymousZap" class="font-bold">Anonymous zap</Label>
+					<Switch
+						bind:checked={isAnonymousZap}
+						class="border-2 border-black"
+						id="isAnonymousZap"
+						disabled={!$ndkStore.activeUser || spinnerShown}
+					/>
+				</div>
+			</Collapsible.Content>
+		</Collapsible.Root>
 
-		<Label for="zapMessage" class="font-bold">Message</Label>
-		<Input bind:value={zapMessage} class="border-2 border-black" type="text" id="zapMessage" />
-
-		<Label for="isAnonymousZap" class="font-bold">Anonymous zap</Label>
-		<Switch bind:checked={isAnonymousZap} class="border-2 border-black" id="isAnonymousZap" disabled={!$ndkStore.activeUser} />
+		{#if spinnerShown}
+			<div class="w-full flex justify-center mt-4">
+				<Spinner />
+			</div>
+		{/if}
 
 		{#if zapMethods.length && zapAmountSats > 0}
-			<div class="grid grid-cols-[auto_auto] justify-center gap-2">
-				<Button variant="secondary" on:click={() => handleZap('qr')}>
+			<div class="grid grid-cols-[auto_auto] justify-center gap-2 mt-4">
+				<Button variant="secondary" on:click={() => handleZap('qr')} disabled={spinnerShown}>
 					<span class="i-mingcute-qrcode-line text-black w-6 h-6 mr-2" />
 					<span>Zap with QR</span>
 				</Button>
 				{#if canUseNWC}
-					<Button variant="secondary" on:click={() => handleZap('nwc')}>
+					<Button variant="secondary" on:click={() => handleZap('nwc')} disabled={spinnerShown}>
 						<span class="i-mdi-purse w-6 h-6 mr-2" />
 						<span>Zap with NWC</span>
-						{#if nwcSpinnerShown}
-							<Spinner />
-						{/if}
 					</Button>
 				{/if}
 				{#if canUseWebln}
-					<Button variant="secondary" on:click={() => handleZap('webln')}>
+					<Button variant="secondary" on:click={() => handleZap('webln')} disabled={spinnerShown}>
 						<span class="i-mdi-lightning-bolt w-6 h-6 mr-2" />
 						<span>Zap with WebLN</span>
 					</Button>
@@ -182,6 +213,7 @@
 		bolt11String={lightningInvoiceData}
 		on:zapSuccess={() => (qrDialogOpen = false)}
 		on:zapExpired={() => (zapDialogOpen = false)}
+		on:zapCleanup={() => (spinnerShown = false)}
 	/>
 {/if}
 

@@ -5,7 +5,7 @@
 	import { copyToClipboard, truncateText } from '$lib/utils'
 	import { createInvoiceObject, formatTime, handleZapEvent, setupExpiryCountdown, setupZapSubscription } from '$lib/utils/zap.utils'
 	import { addSeconds } from 'date-fns'
-	import { createEventDispatcher, onDestroy, onMount } from 'svelte'
+	import { createEventDispatcher, onDestroy } from 'svelte'
 	import { toast } from 'svelte-sonner'
 
 	import Button from '../ui/button/button.svelte'
@@ -51,6 +51,7 @@
 			subscription = undefined
 		}
 		if (cleanupCountdown) cleanupCountdown()
+		dispatch('zapCleanup')
 		timeLeft = null
 	}
 
