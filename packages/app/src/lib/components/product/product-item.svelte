@@ -53,9 +53,9 @@
 				<Separator></Separator>
 				<div class="flex flex-col items-start">
 					{#if price && currency && !['sat', 'sats'].includes(currency.toLowerCase())}
-						<span class="text-xs">{price.toLocaleString('en-US', { style: 'currency', currency: currency })} {currency}</span>
+						<span class="text-xs">{price.toLocaleString('en-US')} {currency}</span>
 					{:else if price && currency && currency.toLowerCase() == 'btc'}
-						<span class="text-xs">{price.toLocaleString('en-US', { style: 'currency', currency: currency })} {currency}</span>
+						<span class="text-xs">{price.toLocaleString('en-US')} {currency}</span>
 					{/if}
 					<span class=" font-bold">
 						{#if $priceQuery?.isLoading}

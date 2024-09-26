@@ -34,6 +34,7 @@ function convertToOrderItemsInDb(orderId: string, order: OrderMessage): OrderIte
 function convertToInvoiceInDb(invoice: InvoiceMessage): InvoiceInDb {
 	return InvoiceInDbSchema.parse({
 		...invoice,
+		type: invoice.type,
 		createdAt: new Date(invoice.createdAt),
 		updatedAt: new Date(invoice.updatedAt),
 		paymentDetails: invoice.paymentId,
@@ -63,6 +64,7 @@ export const actions = {
 					const invoiceInDb = convertToInvoiceInDb(invoice)
 					const insertedInvoice = await tx.insert(invoices).values({
 						...invoiceInDb,
+						type: invoiceInDb.type,
 						totalAmount: invoiceInDb.totalAmount.toString(),
 					})
 					insertedInvoices.push(insertedInvoice)

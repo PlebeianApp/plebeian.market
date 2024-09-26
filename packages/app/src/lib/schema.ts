@@ -1,11 +1,12 @@
 import { z } from 'zod'
 
-import type { InvoiceStatus, OrderStatus } from '@plebeian/database/constants'
-import { INVOICE_STATUS, ORDER_STATUS } from '@plebeian/database/constants'
+import type { InvoiceStatus, InvoiceType, OrderStatus } from '@plebeian/database/constants'
+import { INVOICE_STATUS, INVOICE_TYPE, ORDER_STATUS } from '@plebeian/database/constants'
 
 import { validUrls } from './constants'
 
 export const generalFilterSchema = z.object({
+	search: z.string().optional(),
 	pageSize: z.coerce.number().min(1).default(10),
 	page: z.coerce.number().min(1).default(1),
 	order: z.enum(['asc', 'desc']).default('asc'),
@@ -182,6 +183,7 @@ export const InvoiceInDbSchema = z.object({
 	totalAmount: z.number(),
 	invoiceStatus: z.enum(Object.values(INVOICE_STATUS) as NonEmptyArray<InvoiceStatus>),
 	paymentDetails: z.string(),
+	type: z.enum(Object.values(INVOICE_TYPE) as NonEmptyArray<InvoiceType>),
 	paymentRequest: z.string().nullable(),
 	proof: z.string().nullable(),
 })

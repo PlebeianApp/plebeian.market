@@ -14,9 +14,6 @@
 <div class="flex flex-col gap-6">
 	{#if $categoriesQuery.isLoading}
 		<Skeleton class=" h-96 w-full" />
-		<Skeleton class=" h-96 w-full" />
-		<Skeleton class=" h-96 w-full" />
-		<Skeleton class=" h-96 w-full" />
 	{:else if $categoriesQuery.data?.categories.length}
 		<h3>Categories</h3>
 		<div class="flex flex-col gap-6">

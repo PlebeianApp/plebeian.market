@@ -18,3 +18,12 @@ export const FormLabels: { [key: string]: string } = {
 	contactEmail: 'Email',
 	observations: 'Observations',
 }
+
+export type CheckoutPaymentEvent = {
+	paymentRequest: string | null
+	preimage: string | null
+	amountSats: number
+	paymentType: string
+}
+
+export type PaymentStatus = 'pending' | 'success' | 'failed' | 'canceled'
