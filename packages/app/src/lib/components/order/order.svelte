@@ -1,11 +1,11 @@
 <script lang="ts">
-	import type { QueryObserverResult } from '@tanstack/svelte-query'
 	import type { DisplayOrder } from '$lib/server/orders.service'
 	import type { RichPaymentDetail } from '$lib/server/paymentDetails.service'
-	import type { DisplayProduct } from '$lib/server/products.service'
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
 	import { updateInvoiceStatusMutation } from '$lib/fetch/invoices.mutations'
 	import { createInvoicesByFilterQuery } from '$lib/fetch/invoices.queries'
 	import { updateOrderStatusMutation } from '$lib/fetch/order.mutations'
+	import { createPaymentsForUserQuery } from '$lib/fetch/payments.queries'
 	import { createProductQuery } from '$lib/fetch/products.queries'
 	import { formatSats, getInvoiceStatusColor } from '$lib/utils'
 	import { toast } from 'svelte-sonner'
@@ -13,6 +13,7 @@
 
 	import type { CheckoutPaymentEvent } from '../checkout/types'
 	import MiniUser from '../cart/mini-user.svelte'
+	import CheckPaymentDetail from '../common/check-payment-detail.svelte'
 	import PaymentProcessor from '../paymentProcessors/paymentProcessor.svelte'
 	import ProductItem from '../product/product-item.svelte'
 	import StallName from '../stalls/stall-name.svelte'
@@ -24,10 +25,13 @@
 	export let order: DisplayOrder
 	export let orderMode: 'sale' | 'purchase'
 	let currentPaymentDetail: RichPaymentDetail | undefined = undefined
-	type ProductQueryResult = QueryObserverResult<DisplayProduct, Error>
+	let merchantPaymentDetail: RichPaymentDetail | undefined = undefined
 	type PaymentStatus = 'paid' | 'expired' | 'canceled' | null
 
 	let getUserProfileLoading: string | undefined = undefined
+
+	const paymentDetails = createPaymentsForUserQuery(order.sellerUserId)
+	$: relevantPaymentDetails = $paymentDetails.data?.filter((payment) => payment.stallId === order.stallId || payment.stallId === null) ?? []
 
 	const v4vPaymentDetail: RichPaymentDetail = {
 		id: 'v4v',
@@ -95,6 +99,7 @@
 		$updateInvoiceStatusMutation.mutateAsync({ invoiceId, status, preimage: event.detail.preimage ?? '' })
 		toast.success(`Payment ${status}`)
 		currentPaymentDetail = undefined
+		merchantPaymentDetail = undefined
 	}
 </script>
 
@@ -171,7 +176,6 @@
 		<h3 class="text-xl font-semibold mt-8 mb-4">Invoices</h3>
 		<div class="space-y-4">
 			{#each $invoices.data as invoice (invoice.id)}
-				<!-- {JSON.stringify(invoice)} -->
 				<div class="flex flex-col p-4 bg-gray-50 rounded-lg shadow transition-all duration-200">
 					<div class="flex justify-between items-start">
 						<div class="flex flex-col">
@@ -186,12 +190,35 @@
 							<span class="text-gray-600">{new Date(invoice.createdAt).toLocaleString()}</span>
 						</div>
 					</div>
+					{#if invoice.type === 'merchant' && orderMode === 'purchase' && invoice.invoiceStatus !== 'paid' && invoice.invoiceStatus !== 'refunded'}
+						<DropdownMenu.Root>
+							<DropdownMenu.Trigger class="text-right"><Button class="w-32">Retry</Button></DropdownMenu.Trigger>
+							<DropdownMenu.Content>
+								<DropdownMenu.Group>
+									{#each relevantPaymentDetails as paymentDetail}
+										<DropdownMenu.Item on:click={() => (currentPaymentDetail = paymentDetail)}
+											>`${paymentDetail.paymentMethod} - ${paymentDetail.paymentDetails}`</DropdownMenu.Item
+										>
+									{/each}
+								</DropdownMenu.Group>
+							</DropdownMenu.Content>
+						</DropdownMenu.Root>
+						{#if merchantPaymentDetail?.paymentDetails}
+							<PaymentProcessor
+								paymentDetail={merchantPaymentDetail}
+								amountSats={parseInt(invoice.totalAmount)}
+								paymentType="v4v"
+								on:paymentComplete={(e) => handlePaymentEvent(e, invoice.id)}
+								on:paymentExpired={(e) => handlePaymentEvent(e, invoice.id)}
+								on:paymentCanceled={(e) => handlePaymentEvent(e, invoice.id)}
+							/>
+						{/if}
+					{/if}
 
 					{#if invoice.type === 'v4v'}
 						{#if orderMode === 'purchase'}
 							<div class="p-2 bg-white flex justify-between items-center gap-2">
 								<div>{invoice.paymentDetails}</div>
-								<!-- <MiniV4v npub={invoice.paymentDetails} /> -->
 								{#if invoice.invoiceStatus !== 'paid' && invoice.invoiceStatus !== 'refunded'}
 									<Button class="w-32" on:click={() => handleRetryPayment(invoice.paymentDetails)}>Retry</Button>
 								{:else}
@@ -208,6 +235,10 @@
 									on:paymentCanceled={(e) => handlePaymentEvent(e, invoice.id)}
 								/>
 							{/if}
+						{:else if invoice.invoiceStatus !== 'paid' && invoice.invoiceStatus !== 'refunded'}
+							<div class="p-2 bg-white flex justify-between items-center gap-2">
+								<CheckPaymentDetail paymentDetails={invoice.paymentDetails} />
+							</div>
 						{/if}
 					{/if}
 				</div>
