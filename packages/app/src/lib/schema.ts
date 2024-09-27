@@ -117,6 +117,14 @@ export const orderSchema = z.object({
 
 export type OrderFilter = z.infer<typeof orderSchema>
 
+export const invoicesFilterSchema = generalFilterSchema.extend({
+	orderBy: z.enum(['createdAt', 'updatedAt']).default('createdAt'),
+	orderId: z.string().optional(),
+	invoiceStatus: z.enum(Object.values(INVOICE_STATUS) as NonEmptyArray<InvoiceStatus>).optional(),
+})
+
+export type InvoicesFilter = z.infer<typeof invoicesFilterSchema>
+
 export const createInvoiceFilter = z.object({
 	orderId: z.string(),
 	totalAmount: z.string(),
