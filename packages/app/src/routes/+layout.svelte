@@ -31,7 +31,7 @@
 		queryClient.setQueryData(['currency-conversion', currency], price)
 	}
 
-	$: isLoggedIn = $ndkStore.activeUser
+	$: isLoggedIn = $ndkStore && $ndkStore.activeUser
 
 	onMount(async () => {
 		if (isFirstTimeRunning) {

@@ -5,7 +5,7 @@
 	import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '$lib/components/ui/card'
 	import { Separator } from '$lib/components/ui/separator'
 	import { cart } from '$lib/stores/cart'
-	import { checkIfUserExists, formatSats, shouldRegister } from '$lib/utils'
+	import { checkIfUserExists, formatSats, getInvoiceStatusColor, shouldRegister } from '$lib/utils'
 	import { CheckCircle } from 'lucide-svelte'
 	import { createEventDispatcher, onMount } from 'svelte'
 
@@ -84,17 +84,6 @@
 			await handlePersist()
 		}
 	})
-
-	function getInvoiceStatusColor(status: string): string {
-		switch (status) {
-			case 'paid':
-				return 'text-green-600'
-			case 'pending':
-				return 'text-yellow-600'
-			default:
-				return 'text-gray-600'
-		}
-	}
 </script>
 
 <div class="flex flex-col items-center justify-center w-full max-w-3xl mx-auto gap-8 py-8">

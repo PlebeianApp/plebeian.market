@@ -156,6 +156,7 @@
 			toast.error(`Failed to process ${status} payment: ${error instanceof Error ? error.message : 'Unknown error'}`)
 		}
 	}
+
 	function createInvoice(
 		paymentRequest: string | null,
 		preimage: string | null,
