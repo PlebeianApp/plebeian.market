@@ -169,8 +169,8 @@ export type WalletType = ObjectValues<typeof WALLET_TYPE> | null
 export const PAYMENT_DETAILS_METHOD = {
 	LIGHTNING_NETWORK: 'ln',
 	ON_CHAIN: 'on-chain',
-	CASHU: 'cashu',
-	OTHER: 'other',
+	// CASHU: 'cashu',
+	// OTHER: 'other',
 } as const
 
 export type PaymentDetailsMethod = ObjectValues<typeof PAYMENT_DETAILS_METHOD>
