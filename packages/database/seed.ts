@@ -27,7 +27,7 @@ import {
 	WALLET_TYPE,
 } from './constants'
 import { db } from './database'
-import { devInstance, devUser1, devUser2, devUser3, devUser4, devUser5 } from './fixtures'
+import { CURRENCIES_WITH_FICTIONAL_CONVERSION_RATES, devInstance, devUser1, devUser2, devUser3, devUser4, devUser5 } from './fixtures'
 import {
 	AppSettings,
 	Auction,
@@ -46,7 +46,7 @@ import {
 	ShippingZone,
 	Stall,
 	User,
-	UserMeta
+	UserMeta,
 } from './types'
 import { createId, createShippingCoordinates } from './utils'
 
@@ -167,10 +167,10 @@ const main = async () => {
 							id: createId(),
 							userId: userId.id,
 							metaName: name,
-							valueText: value,
+							valueText: value.paymentDetails,
 							valueBoolean: valueBoolean,
-							valueNumeric: String(valueNumeric),
-							key: value,
+                            valueNumeric: String(valueNumeric),
+							key: value.npub,
 							createdAt: faker.date.recent(),
 							updatedAt: faker.date.future(),
 						} as UserMeta
@@ -386,27 +386,82 @@ const main = async () => {
 
 	const orderItemsData = ordersData.map((orders) => {
 		return orders.flat(1).map((order) => {
-			return {
-				orderId: order.id,
-				productId: faker.helpers.arrayElement(productData.flat(2)).id,
-				qty: faker.number.int({ min: 1, max: 10 }),
-			} as OrderItem
+			const itemsForStall = productData.flat(2).filter((product) => product.stallId === order.stallId)
+			const numberOfItems = faker.number.int({ min: 1, max: Math.min(5, itemsForStall.length) })
+
+			const selectedProducts = faker.helpers.arrayElements(itemsForStall, numberOfItems)
+
+			return selectedProducts.map(
+				(product) =>
+					({
+						orderId: order.id,
+						productId: product.id,
+						qty: faker.number.int({ min: 1, max: 10 }),
+					}) as OrderItem,
+			)
 		})
 	})
 
 	const invoicesData = ordersData.map((orders) => {
 		return orders.flat(1).map((order) => {
-			return {
-				id: createId(),
-				orderId: order.id,
-				createdAt: faker.date.recent(),
-				updatedAt: faker.date.future(),
-				totalAmount: faker.finance.amount(),
-				type: faker.helpers.arrayElement(Object.values(INVOICE_TYPE)),
-				invoiceStatus: faker.helpers.arrayElement(Object.values(INVOICE_STATUS)),
-				paymentMethod: faker.helpers.arrayElement(Object.values(PAYMENT_DETAILS_METHOD)),
-				paymentDetails: faker.finance.creditCardNumber(),
-			} as Invoice
+			const v4vUserMeta = userMetaData
+				.flat(1)
+				.filter((meta) => meta.metaName === USER_META.V4V_SHARE.value)
+				.filter((meta) => meta.userId === order.buyerUserId)
+
+			const totalV4VShare = v4vUserMeta.reduce((acc, meta) => {
+				return acc + (parseFloat(meta.valueNumeric ?? '0') || 0)
+			}, 0)
+
+			const orderItemsForOrder = orderItemsData.flat(2).filter((orderItem) => orderItem.orderId === order.id)
+			const productsForOrder = productData
+				.flat(2)
+				.filter((product) => orderItemsForOrder.map((item) => item.productId).includes(product.id))
+
+			const shippingForOrder = parseFloat(shippingData.flat(1).find((shipping) => shipping.id === order.shippingId)?.cost ?? '0')
+
+			const totalAmountInSatsItemsAndShipping = orderItemsForOrder.reduce((acc, item) => {
+				const product = productsForOrder.find((product) => product.id === item.productId)
+				if (product) {
+					const priceInBTC = parseFloat(product.price) / CURRENCIES_WITH_FICTIONAL_CONVERSION_RATES[product.currency ?? 'USD']
+					const priceInSats = priceInBTC * 100000000 // Convert BTC to sats
+					return acc + priceInSats * item.qty
+				}
+				return acc
+			}, shippingForOrder || 0)
+
+			const shares = [
+				{
+					amount: totalAmountInSatsItemsAndShipping * (1 - totalV4VShare),
+					target: 'merchant',
+				},
+				...v4vUserMeta.map((meta) => {
+					return {
+						amount: parseFloat(meta.valueNumeric ?? '0'),
+						target: meta.key,
+					}
+				}),
+			]
+
+			return shares.map((share) => {
+				const paymenttDetailsForTarget = V4V_DEFAULT_RECIPIENTS.find((recipient) => recipient.npub === share.target)?.paymentDetails
+				return {
+					id: createId(),
+					orderId: order.id,
+					createdAt: faker.date.recent(),
+					updatedAt: faker.date.future(),
+					totalAmount: (share.target === 'merchant'
+						? totalAmountInSatsItemsAndShipping * (1 - totalV4VShare)
+						: totalAmountInSatsItemsAndShipping * share.amount
+					).toString(),
+					invoiceStatus: faker.helpers.arrayElement(Object.values(INVOICE_STATUS)),
+					paymentMethod: faker.helpers.arrayElement(Object.values(PAYMENT_DETAILS_METHOD)),
+					paymentDetails: share.target === 'merchant' ? faker.finance.creditCardNumber() : paymenttDetailsForTarget,
+					paymentRequest: faker.internet.url(),
+					proof: faker.internet.url(),
+					type: share.target === 'merchant' ? INVOICE_TYPE.MERCHANT : INVOICE_TYPE.V4V,
+				} as Invoice
+			})
 		})
 	})
 
@@ -583,8 +638,8 @@ const main = async () => {
 			{ table: dbSchema.shipping, data: shippingData.flat(1) },
 			{ table: dbSchema.shippingZones, data: uniqueShippingZonesData },
 			{ table: dbSchema.orders, data: ordersData.flat(2) },
-			{ table: dbSchema.invoices, data: invoicesData.flat(1) },
-			{ table: dbSchema.orderItems, data: orderItemsData.flat(1) },
+			{ table: dbSchema.invoices, data: invoicesData.flat(2) },
+			{ table: dbSchema.orderItems, data: orderItemsData.flat(2) },
 			{ table: dbSchema.events, data: eventData.flat(1) },
 		]) {
 			await tx.insert(table).values(data).execute()
