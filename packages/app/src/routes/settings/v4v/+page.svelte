@@ -1,4 +1,5 @@
 <script lang="ts">
+	// +page.svelte (current)
 	import type { V4VDTO } from '$lib/fetch/v4v.queries'
 	import * as Alert from '$lib/components/ui/alert/index.js'
 	import { Button } from '$lib/components/ui/button/index.js'
@@ -14,15 +15,11 @@
 
 	import type { PageData } from './$types'
 
-	// TODO: add percentage bar and refine ui/ux, now it jumps and glitches some times.
-	// TODO: If a user removes all v4v shares the percentage get stucked and have to go out and come back to see it well
 	export let data: PageData
 	const { appSettings, activeUser } = data
 	let v4vTotal = [0]
 	let initialTotalSet = false
-
 	let hoveredRecipient: string | null = null
-	let v4vHovered = false
 	let newRecipientFormVisible = false
 
 	const details = data.menuItems.find((item) => item.value === 'v4v-settings')
@@ -52,57 +49,110 @@
 		v4vRecipients = v4vRecipients.map((item) => ({ ...item, amount: equalAmount }))
 		v4vRecipients = [...v4vRecipients]
 	}
-
 	function handleIndividualPercentageChange(event: CustomEvent<{ npub: string; percentage: number }>) {
 		const { npub, percentage } = event.detail
 		const oldPercentage = v4vRecipients.find((item) => item.target === npub)?.amount || 0
-		const difference = percentage - oldPercentage
 
+		// Calculate the total percentage excluding the current recipient
+		const totalOthers = v4vRecipients.reduce((sum, item) => (item.target !== npub ? sum + item.amount : sum), 0)
+
+		// Adjust other recipients' percentages proportionally
 		v4vRecipients = v4vRecipients.map((item) => {
 			if (item.target === npub) {
 				return { ...item, amount: percentage }
 			} else {
-				const scale = (1 - percentage) / (1 - oldPercentage)
-				return { ...item, amount: item.amount * scale }
+				const newAmount = totalOthers > 0 ? (item.amount * (1 - percentage)) / totalOthers : (1 - percentage) / (v4vRecipients.length - 1)
+				return { ...item, amount: Math.max(newAmount, 0) }
 			}
 		})
 
 		// Normalize to ensure total is exactly 1
 		const total = v4vRecipients.reduce((sum, item) => sum + item.amount, 0)
-		v4vRecipients = v4vRecipients.map((item) => ({ ...item, amount: item.amount / total }))
+		v4vRecipients = v4vRecipients.map((item) => ({
+			...item,
+			amount: Number((total > 0 ? item.amount / total : 1 / v4vRecipients.length).toFixed(6)),
+		}))
 	}
 
 	function handleRecipientAdded(event: CustomEvent<{ npub: string; percentage: number }>) {
 		const { npub, percentage } = event.detail
-		v4vRecipients = [...v4vRecipients, { target: npub, amount: percentage }]
+		if (v4vRecipients.some((r) => r.target === npub)) {
+			toast.error('Recipient already exists')
+			return
+		}
+		const newRecipient = { target: npub, amount: percentage }
+
+		// Adjust existing recipients' percentages
+		const totalExisting = v4vRecipients.reduce((sum, item) => sum + item.amount, 0)
+		const adjustmentFactor = (1 - percentage) / totalExisting
+
+		v4vRecipients = v4vRecipients.map((item) => ({
+			...item,
+			amount: Number((item.amount * adjustmentFactor).toFixed(6)),
+		}))
+
+		// Add new recipient
+		v4vRecipients = [...v4vRecipients, newRecipient]
+
 		newRecipientFormVisible = false
 	}
-
 	function handleRecipientRemoved(event: CustomEvent<{ npub: string }>) {
 		const { npub } = event.detail
-		const removedRecipient = v4vRecipients.find((item) => item.target === npub)
-		if (!removedRecipient) return
+		v4vRecipients = v4vRecipients.filter((item) => item.target !== npub)
 
-		const remainingRecipients = v4vRecipients.filter((item) => item.target !== npub)
-		const totalRemainingPercentage = 1 - removedRecipient.amount
-
-		v4vRecipients = remainingRecipients.map((item) => ({
-			...item,
-			amount: totalRemainingPercentage > 0 ? item.amount / totalRemainingPercentage : 1 / remainingRecipients.length,
-		}))
+		if (v4vRecipients.length === 0) {
+			v4vTotal = [0]
+		} else {
+			const totalPercentage = v4vRecipients.reduce((sum, item) => sum + item.amount, 0)
+			v4vRecipients = v4vRecipients.map((item) => ({
+				...item,
+				amount: Number((item.amount / totalPercentage).toFixed(6)),
+			}))
+		}
 	}
-
 	$: displayValue = decimalToPercentage(v4vTotal[0])
+
 	const handleSetV4VAmounts = async () => {
 		const totalPercentage = v4vTotal[0]
+		if (!v4vRecipients.length && totalPercentage > 0) {
+			toast.error('Please add at least one recipient')
+			return
+		}
+		if (v4vRecipients.length && totalPercentage === 0) {
+			toast.error('Total percentage must be greater than 0')
+			return
+		}
+		if (totalPercentage === 0 || v4vRecipients.length === 0) {
+			await $setV4VForUserMutation.mutateAsync([])
+			toast.success('V4V settings cleared')
+			return
+		}
+
 		const adjustedRecipients = v4vRecipients.map((recipient) => ({
 			target: recipient.target,
-			amount: recipient.amount * totalPercentage,
+			amount: Number((recipient.amount * totalPercentage).toFixed(6)),
 		}))
 
-		await $setV4VForUserMutation.mutateAsync(adjustedRecipients)
-		toast.success('V4V values successfully updated')
+		// Ensure the sum of all amounts equals the total percentage
+		const sum = adjustedRecipients.reduce((acc, r) => acc + r.amount, 0)
+		const roundedTotal = Number(totalPercentage.toFixed(6))
+
+		if (Math.abs(sum - roundedTotal) > 0.000001) {
+			const diff = roundedTotal - sum
+			// Add the difference to the largest recipient to maintain the total
+			const largestRecipient = adjustedRecipients.reduce((max, r) => (r.amount > max.amount ? r : max))
+			largestRecipient.amount = Number((largestRecipient.amount + diff).toFixed(6))
+		}
+
+		try {
+			await $setV4VForUserMutation.mutateAsync(adjustedRecipients)
+			toast.success('V4V values successfully updated')
+		} catch (error) {
+			console.error('Error updating V4V values:', error)
+			toast.error('Failed to update V4V values')
+		}
 	}
+
 	function getContrastColor(hexColor: string) {
 		const r = parseInt(hexColor.slice(1, 3), 16)
 		const g = parseInt(hexColor.slice(3, 5), 16)
@@ -159,23 +209,24 @@
 					</Tooltip.Trigger>
 					<Tooltip.Content>Your share: {((1 - v4vTotal[0]) * 100).toFixed(2)}%</Tooltip.Content>
 				</Tooltip.Root>
-
-				<Tooltip.Root>
-					<Tooltip.Trigger
-						class="absolute inset-y-0 right-0 bg-blue-500 flex items-center justify-center"
-						style="width: {v4vTotal[0] * 100}%;"
-					>
-						<span class="text-current">V4V</span>
-					</Tooltip.Trigger>
-					<Tooltip.Content>V4V share: {(v4vTotal[0] * 100).toFixed(2)}%</Tooltip.Content>
-				</Tooltip.Root>
+				{#if v4vTotal[0] > 0}
+					<Tooltip.Root>
+						<Tooltip.Trigger
+							class="absolute inset-y-0 right-0 bg-blue-500 flex items-center justify-center"
+							style="width: {v4vTotal[0] * 100}%;"
+						>
+							<span class="text-current">V4V</span>
+						</Tooltip.Trigger>
+						<Tooltip.Content>V4V share: {(v4vTotal[0] * 100).toFixed(2)}%</Tooltip.Content>
+					</Tooltip.Root>
+				{/if}
 			</div>
 		</div>
 
 		<div>
 			<Label class="font-bold">Distribution of v4v share among recipients</Label>
 			<div class="relative w-full h-10 bg-gray-200 rounded-lg overflow-hidden">
-				{#each v4vRecipients as v4v, index}
+				{#each v4vRecipients as v4v, index (v4v.target)}
 					{@const color = getHexColorFingerprintFromHexPubkey(v4v.target)}
 					{@const textColor = getContrastColor(color)}
 					{@const leftPosition = v4vRecipients.slice(0, index).reduce((sum, r) => sum + r.amount, 0) * 100}
@@ -214,7 +265,8 @@
 	{#if newRecipientFormVisible}
 		<V4vRecipientEdit
 			npub={''}
-			percentage={0}
+			percentage={v4vRecipients.length == 0 ? 1 : 0.1}
+			isNewRecipient={true}
 			on:percentageChange={handleIndividualPercentageChange}
 			on:recipientAdded={handleRecipientAdded}
 			on:recipientRemoved={handleRecipientRemoved}
