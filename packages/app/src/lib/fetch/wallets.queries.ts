@@ -35,14 +35,7 @@ export const createWalletBalanceQuery = (nwc: NDKNwc, walletId: string) =>
 			queryFn: async () => {
 				console.log('Getting balance for', walletId, nwc.relaySet.relayUrls)
 				const balance = await nwc.getBalance()
-				// TODO: Remove condicional conversion to msats when https://github.com/coinos/coinos-server/issues/65 is closed
-				const balanceResult = balance.result?.balance
-					? nwc.relaySet.relayUrls.includes('wss://relay.coinos.io/')
-						? balance.result?.balance * 1000
-						: balance.result?.balance
-					: 0
-				console.log(balanceResult)
-				return balanceResult
+				return balance.result?.balance
 			},
 			staleTime: 1000 * 60 * 60,
 		},

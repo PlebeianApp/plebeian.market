@@ -10,7 +10,7 @@
 	import Switch from '$lib/components/ui/switch/switch.svelte'
 	import { DEFAULT_ZAP_AMOUNTS } from '$lib/constants'
 	import ndkStore from '$lib/stores/ndk'
-	import { canPayWithNWC } from '$lib/stores/nwc'
+	import { balanceOfWorkingNWCs, canPayWithNWC } from '$lib/stores/nwc'
 	import { checkTargetUserHasLightningAddress } from '$lib/utils'
 	import {
 		createInvoiceObject,
@@ -45,7 +45,10 @@
 	$: zapAmountMSats = zapAmountSats * 1000
 	$: userCanBeZapped = profile?.lud16 && LN_ADDRESS_REGEX.test(profile?.lud16)
 	let canUseNWC = canPayWithNWC(zapAmountSats)
-	$: if (zapDialogOpen) canUseNWC = canPayWithNWC(zapAmountSats)
+
+	$: if ($balanceOfWorkingNWCs) {
+		canUseNWC = canPayWithNWC(zapAmountSats)
+	}
 
 	const zapSubscription = setupZapSubscription((event) => {
 		const invoice = createInvoiceObject(lightningInvoiceData!)
