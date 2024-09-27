@@ -1,22 +1,51 @@
 <script lang="ts">
 	import type { QueryObserverResult } from '@tanstack/svelte-query'
 	import type { DisplayOrder } from '$lib/server/orders.service'
+	import type { RichPaymentDetail } from '$lib/server/paymentDetails.service'
 	import type { DisplayProduct } from '$lib/server/products.service'
+	import { updateInvoiceStatusMutation } from '$lib/fetch/invoices.mutations'
+	import { createInvoicesByFilterQuery } from '$lib/fetch/invoices.queries'
 	import { updateOrderStatusMutation } from '$lib/fetch/order.mutations'
 	import { createProductQuery } from '$lib/fetch/products.queries'
+	import { formatSats, getInvoiceStatusColor } from '$lib/utils'
 	import { toast } from 'svelte-sonner'
 	import { derived } from 'svelte/store'
 
+	import type { CheckoutPaymentEvent } from '../checkout/types'
 	import MiniUser from '../cart/mini-user.svelte'
+	import PaymentProcessor from '../paymentProcessors/paymentProcessor.svelte'
 	import ProductItem from '../product/product-item.svelte'
 	import StallName from '../stalls/stall-name.svelte'
+	import Button from '../ui/button/button.svelte'
 	import Separator from '../ui/separator/separator.svelte'
 	import MiniShipping from './mini-shipping.svelte'
 	import OrderActions from './order-actions.svelte'
 
 	export let order: DisplayOrder
 	export let orderMode: 'sale' | 'purchase'
+	let currentPaymentDetail: RichPaymentDetail | undefined = undefined
 	type ProductQueryResult = QueryObserverResult<DisplayProduct, Error>
+	type PaymentStatus = 'paid' | 'expired' | 'canceled' | null
+
+	let getUserProfileLoading: string | undefined = undefined
+
+	const v4vPaymentDetail: RichPaymentDetail = {
+		id: 'v4v',
+		paymentMethod: 'ln',
+		isDefault: false,
+		paymentDetails: '',
+		stallId: order.stallId,
+		stallName: '',
+		userId: order.sellerUserId,
+	}
+
+	const paymentEventToStatus: Record<string, NonNullable<PaymentStatus>> = {
+		paymentComplete: 'paid',
+		paymentExpired: 'expired',
+		paymentCanceled: 'canceled',
+	}
+
+	$: invoices = createInvoicesByFilterQuery({ orderId: order.id })
 
 	const handleConfirmOrder = async (order: DisplayOrder): Promise<void> => {
 		await $updateOrderStatusMutation.mutate({ orderId: order.id, status: 'confirmed' })
@@ -34,13 +63,39 @@
 	}
 
 	const handleCancelOrder = async (order: DisplayOrder): Promise<void> => {
-		await $updateOrderStatusMutation.mutate({ orderId: order.id, status: 'cancelled' })
+		await $updateOrderStatusMutation.mutate({ orderId: order.id, status: 'canceled' })
 		toast.success('Order cancelled')
 	}
 
-	$: productQueries = order?.orderItems ? order.orderItems.map((item) => createProductQuery(item.productId)) : []
+	const handleRetryPayment = async (paymentDetails: string): Promise<void> => {
+		getUserProfileLoading = paymentDetails
+		currentPaymentDetail = {
+			...v4vPaymentDetail,
+			paymentDetails,
+		}
+	}
+
+	$: productQueries = order?.orderItems
+		? order.orderItems.map((item) => {
+				return createProductQuery(item.productId)
+			})
+		: []
 
 	$: productQueryResults = derived(productQueries, ($queries) => $queries.map(($q) => $q))
+
+	function handlePaymentEvent(event: CustomEvent<CheckoutPaymentEvent>, invoiceId: string) {
+		const { type } = event
+		const status = paymentEventToStatus[type]
+
+		if (!status) {
+			console.error(`Unknown payment event type: ${type}`)
+			return
+		}
+
+		$updateInvoiceStatusMutation.mutateAsync({ invoiceId, status, preimage: event.detail.preimage ?? '' })
+		toast.success(`Payment ${status}`)
+		currentPaymentDetail = undefined
+	}
 </script>
 
 <div>
@@ -94,18 +149,69 @@
 			<p>Observations: {order.observations}</p>
 		</div>
 	</div>
+
 	<Separator class={'my-4'} />
 
-	{#each $productQueryResults as query}
-		{#if query.isLoading}
-			<p>Loading...</p>
-		{:else if query.isError}
-			<p>Error: {query.error.message}</p>
-		{:else if query.isSuccess && query.data}
-			<ProductItem product={query.data} />
-			<!-- Display other product details -->
-		{:else}
-			<p>No data available</p>
-		{/if}
-	{/each}
+	<div class="grid grid-cols-2 md:grid-cols-3 gap-2 mt-8">
+		{#each $productQueryResults as query}
+			{#if query.isLoading}
+				<p>Loading...</p>
+			{:else if query.isError}
+				<p>Error: {query.error.message}</p>
+			{:else if query.isSuccess && query.data}
+				<ProductItem product={query.data} qtyPurchased={order.orderItems.find((oi) => oi.productId === query.data?.id)?.qty} />
+			{:else}
+				<p>No data available</p>
+			{/if}
+		{/each}
+	</div>
+
+	{#if $invoices.data && $invoices.data.length > 0}
+		<Separator class={'my-4'} />
+		<h3 class="text-xl font-semibold mt-8 mb-4">Invoices</h3>
+		<div class="space-y-4">
+			{#each $invoices.data as invoice (invoice.id)}
+				<!-- {JSON.stringify(invoice)} -->
+				<div class="flex flex-col p-4 bg-gray-50 rounded-lg shadow transition-all duration-200">
+					<div class="flex justify-between items-start">
+						<div class="flex flex-col">
+							<span class="text-sm font-medium text-gray-500 uppercase">{invoice.type}</span>
+							<span class="font-medium">Invoice ID: {invoice.id}</span>
+							<span class="capitalize font-medium {getInvoiceStatusColor(invoice.invoiceStatus)}">
+								{invoice.invoiceStatus}
+							</span>
+						</div>
+						<div class="flex flex-col text-sm text-right">
+							<span class="font-bold text-lg">{formatSats(parseInt(invoice.totalAmount))} sats</span>
+							<span class="text-gray-600">{new Date(invoice.createdAt).toLocaleString()}</span>
+						</div>
+					</div>
+
+					{#if invoice.type === 'v4v'}
+						{#if orderMode === 'purchase'}
+							<div class="p-2 bg-white flex justify-between items-center gap-2">
+								<div>{invoice.paymentDetails}</div>
+								<!-- <MiniV4v npub={invoice.paymentDetails} /> -->
+								{#if invoice.invoiceStatus !== 'paid' && invoice.invoiceStatus !== 'refunded'}
+									<Button class="w-32" on:click={() => handleRetryPayment(invoice.paymentDetails)}>Retry</Button>
+								{:else}
+									<Button class="w-32" variant="secondary" disabled>Done</Button>
+								{/if}
+							</div>
+							{#if currentPaymentDetail && currentPaymentDetail.paymentDetails === invoice.paymentDetails}
+								<PaymentProcessor
+									paymentDetail={currentPaymentDetail}
+									amountSats={parseInt(invoice.totalAmount)}
+									paymentType="v4v"
+									on:paymentComplete={(e) => handlePaymentEvent(e, invoice.id)}
+									on:paymentExpired={(e) => handlePaymentEvent(e, invoice.id)}
+									on:paymentCanceled={(e) => handlePaymentEvent(e, invoice.id)}
+								/>
+							{/if}
+						{/if}
+					{/if}
+				</div>
+			{/each}
+		</div>
+	{/if}
 </div>
