@@ -47,12 +47,12 @@ export class NostrifyNDKSigner implements NostrSigner {
 		return pubkey
 	}
 
-	async signEvent(event: NostrEvent): Promise<NostrEvent> {
+	async signEvent(event: NostrEvent): Promise<Event> {
 		const ndkEvent = new NDKEvent(this.ndk, event)
 
 		await ndkEvent.sign()
 
-		return ndkEvent.toNostrEvent()
+		return (await ndkEvent.toNostrEvent()) as Event
 	}
 }
 

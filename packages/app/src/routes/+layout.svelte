@@ -17,7 +17,7 @@
 	import { queryClient } from '$lib/fetch/client'
 	import { processQueuedInsertions } from '$lib/nostrSubs/data-aggregator'
 	import ndkStore from '$lib/stores/ndk'
-	import { setupNdkStoreListener } from '$lib/stores/nwc'
+	import { initNdkNWCs } from '$lib/stores/nwc'
 	import { cleanupCachedEvents } from '$lib/stores/session'
 
 	import type { LayoutData } from './$types'
@@ -55,8 +55,6 @@
 			})
 		}
 		cleanupCachedEvents()
-		setupNdkStoreListener()
-		// await initNdkNWCs()
 	})
 
 	$: webManifestLink = pwaInfo ? pwaInfo.webManifest.linkTag : ''
@@ -135,6 +133,10 @@
 			}
 		})
 	})
+
+	$: if ($ndkStore.activeUser) {
+		initNdkNWCs()
+	}
 </script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com" />

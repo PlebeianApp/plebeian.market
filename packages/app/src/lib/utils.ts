@@ -3,7 +3,15 @@ import type { ClassValue } from 'clsx'
 import type { VerifiedEvent } from 'nostr-tools'
 import type { Readable } from 'svelte/store'
 import type { TransitionConfig } from 'svelte/transition'
-import { type NDKEvent, type NDKKind, type NDKTag, type NDKUserProfile, type NDKZapMethodInfo, type NostrEvent } from '@nostr-dev-kit/ndk'
+import {
+	type NDKEvent,
+	type NDKKind,
+	type NDKSigner,
+	type NDKTag,
+	type NDKUserProfile,
+	type NDKZapMethodInfo,
+	type NostrEvent,
+} from '@nostr-dev-kit/ndk'
 import { page } from '$app/stores'
 import ndkStore from '$lib/stores/ndk'
 import { clsx } from 'clsx'
@@ -436,7 +444,6 @@ export class EncryptedStorage {
 	async getItem(key: string): Promise<string | null> {
 		key = await this.deriveKey(key)
 		const value = localStorage.getItem(key)
-
 		if (value) {
 			return this.signer.decrypt(await this.signer.user(), value)
 		}

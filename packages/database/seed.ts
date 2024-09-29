@@ -169,7 +169,7 @@ const main = async () => {
 							metaName: name,
 							valueText: value,
 							valueBoolean: valueBoolean,
-							valueNumeric: valueNumeric,
+							valueNumeric: String(valueNumeric),
 							key: value,
 							createdAt: faker.date.recent(),
 							updatedAt: faker.date.future(),

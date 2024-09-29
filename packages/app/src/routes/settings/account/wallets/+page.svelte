@@ -12,7 +12,6 @@
 	import type { PageData } from './$types'
 
 	export let data: PageData
-	const { WalletTypes } = data
 	let localWallets: DisplayWallet[] = []
 
 	const linkDetails = data.menuItems

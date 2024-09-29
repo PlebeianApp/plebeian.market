@@ -8,7 +8,7 @@
 	import { checkoutFormStore } from '$lib/stores/checkout'
 	import ndkStore from '$lib/stores/ndk'
 	import { formatSats } from '$lib/utils'
-	import { createOrderMessage } from '$lib/utils/utils.dm'
+	import { createOrderMessage, sendDM } from '$lib/utils/dm.utils'
 	import { createEventDispatcher } from 'svelte'
 	import { toast } from 'svelte-sonner'
 
@@ -71,7 +71,8 @@
 				}
 
 				try {
-					// await sendDM(order, pubkey)
+					// await
+					order, pubkey
 				} catch (error) {
 					console.error('Failed to send order DM:', error)
 					throw new Error('Failed to send order DM to merchant')

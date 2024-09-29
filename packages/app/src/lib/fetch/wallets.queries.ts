@@ -33,10 +33,11 @@ export const createWalletBalanceQuery = (nwc: NDKNwc, walletId: string) =>
 		{
 			queryKey: ['wallet-balance', nwc.walletService.pubkey, walletId],
 			queryFn: async () => {
+				console.log('Getting balance for', walletId, nwc.relaySet.relayUrls)
 				const balance = await nwc.getBalance()
 				return balance.result?.balance
 			},
-			staleTime: 1000 * 60 * 5,
+			staleTime: 1000 * 60 * 60,
 		},
 		queryClient,
 	)

@@ -22,23 +22,38 @@
 	$: editingActiveUser = activeUser ?? ({} as RichUser)
 
 	const handleSubmit = async (event: SubmitEvent) => {
+		event.preventDefault()
 		const formData = new FormData(event.currentTarget as HTMLFormElement) as FormDataWithEntries
-		const formObject = Object.fromEntries(formData.entries())
+		const formObject: Record<string, string | undefined> = {}
 
-		activeUser?.id && (formObject.id = activeUser.id)
-		formObject.banner = editingActiveUser.banner ?? ''
-		formObject.image = editingActiveUser.image ?? ''
+		for (const [key, value] of formData.entries()) {
+			formObject[key] = typeof value === 'string' ? (value.trim() === '' ? undefined : value.trim()) : undefined
+		}
+
+		if (activeUser?.id) formObject.id = activeUser.id
+		formObject.banner = editingActiveUser.banner ?? undefined
+		formObject.image = editingActiveUser.image ?? undefined
 
 		const ndkUser = $ndkStore.getUser({
 			pubkey: $ndkStore.activeUser?.pubkey,
 		})
-		const { data: filteredProfile } = userEventSchema.strip().safeParse(formObject)
-		filteredProfile?.id && delete (filteredProfile as NDKUserProfile).id
+
+		const parseResult = userEventSchema.safeParse(formObject)
+
+		if (!parseResult.success) {
+			console.error(parseResult.error)
+			toast.error('Invalid form data')
+			return
+		}
+
+		const filteredProfile = parseResult.data
+
 		ndkUser.profile = filteredProfile as NDKUserProfile
-		if (userExist && filteredProfile) {
+
+		if (userExist) {
 			try {
 				await $userDataMutation.mutateAsync(filteredProfile)
-				// await ndkUser.publish().then((data) => console.log(data))
+				await ndkUser.publish()
 				toast.success('User data updated')
 			} catch (error) {
 				console.error(error)
@@ -51,20 +66,16 @@
 		.find((item) => item.value === 'account-settings')
 		?.links.find((item) => item.href === $page.url.pathname)
 
-	const handleSaveBannerImage = (event: CustomEvent) => {
-		editingActiveUser.banner = event.detail
-	}
-
-	const handleSaveProfileImage = (event: CustomEvent) => {
-		editingActiveUser.image = event.detail
+	const handleSaveImage = (field: 'banner' | 'image') => (event: CustomEvent) => {
+		editingActiveUser[field] = event.detail
 	}
 </script>
 
 {#if activeUser}
-	<form on:submit|preventDefault={handleSubmit}>
+	<form on:submit={handleSubmit}>
 		<div class="pb-4 space-y-2">
 			<div class="flex items-center gap-1">
-				<Button size="icon" variant="outline" class="border-none" on:click={() => nav_back()}>
+				<Button size="icon" variant="outline" class="border-none" on:click={nav_back}>
 					<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
 				</Button>
 				<section>
@@ -75,12 +86,12 @@
 
 			<div class="grid w-full items-center gap-1.5">
 				<Label for="userImage" class="font-bold">Banner image</Label>
-				<SingleImage src={editingActiveUser?.banner ?? null} on:save={handleSaveBannerImage} />
+				<SingleImage src={editingActiveUser?.banner ?? null} on:save={handleSaveImage('banner')} />
 			</div>
 
 			<div class="grid items-center gap-1.5 w-28">
 				<Label for="userImage" class="font-bold">Profile image</Label>
-				<SingleImage src={editingActiveUser?.image ?? null} on:save={handleSaveProfileImage} />
+				<SingleImage src={editingActiveUser?.image ?? null} on:save={handleSaveImage('image')} />
 			</div>
 
 			<div class="grid w-full items-center gap-1.5">
@@ -105,8 +116,18 @@
 			</div>
 
 			<div class="grid w-full items-center gap-1.5">
-				<Label for="nip05" class="font-bold">Nostr address</Label>
+				<Label for="nip05" class="font-bold">Nostr address (NIP05)</Label>
 				<Input value={activeUser?.nip05} type="text" id="nip05" name="nip05" placeholder={editingActiveUser?.nip05} />
+			</div>
+
+			<div class="grid w-full items-center gap-1.5">
+				<Label for="lud16" class="font-bold">Lightning address (LUD16)</Label>
+				<Input value={activeUser?.lud16} type="text" id="lud16" name="lud16" placeholder={editingActiveUser?.lud16} />
+			</div>
+
+			<div class="grid w-full items-center gap-1.5">
+				<Label for="lud06" class="font-bold">LNURL (LUD06)</Label>
+				<Input value={activeUser?.lud06} type="text" id="lud06" name="lud06" placeholder={editingActiveUser?.lud06} />
 			</div>
 
 			<Button id="userDataSubmit" class="w-full font-bold" type="submit">Save</Button>

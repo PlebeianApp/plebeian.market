@@ -116,7 +116,7 @@
 							<Button size="icon" variant="secondary" on:click={handleThreeDots}>
 								<span class="i-mdi-dots-horizontal w-6 h-6" />
 							</Button>
-							<InteractiveZapButton userIdToZap={id} />
+							<InteractiveZapButton userIdToZap={id} profile={$userProfileQuery.data} />
 							<Button size="icon" variant="secondary" on:click={handleSendMessage}>
 								<span class="i-mdi-message-bubble w-6 h-6" />
 							</Button>

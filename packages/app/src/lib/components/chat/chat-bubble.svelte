@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { NDKEvent } from '@nostr-dev-kit/ndk'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
-	import { createDecryptedMessage } from '$lib/utils/utils.dm'
+	import { createDecryptedMessage } from '$lib/utils/dm.utils'
 
 	import CAvatar from '../ui/custom-components/c-avatar.svelte'
 
