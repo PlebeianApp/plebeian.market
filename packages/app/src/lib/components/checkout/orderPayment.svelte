@@ -134,7 +134,7 @@
 
 	function handlePaymentEvent(event: CustomEvent<CheckoutPaymentEvent>) {
 		const { type } = event
-		const { paymentRequest, preimage, amountSats, paymentType } = event.detail
+		const { paymentRequest, proof, amountSats, paymentType } = event.detail
 
 		const status = paymentEventToStatus[type]
 		if (!status) {
@@ -148,7 +148,7 @@
 		}
 
 		try {
-			const invoice = createInvoice(paymentRequest, preimage, status, amountSats, paymentType)
+			const invoice = createInvoice(paymentRequest, proof, status, amountSats, paymentType)
 			processPayment(invoice, status)
 			paymentStatuses = paymentStatuses.map((s) => (s.id === paymentType ? { ...s, status } : s))
 			moveToNextPaymentProcessor()

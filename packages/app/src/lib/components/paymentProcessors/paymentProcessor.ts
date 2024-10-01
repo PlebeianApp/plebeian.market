@@ -7,6 +7,7 @@ import type { PaymentDetailsMethod } from '@plebeian/database'
 export interface PaymentProcessorProps {
 	paymentDetail: RichPaymentDetail
 	amountSats: number
+	paymentType: 'merchant' | string
 }
 
 export interface PaymentProcessor {

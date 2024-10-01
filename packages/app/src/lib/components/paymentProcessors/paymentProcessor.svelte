@@ -10,7 +10,7 @@
 
 	export let paymentDetail: RichPaymentDetail
 	export let amountSats: number
-	export let paymentType: string
+	export let paymentType: 'merchant' | string
 
 	const dispatch = createEventDispatcher()
 	// TODO: add method validation as we are doing in the paymentDetails input.

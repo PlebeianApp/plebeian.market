@@ -1,4 +1,5 @@
 <script lang="ts">
+	// paymentDetailCreateEdit.svelte
 	import type { RichPaymentDetail } from '$lib/server/paymentDetails.service'
 	import { LightningAddress } from '@getalby/lightning-tools'
 	import { Button } from '$lib/components/ui/button'

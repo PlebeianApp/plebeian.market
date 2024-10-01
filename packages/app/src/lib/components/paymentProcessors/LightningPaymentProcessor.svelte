@@ -174,7 +174,7 @@
 		toast.success('Payment successful')
 		dispatch('paymentComplete', {
 			paymentRequest: invoice!.paymentRequest,
-			preimage,
+			proof: preimage,
 			amountSats: normalizedAmount,
 			paymentType,
 		})
@@ -187,7 +187,7 @@
 		toast.error('Invoice expired')
 		dispatch('paymentExpired', {
 			paymentRequest: invoice!.paymentRequest,
-			preimage: null,
+			proof: null,
 			amountSats: normalizedAmount,
 			paymentType,
 		})
@@ -198,7 +198,7 @@
 		cleanupFunctions.forEach((fn) => fn())
 		dispatch('paymentCanceled', {
 			paymentRequest: invoice!.paymentRequest,
-			preimage: null,
+			proof: null,
 			amountSats: normalizedAmount,
 			paymentType,
 		})
@@ -209,7 +209,7 @@
 		cleanupFunctions.forEach((fn) => fn())
 		dispatch('paymentCanceled', {
 			paymentRequest: null,
-			preimage: null,
+			proof: null,
 			amountSats: normalizedAmount,
 			paymentType,
 		})
