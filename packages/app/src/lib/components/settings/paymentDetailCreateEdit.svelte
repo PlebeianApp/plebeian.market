@@ -10,11 +10,13 @@
 	import * as Select from '$lib/components/ui/select'
 	import { deletePaymentMethodMutation, persistPaymentMethodMutation, updatePaymentMethodMutation } from '$lib/fetch/payments.mutations'
 	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
+	import { deleteWalletMutation } from '$lib/fetch/wallets.mutations'
+	import { createOnChainIndexQuery } from '$lib/fetch/wallets.queries'
 	import ndkStore from '$lib/stores/ndk'
-	import { checkAddress, checkExtendedPublicKey } from '$lib/utils/paymentDetails.utils'
+	import { checkAddress, checkExtendedPublicKey, deriveAddresses, isExtendedPublicKey } from '$lib/utils/paymentDetails.utils'
 	import { NIP05_REGEX } from 'nostr-tools/nip05'
 
-	import type { PaymentDetailsMethod } from '@plebeian/database'
+	import type { PaymentDetailsMethod } from '@plebeian/database/constants'
 	import { PAYMENT_DETAILS_METHOD } from '@plebeian/database/constants'
 
 	import type { onChainConfirmationType } from './types'
@@ -73,7 +75,7 @@
 			return false
 		},
 		[PAYMENT_DETAILS_METHOD.ON_CHAIN]: async (value) => {
-			if (value.startsWith('xpub') || value.startsWith('zpub')) {
+			if (isExtendedPublicKey(value)) {
 				confirmationType = 'extended_public_key'
 				return checkExtendedPublicKey(value) ? 'needsConfirmation' : false
 			} else if (value.startsWith('bc1')) {
@@ -176,10 +178,20 @@
 				paymentDetailId: editedPaymentDetail.id,
 				userId: $ndkStore.activeUser?.pubkey as string,
 			})
+
+			if (editedPaymentDetail.paymentMethod == 'on-chain' && isExtendedPublicKey(editedPaymentDetail.paymentDetails)) {
+				$deleteWalletMutation.mutate({
+					userId: $ndkStore.activeUser?.pubkey as string,
+					paymentDetailId: editedPaymentDetail.id,
+				})
+			}
 		}
 	}
-
 	$: if (!isOpen) validationMessage = ''
+	$: onChainWalletIndexQuery =
+		paymentDetail?.paymentMethod == 'on-chain' && isExtendedPublicKey(editedPaymentDetail.paymentDetails)
+			? createOnChainIndexQuery(String($ndkStore.activeUser?.pubkey), paymentDetail.id)
+			: undefined
 </script>
 
 <div class="border flex flex-col p-4 justify-between">
@@ -302,6 +314,16 @@
 						class="w-full border"
 						placeholder="Enter payment details"
 					/>
+					{#if $onChainWalletIndexQuery?.data !== undefined && paymentDetail?.paymentDetails && $onChainWalletIndexQuery?.data}
+						<Label for="payment-details" class="font-medium">Current address</Label>
+						<small
+							>Index: {$onChainWalletIndexQuery.data} - {deriveAddresses(
+								paymentDetail.paymentDetails,
+								0,
+								$onChainWalletIndexQuery.data,
+							)}</small
+						>
+					{/if}
 				</div>
 
 				{#if validationMessage && formState == 'idle'}

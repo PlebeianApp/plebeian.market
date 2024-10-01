@@ -10,14 +10,19 @@ export type NWCWallet = {
 	walletSecret: string
 }
 
+export type OnChainIndexWallet = {
+	paymentDetailId: string
+	index: number
+}
+
 export type DisplayWallet = {
 	id: string
 	userId: string
 	walletType: WalletType
-	walletDetails: NWCWallet
+	walletDetails: NWCWallet | OnChainIndexWallet
 }
 
-export const getWalletsByUserId = async (userId: string) => {
+export const getNwcWalletsByUserId = async (userId: string) => {
 	const userWallets = await db
 		.select()
 		.from(userMeta)
@@ -25,7 +30,6 @@ export const getWalletsByUserId = async (userId: string) => {
 		.execute()
 	return userWallets.map((wallet) => {
 		if (wallet.key === 'nwc') {
-			const details = nwcUriToWalletDetails(wallet.valueText as string)
 			return {
 				id: wallet.id,
 				wallet: wallet.userId,
@@ -36,16 +40,29 @@ export const getWalletsByUserId = async (userId: string) => {
 	})
 }
 
-export const postWalletForUser = async (walletType: WalletType, userId: string, walletDetails: NWCWallet) => {
-	const constructedNwc = walletDetailsToNWCUri(walletDetails)
+export const postWalletForUser = async (walletType: WalletType, userId: string, walletDetails: NWCWallet | OnChainIndexWallet) => {
 	try {
+		let valueText: string
+		let valueNumeric: number | null = null
+
+		if (walletType === WALLET_TYPE.NWC) {
+			valueText = walletDetailsToNWCUri(walletDetails as NWCWallet)
+		} else if (walletType === WALLET_TYPE.ON_CHAIN_INDEX) {
+			const onChainDetails = walletDetails as OnChainIndexWallet
+			valueText = onChainDetails.paymentDetailId
+			valueNumeric = onChainDetails.index
+		} else {
+			throw new Error('Invalid wallet type')
+		}
+
 		const [result] = await db
 			.insert(userMeta)
 			.values({
 				userId: userId,
 				metaName: USER_META.WALLET_DETAILS.value,
 				key: walletType,
-				valueText: constructedNwc,
+				valueText: valueText,
+				valueNumeric: valueNumeric !== null ? valueNumeric.toString() : null,
 			})
 			.returning()
 
@@ -81,7 +98,7 @@ export const updateWalletForUser = async (walletId: string, userId: string, wall
 	}
 }
 
-export const deleteWalletForUser = async (walletId: string, userId: string) => {
+export const deleteWalletForUser = async (userId: string, walletId: string) => {
 	try {
 		const [result] = await db
 			.delete(userMeta)
@@ -97,4 +114,65 @@ export const deleteWalletForUser = async (walletId: string, userId: string) => {
 		console.error(e)
 		throw error(500, `Failed to delete wallet for user ${userId}. Reason: ${e}`)
 	}
+}
+
+export const deleteWalletForUserByPaymentDetailId = async (userId: string, paymentDetailId: string) => {
+	try {
+		const [result] = await db
+			.delete(userMeta)
+			.where(
+				and(
+					eq(userMeta.metaName, USER_META.WALLET_DETAILS.value),
+					eq(userMeta.userId, userId),
+					eq(userMeta.key, WALLET_TYPE.ON_CHAIN_INDEX),
+					eq(userMeta.valueText, paymentDetailId),
+				),
+			)
+			.returning()
+
+		if (!result) {
+			throw new Error('Failed to delete wallet')
+		}
+
+		return result
+	} catch (e) {
+		console.error(e)
+		throw error(500, `Failed to delete wallet for user ${userId} and payment detail ${paymentDetailId}. Reason: ${e}`)
+	}
+}
+
+export const getOnChainIndexForPaymentDetail = async (userId: string, paymentDetailId: string): Promise<number> => {
+	const [result] = await db
+		.select()
+		.from(userMeta)
+		.where(
+			and(
+				eq(userMeta.metaName, USER_META.WALLET_DETAILS.value),
+				eq(userMeta.userId, userId),
+				eq(userMeta.key, WALLET_TYPE.ON_CHAIN_INDEX),
+				eq(userMeta.valueText, paymentDetailId),
+			),
+		)
+		.execute()
+
+	if (!result) {
+		return 0
+	}
+
+	return Number(result.valueNumeric)
+}
+
+export const incrementOnChainIndex = async (userId: string, paymentDetailId: string): Promise<number> => {
+	const currentIndex = await getOnChainIndexForPaymentDetail(userId, paymentDetailId)
+	const newIndex = currentIndex + 1
+
+	await db
+		.update(userMeta)
+		.set({
+			valueNumeric: String(newIndex),
+		})
+		.where(and(eq(userMeta.metaName, USER_META.WALLET_DETAILS.value), eq(userMeta.userId, userId), eq(userMeta.valueText, paymentDetailId)))
+		.returning()
+
+	return newIndex
 }

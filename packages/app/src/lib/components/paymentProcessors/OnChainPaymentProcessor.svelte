@@ -1,8 +1,8 @@
 <script lang="ts">
 	import type { RichPaymentDetail } from '$lib/server/paymentDetails.service'
 	import QrCode from '@castlenine/svelte-qrcode'
-	import { copyToClipboard, truncateText } from '$lib/utils'
-	import { deriveAddresses } from '$lib/utils/paymentDetails.utils'
+	import { copyToClipboard } from '$lib/utils'
+	import { deriveAddresses, isExtendedPublicKey } from '$lib/utils/paymentDetails.utils'
 	import { createEventDispatcher } from 'svelte'
 	import { toast } from 'svelte-sonner'
 
@@ -22,16 +22,11 @@
 		dispatch('paymentCanceled', { paymentRequest: paymentDetail.paymentDetails, proof: null, amountSats, paymentType: 'on-chain' })
 	}
 
-	console.log(paymentDetail)
-	let addressToDisplay =
-		paymentDetail.paymentDetails.startsWith('xpub') || paymentDetail.paymentDetails.startsWith('zpub')
-			? deriveAddresses(paymentDetail.paymentDetails, 1)![0]
-			: paymentDetail.paymentDetails
-	$: if (paymentDetail.paymentDetails.startsWith('xpub') || paymentDetail.paymentDetails.startsWith('zpub'))
-		addressToDisplay = deriveAddresses(paymentDetail.paymentDetails, 1)![0]
+	let addressToDisplay = isExtendedPublicKey(paymentDetail.paymentDetails)
+		? deriveAddresses(paymentDetail.paymentDetails, 0)![0]
+		: paymentDetail.paymentDetails
+	$: if (isExtendedPublicKey(paymentDetail.paymentDetails)) addressToDisplay = deriveAddresses(paymentDetail.paymentDetails, 1)![0]
 	else if (paymentDetail.paymentDetails.startsWith('bc1')) addressToDisplay = paymentDetail.paymentDetails
-
-	$: console.log(addressToDisplay)
 
 	function handleCopyInvoice() {
 		if (addressToDisplay) {

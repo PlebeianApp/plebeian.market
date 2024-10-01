@@ -39,6 +39,7 @@
 			queryClient.invalidateQueries({ queryKey: ['walletDetails'] })
 		}
 	}
+
 	$: encryptedStorage = new EncryptedStorage($ndkStore.signer!)
 
 	async function loadLocalWallets() {

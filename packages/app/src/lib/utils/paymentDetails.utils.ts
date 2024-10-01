@@ -38,7 +38,7 @@ export function deriveAddresses(extendedKey: string, numAddressesToGenerate: num
 		extendedKey = xpub
 	} else if (extendedKey.startsWith('xpub') && !checkExtendedPublicKey(extendedKey)) {
 		return null
-	} else if (!extendedKey.startsWith('xpub') && !extendedKey.startsWith('zpub')) {
+	} else if (!isExtendedPublicKey(extendedKey)) {
 		return null
 	}
 	const hdkey = HDKey.fromExtendedKey(extendedKey)
@@ -50,4 +50,9 @@ export function deriveAddresses(extendedKey: string, numAddressesToGenerate: num
 		addresses.push(address)
 	}
 	return addresses
+}
+
+export function isExtendedPublicKey(input: string): boolean {
+	const result = !input.startsWith('bc1') || input.startsWith('xpub') || input.startsWith('zpub')
+	return result
 }

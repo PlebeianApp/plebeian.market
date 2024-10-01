@@ -1,11 +1,19 @@
 import { error, json } from '@sveltejs/kit'
-import { authorize, authorizeUserless } from '$lib/auth'
-import { deleteWalletForUser, getWalletsByUserId, postWalletForUser, updateWalletForUser } from '$lib/server/wallet.service'
+import { authorize } from '$lib/auth'
+import {
+	deleteWalletForUser,
+	deleteWalletForUserByPaymentDetailId,
+	getNwcWalletsByUserId,
+	getOnChainIndexForPaymentDetail,
+	postWalletForUser,
+	updateWalletForUser,
+} from '$lib/server/wallet.service'
 
 import type { RequestHandler } from './$types'
 
 export const GET: RequestHandler = async ({ request, url: { searchParams } }) => {
 	const userId = searchParams.get('userId')
+	const paymentDetailId = searchParams.get('paymentDetailId')
 
 	if (!userId) {
 		throw error(400, 'Invalid request')
@@ -13,8 +21,14 @@ export const GET: RequestHandler = async ({ request, url: { searchParams } }) =>
 
 	try {
 		await authorize(request, userId, 'GET')
-		const wallets = await getWalletsByUserId(userId)
-		return json(wallets)
+
+		if (paymentDetailId) {
+			const index = await getOnChainIndexForPaymentDetail(userId, paymentDetailId)
+			return json({ index })
+		} else {
+			const wallets = await getNwcWalletsByUserId(userId)
+			return json(wallets)
+		}
 	} catch (e: unknown) {
 		console.error(e)
 		throw error(500, e as Error)
@@ -58,15 +72,22 @@ export const PUT: RequestHandler = async ({ request, url: { searchParams } }) =>
 }
 
 export const DELETE: RequestHandler = async ({ request, url: { searchParams } }) => {
+	const userId = searchParams.get('userId')
 	const walletId = searchParams.get('walletId')
+	const paymentDetailId = searchParams.get('paymentDetailId')
 
-	if (!walletId) {
+	if (!userId || (!walletId && !paymentDetailId)) {
 		throw error(400, 'Invalid request')
 	}
 
 	try {
-		const userId = await authorizeUserless(request, 'DELETE')
-		const deletedWallet = await deleteWalletForUser(walletId, userId)
+		await authorize(request, userId, 'DELETE')
+		let deletedWallet
+		if (walletId) {
+			deletedWallet = await deleteWalletForUser(userId, walletId)
+		} else if (paymentDetailId) {
+			deletedWallet = await deleteWalletForUserByPaymentDetailId(userId, paymentDetailId)
+		}
 		return json(deletedWallet)
 	} catch (e: unknown) {
 		console.error(e)
