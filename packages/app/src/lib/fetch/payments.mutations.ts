@@ -43,8 +43,10 @@ export const persistPaymentMethodMutation = createMutation(
 						isDefault,
 					},
 				})
+				toast.success('Payment created')
 				return pd
 			}
+			toast.error(`Payment not created`)
 			return null
 		},
 		onSuccess: () => {

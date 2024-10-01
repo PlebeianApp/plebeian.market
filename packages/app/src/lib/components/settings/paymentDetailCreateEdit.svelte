@@ -10,21 +10,28 @@
 	import { deletePaymentMethodMutation, persistPaymentMethodMutation, updatePaymentMethodMutation } from '$lib/fetch/payments.mutations'
 	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
 	import ndkStore from '$lib/stores/ndk'
+	import { checkAddress, checkExtendedPublicKey } from '$lib/utils/paymentDetails.utils'
 	import { NIP05_REGEX } from 'nostr-tools/nip05'
 
 	import type { PaymentDetailsMethod } from '@plebeian/database'
 	import { PAYMENT_DETAILS_METHOD } from '@plebeian/database/constants'
 
+	import type { onChainConfirmationType } from './types'
 	import Spinner from '../assets/spinner.svelte'
+	import PaymentDetailConfirmationCard from './paymentDetailConfirmationCard.svelte'
 
 	export let paymentDetail: RichPaymentDetail | null = null
 	export let paymentDetailMethods: PaymentDetailsMethod[]
+	let confirmationType: onChainConfirmationType
+	type FormState = 'idle' | 'validating' | 'confirming' | 'submitting'
 
-	let isEditing = !!paymentDetail
 	let isOpen = false
-	let isLoading = false
+	let formState: FormState = 'idle'
 	let validationMessage = ''
+	let showConfirmation = false
+	let tempValidatedValue = ''
 
+	$: isEditing = !!paymentDetail
 	let editedPaymentDetail = paymentDetail
 		? { ...paymentDetail }
 		: {
@@ -55,7 +62,7 @@
 		[PAYMENT_DETAILS_METHOD.ON_CHAIN]: 'i-mingcute-anchor-line',
 	}
 
-	const validationMethods: Record<PaymentDetailsMethod, (value: string) => Promise<boolean>> = {
+	const validationMethods: Record<PaymentDetailsMethod, (value: string) => Promise<boolean | 'needsConfirmation'>> = {
 		[PAYMENT_DETAILS_METHOD.LIGHTNING_NETWORK]: async (value) => {
 			if (NIP05_REGEX.test(value)) {
 				const ln = new LightningAddress(value)
@@ -65,71 +72,100 @@
 			return false
 		},
 		[PAYMENT_DETAILS_METHOD.ON_CHAIN]: async (value) => {
-			const btcRegex = /^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$|^bc1[ac-hj-np-z02-9]{39,59}$/
-			return btcRegex.test(value)
+			if (value.startsWith('xpub') || value.startsWith('zpub')) {
+				confirmationType = 'extended_public_key'
+				return checkExtendedPublicKey(value) ? 'needsConfirmation' : false
+			} else if (value.startsWith('bc1')) {
+				confirmationType = 'single_address'
+				return checkAddress(value) ? 'needsConfirmation' : false
+			}
+			return false
 		},
 	}
 
-	async function validateInput(value: string, method: PaymentDetailsMethod): Promise<boolean> {
-		const validationMethod = validationMethods[method]
-		if (!validationMethod) {
-			validationMessage = 'Unknown payment method'
-			return false
-		}
-
-		const isValid = await validationMethod(value)
-		validationMessage = isValid ? '' : `Invalid ${paymentMethodLabels[method]}`
-		return isValid
-	}
-
-	async function handleSubmit() {
+	async function validateAndConfirm() {
 		if (!editedPaymentDetail.paymentDetails) {
 			validationMessage = 'Please fill in the payment details'
 			return
 		}
 
-		isLoading = true
+		formState = 'validating'
 		validationMessage = 'Validating...'
 
 		try {
-			const isValid = await validateInput(editedPaymentDetail.paymentDetails, editedPaymentDetail.paymentMethod)
-			if (!isValid) return
+			const result = await validationMethods[editedPaymentDetail.paymentMethod](editedPaymentDetail.paymentDetails)
 
-			validationMessage = 'Saving...'
+			if (result === 'needsConfirmation') {
+				formState = 'confirming'
+				tempValidatedValue = editedPaymentDetail.paymentDetails
+				showConfirmation = true
+			} else if (result) {
+				handleSubmit()
+			} else {
+				formState = 'idle'
+				validationMessage = `Invalid ${paymentMethodLabels[editedPaymentDetail.paymentMethod]}`
+			}
+		} catch (error) {
+			formState = 'idle'
+			validationMessage = 'An error occurred during validation'
+			console.error('Validation error:', error)
+		}
+	}
+
+	function handleConfirmation() {
+		showConfirmation = false
+		handleSubmit()
+	}
+
+	function handleCancellation() {
+		showConfirmation = false
+		formState = 'idle'
+		validationMessage = 'Confirmation cancelled'
+	}
+
+	async function handleSubmit() {
+		formState = 'submitting'
+		validationMessage = 'Saving...'
+
+		try {
+			const mutationPayload = {
+				paymentDetails: editedPaymentDetail.paymentDetails,
+				paymentMethod: editedPaymentDetail.paymentMethod,
+				stallId: editedPaymentDetail.stallId,
+				isDefault: editedPaymentDetail.isDefault,
+			}
+
 			if (isEditing) {
 				await $updatePaymentMethodMutation.mutateAsync({
-					paymentDetails: editedPaymentDetail.paymentDetails,
-					paymentMethod: editedPaymentDetail.paymentMethod,
-					stallId: editedPaymentDetail.stallId,
+					...mutationPayload,
 					paymentDetailId: editedPaymentDetail.id,
-					isDefault: editedPaymentDetail.isDefault,
 				})
 			} else {
-				await $persistPaymentMethodMutation.mutateAsync({
-					paymentDetails: editedPaymentDetail.paymentDetails,
-					paymentMethod: editedPaymentDetail.paymentMethod,
-					stallId: editedPaymentDetail.stallId,
-					isDefault: editedPaymentDetail.isDefault,
-				})
+				await $persistPaymentMethodMutation.mutateAsync(mutationPayload)
 			}
 
 			isOpen = false
 			if (!isEditing) {
-				editedPaymentDetail = {
-					id: '',
-					userId: $ndkStore.activeUser?.pubkey ?? '',
-					paymentMethod: PAYMENT_DETAILS_METHOD.LIGHTNING_NETWORK,
-					paymentDetails: '',
-					stallId: null,
-					stallName: 'General',
-					isDefault: false,
-				}
+				resetForm()
 			}
+			validationMessage = ''
 		} catch (error) {
 			validationMessage = 'An error occurred while saving'
 			console.error('Error saving payment method:', error)
 		} finally {
-			isLoading = false
+			formState = 'idle'
+		}
+	}
+
+	function resetForm() {
+		editedPaymentDetail = {
+			id: '',
+			userId: $ndkStore.activeUser?.pubkey ?? '',
+			paymentMethod: PAYMENT_DETAILS_METHOD.LIGHTNING_NETWORK,
+			paymentDetails: '',
+			stallId: null,
+			stallName: 'General',
+			isDefault: false,
 		}
 	}
 
@@ -149,7 +185,7 @@
 	<Collapsible.Root bind:open={isOpen}>
 		<Collapsible.Trigger on:click={() => (isOpen = !isOpen)} class="flex flex-row w-full justify-between items-center gap-2">
 			{#if isEditing}
-				<div class="flex flex-row gap-2 items-center">
+				<div class="grid grid-flow-col grid-cols-[1fr_auto] gap-2">
 					<span class={paymentMethodIcons[editedPaymentDetail.paymentMethod] + ' w-6 h-6'} />
 					<span class="truncate">{editedPaymentDetail.paymentDetails}</span>
 				</div>
@@ -174,115 +210,126 @@
 		</Collapsible.Trigger>
 
 		<Collapsible.Content class="flex flex-col gap-4 py-4">
-			<div class="flex flex-row gap-4 items-start">
-				<div class="w-full">
-					<Label for="payment-details" class="font-medium">Payment Method</Label>
-					<Select.Root
-						selected={{
-							value: editedPaymentDetail.paymentMethod,
-							label: paymentMethodLabels[editedPaymentDetail.paymentMethod],
-						}}
-						onSelectedChange={(sEvent) => {
-							if (sEvent) {
-								editedPaymentDetail.paymentMethod = sEvent.value
-							}
-						}}
-						name="paymentMethod"
-					>
-						<Select.Trigger class="focus:border-2 focus:ring-2">
-							<Select.Value placeholder="Payment method" />
-						</Select.Trigger>
-						<Select.Content>
-							{#each paymentDetailMethods as method}
-								<Select.Item value={method}>
-									<div class="flex items-center gap-2">
-										<span class={paymentMethodIcons[method] + ' w-5 h-5'} />
-										{paymentMethodLabels[method]}
-									</div>
-								</Select.Item>
-							{/each}
-						</Select.Content>
-					</Select.Root>
-				</div>
-				<div class="w-full">
-					<Label for="payment-details" class="font-medium">Stall</Label>
-					<Select.Root
-						selected={{
-							value: editedPaymentDetail.stallId,
-							label: editedPaymentDetail.stallName,
-						}}
-						onSelectedChange={(sEvent) => {
-							if (sEvent?.value === null) {
-								editedPaymentDetail.stallId = null
-								editedPaymentDetail.stallName = 'General'
-								editedPaymentDetail.isDefault = false
-							} else if (sEvent?.value && sEvent?.label) {
-								editedPaymentDetail.stallId = sEvent.value
-								editedPaymentDetail.stallName = sEvent.label
-								editedPaymentDetail.isDefault = false
-							}
-						}}
-						name="assignStallForPaymentMethod"
-					>
-						<Select.Trigger class=" focus:border-2 focus:ring-2">
-							<Select.Value placeholder="Assign a stall" />
-						</Select.Trigger>
-						<Select.Content>
-							<Select.Item value={null}>
-								<div class="flex items-center gap-2">
-									<span class="i-mingcute-earth-2-line w-5 h-5" />
-									General
-								</div>
-							</Select.Item>
-							{#if $stallsQuery && $stallsQuery.data}
-								{#each $stallsQuery.data.stalls as stall}
-									<Select.Item value={stall.id}>
+			{#if showConfirmation}
+				<PaymentDetailConfirmationCard
+					value={tempValidatedValue}
+					type={confirmationType}
+					on:confirm={handleConfirmation}
+					on:cancel={handleCancellation}
+				/>
+			{:else}
+				<div class="flex flex-row gap-4 items-start">
+					<div class="w-full">
+						<Label for="payment-details" class="font-medium">Payment Method</Label>
+						<Select.Root
+							selected={{
+								value: editedPaymentDetail.paymentMethod,
+								label: paymentMethodLabels[editedPaymentDetail.paymentMethod],
+							}}
+							onSelectedChange={(sEvent) => {
+								if (sEvent) {
+									editedPaymentDetail.paymentMethod = sEvent.value
+								}
+							}}
+							name="paymentMethod"
+						>
+							<Select.Trigger class="focus:border-2 focus:ring-2">
+								<Select.Value placeholder="Payment method" />
+							</Select.Trigger>
+							<Select.Content>
+								{#each paymentDetailMethods as method}
+									<Select.Item value={method}>
 										<div class="flex items-center gap-2">
-											<span class="i-tdesign-store w-5 h-5" />
-											{stall.name}
+											<span class={paymentMethodIcons[method] + ' w-5 h-5'} />
+											{paymentMethodLabels[method]}
 										</div>
 									</Select.Item>
 								{/each}
-							{/if}
-						</Select.Content>
-					</Select.Root>
+							</Select.Content>
+						</Select.Root>
+					</div>
+					<div class="w-full">
+						<Label for="payment-details" class="font-medium">Stall</Label>
+						<Select.Root
+							selected={{
+								value: editedPaymentDetail.stallId,
+								label: editedPaymentDetail.stallName,
+							}}
+							onSelectedChange={(sEvent) => {
+								if (sEvent?.value === null) {
+									editedPaymentDetail.stallId = null
+									editedPaymentDetail.stallName = 'General'
+									editedPaymentDetail.isDefault = false
+								} else if (sEvent?.value && sEvent?.label) {
+									editedPaymentDetail.stallId = sEvent.value
+									editedPaymentDetail.stallName = sEvent.label
+									editedPaymentDetail.isDefault = false
+								}
+							}}
+							name="assignStallForPaymentMethod"
+						>
+							<Select.Trigger class=" focus:border-2 focus:ring-2">
+								<Select.Value placeholder="Assign a stall" />
+							</Select.Trigger>
+							<Select.Content>
+								<Select.Item value={null}>
+									<div class="flex items-center gap-2">
+										<span class="i-mingcute-earth-2-line w-5 h-5" />
+										General
+									</div>
+								</Select.Item>
+								{#if $stallsQuery && $stallsQuery.data}
+									{#each $stallsQuery.data.stalls as stall}
+										<Select.Item value={stall.id}>
+											<div class="flex items-center gap-2">
+												<span class="i-tdesign-store w-5 h-5" />
+												{stall.name}
+											</div>
+										</Select.Item>
+									{/each}
+								{/if}
+							</Select.Content>
+						</Select.Root>
+					</div>
 				</div>
-			</div>
 
-			<div class="flex flex-col gap-2">
-				<Label for="payment-details" class="font-medium">Payment details</Label>
-				<Input
-					id="payment-details"
-					bind:value={editedPaymentDetail.paymentDetails}
-					class="w-full border"
-					placeholder="Enter payment details"
-					disabled={isLoading}
-				/>
-			</div>
+				<div class="flex flex-col gap-2">
+					<Label for="payment-details" class="font-medium">Payment details</Label>
+					<Input
+						id="payment-details"
+						bind:value={editedPaymentDetail.paymentDetails}
+						class="w-full border"
+						placeholder="Enter payment details"
+					/>
+				</div>
 
-			{#if validationMessage && !isLoading}
-				<p class="text-red-500 text-sm">{validationMessage}</p>
-			{:else if isLoading}
-				<Spinner />
-			{/if}
-
-			<div class="flex items-center gap-2">
-				<Checkbox id="default-payment" bind:checked={editedPaymentDetail.isDefault} disabled={isDisabled} class="border" />
-				<Label for="default-payment" class="font-medium">Default</Label>
-			</div>
-
-			<div class="flex flex-row-reverse gap-2 mt-4">
-				<Button type="submit" on:click={handleSubmit} disabled={isLoading} class="font-bold py-2 px-4">
-					{#if isLoading}<Spinner />{/if}
-					{isLoading ? 'Validating...' : isEditing ? 'Update' : 'Save'}
-				</Button>
-				{#if isEditing}
-					<Button variant="destructive" on:click={handleDelete} disabled={isLoading} class="font-bold py-2 px-4">
-						<span class="i-mdi-trash w-6 h-6 cursor-pointer" />
-					</Button>
+				{#if validationMessage && formState == 'idle'}
+					<p class="text-red-500 text-sm">{validationMessage}</p>
+				{:else if formState !== 'idle'}
+					<Spinner />
 				{/if}
-				<Button variant="outline" on:click={() => (isOpen = false)} disabled={isLoading} class="font-bold py-2 px-4">Cancel</Button>
-			</div>
+
+				<div class="flex items-center gap-2">
+					<Checkbox id="default-payment" bind:checked={editedPaymentDetail.isDefault} disabled={isDisabled} class="border" />
+					<Label for="default-payment" class="font-medium">Default</Label>
+				</div>
+				<div class="flex flex-row-reverse gap-2 mt-4">
+					<Button type="submit" on:click={validateAndConfirm} disabled={formState !== 'idle'} class="font-bold py-2 px-4">
+						{#if formState !== 'idle'}<Spinner />{/if}
+						{formState === 'validating' ? 'Validating...' : formState === 'submitting' ? 'Saving...' : isEditing ? 'Update' : 'Save'}
+					</Button>
+
+					{#if isEditing}
+						<Button variant="destructive" on:click={handleDelete} disabled={formState !== 'idle'} class="font-bold py-2 px-4">
+							<span class="i-mdi-trash w-6 h-6 cursor-pointer" />
+						</Button>
+					{/if}
+
+					<Button variant="outline" on:click={() => (isOpen = false)} disabled={formState !== 'idle'} class="font-bold py-2 px-4">
+						Cancel
+					</Button>
+				</div>
+			{/if}
 		</Collapsible.Content>
 	</Collapsible.Root>
 </div>

@@ -11,7 +11,7 @@ import type { PageServerLoad } from './$types'
 export type StallCheck = {
 	id: string
 	identifier?: string
-	exist: boolean
+	// exist: boolean
 }
 
 type ProcessedInfo = {
@@ -59,7 +59,7 @@ const getStallInfo = async (stallId: string, stallIdentifier?: string): Promise<
 	return {
 		id: stallId,
 		identifier: stallIdentifier,
-		exist: await stallExists(stallId).catch(() => false),
+		// exist: await stallExists(stallId).catch(() => false),
 	}
 }
 

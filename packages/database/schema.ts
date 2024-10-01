@@ -135,6 +135,7 @@ export const users = sqliteTable('users', {
 })
 
 // Users meta table
+// TODO: Add index for looking up derived btc addresses from payment details as `wallet_details`
 export const userMeta = sqliteTable('user_meta', {
 	id: text('id')
 		.primaryKey()
@@ -398,6 +399,7 @@ export const orderItems = sqliteTable(
 )
 
 // Invoices
+// TODO: Add observations and use it for user justification of skipping the payment
 export const invoices = sqliteTable('invoices', {
 	id: text('id')
 		.primaryKey()

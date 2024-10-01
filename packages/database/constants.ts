@@ -162,6 +162,8 @@ export type UserTrustLevel = ObjectValues<typeof USER_TRUST_LEVEL> | null
 
 export const WALLET_TYPE = {
 	NWC: 'nwc',
+	// We will use `ON_CHAIN_INDEX` as key, id of the paymentDetail in valueText, and valueNumeric to store the index
+	ON_CHAIN_INDEX: 'on-chain-index',
 } as const
 
 export type WalletType = ObjectValues<typeof WALLET_TYPE> | null

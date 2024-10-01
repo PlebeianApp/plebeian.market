@@ -36,6 +36,7 @@
 	type PaymentStatus = 'paid' | 'expired' | 'canceled' | null
 	type ShareWithInvoice = V4VDTO & { canReceive: boolean; max: number; min: number; paymentDetail: RichPaymentDetail }
 
+	// TODO: Maybe we can fetch invoices at the moment of render it. Right now they all starts at the same time which can lead to end expiry times
 	let api: CarouselAPI
 	let carouselCount = 0
 	let carouselCurrent = 0

@@ -28,6 +28,7 @@
 	let imageLoadError = false
 </script>
 
+<!-- TODO: Improve items without stock visualization -->
 <Card.Root class="relative grid grid-rows-[1fr_auto] border-2 border-black bg-transparent text-black group">
 	{#if images?.length && !imageLoadError}
 		{@const mainImage = images.find((img) => img.imageOrder === 0) || images[0]}

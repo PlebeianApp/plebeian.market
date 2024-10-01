@@ -42,7 +42,7 @@
 			const cartData = JSON.stringify({ orders, invoices })
 			const formData = new FormData()
 			formData.append('cartData', cartData)
-
+			// FIXME: Error when attempting to persist orders and invoices in vps deployment. Error: SyntaxError: Unexpected token 'C', "Cross-site"... is not valid JSON
 			const response = await fetch('?/persistOrdersAndInvoices', {
 				method: 'POST',
 				body: formData,
@@ -79,8 +79,8 @@
 
 		const userExists = await checkIfUserExists(merchant.pubkey)
 		const shouldPersist = await shouldRegister(undefined, userExists)
-
 		if (shouldPersist && !persistenceComplete) {
+			// TODO: reduce product stock Quantity of products when order is fully paid, when an order has just been placed or not fully paid no
 			await handlePersist()
 		}
 	})
