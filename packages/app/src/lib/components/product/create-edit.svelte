@@ -153,7 +153,7 @@
 			<Tabs.List class="w-full justify-around bg-transparent">
 				<Tabs.Trigger value="basic" class={activeTab}>Basic</Tabs.Trigger>
 				<Tabs.Trigger value="categories" class={activeTab}>Categories</Tabs.Trigger>
-				<Tabs.Trigger value="images" class={activeTab}>Images</Tabs.Trigger>
+				<Tabs.Trigger data-tooltip="Images help customers recognize your product" value="images" class={activeTab}>Images</Tabs.Trigger>
 				<Tabs.Trigger value="shipping" class={activeTab}>Shipping</Tabs.Trigger>
 			</Tabs.List>
 
@@ -161,6 +161,7 @@
 				<div class="grid w-full items-center gap-1.5">
 					<Label for="title" class="font-bold required-mark">Title</Label>
 					<Input
+						data-tooltip="Your product's name"
 						value={product?.name ?? ''}
 						required
 						class="border-2 border-black"
@@ -172,13 +173,20 @@
 
 				<div class="grid w-full items-center gap-1.5">
 					<Label for="description" class="font-bold">Description (Recommended)</Label>
-					<Textarea value={product?.description ?? ''} class="border-2 border-black" placeholder="Description" name="description" />
+					<Textarea
+						data-tooltip="More information on your product"
+						value={product?.description ?? ''}
+						class="border-2 border-black"
+						placeholder="Description"
+						name="description"
+					/>
 				</div>
 
 				<div class="flex gap-1.5">
 					<div class="grid w-full items-center gap-1.5">
 						<Label for="price" class="font-bold required-mark">Price</Label>
 						<Input
+							data-tooltip="The cost of your product"
 							class="border-2 border-black"
 							min={0}
 							type="text"
@@ -192,7 +200,15 @@
 
 					<div class="grid w-full items-center gap-1.5">
 						<Label title="quantity" for="quantity" class="font-bold required-mark">Quantity</Label>
-						<Input value={product?.quantity ?? ''} required class="border-2 border-black" type="number" name="quantity" placeholder="10" />
+						<Input
+							data-tooltip="The available stock for this product"
+							value={product?.quantity ?? ''}
+							required
+							class="border-2 border-black"
+							type="number"
+							name="quantity"
+							placeholder="10"
+						/>
 					</div>
 				</div>
 
@@ -201,7 +217,12 @@
 						<Label for="from" class="font-bold">Stall</Label>
 						<DropdownMenu.Root>
 							<DropdownMenu.Trigger asChild let:builder>
-								<Button variant="outline" class="border-2 border-black" builders={[builder]}>
+								<Button
+									data-tooltip="The stall this product is part of"
+									variant="outline"
+									class="border-2 border-black"
+									builders={[builder]}
+								>
 									{#if currentStallIdentifier}
 										{@const defaultStall = $stallsQuery.data?.stalls.find((stall) => stall.identifier === currentStallIdentifier)}
 										{defaultStall ? defaultStall.name : 'Select a stall'}
@@ -230,7 +251,15 @@
 					</div>
 					<div class="grid w-full items-center gap-1.5">
 						<Label for="from" class="font-bold">Currency</Label>
-						<Input value={stall?.currency} required class="border-2 border-black" type="text" name="currency" disabled />
+						<Input
+							data-tooltip="This is inherited from the stall's currency"
+							value={stall?.currency}
+							required
+							class="border-2 border-black"
+							type="text"
+							name="currency"
+							disabled
+						/>
 					</div>
 				</div>
 			</Tabs.Content>
@@ -297,6 +326,7 @@
 						<div class="grid w-full items-center gap-1.5">
 							<Label for="from" class="font-bold required-mark">Extra cost <small class="font-light">(in {stall?.currency})</small></Label>
 							<Input
+								data-tooltip="The cost of the product, which will be added to the method's base cost"
 								value={shippingMethod.extraCost}
 								on:input={(e) => {
 									shippingMethod.extraCost = e.currentTarget.value
@@ -322,6 +352,9 @@
 
 				<div class="grid gap-1.5">
 					<Button
+						data-tooltip={currentShippings.length === stall?.shipping?.length
+							? 'Add few shipping methods to the stall first'
+							: 'Add shipping methods available for this product'}
 						on:click={() => (currentShippings = [...currentShippings, { shipping: null, extraCost: '' }])}
 						disabled={currentShippings.length === stall?.shipping?.length}
 						variant="outline"
