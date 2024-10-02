@@ -8,12 +8,14 @@
 	import { Input } from '$lib/components/ui/input'
 	import { Label } from '$lib/components/ui/label'
 	import * as Select from '$lib/components/ui/select'
+	import { standardDisplayDateFormat } from '$lib/constants'
 	import { deletePaymentMethodMutation, persistPaymentMethodMutation, updatePaymentMethodMutation } from '$lib/fetch/payments.mutations'
 	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
 	import { deleteWalletMutation } from '$lib/fetch/wallets.mutations'
 	import { createOnChainIndexQuery } from '$lib/fetch/wallets.queries'
 	import ndkStore from '$lib/stores/ndk'
 	import { checkAddress, checkExtendedPublicKey, deriveAddresses, isExtendedPublicKey } from '$lib/utils/paymentDetails.utils'
+	import { format } from 'date-fns'
 	import { NIP05_REGEX } from 'nostr-tools/nip05'
 
 	import type { PaymentDetailsMethod } from '@plebeian/database/constants'
@@ -231,6 +233,7 @@
 					on:cancel={handleCancellation}
 				/>
 			{:else}
+				<!-- TODO: Improve ux by having a waila (what im looking at) function that determines the payment method -->
 				<div class="flex flex-row gap-4 items-start">
 					<div class="w-full">
 						<Label for="payment-details" class="font-medium">Payment Method</Label>
@@ -314,15 +317,21 @@
 						class="w-full border"
 						placeholder="Enter payment details"
 					/>
-					{#if $onChainWalletIndexQuery?.data !== undefined && paymentDetail?.paymentDetails && $onChainWalletIndexQuery?.data}
+					{#if $onChainWalletIndexQuery?.data && paymentDetail?.paymentDetails}
 						<Label for="payment-details" class="font-medium">Current address</Label>
-						<small
-							>Index: {$onChainWalletIndexQuery.data} - {deriveAddresses(
-								paymentDetail.paymentDetails,
-								0,
-								$onChainWalletIndexQuery.data,
-							)}</small
-						>
+						<div class=" bg-secondary flex flex-col gap-2 p-2">
+							<small
+								>Index: {$onChainWalletIndexQuery.data.valueNumeric} - {deriveAddresses(
+									paymentDetail.paymentDetails,
+									1,
+									Number($onChainWalletIndexQuery.data.valueNumeric),
+								)}</small
+							>
+							<small>
+								Last updated:
+								{format($onChainWalletIndexQuery.data.updatedAt, standardDisplayDateFormat)}
+							</small>
+						</div>
 					{/if}
 				</div>
 

@@ -1,7 +1,7 @@
 import { error } from '@sveltejs/kit'
 import { nwcUriToWalletDetails, walletDetailsToNWCUri } from '$lib/utils'
 
-import type { WalletType } from '@plebeian/database'
+import type { UserMeta, WalletType } from '@plebeian/database'
 import { and, db, eq, USER_META, userMeta, WALLET_TYPE } from '@plebeian/database'
 
 export type NWCWallet = {
@@ -141,7 +141,7 @@ export const deleteWalletForUserByPaymentDetailId = async (userId: string, payme
 	}
 }
 
-export const getOnChainIndexForPaymentDetail = async (userId: string, paymentDetailId: string): Promise<number> => {
+export const getOnChainWalletDetails = async (userId: string, paymentDetailId: string): Promise<UserMeta | null> => {
 	const [result] = await db
 		.select()
 		.from(userMeta)
@@ -156,23 +156,25 @@ export const getOnChainIndexForPaymentDetail = async (userId: string, paymentDet
 		.execute()
 
 	if (!result) {
-		return 0
+		return null
 	}
 
-	return Number(result.valueNumeric)
+	return result
 }
 
 export const incrementOnChainIndex = async (userId: string, paymentDetailId: string): Promise<number> => {
-	const currentIndex = await getOnChainIndexForPaymentDetail(userId, paymentDetailId)
-	const newIndex = currentIndex + 1
-
-	await db
+	console.log('Incrementing on chain index for', userId, paymentDetailId)
+	const currentIndex = await getOnChainWalletDetails(userId, paymentDetailId)
+	console.log('Current index', currentIndex)
+	const newIndex = currentIndex?.valueNumeric ? Number(currentIndex.valueNumeric) + 1 : 0 + 1
+	console.log('New index', newIndex)
+	const result = await db
 		.update(userMeta)
 		.set({
 			valueNumeric: String(newIndex),
 		})
 		.where(and(eq(userMeta.metaName, USER_META.WALLET_DETAILS.value), eq(userMeta.userId, userId), eq(userMeta.valueText, paymentDetailId)))
 		.returning()
-
+	console.log('Result', result)
 	return newIndex
 }

@@ -4,7 +4,7 @@ import {
 	deleteWalletForUser,
 	deleteWalletForUserByPaymentDetailId,
 	getNwcWalletsByUserId,
-	getOnChainIndexForPaymentDetail,
+	getOnChainWalletDetails,
 	postWalletForUser,
 	updateWalletForUser,
 } from '$lib/server/wallet.service'
@@ -23,8 +23,8 @@ export const GET: RequestHandler = async ({ request, url: { searchParams } }) =>
 		await authorize(request, userId, 'GET')
 
 		if (paymentDetailId) {
-			const index = await getOnChainIndexForPaymentDetail(userId, paymentDetailId)
-			return json({ index })
+			const result = await getOnChainWalletDetails(userId, paymentDetailId)
+			return json(result)
 		} else {
 			const wallets = await getNwcWalletsByUserId(userId)
 			return json(wallets)

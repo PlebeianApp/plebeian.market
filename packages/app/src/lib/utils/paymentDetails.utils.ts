@@ -32,24 +32,18 @@ export function zpubToXpub(zpub: string): string | undefined {
 }
 
 export function deriveAddresses(extendedKey: string, numAddressesToGenerate: number = 10, fromIndex: number = 0): string[] | null {
-	if (extendedKey.startsWith('zpub')) {
-		const xpub = zpubToXpub(extendedKey)
-		if (!xpub) return null
-		extendedKey = xpub
-	} else if (extendedKey.startsWith('xpub') && !checkExtendedPublicKey(extendedKey)) {
-		return null
-	} else if (!isExtendedPublicKey(extendedKey)) {
+	const xpub = extendedKey.startsWith('zpub') ? zpubToXpub(extendedKey) : extendedKey
+
+	if (!xpub || (!xpub.startsWith('xpub') && !isExtendedPublicKey(xpub)) || (xpub.startsWith('xpub') && !checkExtendedPublicKey(xpub))) {
 		return null
 	}
-	const hdkey = HDKey.fromExtendedKey(extendedKey)
-	const addresses: string[] = []
-	for (let i = fromIndex; i <= numAddressesToGenerate; i++) {
-		const child = hdkey.derive(`m/0/${i}`)
-		const publicKey = child.publicKey!
-		const address = payments.p2wpkh({ pubkey: publicKey, network: networks.bitcoin }).address!
-		addresses.push(address)
-	}
-	return addresses
+
+	const hdkey = HDKey.fromExtendedKey(xpub)
+
+	return Array.from({ length: numAddressesToGenerate }, (_, i) => i + fromIndex)
+		.map((i) => hdkey.derive(`m/0/${i}`))
+		.map((child) => child.publicKey)
+		.map((publicKey) => payments.p2wpkh({ pubkey: publicKey ?? undefined, network: networks.bitcoin }).address!)
 }
 
 export function isExtendedPublicKey(input: string): boolean {

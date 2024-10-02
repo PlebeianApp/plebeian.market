@@ -4,7 +4,9 @@
 	import { Button } from '$lib/components/ui/button'
 	import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '$lib/components/ui/card'
 	import { Separator } from '$lib/components/ui/separator'
+	import { queryClient } from '$lib/fetch/client'
 	import { cart } from '$lib/stores/cart'
+	import ndkStore from '$lib/stores/ndk'
 	import { checkIfUserExists, formatSats, shouldRegister } from '$lib/utils'
 	import { CheckCircle } from 'lucide-svelte'
 	import { createEventDispatcher, onMount } from 'svelte'
@@ -82,6 +84,8 @@
 		if (shouldPersist && !persistenceComplete) {
 			// TODO: reduce product stock Quantity of products when order is fully paid, when an order has just been placed or not fully paid no
 			await handlePersist()
+			// invoices.some((invoice) => invoice.paymentRequest?.startsWith('bc1')) &&
+			// 	queryClient.invalidateQueries({ queryKey: ['onChainWalletDetails', $ndkStore.activeUser?.pubkey] })
 		}
 	})
 

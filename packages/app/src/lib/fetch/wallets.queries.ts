@@ -4,12 +4,14 @@ import { createQuery } from '@tanstack/svelte-query'
 import ndkStore from '$lib/stores/ndk'
 import { derived } from 'svelte/store'
 
+import type { UserMeta } from '@plebeian/database'
+
 import { createRequest, queryClient } from './client'
 
 declare module './client' {
 	interface Endpoints {
 		[k: `GET /api/v1/wallets/?userId=${string}`]: Operation<string, 'GET', never, never, DisplayWallet[], never>
-		[k: `GET /api/v1/wallets/?userId=${string}&paymentDetailId=${string}`]: Operation<string, 'GET', never, never, { index: number }, never>
+		[k: `GET /api/v1/wallets/?userId=${string}&paymentDetailId=${string}`]: Operation<string, 'GET', never, never, UserMeta, never>
 	}
 }
 
@@ -42,18 +44,19 @@ export const createWalletBalanceQuery = (nwc: NDKNwc, walletId: string) =>
 		},
 		queryClient,
 	)
+
 export const createOnChainIndexQuery = (userId: string, paymentDetailId: string) =>
 	createQuery(
 		{
-			queryKey: ['onChainIndex', userId, paymentDetailId],
+			queryKey: ['onChainWalletDetails', userId, paymentDetailId],
 			queryFn: async () => {
 				if (userId && paymentDetailId) {
 					const response = await createRequest(`GET /api/v1/wallets/?userId=${userId}&paymentDetailId=${paymentDetailId}`, {
 						auth: true,
 					})
-					return response.index
+					return response
 				}
-				return null
+				return undefined
 			},
 			enabled: !!userId && !!paymentDetailId,
 		},
