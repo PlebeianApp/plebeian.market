@@ -7,8 +7,8 @@ interface MempoolTransaction {
 	txid: string
 	version: number
 	locktime: number
-	vin: unknown[]
-	vout: unknown[]
+	vin: Vin[]
+	vout: Vout[]
 	size: number
 	weight: number
 	fee: number
@@ -20,6 +20,32 @@ interface MempoolTransaction {
 	}
 }
 
+interface Vin {
+	txid: string
+	vout: number
+	prevout: {
+		scriptpubkey: string
+		scriptpubkey_asm: string
+		scriptpubkey_type: string
+		scriptpubkey_address: string
+		value: number
+	}
+	scriptsig: string
+	scriptsig_asm: string
+	witness: string[]
+	is_coinbase: boolean
+	sequence: number
+	inner_witnessscript_asm: string
+}
+
+interface Vout {
+	scriptpubkey: string
+	scriptpubkey_asm: string
+	scriptpubkey_type: string
+	scriptpubkey_address: string
+	value: number
+}
+
 const MEMPOOL_API_BASE = 'https://mempool.space/api'
 
 export const createMempoolAddressTransactionsQuery = (address: string, amountSats: number) =>
@@ -27,7 +53,6 @@ export const createMempoolAddressTransactionsQuery = (address: string, amountSat
 		{
 			queryKey: ['mempoolAddressTransactions', address],
 			queryFn: async () => {
-				console.log(address)
 				const response = await fetch(`${MEMPOOL_API_BASE}/address/${address}/txs`)
 				if (!response.ok) {
 					throw new Error('Failed to fetch address transactions')

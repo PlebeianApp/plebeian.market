@@ -26,7 +26,7 @@ export const getNwcWalletsByUserId = async (userId: string) => {
 	const userWallets = await db
 		.select()
 		.from(userMeta)
-		.where(and(eq(userMeta.metaName, USER_META.WALLET_DETAILS.value), eq(userMeta.userId, userId)))
+		.where(and(eq(userMeta.metaName, USER_META.WALLET_DETAILS.value), eq(userMeta.userId, userId), eq(userMeta.key, WALLET_TYPE.NWC)))
 		.execute()
 	return userWallets.map((wallet) => {
 		if (wallet.key === 'nwc') {
@@ -163,11 +163,8 @@ export const getOnChainWalletDetails = async (userId: string, paymentDetailId: s
 }
 
 export const incrementOnChainIndex = async (userId: string, paymentDetailId: string): Promise<number> => {
-	console.log('Incrementing on chain index for', userId, paymentDetailId)
 	const currentIndex = await getOnChainWalletDetails(userId, paymentDetailId)
-	console.log('Current index', currentIndex)
 	const newIndex = currentIndex?.valueNumeric ? Number(currentIndex.valueNumeric) + 1 : 0 + 1
-	console.log('New index', newIndex)
 	const result = await db
 		.update(userMeta)
 		.set({
@@ -175,6 +172,5 @@ export const incrementOnChainIndex = async (userId: string, paymentDetailId: str
 		})
 		.where(and(eq(userMeta.metaName, USER_META.WALLET_DETAILS.value), eq(userMeta.userId, userId), eq(userMeta.valueText, paymentDetailId)))
 		.returning()
-	console.log('Result', result)
-	return newIndex
+	return result.length ? newIndex : 0
 }

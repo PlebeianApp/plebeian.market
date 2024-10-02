@@ -22,7 +22,6 @@ declare module './client' {
 	interface Endpoints {
 		[k: `POST /api/v1/wallets/?userId=${string}`]: Operation<string, 'POST', never, WalletDTO, object, never>
 		[k: `PUT /api/v1/wallets/?userId=${string}&walletId=${string}`]: Operation<string, 'PUT', never, WalletDTO, object, never>
-		// TODO: Finish return type
 		[k: `PUT /api/v1/wallets/${string}?userId=${string}`]: Operation<string, 'PUT', never, never, number, never>
 		[k: `DELETE /api/v1/wallets/?userId=${string}&walletId=${string}`]: Operation<string, 'DELETE', never, never, boolean, never>
 		[k: `DELETE /api/v1/wallets/?userId=${string}&paymentDetailId=${string}`]: Operation<string, 'DELETE', never, never, boolean, never>
