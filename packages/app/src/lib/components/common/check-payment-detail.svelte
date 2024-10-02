@@ -4,17 +4,18 @@
 
 	import Spinner from '../assets/spinner.svelte'
 
+	// TODO: Maybe we can pass the whole invoice object as a prop and extend the usage of this component to also show observations about the invoice
 	export let paymentDetails: string
-	let allowsNostr = false
+	let canBePaid = false
 	let isLoading = false
 
 	onMount(async () => {
 		isLoading = true
-
+		// TODO: Maybe we can leverage svelte query to avoid repeated network calls
 		const ln = new LightningAddress(paymentDetails)
 		await ln.fetch()
 
-		allowsNostr = ln.lnurlpData?.allowsNostr ?? false
+		canBePaid = !!ln.lnurlpData
 		isLoading = false
 	})
 </script>
@@ -25,8 +26,8 @@
 	<div>
 		{#if isLoading}
 			<Spinner />
-		{:else if allowsNostr}
-			<span class="i-mdi-check w-6 h-6" data-tooltip="Invoice outstanding but the user can be zapped." />
+		{:else if canBePaid}
+			<span class="i-mdi-check w-6 h-6" data-tooltip="Invoice outstanding but the user can be paid." />
 		{:else}
 			<span
 				class="i-mdi-remove w-6 h-6"

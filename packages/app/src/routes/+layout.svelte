@@ -134,7 +134,7 @@
 		})
 	})
 
-	$: if ($ndkStore.activeUser) {
+	$: if (isLoggedIn) {
 		initNdkNWCs()
 	}
 </script>

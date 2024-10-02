@@ -398,6 +398,7 @@ export const orderItems = sqliteTable(
 )
 
 // Invoices
+// TODO: Add invoice observations
 export const invoices = sqliteTable('invoices', {
 	id: text('id')
 		.primaryKey()

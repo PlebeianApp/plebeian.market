@@ -26,6 +26,8 @@
 	export let orderMode: 'sale' | 'purchase'
 	let currentPaymentDetail: RichPaymentDetail | undefined = undefined
 	let merchantPaymentDetail: RichPaymentDetail | undefined = undefined
+
+	// TODO: We are repeating this type from the checkout, should be the same an be imported
 	type PaymentStatus = 'paid' | 'expired' | 'canceled' | null
 
 	let getUserProfileLoading: string | undefined = undefined
@@ -52,22 +54,22 @@
 	$: invoices = createInvoicesByFilterQuery({ orderId: order.id })
 
 	const handleConfirmOrder = async (order: DisplayOrder): Promise<void> => {
-		await $updateOrderStatusMutation.mutate({ orderId: order.id, status: 'confirmed' })
+		await $updateOrderStatusMutation.mutateAsync({ orderId: order.id, status: 'confirmed' })
 		toast.success('Order confirmed')
 	}
 
 	const handleMarkAsShipped = async (order: DisplayOrder): Promise<void> => {
-		await $updateOrderStatusMutation.mutate({ orderId: order.id, status: 'shipped' })
+		await $updateOrderStatusMutation.mutateAsync({ orderId: order.id, status: 'shipped' })
 		toast.success('Order marked as shipped')
 	}
 
 	const handleMarkAsReceived = async (order: DisplayOrder): Promise<void> => {
-		await $updateOrderStatusMutation.mutate({ orderId: order.id, status: 'completed' })
+		await $updateOrderStatusMutation.mutateAsync({ orderId: order.id, status: 'completed' })
 		toast.success('Order marked as received')
 	}
 
 	const handleCancelOrder = async (order: DisplayOrder): Promise<void> => {
-		await $updateOrderStatusMutation.mutate({ orderId: order.id, status: 'canceled' })
+		await $updateOrderStatusMutation.mutateAsync({ orderId: order.id, status: 'canceled' })
 		toast.success('Order cancelled')
 	}
 
@@ -175,6 +177,7 @@
 		<Separator class={'my-4'} />
 		<h3 class="text-xl font-semibold mt-8 mb-4">Invoices</h3>
 		<div class="space-y-4">
+			<!-- TODO: We can create a common component for invoices with the markup, we are repeating this code in the checkout -->
 			{#each $invoices.data as invoice (invoice.id)}
 				<div class="flex flex-col p-4 bg-gray-50 rounded-lg shadow transition-all duration-200">
 					<div class="flex justify-between items-start">
@@ -190,6 +193,7 @@
 							<span class="text-gray-600">{new Date(invoice.createdAt).toLocaleString()}</span>
 						</div>
 					</div>
+					<!-- TODO: Maybe we can have this conditional in a variable a function `shouldRetry` -->
 					{#if invoice.type === 'merchant' && orderMode === 'purchase' && invoice.invoiceStatus !== 'paid' && invoice.invoiceStatus !== 'refunded'}
 						<DropdownMenu.Root>
 							<DropdownMenu.Trigger class="text-right"><Button class="w-32">Retry</Button></DropdownMenu.Trigger>
@@ -217,6 +221,7 @@
 
 					{#if invoice.type === 'v4v'}
 						{#if orderMode === 'purchase'}
+							<!-- TODO: Invoice retry button needs to be more robust, take care of min and max sendable and valid payment details -->
 							<div class="p-2 bg-white flex justify-between items-center gap-2">
 								<div>{invoice.paymentDetails}</div>
 								{#if invoice.invoiceStatus !== 'paid' && invoice.invoiceStatus !== 'refunded'}
@@ -236,7 +241,7 @@
 								/>
 							{/if}
 						{:else if invoice.invoiceStatus !== 'paid' && invoice.invoiceStatus !== 'refunded'}
-							<div class="p-2 bg-white flex justify-between items-center gap-2">
+							<div class="p-2 flex justify-between items-center gap-2">
 								<CheckPaymentDetail paymentDetails={invoice.paymentDetails} />
 							</div>
 						{/if}
