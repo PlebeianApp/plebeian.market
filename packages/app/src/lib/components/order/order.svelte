@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { DisplayInvoice } from '$lib/server/invoices.service'
 	import type { DisplayOrder } from '$lib/server/orders.service'
 	import type { RichPaymentDetail } from '$lib/server/paymentDetails.service'
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
@@ -7,20 +8,23 @@
 	import { updateOrderStatusMutation } from '$lib/fetch/order.mutations'
 	import { createPaymentsForUserQuery } from '$lib/fetch/payments.queries'
 	import { createProductQuery } from '$lib/fetch/products.queries'
-	import { formatSats, getInvoiceStatusColor } from '$lib/utils'
 	import { toast } from 'svelte-sonner'
 	import { derived } from 'svelte/store'
 
 	import type { CheckoutPaymentEvent } from '../checkout/types'
 	import MiniUser from '../cart/mini-user.svelte'
 	import CheckPaymentDetail from '../common/check-payment-detail.svelte'
+	import InvoiceDeisplay from '../common/invoice-deisplay.svelte'
 	import PaymentProcessor from '../paymentProcessors/paymentProcessor.svelte'
 	import ProductItem from '../product/product-item.svelte'
 	import StallName from '../stalls/stall-name.svelte'
 	import Button from '../ui/button/button.svelte'
+	import Label from '../ui/label/label.svelte'
 	import Separator from '../ui/separator/separator.svelte'
+	import InvoiceObservationsEdit from './invoice-observations-edit.svelte'
 	import MiniShipping from './mini-shipping.svelte'
 	import OrderActions from './order-actions.svelte'
+	import V4vInvoiceRetry from './v4v-invoice-retry.svelte'
 
 	export let order: DisplayOrder
 	export let orderMode: 'sale' | 'purchase'
@@ -73,11 +77,11 @@
 		toast.success('Order cancelled')
 	}
 
-	const handleRetryPayment = async (paymentDetails: string): Promise<void> => {
-		getUserProfileLoading = paymentDetails
+	const handleRetryPayment = async (customEvent: CustomEvent<string>): Promise<void> => {
+		getUserProfileLoading = customEvent.detail
 		currentPaymentDetail = {
 			...v4vPaymentDetail,
-			paymentDetails,
+			paymentDetails: customEvent.detail,
 		}
 	}
 
@@ -102,6 +106,21 @@
 		toast.success(`Payment ${status}`)
 		currentPaymentDetail = undefined
 		merchantPaymentDetail = undefined
+	}
+
+	const handleInvoiceUpdate = async (invoiceId: string, ce: CustomEvent<string>) => {
+		await $updateInvoiceStatusMutation.mutateAsync({
+			invoiceId,
+			observations: ce.detail,
+			status: undefined,
+		})
+		toast.success('Observations updated')
+	}
+
+	function shouldRetry(invoice: DisplayInvoice, orderMode: 'sale' | 'purchase'): boolean {
+		return (
+			invoice.type === 'merchant' && orderMode === 'purchase' && invoice.invoiceStatus !== 'paid' && invoice.invoiceStatus !== 'refunded'
+		)
 	}
 </script>
 
@@ -177,24 +196,10 @@
 		<Separator class={'my-4'} />
 		<h3 class="text-xl font-semibold mt-8 mb-4">Invoices</h3>
 		<div class="space-y-4">
-			<!-- TODO: We can create a common component for invoices with the markup, we are repeating this code in the checkout -->
 			{#each $invoices.data as invoice (invoice.id)}
-				<div class="flex flex-col p-4 bg-gray-50 rounded-lg shadow transition-all duration-200">
-					<div class="flex justify-between items-start">
-						<div class="flex flex-col">
-							<span class="text-sm font-medium text-gray-500 uppercase">{invoice.type}</span>
-							<span class="font-medium">Invoice ID: {invoice.id}</span>
-							<span class="capitalize font-medium {getInvoiceStatusColor(invoice.invoiceStatus)}">
-								{invoice.invoiceStatus}
-							</span>
-						</div>
-						<div class="flex flex-col text-sm text-right">
-							<span class="font-bold text-lg">{formatSats(parseInt(invoice.totalAmount))} sats</span>
-							<span class="text-gray-600">{new Date(invoice.createdAt).toLocaleString()}</span>
-						</div>
-					</div>
-					<!-- TODO: Maybe we can have this conditional in a variable a function `shouldRetry` -->
-					{#if invoice.type === 'merchant' && orderMode === 'purchase' && invoice.invoiceStatus !== 'paid' && invoice.invoiceStatus !== 'refunded'}
+				<div class="flex flex-col p-4 bg-gray-50 rounded-lg shadow transition-all duration-200 gap-3">
+					<InvoiceDeisplay {invoice} />
+					{#if shouldRetry(invoice, orderMode)}
 						<DropdownMenu.Root>
 							<DropdownMenu.Trigger class="text-right"><Button class="w-32">Retry</Button></DropdownMenu.Trigger>
 							<DropdownMenu.Content>
@@ -221,15 +226,7 @@
 
 					{#if invoice.type === 'v4v'}
 						{#if orderMode === 'purchase'}
-							<!-- TODO: Invoice retry button needs to be more robust, take care of min and max sendable and valid payment details -->
-							<div class="p-2 bg-white flex justify-between items-center gap-2">
-								<div>{invoice.paymentDetails}</div>
-								{#if invoice.invoiceStatus !== 'paid' && invoice.invoiceStatus !== 'refunded'}
-									<Button class="w-32" on:click={() => handleRetryPayment(invoice.paymentDetails)}>Retry</Button>
-								{:else}
-									<Button class="w-32" variant="secondary" disabled>Done</Button>
-								{/if}
-							</div>
+							<V4vInvoiceRetry {invoice} on:retryPayment={(ce) => handleRetryPayment(ce)} />
 							{#if currentPaymentDetail && currentPaymentDetail.paymentDetails === invoice.paymentDetails}
 								<PaymentProcessor
 									paymentDetail={currentPaymentDetail}
@@ -246,6 +243,7 @@
 							</div>
 						{/if}
 					{/if}
+					<InvoiceObservationsEdit observations={invoice.observations ?? ''} on:update={(ce) => handleInvoiceUpdate(invoice.id, ce)} />
 				</div>
 			{/each}
 		</div>

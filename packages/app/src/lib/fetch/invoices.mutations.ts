@@ -14,7 +14,7 @@ declare module './client' {
 			string,
 			'PUT',
 			never,
-			{ status: InvoiceStatus; preimage: string },
+			{ status?: InvoiceStatus; observations?: string; preimage?: string },
 			DisplayInvoice,
 			never
 		>
@@ -47,12 +47,22 @@ export const createInvoiceMutation = createMutation(
 export const updateInvoiceStatusMutation = createMutation(
 	{
 		mutationKey: [],
-		mutationFn: async ({ invoiceId, status, preimage }: { invoiceId: string; status: InvoiceStatus; preimage: string }) => {
+		mutationFn: async ({
+			invoiceId,
+			status,
+			observations,
+			preimage,
+		}: {
+			invoiceId: string
+			status?: InvoiceStatus
+			observations?: string
+			preimage?: string
+		}) => {
 			const $ndkStore = get(ndkStore)
 			if ($ndkStore.activeUser?.pubkey) {
 				return await createRequest(`PUT /api/v1/invoices/${invoiceId}`, {
 					auth: true,
-					body: { status, preimage },
+					body: { status, preimage, observations },
 				})
 			}
 			return null

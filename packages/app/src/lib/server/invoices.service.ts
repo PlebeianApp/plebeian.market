@@ -6,7 +6,10 @@ import { format } from 'date-fns'
 import type { Invoice, InvoiceStatus } from '@plebeian/database'
 import { db, eq, invoices, orders } from '@plebeian/database'
 
-export type DisplayInvoice = Pick<Invoice, 'id' | 'orderId' | 'totalAmount' | 'invoiceStatus' | 'type' | 'paymentDetails'> & {
+export type DisplayInvoice = Pick<
+	Invoice,
+	'id' | 'orderId' | 'totalAmount' | 'invoiceStatus' | 'type' | 'paymentDetails' | 'observations'
+> & {
 	createdAt: string
 	updatedAt: string
 }
@@ -59,6 +62,36 @@ export const createInvoice = async (invoice: Omit<Invoice, 'id' | 'createdAt' | 
 	}
 
 	return toDisplayInvoice(newInvoice)
+}
+
+export const updateInvoiceObservations = async (invoiceId: string, observations: string, userId: string): Promise<DisplayInvoice> => {
+	const [invoiceRes] = await db.select().from(invoices).where(eq(invoices.id, invoiceId)).execute()
+	const [orderRes] = await db
+		.select({
+			buyerId: orders.buyerUserId,
+			sellerId: orders.sellerUserId,
+		})
+		.from(orders)
+		.where(eq(orders.id, invoiceRes.orderId))
+		.execute()
+
+	const { buyerId, sellerId } = orderRes
+
+	if (userId !== buyerId && userId !== sellerId) {
+		error(401, 'Unauthorized')
+	}
+
+	const [updatedInvoice] = await db
+		.update(invoices)
+		.set({ observations, updatedAt: new Date() })
+		.where(eq(invoices.id, invoiceId))
+		.returning()
+
+	if (!updatedInvoice) {
+		error(404, 'Invoice not found')
+	}
+
+	return toDisplayInvoice(updatedInvoice)
 }
 
 export const updateInvoiceStatus = async (invoiceId: string, newStatus: InvoiceStatus, userId: string): Promise<DisplayInvoice> => {

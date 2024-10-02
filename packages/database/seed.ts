@@ -459,6 +459,10 @@ const main = async () => {
 					paymentDetails: share.target === 'merchant' ? faker.finance.creditCardNumber() : paymenttDetailsForTarget,
 					paymentRequest: faker.internet.url(),
 					proof: faker.internet.url(),
+					observations: faker.lorem.sentence({
+						min: 5,
+						max: 15,
+					}),
 					type: share.target === 'merchant' ? INVOICE_TYPE.MERCHANT : INVOICE_TYPE.V4V,
 				} as Invoice
 			})
