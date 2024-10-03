@@ -20,6 +20,7 @@
 	import { ORDER_STATUS } from '@plebeian/database/constants'
 	import { createId } from '@plebeian/database/utils'
 
+	import type { OrderPaymentStatus } from '../order/types'
 	import type { CheckoutPaymentEvent } from './types'
 	import MiniStall from '../cart/mini-stall.svelte'
 	import ProductInCart from '../cart/product-in-cart.svelte'
@@ -33,13 +34,12 @@
 
 	const dispatch = createEventDispatcher<{ valid: boolean }>()
 
-	type PaymentStatus = 'paid' | 'expired' | 'canceled' | null
 	type ShareWithInvoice = V4VDTO & { canReceive: boolean; max: number; min: number; paymentDetail: RichPaymentDetail }
 
 	let api: CarouselAPI
 	let carouselCount = 0
 	let carouselCurrent = 0
-	let paymentStatuses: { id: string; status: PaymentStatus }[] = []
+	let paymentStatuses: { id: string; status: OrderPaymentStatus }[] = []
 	let orderTotal: Awaited<ReturnType<typeof cart.calculateStallTotal>>
 	let v4vShares: ShareWithInvoice[] = []
 	let v4vTotalPercentage: number | null = null
@@ -108,13 +108,13 @@
 		paymentStatuses = [{ id: 'merchant', status: null }, ...v4vShares.map((share) => ({ id: share.target, status: null }))]
 	}
 
-	const statusMapping: Record<NonNullable<PaymentStatus>, OrderStatus> = {
+	const statusMapping: Record<NonNullable<OrderPaymentStatus>, OrderStatus> = {
 		paid: ORDER_STATUS.PAID,
 		expired: ORDER_STATUS.PENDING,
 		canceled: ORDER_STATUS.PENDING,
 	}
 
-	const paymentEventToStatus: Record<string, NonNullable<PaymentStatus>> = {
+	const paymentEventToStatus: Record<string, NonNullable<OrderPaymentStatus>> = {
 		paymentComplete: 'paid',
 		paymentExpired: 'expired',
 		paymentCanceled: 'canceled',
@@ -156,10 +156,11 @@
 			toast.error(`Failed to process ${status} payment: ${error instanceof Error ? error.message : 'Unknown error'}`)
 		}
 	}
+
 	function createInvoice(
 		paymentRequest: string | null,
 		preimage: string | null,
-		status: NonNullable<PaymentStatus>,
+		status: NonNullable<OrderPaymentStatus>,
 		amount: number,
 		paymentType: string,
 	): InvoiceMessage {
@@ -177,7 +178,7 @@
 		}
 	}
 
-	async function processPayment(invoice: InvoiceMessage, status: NonNullable<PaymentStatus>) {
+	async function processPayment(invoice: InvoiceMessage, status: NonNullable<OrderPaymentStatus>) {
 		cart.addInvoice(invoice)
 
 		const paymentRequestMessage: PaymentRequestMessage = {

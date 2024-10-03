@@ -1,46 +1,123 @@
 <script lang="ts">
-	import type { QueryObserverResult } from '@tanstack/svelte-query'
+	import type { DisplayInvoice } from '$lib/server/invoices.service'
 	import type { DisplayOrder } from '$lib/server/orders.service'
-	import type { DisplayProduct } from '$lib/server/products.service'
+	import type { RichPaymentDetail } from '$lib/server/paymentDetails.service'
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
+	import { updateInvoiceStatusMutation } from '$lib/fetch/invoices.mutations'
+	import { createInvoicesByFilterQuery } from '$lib/fetch/invoices.queries'
 	import { updateOrderStatusMutation } from '$lib/fetch/order.mutations'
+	import { createPaymentsForUserQuery } from '$lib/fetch/payments.queries'
 	import { createProductQuery } from '$lib/fetch/products.queries'
 	import { toast } from 'svelte-sonner'
 	import { derived } from 'svelte/store'
 
+	import type { CheckoutPaymentEvent } from '../checkout/types'
+	import type { OrderMode, OrderPaymentStatus } from './types'
 	import MiniUser from '../cart/mini-user.svelte'
+	import CheckPaymentDetail from '../common/check-payment-detail.svelte'
+	import InvoiceDeisplay from '../common/invoice-deisplay.svelte'
+	import PaymentProcessor from '../paymentProcessors/paymentProcessor.svelte'
 	import ProductItem from '../product/product-item.svelte'
 	import StallName from '../stalls/stall-name.svelte'
+	import Button from '../ui/button/button.svelte'
 	import Separator from '../ui/separator/separator.svelte'
+	import InvoiceObservationsEdit from './invoice-observations-edit.svelte'
 	import MiniShipping from './mini-shipping.svelte'
 	import OrderActions from './order-actions.svelte'
+	import V4vInvoiceRetry from './v4v-invoice-retry.svelte'
 
 	export let order: DisplayOrder
-	export let orderMode: 'sale' | 'purchase'
-	type ProductQueryResult = QueryObserverResult<DisplayProduct, Error>
+	export let orderMode: OrderMode
+	let currentPaymentDetail: RichPaymentDetail | undefined = undefined
+	let merchantPaymentDetail: RichPaymentDetail | undefined = undefined
+
+	let getUserProfileLoading: string | undefined = undefined
+
+	const paymentDetails = createPaymentsForUserQuery(order.sellerUserId)
+	$: relevantPaymentDetails = $paymentDetails.data?.filter((payment) => payment.stallId === order.stallId || payment.stallId === null) ?? []
+	const v4vPaymentDetail: RichPaymentDetail = {
+		id: 'v4v',
+		paymentMethod: 'ln',
+		isDefault: false,
+		paymentDetails: '',
+		stallId: order.stallId,
+		stallName: '',
+		userId: order.sellerUserId,
+	}
+
+	const paymentEventToStatus: Record<string, NonNullable<OrderPaymentStatus>> = {
+		paymentComplete: 'paid',
+		paymentExpired: 'expired',
+		paymentCanceled: 'canceled',
+	}
+
+	$: invoices = createInvoicesByFilterQuery({ orderId: order.id })
 
 	const handleConfirmOrder = async (order: DisplayOrder): Promise<void> => {
-		await $updateOrderStatusMutation.mutate({ orderId: order.id, status: 'confirmed' })
+		await $updateOrderStatusMutation.mutateAsync({ orderId: order.id, status: 'confirmed' })
 		toast.success('Order confirmed')
 	}
 
 	const handleMarkAsShipped = async (order: DisplayOrder): Promise<void> => {
-		await $updateOrderStatusMutation.mutate({ orderId: order.id, status: 'shipped' })
+		await $updateOrderStatusMutation.mutateAsync({ orderId: order.id, status: 'shipped' })
 		toast.success('Order marked as shipped')
 	}
 
 	const handleMarkAsReceived = async (order: DisplayOrder): Promise<void> => {
-		await $updateOrderStatusMutation.mutate({ orderId: order.id, status: 'completed' })
+		await $updateOrderStatusMutation.mutateAsync({ orderId: order.id, status: 'completed' })
 		toast.success('Order marked as received')
 	}
 
 	const handleCancelOrder = async (order: DisplayOrder): Promise<void> => {
-		await $updateOrderStatusMutation.mutate({ orderId: order.id, status: 'cancelled' })
+		await $updateOrderStatusMutation.mutateAsync({ orderId: order.id, status: 'canceled' })
 		toast.success('Order cancelled')
 	}
 
-	$: productQueries = order?.orderItems ? order.orderItems.map((item) => createProductQuery(item.productId)) : []
+	const handleRetryPayment = async (customEvent: CustomEvent<string>): Promise<void> => {
+		getUserProfileLoading = customEvent.detail
+		currentPaymentDetail = {
+			...v4vPaymentDetail,
+			paymentDetails: customEvent.detail,
+		}
+	}
+
+	$: productQueries = order?.orderItems
+		? order.orderItems.map((item) => {
+				return createProductQuery(item.productId)
+			})
+		: []
 
 	$: productQueryResults = derived(productQueries, ($queries) => $queries.map(($q) => $q))
+
+	function handlePaymentEvent(event: CustomEvent<CheckoutPaymentEvent>, invoiceId: string) {
+		const { type } = event
+		const status = paymentEventToStatus[type]
+
+		if (!status) {
+			console.error(`Unknown payment event type: ${type}`)
+			return
+		}
+
+		$updateInvoiceStatusMutation.mutateAsync({ invoiceId, status, preimage: event.detail.preimage ?? '' })
+		toast.success(`Payment ${status}`)
+		currentPaymentDetail = undefined
+		merchantPaymentDetail = undefined
+	}
+
+	const handleInvoiceUpdate = async (invoiceId: string, ce: CustomEvent<string>) => {
+		await $updateInvoiceStatusMutation.mutateAsync({
+			invoiceId,
+			observations: ce.detail,
+			status: undefined,
+		})
+		toast.success('Observations updated')
+	}
+
+	function shouldRetry(invoice: DisplayInvoice, orderMode: OrderMode): boolean {
+		return (
+			invoice.type === 'merchant' && orderMode === 'purchase' && invoice.invoiceStatus !== 'paid' && invoice.invoiceStatus !== 'refunded'
+		)
+	}
 </script>
 
 <div>
@@ -94,18 +171,85 @@
 			<p>Observations: {order.observations}</p>
 		</div>
 	</div>
+
 	<Separator class={'my-4'} />
 
-	{#each $productQueryResults as query}
-		{#if query.isLoading}
-			<p>Loading...</p>
-		{:else if query.isError}
-			<p>Error: {query.error.message}</p>
-		{:else if query.isSuccess && query.data}
-			<ProductItem product={query.data} />
-			<!-- Display other product details -->
-		{:else}
-			<p>No data available</p>
-		{/if}
-	{/each}
+	<div class="grid grid-cols-2 md:grid-cols-3 gap-2 mt-8">
+		{#each $productQueryResults as query}
+			{#if query.isLoading}
+				<p>Loading...</p>
+			{:else if query.isError}
+				<p>Error: {query.error.message}</p>
+			{:else if query.isSuccess && query.data}
+				<ProductItem product={query.data} qtyPurchased={order.orderItems.find((oi) => oi.productId === query.data?.id)?.qty} />
+			{:else}
+				<p>No data available</p>
+			{/if}
+		{/each}
+	</div>
+
+	{#if $invoices.data && $invoices.data.length > 0}
+		<Separator class={'my-4'} />
+		<h3 class="text-xl font-semibold mt-8 mb-4">Invoices</h3>
+		<div class="space-y-4">
+			{#each $invoices.data as invoice (invoice.id)}
+				<div class="flex flex-col p-4 bg-gray-50 rounded-lg shadow transition-all duration-200 gap-3">
+					<InvoiceDeisplay {invoice} />
+					{#if shouldRetry(invoice, orderMode)}
+						<DropdownMenu.Root>
+							<DropdownMenu.Trigger class="text-right"><Button class="w-32">Retry</Button></DropdownMenu.Trigger>
+							<DropdownMenu.Content>
+								<DropdownMenu.Group>
+									{#if relevantPaymentDetails.length > 0}
+										{#each relevantPaymentDetails as paymentDetail}
+											<DropdownMenu.Item on:click={() => (currentPaymentDetail = paymentDetail)}
+												>{paymentDetail.paymentMethod} - {paymentDetail.paymentDetails}</DropdownMenu.Item
+											>
+										{/each}
+									{:else}
+										No related payment details
+									{/if}
+								</DropdownMenu.Group>
+							</DropdownMenu.Content>
+						</DropdownMenu.Root>
+						{#if merchantPaymentDetail?.paymentDetails}
+							<PaymentProcessor
+								paymentDetail={merchantPaymentDetail}
+								amountSats={parseInt(invoice.totalAmount)}
+								paymentType="v4v"
+								on:paymentComplete={(e) => handlePaymentEvent(e, invoice.id)}
+								on:paymentExpired={(e) => handlePaymentEvent(e, invoice.id)}
+								on:paymentCanceled={(e) => handlePaymentEvent(e, invoice.id)}
+							/>
+						{/if}
+					{/if}
+
+					{#if invoice.type === 'v4v'}
+						{#if orderMode === 'purchase'}
+							<V4vInvoiceRetry {invoice} on:retryPayment={(ce) => handleRetryPayment(ce)} />
+							{#if currentPaymentDetail && currentPaymentDetail.paymentDetails === invoice.paymentDetails}
+								<PaymentProcessor
+									paymentDetail={currentPaymentDetail}
+									amountSats={parseInt(invoice.totalAmount)}
+									paymentType="v4v"
+									on:paymentComplete={(e) => handlePaymentEvent(e, invoice.id)}
+									on:paymentExpired={(e) => handlePaymentEvent(e, invoice.id)}
+									on:paymentCanceled={(e) => handlePaymentEvent(e, invoice.id)}
+								/>
+							{/if}
+						{:else if invoice.invoiceStatus !== 'paid' && invoice.invoiceStatus !== 'refunded'}
+							<div class="p-2 flex justify-between items-center gap-2">
+								<CheckPaymentDetail paymentDetails={invoice.paymentDetails} />
+							</div>
+						{/if}
+					{/if}
+					<InvoiceObservationsEdit
+						observations={invoice.observations ?? ''}
+						on:update={(ce) => handleInvoiceUpdate(invoice.id, ce)}
+						{orderMode}
+					/>
+				</div>
+			{/each}
+		</div>
+	{/if}
 </div>

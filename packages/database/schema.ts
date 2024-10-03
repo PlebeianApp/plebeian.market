@@ -416,6 +416,7 @@ export const invoices = sqliteTable('invoices', {
 	invoiceStatus: text('invoice_status', { enum: Object.values(INVOICE_STATUS) as NonEmptyArray<InvoiceStatus> })
 		.notNull()
 		.default('pending'),
+	observations: text('observations'),
 	paymentDetails: text('payment_details_id').notNull(),
 	paymentRequest: text('payment_request'),
 	proof: text('proof'),

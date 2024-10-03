@@ -3,8 +3,10 @@
 	import Button from '$lib/components/ui/button/button.svelte'
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
 
+	import type { OrderMode } from '../types'
+
 	export let order: DisplayOrder
-	export let orderMode: 'list' | 'sale' | 'purchase'
+	export let orderMode: 'list' | OrderMode
 	export let handleConfirmOrder: (order: DisplayOrder) => Promise<void>
 	export let handleMarkAsShipped: (order: DisplayOrder) => Promise<void>
 	export let handleMarkAsReceived: (order: DisplayOrder) => Promise<void>
