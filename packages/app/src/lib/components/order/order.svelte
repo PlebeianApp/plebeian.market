@@ -12,6 +12,7 @@
 	import { derived } from 'svelte/store'
 
 	import type { CheckoutPaymentEvent } from '../checkout/types'
+	import type { OrderMode, OrderPaymentStatus } from './types'
 	import MiniUser from '../cart/mini-user.svelte'
 	import CheckPaymentDetail from '../common/check-payment-detail.svelte'
 	import InvoiceDeisplay from '../common/invoice-deisplay.svelte'
@@ -19,7 +20,6 @@
 	import ProductItem from '../product/product-item.svelte'
 	import StallName from '../stalls/stall-name.svelte'
 	import Button from '../ui/button/button.svelte'
-	import Label from '../ui/label/label.svelte'
 	import Separator from '../ui/separator/separator.svelte'
 	import InvoiceObservationsEdit from './invoice-observations-edit.svelte'
 	import MiniShipping from './mini-shipping.svelte'
@@ -27,18 +27,14 @@
 	import V4vInvoiceRetry from './v4v-invoice-retry.svelte'
 
 	export let order: DisplayOrder
-	export let orderMode: 'sale' | 'purchase'
+	export let orderMode: OrderMode
 	let currentPaymentDetail: RichPaymentDetail | undefined = undefined
 	let merchantPaymentDetail: RichPaymentDetail | undefined = undefined
-
-	// TODO: We are repeating this type from the checkout, should be the same an be imported
-	type PaymentStatus = 'paid' | 'expired' | 'canceled' | null
 
 	let getUserProfileLoading: string | undefined = undefined
 
 	const paymentDetails = createPaymentsForUserQuery(order.sellerUserId)
 	$: relevantPaymentDetails = $paymentDetails.data?.filter((payment) => payment.stallId === order.stallId || payment.stallId === null) ?? []
-
 	const v4vPaymentDetail: RichPaymentDetail = {
 		id: 'v4v',
 		paymentMethod: 'ln',
@@ -49,7 +45,7 @@
 		userId: order.sellerUserId,
 	}
 
-	const paymentEventToStatus: Record<string, NonNullable<PaymentStatus>> = {
+	const paymentEventToStatus: Record<string, NonNullable<OrderPaymentStatus>> = {
 		paymentComplete: 'paid',
 		paymentExpired: 'expired',
 		paymentCanceled: 'canceled',
@@ -117,7 +113,7 @@
 		toast.success('Observations updated')
 	}
 
-	function shouldRetry(invoice: DisplayInvoice, orderMode: 'sale' | 'purchase'): boolean {
+	function shouldRetry(invoice: DisplayInvoice, orderMode: OrderMode): boolean {
 		return (
 			invoice.type === 'merchant' && orderMode === 'purchase' && invoice.invoiceStatus !== 'paid' && invoice.invoiceStatus !== 'refunded'
 		)
@@ -204,11 +200,15 @@
 							<DropdownMenu.Trigger class="text-right"><Button class="w-32">Retry</Button></DropdownMenu.Trigger>
 							<DropdownMenu.Content>
 								<DropdownMenu.Group>
-									{#each relevantPaymentDetails as paymentDetail}
-										<DropdownMenu.Item on:click={() => (currentPaymentDetail = paymentDetail)}
-											>`${paymentDetail.paymentMethod} - ${paymentDetail.paymentDetails}`</DropdownMenu.Item
-										>
-									{/each}
+									{#if relevantPaymentDetails.length > 0}
+										{#each relevantPaymentDetails as paymentDetail}
+											<DropdownMenu.Item on:click={() => (currentPaymentDetail = paymentDetail)}
+												>{paymentDetail.paymentMethod} - {paymentDetail.paymentDetails}</DropdownMenu.Item
+											>
+										{/each}
+									{:else}
+										No related payment details
+									{/if}
 								</DropdownMenu.Group>
 							</DropdownMenu.Content>
 						</DropdownMenu.Root>
@@ -243,7 +243,11 @@
 							</div>
 						{/if}
 					{/if}
-					<InvoiceObservationsEdit observations={invoice.observations ?? ''} on:update={(ce) => handleInvoiceUpdate(invoice.id, ce)} />
+					<InvoiceObservationsEdit
+						observations={invoice.observations ?? ''}
+						on:update={(ce) => handleInvoiceUpdate(invoice.id, ce)}
+						{orderMode}
+					/>
 				</div>
 			{/each}
 		</div>

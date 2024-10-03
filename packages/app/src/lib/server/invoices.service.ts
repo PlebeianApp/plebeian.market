@@ -1,6 +1,7 @@
 import type { InvoicesFilter } from '$lib/schema'
 import { error } from '@sveltejs/kit'
 import { standardDisplayDateFormat } from '$lib/constants'
+import { formatSats } from '$lib/utils'
 import { format } from 'date-fns'
 
 import type { Invoice, InvoiceStatus } from '@plebeian/database'
@@ -17,6 +18,7 @@ export type DisplayInvoice = Pick<
 const toDisplayInvoice = (invoice: Invoice): DisplayInvoice => {
 	return {
 		...invoice,
+		totalAmount: formatSats(parseFloat(invoice.totalAmount), false).toString(),
 		createdAt: format(invoice.createdAt, standardDisplayDateFormat),
 		updatedAt: format(invoice.updatedAt, standardDisplayDateFormat),
 	}
@@ -33,7 +35,7 @@ export const getInvoiceById = async (invoiceId: string): Promise<DisplayInvoice>
 }
 
 export const getInvoicesByOrderId = async (filter: InvoicesFilter): Promise<DisplayInvoice[]> => {
-	const invoicesResult = await db.select().from(invoices).where(eq(invoices.orderId, filter.orderId)).execute()
+	const invoicesResult = await db.select().from(invoices).where(eq(invoices.orderId, filter.orderId!)).execute()
 	if (!invoicesResult.length) {
 		error(404, 'No invoices found for this order')
 	}

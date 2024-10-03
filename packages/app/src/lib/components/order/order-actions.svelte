@@ -2,9 +2,10 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte'
 
+	import type { OrderMode } from './types'
 	import Button from '../ui/button/button.svelte'
 
-	export let orderMode: 'sale' | 'purchase'
+	export let orderMode: OrderMode
 	export let orderStatus: string
 	export let orderId: string
 

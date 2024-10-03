@@ -33,7 +33,7 @@
 	})
 </script>
 
-<div class="p-2 bg-white flex justify-between items-center gap-2">
+<div class="p-2 flex justify-between items-center gap-2">
 	<div>{invoice.paymentDetails}</div>
 	{#if invoice.invoiceStatus !== 'paid' && invoice.invoiceStatus !== 'refunded'}
 		{#if canBePaid}
