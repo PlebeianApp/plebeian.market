@@ -1785,10 +1785,19 @@ export const COUNTRIES_ISO = {
 	},
 } as const
 
-export const V4V_DEFAULT_RECIPIENTS = [
-	'npub1ks6gyyhh8nvmzwssqul3yvw3gptevrcmxlmn93kdvatns6uh3cxqc26vrm',
-	'npub10pensatlcfwktnvjjw2dtem38n6rvw8g6fv73h84cuacxn4c28eqyfn34f',
-	'npub180cvv07tjdrrgpa0j7j7tmnyl2yr6yr7l8j4s3evf6u64th6gkwsyjh6w6',
+export const V4V_DEFAULT_RECIPIENTS: { npub: string; paymentDetails: string }[] = [
+	{
+		npub: 'npub1ks6gyyhh8nvmzwssqul3yvw3gptevrcmxlmn93kdvatns6uh3cxqc26vrm',
+		paymentDetails: 'asd@asd.asd', // not a real address
+	},
+	{
+		npub: 'npub10pensatlcfwktnvjjw2dtem38n6rvw8g6fv73h84cuacxn4c28eqyfn34f',
+		paymentDetails: 'opensats@vlt.ge',
+	},
+	{
+		npub: 'npub180cvv07tjdrrgpa0j7j7tmnyl2yr6yr7l8j4s3evf6u64th6gkwsyjh6w6',
+		paymentDetails: 'fiatjaf@zbd.gg',
+	},
 ]
 
 export type ISO3 = (typeof COUNTRIES_ISO)[keyof typeof COUNTRIES_ISO]['iso3']

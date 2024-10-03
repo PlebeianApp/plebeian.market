@@ -13,10 +13,11 @@
 
 	import type { OrderStatus } from '@plebeian/database'
 
+	import type { OrderMode } from '../types'
 	import StatusCell from './status-cell.svelte'
 
 	export let orders: DisplayOrder[] = []
-	export let orderMode: 'list' | 'sale' | 'purchase'
+	export let orderMode: 'list' | OrderMode
 	export let currentPage: number = 0
 
 	const dispatch = createEventDispatcher()

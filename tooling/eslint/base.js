@@ -36,7 +36,7 @@ export default tseslint.config(
 	},
 	{
 		files: ['**/*.js', '**/*.ts', '**/*.tsx'],
-		ignores: ['seed.ts', 'schema.ts'],
+		ignores: ['seed.ts', 'seed-wallet-user.ts', 'schema.ts'],
 		plugins: {
 			import: importPlugin,
 		},

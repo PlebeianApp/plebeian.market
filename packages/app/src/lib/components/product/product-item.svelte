@@ -14,6 +14,7 @@
 	import Separator from '../ui/separator/separator.svelte'
 
 	export let product: Partial<DisplayProduct>
+	export let qtyPurchased: number | undefined = undefined
 	let { images, name, currency, price, userNip05, identifier, id, userId, quantity } = product
 
 	let isMyProduct = false
@@ -34,14 +35,14 @@
 		{@const mainImage = images.find((img) => img.imageOrder === 0) || images[0]}
 		<div class="relative flex items-center justify-center p-2">
 			<img
-				class="h-[329px] object-cover transition-opacity duration-300 group-hover:opacity-70"
+				class="object-cover transition-opacity duration-300 group-hover:opacity-70"
 				src={mainImage.imageUrl}
 				alt=""
 				on:error={() => (imageLoadError = true)}
 			/>
 		</div>
 	{:else}
-		<div class="h-[329px] flex items-center justify-center p-2">
+		<div class="flex items-center justify-center p-2">
 			<span style={`color:${stringToHexColor(String(name || identifier))}`} class="i-mdi-package-variant-closed w-16 h-16" />
 		</div>
 	{/if}
@@ -68,6 +69,9 @@
 							<i class="text-lg">price ({price} {currency}) could not be converted</i>
 						{/if}
 					</span>
+					{#if qtyPurchased}
+						<span class="text-xs">Quantity: {qtyPurchased}</span>
+					{/if}
 				</div>
 			</div>
 		</Card.Footer>

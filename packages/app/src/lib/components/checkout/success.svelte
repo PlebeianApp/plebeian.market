@@ -13,6 +13,7 @@
 
 	import Spinner from '../assets/spinner.svelte'
 	import Order from '../cart/order.svelte'
+	import InvoiceDeisplay from '../common/invoice-deisplay.svelte'
 
 	export let variant: 'singleMerchant' | 'multiMerchant'
 	export let merchant: CartUser | null = null
@@ -86,17 +87,6 @@
 			await handlePersist()
 		}
 	})
-
-	function getInvoiceStatusColor(status: string): string {
-		switch (status) {
-			case 'paid':
-				return 'text-green-600'
-			case 'pending':
-				return 'text-yellow-600'
-			default:
-				return 'text-gray-600'
-		}
-	}
 </script>
 
 <div class="flex flex-col items-center justify-center w-full max-w-3xl mx-auto gap-8 py-8">
@@ -138,19 +128,7 @@
 					<h3 class="text-xl font-semibold mt-8 mb-4">Invoices</h3>
 					<div class="space-y-4">
 						{#each sortedInvoices as invoice (invoice.id)}
-							<div class="flex justify-between items-start p-4 bg-gray-50 rounded-lg shadow transition-all duration-200">
-								<div class="flex flex-col">
-									<span class="text-sm font-medium text-gray-500 uppercase">{invoice.type}</span>
-									<span class="font-medium">Invoice ID: {invoice.id}</span>
-									<span class="capitalize font-medium {getInvoiceStatusColor(invoice.invoiceStatus)}">
-										{invoice.invoiceStatus}
-									</span>
-								</div>
-								<div class="flex flex-col text-sm text-right">
-									<span class="font-bold text-lg">{formatSats(invoice.totalAmount)} sats</span>
-									<span class="text-gray-600">{new Date(invoice.createdAt).toLocaleString()}</span>
-								</div>
-							</div>
+							<InvoiceDeisplay {invoice} />
 						{/each}
 					</div>
 				{/if}

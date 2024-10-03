@@ -484,3 +484,14 @@ export function reactiveDebounce<T>(value: Readable<T>, delayMs = 300) {
 		get(value),
 	)
 }
+
+export function getInvoiceStatusColor(status: string): string {
+	switch (status) {
+		case 'paid':
+			return 'text-green-600'
+		case 'pending':
+			return 'text-yellow-600'
+		default:
+			return 'text-gray-600'
+	}
+}

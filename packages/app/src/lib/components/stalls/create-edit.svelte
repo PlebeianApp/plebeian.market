@@ -187,7 +187,13 @@
 <form class="flex flex-col gap-4 grow" on:submit={create}>
 	<Collapsible.Root>
 		<Collapsible.Trigger asChild let:builder>
-			<Button builders={[builder]} variant="ghost" size="sm" class="w-full p-0">
+			<Button
+				data-tooltip="This image helps customers recognize your stall"
+				builders={[builder]}
+				variant="ghost"
+				size="sm"
+				class="w-full p-0"
+			>
 				<Label for="userImage" class="font-bold">Header image (Recommended)</Label>
 				<span class="i-ion-chevron-expand" />
 			</Button>
@@ -199,12 +205,26 @@
 
 	<div class="grid w-full items-center gap-1.5">
 		<Label for="title" class="font-bold required-mark">Title</Label>
-		<Input bind:value={name} required class="border-2 border-black" type="text" name="title" placeholder="e.g. Fancy Wears" />
+		<Input
+			data-tooltip="Your stall's name"
+			bind:value={name}
+			required
+			class="border-2 border-black"
+			type="text"
+			name="title"
+			placeholder="e.g. Fancy Wears"
+		/>
 	</div>
 
 	<div class="grid w-full items-center gap-1.5">
 		<Label for="description" class="font-bold">Description (Recommended)</Label>
-		<Textarea bind:value={description} class="border-2 border-black" placeholder="Description" name="description" />
+		<Textarea
+			data-tooltip="More information on your stall"
+			bind:value={description}
+			class="border-2 border-black"
+			placeholder="Description"
+			name="description"
+		/>
 	</div>
 
 	<Collapsible.Root>
@@ -262,7 +282,12 @@
 		<Label for="currency" class="font-bold">Currency</Label>
 		<DropdownMenu.Root>
 			<DropdownMenu.Trigger asChild let:builder>
-				<Button variant="outline" class="border-2 border-black" builders={[builder]}>{currency}</Button>
+				<Button
+					data-tooltip="Products in this stall will use this currency. It would be converted to bitcoin in real time for your users to pay!"
+					variant="outline"
+					class="border-2 border-black"
+					builders={[builder]}>{currency}</Button
+				>
 			</DropdownMenu.Trigger>
 			<DropdownMenu.Content class="w-56">
 				<DropdownMenu.Label>Currency</DropdownMenu.Label>
@@ -295,6 +320,7 @@
 			<div>
 				<Label for={`shipping-cost-${i}`} class="font-bold">Base Cost</Label>
 				<Input
+					data-tooltip="Shipping cost that each product using this method would include!"
 					bind:value={item.cost}
 					class="border-2 border-black"
 					min={0}
@@ -309,6 +335,7 @@
 				<Popover.Root let:ids>
 					<Popover.Trigger asChild let:builder>
 						<Button
+							data-tooltip="Destinations for this option"
 							builders={[builder]}
 							variant="outline"
 							role="combobox"
@@ -360,10 +387,15 @@
 			</div>
 			<div class="h-full flex flex-col justify-end">
 				<div class="flex gap-1">
-					<Button on:click={() => addShipping(item.id)} variant="outline" class="font-bold border-0 h-full">
+					<Button data-tooltip="Copy this method" on:click={() => addShipping(item.id)} variant="outline" class="font-bold border-0 h-full">
 						<span class="i-tdesign-copy"></span>
 					</Button>
-					<Button on:click={() => removeShipping(item.id)} variant="outline" class="font-bold text-red-500 border-0 h-full">
+					<Button
+						data-tooltip="Remove this method"
+						on:click={() => removeShipping(item.id)}
+						variant="outline"
+						class="font-bold text-red-500 border-0 h-full"
+					>
 						<span class="i-tdesign-delete-1"></span>
 					</Button>
 				</div>
@@ -372,7 +404,12 @@
 	{/each}
 	<!-- TODO: Ensure at least one shipping method to persist stall -->
 	<div class="grid gap-1.5">
-		<Button on:click={() => addShipping()} variant="outline" class="font-bold ml-auto">Add Shipping Method</Button>
+		<Button
+			data-tooltip="Provide different shipping options for your customers!"
+			on:click={() => addShipping()}
+			variant="outline"
+			class="font-bold ml-auto">Add Shipping Method</Button
+		>
 	</div>
 
 	<Button id="stall-save-button" type="submit" disabled={isLoading || !changed} class="w-full font-bold">Save</Button>
