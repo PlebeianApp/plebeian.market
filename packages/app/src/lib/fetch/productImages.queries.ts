@@ -15,7 +15,7 @@ declare module './client' {
 
 export const productImagesForUserQuery = createQuery(
 	derived(ndkStore, ($ndkStore) => ({
-		queryKey: ['paymentDetails', $ndkStore.activeUser?.pubkey],
+		queryKey: ['productImages', $ndkStore.activeUser?.pubkey],
 		queryFn: async () => {
 			if ($ndkStore.activeUser?.pubkey) {
 				const user = await createRequest(`GET /api/v1/product-images?userId=${$ndkStore.activeUser.pubkey}`, {

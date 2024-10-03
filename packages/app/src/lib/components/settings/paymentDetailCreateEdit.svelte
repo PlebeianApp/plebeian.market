@@ -2,6 +2,7 @@
 	// paymentDetailCreateEdit.svelte
 	import type { RichPaymentDetail } from '$lib/server/paymentDetails.service'
 	import { LightningAddress } from '@getalby/lightning-tools'
+	import * as Alert from '$lib/components/ui/alert/index.js'
 	import { Button } from '$lib/components/ui/button'
 	import { Checkbox } from '$lib/components/ui/checkbox'
 	import * as Collapsible from '$lib/components/ui/collapsible'
@@ -17,6 +18,7 @@
 	import { checkAddress, checkExtendedPublicKey, deriveAddresses, isExtendedPublicKey } from '$lib/utils/paymentDetails.utils'
 	import { format } from 'date-fns'
 	import { NIP05_REGEX } from 'nostr-tools/nip05'
+	import { npubEncode } from 'nostr-tools/nip19'
 
 	import type { PaymentDetailsMethod } from '@plebeian/database/constants'
 	import { PAYMENT_DETAILS_METHOD } from '@plebeian/database/constants'
@@ -27,7 +29,9 @@
 
 	export let paymentDetail: RichPaymentDetail | null = null
 	export let paymentDetailMethods: PaymentDetailsMethod[]
+	export let showGuidance: boolean = false
 	let confirmationType: onChainConfirmationType
+
 	type FormState = 'idle' | 'validating' | 'confirming' | 'submitting'
 
 	let isOpen = false
@@ -35,6 +39,8 @@
 	let validationMessage = ''
 	let showConfirmation = false
 	let tempValidatedValue = ''
+	let hasAcceptedTerms: boolean = false
+	let checked: boolean = false
 
 	$: isEditing = !!paymentDetail
 	let editedPaymentDetail = paymentDetail
@@ -88,7 +94,9 @@
 		},
 	}
 
-	async function validateAndConfirm() {
+	async function validateAndConfirm(event?: Event) {
+		if (event) event.preventDefault()
+
 		if (!editedPaymentDetail.paymentDetails) {
 			validationMessage = 'Please fill in the payment details'
 			return
@@ -194,6 +202,17 @@
 		paymentDetail?.paymentMethod == 'on-chain' && isExtendedPublicKey(editedPaymentDetail.paymentDetails)
 			? createOnChainIndexQuery(String($ndkStore.activeUser?.pubkey), paymentDetail.id)
 			: undefined
+	function setupPaymentDetail(paymentDetails: string, method: PaymentDetailsMethod) {
+		editedPaymentDetail = {
+			...editedPaymentDetail,
+			paymentDetails,
+			paymentMethod: method,
+			stallId: null,
+			stallName: 'General',
+			isDefault: false,
+		}
+		showGuidance = false
+	}
 </script>
 
 <div class="border flex flex-col p-4 justify-between">
@@ -232,135 +251,212 @@
 					on:confirm={handleConfirmation}
 					on:cancel={handleCancellation}
 				/>
+			{:else if showGuidance}
+				<div class="space-y-4">
+					{#if !hasAcceptedTerms}
+						<h3 class="text-lg font-semibold">Set Up Your First Payment Method</h3>
+						<p>This will allow customers to purchase your products without you needing to be online.</p>
+
+						<Alert.Root variant="destructive">
+							<Alert.Description>
+								PlebianMarket is not responsible for disputes between you and your customers. Please review our terms and conditions.
+							</Alert.Description>
+						</Alert.Root>
+
+						<div class="flex items-center space-x-2">
+							<Checkbox id="terms" bind:checked />
+							<Label for="terms" class="text-sm">I accept the terms and conditions</Label>
+						</div>
+
+						<Button on:click={() => (hasAcceptedTerms = true)} disabled={!checked}>Continue</Button>
+					{:else}
+						<h3 class="text-lg font-semibold">Choose Your Payment Method</h3>
+
+						{#if $ndkStore.activeUser?.profile?.lud16}
+							<div class="bg-secondary p-4 rounded-md">
+								<p>We've detected a Lightning address linked to your profile:</p>
+								<p class="font-bold text-primary">{$ndkStore.activeUser.profile.lud16}</p>
+								<p>Would you like to use this as your payment method?</p>
+							</div>
+
+							<div class="flex space-x-2">
+								<Button
+									on:click={() =>
+										setupPaymentDetail(String($ndkStore.activeUser?.profile?.lud16), PAYMENT_DETAILS_METHOD.LIGHTNING_NETWORK)}
+								>
+									Use This Address
+								</Button>
+								<Button variant="outline" on:click={() => (showGuidance = false)}>Set Up Manually</Button>
+							</div>
+						{:else}
+							{@const npubCashAddress = `${npubEncode(String($ndkStore.activeUser?.pubkey))}@npub.cash`}
+
+							<div class="space-y-2">
+								<p>You don't have a Lightning address linked to your profile. Here are your options:</p>
+
+								<div class="bg-secondary p-4 flex flex-col gap-2">
+									<h4 class="font-semibold">
+										1. Use an <a href="https://npub.cash" target="_blank" rel="noreferrer" class="text-primary hover:underline">Npub.cash</a
+										> address
+									</h4>
+									<Button class="mt-2" on:click={() => setupPaymentDetail(npubCashAddress, PAYMENT_DETAILS_METHOD.LIGHTNING_NETWORK)}>
+										Use npub.cash Address
+									</Button>
+									<p>
+										Check <a href="https://npub.cash" target="_blank" rel="noreferrer" class="text-primary hover:underline">Npub.cash</a> to
+										know more about the project
+									</p>
+								</div>
+
+								<div class="bg-secondary p-4 flex flex-col gap-2">
+									<h4 class="font-semibold">2. Set up manually</h4>
+									<Button variant="outline" class="mt-2" on:click={() => (showGuidance = false)}>Set Up Manually</Button>
+									<p>
+										If you don't have a lightning address yet, we recommend setting up one at <a
+											href="https://coinos.io"
+											target="_blank"
+											rel="noreferrer"
+											class="text-primary hover:underline">Coinos.io</a
+										>, then come back to enter it manually.
+									</p>
+								</div>
+							</div>
+						{/if}
+					{/if}
+				</div>
 			{:else}
-				<!-- TODO: Improve ux by having a waila (what im looking at) function that determines the payment method -->
-				<div class="flex flex-row gap-4 items-start">
-					<div class="w-full">
-						<Label for="payment-details" class="font-medium">Payment Method</Label>
-						<Select.Root
-							selected={{
-								value: editedPaymentDetail.paymentMethod,
-								label: paymentMethodLabels[editedPaymentDetail.paymentMethod],
-							}}
-							onSelectedChange={(sEvent) => {
-								if (sEvent) {
-									editedPaymentDetail.paymentMethod = sEvent.value
-								}
-							}}
-							name="paymentMethod"
-						>
-							<Select.Trigger class="focus:border-2 focus:ring-2">
-								<Select.Value placeholder="Payment method" />
-							</Select.Trigger>
-							<Select.Content>
-								{#each paymentDetailMethods as method}
-									<Select.Item value={method}>
-										<div class="flex items-center gap-2">
-											<span class={paymentMethodIcons[method] + ' w-5 h-5'} />
-											{paymentMethodLabels[method]}
-										</div>
-									</Select.Item>
-								{/each}
-							</Select.Content>
-						</Select.Root>
-					</div>
-					<div class="w-full">
-						<Label for="payment-details" class="font-medium">Stall</Label>
-						<Select.Root
-							selected={{
-								value: editedPaymentDetail.stallId,
-								label: editedPaymentDetail.stallName,
-							}}
-							onSelectedChange={(sEvent) => {
-								if (sEvent?.value === null) {
-									editedPaymentDetail.stallId = null
-									editedPaymentDetail.stallName = 'General'
-									editedPaymentDetail.isDefault = false
-								} else if (sEvent?.value && sEvent?.label) {
-									editedPaymentDetail.stallId = sEvent.value
-									editedPaymentDetail.stallName = sEvent.label
-									editedPaymentDetail.isDefault = false
-								}
-							}}
-							name="assignStallForPaymentMethod"
-						>
-							<Select.Trigger class=" focus:border-2 focus:ring-2">
-								<Select.Value placeholder="Assign a stall" />
-							</Select.Trigger>
-							<Select.Content>
-								<Select.Item value={null}>
-									<div class="flex items-center gap-2">
-										<span class="i-mingcute-earth-2-line w-5 h-5" />
-										General
-									</div>
-								</Select.Item>
-								{#if $stallsQuery && $stallsQuery.data}
-									{#each $stallsQuery.data.stalls as stall}
-										<Select.Item value={stall.id}>
+				<form on:submit|preventDefault={validateAndConfirm} class="flex flex-col gap-4">
+					<!-- TODO: Improve ux by having a waila (what im looking at) function that determines the payment method -->
+					<div class="flex flex-row gap-4 items-start">
+						<div class="w-full">
+							<Label for="payment-details" class="font-medium">Payment Method</Label>
+							<Select.Root
+								selected={{
+									value: editedPaymentDetail.paymentMethod,
+									label: paymentMethodLabels[editedPaymentDetail.paymentMethod],
+								}}
+								onSelectedChange={(sEvent) => {
+									if (sEvent) {
+										editedPaymentDetail.paymentMethod = sEvent.value
+									}
+								}}
+								name="paymentMethod"
+							>
+								<Select.Trigger class="focus:border-2 focus:ring-2">
+									<Select.Value placeholder="Payment method" />
+								</Select.Trigger>
+								<Select.Content>
+									{#each paymentDetailMethods as method}
+										<Select.Item value={method}>
 											<div class="flex items-center gap-2">
-												<span class="i-tdesign-store w-5 h-5" />
-												{stall.name}
+												<span class={paymentMethodIcons[method] + ' w-5 h-5'} />
+												{paymentMethodLabels[method]}
 											</div>
 										</Select.Item>
 									{/each}
-								{/if}
-							</Select.Content>
-						</Select.Root>
-					</div>
-				</div>
-
-				<div class="flex flex-col gap-2">
-					<Label for="payment-details" class="font-medium">Payment details</Label>
-					<Input
-						id="payment-details"
-						bind:value={editedPaymentDetail.paymentDetails}
-						class="w-full border"
-						placeholder="Enter payment details"
-					/>
-					{#if $onChainWalletIndexQuery?.data && paymentDetail?.paymentDetails}
-						<Label for="payment-details" class="font-medium">Current address</Label>
-						<div class=" bg-secondary flex flex-col gap-2 p-2">
-							<small
-								>Index: {$onChainWalletIndexQuery.data.valueNumeric} - {deriveAddresses(
-									paymentDetail.paymentDetails,
-									1,
-									Number($onChainWalletIndexQuery.data.valueNumeric),
-								)}</small
-							>
-							<small>
-								Last updated:
-								{format($onChainWalletIndexQuery.data.updatedAt, standardDisplayDateFormat)}
-							</small>
+								</Select.Content>
+							</Select.Root>
 						</div>
+						<div class="w-full">
+							<Label for="payment-details" class="font-medium">Stall</Label>
+							<Select.Root
+								selected={{
+									value: editedPaymentDetail.stallId,
+									label: editedPaymentDetail.stallName,
+								}}
+								onSelectedChange={(sEvent) => {
+									if (sEvent?.value === null) {
+										editedPaymentDetail.stallId = null
+										editedPaymentDetail.stallName = 'General'
+										editedPaymentDetail.isDefault = false
+									} else if (sEvent?.value && sEvent?.label) {
+										editedPaymentDetail.stallId = sEvent.value
+										editedPaymentDetail.stallName = sEvent.label
+										editedPaymentDetail.isDefault = false
+									}
+								}}
+								name="assignStallForPaymentMethod"
+							>
+								<Select.Trigger class=" focus:border-2 focus:ring-2">
+									<Select.Value placeholder="Assign a stall" />
+								</Select.Trigger>
+								<Select.Content>
+									<Select.Item value={null}>
+										<div class="flex items-center gap-2">
+											<span class="i-mingcute-earth-2-line w-5 h-5" />
+											General
+										</div>
+									</Select.Item>
+									{#if $stallsQuery && $stallsQuery.data}
+										{#each $stallsQuery.data.stalls as stall}
+											<Select.Item value={stall.id}>
+												<div class="flex items-center gap-2">
+													<span class="i-tdesign-store w-5 h-5" />
+													{stall.name}
+												</div>
+											</Select.Item>
+										{/each}
+									{/if}
+								</Select.Content>
+							</Select.Root>
+						</div>
+					</div>
+
+					<div class="flex flex-col gap-2">
+						<Label for="payment-details" class="font-medium">Payment details</Label>
+						<Input
+							id="payment-details"
+							bind:value={editedPaymentDetail.paymentDetails}
+							class="w-full border"
+							placeholder="Enter payment details"
+						/>
+						{#if $onChainWalletIndexQuery?.data && paymentDetail?.paymentDetails}
+							<Label for="payment-details" class="font-medium">Current address</Label>
+							<div class=" bg-secondary flex flex-col gap-2 p-2">
+								<small
+									>Index: {$onChainWalletIndexQuery.data.valueNumeric} - {deriveAddresses(
+										paymentDetail.paymentDetails,
+										1,
+										Number($onChainWalletIndexQuery.data.valueNumeric),
+									)}</small
+								>
+								<small>
+									Last updated:
+									{format($onChainWalletIndexQuery.data.updatedAt, standardDisplayDateFormat)}
+								</small>
+							</div>
+						{/if}
+					</div>
+
+					{#if validationMessage && formState == 'idle'}
+						<p class="text-red-500 text-sm">{validationMessage}</p>
+					{:else if formState !== 'idle'}
+						<Spinner />
 					{/if}
-				</div>
 
-				{#if validationMessage && formState == 'idle'}
-					<p class="text-red-500 text-sm">{validationMessage}</p>
-				{:else if formState !== 'idle'}
-					<Spinner />
-				{/if}
+					<div class="flex flex-col gap-2">
+						<section class=" flex items-center gap-2">
+							<Checkbox id="default-payment" bind:checked={editedPaymentDetail.isDefault} disabled={isDisabled} class="border" />
+							<Label for="default-payment" class="font-medium">Default</Label>
+						</section>
+						<div class="flex flex-row-reverse gap-2 mt-4">
+							<Button type="submit" disabled={formState !== 'idle'} class="font-bold py-2 px-4">
+								{#if formState !== 'idle'}<Spinner />{/if}
+								{formState === 'validating' ? 'Validating...' : formState === 'submitting' ? 'Saving...' : isEditing ? 'Update' : 'Save'}
+							</Button>
 
-				<div class="flex items-center gap-2">
-					<Checkbox id="default-payment" bind:checked={editedPaymentDetail.isDefault} disabled={isDisabled} class="border" />
-					<Label for="default-payment" class="font-medium">Default</Label>
-				</div>
-				<div class="flex flex-row-reverse gap-2 mt-4">
-					<Button type="submit" on:click={validateAndConfirm} disabled={formState !== 'idle'} class="font-bold py-2 px-4">
-						{#if formState !== 'idle'}<Spinner />{/if}
-						{formState === 'validating' ? 'Validating...' : formState === 'submitting' ? 'Saving...' : isEditing ? 'Update' : 'Save'}
-					</Button>
+							{#if isEditing}
+								<Button variant="destructive" on:click={handleDelete} disabled={formState !== 'idle'} class="font-bold py-2 px-4">
+									<span class="i-mdi-trash w-6 h-6 cursor-pointer" />
+								</Button>
+							{/if}
 
-					{#if isEditing}
-						<Button variant="destructive" on:click={handleDelete} disabled={formState !== 'idle'} class="font-bold py-2 px-4">
-							<span class="i-mdi-trash w-6 h-6 cursor-pointer" />
-						</Button>
-					{/if}
-
-					<Button variant="outline" on:click={() => (isOpen = false)} disabled={formState !== 'idle'} class="font-bold py-2 px-4">
-						Cancel
-					</Button>
-				</div>
+							<Button variant="outline" on:click={() => (isOpen = false)} disabled={formState !== 'idle'} class="font-bold py-2 px-4">
+								Cancel
+							</Button>
+						</div>
+					</div>
+				</form>
 			{/if}
 		</Collapsible.Content>
 	</Collapsible.Root>
