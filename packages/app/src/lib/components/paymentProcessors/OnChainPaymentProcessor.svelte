@@ -5,8 +5,10 @@
 	import { Button } from '$lib/components/ui/button'
 	import { createMempoolAddressTransactionsQuery } from '$lib/fetch/mempool.queries'
 	import { updateOnChainIndexMutation } from '$lib/fetch/wallets.mutations'
-	import { copyToClipboard, satoshisToBtc, truncateText } from '$lib/utils'
-	import { createEventDispatcher } from 'svelte'
+	import { copyToClipboard, satoshisToBtc } from '$lib/utils'
+	import { formatTime, setupExpiryCountdown } from '$lib/utils/zap.utils'
+	import { addMinutes } from 'date-fns'
+	import { createEventDispatcher, onDestroy, onMount } from 'svelte'
 	import { toast } from 'svelte-sonner'
 
 	import type { CheckoutPaymentEvent } from '../checkout/types'
@@ -14,6 +16,9 @@
 	export let paymentDetail: RichPaymentDetail
 	export let amountSats: number
 	export let paymentType: string
+	let expiryTime: Date | null = null
+	let remainingTime = 'Calculating...'
+	let cleanupExpiryCountdown: (() => void) | null = null
 
 	const dispatch = createEventDispatcher<{
 		paymentComplete: CheckoutPaymentEvent
@@ -28,12 +33,31 @@
 	}
 
 	function handleSkipPayment() {
-		dispatch('paymentCanceled', { paymentRequest: paymentDetail.paymentDetails, proof: null, amountSats, paymentType })
+		dispatch('paymentCanceled', {
+			paymentRequest: paymentDetail.paymentDetails,
+			proof: null,
+			amountSats,
+			paymentType,
+		})
+	}
+
+	function handleExpiredPayment() {
+		dispatch('paymentExpired', {
+			paymentRequest: paymentDetail.paymentDetails,
+			proof: null,
+			amountSats,
+			paymentType,
+		})
 	}
 
 	async function handleSuccessfulPayment(txId: string) {
-		dispatch('paymentComplete', { paymentRequest: paymentDetail.paymentDetails, proof: txId, amountSats, paymentType })
 		await $updateOnChainIndexMutation.mutateAsync(paymentDetail.id)
+		dispatch('paymentComplete', {
+			paymentRequest: paymentDetail.paymentDetails,
+			proof: txId,
+			amountSats,
+			paymentType,
+		})
 		toast.success('Payment received!')
 	}
 
@@ -51,6 +75,29 @@
 		}
 	}
 
+	function setupExpiry() {
+		expiryTime = addMinutes(new Date(), 30)
+		cleanupExpiryCountdown = setupExpiryCountdown(
+			expiryTime,
+			(secondsLeft) => {
+				remainingTime = formatTime(secondsLeft)
+			},
+			() => {
+				handleExpiredPayment()
+			},
+		)
+	}
+
+	onMount(() => {
+		setupExpiry()
+	})
+
+	onDestroy(() => {
+		if (cleanupExpiryCountdown) {
+			cleanupExpiryCountdown()
+		}
+	})
+
 	const bitcoinUri = `bitcoin:${paymentDetail.paymentDetails}?amount=${satoshisToBtc(amountSats)}`
 </script>
 
@@ -59,16 +106,11 @@
 
 	<QrCode data={bitcoinUri} logoPath="/logo.svg" />
 
-	<Button variant="secondary" class="flex items-center gap-2" on:click={handleCopyAddress}>
-		<span>{truncateText(paymentDetail.paymentDetails, 20)}</span>
+	<Button variant="secondary" class="items-center gap-2 grid grid-cols-[auto_auto] max-w-full" on:click={handleCopyAddress}>
+		<span class="truncate">{paymentDetail.paymentDetails}</span>
 		<span class="i-tdesign-copy" />
 	</Button>
-
-	<div class="flex flex-wrap gap-2 justify-center">
-		<Button variant="ghost" on:click={() => window.open(bitcoinUri, '_blank')}>Open in wallet</Button>
-		<Button on:click={handleManualCheck}>I've already paid</Button>
-		<Button variant="outline" on:click={handleSkipPayment}>Skip Payment</Button>
-	</div>
+	<p class="text-sm">Expires in: {remainingTime}</p>
 
 	{#if $mempoolQuery.isLoading || (!$mempoolQuery.data?.length && !$mempoolQuery.isError)}
 		<div class="flex items-center gap-2">
@@ -78,4 +120,9 @@
 	{:else if $mempoolQuery.isError}
 		<p class="text-red-500">Error checking payment status. Please try again.</p>
 	{/if}
+	<div class="flex flex-wrap gap-2 justify-center">
+		<Button variant="ghost" on:click={() => window.open(bitcoinUri, '_blank')}>Open in wallet</Button>
+		<Button on:click={handleManualCheck}>I've already paid</Button>
+		<Button variant="outline" on:click={handleSkipPayment}>Skip Payment</Button>
+	</div>
 </div>

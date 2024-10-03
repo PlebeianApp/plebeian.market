@@ -84,8 +84,6 @@
 		if (shouldPersist && !persistenceComplete) {
 			// TODO: reduce product stock Quantity of products when order is fully paid, when an order has just been placed or not fully paid no
 			await handlePersist()
-			// invoices.some((invoice) => invoice.paymentRequest?.startsWith('bc1')) &&
-			// 	queryClient.invalidateQueries({ queryKey: ['onChainWalletDetails', $ndkStore.activeUser?.pubkey] })
 		}
 	})
 

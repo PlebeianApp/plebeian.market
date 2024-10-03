@@ -61,7 +61,10 @@ export const createMempoolAddressTransactionsQuery = (address: string, amountSat
 				return await response.json()
 			},
 
-			refetchInterval: (q) => (q.state.data?.length ? false : 60000),
+			refetchInterval: (q) => {
+				if (q.state.dataUpdateCount < 60) return q.state.data?.length ? false : 60000
+				else return false
+			},
 			select: (data) => {
 				return data.filter((tx) => tx.vout.some((output) => output.value === amountSats && output.scriptpubkey_address === address))
 			},

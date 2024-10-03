@@ -131,10 +131,10 @@ export const updateOnChainIndexMutation = createMutation(
 			}
 			return null
 		},
-		// onSuccess: () => {
-		// 	const $ndkStore = get(ndkStore)
-		// 	queryClient.invalidateQueries({ queryKey: ['onChainWalletDetails', $ndkStore.activeUser?.pubkey] })
-		// },
+		onSuccess: () => {
+			const $ndkStore = get(ndkStore)
+			queryClient.invalidateQueries({ queryKey: ['onChainWalletDetails', $ndkStore.activeUser?.pubkey] })
+		},
 	},
 	queryClient,
 )
