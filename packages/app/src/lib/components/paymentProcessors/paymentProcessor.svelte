@@ -10,10 +10,10 @@
 
 	export let paymentDetail: RichPaymentDetail
 	export let amountSats: number
-	export let paymentType: string
+	export let paymentType: 'merchant' | string
 
 	const dispatch = createEventDispatcher()
-
+	// TODO: add method validation as we are doing in the paymentDetails input.
 	const paymentProcessors: PaymentProcessorMap = {
 		ln: {
 			component: LightningPaymentProcessor,
@@ -23,14 +23,14 @@
 			component: OnChainPaymentProcessor,
 			props: {},
 		},
-		cashu: {
-			component: null,
-			props: {},
-		},
-		other: {
-			component: null,
-			props: {},
-		},
+		// cashu: {
+		// 	component: null,
+		// 	props: {},
+		// },
+		// other: {
+		// 	component: null,
+		// 	props: {},
+		// },
 	}
 
 	$: currentProcessor = paymentProcessors[paymentDetail.paymentMethod]

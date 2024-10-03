@@ -169,6 +169,7 @@
 					<article>
 						<h4 class="font-bold">Categories</h4>
 						<div class=" inline-flex gap-2">
+							<!-- TODO: Improve categories visualization, right now overflows if there are too many, also they should navigate to category page -->
 							{#each $productsQuery.data.categories as category}
 								<Badge variant="secondary" class=" w-fit">{category}</Badge>
 							{/each}

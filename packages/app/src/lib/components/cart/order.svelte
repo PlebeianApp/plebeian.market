@@ -6,8 +6,6 @@
 	import { formatSats } from '$lib/utils'
 	import { createEventDispatcher, onDestroy } from 'svelte'
 
-	import type { Order } from '@plebeian/database'
-
 	import Separator from '../ui/separator/separator.svelte'
 	import MiniStall from './mini-stall.svelte'
 	import MiniUser from './mini-user.svelte'
@@ -17,12 +15,10 @@
 	export let stalls: Record<string, CartStall>
 	export let products: Record<string, CartProduct>
 	export let mode: 'cart' | 'checkout' | 'payment' | 'success' = 'cart'
-	export let formData: Partial<Order> = {}
 	let v4vTotalPercentage: number | null = null
 
 	export let userTotal: Awaited<ReturnType<typeof cart.calculateUserTotal>> | null = null
 
-	$: hasFormData = Object.keys(formData).length > 0
 	const dispatch = createEventDispatcher()
 
 	function handleProductUpdate(event: CustomEvent, stallId: string, productId: string) {
@@ -77,7 +73,7 @@
 				stallId={stallId.split(':').length !== 3 ? `${KindStalls}:${user.pubkey}:${stallId}` : stallId}
 				mode={mode === 'success' ? 'view' : undefined}
 			/>
-
+			<!-- TODO: Improve shipping visualization for products with shipping cost 0 and extra cost -->
 			{#each stall.products as productId}
 				{@const product = products[productId]}
 				<ProductInCart

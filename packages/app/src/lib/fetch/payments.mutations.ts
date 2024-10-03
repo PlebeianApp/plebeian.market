@@ -1,10 +1,14 @@
+// payments.mutations.ts
 import type { RichPaymentDetail } from '$lib/server/paymentDetails.service'
 import { createMutation } from '@tanstack/svelte-query'
 import ndkStore from '$lib/stores/ndk'
 import { toast } from 'svelte-sonner'
 import { get } from 'svelte/store'
 
+import { PAYMENT_DETAILS_METHOD } from '@plebeian/database/constants'
+
 import { createRequest, queryClient } from './client'
+import { persistOnChainIndexWalletMutation } from './wallets.mutations'
 
 export type PostStall = {
 	paymentDetails: string
@@ -28,6 +32,7 @@ declare module './client' {
 		[k: `POST /api/v1/payments/${string}/?paymentDetailId=${string}`]: Operation<string, 'POST', never, never, RichPaymentDetail, never>
 	}
 }
+
 export const persistPaymentMethodMutation = createMutation(
 	{
 		mutationKey: [],
@@ -43,8 +48,15 @@ export const persistPaymentMethodMutation = createMutation(
 						isDefault,
 					},
 				})
+
+				if (paymentMethod === PAYMENT_DETAILS_METHOD.ON_CHAIN && !paymentDetails.startsWith('bc1')) {
+					await get(persistOnChainIndexWalletMutation).mutateAsync({ paymentDetailId: pd.id, index: 0 })
+				}
+
+				toast.success('Payment created')
 				return pd
 			}
+			toast.error(`Payment not created`)
 			return null
 		},
 		onSuccess: () => {
@@ -54,7 +66,6 @@ export const persistPaymentMethodMutation = createMutation(
 	},
 	queryClient,
 )
-
 export const updatePaymentMethodMutation = createMutation(
 	{
 		mutationKey: [],

@@ -174,7 +174,7 @@
 		toast.success('Payment successful')
 		dispatch('paymentComplete', {
 			paymentRequest: invoice!.paymentRequest,
-			preimage,
+			proof: preimage,
 			amountSats: normalizedAmount,
 			paymentType,
 		})
@@ -187,7 +187,7 @@
 		toast.error('Invoice expired')
 		dispatch('paymentExpired', {
 			paymentRequest: invoice!.paymentRequest,
-			preimage: null,
+			proof: null,
 			amountSats: normalizedAmount,
 			paymentType,
 		})
@@ -198,7 +198,7 @@
 		cleanupFunctions.forEach((fn) => fn())
 		dispatch('paymentCanceled', {
 			paymentRequest: invoice!.paymentRequest,
-			preimage: null,
+			proof: null,
 			amountSats: normalizedAmount,
 			paymentType,
 		})
@@ -209,7 +209,7 @@
 		cleanupFunctions.forEach((fn) => fn())
 		dispatch('paymentCanceled', {
 			paymentRequest: null,
-			preimage: null,
+			proof: null,
 			amountSats: normalizedAmount,
 			paymentType,
 		})
@@ -295,8 +295,8 @@
 		<Spinner />
 	{:else if invoice}
 		<QrCode data={invoice.paymentRequest} logoPath="/logo.svg" />
-		<Button variant="secondary" class="flex items-center gap-2" on:click={handleCopyInvoice}>
-			<span>{truncateText(invoice.paymentRequest, 30)}</span>
+		<Button variant="secondary" class="items-center gap-2 grid grid-cols-[auto_auto] max-w-full" on:click={handleCopyInvoice}>
+			<span class=" truncate">{invoice.paymentRequest}</span>
 			<span class="i-tdesign-copy" />
 		</Button>
 		<p class="text-sm">Expires in: {remainingTime}</p>
@@ -316,10 +316,10 @@
 				<Button on:click={handleNWCPay} disabled={paymentStatus !== 'pending'}>Pay with NWC</Button>
 			{/if}
 			<Button variant="ghost" on:click={() => window.open(url, '_blank')}>Open in wallet</Button>
-			<Button variant="outline" on:click={handleSkipPayment}>Skip Payment</Button>
 			{#if showManualVerification}
-				<Button on:click={() => (showPreimageInput = true)} class="w-full mb-4">I've already paid</Button>
+				<Button on:click={() => (showPreimageInput = true)}>I've already paid</Button>
 			{/if}
+			<Button variant="outline" on:click={handleSkipPayment}>Skip Payment</Button>
 		</div>
 
 		<Collapsible.Root open={showPreimageInput}>

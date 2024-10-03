@@ -4,24 +4,30 @@ import {
 	createPaymentDetail,
 	deletePaymentDetail,
 	getPaymentDetailsByUserId,
+	getPrivatePaymentDetailsByUserId,
 	updatePaymentDetail,
 } from '$lib/server/paymentDetails.service'
 
 import type { RequestHandler } from './$types'
 
+// TODO: should we add auth for non-private payment requests?
 export const GET: RequestHandler = async ({ request, url: { searchParams } }) => {
 	const userId = searchParams.get('userId')
+	const isPrivate = searchParams.has('private')
 	if (!userId) {
 		error(400, 'Invalid request')
 	}
-	if (request.headers.has('Authorization')) {
+	if (isPrivate && request.headers.has('Authorization')) {
 		try {
-			await authorizeUserless(request, 'GET')
+			await authorize(request, userId, 'GET')
 		} catch (e) {
 			error(401, 'Unauthorized')
 		}
+	} else if (isPrivate && !request.headers.has('Authorization')) {
+		error(401, 'Unauthorized')
 	}
-	const paymentDetails = await getPaymentDetailsByUserId(userId)
+
+	const paymentDetails = isPrivate ? await getPrivatePaymentDetailsByUserId(userId) : await getPaymentDetailsByUserId(userId)
 	return json(paymentDetails)
 }
 

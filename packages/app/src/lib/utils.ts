@@ -94,6 +94,10 @@ export const bitcoinToSatoshis = (amountInBtc: number) => {
 	return Math.floor(amountInBtc * numSatsInBtc)
 }
 
+export const satoshisToBtc = (amountInSatoshis: number) => {
+	return Number((amountInSatoshis / numSatsInBtc).toFixed(8))
+}
+
 export function formatPrice(price: number): string {
 	return Number(price.toFixed(2)).toString()
 }

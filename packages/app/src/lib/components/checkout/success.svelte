@@ -4,8 +4,10 @@
 	import { Button } from '$lib/components/ui/button'
 	import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '$lib/components/ui/card'
 	import { Separator } from '$lib/components/ui/separator'
+	import { queryClient } from '$lib/fetch/client'
 	import { cart } from '$lib/stores/cart'
-	import { checkIfUserExists, shouldRegister } from '$lib/utils'
+	import ndkStore from '$lib/stores/ndk'
+	import { checkIfUserExists, formatSats, shouldRegister } from '$lib/utils'
 	import { CheckCircle } from 'lucide-svelte'
 	import { createEventDispatcher, onMount } from 'svelte'
 
@@ -43,7 +45,7 @@
 			const cartData = JSON.stringify({ orders, invoices })
 			const formData = new FormData()
 			formData.append('cartData', cartData)
-
+			// FIXME: Error when attempting to persist orders and invoices in vps deployment. Error: SyntaxError: Unexpected token 'C', "Cross-site"... is not valid JSON
 			const response = await fetch('?/persistOrdersAndInvoices', {
 				method: 'POST',
 				body: formData,
@@ -80,8 +82,8 @@
 
 		const userExists = await checkIfUserExists(merchant.pubkey)
 		const shouldPersist = await shouldRegister(undefined, userExists)
-
 		if (shouldPersist && !persistenceComplete) {
+			// TODO: reduce product stock Quantity of products when order is fully paid, when an order has just been placed or not fully paid no
 			await handlePersist()
 		}
 	})

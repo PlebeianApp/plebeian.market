@@ -8,16 +8,17 @@ import { createRequest, queryClient } from './client'
 declare module './client' {
 	interface Endpoints {
 		[k: `GET /api/v1/payments/?userId=${string}`]: Operation<string, 'GET', never, never, RichPaymentDetail[], never>
+		[k: `GET /api/v1/payments/?userId=${string}&private`]: Operation<string, 'GET', never, never, RichPaymentDetail[], never>
 		[k: `GET /api/v1/payments/${string}`]: Operation<string, 'GET', never, never, RichPaymentDetail[], never>
 	}
 }
 
-export const paymentsQuery = createQuery(
+export const privatePaymentsQuery = createQuery(
 	derived(ndkStore, ($ndkStore) => ({
-		queryKey: ['paymentDetails', $ndkStore.activeUser?.pubkey],
+		queryKey: ['paymentDetailsPrivate', $ndkStore.activeUser?.pubkey],
 		queryFn: async () => {
 			if ($ndkStore.activeUser?.pubkey) {
-				const user = await createRequest(`GET /api/v1/payments/?userId=${$ndkStore.activeUser.pubkey}`, {
+				const user = await createRequest(`GET /api/v1/payments/?userId=${$ndkStore.activeUser.pubkey}&private`, {
 					auth: true,
 				})
 
@@ -36,7 +37,7 @@ export const createPaymentsForUserQuery = (userId: string) =>
 			queryKey: ['paymentDetails', userId],
 			queryFn: async () => {
 				const paymentDetails = await createRequest(`GET /api/v1/payments/?userId=${userId}`, {
-					auth: true,
+					auth: false,
 				})
 				return paymentDetails
 			},

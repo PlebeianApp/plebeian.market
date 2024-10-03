@@ -1,7 +1,10 @@
 import { error } from '@sveltejs/kit'
+import { deriveAddresses } from '$lib/utils/paymentDetails.utils'
 
 import type { PaymentDetail } from '@plebeian/database'
 import { and, db, eq, isNull, or, paymentDetails } from '@plebeian/database'
+
+import { getOnChainWalletDetails } from './wallet.service'
 
 export type RichPaymentDetail = PaymentDetail & {
 	stallName: string
@@ -49,7 +52,32 @@ const enrichWithStallName = async (detail: PaymentDetail): Promise<RichPaymentDe
 	}
 }
 
+const renderOnChainPaymentDetail = async (detail: PaymentDetail) => {
+	const currentIndex = await getOnChainWalletDetails(detail.userId, detail.id)
+	const currentAddress = deriveAddresses(detail.paymentDetails, 1, currentIndex?.valueNumeric ? Number(currentIndex.valueNumeric) : 0)
+	if (!currentAddress) error(500, 'Could not derive address')
+	return {
+		...detail,
+		paymentDetails: currentAddress[0],
+	}
+}
+
 export const getPaymentDetailsByUserId = async (userId: string): Promise<RichPaymentDetail[]> => {
+	const details = await db.query.paymentDetails.findMany({
+		where: eq(paymentDetails.userId, userId),
+	})
+	const updatedDetails = await Promise.all(
+		details.map(async (detail) => {
+			if (detail.paymentMethod === 'on-chain') {
+				return renderOnChainPaymentDetail(detail)
+			}
+			return detail
+		}),
+	)
+	return Promise.all(updatedDetails.map(enrichWithStallName))
+}
+
+export const getPrivatePaymentDetailsByUserId = async (userId: string): Promise<RichPaymentDetail[]> => {
 	const details = await db.query.paymentDetails.findMany({
 		where: eq(paymentDetails.userId, userId),
 	})

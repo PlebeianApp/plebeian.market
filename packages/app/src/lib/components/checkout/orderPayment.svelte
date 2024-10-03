@@ -36,6 +36,7 @@
 
 	type ShareWithInvoice = V4VDTO & { canReceive: boolean; max: number; min: number; paymentDetail: RichPaymentDetail }
 
+	// TODO: Maybe we can fetch invoices at the moment of render it. Right now they all starts at the same time which can lead to end expiry times
 	let api: CarouselAPI
 	let carouselCount = 0
 	let carouselCurrent = 0
@@ -133,7 +134,7 @@
 
 	function handlePaymentEvent(event: CustomEvent<CheckoutPaymentEvent>) {
 		const { type } = event
-		const { paymentRequest, preimage, amountSats, paymentType } = event.detail
+		const { paymentRequest, proof, amountSats, paymentType } = event.detail
 
 		const status = paymentEventToStatus[type]
 		if (!status) {
@@ -147,7 +148,7 @@
 		}
 
 		try {
-			const invoice = createInvoice(paymentRequest, preimage, status, amountSats, paymentType)
+			const invoice = createInvoice(paymentRequest, proof, status, amountSats, paymentType)
 			processPayment(invoice, status)
 			paymentStatuses = paymentStatuses.map((s) => (s.id === paymentType ? { ...s, status } : s))
 			moveToNextPaymentProcessor()

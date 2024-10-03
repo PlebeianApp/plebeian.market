@@ -402,7 +402,7 @@
 			</div>
 		</div>
 	{/each}
-
+	<!-- TODO: Ensure at least one shipping method to persist stall -->
 	<div class="grid gap-1.5">
 		<Button
 			data-tooltip="Provide different shipping options for your customers!"

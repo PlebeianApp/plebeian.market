@@ -21,7 +21,7 @@ export const FormLabels: { [key: string]: string } = {
 
 export type CheckoutPaymentEvent = {
 	paymentRequest: string | null
-	preimage: string | null
+	proof: string | null
 	amountSats: number
 	paymentType: string
 }
