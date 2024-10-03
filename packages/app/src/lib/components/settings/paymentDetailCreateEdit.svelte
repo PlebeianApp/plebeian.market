@@ -2,7 +2,6 @@
 	// paymentDetailCreateEdit.svelte
 	import type { RichPaymentDetail } from '$lib/server/paymentDetails.service'
 	import { LightningAddress } from '@getalby/lightning-tools'
-	import * as Alert from '$lib/components/ui/alert/index.js'
 	import { Button } from '$lib/components/ui/button'
 	import { Checkbox } from '$lib/components/ui/checkbox'
 	import * as Collapsible from '$lib/components/ui/collapsible'
@@ -18,13 +17,13 @@
 	import { checkAddress, checkExtendedPublicKey, deriveAddresses, isExtendedPublicKey } from '$lib/utils/paymentDetails.utils'
 	import { format } from 'date-fns'
 	import { NIP05_REGEX } from 'nostr-tools/nip05'
-	import { npubEncode } from 'nostr-tools/nip19'
 
 	import type { PaymentDetailsMethod } from '@plebeian/database/constants'
 	import { PAYMENT_DETAILS_METHOD } from '@plebeian/database/constants'
 
 	import type { onChainConfirmationType } from './types'
 	import Spinner from '../assets/spinner.svelte'
+	import PaymentGidance from '../common/paymentGidance.svelte'
 	import PaymentDetailConfirmationCard from './paymentDetailConfirmationCard.svelte'
 
 	export let paymentDetail: RichPaymentDetail | null = null
@@ -202,6 +201,7 @@
 		paymentDetail?.paymentMethod == 'on-chain' && isExtendedPublicKey(editedPaymentDetail.paymentDetails)
 			? createOnChainIndexQuery(String($ndkStore.activeUser?.pubkey), paymentDetail.id)
 			: undefined
+
 	function setupPaymentDetail(paymentDetails: string, method: PaymentDetailsMethod) {
 		editedPaymentDetail = {
 			...editedPaymentDetail,
@@ -211,6 +211,14 @@
 			stallName: 'General',
 			isDefault: false,
 		}
+		showGuidance = false
+	}
+	function handleSetupPaymentDetail(event: CustomEvent) {
+		const { paymentDetails, method } = event.detail
+		setupPaymentDetail(paymentDetails, method)
+	}
+
+	function handleCloseGuidance() {
 		showGuidance = false
 	}
 </script>
@@ -252,78 +260,11 @@
 					on:cancel={handleCancellation}
 				/>
 			{:else if showGuidance}
-				<div class="space-y-4">
-					{#if !hasAcceptedTerms}
-						<h3 class="text-lg font-semibold">Set Up Your First Payment Method</h3>
-						<p>This will allow customers to purchase your products without you needing to be online.</p>
-
-						<Alert.Root variant="destructive">
-							<Alert.Description>
-								PlebianMarket is not responsible for disputes between you and your customers. Please review our terms and conditions.
-							</Alert.Description>
-						</Alert.Root>
-
-						<div class="flex items-center space-x-2">
-							<Checkbox id="terms" bind:checked />
-							<Label for="terms" class="text-sm">I accept the terms and conditions</Label>
-						</div>
-
-						<Button on:click={() => (hasAcceptedTerms = true)} disabled={!checked}>Continue</Button>
-					{:else}
-						<h3 class="text-lg font-semibold">Choose Your Payment Method</h3>
-
-						{#if $ndkStore.activeUser?.profile?.lud16}
-							<div class="bg-secondary p-4 rounded-md">
-								<p>We've detected a Lightning address linked to your profile:</p>
-								<p class="font-bold text-primary">{$ndkStore.activeUser.profile.lud16}</p>
-								<p>Would you like to use this as your payment method?</p>
-							</div>
-
-							<div class="flex space-x-2">
-								<Button
-									on:click={() =>
-										setupPaymentDetail(String($ndkStore.activeUser?.profile?.lud16), PAYMENT_DETAILS_METHOD.LIGHTNING_NETWORK)}
-								>
-									Use This Address
-								</Button>
-								<Button variant="outline" on:click={() => (showGuidance = false)}>Set Up Manually</Button>
-							</div>
-						{:else}
-							{@const npubCashAddress = `${npubEncode(String($ndkStore.activeUser?.pubkey))}@npub.cash`}
-
-							<div class="space-y-2">
-								<p>You don't have a Lightning address linked to your profile. Here are your options:</p>
-
-								<div class="bg-secondary p-4 flex flex-col gap-2">
-									<h4 class="font-semibold">
-										1. Use an <a href="https://npub.cash" target="_blank" rel="noreferrer" class="text-primary hover:underline">Npub.cash</a
-										> address
-									</h4>
-									<Button class="mt-2" on:click={() => setupPaymentDetail(npubCashAddress, PAYMENT_DETAILS_METHOD.LIGHTNING_NETWORK)}>
-										Use npub.cash Address
-									</Button>
-									<p>
-										Check <a href="https://npub.cash" target="_blank" rel="noreferrer" class="text-primary hover:underline">Npub.cash</a> to
-										know more about the project
-									</p>
-								</div>
-
-								<div class="bg-secondary p-4 flex flex-col gap-2">
-									<h4 class="font-semibold">2. Set up manually</h4>
-									<Button variant="outline" class="mt-2" on:click={() => (showGuidance = false)}>Set Up Manually</Button>
-									<p>
-										If you don't have a lightning address yet, we recommend setting up one at <a
-											href="https://coinos.io"
-											target="_blank"
-											rel="noreferrer"
-											class="text-primary hover:underline">Coinos.io</a
-										>, then come back to enter it manually.
-									</p>
-								</div>
-							</div>
-						{/if}
-					{/if}
-				</div>
+				<PaymentGidance
+					userLightningAddress={$ndkStore.activeUser?.profile?.lud16}
+					on:setupPaymentDetail={handleSetupPaymentDetail}
+					on:closeGuidance={handleCloseGuidance}
+				/>
 			{:else}
 				<form on:submit|preventDefault={validateAndConfirm} class="flex flex-col gap-4">
 					<!-- TODO: Improve ux by having a waila (what im looking at) function that determines the payment method -->
