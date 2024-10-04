@@ -1,4 +1,5 @@
 import type { NDKEvent, NDKUserProfile } from '@nostr-dev-kit/ndk'
+import { queryClient } from '$lib/fetch/client'
 import { checkIfUserExists, getElapsedTimeInDays, getEventCoordinates, shouldRegister, truncateString } from '$lib/utils'
 
 import { fetchUserData, handleProductNostrData, handleStallNostrData, handleUserNostrData } from './utils'
@@ -33,7 +34,9 @@ function clearQueues() {
 }
 
 export async function processQueuedInsertions(allowRegister?: boolean) {
-	if (![stallQueue, productQueue, userQueue].some((queue) => queue.size > 0) || allowRegister === undefined) return
+	if (![stallQueue, productQueue, userQueue].some((queue) => queue.size > 0) || allowRegister === undefined || queryClient.isFetching() > 0)
+		return
+
 	const allUserIds = new Set([
 		...Array.from(userQueue).map((user) => user.id as string),
 		...Array.from(stallQueue)

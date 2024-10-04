@@ -1,7 +1,8 @@
 import { getAppSettings } from '$lib/server/setup.service'
 import { btcToCurrency } from '$lib/utils'
 
-import { AppSettings, CURRENCIES, PAYMENT_DETAILS_METHOD, PaymentDetailsMethod } from '@plebeian/database'
+import type { AppSettings, PaymentDetailsMethod } from '@plebeian/database'
+import { CURRENCIES, PAYMENT_DETAILS_METHOD } from '@plebeian/database'
 
 import type { PageServerLoad } from './$types'
 

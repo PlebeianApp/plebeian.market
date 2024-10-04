@@ -61,7 +61,7 @@ export const persistPaymentMethodMutation = createMutation(
 		},
 		onSuccess: () => {
 			const $ndkStore = get(ndkStore)
-			queryClient.invalidateQueries({ queryKey: ['paymentDetails', $ndkStore.activeUser?.pubkey] })
+			queryClient.invalidateQueries({ queryKey: ['paymentDetailsPrivate', $ndkStore.activeUser?.pubkey] })
 		},
 	},
 	queryClient,
@@ -89,7 +89,7 @@ export const updatePaymentMethodMutation = createMutation(
 		},
 		onSuccess: () => {
 			const $ndkStore = get(ndkStore)
-			queryClient.invalidateQueries({ queryKey: ['paymentDetails', $ndkStore.activeUser?.pubkey] })
+			queryClient.invalidateQueries({ queryKey: ['paymentDetailsPrivate', $ndkStore.activeUser?.pubkey] })
 		},
 	},
 	queryClient,
@@ -110,7 +110,7 @@ export const deletePaymentMethodMutation = createMutation(
 		},
 		onSuccess: () => {
 			const $ndkStore = get(ndkStore)
-			queryClient.invalidateQueries({ queryKey: ['paymentDetails', $ndkStore.activeUser?.pubkey] })
+			queryClient.invalidateQueries({ queryKey: ['paymentDetailsPrivate', $ndkStore.activeUser?.pubkey] })
 		},
 	},
 	queryClient,
@@ -130,7 +130,7 @@ export const setDefaultPaymentMethodForStallMutation = createMutation(
 			return null
 		},
 		onSuccess: (data) => {
-			queryClient.invalidateQueries({ queryKey: ['paymentDetails', data?.stallId] })
+			queryClient.invalidateQueries({ queryKey: ['paymentDetailsPrivate', data?.stallId] })
 		},
 	},
 	queryClient,

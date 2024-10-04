@@ -1,5 +1,5 @@
 import { error } from '@sveltejs/kit'
-import { deriveAddresses } from '$lib/utils/paymentDetails.utils'
+import { deriveAddresses, isExtendedPublicKey } from '$lib/utils/paymentDetails.utils'
 
 import type { PaymentDetail } from '@plebeian/database'
 import { and, db, eq, isNull, or, paymentDetails } from '@plebeian/database'
@@ -66,14 +66,16 @@ export const getPaymentDetailsByUserId = async (userId: string): Promise<RichPay
 	const details = await db.query.paymentDetails.findMany({
 		where: eq(paymentDetails.userId, userId),
 	})
+
 	const updatedDetails = await Promise.all(
 		details.map(async (detail) => {
-			if (detail.paymentMethod === 'on-chain') {
+			if (detail.paymentMethod === 'on-chain' && isExtendedPublicKey(detail.paymentDetails)) {
 				return renderOnChainPaymentDetail(detail)
 			}
 			return detail
 		}),
 	)
+
 	return Promise.all(updatedDetails.map(enrichWithStallName))
 }
 
