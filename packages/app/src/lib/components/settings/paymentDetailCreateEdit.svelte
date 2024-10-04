@@ -23,7 +23,7 @@
 
 	import type { onChainConfirmationType } from './types'
 	import Spinner from '../assets/spinner.svelte'
-	import PaymentGidance from '../common/paymentGidance.svelte'
+	import PaymentGuidance from '../common/paymentGuidance.svelte'
 	import PaymentDetailConfirmationCard from './paymentDetailConfirmationCard.svelte'
 
 	export let paymentDetail: RichPaymentDetail | null = null
@@ -38,8 +38,6 @@
 	let validationMessage = ''
 	let showConfirmation = false
 	let tempValidatedValue = ''
-	let hasAcceptedTerms: boolean = false
-	let checked: boolean = false
 
 	$: isEditing = !!paymentDetail
 	let editedPaymentDetail = paymentDetail
@@ -260,7 +258,7 @@
 					on:cancel={handleCancellation}
 				/>
 			{:else if showGuidance}
-				<PaymentGidance
+				<PaymentGuidance
 					userLightningAddress={$ndkStore.activeUser?.profile?.lud16}
 					on:setupPaymentDetail={handleSetupPaymentDetail}
 					on:closeGuidance={handleCloseGuidance}

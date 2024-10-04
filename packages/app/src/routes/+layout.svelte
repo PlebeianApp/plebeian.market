@@ -3,14 +3,14 @@
 	import Footer from '$lib/components/footer.svelte'
 	import Header from '$lib/components/header.svelte'
 	import { Toaster } from '$lib/components/ui/sonner'
-	import { onMount, tick } from 'svelte'
+	import { onMount } from 'svelte'
 	import { pwaInfo } from 'virtual:pwa-info'
 
 	import '@fontsource/ibm-plex-mono'
 	import '../app.css'
 
 	import { QueryClientProvider } from '@tanstack/svelte-query'
-	import { goto, onNavigate } from '$app/navigation'
+	import { afterNavigate, goto } from '$app/navigation'
 	import RelayWidget from '$lib/components/assets/relayWidget.svelte'
 	import Drawer from '$lib/components/drawer.svelte'
 	import SellStuffAdvert from '$lib/components/sell-stuff-advert.svelte'
@@ -59,10 +59,8 @@
 
 	$: webManifestLink = pwaInfo ? pwaInfo.webManifest.linkTag : ''
 
-	onNavigate(() => {
-		tick().then(() => {
-			processQueuedInsertions(allowRegister)
-		})
+	afterNavigate(() => {
+		processQueuedInsertions(allowRegister)
 	})
 
 	// Tooltips on elements with the tooltip attribute
