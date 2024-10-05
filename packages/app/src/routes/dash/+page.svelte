@@ -16,8 +16,8 @@
 			</a>
 		</section>
 		<ul>
-			{#each item.links as link}
-				{#if link.public || userExist}
+			{#each item?.links || [] as link}
+				{#if userExist}
 					<li>
 						<a href={link.href}>
 							<p class={link.title == 'Delete account' ? 'text-[hsl(var(--destructive))]' : ''}>{link.title}</p>

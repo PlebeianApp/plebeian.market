@@ -1,10 +1,9 @@
-import type { NDKEvent } from '@nostr-dev-kit/ndk'
 import type { ExtendedBaseType, NDKEventStore } from '@nostr-dev-kit/ndk-svelte'
-import { NDKKind } from '@nostr-dev-kit/ndk'
+import { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk'
 import { page } from '$app/stores'
 import { KindStalls } from '$lib/constants'
 import ndkStore from '$lib/stores/ndk'
-import { derived, get } from 'svelte/store'
+import { derived, get, writable } from 'svelte/store'
 
 import type { AppSettings } from '@plebeian/database'
 
@@ -25,7 +24,12 @@ export const stallsSub: NDKEventStore<ExtendedBaseType<NDKEvent>> = ndk.storeSub
 	{ closeOnEose: true, autoStart: false },
 )
 
-export const dmKind04Sub: NDKEventStore<ExtendedBaseType<NDKEvent>> = ndk.storeSubscribe({}, { closeOnEose: false, autoStart: false })
+export const dmKind04Sub: NDKEventStore<ExtendedBaseType<NDKEvent>> = ndk.storeSubscribe(
+	{
+		kinds: [NDKKind.EncryptedDirectMessage],
+	},
+	{ closeOnEose: false, autoStart: true },
+)
 
 export const groupedDMs = derived(dmKind04Sub, ($dmKind04Sub) => {
 	const groups: Record<string, NDKEvent[]> = {}
@@ -40,6 +44,20 @@ export const groupedDMs = derived(dmKind04Sub, ($dmKind04Sub) => {
 	}
 
 	return groups
+})
+
+export const lastSeen = writable(typeof window !== 'undefined' ? Number(localStorage.getItem('last-seen')) ?? Date.now() : Date.now())
+
+if (typeof window !== 'undefined') {
+	lastSeen.subscribe(($lastSeen) => localStorage?.setItem('last-seen', `${$lastSeen}`))
+}
+
+export const unseenDMs = derived([lastSeen, groupedDMs], ([$lastSeen, $groupedDMs]) => {
+	return Object.fromEntries(
+		Object.entries($groupedDMs).filter(([_, events]) => {
+			return Number(events[0].created_at) * 1000 > $lastSeen
+		}),
+	)
 })
 
 export const activeUserDMs = derived(dmKind04Sub, ($dmKind04Sub) => {

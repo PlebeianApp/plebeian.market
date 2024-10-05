@@ -6,7 +6,7 @@
 	import CAvatar from '../ui/custom-components/c-avatar.svelte'
 
 	export let pubkey: string
-	export let lastMessagets: number
+	export let lastMessages: number
 	export let onSelect: (pubkey: string) => void
 
 	$: userProfileQuery = createUserByIdQuery(pubkey)
@@ -18,6 +18,6 @@
 		<span class="font-semibold truncate"
 			>{$userProfileQuery?.data?.displayName || $userProfileQuery?.data?.name || truncateString(pubkey)}</span
 		>
-		<span class="text-sm text-muted-foreground truncate w-full">Last message: {new Date(lastMessagets * 1000).toLocaleString()}</span>
+		<span class="text-sm text-muted-foreground truncate w-full">Last message: {new Date(lastMessages * 1000).toLocaleString()}</span>
 	</div>
 </Button>

@@ -8,7 +8,7 @@ import type { PageServerLoad } from './$types'
 
 export const load: PageServerLoad = async () => {
 	return {
-		prices: await fetchInitialPrices(),
+		prices: [] ?? await fetchInitialPrices(),
 		appSettings: (await getAppSettings()) as AppSettings,
 		paymentDetailsMethod: Object.values(PAYMENT_DETAILS_METHOD) as unknown as PaymentDetailsMethod,
 	}

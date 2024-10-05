@@ -3,14 +3,23 @@ import { activeUserQuery } from '$lib/fetch/users.queries'
 import ndkStore from '$lib/stores/ndk.js'
 import { checkIfUserExists } from '$lib/utils.js'
 import { get } from 'svelte/store'
+import { hasActivity } from '$lib/stores/activity'
 
 export const load = async () => {
+	const $hasActivity = get(hasActivity) 
 	const $ndkStore = get(ndkStore)
+	
 	const userExist = await checkIfUserExists($ndkStore.activeUser?.pubkey as string)
 	const activeUser = userExist
 		? get(activeUserQuery).data
 		: ({ ...$ndkStore.activeUser?.profile, id: $ndkStore.activeUser?.pubkey } as Partial<RichUser>)
 	const menuItems = [
+		{
+			title: `🏏 Activity ${$hasActivity ? '*' : ''}`,
+			description: 'Your activity hub',
+			value: 'activity',
+			root: '/dash/activity',
+		},
 		{
 			title: '🛍️ Orders',
 			description: 'View and manage your orders',

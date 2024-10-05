@@ -6,6 +6,7 @@
 	import { Button } from '$lib/components/ui/button/index.js'
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
 	import { login, logout } from '$lib/ndkLogin'
+	import { hasActivity } from '$lib/stores/activity'
 	import ndkStore from '$lib/stores/ndk'
 	import { balanceOfWorkingNWCs } from '$lib/stores/nwc'
 	import { getAccount } from '$lib/stores/session'
@@ -59,7 +60,12 @@
 			<CartWithState />
 			<DropdownMenu.Root>
 				<DropdownMenu.Trigger id="menuButton">
-					<Button class="p-2 bg-white"><span class="i-tdesign-view-list text-black w-6 h-6"></span></Button>
+					<Button class="p-2 bg-white relative">
+						<span class="i-tdesign-view-list text-black w-6 h-6"></span>
+						{#if $hasActivity}
+							<span class="notification-dot"></span>
+						{/if}
+					</Button>
 				</DropdownMenu.Trigger>
 				<DropdownMenu.Content>
 					<DropdownMenu.Group>
@@ -93,8 +99,12 @@
 							</DropdownMenu.Item>
 							<DropdownMenu.Item>
 								<a id="headerMenuDashboard" href="/dash" class="inline-flex items-center gap-2 w-full"
-									><span class=" i-tdesign-dashboard" />Dashboard</a
-								>
+									><span class=" i-tdesign-dashboard" />Dashboard
+
+									{#if $hasActivity}
+										<span class="notification-dot"></span>
+									{/if}
+								</a>
 							</DropdownMenu.Item>
 							<DropdownMenu.Item>
 								<Button id="headerMenuLogOut" variant="destructive" class="inline-flex items-center gap-2" on:click={() => logout()}
