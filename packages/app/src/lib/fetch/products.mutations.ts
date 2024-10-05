@@ -1,7 +1,6 @@
 import type { NostrEvent } from '@nostr-dev-kit/ndk'
 import type { DisplayProduct } from '$lib/server/products.service'
 import type { RichStall } from '$lib/server/stalls.service'
-import { createRequest, queryClient } from './client'
 import { NDKEvent } from '@nostr-dev-kit/ndk'
 import { createMutation } from '@tanstack/svelte-query'
 import { KindProducts, KindStalls } from '$lib/constants'
@@ -12,6 +11,7 @@ import { get } from 'svelte/store'
 import type { ProductImage } from '@plebeian/database'
 import { createSlugId } from '@plebeian/database/utils'
 
+import { createRequest, queryClient } from './client'
 
 declare module './client' {
 	interface Endpoints {

@@ -38,10 +38,9 @@
 							</Accordion.Item>
 						{:else}
 							<div class="py-4">
-								<a class="hover:underline"  href={item.root} id={item.value}>{item.title}</a>
-	
+								<a class="hover:underline" href={item.root} id={item.value}>{item.title}</a>
 							</div>
-								<Separator />
+							<Separator />
 						{/if}
 					{/each}
 				</Accordion.Root>

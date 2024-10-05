@@ -1,14 +1,14 @@
 import type { RichUser } from '$lib/server/users.service.js'
 import { activeUserQuery } from '$lib/fetch/users.queries'
+import { hasActivity } from '$lib/stores/activity'
 import ndkStore from '$lib/stores/ndk.js'
 import { checkIfUserExists } from '$lib/utils.js'
 import { get } from 'svelte/store'
-import { hasActivity } from '$lib/stores/activity'
 
 export const load = async () => {
-	const $hasActivity = get(hasActivity) 
+	const $hasActivity = get(hasActivity)
 	const $ndkStore = get(ndkStore)
-	
+
 	const userExist = await checkIfUserExists($ndkStore.activeUser?.pubkey as string)
 	const activeUser = userExist
 		? get(activeUserQuery).data

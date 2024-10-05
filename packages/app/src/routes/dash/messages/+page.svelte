@@ -1,6 +1,4 @@
-
 <script lang="ts">
-
 	import { page } from '$app/stores'
 	import Chat from '$lib/components/chat/chat.svelte'
 	import ConversationListItem from '$lib/components/chat/conversation-list-item.svelte'
