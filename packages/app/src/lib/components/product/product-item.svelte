@@ -33,13 +33,8 @@
 <Card.Root class="relative grid grid-rows-[1fr_auto] border-2 border-black bg-transparent text-black group">
 	{#if images?.length && !imageLoadError}
 		{@const mainImage = images.find((img) => img.imageOrder === 0) || images[0]}
-		<div class="relative flex items-center justify-center p-2">
-			<img
-				class="object-cover transition-opacity duration-300 group-hover:opacity-70"
-				src={mainImage.imageUrl}
-				alt=""
-				on:error={() => (imageLoadError = true)}
-			/>
+		<div class="relative flex items-center justify-center p-2" style="aspect-ratio: 16/12;">
+			<img class="object-cover w-full h-full" src={mainImage.imageUrl} alt="" on:error={() => (imageLoadError = true)} />
 		</div>
 	{:else}
 		<div class="flex items-center justify-center p-2">
