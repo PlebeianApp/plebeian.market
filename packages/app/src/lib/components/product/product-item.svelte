@@ -68,7 +68,7 @@
 					</div>
 					<div>
 						{#if qtyPurchased}
-							<Badge variant="outline">purhcased: {qtyPurchased}</Badge>
+							<Badge variant="outline">purchased: {qtyPurchased}</Badge>
 						{:else}
 							<Badge variant={quantity && quantity > 0 ? 'outline' : 'default'}
 								>{quantity && quantity > 0 ? `${quantity} in stock` : 'Out of stock'}</Badge
