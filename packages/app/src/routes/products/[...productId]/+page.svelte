@@ -30,6 +30,11 @@
 		'w-full font-bold border-b-2 border-black text-black data-[state=active]:border-b-primary data-[state=active]:text-primary'
 
 	$: productsQuery = createProductQuery(productRes.id)
+
+	$: if ($productsQuery.data) {
+		qtyToCart = $productsQuery.data.quantity > 0 ? 1 : 0
+	}
+
 	$: userProfileQuery = user.id ? createUserByIdQuery(user.id) : null
 	$: stallCoordinates = parseCoordinatesString(`${KindStalls}:${user.id}:${$productsQuery.data?.stallId}`).coordinates
 	$: priceQuery = createCurrencyConversionQuery($productsQuery.data?.currency as string, $productsQuery.data?.price as number)
@@ -142,11 +147,16 @@
 					>
 						<span class="i-mdi-plus w-4 h-4"></span>
 					</Button>
-					<Button
-						class="ml-2"
-						on:click={() => handleAddToCart(String($productsQuery.data?.userId), String(stallCoordinates), $productsQuery.data)}
-						>Add to cart</Button
-					>
+
+					{#if $productsQuery.data.quantity && $productsQuery.data.quantity > 0}
+						<Button
+							class="ml-2"
+							on:click={() => handleAddToCart(String($productsQuery.data?.userId), String(stallCoordinates), $productsQuery.data)}
+							>Add to cart</Button
+						>
+					{:else}
+						<Button disabled>Out of stock</Button>
+					{/if}
 				</div>
 				<span class="my-8 font-bold"
 					>Sold by <a

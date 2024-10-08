@@ -174,7 +174,7 @@
 
 	<Separator class={'my-4'} />
 
-	<div class="grid grid-cols-2 md:grid-cols-3 gap-2 mt-8">
+	<div class="grid grid-cols-1 md:grid-cols-2 gap-2 mt-8">
 		{#each $productQueryResults as query}
 			{#if query.isLoading}
 				<p>Loading...</p>
