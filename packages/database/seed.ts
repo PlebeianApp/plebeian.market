@@ -522,20 +522,40 @@ const main = async () => {
 
 	const productImagesData = productData.flat(2).map((product) => {
 		const images = randomLengthArrayFromTo(0, 4).map((_, index) => {
+			// Randomly choose an aspect ratio
+			const aspectRatio = faker.helpers.arrayElement(['square', 'portrait', 'landscape']);
+			let width, height;
+
+			switch (aspectRatio) {
+				case 'square':
+					width = height = faker.number.int({ min: 300, max: 600 });
+					break;
+				case 'portrait':
+					width = faker.number.int({ min: 300, max: 400 });
+					height = faker.number.int({ min: 500, max: 800 });
+					break;
+				case 'landscape':
+					width = faker.number.int({ min: 500, max: 800 });
+					height = faker.number.int({ min: 300, max: 400 });
+					break;
+			}
+
 			return {
 				productId: product.id,
 				auctionId: null,
 				imageUrl: faker.image.urlLoremFlickr({
 					category: 'product',
+					width: width,
+					height: height,
 				}),
 				imageType: 'gallery',
 				imageOrder: index,
 				createdAt: faker.date.recent(),
 				updatedAt: faker.date.future(),
-			} as ProductImage
-		})
-		return images
-	})
+			} as ProductImage;
+		});
+		return images;
+	});
 
 	const userStallsEvents = userStalls.flatMap((stallList) =>
 		stallList.map(
