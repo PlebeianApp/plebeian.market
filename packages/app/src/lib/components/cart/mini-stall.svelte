@@ -8,15 +8,15 @@
 	import Spinner from '../assets/spinner.svelte'
 	import { Button } from '../ui/button'
 
-	export let stallId: string
+	export let stallCoordinate: string
 	export let mode: 'edit' | 'view' = 'edit'
-	$: stallQuery = createStallQuery(stallId)
-	$: currentShippingMethodId = $cart.stalls[stallId]?.shippingMethodId || null
+	$: stallQuery = createStallQuery(stallCoordinate)
+	$: currentShippingMethodId = $cart.stalls[stallCoordinate]?.shippingMethodId || null
 
 	function handleShippingMethodSelect(methodId: string) {
 		const selectedMethod = $stallQuery.data?.stall?.shipping?.find((m) => m.id === methodId)
 		if (selectedMethod) {
-			cart.setShippingMethod(stallId, selectedMethod)
+			cart.setShippingMethod(stallCoordinate, selectedMethod)
 		}
 	}
 

@@ -14,7 +14,7 @@ type IdType = StallCoordinatesType | ProductCoordinatesType | null
 export const drawerUI = writable<{
 	drawerType: DraweUiType
 	id: IdType
-	forStall: StallCoordinatesType | null
+	forStall: string | null
 }>({
 	drawerType: null,
 	id: null,
@@ -27,7 +27,7 @@ const handleUserNotLoggedIn = (action: string) => {
 	toast.error(`You need to be logged in to ${action}`)
 }
 
-const setDrawerState = (state: { drawerType: DraweUiType; id: IdType; forStall: StallCoordinatesType | null }) => {
+const setDrawerState = (state: { drawerType: DraweUiType; id: IdType; forStall: string | null }) => {
 	drawerUI.set(state)
 }
 
@@ -80,7 +80,7 @@ export const openDrawerForStall = (stallId: string) => {
 	setDrawerState({ drawerType: 'stall', id, forStall: null })
 }
 
-export const openDrawerForProduct = (productId: string, stallId?: StallCoordinatesType) => {
+export const openDrawerForProduct = (productId: string, stallId?: string) => {
 	const currentNdkStore = get(ndkStore)
 	if (!isUserLoggedIn(currentNdkStore)) {
 		handleUserNotLoggedIn('view a product')

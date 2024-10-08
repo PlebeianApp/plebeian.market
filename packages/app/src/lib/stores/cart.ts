@@ -486,7 +486,7 @@ export const userCartTotalInSats = derived<typeof cart, Record<string, number>>(
 	debouncedCalculate()
 })
 
-export function handleAddToCart(userId: string, stallCoordinates: StallCoordinatesType, product: Partial<DisplayProduct> | null) {
+export function handleAddToCart(userId: string, stallCoordinates: string, product: Partial<DisplayProduct> | null) {
 	if (!product) return
 	const currentCart = get(cart)
 	const currentAmount = currentCart.products[product.id ?? '']?.amount || 0

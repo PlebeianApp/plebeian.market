@@ -1,13 +1,13 @@
 <script lang="ts">
+	import type { EventCoordinates } from '$lib/interfaces'
 	import type { DisplayProduct } from '$lib/server/products.service'
-	import type { ProductCoordinatesType, StallCoordinatesType } from '$lib/stores/drawer-ui'
 	import * as Card from '$lib/components/ui/card/index.js'
 	import { KindProducts, KindStalls } from '$lib/constants'
 	import { createCurrencyConversionQuery } from '$lib/fetch/products.queries'
 	import { handleAddToCart } from '$lib/stores/cart'
 	import { openDrawerForProduct } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
-	import { formatSats, stringToHexColor } from '$lib/utils'
+	import { formatSats, parseCoordinatesString, stringToHexColor } from '$lib/utils'
 
 	import Spinner from '../assets/spinner.svelte'
 	import { Button } from '../ui/button'
@@ -18,12 +18,10 @@
 	let { images, name, currency, price, userNip05, identifier, id, userId, quantity } = product
 
 	let isMyProduct = false
-	const stallCoordinates: StallCoordinatesType = !product.stallId?.startsWith(String(KindStalls))
-		? (`${KindStalls}:${userId}:${product.stallId}` as StallCoordinatesType)
-		: (product.stallId as StallCoordinatesType)
-	const productCoordinates: ProductCoordinatesType = !id?.startsWith(String(KindProducts))
-		? (`${KindProducts}:${userId}:${id}` as ProductCoordinatesType)
-		: (id as ProductCoordinatesType)
+
+	const stallCoordinates: Partial<EventCoordinates> = parseCoordinatesString(`${KindStalls}:${userId}:${product.stallId}`)
+	const productCoordinates: Partial<EventCoordinates> = parseCoordinatesString(`${KindProducts}:${userId}:${id}`)
+
 	$: priceQuery = createCurrencyConversionQuery(String(currency), Number(price))
 	$: isMyProduct = $ndkStore.activeUser?.pubkey ? $ndkStore.activeUser.pubkey === userId : false
 	let imageLoadError = false
@@ -41,7 +39,7 @@
 			<span style={`color:${stringToHexColor(String(name || identifier))}`} class="i-mdi-package-variant-closed w-16 h-16" />
 		</div>
 	{/if}
-	<a href={userNip05 ? `/products/${userNip05}/${identifier}` : `/products/${productCoordinates}`}>
+	<a href={userNip05 ? `/products/${userNip05}/${identifier}` : `/products/${productCoordinates.coordinates}`}>
 		<Card.Footer class="cursor-pointer">
 			<div class="flex flex-col justify-between items-start w-full gap-2">
 				<div class="flex-grow">
@@ -77,7 +75,7 @@
 			class="flex flex-col gap-2 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-black font-bold opacity-0 transition-opacity duration-300 group-hover:opacity-100"
 		>
 			<Button
-				on:click={() => openDrawerForProduct(productCoordinates, stallCoordinates)}
+				on:click={() => openDrawerForProduct(String(productCoordinates.coordinates), String(stallCoordinates.coordinates))}
 				class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white text-black font-bold opacity-0 transition-opacity duration-300 group-hover:opacity-100"
 			>
 				Edit product
@@ -86,7 +84,7 @@
 	{:else if userId}
 		<Button
 			class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white text-black font-bold opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-			on:click={() => handleAddToCart(userId, stallCoordinates, product)}>Add to cart</Button
+			on:click={() => handleAddToCart(userId, String(stallCoordinates.coordinates), product)}>Add to cart</Button
 		>
 	{/if}
 </Card.Root>

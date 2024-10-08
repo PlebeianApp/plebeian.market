@@ -44,7 +44,7 @@ const resolveUser = async (user: User): Promise<RichUser> => {
 		}
 	}
 }
-// TODO: Use profile event (k:0) to create a user... Waiting for ndk bump
+// TODO: Use profile event (k:0) to create a user... use ndk storeProfile prop
 export const getAllUsers = async (filter: UsersFilter = usersFilterSchema.parse({})): Promise<User[]> => {
 	try {
 		const orderBy = {
