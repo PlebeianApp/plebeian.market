@@ -1,9 +1,8 @@
 <script lang="ts">
 	import type { CartProduct, CartStall, CartUser } from '$lib/stores/cart'
-	import { KindStalls } from '$lib/constants'
 	import { v4VForUserQuery } from '$lib/fetch/v4v.queries'
 	import { cart } from '$lib/stores/cart'
-	import { formatSats } from '$lib/utils'
+	import { formatSats, parseCoordinatesString } from '$lib/utils'
 	import { createEventDispatcher, onDestroy } from 'svelte'
 
 	import Separator from '../ui/separator/separator.svelte'
@@ -69,10 +68,7 @@
 	{#each user.stalls as stallId}
 		{@const stall = stalls[stallId]}
 		<div class="stall">
-			<MiniStall
-				stallId={stallId.split(':').length !== 3 ? `${KindStalls}:${user.pubkey}:${stallId}` : stallId}
-				mode={mode === 'success' ? 'view' : undefined}
-			/>
+			<MiniStall stallCoordinate={parseCoordinatesString(stallId).coordinates || ''} mode={mode === 'success' ? 'view' : undefined} />
 			<!-- TODO: Improve shipping visualization for products with shipping cost 0 and extra cost -->
 			{#each stall.products as productId}
 				{@const product = products[productId]}

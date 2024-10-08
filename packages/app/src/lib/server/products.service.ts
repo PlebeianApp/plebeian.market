@@ -1,12 +1,13 @@
 import type { NostrEvent } from '@nostr-dev-kit/ndk'
 import type { ProductsFilter } from '$lib/schema'
 import { error } from '@sveltejs/kit'
-import { KindStalls, standardDisplayDateFormat } from '$lib/constants'
+import { KindProducts, KindStalls, standardDisplayDateFormat } from '$lib/constants'
 import { productsFilterSchema } from '$lib/schema'
 import { getImagesByProductId } from '$lib/server/productImages.service'
-import { customTagValue, getEventCoordinates } from '$lib/utils'
+import { customTagValue, getEventCoordinates, parseCoordinatesString } from '$lib/utils'
 import { format } from 'date-fns'
 
+import type { Product, ProductImage, ProductMeta, ProductShipping, ProductTypes } from '@plebeian/database'
 import {
 	and,
 	asc,
@@ -21,17 +22,12 @@ import {
 	getTableColumns,
 	inArray,
 	like,
-	Product,
 	PRODUCT_IMAGES_TYPE,
 	PRODUCT_META,
-	ProductImage,
 	productImages,
-	ProductMeta,
 	productMeta,
 	products,
-	ProductShipping,
 	productShipping,
-	ProductTypes,
 	sql,
 } from '@plebeian/database'
 
@@ -73,7 +69,7 @@ export const toDisplayProduct = async (product: Product): Promise<DisplayProduct
 		currency: product.currency,
 		quantity: product.quantity,
 		images: images,
-		stallId: product.stallId.startsWith(KindStalls.toString()) ? product.stallId.split(':')[2] : product.stallId,
+		stallId: parseCoordinatesString(product.stallId).tagD!,
 		shipping,
 		categories: categories.map((c) => c.tagValue),
 	}
@@ -190,10 +186,12 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 				})
 
 				if (!success) {
+					console.error(`createProducts: Failed to parse product event ${productEvent.id}: ${parseError}`)
 					error(500, { message: `${parseError}` })
 				}
 
 				if (!parsedProduct) {
+					console.error(`createProducts: Invalid product schema for event ${productEvent.id}`)
 					throw Error('Bad product schema')
 				}
 
@@ -204,10 +202,11 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 				const stall = await stallExists(stallId)
 
 				if (!stall) {
+					console.error(`createProducts: Stall not found for event ${productEvent.id}`)
 					throw Error('Stall not found')
 				}
 
-				const parentId = customTagValue(productEvent.tags, 'a')[0] || null
+				const parentId = customTagValue(productEvent.tags, 'a').find((tag) => tag.startsWith(KindProducts.toString())) || null
 
 				const extraCost = parsedProduct.shipping?.length ? parsedProduct.shipping[0].cost : 0
 
@@ -254,6 +253,7 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 					imageType: 'gallery',
 					imageOrder: index + 1,
 				}))
+
 				await db.insert(events).values({
 					id: eventCoordinates.coordinates,
 					author: productEvent.pubkey,
@@ -274,25 +274,29 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 				if (insertProductImages?.length) {
 					await db.insert(productImages).values(insertProductImages).returning()
 				}
+
 				if (parsedProduct.shipping?.length) {
 					const validShipping = parsedProduct.shipping.filter((s) => s.id && parseFloat(String(s.cost)))
 					if (validShipping.length) {
 						for (const s of validShipping) {
 							try {
+								const shippingCoordinates =
+									s.id.split(':').length > 1 ? s.id : createShippingCoordinates(s.id, String(stallId.split(':').pop()))
 								await db
 									.insert(productShipping)
 									.values({
 										cost: s.cost!,
-										shippingId: createShippingCoordinates(s.id, String(stallId.split(':').pop())),
+										shippingId: shippingCoordinates,
 										productId: eventCoordinates!.coordinates!,
 									})
 									.returning()
 							} catch (e) {
-								console.warn('Catching error when inserting productShipping for:', eventCoordinates!.coordinates!, e)
+								console.error(`createProducts: Failed to insert product shipping for ${productResult[0].id}: ${e}`)
 							}
 						}
 					}
 				}
+
 				if (productEvent.tags.length) {
 					await db
 						.insert(eventTags)
@@ -316,19 +320,21 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 				if (productResult[0]) {
 					return toDisplayProduct(productResult[0])
 				} else {
+					console.error(`createProducts: Failed to create product ${insertProduct.id}`)
 					throw Error('Failed to create product')
 				}
 			} catch (e) {
+				console.error(`createProducts: Error processing product event ${productEvent.id}: ${e}`)
 				throw Error(`${e}`)
 			}
 		})
 		const results = await Promise.all(productPromises)
 		return results
 	} catch (e) {
+		console.error(`createProducts: Failed to create products: ${e}`)
 		error(500, { message: `Failed to create products: ${e}` })
 	}
 }
-
 export const updateProduct = async (productId: string, productEvent: NostrEvent): Promise<DisplayProduct | null> => {
 	try {
 		return await db.transaction(async (tx) => {
@@ -415,11 +421,13 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 					await tx.insert(productShipping).values(
 						parsedProductData.shipping.map((shipping) => ({
 							cost: shipping.cost!,
-							shippingId: createShippingCoordinates(shipping.id, String(stallId.split(':').pop())),
+							shippingId:
+								shipping.id.split(':').length > 1 ? shipping.id : createShippingCoordinates(shipping.id, String(stallId.split(':').pop())),
 							productId: productId,
 						})),
 					)
 				} catch (e) {
+					console.error(e)
 					await tx.insert(productShipping).values(
 						parsedProductData.shipping.map((shipping) => ({
 							cost: shipping.cost!,
@@ -429,7 +437,6 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 					)
 				}
 			}
-
 			await tx.delete(eventTags).where(eq(eventTags.eventId, eventCoordinates?.coordinates as string))
 
 			if (productEvent.tags.length > 0) {

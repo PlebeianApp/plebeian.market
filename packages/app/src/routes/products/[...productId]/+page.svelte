@@ -13,7 +13,7 @@
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
 	import { handleAddToCart } from '$lib/stores/cart'
 	import { openDrawerForProduct } from '$lib/stores/drawer-ui'
-	import { cn, formatSats, stringToHexColor, truncateText } from '$lib/utils'
+	import { cn, formatSats, parseCoordinatesString, stringToHexColor, truncateText } from '$lib/utils'
 
 	import type { PageData } from './$types'
 
@@ -31,10 +31,7 @@
 
 	$: productsQuery = createProductQuery(productRes.id)
 	$: userProfileQuery = user.id ? createUserByIdQuery(user.id) : null
-	$: stallCoordinates = !$productsQuery.data?.stallId?.startsWith(String(KindStalls))
-		? (`${KindStalls}:${user.id}:${$productsQuery.data?.stallId}` as StallCoordinatesType)
-		: ($productsQuery.data?.stallId as StallCoordinatesType)
-
+	$: stallCoordinates = parseCoordinatesString(`${KindStalls}:${user.id}:${$productsQuery.data?.stallId}`).coordinates
 	$: priceQuery = createCurrencyConversionQuery($productsQuery.data?.currency as string, $productsQuery.data?.price as number)
 
 	$: otherProducts = user.id ? createProductsByFilterQuery({ userId: user.id, pageSize: 3 }) : null
@@ -145,7 +142,9 @@
 					>
 						<span class="i-mdi-plus w-4 h-4"></span>
 					</Button>
-					<Button class="ml-2" on:click={() => handleAddToCart(String($productsQuery.data?.userId), stallCoordinates, $productsQuery.data)}
+					<Button
+						class="ml-2"
+						on:click={() => handleAddToCart(String($productsQuery.data?.userId), String(stallCoordinates), $productsQuery.data)}
 						>Add to cart</Button
 					>
 				</div>

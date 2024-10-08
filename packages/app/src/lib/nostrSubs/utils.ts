@@ -21,15 +21,15 @@ import { productEventSchema, shippingObjectSchema, stallEventSchema } from '../.
 import { stallsSub } from './subs'
 
 export async function fetchStallData(
-	stallId: string,
+	stallCoordinate: string,
 	subCacheUsage?: NDKSubscriptionCacheUsage,
 ): Promise<{
 	stallNostrRes: NDKEvent | null
 }> {
 	const $stallsSub = get(stallsSub)
 	const $ndkStore = get(ndkStore)
-	const [_, userId, stallIdentifier] = stallId.split(':')
-	const fetchedStall = $stallsSub.find((nostrStall) => stallId.split(':')[2] == nostrStall.dTag)
+	const [_, userId, stallIdentifier] = stallCoordinate.split(':')
+	const fetchedStall = $stallsSub.find((nostrStall) => stallCoordinate.split(':')[2] == nostrStall.dTag)
 	const stallFilter = {
 		kinds: [KindStalls],
 		authors: [userId],

@@ -15,6 +15,7 @@
 	import { createProductMutation, deleteProductMutation, editProductMutation } from '$lib/fetch/products.mutations'
 	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
 	import ndkStore from '$lib/stores/ndk'
+	import { prepareProductData, validateProduct } from '$lib/utils/product.utils'
 	import { createEventDispatcher, onMount } from 'svelte'
 	import { toast } from 'svelte-sonner'
 
@@ -87,11 +88,13 @@
 	function addCategory() {
 		categories = [...categories, { key: createId(), name: `category ${categories.length + 1}`, checked: true }]
 	}
+
 	async function handleSubmit(sEvent: SubmitEvent, stall: Partial<RichStall> | null) {
 		if (!stall) return
 		isLoading = true
 
 		try {
+			const formData = new FormData(sEvent.currentTarget as HTMLFormElement)
 			const shippingData = currentShippings
 				.filter((method) => method.shipping !== null && method.shipping.id !== undefined)
 				.map((method) => ({
@@ -99,10 +102,20 @@
 					cost: method.extraCost,
 				}))
 
+			const productData = prepareProductData(formData, stall, sortedImages, shippingData, product!)
+			const validationResult = validateProduct(productData)
+
+			if (!validationResult.success || !validationResult.data) {
+				validationResult.errors?.forEach((error) => toast.error(error))
+				return
+			}
+
+			const categoriesData = categories.filter((c) => c.checked).map((c) => c.name)
+
 			if (product) {
-				await $editProductMutation.mutateAsync([sEvent, product, sortedImages, shippingData, categories.filter((c) => c.checked)] as const)
+				await $editProductMutation.mutateAsync({ product: validationResult.data, categories: categoriesData })
 			} else {
-				await $createProductMutation.mutateAsync([sEvent, stall, sortedImages, shippingData, categories] as const)
+				await $createProductMutation.mutateAsync({ product: validationResult.data, categories: categoriesData })
 			}
 
 			toast.success(`Product ${product ? 'updated' : 'created'}!`)
@@ -114,6 +127,7 @@
 		}
 		isLoading = false
 	}
+
 	onMount(() => {
 		if (product?.categories?.length) {
 			categories = product.categories.map((categoryName) => ({
@@ -124,7 +138,7 @@
 		}
 		if (product?.shipping && stall?.shipping) {
 			currentShippings = product.shipping.map((sh) => {
-				const stallShipping = stall?.shipping?.find((s) => s.id == sh.shippingId.split(':')[0])
+				const stallShipping = stall?.shipping?.find((s) => s.id == sh.shippingId)
 				return {
 					shipping: stallShipping ?? null,
 					extraCost: sh.cost ?? '',
@@ -214,7 +228,7 @@
 
 				<div class="flex gap-1.5">
 					<div class="grid w-full items-center gap-1.5">
-						<Label for="from" class="font-bold">Stall</Label>
+						<Label for="product-stall" class="font-bold">Stall</Label>
 						<DropdownMenu.Root>
 							<DropdownMenu.Trigger asChild let:builder>
 								<Button
@@ -250,7 +264,7 @@
 						</DropdownMenu.Root>
 					</div>
 					<div class="grid w-full items-center gap-1.5">
-						<Label for="from" class="font-bold">Currency</Label>
+						<Label for="product-currency" class="font-bold">Currency</Label>
 						<Input
 							data-tooltip="This is inherited from the stall's currency"
 							value={stall?.currency}
@@ -295,7 +309,7 @@
 			<Tabs.Content value="shipping" class="flex flex-col gap-2 p-2">
 				{#each currentShippings as shippingMethod (shippingMethod.shipping?.id)}
 					<div class="grid w-full items-center gap-1.5">
-						<Label for="from" class="font-bold">Shipping Method</Label>
+						<Label for="stall-shippings" class="font-bold">Shipping Method</Label>
 						<DropdownMenu.Root>
 							<DropdownMenu.Trigger asChild let:builder>
 								<Button variant="outline" class="border-2 border-black" builders={[builder]}>
@@ -324,7 +338,9 @@
 						</DropdownMenu.Root>
 
 						<div class="grid w-full items-center gap-1.5">
-							<Label for="from" class="font-bold required-mark">Extra cost <small class="font-light">(in {stall?.currency})</small></Label>
+							<Label for="product-extracost" class="font-bold required-mark"
+								>Extra cost <small class="font-light">(in {stall?.currency})</small></Label
+							>
 							<Input
 								data-tooltip="The cost of the product, which will be added to the method's base cost"
 								value={shippingMethod.extraCost}

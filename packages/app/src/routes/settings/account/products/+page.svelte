@@ -6,18 +6,18 @@
 	import { Skeleton } from '$lib/components/ui/skeleton'
 	import { createProductsByFilterQuery } from '$lib/fetch/products.queries'
 	import { fetchUserProductData, normalizeProductsFromNostr } from '$lib/nostrSubs/utils'
+	import ndkStore from '$lib/stores/ndk'
 	import { mergeWithExisting, nav_back } from '$lib/utils'
 	import { onMount } from 'svelte'
 
 	import type { PageData } from './$types'
 
 	export let data: PageData
-	const { activeUser } = data
 	let toDisplayProducts: Partial<DisplayProduct>[] = []
 	let productsMode: 'list' | 'create' | 'edit' = 'list'
 
 	$: productsQuery = createProductsByFilterQuery({
-		userId: activeUser?.id,
+		userId: $ndkStore?.activeUser?.pubkey,
 		pageSize: 100,
 	})
 	$: productsMixture = mergeWithExisting($productsQuery?.data?.products ?? [], toDisplayProducts, 'id')
@@ -36,11 +36,11 @@
 		}
 	}
 	onMount(async () => {
-		if (!activeUser?.id) return
-		const { products: productsData } = await fetchUserProductData(activeUser.id)
+		if (!$ndkStore?.activeUser?.pubkey) return
+		const { products: productsData } = await fetchUserProductData($ndkStore?.activeUser?.pubkey)
 
 		if (productsData?.size) {
-			const normalizedProducts = await normalizeProductsFromNostr(productsData, activeUser.id)
+			const normalizedProducts = await normalizeProductsFromNostr(productsData, $ndkStore?.activeUser?.pubkey)
 			toDisplayProducts = normalizedProducts?.toDisplayProducts ?? []
 		}
 	})

@@ -4,9 +4,10 @@ import type { StallsFilter } from '$lib/schema'
 import { error } from '@sveltejs/kit'
 import { KindStalls, standardDisplayDateFormat } from '$lib/constants'
 import { stallsFilterSchema } from '$lib/schema'
-import { customTagValue, getEventCoordinates } from '$lib/utils'
+import { customTagValue, getEventCoordinates, parseCoordinatesString } from '$lib/utils'
 import { format } from 'date-fns'
 
+import type { PaymentDetail, Shipping, Stall } from '@plebeian/database'
 import {
 	and,
 	asc,
@@ -19,14 +20,11 @@ import {
 	getTableColumns,
 	inArray,
 	like,
-	PaymentDetail,
 	paymentDetails,
 	products,
-	Shipping,
 	shipping,
 	shippingZones,
 	sql,
-	Stall,
 	stalls,
 	users,
 } from '@plebeian/database'
@@ -153,7 +151,7 @@ const resolveStalls = async (stall: Stall): Promise<RichStall> => {
 		// orderCount,
 		paymentMethods,
 		image: image?.tagValue ?? undefined,
-		identifier: stall.id.split(':')[2],
+		identifier: parseCoordinatesString(stall.id).tagD!,
 		shipping: shippingInfo,
 		geohash: geo?.tagValue ?? undefined,
 	}

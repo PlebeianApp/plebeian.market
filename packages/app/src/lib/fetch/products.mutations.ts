@@ -1,16 +1,14 @@
 import type { NostrEvent } from '@nostr-dev-kit/ndk'
 import type { DisplayProduct } from '$lib/server/products.service'
-import type { RichStall } from '$lib/server/stalls.service'
+import type { z } from 'zod'
 import { NDKEvent } from '@nostr-dev-kit/ndk'
 import { createMutation } from '@tanstack/svelte-query'
 import { KindProducts, KindStalls } from '$lib/constants'
 import ndkStore from '$lib/stores/ndk'
-import { shouldRegister, unixTimeNow } from '$lib/utils'
+import { parseCoordinatesString, shouldRegister, unixTimeNow } from '$lib/utils'
 import { get } from 'svelte/store'
 
-import type { ProductImage } from '@plebeian/database'
-import { createSlugId } from '@plebeian/database/utils'
-
+import type { productEventSchema } from '../../schema/nostr-events'
 import { createRequest, queryClient } from './client'
 
 declare module './client' {
@@ -25,47 +23,24 @@ export type Category = { key: string; name: string; checked: boolean }
 
 export const createProductMutation = createMutation(
 	{
-		mutationFn: async ([sEvent, stall, images, shippingMethods, categories]: [
-			SubmitEvent,
-			Partial<RichStall>,
-			Partial<ProductImage>[],
-			{
-				id: string
-				cost: string
-			}[],
-			Category[],
-		]) => {
+		mutationFn: async ({ product, categories }: { product: z.infer<typeof productEventSchema>; categories: string[] }) => {
 			const $ndkStore = get(ndkStore)
 			if (!$ndkStore.activeUser?.pubkey) return
-			const formData = new FormData(sEvent.currentTarget as HTMLFormElement)
-			const productTile = String(formData.get('title'))
-			const productDescription = String(formData.get('description'))
-			const productPrice = Number(formData.get('price'))
-			const productQty = Number(formData.get('quantity'))
-			const identifier = createSlugId(productTile)
-			const eventImages = images.map((image) => image.imageUrl).filter((url): url is string => url !== null && url !== undefined)
-
+			const stallCoordinates = parseCoordinatesString(`${KindStalls}:${$ndkStore.activeUser.pubkey}:${product.stallId}`)
 			const evContent = {
-				id: identifier,
-				stall_id: stall?.id?.split(':').length == 3 ? stall.id.split(':')[2] : stall.id,
-				name: productTile,
-				description: productDescription,
-				images: eventImages,
-				price: productPrice,
-				quantity: productQty,
-				shipping: shippingMethods,
-				currency: stall.currency,
+				...product,
+				stall_id: stallCoordinates.tagD!,
 			}
+
 			const newEvent = new NDKEvent($ndkStore, {
 				kind: KindProducts,
 				pubkey: $ndkStore.activeUser.pubkey,
 				content: JSON.stringify(evContent),
 				created_at: unixTimeNow(),
-				tags: [['d', identifier], ...categories.map((c) => ['t', c.name])],
+				tags: [['d', product.id!], ...categories.map((c) => ['t', c]), ['a', stallCoordinates.coordinates!]],
 			})
-
+			console.log(newEvent.tags)
 			await newEvent.sign()
-			// await newEvent.publish().then((d) => console.log(d))
 			const _shouldRegister = await shouldRegister(undefined, undefined, $ndkStore.activeUser.pubkey)
 			if (_shouldRegister) {
 				const response = get(createProductsFromNostrMutation).mutateAsync(new Set([newEvent]))
@@ -86,49 +61,30 @@ export const createProductMutation = createMutation(
 
 export const editProductMutation = createMutation(
 	{
-		mutationFn: async ([sEvent, product, images, shippingMethods, categories]: [
-			SubmitEvent,
-			Partial<DisplayProduct>,
-			Partial<ProductImage>[],
-			{
-				id: string
-				cost: string
-			}[],
-			Category[],
-		]) => {
+		mutationFn: async ({ product, categories }: { product: z.infer<typeof productEventSchema>; categories: string[] }) => {
 			const $ndkStore = get(ndkStore)
 			if (!$ndkStore.activeUser?.pubkey || !product.id) return
-			const formData = new FormData(sEvent.currentTarget as HTMLFormElement)
-			const productTile = String(formData.get('title'))
-			const productDescription = String(formData.get('description'))
-			const productPrice = Number(formData.get('price'))
-			const productQty = Number(formData.get('quantity'))
-			const identifier = product.id.split(':')[2]
-			const eventImages = images.map((image) => image.imageUrl).filter((url): url is string => url !== null && url !== undefined)
 
-			const stallCoordinates =
-				product?.stallId?.split(':').length == 3 ? product?.stallId : `${KindStalls}:${product.userId}:${product?.stallId}`
+			const stallCoordinates = parseCoordinatesString(`${KindStalls}:${$ndkStore.activeUser.pubkey}:${product.stallId}`)
+			const productCoordinates = parseCoordinatesString(product.id)
+
 			const evContent = {
-				id: identifier,
-				stall_id: product?.stallId?.split(':').length == 3 ? product?.stallId.split(':')[2] : product?.stallId,
-				name: productTile,
-				description: productDescription,
-				images: eventImages,
-				price: productPrice,
-				quantity: productQty,
-				shipping: shippingMethods,
-				currency: product?.currency,
+				...product,
+				stall_id: parseCoordinatesString(product.stallId!).tagD,
 			}
+
 			const newEvent = new NDKEvent($ndkStore, {
 				kind: KindProducts,
 				pubkey: $ndkStore.activeUser.pubkey,
 				content: JSON.stringify(evContent),
 				created_at: unixTimeNow(),
-				tags: [['d', identifier], ...categories.map((c) => ['t', c.name]), ...(product?.stallId ? [['a', stallCoordinates]] : [])],
+				tags: [
+					['d', productCoordinates.tagD!],
+					...categories.map((c) => ['t', c]),
+					...(stallCoordinates.coordinates ? [['a', stallCoordinates.coordinates!]] : []),
+				],
 			})
-
 			await newEvent.sign()
-			// await newEvent.publish().then((d) => console.log(d))
 			const nostrEvent = await newEvent.toNostrEvent()
 			const _shouldRegister = await shouldRegister(undefined, undefined, $ndkStore.activeUser.pubkey)
 			if (_shouldRegister) {

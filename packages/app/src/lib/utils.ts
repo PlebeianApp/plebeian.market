@@ -106,12 +106,50 @@ export function decimalToPercentage(value: number): number {
 	return Number((value * 100).toPrecision(2))
 }
 
+export function parseCoordinatesString(input: string): Partial<EventCoordinates> {
+	const parts = input.split(':')
+	const result: Partial<EventCoordinates> = {
+		tagD: input,
+	}
+
+	if (parts.length >= 3) {
+		let tagDIndex = parts.length - 1
+		while (tagDIndex >= 0 && !parts[tagDIndex]) {
+			tagDIndex--
+		}
+		if (tagDIndex >= 0) {
+			result.tagD = parts[tagDIndex]
+		}
+
+		for (let i = 0; i < tagDIndex; i++) {
+			const part = parts[i]
+			if (!result.kind) {
+				const kindNumber = Number(part)
+				if (!isNaN(kindNumber) && kindNumber >= 30000 && kindNumber < 40000) {
+					result.kind = kindNumber
+					continue
+				}
+			}
+			if (!result.pubkey && HEX_KEYS_REGEX.test(part)) {
+				result.pubkey = part
+			}
+		}
+
+		if (result.kind && result.pubkey && result.tagD) {
+			result.coordinates = `${result.kind}:${result.pubkey}:${result.tagD}`
+		}
+	}
+
+	return result
+}
+
 export function getEventCoordinates(event: NostrEvent | VerifiedEvent | NDKEvent): EventCoordinates | null {
 	const { kind, pubkey, tags } = event
 
-	const [_, tagD] = tags.find(([key]) => key === 'd') ?? []
+	const dTag = tags.find(([key]) => key === 'd')
+	const tagD = dTag?.[1]
 
-	if (!event || !kind || kind < 30000 || kind >= 40000 || !pubkey || !tagD) {
+	if (!kind || kind < 30000 || kind >= 40000 || !pubkey || !tagD) {
 		console.warn(
 			!kind
 				? 'No kind found in event'
@@ -123,16 +161,23 @@ export function getEventCoordinates(event: NostrEvent | VerifiedEvent | NDKEvent
 							? 'Event object missing "d" tag'
 							: 'Unknown error in getEventCoordinates',
 		)
-		console.warn('Event id:', event?.id, 'Event pubkey', event?.pubkey)
+		console.warn('Event id:', event.id, 'Event pubkey', event.pubkey)
 		return null
 	}
 
-	return {
-		coordinates: `${kind}:${pubkey}:${tagD}`,
-		kind: kind,
-		pubkey: pubkey,
-		tagD: tagD,
+	const coordinatesString = `${kind}:${pubkey}:${tagD}`
+	const parsedCoordinates = parseCoordinatesString(coordinatesString)
+
+	if (parsedCoordinates.coordinates && parsedCoordinates.tagD) {
+		return {
+			coordinates: parsedCoordinates.coordinates,
+			kind,
+			pubkey,
+			tagD: parsedCoordinates.tagD,
+		}
 	}
+
+	return null
 }
 
 export function customTagValue(eventTags: NDKTag[], key: string, thirdValue?: string): string[] {
