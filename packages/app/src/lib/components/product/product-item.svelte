@@ -30,17 +30,19 @@
 
 <!-- TODO: Improve items without stock visualization -->
 <Card.Root class="relative grid grid-rows-[1fr_auto] border-2 border-black bg-transparent text-black group">
-	{#if images?.length && !imageLoadError}
-		{@const mainImage = images.find((img) => img.imageOrder === 0) || images[0]}
-		<div class="relative flex items-center justify-center p-2" style="aspect-ratio: 16/9;">
-			<img class="object-cover w-full h-full" src={mainImage.imageUrl} alt="" on:error={() => (imageLoadError = true)} />
-		</div>
-	{:else}
-		<div class="flex items-center justify-center p-2">
-			<span style={`color:${stringToHexColor(String(name || identifier))}`} class="i-mdi-package-variant-closed w-16 h-16" />
-		</div>
-	{/if}
-	<a href={userNip05 ? `/products/${userNip05}/${identifier}` : `/products/${productCoordinates.coordinates}`}>
+	<Card.CardContent>
+		{#if images?.length && !imageLoadError}
+			{@const mainImage = images.find((img) => img.imageOrder === 0) || images[0]}
+			<div class="relative flex items-center justify-center p-2" style="aspect-ratio:10/9;">
+				<img class="object-cover w-auto h-full" src={mainImage.imageUrl} alt="" on:error={() => (imageLoadError = true)} />
+			</div>
+		{:else}
+			<div class="flex items-center justify-center p-2 min-h-64 h-full">
+				<span style={`color:${stringToHexColor(String(name || identifier))}`} class="i-mdi-package-variant-closed w-16 h-16" />
+			</div>
+		{/if}
+	</Card.CardContent>
+	<a href={userNip05 ? `/products/${userNip05}/${identifier}` : `/products/${productCoordinates}`}>
 		<Card.Footer class="cursor-pointer">
 			<div class="flex flex-col justify-between items-start w-full gap-2">
 				<div class="flex-grow">
