@@ -70,8 +70,8 @@
 						<Carousel.Root bind:api>
 							<Carousel.Content>
 								{#each sortedImages as item}
-									<Carousel.Item>
-										<img class="w-full h-auto" src={item.imageUrl} alt="" />
+									<Carousel.Item class="flex items-center justify-center">
+										<img class="h-full object-contain" src={item.imageUrl} alt="" />
 									</Carousel.Item>
 								{/each}
 							</Carousel.Content>
@@ -85,7 +85,7 @@
 										class={cn('w-32 object-cover aspect-square cursor-pointer p-1', i === current - 1 ? 'border border-primary' : null)}
 										on:click={() => api?.scrollTo(i)}
 									>
-										<img src={item.imageUrl} alt="" />
+										<img class="aspect-square object-cover" src={item.imageUrl} alt="" />
 									</button>
 								{/each}
 							</div>
