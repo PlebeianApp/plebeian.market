@@ -28,16 +28,15 @@
 	let imageLoadError = false
 </script>
 
-<!-- TODO: Improve items without stock visualization -->
 <Card.Root class="relative grid grid-rows-[1fr_auto] border-2 border-black bg-transparent text-black group">
-	<Card.CardContent>
+	<Card.CardContent class="p-2">
 		{#if images?.length && !imageLoadError}
 			{@const mainImage = images.find((img) => img.imageOrder === 0) || images[0]}
-			<div class="relative flex items-center justify-center p-2" style="aspect-ratio:10/9;">
-				<img class="object-cover w-auto h-full" src={mainImage.imageUrl} alt="" on:error={() => (imageLoadError = true)} />
+			<div class="relative flex items-center justify-center aspect-[10/9] mt-1">
+				<img class="object-cover w-full h-full" src={mainImage.imageUrl} alt="" on:error={() => (imageLoadError = true)} />
 			</div>
 		{:else}
-			<div class="flex items-center justify-center p-2 min-h-64 h-full">
+			<div class="flex items-center justify-center min-h-64 h-full">
 				<span style={`color:${stringToHexColor(String(name || identifier))}`} class="i-mdi-package-variant-closed w-16 h-16" />
 			</div>
 		{/if}
