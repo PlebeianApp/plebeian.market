@@ -24,12 +24,7 @@ export const stallsSub: NDKEventStore<ExtendedBaseType<NDKEvent>> = ndk.storeSub
 	{ closeOnEose: true, autoStart: false },
 )
 
-export const dmKind04Sub: NDKEventStore<ExtendedBaseType<NDKEvent>> = ndk.storeSubscribe(
-	{
-		kinds: [],
-	},
-	{ closeOnEose: false, autoStart: false },
-)
+export const dmKind04Sub: NDKEventStore<ExtendedBaseType<NDKEvent>> = ndk.storeSubscribe({}, { closeOnEose: false, autoStart: false })
 
 if (typeof window !== 'undefined') {
 	ndkStore.subscribe(($ndkStore) => {
