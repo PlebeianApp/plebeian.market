@@ -203,7 +203,7 @@ export const AUCTION_STATUS = {
 	ACTIVE: 'active',
 	INACTIVE: 'inactive',
 	ENDED: 'ended',
-	CANCELED: 'canceled',
+	CANCELED: 'cancelled',
 } as const
 
 export type AuctionStatus = ObjectValues<typeof AUCTION_STATUS>
@@ -224,7 +224,7 @@ export const ORDER_STATUS = {
 	CONFIRMED: 'confirmed',
 	SHIPPED: 'shipped',
 	COMPLETED: 'completed',
-	CANCELED: 'canceled',
+	CANCELED: 'cancelled',
 } as const
 
 export type OrderStatus = ObjectValues<typeof ORDER_STATUS>
@@ -287,7 +287,7 @@ export const INVOICE_STATUS = {
 	PENDING: 'pending',
 	PAID: 'paid',
 	EXPIRED: 'expired',
-	CANCELED: 'canceled',
+	CANCELED: 'cancelled',
 	REFUNDED: 'refunded',
 } as const
 

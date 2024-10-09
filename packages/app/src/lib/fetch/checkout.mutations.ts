@@ -5,7 +5,7 @@ import { createRequest, queryClient } from './client'
 
 declare module './client' {
 	interface Endpoints {
-		'POST /api/v1/checkout': Operation<string, 'POST', never, NormalizedCart, { success: boolean; result: unknown }, never>
+		'POST /api/v1/checkout': Operation<string, 'POST', never, NormalizedCart, { success: boolean }, never>
 	}
 }
 

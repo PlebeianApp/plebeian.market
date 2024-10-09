@@ -74,7 +74,7 @@ export const POST = async ({ request }) => {
 			return { insertedOrders, insertedOrderItems, insertedInvoices }
 		})
 
-		return json({ success: true, result })
+		return json({ success: true })
 	} catch (err) {
 		console.error('Error persisting orders and invoices:', err)
 		throw error(500, `Failed to persist orders and invoices: ${err}`)

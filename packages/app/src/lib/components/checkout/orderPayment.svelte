@@ -49,14 +49,13 @@
 	const v4vQuery = v4VForUserQuery(order.sellerUserId)
 	$: relevantPaymentDetails = $paymentDetails.data?.filter((payment) => payment.stallId === order.stallId || payment.stallId === null) ?? []
 	$: selectedPaymentDetail = relevantPaymentDetails[0] ?? null
-
 	$: selectedPaymentValue = selectedPaymentDetail && {
 		label: `${selectedPaymentDetail.paymentMethod} - ${selectedPaymentDetail.paymentDetails}`,
 		value: selectedPaymentDetail,
 	}
 
 	$: allPaymentsPaid =
-		paymentStatuses.length > 0 && paymentStatuses.every((status) => ['paid', 'expired', 'canceled'].includes(status.status ?? ''))
+		paymentStatuses.length > 0 && paymentStatuses.every((status) => ['paid', 'expired', 'cancelled'].includes(status.status ?? ''))
 	$: {
 		if (allPaymentsPaid) {
 			dispatch('valid', true)
@@ -112,13 +111,13 @@
 	const statusMapping: Record<NonNullable<OrderPaymentStatus>, OrderStatus> = {
 		paid: ORDER_STATUS.PAID,
 		expired: ORDER_STATUS.PENDING,
-		canceled: ORDER_STATUS.PENDING,
+		cancelled: ORDER_STATUS.PENDING,
 	}
 
 	const paymentEventToStatus: Record<string, NonNullable<OrderPaymentStatus>> = {
 		paymentComplete: 'paid',
 		paymentExpired: 'expired',
-		paymentCanceled: 'canceled',
+		paymentCancelled: 'cancelled',
 	}
 
 	function moveToNextPaymentProcessor() {
@@ -317,7 +316,7 @@
 									paymentType="merchant"
 									on:paymentComplete={handlePaymentEvent}
 									on:paymentExpired={handlePaymentEvent}
-									on:paymentCanceled={handlePaymentEvent}
+									on:paymentCancelled={handlePaymentEvent}
 								/>
 							</div>
 						</Carousel.Item>
@@ -331,7 +330,7 @@
 										paymentType={share.target}
 										on:paymentComplete={handlePaymentEvent}
 										on:paymentExpired={handlePaymentEvent}
-										on:paymentCanceled={handlePaymentEvent}
+										on:paymentCancelled={handlePaymentEvent}
 									/>
 								</div>
 							</Carousel.Item>
@@ -348,7 +347,7 @@
 				paymentType="merchant"
 				on:paymentComplete={handlePaymentEvent}
 				on:paymentExpired={handlePaymentEvent}
-				on:paymentCanceled={handlePaymentEvent}
+				on:paymentCancelled={handlePaymentEvent}
 			/>
 		{/if}
 	</div>

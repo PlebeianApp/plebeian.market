@@ -43,9 +43,9 @@ export const isAuthorizedToUpdateOrderStatus = async (orderId: string, userId: s
 	if (order.sellerUserId === userId || order.buyerUserId === userId) {
 		switch (order.status) {
 			case 'pending':
-				return newStatus === 'confirmed' || newStatus === 'canceled'
+				return newStatus === 'confirmed' || newStatus === 'cancelled'
 			case 'confirmed':
-				return newStatus === 'shipped' || newStatus === 'canceled'
+				return newStatus === 'shipped' || newStatus === 'cancelled'
 			case 'shipped':
 				return newStatus === 'completed'
 			default:

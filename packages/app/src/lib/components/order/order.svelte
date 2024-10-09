@@ -15,7 +15,7 @@
 	import type { OrderMode, OrderPaymentStatus } from './types'
 	import MiniUser from '../cart/mini-user.svelte'
 	import CheckPaymentDetail from '../common/check-payment-detail.svelte'
-	import InvoiceDeisplay from '../common/invoice-deisplay.svelte'
+	import InvoiceDisplay from '../common/invoice-display.svelte'
 	import PaymentProcessor from '../paymentProcessors/paymentProcessor.svelte'
 	import ProductItem from '../product/product-item.svelte'
 	import StallName from '../stalls/stall-name.svelte'
@@ -48,7 +48,7 @@
 	const paymentEventToStatus: Record<string, NonNullable<OrderPaymentStatus>> = {
 		paymentComplete: 'paid',
 		paymentExpired: 'expired',
-		paymentCanceled: 'canceled',
+		paymentCancelled: 'cancelled',
 	}
 
 	$: invoices = createInvoicesByFilterQuery({ orderId: order.id })
@@ -69,7 +69,7 @@
 	}
 
 	const handleCancelOrder = async (order: DisplayOrder): Promise<void> => {
-		await $updateOrderStatusMutation.mutateAsync({ orderId: order.id, status: 'canceled' })
+		await $updateOrderStatusMutation.mutateAsync({ orderId: order.id, status: 'cancelled' })
 		toast.success('Order cancelled')
 	}
 
@@ -194,7 +194,7 @@
 		<div class="space-y-4">
 			{#each $invoices.data as invoice (invoice.id)}
 				<div class="flex flex-col p-4 bg-gray-50 rounded-lg shadow transition-all duration-200 gap-3">
-					<InvoiceDeisplay {invoice} />
+					<InvoiceDisplay {invoice} />
 					{#if shouldRetry(invoice, orderMode)}
 						<DropdownMenu.Root>
 							<DropdownMenu.Trigger class="text-right"><Button class="w-32">Retry</Button></DropdownMenu.Trigger>
@@ -219,7 +219,7 @@
 								paymentType="v4v"
 								on:paymentComplete={(e) => handlePaymentEvent(e, invoice.id)}
 								on:paymentExpired={(e) => handlePaymentEvent(e, invoice.id)}
-								on:paymentCanceled={(e) => handlePaymentEvent(e, invoice.id)}
+								on:paymentCancelled={(e) => handlePaymentEvent(e, invoice.id)}
 							/>
 						{/if}
 					{/if}
@@ -234,7 +234,7 @@
 									paymentType="v4v"
 									on:paymentComplete={(e) => handlePaymentEvent(e, invoice.id)}
 									on:paymentExpired={(e) => handlePaymentEvent(e, invoice.id)}
-									on:paymentCanceled={(e) => handlePaymentEvent(e, invoice.id)}
+									on:paymentCancelled={(e) => handlePaymentEvent(e, invoice.id)}
 								/>
 							{/if}
 						{:else if invoice.invoiceStatus !== 'paid' && invoice.invoiceStatus !== 'refunded'}

@@ -94,8 +94,9 @@ export const bitcoinToSatoshis = (amountInBtc: number) => {
 	return Math.floor(amountInBtc * numSatsInBtc)
 }
 
-export const satoshisToBtc = (amountInSatoshis: number) => {
-	return Number((amountInSatoshis / numSatsInBtc).toFixed(8))
+export const satoshisToBtc = (amountInSatoshis: number): string => {
+	const btcValue = amountInSatoshis / numSatsInBtc
+	return btcValue.toFixed(8)
 }
 
 export function formatPrice(price: number): string {
@@ -510,8 +511,7 @@ export function formatSats(amount: number): string
 export function formatSats(amount: number, toDisplay: false): number
 export function formatSats(amount: number, toDisplay?: boolean): string | number {
 	const formattedAmount =
-		toDisplay === undefined || toDisplay ? amount.toLocaleString(undefined, { maximumFractionDigits: 0 }) : Math.floor(amount)
-
+		toDisplay === undefined || toDisplay ? amount.toLocaleString(undefined, { maximumFractionDigits: 0 }) : Math.round(amount)
 	return formattedAmount
 }
 

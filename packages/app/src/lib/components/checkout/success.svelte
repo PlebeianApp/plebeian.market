@@ -12,7 +12,7 @@
 
 	import Spinner from '../assets/spinner.svelte'
 	import Order from '../cart/order.svelte'
-	import InvoiceDeisplay from '../common/invoice-deisplay.svelte'
+	import InvoiceDisplay from '../common/invoice-display.svelte'
 
 	export let variant: 'singleMerchant' | 'multiMerchant'
 	export let merchant: CartUser | null = null
@@ -131,7 +131,7 @@
 					<h3 class="text-xl font-semibold mt-8 mb-4">Invoices</h3>
 					<div class="space-y-4">
 						{#each sortedInvoices as invoice (invoice.id)}
-							<InvoiceDeisplay {invoice} />
+							<InvoiceDisplay {invoice} />
 						{/each}
 					</div>
 				{/if}

@@ -96,7 +96,7 @@
 	const handleConfirmOrder = (order: DisplayOrder) => updateOrderStatus(order, 'confirmed')
 	const handleMarkAsShipped = (order: DisplayOrder) => updateOrderStatus(order, 'shipped')
 	const handleMarkAsReceived = (order: DisplayOrder) => updateOrderStatus(order, 'completed')
-	const handleCancelOrder = (order: DisplayOrder) => updateOrderStatus(order, 'canceled')
+	const handleCancelOrder = (order: DisplayOrder) => updateOrderStatus(order, 'cancelled')
 </script>
 
 <Table.Root {...$tableAttrs}>
