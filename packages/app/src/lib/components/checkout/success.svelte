@@ -1,14 +1,13 @@
 <script lang="ts">
-	import type { CartUser } from '$lib/stores/cart'
+	import type { CartUser, NormalizedCart } from '$lib/stores/cart'
 	import { goto } from '$app/navigation'
 	import { Button } from '$lib/components/ui/button'
 	import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '$lib/components/ui/card'
 	import { Separator } from '$lib/components/ui/separator'
-	import { queryClient } from '$lib/fetch/client'
+	import { persistOrdersAndInvoicesMutation } from '$lib/fetch/checkout.mutations'
 	import { cart } from '$lib/stores/cart'
-	import ndkStore from '$lib/stores/ndk'
-	import { checkIfUserExists, formatSats, shouldRegister } from '$lib/utils'
-	import { CheckCircle } from 'lucide-svelte'
+	import { checkIfUserExists, shouldRegister } from '$lib/utils'
+	import { CheckCircle, XCircle } from 'lucide-svelte'
 	import { createEventDispatcher, onMount } from 'svelte'
 
 	import Spinner from '../assets/spinner.svelte'
@@ -31,34 +30,28 @@
 		return 0
 	})
 
-	let isPersisting = false
+	let isPersisting = true
 	let error: string | null = null
 	let persistenceComplete: boolean | null = null
 
 	async function handlePersist() {
 		if (persistenceComplete) return true
-
 		isPersisting = true
 		error = null
 
 		try {
-			const cartData = JSON.stringify({ orders, invoices })
-			const formData = new FormData()
-			formData.append('cartData', cartData)
-			// FIXME: Error when attempting to persist orders and invoices in vps deployment. Error: SyntaxError: Unexpected token 'C', "Cross-site"... is not valid JSON
-			const response = await fetch('?/persistOrdersAndInvoices', {
-				method: 'POST',
-				body: formData,
-			})
-
-			const result = await response.json()
-
-			if (response.ok) {
-				persistenceComplete = true
-				return true
-			} else {
-				throw new Error(result.message || 'Failed to persist orders and invoices')
+			const cartData: NormalizedCart = {
+				users: $cart.users,
+				stalls: $cart.stalls,
+				products: $cart.products,
+				orders: $cart.orders,
+				invoices: $cart.invoices,
 			}
+
+			const result = await $persistOrdersAndInvoicesMutation.mutateAsync(cartData)
+
+			persistenceComplete = result.success
+			return result.success
 		} catch (err) {
 			console.error('Error:', err)
 			error = err instanceof Error ? err.message : 'An unexpected error occurred'
@@ -83,8 +76,9 @@
 		const userExists = await checkIfUserExists(merchant.pubkey)
 		const shouldPersist = await shouldRegister(undefined, userExists)
 		if (shouldPersist && !persistenceComplete) {
-			// TODO: reduce product stock Quantity of products when order is fully paid, when an order has just been placed or not fully paid no
 			await handlePersist()
+		} else {
+			isPersisting = false
 		}
 	})
 </script>
@@ -92,25 +86,34 @@
 <div class="flex flex-col items-center justify-center w-full max-w-3xl mx-auto gap-8 py-8">
 	{#if isPersisting}
 		<Spinner size={95} />
+		<p class="text-lg text-center">Processing your order...</p>
 	{:else if error}
+		<XCircle class="w-24 h-24 text-red-500" />
 		<div class="text-red-500 bg-red-100 p-4 rounded-lg">{error}</div>
-	{:else}
+	{:else if persistenceComplete}
 		<CheckCircle class="w-24 h-24 text-green-500" />
+	{:else}
+		<Spinner size={95} />
+		<p class="text-lg text-center">Initializing...</p>
 	{/if}
 
 	<Card class="w-full">
 		<CardHeader>
 			<CardTitle class="text-2xl text-center text-green-700">
 				{#if error}
-					...
-				{:else if variant === 'singleMerchant'}
-					All your orders have been placed successfully!
-				{:else if variant === 'multiMerchant'}
-					Your order{orders.length > 1 ? 's have' : ' has'} been sent to the merchant{orders.length > 1 ? 's' : ''}!
+					An error occurred
+				{:else if persistenceComplete}
+					{#if variant === 'singleMerchant'}
+						All your orders have been placed successfully!
+					{:else if variant === 'multiMerchant'}
+						Your order{orders.length > 1 ? 's have' : ' has'} been sent to the merchant{orders.length > 1 ? 's' : ''}!
+					{/if}
+				{:else}
+					Processing your order...
 				{/if}
 			</CardTitle>
 		</CardHeader>
-		{#if orders && invoices}
+		{#if orders && invoices && persistenceComplete}
 			<CardContent>
 				<Separator class="my-6" />
 
@@ -138,9 +141,9 @@
 			<Button
 				class="w-full text-lg py-3"
 				on:click={handleContinue}
-				disabled={isPersisting || (persistenceComplete != null && !persistenceComplete)}
+				disabled={isPersisting || persistenceComplete === null || persistenceComplete === false}
 			>
-				{isPersisting ? 'Saving...' : 'Continue'}
+				{isPersisting ? 'Processing...' : error ? 'Try Again' : 'Continue'}
 			</Button>
 		</CardFooter>
 	</Card>

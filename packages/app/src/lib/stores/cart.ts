@@ -7,9 +7,8 @@ import { debounce, resolveQuery } from '$lib/utils'
 import { toast } from 'svelte-sonner'
 import { derived, get, writable } from 'svelte/store'
 
-import type { InvoiceStatus, OrderMessage, OrderStatus, ProductImage, ProductShipping } from '@plebeian/database'
+import type { InvoiceMessage, OrderMessage, OrderStatus, ProductImage, ProductShipping } from '@plebeian/database'
 
-import type { StallCoordinatesType } from './drawer-ui'
 import { checkoutFormStore, currentStep } from './checkout'
 
 export interface CartProduct {
@@ -37,20 +36,6 @@ export interface CartUser {
 	stalls: string[]
 	v4vShares: V4VDTO[]
 }
-
-export interface InvoiceMessage {
-	id: string
-	createdAt: number
-	updatedAt: number
-	orderId: string
-	totalAmount: number
-	invoiceStatus: InvoiceStatus
-	type: 'v4v' | 'merchant'
-	paymentId: string
-	paymentRequest: string | null
-	proof: string | null
-}
-
 export interface NormalizedCart {
 	users: Record<string, CartUser>
 	stalls: Record<string, CartStall>

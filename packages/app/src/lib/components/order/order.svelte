@@ -98,7 +98,7 @@
 			return
 		}
 
-		$updateInvoiceStatusMutation.mutateAsync({ invoiceId, status, preimage: event.detail.preimage ?? '' })
+		$updateInvoiceStatusMutation.mutateAsync({ invoiceId, status, preimage: event.detail.proof ?? '' })
 		toast.success(`Payment ${status}`)
 		currentPaymentDetail = undefined
 		merchantPaymentDetail = undefined

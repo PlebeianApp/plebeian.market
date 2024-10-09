@@ -256,6 +256,19 @@ export interface OrderMessage {
 	items: OrderMessageItem[]
 }
 
+export interface InvoiceMessage {
+	id: string
+	createdAt: number
+	updatedAt: number
+	orderId: string
+	totalAmount: number
+	invoiceStatus: InvoiceStatus
+	type: 'v4v' | 'merchant'
+	paymentId: string
+	paymentRequest: string | null
+	proof: string | null
+}
+
 export interface PaymentOption {
 	type: string
 	link: string | null

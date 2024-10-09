@@ -3,7 +3,7 @@
 	import type { V4VDTO } from '$lib/fetch/v4v.queries'
 	import type { OrderFilter } from '$lib/schema'
 	import type { RichPaymentDetail } from '$lib/server/paymentDetails.service'
-	import type { CartProduct, CartStall, InvoiceMessage } from '$lib/stores/cart'
+	import type { CartProduct, CartStall } from '$lib/stores/cart'
 	import * as Carousel from '$lib/components/ui/carousel/index.js'
 	import * as Select from '$lib/components/ui/select'
 	import { createPaymentsForUserQuery } from '$lib/fetch/payments.queries'
@@ -16,7 +16,7 @@
 	import { createEventDispatcher, onMount, tick } from 'svelte'
 	import { toast } from 'svelte-sonner'
 
-	import type { OrderStatus, PaymentRequestMessage } from '@plebeian/database/constants'
+	import type { InvoiceMessage, OrderStatus, PaymentRequestMessage } from '@plebeian/database/constants'
 	import { ORDER_STATUS } from '@plebeian/database/constants'
 	import { createId } from '@plebeian/database/utils'
 
@@ -217,7 +217,7 @@
 
 <div class="flex flex-row gap-8">
 	<div class="w-1/2 flex flex-col gap-4">
-		<MiniStall stallId={order.stallId} mode="view" />
+		<MiniStall stallCoordinate={order.stallId} mode="view" />
 		<div class="flex flex-col gap-2">
 			{#each stall.products as productId}
 				<ProductInCart product={products[productId]} mode="payment" />

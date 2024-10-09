@@ -12,7 +12,7 @@
 	export let userLightningAddress: string | undefined
 
 	const dispatch = createEventDispatcher()
-
+	//TODO: seems that npub.cash addresses are not working well
 	let hasAcceptedTerms: boolean = false
 	let checked: boolean = false
 	function setupPaymentDetail(paymentDetails: string, method: typeof PAYMENT_DETAILS_METHOD.LIGHTNING_NETWORK) {
