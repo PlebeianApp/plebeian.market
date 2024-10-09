@@ -1,6 +1,7 @@
 import type { NostrEvent } from '@nostr-dev-kit/ndk'
 import type { DisplayProduct } from '$lib/server/products.service'
 import type { RichStall } from '$lib/server/stalls.service'
+import { createRequest, queryClient } from './client'
 import { NDKEvent } from '@nostr-dev-kit/ndk'
 import { createMutation } from '@tanstack/svelte-query'
 import { KindProducts, KindStalls } from '$lib/constants'
@@ -11,7 +12,6 @@ import { get } from 'svelte/store'
 import type { ProductImage } from '@plebeian/database'
 import { createSlugId } from '@plebeian/database/utils'
 
-import { createRequest, queryClient } from './client'
 
 declare module './client' {
 	interface Endpoints {
@@ -23,7 +23,7 @@ declare module './client' {
 
 export type Category = { key: string; name: string; checked: boolean }
 
-const createProductMutation = createMutation(
+export const createProductMutation = createMutation(
 	{
 		mutationFn: async ([sEvent, stall, images, shippingMethods, categories]: [
 			SubmitEvent,
@@ -84,7 +84,7 @@ const createProductMutation = createMutation(
 	queryClient,
 )
 
-const editProductMutation = createMutation(
+export const editProductMutation = createMutation(
 	{
 		mutationFn: async ([sEvent, product, images, shippingMethods, categories]: [
 			SubmitEvent,
@@ -150,7 +150,7 @@ const editProductMutation = createMutation(
 	queryClient,
 )
 
-const createProductsFromNostrMutation = createMutation(
+export const createProductsFromNostrMutation = createMutation(
 	{
 		mutationFn: async (products: Set<NDKEvent>) => {
 			const nostrEventsToInsert = await Promise.all([...products].map((product) => product.toNostrEvent()))
@@ -179,7 +179,7 @@ const createProductsFromNostrMutation = createMutation(
 	queryClient,
 )
 
-const deleteProductMutation = createMutation(
+export const deleteProductMutation = createMutation(
 	{
 		mutationKey: [],
 		mutationFn: async (productId: string) => {
@@ -202,5 +202,3 @@ const deleteProductMutation = createMutation(
 	},
 	queryClient,
 )
-
-export { createProductMutation, editProductMutation, createProductsFromNostrMutation, deleteProductMutation }
