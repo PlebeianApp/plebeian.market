@@ -49,9 +49,19 @@ export const productEventSchema = z
 		stall_id: z.string().refine((value) => !value.startsWith(KindStalls.toString()), {
 			message: `stallId must be and identifier ("d" tag)`,
 		}),
-		name: z.string(),
+		name: z
+			.string()
+			.trim()
+			.refine((name) => !forbiddenPattern.test(name), {
+				message: `forbidden_word`,
+			}),
 		type: z.custom(productTypeValidator).optional(),
-		description: z.string().optional(),
+		description: z
+			.string()
+			.optional()
+			.refine((description) => description === undefined || !forbiddenPattern.test(description) || !description.trim().length, {
+				message: `forbidden_word`,
+			}),
 		images: z.array(z.string()).optional(),
 		currency: z.string(),
 		price: z.number(),
