@@ -1,5 +1,6 @@
 import type { DisplayProduct } from '$lib/server/products.service'
 import type { RichStall } from '$lib/server/stalls.service'
+import { displayZodErrors } from '$lib/utils'
 
 import type { ProductImage } from '@plebeian/database'
 import { createSlugId } from '@plebeian/database/utils'
@@ -31,8 +32,8 @@ export function prepareProductData(
 export function validateProduct(productData: unknown) {
 	const result = productEventSchema.safeParse(productData)
 	if (!result.success) {
-		const errors = result.error.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`)
-		return { success: false, errors }
+		displayZodErrors(result.error)
+		return { success: false }
 	}
 	return { success: true, data: result.data }
 }

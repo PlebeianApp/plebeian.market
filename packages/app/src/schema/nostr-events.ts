@@ -83,7 +83,7 @@ export const auctionEventSchema = z.object({
 
 export const bidEventSchema = z.number().int()
 
-export const stallEventSchema = z.object({
+export const stallEventContentSchema = z.object({
 	id: z.string(),
 	name: z
 		.string()
@@ -98,7 +98,7 @@ export const stallEventSchema = z.object({
 			message: `forbidden_word`,
 		}),
 	currency: z.string(),
-	shipping: z.array(shippingObjectSchema),
+	shipping: z.array(shippingObjectSchema).nonempty(),
 })
 
 export const userEventSchema = z.object({

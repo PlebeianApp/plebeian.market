@@ -17,7 +17,7 @@ import { ZodError, ZodSchema } from 'zod'
 
 import type { ProductImage, ProductImagesType } from '@plebeian/database'
 
-import { productEventSchema, shippingObjectSchema, stallEventSchema } from '../../schema/nostr-events'
+import { productEventSchema, shippingObjectSchema, stallEventContentSchema } from '../../schema/nostr-events'
 import { stallsSub } from './subs'
 
 export async function fetchStallData(
@@ -215,7 +215,7 @@ async function normalizeNostrData<T>(
 }
 
 export async function normalizeStallData(nostrStall: NDKEvent): Promise<NormalizedData<RichStall>> {
-	return normalizeNostrData<RichStall>(nostrStall, stallEventSchema.passthrough(), (data, coordinates) => ({
+	return normalizeNostrData<RichStall>(nostrStall, stallEventContentSchema.passthrough(), (data, coordinates) => ({
 		...data,
 		createDate: formatDate(nostrStall.created_at),
 		identifier: coordinates?.tagD,

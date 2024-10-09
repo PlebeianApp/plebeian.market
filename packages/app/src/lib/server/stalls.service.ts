@@ -30,7 +30,7 @@ import {
 } from '@plebeian/database'
 
 import type { RichShippingInfo } from './shipping.service'
-import { stallEventSchema } from '../../schema/nostr-events'
+import { stallEventContentSchema } from '../../schema/nostr-events'
 import { getShippingByStallId } from './shipping.service'
 
 export type RichStall = {
@@ -259,7 +259,7 @@ export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall 
 		return await db.transaction(async (tx) => {
 			const { coordinates, tagD } = getEventCoordinates(stallEvent) as EventCoordinates
 
-			const { data, success } = stallEventSchema.safeParse({
+			const { data, success } = stallEventContentSchema.safeParse({
 				id: coordinates,
 				...JSON.parse(stallEvent.content),
 			})
@@ -340,7 +340,7 @@ export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall 
 export const updateStall = async (stallId: string, stallEvent: NostrEvent): Promise<DisplayStall | null> => {
 	try {
 		return await db.transaction(async (tx) => {
-			const { data: parsedStall, success } = stallEventSchema.partial().safeParse({
+			const { data: parsedStall, success } = stallEventContentSchema.partial().safeParse({
 				id: stallId,
 				...JSON.parse(stallEvent.content),
 			})

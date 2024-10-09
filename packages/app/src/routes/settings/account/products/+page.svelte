@@ -5,6 +5,7 @@
 	import { Button } from '$lib/components/ui/button/index.js'
 	import { Skeleton } from '$lib/components/ui/skeleton'
 	import { createProductsByFilterQuery } from '$lib/fetch/products.queries'
+	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
 	import { fetchUserProductData, normalizeProductsFromNostr } from '$lib/nostrSubs/utils'
 	import ndkStore from '$lib/stores/ndk'
 	import { mergeWithExisting, nav_back } from '$lib/utils'
@@ -20,7 +21,14 @@
 		userId: $ndkStore?.activeUser?.pubkey,
 		pageSize: 100,
 	})
-	$: productsMixture = mergeWithExisting($productsQuery?.data?.products ?? [], toDisplayProducts, 'id')
+	$: stallsQuery = createStallsByFilterQuery({
+		userId: $ndkStore.activeUser?.pubkey,
+		pageSize: 999,
+	})
+	$: productsMixture = mergeWithExisting($productsQuery?.data?.products ?? [], toDisplayProducts, 'id').filter((product) =>
+		$stallsQuery.data?.stalls.some((stall) => stall.identifier == product.stallId),
+	)
+
 	$: productsMode === 'list' ? $productsQuery?.refetch() : null
 
 	let currentProduct: Partial<DisplayProduct> | null = null

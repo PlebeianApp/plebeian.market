@@ -105,10 +105,7 @@
 			const productData = prepareProductData(formData, stall, sortedImages, shippingData, product!)
 			const validationResult = validateProduct(productData)
 
-			if (!validationResult.success || !validationResult.data) {
-				validationResult.errors?.forEach((error) => toast.error(error))
-				return
-			}
+			if (!validationResult.success || !validationResult.data) return
 
 			const categoriesData = categories.filter((c) => c.checked).map((c) => c.name)
 
