@@ -23,7 +23,7 @@ declare module './client' {
 
 export type Category = { key: string; name: string; checked: boolean }
 
-export const createProductMutation = createMutation(
+const createProductMutation = createMutation(
 	{
 		mutationFn: async ([sEvent, stall, images, shippingMethods, categories]: [
 			SubmitEvent,
@@ -84,7 +84,7 @@ export const createProductMutation = createMutation(
 	queryClient,
 )
 
-export const editProductMutation = createMutation(
+const editProductMutation = createMutation(
 	{
 		mutationFn: async ([sEvent, product, images, shippingMethods, categories]: [
 			SubmitEvent,
@@ -150,7 +150,7 @@ export const editProductMutation = createMutation(
 	queryClient,
 )
 
-export const createProductsFromNostrMutation = createMutation(
+const createProductsFromNostrMutation = createMutation(
 	{
 		mutationFn: async (products: Set<NDKEvent>) => {
 			const nostrEventsToInsert = await Promise.all([...products].map((product) => product.toNostrEvent()))
@@ -179,7 +179,7 @@ export const createProductsFromNostrMutation = createMutation(
 	queryClient,
 )
 
-export const deleteProductMutation = createMutation(
+const deleteProductMutation = createMutation(
 	{
 		mutationKey: [],
 		mutationFn: async (productId: string) => {
@@ -202,3 +202,5 @@ export const deleteProductMutation = createMutation(
 	},
 	queryClient,
 )
+
+export { createProductMutation, editProductMutation, createProductsFromNostrMutation, deleteProductMutation }

@@ -22,14 +22,14 @@
 
 	const dispatch = createEventDispatcher()
 
-	const ordersStore = writable(orders)
+	$: ordersStore = writable(orders)
 
-	const table = createTable(ordersStore, {
+	$: table = createTable(ordersStore, {
 		sort: addSortBy({ disableMultiSort: true }),
 		page: addPagination({ pageSize: 10, initialPageIndex: currentPage }),
 	})
 
-	const columns = table.createColumns([
+	$: columns = table.createColumns([
 		table.column({
 			accessor: 'id',
 			header: 'Order ID',
@@ -62,8 +62,8 @@
 		}),
 	])
 
-	const { headerRows, pageRows, tableAttrs, tableBodyAttrs, pluginStates } = table.createViewModel(columns)
-	const { hasNextPage, hasPreviousPage, pageIndex, pageCount } = pluginStates.page
+	$: ({ headerRows, pageRows, tableAttrs, tableBodyAttrs, pluginStates } = table.createViewModel(columns))
+	$: ({ hasNextPage, hasPreviousPage, pageIndex, pageCount } = pluginStates.page)
 
 	$: dispatch('pageChange', $pageIndex)
 

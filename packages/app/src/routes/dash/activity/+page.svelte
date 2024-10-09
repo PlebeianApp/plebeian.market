@@ -2,8 +2,16 @@
 	import { goto } from '$app/navigation'
 	import ConversationListItem from '$lib/components/chat/conversation-list-item.svelte'
 	import OrderTable from '$lib/components/order/order-table/order-table.svelte'
-	import { unseenDMs } from '$lib/nostrSubs/subs'
+	import { lastSeen, unseenDMs } from '$lib/nostrSubs/subs'
 	import { pendingPurchasedOrders, pendingSalesOrders } from '$lib/stores/activity'
+	import { onMount } from 'svelte'
+
+	onMount(() => {
+		localStorage?.setItem('last-seen', `${Date.now()}`) // in case the component does not mount and the page refreshes instead
+		return () => {
+			lastSeen.set(Date.now())
+		}
+	})
 </script>
 
 <div class="pb-4 space-y-2">

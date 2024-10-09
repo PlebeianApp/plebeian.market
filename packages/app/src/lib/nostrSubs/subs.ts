@@ -26,14 +26,26 @@ export const stallsSub: NDKEventStore<ExtendedBaseType<NDKEvent>> = ndk.storeSub
 
 export const dmKind04Sub: NDKEventStore<ExtendedBaseType<NDKEvent>> = ndk.storeSubscribe(
 	{
-		kinds: [NDKKind.EncryptedDirectMessage],
+		kinds: [],
 	},
-	{ closeOnEose: false, autoStart: true },
+	{ closeOnEose: false, autoStart: false },
 )
 
-export const groupedDMs = derived(dmKind04Sub, ($dmKind04Sub) => {
+if (typeof window !== 'undefined') {
+	ndkStore.subscribe(($ndkStore) => {
+		if ($ndkStore.activeUser) {
+			dmKind04Sub.changeFilters([
+				{ kinds: [NDKKind.EncryptedDirectMessage], limit: 50, '#p': [$ndkStore.activeUser.pubkey] },
+				{ kinds: [NDKKind.EncryptedDirectMessage], limit: 50, authors: [$ndkStore.activeUser.pubkey] },
+			])
+			dmKind04Sub.ref()
+		}
+	})
+}
+
+export const groupedDMs = derived([ndkStore, dmKind04Sub], ([$ndkStore, $dmKind04Sub]) => {
 	const groups: Record<string, NDKEvent[]> = {}
-	const activeUser = get(ndkStore).activeUser
+	const activeUser = $ndkStore.activeUser
 	for (const event of $dmKind04Sub) {
 		if (event.pubkey === activeUser?.pubkey) continue
 		const pubkey = event.pubkey
@@ -60,9 +72,9 @@ export const unseenDMs = derived([lastSeen, groupedDMs], ([$lastSeen, $groupedDM
 	)
 })
 
-export const activeUserDMs = derived(dmKind04Sub, ($dmKind04Sub) => {
+export const activeUserDMs = derived([ndkStore, dmKind04Sub], ([$ndkStore, $dmKind04Sub]) => {
 	const groups: Record<string, NDKEvent[]> = {}
-	const activeUser = get(ndkStore).activeUser
+	const activeUser = $ndkStore.activeUser
 	for (const event of $dmKind04Sub) {
 		if (event.pubkey !== activeUser?.pubkey) continue
 		const pubkey = event.tagValue('p')

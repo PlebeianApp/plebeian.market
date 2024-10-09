@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { NDKKind } from '@nostr-dev-kit/ndk'
 	import { Button } from '$lib/components/ui/button/index.js'
 	import { Checkbox } from '$lib/components/ui/checkbox/index.js'
 	import * as Dialog from '$lib/components/ui/dialog/index.js'
@@ -8,7 +7,6 @@
 	import { Separator } from '$lib/components/ui/separator'
 	import * as Tabs from '$lib/components/ui/tabs/index.js'
 	import { login } from '$lib/ndkLogin'
-	import { dmKind04Sub } from '$lib/nostrSubs/subs'
 	import ndkStore from '$lib/stores/ndk'
 	import { type BaseAccount } from '$lib/stores/session'
 	import { copyToClipboard } from '$lib/utils'
@@ -26,16 +24,7 @@
 	async function handleLogin(loginMethod: BaseAccount['type'], formData?: FormData, autoLogin?: boolean) {
 		const loginResult = await login(loginMethod, formData, autoLogin)
 		if (loginResult) {
-			toast.success('Login sucess!')
-			setTimeout(() => {
-				if ($ndkStore.activeUser) {
-					dmKind04Sub.changeFilters([
-						{ kinds: [NDKKind.EncryptedDirectMessage], limit: 50, '#p': [$ndkStore.activeUser.pubkey] },
-						{ kinds: [NDKKind.EncryptedDirectMessage], limit: 50, authors: [$ndkStore.activeUser.pubkey] },
-					])
-					dmKind04Sub.ref()
-				}
-			}, 5)
+			toast.success('Login success!')
 		} else {
 			toast.error('Login error!')
 		}
