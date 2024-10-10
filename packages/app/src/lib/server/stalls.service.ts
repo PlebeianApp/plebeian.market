@@ -31,7 +31,6 @@ import {
 
 import type { RichShippingInfo } from './shipping.service'
 import { stallEventSchema } from '../../schema/nostr-events'
-import { disallowedString } from './appSettings.service'
 import { getShippingByStallId } from './shipping.service'
 
 export type RichStall = {
@@ -267,12 +266,6 @@ export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall 
 
 			if (!success) throw Error(`Invalid stall event data`)
 
-			const disallowedWord = await disallowedString(data.name as string)
-
-			if (disallowedWord) {
-				throw error(400, `Stall content is not allowed: ${disallowedWord}`)
-			}
-
 			const insertStall: Stall = {
 				id: coordinates,
 				createdAt: new Date(stallEvent.created_at * 1000),
@@ -352,12 +345,6 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
 				...JSON.parse(stallEvent.content),
 			})
 			if (!success) throw new Error(`Failed to parse stall event`)
-
-			const disallowedWord = await disallowedString(parsedStall.name as string)
-
-			if (disallowedWord) {
-				throw error(400, `Stall content is not allowed: ${disallowedWord}`)
-			}
 
 			const [stallResult] = await tx
 				.update(stalls)
