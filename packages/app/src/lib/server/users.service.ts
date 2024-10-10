@@ -4,7 +4,7 @@ import { error } from '@sveltejs/kit'
 import { usersFilterSchema } from '$lib/schema'
 
 import type { NewUser, User, UserMeta, UserRoles, UserTrustLevel } from '@plebeian/database'
-import { and, db, eq, inArray, products, sql, USER_META, userMeta, users } from '@plebeian/database'
+import { and, db, eq, inArray, products, sql, USER_META, USER_ROLES, userMeta, users } from '@plebeian/database'
 
 import { userEventSchema } from '../../schema/nostr-events'
 
@@ -413,4 +413,15 @@ export const usersExists = async (userIds: string[], returnExisting: boolean = f
 	} else {
 		return userIds.filter((userId) => !resultIds.has(userId))
 	}
+}
+
+export const isUserAdmin = async (userId: string): Promise<boolean> => {
+	const userMeta = await getUserMetaByUserId(userId)
+	const adminRole = userMeta.find((meta) => meta.metaName === USER_META.ROLE.value && meta.valueText === USER_ROLES.ADMIN)
+	return adminRole !== undefined
+}
+
+export const getUserMetaByUserId = async (userId: string): Promise<UserMeta[]> => {
+	const result = await db.select().from(userMeta).where(eq(userMeta.userId, userId)).execute()
+	return result
 }

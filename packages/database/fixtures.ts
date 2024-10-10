@@ -6,6 +6,7 @@ export const devInstance = {
 }
 
 // devUser1 can receive zaps at totaldaybed859@minibits.cash
+// devUser1 is an admin
 
 export const devUser1 = {
 	pk: '86a82cab18b293f53cbaaae8cdcbee3f7ec427fdf9f9c933db77800bb5ef38a0',
@@ -63,3 +64,21 @@ export const CURRENCIES_WITH_FICTIONAL_CONVERSION_RATES: Record<string, number> 
 	IDR: 977592722.31,
 	MYR: 266377.9,
 } as const
+
+export const FORBIDDEN_WORDS = new Set([
+	'test',
+	'testing',
+	'TestStore',
+	'example',
+	'dummy',
+	'fake',
+	'demo',
+	'sample',
+	'trial',
+	'sandbox',
+	'mock',
+	'placeholder',
+	'lorem',
+	'admin',
+	'password',
+])
