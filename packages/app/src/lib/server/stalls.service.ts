@@ -266,6 +266,12 @@ export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall 
 
 			if (!success) throw Error(`Invalid stall event data`)
 
+			const disallowedWord = await disallowedString(data.name as string)
+
+			if (disallowedWord) {
+				throw error(400, `Stall content is not allowed: ${disallowedWord}`)
+			}
+
 			const insertStall: Stall = {
 				id: coordinates,
 				createdAt: new Date(stallEvent.created_at * 1000),
@@ -333,7 +339,7 @@ export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall 
 		})
 	} catch (e) {
 		console.error(`Failed to create stall: ${e}`)
-		throw error(500, `Failed to create stall: ${e}`)
+		return error(e.status, `Failed to create stall: ${e}`)
 	}
 }
 
@@ -345,6 +351,12 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
 				...JSON.parse(stallEvent.content),
 			})
 			if (!success) throw new Error(`Failed to parse stall event`)
+
+			const disallowedWord = await disallowedString(parsedStall.name as string)
+
+			if (disallowedWord) {
+				throw error(400, `Stall content is not allowed: ${disallowedWord}`)
+			}
 
 			const [stallResult] = await tx
 				.update(stalls)
