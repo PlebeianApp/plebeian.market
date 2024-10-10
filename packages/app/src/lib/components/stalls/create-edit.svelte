@@ -446,11 +446,13 @@
 			data-tooltip="Provide different shipping options for your customers!"
 			on:click={() => addShipping()}
 			variant="outline"
-			class="font-bold ml-auto">Add Shipping Method</Button
+			class={`font-bold ml-auto ${!shippingMethods.length ? 'required-mark' : ''}`}>Add Shipping Method</Button
 		>
 	</div>
 
-	<Button id="stall-save-button" type="submit" disabled={isLoading || !changed} class="w-full font-bold">Save</Button>
+	<Button id="stall-save-button" type="submit" disabled={isLoading || !changed || !shippingMethods.length} class="w-full font-bold"
+		>Save</Button
+	>
 	{#if stall?.id}
 		<Button type="button" variant="destructive" on:click={handleDelete}>Delete</Button>
 	{/if}
