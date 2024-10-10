@@ -2,6 +2,7 @@
 	import type { NDKTag } from '@nostr-dev-kit/ndk'
 	import type { RichStall } from '$lib/server/stalls.service'
 	import type { Location } from '$lib/utils'
+	import type { ValidationErrors } from '$lib/utils/zod.utils'
 	import type { GeoJSON } from 'geojson'
 	import { NDKEvent } from '@nostr-dev-kit/ndk'
 	import { browser } from '$app/environment'
@@ -24,11 +25,11 @@
 		checkIfUserExists,
 		createChangeTracker,
 		debounce,
-		displayZodErrors,
 		searchLocation,
 		shouldRegister,
 		unixTimeNow,
 	} from '$lib/utils'
+	import { displayZodErrors, validateForm } from '$lib/utils/zod.utils'
 	import geohash from 'ngeohash'
 	import { createEventDispatcher, onMount } from 'svelte'
 
@@ -64,7 +65,7 @@
 	let locationResults: Location[] = []
 	let mapGeoJSON: (GeoJSON.Feature<GeoJSON.Point> & { boundingbox: [number, number, number, number] }) | null = null
 	let isLoading = false
-	let validationErrors: Record<string, string> = {}
+	let validationErrors: ValidationErrors = {}
 
 	const debouncedSearch = debounce(async () => {
 		isLoading = true
@@ -123,21 +124,6 @@
 		if (!$ndkStore.activeUser?.pubkey) return
 
 		const identifier = stall?.identifier ?? createSlugId(name)
-		const validateStallContent = stallEventContentSchema.safeParse({
-			id: identifier,
-			name,
-			description,
-			currency,
-			shipping: shippingMethods,
-		})
-		if (!validateStallContent.success) {
-			const errors: Record<string, string> = {}
-			validateStallContent.error.issues.forEach((issue) => {
-				errors[issue.path.join('.')] = issue.message
-			})
-			displayZodErrors(validateStallContent.error)
-			return errors
-		}
 
 		isLoading = true
 		event.preventDefault()
@@ -200,7 +186,19 @@
 
 	async function handleSubmit(event: Event) {
 		event.preventDefault()
-		validationErrors = (await create(event)) || {}
+		const formData = {
+			id: stall?.identifier ?? createSlugId(name),
+			name,
+			description,
+			currency,
+			shipping: shippingMethods,
+		}
+
+		validationErrors = validateForm(formData, stallEventContentSchema)
+
+		if (Object.keys(validationErrors).length === 0) {
+			await create(event)
+		}
 	}
 
 	async function handleDelete() {

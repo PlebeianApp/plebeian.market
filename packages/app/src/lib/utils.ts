@@ -3,7 +3,6 @@ import type { ClassValue } from 'clsx'
 import type { VerifiedEvent } from 'nostr-tools'
 import type { Readable } from 'svelte/store'
 import type { TransitionConfig } from 'svelte/transition'
-import type { ZodError } from 'zod'
 import {
 	type NDKEvent,
 	type NDKKind,
@@ -540,16 +539,4 @@ export function getInvoiceStatusColor(status: string): string {
 		default:
 			return 'text-gray-600'
 	}
-}
-
-export const formatZodError = (error: ZodError): string => {
-	return error.errors.map((err) => `${err.path.join('.')}: ${err.message}`).join('\n')
-}
-
-export const displayZodErrors = (error: ZodError): void => {
-	error.errors.forEach((err) => {
-		const errorMessage = `${err.path.join('.')}: ${err.message}`
-		toast.error(errorMessage)
-		console.log(errorMessage)
-	})
 }
