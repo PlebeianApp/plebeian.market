@@ -31,7 +31,7 @@
 	const dispatch = createEventDispatcher<{
 		paymentComplete: CheckoutPaymentEvent
 		paymentExpired: CheckoutPaymentEvent
-		paymentCanceled: CheckoutPaymentEvent
+		paymentCancelled: CheckoutPaymentEvent
 	}>()
 
 	const RELAYS = [
@@ -194,9 +194,9 @@
 	}
 
 	function handleSkipPayment() {
-		paymentStatus = 'canceled'
+		paymentStatus = 'cancelled'
 		cleanupFunctions.forEach((fn) => fn())
-		dispatch('paymentCanceled', {
+		dispatch('paymentCancelled', {
 			paymentRequest: invoice!.paymentRequest,
 			proof: null,
 			amountSats: normalizedAmount,
@@ -205,9 +205,9 @@
 	}
 
 	function handleSkipInvalidPayment() {
-		paymentStatus = 'canceled'
+		paymentStatus = 'cancelled'
 		cleanupFunctions.forEach((fn) => fn())
-		dispatch('paymentCanceled', {
+		dispatch('paymentCancelled', {
 			paymentRequest: null,
 			proof: null,
 			amountSats: normalizedAmount,

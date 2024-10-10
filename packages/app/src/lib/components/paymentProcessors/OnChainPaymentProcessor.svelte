@@ -61,13 +61,6 @@
 		toast.success('Payment received!')
 	}
 
-	function handleCopyAddress() {
-		if (paymentDetail.paymentDetails) {
-			copyToClipboard(paymentDetail.paymentDetails)
-			toast.success('Bitcoin address copied to clipboard')
-		}
-	}
-
 	async function handleManualCheck() {
 		await $mempoolQuery.refetch()
 		if (!$mempoolQuery.data || $mempoolQuery.data.length === 0) {
@@ -106,7 +99,7 @@
 
 	<QrCode data={bitcoinUri} logoPath="/logo.svg" />
 
-	<Button variant="secondary" class="items-center gap-2 grid grid-cols-[auto_auto] max-w-full" on:click={handleCopyAddress}>
+	<Button variant="secondary" class="items-center gap-2 grid grid-cols-[auto_auto] max-w-full" on:click={() => copyToClipboard(bitcoinUri)}>
 		<span class="truncate">{paymentDetail.paymentDetails}</span>
 		<span class="i-tdesign-copy" />
 	</Button>

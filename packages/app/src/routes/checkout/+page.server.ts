@@ -1,10 +1,10 @@
 // src/routes/checkout/+page.server.ts
 import type { InvoiceInDb, OrderInDb, OrderItemInDb } from '$lib/schema'
-import type { InvoiceMessage, NormalizedCart } from '$lib/stores/cart'
+import type { NormalizedCart } from '$lib/stores/cart'
 import { error } from '@sveltejs/kit'
 import { InvoiceInDbSchema, OrderInDbSchema, OrderItemInDbSchema } from '$lib/schema'
 
-import type { OrderMessage } from '@plebeian/database'
+import type { InvoiceMessage, OrderMessage } from '@plebeian/database'
 import { db, invoices, orderItems, orders } from '@plebeian/database'
 
 import type { Actions } from './$types'
