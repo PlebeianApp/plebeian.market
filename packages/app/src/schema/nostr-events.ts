@@ -53,14 +53,14 @@ export const productEventSchema = z
 			.string()
 			.trim()
 			.refine((name) => !forbiddenPattern.test(name), {
-				message: `forbidden_word`,
+				message: `forbidden word`,
 			}),
 		type: z.custom(productTypeValidator).optional(),
 		description: z
 			.string()
 			.optional()
 			.refine((description) => description === undefined || !forbiddenPattern.test(description) || !description.trim().length, {
-				message: `forbidden_word`,
+				message: `forbidden word`,
 			}),
 		images: z.array(z.string()).optional(),
 		currency: z.string(),
@@ -99,13 +99,13 @@ export const stallEventContentSchema = z.object({
 		.string()
 		.trim()
 		.refine((name) => !forbiddenPattern.test(name), {
-			message: `forbidden_word`,
+			message: `forbidden word`,
 		}),
 	description: z
 		.string()
 		.optional()
 		.refine((description) => description === undefined || !forbiddenPattern.test(description) || !description.trim().length, {
-			message: `forbidden_word`,
+			message: `forbidden word`,
 		}),
 	currency: z.string(),
 	shipping: z.array(shippingObjectSchema).nonempty(),
