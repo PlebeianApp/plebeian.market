@@ -8,6 +8,7 @@ export function checkExtendedPublicKey(input: string): boolean {
 		bs58check.default.decode(input)
 		return true
 	} catch (e) {
+		e instanceof Error && console.log(e.message)
 		return false
 	}
 }
@@ -47,6 +48,6 @@ export function deriveAddresses(extendedKey: string, numAddressesToGenerate: num
 }
 
 export function isExtendedPublicKey(input: string): boolean {
-	const result = !input.startsWith('bc1') || input.startsWith('xpub') || input.startsWith('zpub')
+	const result = input.startsWith('xpub') || input.startsWith('zpub')
 	return result
 }

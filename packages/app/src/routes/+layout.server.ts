@@ -31,7 +31,7 @@ const fetchInitialPrices = async () => {
 	if (cache.data && now - cache.timestamp < CACHE_DURATION) {
 		return cache.data
 	}
-
+	// TODO: make this more robust and have a retry mechanism, if internet is slow or something it fails and you have to restart the server
 	// Fetch new data and update the cache
 	const data = [
 		...(await Promise.all(CURRENCIES.slice(2).map(async (c) => [c, await btcToCurrency(c)] as const))),

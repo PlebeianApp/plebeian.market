@@ -3,7 +3,7 @@
 	import type { V4VDTO } from '$lib/fetch/v4v.queries'
 	import type { OrderFilter } from '$lib/schema'
 	import type { RichPaymentDetail } from '$lib/server/paymentDetails.service'
-	import type { CartProduct, CartStall, InvoiceMessage } from '$lib/stores/cart'
+	import type { CartProduct, CartStall } from '$lib/stores/cart'
 	import * as Carousel from '$lib/components/ui/carousel/index.js'
 	import * as Select from '$lib/components/ui/select'
 	import { createPaymentsForUserQuery } from '$lib/fetch/payments.queries'
@@ -16,7 +16,7 @@
 	import { createEventDispatcher, onMount, tick } from 'svelte'
 	import { toast } from 'svelte-sonner'
 
-	import type { OrderStatus, PaymentRequestMessage } from '@plebeian/database/constants'
+	import type { InvoiceMessage, OrderStatus, PaymentRequestMessage } from '@plebeian/database/constants'
 	import { ORDER_STATUS } from '@plebeian/database/constants'
 	import { createId } from '@plebeian/database/utils'
 
@@ -49,14 +49,13 @@
 	const v4vQuery = v4VForUserQuery(order.sellerUserId)
 	$: relevantPaymentDetails = $paymentDetails.data?.filter((payment) => payment.stallId === order.stallId || payment.stallId === null) ?? []
 	$: selectedPaymentDetail = relevantPaymentDetails[0] ?? null
-
 	$: selectedPaymentValue = selectedPaymentDetail && {
 		label: `${selectedPaymentDetail.paymentMethod} - ${selectedPaymentDetail.paymentDetails}`,
 		value: selectedPaymentDetail,
 	}
 
 	$: allPaymentsPaid =
-		paymentStatuses.length > 0 && paymentStatuses.every((status) => ['paid', 'expired', 'canceled'].includes(status.status ?? ''))
+		paymentStatuses.length > 0 && paymentStatuses.every((status) => ['paid', 'expired', 'cancelled'].includes(status.status ?? ''))
 	$: {
 		if (allPaymentsPaid) {
 			dispatch('valid', true)
@@ -112,13 +111,13 @@
 	const statusMapping: Record<NonNullable<OrderPaymentStatus>, OrderStatus> = {
 		paid: ORDER_STATUS.PAID,
 		expired: ORDER_STATUS.PENDING,
-		canceled: ORDER_STATUS.PENDING,
+		cancelled: ORDER_STATUS.PENDING,
 	}
 
 	const paymentEventToStatus: Record<string, NonNullable<OrderPaymentStatus>> = {
 		paymentComplete: 'paid',
 		paymentExpired: 'expired',
-		paymentCanceled: 'canceled',
+		paymentCancelled: 'cancelled',
 	}
 
 	function moveToNextPaymentProcessor() {
@@ -217,7 +216,7 @@
 
 <div class="flex flex-row gap-8">
 	<div class="w-1/2 flex flex-col gap-4">
-		<MiniStall stallId={order.stallId} mode="view" />
+		<MiniStall stallCoordinate={order.stallId} mode="view" />
 		<div class="flex flex-col gap-2">
 			{#each stall.products as productId}
 				<ProductInCart product={products[productId]} mode="payment" />
@@ -317,7 +316,7 @@
 									paymentType="merchant"
 									on:paymentComplete={handlePaymentEvent}
 									on:paymentExpired={handlePaymentEvent}
-									on:paymentCanceled={handlePaymentEvent}
+									on:paymentCancelled={handlePaymentEvent}
 								/>
 							</div>
 						</Carousel.Item>
@@ -331,7 +330,7 @@
 										paymentType={share.target}
 										on:paymentComplete={handlePaymentEvent}
 										on:paymentExpired={handlePaymentEvent}
-										on:paymentCanceled={handlePaymentEvent}
+										on:paymentCancelled={handlePaymentEvent}
 									/>
 								</div>
 							</Carousel.Item>
@@ -348,7 +347,7 @@
 				paymentType="merchant"
 				on:paymentComplete={handlePaymentEvent}
 				on:paymentExpired={handlePaymentEvent}
-				on:paymentCanceled={handlePaymentEvent}
+				on:paymentCancelled={handlePaymentEvent}
 			/>
 		{/if}
 	</div>

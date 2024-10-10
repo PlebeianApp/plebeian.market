@@ -40,7 +40,7 @@
 	}
 
 	function handleSkipPayment() {
-		dispatch('paymentCanceled', { paymentRequest: '', preimage: null, amountSats, paymentType })
+		dispatch('paymentCancelled', { paymentRequest: '', preimage: null, amountSats, paymentType })
 	}
 </script>
 
@@ -48,12 +48,12 @@
 	<svelte:component
 		this={currentProcessor.component}
 		{paymentDetail}
-		{amountSats}
+		amountSats={formatSats(amountSats, false)}
 		{paymentType}
 		{...currentProcessor.props}
 		on:paymentComplete={handlePaymentEvent}
 		on:paymentExpired={handlePaymentEvent}
-		on:paymentCanceled={handlePaymentEvent}
+		on:paymentCancelled={handlePaymentEvent}
 	/>
 {:else}
 	<div class="flex flex-col">

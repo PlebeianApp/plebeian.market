@@ -31,12 +31,14 @@
 	let ableToPlaceOrder = true
 	const paymentDetails = createPaymentsForUserQuery(merchant.pubkey)
 	let userTotal: Awaited<ReturnType<typeof cart.calculateUserTotal>> | null = null
-	$: filledShippingMethods = $cart.users[merchant.pubkey].stalls.every((id) => $cart.stalls[id].shippingMethodId)
-
 	let v4vTotalPercentage: number | null = null
 
+	$: merchantStalls = $cart.users[merchant.pubkey]?.stalls || []
+	$: relevantPaymentDetails =
+		$paymentDetails.data?.filter((payment) => payment.stallId === null || merchantStalls.some((stallId) => stallId === payment.stallId)) ??
+		[]
+	$: filledShippingMethods = merchantStalls.every((id) => $cart.stalls[id].shippingMethodId)
 	$: v4vQuery = v4VForUserQuery(merchant.pubkey)
-
 	$: {
 		if ($v4vQuery.data) {
 			const total = $v4vQuery.data.reduce((sum, item) => {
@@ -52,17 +54,22 @@
 			return null
 		}
 
-		const { stalls, pubkey } = $cart.users[merchant.pubkey]
 		const orders: OrderMessage[] = []
 
-		for (const stallId of stalls) {
+		for (const stallId of merchantStalls) {
 			try {
 				const stall = $cart.stalls[stallId]
 				if (!stall.shippingMethodId) {
 					throw new Error('Missing shipping method')
 				}
 
-				const order: OrderMessage = createOrderMessage($checkoutFormStore, stall, $cart, $ndkStore.activeUser?.pubkey as string, pubkey)
+				const order: OrderMessage = createOrderMessage(
+					$checkoutFormStore,
+					stall,
+					$cart,
+					$ndkStore.activeUser?.pubkey as string,
+					merchant.pubkey,
+				)
 				try {
 					cart.addOrder(order)
 				} catch (error) {
@@ -71,8 +78,7 @@
 				}
 
 				try {
-					// await
-					order, pubkey
+					// await sendDm(order, merchant.pubkey)
 				} catch (error) {
 					console.error('Failed to send order DM:', error)
 					throw new Error('Failed to send order DM to merchant')
@@ -90,7 +96,7 @@
 		}
 
 		ableToPlaceOrder = false
-		return { pubkey, orders }
+		return { orders }
 	}
 
 	async function handleOrderPlacement() {
@@ -209,7 +215,7 @@
 					data-tooltip={!filledShippingMethods ? 'Make sure you choose shipping methods for every stall ' : null}
 					class="flex flex-col gap-4"
 				>
-					{#if $paymentDetails.data?.length}
+					{#if relevantPaymentDetails.length}
 						<Button class="w-full" disabled={!filledShippingMethods || !ableToPlaceOrder || isLoading} on:click={handleOrderAndPayment}
 							>Place Order & Pay</Button
 						>

@@ -1,5 +1,6 @@
 import { error } from '@sveltejs/kit'
-import { deriveAddresses, isExtendedPublicKey } from '$lib/utils/paymentDetails.utils'
+import { checkAddress, checkExtendedPublicKey, deriveAddresses, isExtendedPublicKey } from '$lib/utils/paymentDetails.utils'
+import { LN_ADDRESS_REGEX } from '$lib/utils/zap.utils'
 
 import type { PaymentDetail } from '@plebeian/database'
 import { and, db, eq, isNull, or, paymentDetails } from '@plebeian/database'
@@ -67,16 +68,26 @@ export const getPaymentDetailsByUserId = async (userId: string): Promise<RichPay
 		where: eq(paymentDetails.userId, userId),
 	})
 
-	const updatedDetails = await Promise.all(
-		details.map(async (detail) => {
-			if (detail.paymentMethod === 'on-chain' && isExtendedPublicKey(detail.paymentDetails)) {
-				return renderOnChainPaymentDetail(detail)
-			}
-			return detail
-		}),
-	)
+	const processDetail = async (detail: PaymentDetail) => {
+		switch (detail.paymentMethod) {
+			case 'ln':
+				return LN_ADDRESS_REGEX.test(detail.paymentDetails) ? detail : null
+			case 'on-chain':
+				if (checkExtendedPublicKey(detail.paymentDetails)) {
+					return renderOnChainPaymentDetail(detail)
+				}
+				if (checkAddress(detail.paymentDetails)) {
+					return detail
+				}
+				return null
+			default:
+				return null
+		}
+	}
 
-	return Promise.all(updatedDetails.map(enrichWithStallName))
+	const validDetails = (await Promise.all(details.map(processDetail))).filter((detail): detail is RichPaymentDetail => detail !== null)
+
+	return Promise.all(validDetails.map(enrichWithStallName))
 }
 
 export const getPrivatePaymentDetailsByUserId = async (userId: string): Promise<RichPaymentDetail[]> => {

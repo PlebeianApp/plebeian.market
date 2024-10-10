@@ -26,4 +26,4 @@ export type CheckoutPaymentEvent = {
 	paymentType: string
 }
 
-export type PaymentStatus = 'pending' | 'success' | 'failed' | 'canceled'
+export type PaymentStatus = 'pending' | 'success' | 'failed' | 'cancelled'
