@@ -94,6 +94,14 @@
 		isLoading = true
 
 		try {
+			if (!currentShippings.length) {
+				throw new Error('Add at least one shipping method')
+			}
+			for (const [i, shipping] of currentShippings.entries()) {
+				if (!shipping.shipping) {
+					throw new Error(`Specify a method for shipping item number ${i + 1}`)
+				}
+			}
 			const formData = new FormData(sEvent.currentTarget as HTMLFormElement)
 			const shippingData = currentShippings
 				.filter((method) => method.shipping !== null && method.shipping.id !== undefined)
@@ -168,7 +176,7 @@
 				<Tabs.Trigger value="basic" class={activeTab}>Basic</Tabs.Trigger>
 				<Tabs.Trigger value="categories" class={activeTab}>Categories</Tabs.Trigger>
 				<Tabs.Trigger data-tooltip="Images help customers recognize your product" value="images" class={activeTab}>Images</Tabs.Trigger>
-				<Tabs.Trigger value="shipping" class={activeTab}>Shipping</Tabs.Trigger>
+				<Tabs.Trigger value="shipping" class={`${activeTab} ${!currentShippings.length ? 'required-mark' : ''}`}>Shipping</Tabs.Trigger>
 			</Tabs.List>
 
 			<Tabs.Content value="basic" class="flex flex-col gap-2">
@@ -307,9 +315,9 @@
 			</Tabs.Content>
 
 			<Tabs.Content value="shipping" class="flex flex-col gap-2 p-2">
-				{#each currentShippings as shippingMethod (shippingMethod.shipping?.id)}
+				{#each currentShippings as shippingMethod, i (shippingMethod.shipping?.id)}
 					<div class="grid w-full items-center gap-1.5">
-						<Label for="stall-shippings" class="font-bold">Shipping Method</Label>
+						<Label for="stall-shippings" class="font-bold required-mark">Shipping Method #{i + 1}</Label>
 						<DropdownMenu.Root>
 							<DropdownMenu.Trigger asChild let:builder>
 								<Button variant="outline" class="border-2 border-black" builders={[builder]}>
@@ -374,7 +382,7 @@
 						on:click={() => (currentShippings = [...currentShippings, { shipping: null, extraCost: '' }])}
 						disabled={currentShippings.length === stall?.shipping?.length}
 						variant="outline"
-						class="font-bold ml-auto">Add Shipping Method</Button
+						class={`font-bold ml-auto ${!currentShippings.length ? 'required-mark' : ''}`}>Add Shipping Method</Button
 					>
 				</div>
 			</Tabs.Content>
