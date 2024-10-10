@@ -1,6 +1,6 @@
 import type { NormalizedCart } from '$lib/stores/cart'
 import { error, json } from '@sveltejs/kit'
-import { authorizeUserless } from '$lib/auth'
+import { authorize } from '$lib/auth'
 import { InvoiceInDbSchema, OrderInDbSchema, OrderItemInDbSchema } from '$lib/schema'
 
 import type { InvoiceMessage, OrderMessage } from '@plebeian/database'
@@ -39,13 +39,24 @@ function convertToInvoiceInDb(invoice: InvoiceMessage) {
 }
 
 export const POST = async ({ request }) => {
+	const cartData: NormalizedCart = await request.json()
 	try {
-		await authorizeUserless(request, 'POST')
+		const orders = Object.values(cartData.orders)
+
+		if (orders.length === 0) {
+			throw new Error('No orders found')
+		}
+
+		const buyerUserId = orders[0].buyerUserId
+
+		if (orders.some((order) => order.buyerUserId !== buyerUserId)) {
+			throw new Error('Inconsistent buyerUserIds found')
+		}
+
+		await authorize(request, buyerUserId, 'POST')
 	} catch (e) {
 		throw error(401, 'Unauthorized')
 	}
-	const cartData: NormalizedCart = await request.json()
-
 	try {
 		const result = await db.transaction(async (tx) => {
 			const insertedOrders = []
