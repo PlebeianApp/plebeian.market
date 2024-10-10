@@ -114,9 +114,10 @@ export const DIGITAL_PRODUCT_META: Record<string, MetaInterface<'license_key' | 
 
 export type DigitalProductMetaName = ObjectValues<typeof DIGITAL_PRODUCT_META>
 
-export const APP_SETTINGS_META: Record<string, MetaInterface<'blossom_server' | 'nip96_server'>> = {
+export const APP_SETTINGS_META: Record<string, MetaInterface<'blossom_server' | 'nip96_server' | 'word_blacklist'>> = {
 	BLOSSOM_SERVER: { value: 'blossom_server', dataType: 'text' },
 	NIP96_SERVER: { value: 'nip96_server', dataType: 'text' },
+	WORD_BLACKLIST: { value: 'word_blacklist', dataType: 'text' },
 } as const
 
 export type AppSettingsMetaName = ObjectValues<typeof APP_SETTINGS_META>
