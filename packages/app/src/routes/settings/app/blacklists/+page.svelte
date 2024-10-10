@@ -5,19 +5,19 @@
 	import * as Collapsible from '$lib/components/ui/collapsible'
 	import { Input } from '$lib/components/ui/input'
 	import { addForbiddenWordMutation, deleteForbiddenWordMutation } from '$lib/fetch/settingsMeta.mutations.js'
-	import { appSettingsMetaQuery } from '$lib/fetch/settingsMeta.queries.js'
 	import { nav_back } from '$lib/utils'
 	import { toast } from 'svelte-sonner'
-	import { writable } from 'svelte/store'
+
+	import type { PageData } from './$types.js'
 
 	let newWord = ''
-
+	// TODO: Improve forbidden words dettection, if you add or remove one the stalls in `market square` still appearing with a forbidden word
 	export let data
 	const linkDetails = data.menuItems.find((item) => item.value === 'app-settings')?.links.find((item) => item.href === $page.url.pathname)
 
-	let isCollapsibleOpen = writable(false)
+	let isCollapsibleOpen = false
 
-	$: blacklistedWords = appSettingsMetaQuery('word_blacklist')
+	$: blacklistedWords = ($page.data as PageData).forbiddenWords.forbiddenWords
 
 	async function handleDeleteWord(wordId: string) {
 		await $deleteForbiddenWordMutation.mutateAsync(wordId)
@@ -32,7 +32,7 @@
 				toast.success('Word added to blacklist successfully!')
 				newWord = ''
 				await invalidateAll()
-				isCollapsibleOpen.set(false) // Close the collapsible
+				isCollapsibleOpen = false
 			} catch (error) {
 				console.error('Failed to add word to blacklist', error)
 				toast.error('Failed to add word to blacklist')
@@ -54,8 +54,8 @@
 		</div>
 	</div>
 
-	{#if $blacklistedWords.data}
-		{#each $blacklistedWords.data as word}
+	{#if blacklistedWords?.length > 0}
+		{#each blacklistedWords as word}
 			<div class="flex flex-row items-center justify-between border rounded-md p-2">
 				<span class="text-sm">{word.valueText}</span>
 				<Button type="button" size="icon" variant="outline" class=" bg-red-500" on:click={() => handleDeleteWord(word.id)}>
@@ -65,7 +65,7 @@
 		{/each}
 	{/if}
 
-	<Collapsible.Root bind:open={$isCollapsibleOpen}>
+	<Collapsible.Root bind:open={isCollapsibleOpen}>
 		<Collapsible.Trigger asChild let:builder>
 			<Button builders={[builder]} variant="outline" class="w-full justify-between">
 				Add new blacklisted word

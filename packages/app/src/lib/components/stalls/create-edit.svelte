@@ -29,14 +29,15 @@
 		shouldRegister,
 		unixTimeNow,
 	} from '$lib/utils'
-	import { displayZodErrors, validateForm } from '$lib/utils/zod.utils'
+	import { validateForm } from '$lib/utils/zod.utils'
 	import geohash from 'ngeohash'
 	import { createEventDispatcher, onMount } from 'svelte'
+	import { get } from 'svelte/store'
 
 	import { COUNTRIES_ISO, CURRENCIES } from '@plebeian/database/constants'
 	import { createId, createSlugId } from '@plebeian/database/utils'
 
-	import { stallEventContentSchema } from '../../../schema/nostr-events'
+	import { forbiddenPatternStore } from '../../../schema/nostr-events'
 	import Spinner from '../assets/spinner.svelte'
 	import Leaflet from '../leaflet/leaflet.svelte'
 	import Separator from '../ui/separator/separator.svelte'
@@ -194,7 +195,7 @@
 			shipping: shippingMethods,
 		}
 
-		validationErrors = validateForm(formData, stallEventContentSchema)
+		validationErrors = validateForm(formData, get(forbiddenPatternStore).createStallEventContentSchema)
 
 		if (Object.keys(validationErrors).length === 0) {
 			await create(event)

@@ -17,7 +17,7 @@ import { ZodError, ZodSchema } from 'zod'
 
 import type { ProductImage, ProductImagesType } from '@plebeian/database'
 
-import { productEventSchema, shippingObjectSchema, stallEventContentSchema } from '../../schema/nostr-events'
+import { forbiddenPatternStore, shippingObjectSchema } from '../../schema/nostr-events'
 import { stallsSub } from './subs'
 
 export async function fetchStallData(
@@ -215,15 +215,19 @@ async function normalizeNostrData<T>(
 }
 
 export async function normalizeStallData(nostrStall: NDKEvent): Promise<NormalizedData<RichStall>> {
-	return normalizeNostrData<RichStall>(nostrStall, stallEventContentSchema.passthrough(), (data, coordinates) => ({
-		...data,
-		createDate: formatDate(nostrStall.created_at),
-		identifier: coordinates?.tagD,
-		id: coordinates?.coordinates,
-		userId: coordinates?.pubkey,
-		shipping: parseShipping(data?.shipping),
-		image: nostrStall.tagValue('image'),
-	}))
+	return normalizeNostrData<RichStall>(
+		nostrStall,
+		get(forbiddenPatternStore).createStallEventContentSchema.passthrough(),
+		(data, coordinates) => ({
+			...data,
+			createDate: formatDate(nostrStall.created_at),
+			identifier: coordinates?.tagD,
+			id: coordinates?.coordinates,
+			userId: coordinates?.pubkey,
+			shipping: parseShipping(data?.shipping),
+			image: nostrStall.tagValue('image'),
+		}),
+	)
 }
 
 function parseShipping(shipping: unknown[]): Partial<RichShippingInfo>[] {
@@ -248,15 +252,19 @@ async function processProduct(
 	userId: string,
 	stallId?: string,
 ): Promise<{ displayProduct: Partial<DisplayProduct>; event: NDKEvent } | null> {
-	const result = await normalizeNostrData<DisplayProduct>(event, productEventSchema, (data, coordinates) => ({
-		...data,
-		quantity: data.quantity as number,
-		images: createProductImages(data.images as unknown as string[], String(coordinates?.coordinates)),
-		userId,
-		createdAt: formatDate(event.created_at),
-		identifier: coordinates?.tagD,
-		id: coordinates?.coordinates,
-	}))
+	const result = await normalizeNostrData<DisplayProduct>(
+		event,
+		get(forbiddenPatternStore).createProductEventSchema,
+		(data, coordinates) => ({
+			...data,
+			quantity: data.quantity as number,
+			images: createProductImages(data.images as unknown as string[], String(coordinates?.coordinates)),
+			userId,
+			createdAt: formatDate(event.created_at),
+			identifier: coordinates?.tagD,
+			id: coordinates?.coordinates,
+		}),
+	)
 
 	if (result.data && (!stallId || result.data.stallId === stallId?.split(':')[2])) {
 		return { displayProduct: result.data, event }

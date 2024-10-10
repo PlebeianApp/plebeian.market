@@ -8,7 +8,7 @@ import ndkStore from '$lib/stores/ndk'
 import { parseCoordinatesString, shouldRegister, unixTimeNow } from '$lib/utils'
 import { get } from 'svelte/store'
 
-import type { productEventSchema } from '../../schema/nostr-events'
+import { createProductEventSchema } from '../../schema/nostr-events'
 import { createRequest, queryClient } from './client'
 
 declare module './client' {
@@ -18,12 +18,11 @@ declare module './client' {
 		[k: `DELETE /api/v1/products/${string}`]: Operation<string, 'DELETE', never, string, string, never>
 	}
 }
-
 export type Category = { key: string; name: string; checked: boolean }
-
+const productSchema = createProductEventSchema(new RegExp(''))
 export const createProductMutation = createMutation(
 	{
-		mutationFn: async ({ product, categories }: { product: z.infer<typeof productEventSchema>; categories: string[] }) => {
+		mutationFn: async ({ product, categories }: { product: z.infer<typeof productSchema>; categories: string[] }) => {
 			const $ndkStore = get(ndkStore)
 			if (!$ndkStore.activeUser?.pubkey) return
 			const stallCoordinates = parseCoordinatesString(`${KindStalls}:${$ndkStore.activeUser.pubkey}:${product.stallId}`)
@@ -61,7 +60,7 @@ export const createProductMutation = createMutation(
 
 export const editProductMutation = createMutation(
 	{
-		mutationFn: async ({ product, categories }: { product: z.infer<typeof productEventSchema>; categories: string[] }) => {
+		mutationFn: async ({ product, categories }: { product: z.infer<typeof productSchema>; categories: string[] }) => {
 			const $ndkStore = get(ndkStore)
 			if (!$ndkStore.activeUser?.pubkey || !product.id) return
 

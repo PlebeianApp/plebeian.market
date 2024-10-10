@@ -9,26 +9,32 @@ export type SettingsMeta = {
 	valueText: string
 }
 
-export const getAllForbiddenWords = async (): Promise<SettingsMeta[]> => {
+export let cachedPattern: RegExp | null = null
+
+export const createForbiddenPattern = (words: SettingsMeta[]) => {
+	const escapedWords = words.map((word) => word.valueText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+	console.log('computing forbidden pattern', escapedWords)
+	const pattern = new RegExp(`(?:^|\\s)(${escapedWords.join('|')})(?:$|\\s|[^a-z])`, 'i')
+	cachedPattern = pattern
+	return pattern
+}
+
+export const getAllForbiddenWords = async (): Promise<{ forbiddenWords: SettingsMeta[]; forbiddenPattern: RegExp }> => {
 	try {
 		const results = await db
 			.select({ valueText: appSettingsMeta.valueText, id: appSettingsMeta.id })
 			.from(appSettingsMeta)
 			.where(eq(appSettingsMeta.metaName, APP_SETTINGS_META.WORD_BLACKLIST.value))
 			.execute()
-
-		return results.filter((result): result is SettingsMeta => result.valueText !== null)
+		const forbiddenWords = results.filter((result): result is SettingsMeta => result.valueText !== null)
+		return {
+			forbiddenWords,
+			forbiddenPattern: createForbiddenPattern(forbiddenWords),
+		}
 	} catch (e) {
 		console.error(`Error getting forbidden words: ${e}`)
 		error(500, `Failed to get forbidden words: ${e}`)
 	}
-}
-
-export const disallowedString = async (text: string): Promise<string | null> => {
-	const forbiddenWords = await getAllForbiddenWords()
-	const lowercaseText = text.toLowerCase()
-	const disallowedWord = forbiddenWords.find((word) => lowercaseText.includes(word.valueText.toLowerCase()))
-	return disallowedWord?.valueText ?? null
 }
 
 export const addForbiddenWord = async (newWord: string): Promise<void> => {

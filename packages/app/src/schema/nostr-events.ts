@@ -1,29 +1,12 @@
+import { page } from '$app/stores'
 import { KindStalls } from '$lib/constants'
+import { derived, get } from 'svelte/store'
 import { z } from 'zod'
 
 import type { ProductTypes } from '@plebeian/database'
 import { PRODUCT_TYPES } from '@plebeian/database/constants'
 
-const forbiddenWords = new Set([
-	'test',
-	'testing',
-	'TestStore',
-	'example',
-	'dummy',
-	'fake',
-	'demo',
-	'sample',
-	'trial',
-	'sandbox',
-	'mock',
-	'placeholder',
-	'lorem',
-	'admin',
-	'password',
-])
-
-const escapedWords = Array.from(forbiddenWords).map((word) => word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
-const forbiddenPattern = new RegExp(`(?:^|\\s)(${escapedWords.join('|')})(?:$|\\s|[^a-z])`, 'i')
+import type { PageData } from '../routes/$types'
 
 const productTypeValidator = (value: unknown) => {
 	if (typeof value !== 'string') {
@@ -35,6 +18,14 @@ const productTypeValidator = (value: unknown) => {
 	return value
 }
 
+export const forbiddenPatternStore = derived(page, ($page) => {
+	const forbiddenPattern = ($page.data as PageData).forbiddenWords.forbiddenPattern
+	return {
+		createProductEventSchema: createProductEventSchema(forbiddenPattern),
+		createStallEventContentSchema: createStallEventContentSchema(forbiddenPattern),
+	}
+})
+
 export const shippingObjectSchema = z.object({
 	id: z.string(),
 	name: z.string().optional(),
@@ -43,40 +34,41 @@ export const shippingObjectSchema = z.object({
 	countries: z.array(z.string()).optional(),
 })
 
-export const productEventSchema = z
-	.object({
-		id: z.string(),
-		stall_id: z.string().refine((value) => !value.startsWith(KindStalls.toString()), {
-			message: `stallId must be and identifier ("d" tag)`,
-		}),
-		name: z
-			.string()
-			.trim()
-			.refine((name) => !forbiddenPattern.test(name), {
-				message: `forbidden word`,
+export const createProductEventSchema = (forbiddenPattern: RegExp) =>
+	z
+		.object({
+			id: z.string(),
+			stall_id: z.string().refine((value) => !value.startsWith(KindStalls.toString()), {
+				message: `stallId must be and identifier ("d" tag)`,
 			}),
-		type: z.custom(productTypeValidator).optional(),
-		description: z
-			.string()
-			.optional()
-			.refine((description) => description === undefined || !forbiddenPattern.test(description) || !description.trim().length, {
-				message: `forbidden word`,
-			}),
-		images: z.array(z.string()).optional(),
-		currency: z.string(),
-		price: z.number(),
-		quantity: z.number().int(),
-		specs: z.array(z.tuple([z.string(), z.string()])).optional(),
-		shipping: z.array(shippingObjectSchema),
-	})
-	.partial()
-	.transform((data) => {
-		const { stall_id, ...rest } = data
-		return {
-			...rest,
-			stallId: data.stall_id,
-		}
-	})
+			name: z
+				.string()
+				.trim()
+				.refine((name) => !forbiddenPattern.test(name), {
+					message: `forbidden word`,
+				}),
+			type: z.custom(productTypeValidator).optional(),
+			description: z
+				.string()
+				.optional()
+				.refine((description) => description === undefined || !forbiddenPattern.test(description) || !description.trim().length, {
+					message: `forbidden word`,
+				}),
+			images: z.array(z.string()).optional(),
+			currency: z.string(),
+			price: z.number(),
+			quantity: z.number().int(),
+			specs: z.array(z.tuple([z.string(), z.string()])).optional(),
+			shipping: z.array(shippingObjectSchema),
+		})
+		.partial()
+		.transform((data) => {
+			const { stall_id, ...rest } = data
+			return {
+				...rest,
+				stallId: data.stall_id,
+			}
+		})
 
 export const auctionEventSchema = z.object({
 	id: z.string(),
@@ -93,23 +85,24 @@ export const auctionEventSchema = z.object({
 
 export const bidEventSchema = z.number().int()
 
-export const stallEventContentSchema = z.object({
-	id: z.string(),
-	name: z
-		.string()
-		.trim()
-		.refine((name) => !forbiddenPattern.test(name), {
-			message: `forbidden word`,
-		}),
-	description: z
-		.string()
-		.optional()
-		.refine((description) => description === undefined || !forbiddenPattern.test(description) || !description.trim().length, {
-			message: `forbidden word`,
-		}),
-	currency: z.string(),
-	shipping: z.array(shippingObjectSchema).nonempty(),
-})
+export const createStallEventContentSchema = (forbiddenPattern: RegExp) =>
+	z.object({
+		id: z.string(),
+		name: z
+			.string()
+			.trim()
+			.refine((name) => !forbiddenPattern.test(name), {
+				message: `forbidden word`,
+			}),
+		description: z
+			.string()
+			.optional()
+			.refine((description) => description === undefined || !forbiddenPattern.test(description) || !description.trim().length, {
+				message: `forbidden word`,
+			}),
+		currency: z.string(),
+		shipping: z.array(shippingObjectSchema).nonempty(),
+	})
 
 export const userEventSchema = z.object({
 	id: z.string(),
