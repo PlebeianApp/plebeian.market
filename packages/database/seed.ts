@@ -27,8 +27,18 @@ import {
 	WALLET_TYPE,
 } from './constants'
 import { db } from './database'
-import { CURRENCIES_WITH_FICTIONAL_CONVERSION_RATES, devInstance, devUser1, devUser2, devUser3, devUser4, devUser5 } from './fixtures'
 import {
+	CURRENCIES_WITH_FICTIONAL_CONVERSION_RATES,
+	devInstance,
+	devUser1,
+	devUser2,
+	devUser3,
+	devUser4,
+	devUser5,
+	FORBIDDEN_WORDS,
+} from './fixtures'
+import {
+	AppMeta,
 	AppSettings,
 	Auction,
 	Bid,
@@ -140,6 +150,33 @@ const main = async () => {
 		return metaType
 	})
 
+	const appMetaData = metaTypeData
+		.flat(2)
+		.filter((metaType) => metaType.scope === 'app_settings')
+		.map((metaType) => {
+			const { name } = metaType
+
+			if (name == APP_SETTINGS_META.WORD_BLACKLIST.value) {
+				let appMeta: AppMeta[] = []
+				FORBIDDEN_WORDS.forEach((value) => {
+					const userMeta = {
+						id: createId(),
+						appId: appSettings.instancePk,
+						metaName: name,
+						valueText: value,
+						valueBoolean: null,
+						valueNumeric: null,
+						key: null,
+						createdAt: faker.date.recent(),
+						updatedAt: faker.date.future(),
+					} as AppMeta
+					appMeta.push(userMeta)
+				})
+				return appMeta
+			}
+		})
+		.filter(Boolean)
+
 	const userMetaData = userIds.flatMap((userId) => {
 		return metaTypeData
 			.flat(2)
@@ -154,7 +191,11 @@ const main = async () => {
 				if (name == USER_META.TRUST_LVL.value) {
 					valueText = faker.helpers.arrayElement(Object.values(USER_TRUST_LEVEL))
 				} else if (name == USER_META.ROLE.value) {
-					valueText = faker.helpers.arrayElement(Object.values(USER_ROLES))
+					if (userId.id === devUser1.pk) {
+						valueText = USER_ROLES.ADMIN
+					} else {
+						valueText = faker.helpers.arrayElement(Object.values(USER_ROLES))
+					}
 				} else if (name == USER_META.V4V_SHARE.value) {
 					return V4V_DEFAULT_RECIPIENTS.map((value) => {
 						valueNumeric = parseFloat(
@@ -169,7 +210,7 @@ const main = async () => {
 							metaName: name,
 							valueText: value.paymentDetails,
 							valueBoolean: valueBoolean,
-                            valueNumeric: String(valueNumeric),
+							valueNumeric: String(valueNumeric),
 							key: value.npub,
 							createdAt: faker.date.recent(),
 							updatedAt: faker.date.future(),
@@ -523,21 +564,21 @@ const main = async () => {
 	const productImagesData = productData.flat(2).map((product) => {
 		const images = randomLengthArrayFromTo(0, 4).map((_, index) => {
 			// Randomly choose an aspect ratio
-			const aspectRatio = faker.helpers.arrayElement(['square', 'portrait', 'landscape']);
-			let width, height;
+			const aspectRatio = faker.helpers.arrayElement(['square', 'portrait', 'landscape'])
+			let width, height
 
 			switch (aspectRatio) {
 				case 'square':
-					width = height = faker.number.int({ min: 300, max: 600 });
-					break;
+					width = height = faker.number.int({ min: 300, max: 600 })
+					break
 				case 'portrait':
-					width = faker.number.int({ min: 300, max: 400 });
-					height = faker.number.int({ min: 500, max: 800 });
-					break;
+					width = faker.number.int({ min: 300, max: 400 })
+					height = faker.number.int({ min: 500, max: 800 })
+					break
 				case 'landscape':
-					width = faker.number.int({ min: 500, max: 800 });
-					height = faker.number.int({ min: 300, max: 400 });
-					break;
+					width = faker.number.int({ min: 500, max: 800 })
+					height = faker.number.int({ min: 300, max: 400 })
+					break
 			}
 
 			return {
@@ -552,10 +593,10 @@ const main = async () => {
 				imageOrder: index,
 				createdAt: faker.date.recent(),
 				updatedAt: faker.date.future(),
-			} as ProductImage;
-		});
-		return images;
-	});
+			} as ProductImage
+		})
+		return images
+	})
 
 	const userStallsEvents = userStalls.flatMap((stallList) =>
 		stallList.map(
@@ -650,6 +691,7 @@ const main = async () => {
 			{ table: dbSchema.appSettings, data: appSettings },
 			{ table: dbSchema.users, data: fullUsers },
 			{ table: dbSchema.userMeta, data: userMetaData.flat(1) },
+			{ table: dbSchema.appSettingsMeta, data: appMetaData.flat(1) },
 			{ table: dbSchema.stalls, data: userStalls.flat(1) },
 			{ table: dbSchema.auctions, data: auctionsData.flat(2) },
 			{ table: dbSchema.bids, data: bidsData.flat(2) },

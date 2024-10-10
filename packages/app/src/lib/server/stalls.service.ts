@@ -333,7 +333,7 @@ export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall 
 		})
 	} catch (e) {
 		console.error(`Failed to create stall: ${e}`)
-		throw error(500, `Failed to create stall: ${e}`)
+		return error(e.status, `Failed to create stall: ${e}`)
 	}
 }
 
