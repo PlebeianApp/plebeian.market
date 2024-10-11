@@ -17,7 +17,6 @@ import {
 	db,
 	desc,
 	eq,
-	events,
 	eventTags,
 	getTableColumns,
 	inArray,
@@ -253,13 +252,6 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 					imageType: 'gallery',
 					imageOrder: index + 1,
 				}))
-
-				await db.insert(events).values({
-					id: eventCoordinates.coordinates,
-					author: productEvent.pubkey,
-					event: productEvent.content,
-					kind: productEvent.kind!,
-				})
 
 				const productResult = await db.insert(products).values(insertProduct).returning()
 

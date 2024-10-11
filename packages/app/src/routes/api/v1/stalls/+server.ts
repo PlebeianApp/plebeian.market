@@ -1,7 +1,7 @@
 import { error, json } from '@sveltejs/kit'
 import { KindStalls } from '$lib/constants'
 import { stallsFilterSchema } from '$lib/schema'
-import { verifyAndPersistRawEvent } from '$lib/server/nostrEvents.service'
+import { verifyEventBody } from '$lib/server/nostrEvents.service'
 import { createStall, getAllStalls } from '$lib/server/stalls.service'
 
 export async function GET({ url: { searchParams } }) {
@@ -17,7 +17,7 @@ export async function GET({ url: { searchParams } }) {
 
 export async function POST({ request }) {
 	try {
-		const verifiedEvent = await verifyAndPersistRawEvent(request, KindStalls)
+		const verifiedEvent = await verifyEventBody(request, KindStalls)
 		return json(await createStall(verifiedEvent))
 	} catch (e) {
 		console.log('error', e)
