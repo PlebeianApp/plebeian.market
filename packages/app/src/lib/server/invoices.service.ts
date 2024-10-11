@@ -127,7 +127,6 @@ export const updateInvoiceStatus = async (invoiceId: string, newStatus: InvoiceS
 					quantity: product.quantity - 1,
 				})
 				.where(eq(products.id, product.id))
-				.returning()
 				.execute()
 		}
 	}
