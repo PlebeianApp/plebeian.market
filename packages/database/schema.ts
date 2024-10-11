@@ -249,8 +249,7 @@ export const eventTags = sqliteTable(
 		tagValue: text('tag_value').notNull(),
 		secondTagValue: text('second_tag_value'),
 		thirdTagValue: text('third_tag_value'),
-		eventId: text('event_id')
-			.notNull(),
+		eventId: text('event_id').notNull(),
 		userId: text('user_id')
 			.references(() => users.id, { onDelete: 'cascade', onUpdate: 'cascade' })
 			.notNull(),

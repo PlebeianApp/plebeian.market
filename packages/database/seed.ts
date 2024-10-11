@@ -679,7 +679,6 @@ const main = async () => {
 		db.delete(dbSchema.shipping),
 		db.delete(dbSchema.shippingZones),
 		db.delete(dbSchema.paymentDetails),
-		db.delete(dbSchema.events),
 		db.delete(dbSchema.userMeta),
 		db.delete(dbSchema.users),
 	])
@@ -706,7 +705,6 @@ const main = async () => {
 			{ table: dbSchema.orders, data: ordersData.flat(2) },
 			{ table: dbSchema.invoices, data: invoicesData.flat(2) },
 			{ table: dbSchema.orderItems, data: orderItemsData.flat(2) },
-			{ table: dbSchema.events, data: eventData.flat(1) },
 		]) {
 			await tx.insert(table).values(data).execute()
 		}
