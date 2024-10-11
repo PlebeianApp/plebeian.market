@@ -3,9 +3,9 @@ import { error } from '@sveltejs/kit'
 import { standardDisplayDateFormat } from '$lib/constants'
 import { formatSats } from '$lib/utils'
 import { format } from 'date-fns'
+import { quadInOut } from 'svelte/easing'
 
-import type { Invoice, InvoiceStatus } from '@plebeian/database'
-import { db, eq, invoices, orders } from '@plebeian/database'
+import { db, eq, getTableColumns, Invoice, INVOICE_STATUS, invoices, InvoiceStatus, orderItems, orders, products } from '@plebeian/database'
 
 export type DisplayInvoice = Pick<
 	Invoice,
@@ -111,6 +111,26 @@ export const updateInvoiceStatus = async (invoiceId: string, newStatus: InvoiceS
 
 	if (userId !== buyerId && userId !== sellerId) {
 		error(401, 'Unauthorized')
+	}
+
+	if (newStatus === INVOICE_STATUS.PAID) {
+		const invoiceProducts = await db
+			.select({ ...getTableColumns(products) })
+			.from(orderItems)
+			.where(eq(orderItems.orderId, invoiceRes.orderId))
+			.innerJoin(products, eq(orderItems.productId, products.id))
+			.execute()
+
+		for (const product of invoiceProducts) {
+			await db
+				.update(products)
+				.set({
+					quantity: product.quantity - 1,
+				})
+				.where(eq(products.id, product.id))
+				.returning()
+				.execute()
+		}
 	}
 
 	const [updatedInvoice] = await db
