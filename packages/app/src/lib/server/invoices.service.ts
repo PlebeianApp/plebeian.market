@@ -3,7 +3,6 @@ import { error } from '@sveltejs/kit'
 import { standardDisplayDateFormat } from '$lib/constants'
 import { formatSats } from '$lib/utils'
 import { format } from 'date-fns'
-import { quadInOut } from 'svelte/easing'
 
 import { db, eq, getTableColumns, Invoice, INVOICE_STATUS, invoices, InvoiceStatus, orderItems, orders, products } from '@plebeian/database'
 
