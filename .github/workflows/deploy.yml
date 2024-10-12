@@ -9,10 +9,10 @@ jobs:
     if: ${{ github.event.comment.body == '/deploy' || github.event.comment.body == '/takedown' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout pull request 🏁
+        uses: actions/checkout@v3
         with:
-          ref: ${{ github.event.issue.pull_request.head.ref }}
-          repository: ${{ github.event.issue.pull_request.head.repo.full_name }}
+          ref: refs/pull/${{ github.event.issue.number }}/head
 
       - run: corepack enable
       - uses: actions/setup-node@v4
