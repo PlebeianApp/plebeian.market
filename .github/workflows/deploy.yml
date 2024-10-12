@@ -1,56 +1,53 @@
 name: Deploy
 
 on:
-  push:
-    branches:
-      - main
+  issue_comment:
+    types: [created]
 
 jobs:
   build-and-deploy:
+    if: ${{ github.event.comment.body == '/deploy' || github.event.comment.body == '/takedown' }}
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.issue.pull_request.head.ref }}
+          repository: ${{ github.event.issue.pull_request.head.repo.full_name }}
 
-    - run: corepack enable
-    - uses: actions/setup-node@v4
-      with:
-        node-version: 20
-        cache: "pnpm"
-    - uses: pnpm/action-setup@v4
-      name: Install pnpm
-      with:
-        version: 9.1.4
+      - run: corepack enable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          version: 9.1.4
 
-    - run: sudo apt install sshpass rsync 
+      - run: sudo apt install sshpass rsync
+      - run: pnpm install
+      - run: pnpm db:init
+      - run: pnpm build
 
-      
-    - run: pnpm install
-    - run: pnpm db:init
-    - run: pnpm build
+      - name: Deploy
+        if: ${{ github.event.comment.body == '/deploy' && github.event.issue.pull_request }}
+        run: |
+          rsync --rsh="/usr/bin/sshpass -p \"${{ secrets.REMOTE_PASSWORD }}\" ssh -o StrictHostKeyChecking=no -l deployer" -avz --delete . ${{ secrets.REMOTE_USER }}@${{ vars.REMOTE_HOST }}:plebeian.market
+          sshpass -p "${{ secrets.REMOTE_PASSWORD }}" ssh -o StrictHostKeyChecking=no ${{ secrets.REMOTE_USER }}@${{ vars.REMOTE_HOST }} << 'EOF'
+            cd plebeian.market
+            mv .env.sample .env
+            fuser -k 4173/tcp || true
+            pnpm i --frozen-lockfile
+            pnpm db:init
+            nohup pnpm preview > preview.log 2>&1 &
+            sleep 10
+            head -n 20 preview.log
+          EOF
 
-    - name: rsync
-      run: rsync --rsh="/usr/bin/sshpass -p \"${{ secrets.REMOTE_PASSWORD }}\" ssh -o StrictHostKeyChecking=no -l deployer" -avz --delete . ${{ secrets.REMOTE_USER }}@${{ vars.REMOTE_HOST }}:plebeian.market
-
-    - name: Deploy final assets to server
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ vars.REMOTE_HOST }}
-        username: ${{ secrets.REMOTE_USER }}
-        password: ${{ secrets.REMOTE_PASSWORD }}
-        script: |
-          bash
-          cd plebeian.market
-          mv .env.sample .env
-          # Kill any process running on port 4173
-          fuser -k 4173/tcp || true
-          # Install dependencies and build the project
-          pnpm i --frozen-lockfile
-          pnpm db:init
-          # Run pnpm preview in the background and log output to a file
-          nohup pnpm preview > preview.log 2>&1 &
-          # Give pnpm preview some time to start and log its initial output
-          sleep 10
-          # Display the first few lines of the pnpm preview output
-          head -n 20 preview.log
+      - name: Stop Deployment
+        if: ${{ github.event.comment.body == '/takedown' && github.event.issue.pull_request }}
+        run: |
+          sshpass -p "${{ secrets.REMOTE_PASSWORD }}" ssh -o StrictHostKeyChecking=no ${{ secrets.REMOTE_USER }}@${{ vars.REMOTE_HOST }} << 'EOF'
+            fuser -k 4173/tcp || true
+          EOF
 
