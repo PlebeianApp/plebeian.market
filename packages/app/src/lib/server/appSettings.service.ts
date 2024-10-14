@@ -37,6 +37,13 @@ export const getAllForbiddenWords = async (): Promise<{ forbiddenWords: Settings
 	}
 }
 
+export const disallowedString = async (text: string): Promise<string | null> => {
+	const forbiddenWords = await getAllForbiddenWords()
+	const lowercaseText = text.toLowerCase()
+	const disallowedWord = forbiddenWords.find((word) => lowercaseText.includes(word.valueText.toLowerCase()))
+	return disallowedWord?.valueText ?? null
+}
+
 export const addForbiddenWord = async (newWord: string): Promise<void> => {
 	const instancePk = await getAppSettings()
 

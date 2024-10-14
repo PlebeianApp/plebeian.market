@@ -94,6 +94,14 @@
 		isLoading = true
 
 		try {
+			if (!currentShippings.length) {
+				throw new Error('Add at least one shipping method')
+			}
+			for (const [i, shipping] of currentShippings.entries()) {
+				if (!shipping.shipping) {
+					throw new Error(`Specify a method for shipping item number ${i + 1}`)
+				}
+			}
 			const formData = new FormData(sEvent.currentTarget as HTMLFormElement)
 			const shippingData = currentShippings
 				.filter((method) => method.shipping !== null && method.shipping.id !== undefined)
@@ -165,7 +173,7 @@
 				<Tabs.Trigger value="basic" class={activeTab}>Basic</Tabs.Trigger>
 				<Tabs.Trigger value="categories" class={activeTab}>Categories</Tabs.Trigger>
 				<Tabs.Trigger data-tooltip="Images help customers recognize your product" value="images" class={activeTab}>Images</Tabs.Trigger>
-				<Tabs.Trigger value="shipping" class={activeTab}>Shipping</Tabs.Trigger>
+				<Tabs.Trigger value="shipping" class={`${activeTab} ${!currentShippings.length ? 'required-mark' : ''}`}>Shipping</Tabs.Trigger>
 			</Tabs.List>
 
 			<Tabs.Content value="basic" class="flex flex-col gap-2">

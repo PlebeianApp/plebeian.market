@@ -1,7 +1,6 @@
 import { createQuery } from '@tanstack/svelte-query'
 
 import type { AppSettingsMetaName } from '@plebeian/database'
-
 import { createRequest, queryClient } from './client'
 
 export type SettingsMeta = {
