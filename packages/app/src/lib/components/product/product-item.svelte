@@ -41,7 +41,7 @@
 			</div>
 		{/if}
 	</Card.CardContent>
-	<a href={userNip05 ? `/products/${userNip05}/${identifier}` : `/products/${productCoordinates}`}>
+	<a href={userNip05 ? `/products/${userNip05}/${identifier}` : `/products/${productCoordinates.coordinates}`}>
 		<Card.Footer class="cursor-pointer">
 			<div class="flex flex-col justify-between items-start w-full gap-2">
 				<div class="flex-grow">
