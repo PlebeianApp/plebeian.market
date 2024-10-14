@@ -13,7 +13,6 @@ export let cachedPattern: RegExp | null = null
 
 export const createForbiddenPattern = (words: SettingsMeta[]) => {
 	const escapedWords = words.map((word) => word.valueText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
-	console.log('computing forbidden pattern', escapedWords)
 	const pattern = new RegExp(`(?:^|\\s)(${escapedWords.join('|')})(?:$|\\s|[^a-z])`, 'i')
 	cachedPattern = pattern
 	return pattern

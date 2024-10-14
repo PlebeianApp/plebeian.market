@@ -1,10 +1,10 @@
 import { error, json } from '@sveltejs/kit'
-import { authorize, authorizeUserless } from '$lib/auth'
+import { authorizeUserless } from '$lib/auth'
 import { editImage, getImagesByUserId } from '$lib/server/productImages.service'
 import { getProductById } from '$lib/server/products.service'
 import { z } from 'zod'
 
-export async function GET({ request, url: { searchParams } }) {
+export async function GET({ url: { searchParams } }) {
 	const userId = searchParams.get('userId')
 
 	if (!userId) {
