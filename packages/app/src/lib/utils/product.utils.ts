@@ -1,10 +1,12 @@
 import type { DisplayProduct } from '$lib/server/products.service'
 import type { RichStall } from '$lib/server/stalls.service'
+import { get } from 'svelte/store'
 
 import type { ProductImage } from '@plebeian/database'
 import { createSlugId } from '@plebeian/database/utils'
 
-import { productEventSchema } from '../../schema/nostr-events'
+import { forbiddenPatternStore } from '../../schema/nostr-events'
+import { displayZodErrors } from './zod.utils'
 
 export function prepareProductData(
 	formData: FormData,
@@ -29,10 +31,10 @@ export function prepareProductData(
 }
 
 export function validateProduct(productData: unknown) {
-	const result = productEventSchema.safeParse(productData)
+	const result = get(forbiddenPatternStore).createProductEventSchema.safeParse(productData)
 	if (!result.success) {
-		const errors = result.error.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`)
-		return { success: false, errors }
+		displayZodErrors(result.error)
+		return { success: false }
 	}
 	return { success: true, data: result.data }
 }

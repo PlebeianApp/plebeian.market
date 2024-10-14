@@ -30,7 +30,8 @@ import {
 } from '@plebeian/database'
 
 import type { RichShippingInfo } from './shipping.service'
-import { stallEventSchema } from '../../schema/nostr-events'
+import { createStallEventContentSchema } from '../../schema/nostr-events'
+import { cachedPattern } from './appSettings.service'
 import { getShippingByStallId } from './shipping.service'
 
 export type RichStall = {
@@ -257,9 +258,10 @@ export const getStallsByUserId = async (userId: string): Promise<RichStall[]> =>
 export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall | undefined> => {
 	try {
 		return await db.transaction(async (tx) => {
+			if (!cachedPattern) throw Error(`No forbidden pattern`)
 			const { coordinates, tagD } = getEventCoordinates(stallEvent) as EventCoordinates
 
-			const { data, success } = stallEventSchema.safeParse({
+			const { data, success } = createStallEventContentSchema(cachedPattern).safeParse({
 				id: coordinates,
 				...JSON.parse(stallEvent.content),
 			})
@@ -340,10 +342,13 @@ export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall 
 export const updateStall = async (stallId: string, stallEvent: NostrEvent): Promise<DisplayStall | null> => {
 	try {
 		return await db.transaction(async (tx) => {
-			const { data: parsedStall, success } = stallEventSchema.partial().safeParse({
-				id: stallId,
-				...JSON.parse(stallEvent.content),
-			})
+			if (!cachedPattern) throw Error(`No forbidden pattern`)
+			const { data: parsedStall, success } = createStallEventContentSchema(cachedPattern)
+				.partial()
+				.safeParse({
+					id: stallId,
+					...JSON.parse(stallEvent.content),
+				})
 			if (!success) throw new Error(`Failed to parse stall event`)
 
 			const [stallResult] = await tx

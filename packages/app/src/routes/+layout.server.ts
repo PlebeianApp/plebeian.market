@@ -1,3 +1,4 @@
+import { getAllForbiddenWords } from '$lib/server/appSettings.service'
 import { getAppSettings } from '$lib/server/setup.service'
 import { btcToCurrency } from '$lib/utils'
 
@@ -10,6 +11,7 @@ export const load: PageServerLoad = async () => {
 	return {
 		prices: await fetchInitialPrices(),
 		appSettings: (await getAppSettings()) as AppSettings,
+		forbiddenWords: await getAllForbiddenWords(),
 		paymentDetailsMethod: Object.values(PAYMENT_DETAILS_METHOD) as unknown as PaymentDetailsMethod,
 	}
 }

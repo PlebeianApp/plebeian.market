@@ -2,6 +2,7 @@
 	import type { NDKTag } from '@nostr-dev-kit/ndk'
 	import type { RichStall } from '$lib/server/stalls.service'
 	import type { Location } from '$lib/utils'
+	import type { ValidationErrors } from '$lib/utils/zod.utils'
 	import type { GeoJSON } from 'geojson'
 	import { NDKEvent } from '@nostr-dev-kit/ndk'
 	import { browser } from '$app/environment'
@@ -28,12 +29,15 @@
 		shouldRegister,
 		unixTimeNow,
 	} from '$lib/utils'
+	import { validateForm } from '$lib/utils/zod.utils'
 	import geohash from 'ngeohash'
 	import { createEventDispatcher, onMount } from 'svelte'
+	import { get } from 'svelte/store'
 
 	import { COUNTRIES_ISO, CURRENCIES } from '@plebeian/database/constants'
 	import { createId, createSlugId } from '@plebeian/database/utils'
 
+	import { forbiddenPatternStore } from '../../../schema/nostr-events'
 	import Spinner from '../assets/spinner.svelte'
 	import Leaflet from '../leaflet/leaflet.svelte'
 	import Separator from '../ui/separator/separator.svelte'
@@ -62,6 +66,7 @@
 	let locationResults: Location[] = []
 	let mapGeoJSON: (GeoJSON.Feature<GeoJSON.Point> & { boundingbox: [number, number, number, number] }) | null = null
 	let isLoading = false
+	let validationErrors: ValidationErrors = {}
 
 	const debouncedSearch = debounce(async () => {
 		isLoading = true
@@ -117,11 +122,13 @@
 
 	async function create(event: Event) {
 		if (!changed) return
-		isLoading = true
-		event.preventDefault()
 		if (!$ndkStore.activeUser?.pubkey) return
 
 		const identifier = stall?.identifier ?? createSlugId(name)
+
+		isLoading = true
+		event.preventDefault()
+
 		const tags: NDKTag[] = [['d', identifier]]
 		if (headerImage) tags.push(['image', headerImage])
 		if (geohashOfSelectedGeometry) tags.push(['g', geohashOfSelectedGeometry])
@@ -157,6 +164,7 @@
 	}
 
 	onMount(() => {
+		shippingMethods.length === 0 && addShipping()
 		if (stall?.geohash) {
 			geohashOfSelectedGeometry = stall.geohash
 			const { latitude, longitude } = geohash.decode(stall.geohash)
@@ -177,6 +185,23 @@
 		}
 	})
 
+	async function handleSubmit(event: Event) {
+		event.preventDefault()
+		const formData = {
+			id: stall?.identifier ?? createSlugId(name),
+			name,
+			description,
+			currency,
+			shipping: shippingMethods,
+		}
+
+		validationErrors = validateForm(formData, get(forbiddenPatternStore).createStallEventContentSchema)
+
+		if (Object.keys(validationErrors).length === 0) {
+			await create(event)
+		}
+	}
+
 	async function handleDelete() {
 		if (!stall?.id) return
 		await $deleteStallMutation.mutateAsync(stall.id)
@@ -184,7 +209,7 @@
 	}
 </script>
 
-<form class="flex flex-col gap-4 grow" on:submit={create}>
+<form class="flex flex-col gap-4 grow" on:submit={handleSubmit}>
 	<Collapsible.Root>
 		<Collapsible.Trigger asChild let:builder>
 			<Button
@@ -209,11 +234,16 @@
 			data-tooltip="Your stall's name"
 			bind:value={name}
 			required
-			class="border-2 border-black"
+			class={`border-2 border-black ${validationErrors['name'] ? 'ring-2 ring-red-500' : ''}`}
 			type="text"
 			name="title"
 			placeholder="e.g. Fancy Wears"
 		/>
+		{#if validationErrors['name']}
+			<p class="text-red-500 text-sm mt-1">
+				{validationErrors['name'] == 'forbidden_word' ? 'Forbidden word, this is not allowed' : validationErrors['name']}
+			</p>
+		{/if}
 	</div>
 
 	<div class="grid w-full items-center gap-1.5">
@@ -221,10 +251,13 @@
 		<Textarea
 			data-tooltip="More information on your stall"
 			bind:value={description}
-			class="border-2 border-black"
+			class={`border-2 border-black ${validationErrors['description'] ? 'ring-2 ring-red-500' : ''}`}
 			placeholder="Description"
 			name="description"
 		/>
+		{#if validationErrors['description']}
+			<p class="text-red-500 text-sm mt-1">{validationErrors['description']}</p>
+		{/if}
 	</div>
 
 	<Collapsible.Root>
@@ -311,11 +344,14 @@
 				<Input
 					required
 					bind:value={item.name}
-					class="border-2 border-black"
+					class={`border-2 border-black ${validationErrors[`shipping.${i}.name`] ? 'ring-2 ring-red-500' : ''}`}
 					type="text"
 					id={`shipping-name-${i}`}
 					placeholder="24/28h Europe"
 				/>
+				{#if validationErrors[`shipping.${i}.name`]}
+					<p class="text-red-500 text-sm mt-1">{validationErrors[`shipping.${i}.name`]}</p>
+				{/if}
 			</div>
 			<div>
 				<Label for={`shipping-cost-${i}`} class="font-bold">Base Cost</Label>
@@ -327,8 +363,11 @@
 					type="text"
 					pattern="^(?!.*\.\.)[0-9]*([.][0-9]+)?"
 					id={`shipping-cost-${i}`}
-					placeholder="e.g. $30"
+					placeholder="e.g. 30"
 				/>
+				{#if validationErrors[`shipping.${i}.cost`]}
+					<p class="text-red-500 text-sm mt-1">{validationErrors[`shipping.${i}.cost`]}</p>
+				{/if}
 			</div>
 			<div>
 				<Label for={`shipping-countries-${i}`} class="font-bold">Countries</Label>

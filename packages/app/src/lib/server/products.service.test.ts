@@ -8,6 +8,7 @@ import { describe, expect, it } from 'vitest'
 import type { Product } from '@plebeian/database'
 import { createId, devUser1 } from '@plebeian/database'
 
+import { getAllForbiddenWords } from './appSettings.service'
 import {
 	createProducts,
 	getAllProducts,
@@ -92,6 +93,7 @@ describe('products service', () => {
 	})
 
 	it('creates a product', async () => {
+		await getAllForbiddenWords()
 		const stall = await getStallsByUserId(devUser1.pk).then((stalls) => stalls[0])
 		const skSigner = new NDKPrivateKeySigner(devUser1.sk)
 		const identifier = createId()

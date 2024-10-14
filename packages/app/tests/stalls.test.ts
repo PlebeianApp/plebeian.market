@@ -58,7 +58,6 @@ describe('stalls', async () => {
 		await page.click('text=USD')
 
 		// Add shipping method
-		await page.click('button:has-text("Add Shipping Method")')
 		await page.fill('input[id="shipping-name-0"]', 'Standard Shipping')
 		await page.fill('input[id="shipping-cost-0"]', '10')
 

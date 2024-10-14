@@ -1,5 +1,7 @@
 import { createQuery } from '@tanstack/svelte-query'
 
+import type { AppSettingsMetaName } from '@plebeian/database'
+
 import { createRequest, queryClient } from './client'
 
 export type SettingsMeta = {
@@ -13,7 +15,7 @@ declare module './client' {
 	}
 }
 
-export const appSettingsMetaQuery = (key: string) =>
+export const appSettingsMetaQuery = (key: AppSettingsMetaName['value']) =>
 	createQuery<SettingsMeta[]>(
 		{
 			queryKey: ['settings-meta', key],
@@ -21,6 +23,7 @@ export const appSettingsMetaQuery = (key: string) =>
 				const response = await createRequest(`GET /api/v1/settings-meta?key=${key}`, { auth: true })
 				return response
 			},
+			staleTime: 1000 * 60 * 60,
 		},
 		queryClient,
 	)

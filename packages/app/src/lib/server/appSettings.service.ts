@@ -9,15 +9,27 @@ export type SettingsMeta = {
 	valueText: string
 }
 
-export const getAllForbiddenWords = async (): Promise<SettingsMeta[]> => {
+export let cachedPattern: RegExp | null = null
+
+export const createForbiddenPattern = (words: SettingsMeta[]) => {
+	const escapedWords = words.map((word) => word.valueText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+	const pattern = new RegExp(`(?:^|\\s)(${escapedWords.join('|')})(?:$|\\s|[^a-z])`, 'i')
+	cachedPattern = pattern
+	return pattern
+}
+
+export const getAllForbiddenWords = async (): Promise<{ forbiddenWords: SettingsMeta[]; forbiddenPattern: RegExp }> => {
 	try {
 		const results = await db
 			.select({ valueText: appSettingsMeta.valueText, id: appSettingsMeta.id })
 			.from(appSettingsMeta)
 			.where(eq(appSettingsMeta.metaName, APP_SETTINGS_META.WORD_BLACKLIST.value))
 			.execute()
-
-		return results.filter((result): result is SettingsMeta => result.valueText !== null)
+		const forbiddenWords = results.filter((result): result is SettingsMeta => result.valueText !== null)
+		return {
+			forbiddenWords,
+			forbiddenPattern: createForbiddenPattern(forbiddenWords),
+		}
 	} catch (e) {
 		console.error(`Error getting forbidden words: ${e}`)
 		error(500, `Failed to get forbidden words: ${e}`)

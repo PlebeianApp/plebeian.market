@@ -31,7 +31,8 @@ import {
 	sql,
 } from '@plebeian/database'
 
-import { productEventSchema } from '../../schema/nostr-events'
+import { createProductEventSchema } from '../../schema/nostr-events'
+import { cachedPattern } from './appSettings.service'
 import { stallExists } from './stalls.service'
 import { getNip05ByUserId } from './users.service'
 
@@ -169,6 +170,7 @@ export const getProductById = async (productId: string): Promise<DisplayProduct>
 export const createProducts = async (productEvents: NostrEvent[]) => {
 	try {
 		const productPromises = productEvents.map(async (productEvent) => {
+			if (!cachedPattern) throw Error(`No forbidden pattern`)
 			try {
 				const eventCoordinates = getEventCoordinates(productEvent)
 				if (!eventCoordinates) {
@@ -180,7 +182,7 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 					data: parsedProduct,
 					success,
 					error: parseError,
-				} = productEventSchema.safeParse({
+				} = createProductEventSchema(cachedPattern).safeParse({
 					id: productEventContent.id,
 					...productEventContent,
 				})
@@ -338,9 +340,10 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 export const updateProduct = async (productId: string, productEvent: NostrEvent): Promise<DisplayProduct | null> => {
 	try {
 		return await db.transaction(async (tx) => {
+			if (!cachedPattern) throw Error(`No forbidden pattern`)
 			const eventCoordinates = getEventCoordinates(productEvent)
 			const productEventContent = JSON.parse(productEvent.content)
-			const parsedProduct = productEventSchema.safeParse({
+			const parsedProduct = createProductEventSchema(cachedPattern).safeParse({
 				id: productId,
 				...productEventContent,
 			})

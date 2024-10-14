@@ -7,6 +7,8 @@ import { describe, expect, it } from 'vitest'
 
 import { createId, devUser1, shipping } from '@plebeian/database'
 
+import { getAllForbiddenWords } from './appSettings.service'
+
 describe('stalls service', () => {
 	it('gets stalls by user id', async () => {
 		const userId = devUser1.pk
@@ -43,6 +45,7 @@ describe('stalls service', () => {
 	})
 
 	it('creates a stall', async () => {
+		await getAllForbiddenWords()
 		const skSigner = new NDKPrivateKeySigner(devUser1.sk)
 		const identifier = createId()
 		const evContent = {
