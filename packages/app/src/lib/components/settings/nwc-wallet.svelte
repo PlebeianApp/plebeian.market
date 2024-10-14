@@ -77,7 +77,7 @@
 			dispatch('walletAdded', { id: nwcWallet.id, wallet })
 		} else {
 			if (nwcWallet && !nwcWallet.id.startsWith('local-')) {
-				await $deleteWalletMutation.mutateAsync(nwcWallet.id)
+				await $deleteWalletMutation.mutateAsync({ userId: $ndkStore.activeUser?.pubkey, walletId: nwcWallet.id })
 			}
 			const newId = `local-${Date.now()}`
 			localWallets[newId] = wallet
@@ -113,8 +113,8 @@
 			resetForm()
 			toast.success('NWC Wallet deleted locally')
 		} else {
-			$deleteWalletMutation.mutateAsync(nwcWallet.id)
-			toast.success('NWC Wallet deleted')
+			const deleteResult = await $deleteWalletMutation.mutateAsync({ userId: $ndkStore.activeUser?.pubkey, walletId: nwcWallet.id })
+			deleteResult && toast.success('NWC Wallet deleted')
 		}
 		dispatch('walletDeleted', nwcWallet.id)
 	}

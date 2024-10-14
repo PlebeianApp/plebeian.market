@@ -4,6 +4,7 @@
 	import NwcWallet from '$lib/components/settings/nwc-wallet.svelte'
 	import { Button } from '$lib/components/ui/button/index.js'
 	import { queryClient } from '$lib/fetch/client'
+	import { deleteWalletMutation } from '$lib/fetch/wallets.mutations'
 	import { userWalletQuery } from '$lib/fetch/wallets.queries'
 	import ndkStore from '$lib/stores/ndk'
 	import { EncryptedStorage, nav_back } from '$lib/utils'
@@ -31,12 +32,13 @@
 		showEmptyWallet = false
 	}
 
-	function handleWalletDeleted(event: CustomEvent<string>) {
+	async function handleWalletDeleted(event: CustomEvent<string>) {
 		const deletedWalletId = event.detail
 		if (deletedWalletId.startsWith('local-')) {
 			localWallets = localWallets.filter((wallet) => wallet.id !== deletedWalletId)
 		} else {
 			queryClient.invalidateQueries({ queryKey: ['walletDetails'] })
+			// await $deleteWalletMutation.mutateAsync({ userId: $ndkStore.activeUser?.pubkey!,  walletId: deletedWalletId})
 		}
 	}
 
