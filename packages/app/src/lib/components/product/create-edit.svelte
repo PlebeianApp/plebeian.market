@@ -4,6 +4,7 @@
 	import type { RichShippingInfo } from '$lib/server/shipping.service'
 	import type { RichStall } from '$lib/server/stalls.service'
 	import type { StallCoordinatesType } from '$lib/stores/drawer-ui'
+	import type { ValidationErrors } from '$lib/utils/zod.utils'
 	import Button from '$lib/components/ui/button/button.svelte'
 	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte'
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js'
@@ -16,12 +17,15 @@
 	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
 	import ndkStore from '$lib/stores/ndk'
 	import { prepareProductData, validateProduct } from '$lib/utils/product.utils'
+	import { validateForm } from '$lib/utils/zod.utils'
 	import { createEventDispatcher, onMount } from 'svelte'
 	import { toast } from 'svelte-sonner'
+	import { get } from 'svelte/store'
 
 	import type { ProductImage } from '@plebeian/database'
 	import { createId } from '@plebeian/database/utils'
 
+	import { forbiddenPatternStore } from '../../../schema/nostr-events'
 	import Spinner from '../assets/spinner.svelte'
 	import Separator from '../ui/separator/separator.svelte'
 	import MultiImageEdit from './multi-image-edit.svelte'
@@ -35,6 +39,7 @@
 	let categories: Category[] = []
 	let images: Partial<ProductImage>[] = []
 	let currentShippings: { shipping: Partial<RichShippingInfo> | null; extraCost: string }[] = []
+	let validationErrors: ValidationErrors = {}
 
 	$: stallsQuery = createStallsByFilterQuery({
 		userId: $ndkStore.activeUser?.pubkey,
@@ -94,14 +99,6 @@
 		isLoading = true
 
 		try {
-			if (!currentShippings.length) {
-				throw new Error('Add at least one shipping method')
-			}
-			for (const [i, shipping] of currentShippings.entries()) {
-				if (!shipping.shipping) {
-					throw new Error(`Specify a method for shipping item number ${i + 1}`)
-				}
-			}
 			const formData = new FormData(sEvent.currentTarget as HTMLFormElement)
 			const shippingData = currentShippings
 				.filter((method) => method.shipping !== null && method.shipping.id !== undefined)
@@ -111,16 +108,21 @@
 				}))
 
 			const productData = prepareProductData(formData, stall, sortedImages, shippingData, product!)
-			const validationResult = validateProduct(productData)
 
-			if (!validationResult.success || !validationResult.data) return
+			validationErrors = validateForm(productData, get(forbiddenPatternStore).createProductEventSchema)
+
+			if (Object.keys(validationErrors).length > 0) {
+				toast.error('Please correct the errors in the form')
+				isLoading = false
+				return
+			}
 
 			const categoriesData = categories.filter((c) => c.checked).map((c) => c.name)
 
 			if (product) {
-				await $editProductMutation.mutateAsync({ product: validationResult.data, categories: categoriesData })
+				await $editProductMutation.mutateAsync({ product: { stallId: productData.stall_id, ...productData }, categories: categoriesData })
 			} else {
-				await $createProductMutation.mutateAsync({ product: validationResult.data, categories: categoriesData })
+				await $createProductMutation.mutateAsync({ product: { stallId: productData.stall_id, ...productData }, categories: categoriesData })
 			}
 
 			toast.success(`Product ${product ? 'updated' : 'created'}!`)
@@ -173,7 +175,7 @@
 				<Tabs.Trigger value="basic" class={activeTab}>Basic</Tabs.Trigger>
 				<Tabs.Trigger value="categories" class={activeTab}>Categories</Tabs.Trigger>
 				<Tabs.Trigger data-tooltip="Images help customers recognize your product" value="images" class={activeTab}>Images</Tabs.Trigger>
-				<Tabs.Trigger value="shipping" class={`${activeTab} ${!currentShippings.length ? 'required-mark' : ''}`}>Shipping</Tabs.Trigger>
+				<Tabs.Trigger value="shipping" class={activeTab}>Shipping</Tabs.Trigger>
 			</Tabs.List>
 
 			<Tabs.Content value="basic" class="flex flex-col gap-2">
@@ -183,11 +185,16 @@
 						data-tooltip="Your product's name"
 						value={product?.name ?? ''}
 						required
-						class="border-2 border-black"
+						class={`border-2 border-black ${validationErrors['name'] ? 'ring-2 ring-red-500' : ''}`}
 						type="text"
 						name="title"
 						placeholder="e.g. Fancy Wears"
 					/>
+					{#if validationErrors['name']}
+						<p class="text-red-500 text-sm mt-1">
+							{validationErrors['name']}
+						</p>
+					{/if}
 				</div>
 
 				<div class="grid w-full items-center gap-1.5">
@@ -195,10 +202,15 @@
 					<Textarea
 						data-tooltip="More information on your product"
 						value={product?.description ?? ''}
-						class="border-2 border-black"
+						class={`border-2 border-black ${validationErrors['description'] ? 'ring-2 ring-red-500' : ''}`}
 						placeholder="Description"
 						name="description"
 					/>
+					{#if validationErrors['description']}
+						<p class="text-red-500 text-sm mt-1">
+							{validationErrors['description']}
+						</p>
+					{/if}
 				</div>
 
 				<div class="flex gap-1.5">
@@ -206,7 +218,7 @@
 						<Label for="price" class="font-bold required-mark">Price</Label>
 						<Input
 							data-tooltip="The cost of your product"
-							class="border-2 border-black"
+							class={`border-2 border-black ${validationErrors['price'] ? 'ring-2 ring-red-500' : ''}`}
 							min={0}
 							type="text"
 							pattern="^(?!.*\\.\\.)[0-9]*([.][0-9]+)?"
@@ -215,6 +227,11 @@
 							required
 							value={product?.price ?? ''}
 						/>
+						{#if validationErrors['price']}
+							<p class="text-red-500 text-sm mt-1">
+								{validationErrors['price']}
+							</p>
+						{/if}
 					</div>
 
 					<div class="grid w-full items-center gap-1.5">
@@ -223,11 +240,16 @@
 							data-tooltip="The available stock for this product"
 							value={product?.quantity ?? ''}
 							required
-							class="border-2 border-black"
+							class={`border-2 border-black ${validationErrors['quantity'] ? 'ring-2 ring-red-500' : ''}`}
 							type="number"
 							name="quantity"
 							placeholder="10"
 						/>
+						{#if validationErrors['quantity']}
+							<p class="text-red-500 text-sm mt-1">
+								{validationErrors['quantity']}
+							</p>
+						{/if}
 					</div>
 				</div>
 
@@ -358,6 +380,9 @@
 								type="number"
 								name="extra"
 							/>
+							{#if validationErrors[`shipping.${i}.cost`]}
+								<p class="text-red-500 text-sm mt-1">{validationErrors[`shipping.${i}.cost`]}</p>
+							{/if}
 						</div>
 					</div>
 
