@@ -18,7 +18,7 @@
 
 	import type { InvoiceMessage, OrderStatus, PaymentRequestMessage } from '@plebeian/database/constants'
 	import { ORDER_STATUS } from '@plebeian/database/constants'
-	import { createId } from '@plebeian/database/utils'
+	import { createId, createSlugId } from '@plebeian/database/utils'
 
 	import type { OrderPaymentStatus } from '../order/types'
 	import type { CheckoutPaymentEvent } from './types'
@@ -165,7 +165,7 @@
 		paymentType: string,
 	): InvoiceMessage {
 		return {
-			id: createId(),
+			id: createSlugId(`${order.id}-invoice`),
 			createdAt: Date.now(),
 			updatedAt: Date.now(),
 			orderId: order.id,
