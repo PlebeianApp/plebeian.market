@@ -30,31 +30,29 @@
 					</div>
 				</main>
 			</div>
-			{#if $categoriesQuery.data?.categories.length > pageSize}
-				<Pagination.Root bind:page count={$categoriesQuery.data?.total} perPage={pageSize} let:pages let:currentPage>
-					<Pagination.Content>
-						<Pagination.Item>
-							<Pagination.PrevButton />
-						</Pagination.Item>
-						{#each pages as page (page.key)}
-							{#if page.type === 'ellipsis'}
-								<Pagination.Item>
-									<Pagination.Ellipsis />
-								</Pagination.Item>
-							{:else}
-								<Pagination.Item>
-									<Pagination.Link {page} isActive={currentPage == page.value}>
-										{page.value}
-									</Pagination.Link>
-								</Pagination.Item>
-							{/if}
-						{/each}
-						<Pagination.Item>
-							<Pagination.NextButton />
-						</Pagination.Item>
-					</Pagination.Content>
-				</Pagination.Root>
-			{/if}
+			<Pagination.Root bind:page count={$categoriesQuery.data?.total} perPage={pageSize} let:pages let:currentPage>
+				<Pagination.Content>
+					<Pagination.Item>
+						<Pagination.PrevButton />
+					</Pagination.Item>
+					{#each pages as page (page.key)}
+						{#if page.type === 'ellipsis'}
+							<Pagination.Item>
+								<Pagination.Ellipsis />
+							</Pagination.Item>
+						{:else}
+							<Pagination.Item>
+								<Pagination.Link {page} isActive={currentPage == page.value}>
+									{page.value}
+								</Pagination.Link>
+							</Pagination.Item>
+						{/if}
+					{/each}
+					<Pagination.Item>
+						<Pagination.NextButton />
+					</Pagination.Item>
+				</Pagination.Content>
+			</Pagination.Root>
 		</div>
 	{/if}
 </div>

@@ -38,7 +38,7 @@ export const getAllCategories = async (filter: CatsFilter = catsFilterSchema.par
 	}))
 
 	const [{ count: total } = { count: 0 }] = await db
-		.select({ count: count() })
+		.select({ count: countDistinct(eventTags.tagValue) })
 		.from(eventTags)
 		.where(
 			and(
@@ -47,7 +47,6 @@ export const getAllCategories = async (filter: CatsFilter = catsFilterSchema.par
 				filter.category ? eq(eventTags.tagValue, filter.category) : undefined,
 			),
 		)
-		.groupBy(eventTags.tagValue)
 		.execute()
 
 	if (richCats.length > 0) {
