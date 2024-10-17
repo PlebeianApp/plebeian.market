@@ -26,6 +26,19 @@ const cache: {
 
 const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes in milliseconds
 
+const retry = async <T>(fn: () => Promise<T>, retries: number, delay: number): Promise<T> => {
+	try {
+		return await fn()
+	} catch (err) {
+		if (retries > 0) {
+			await new Promise((resolve) => setTimeout(resolve, delay))
+			return retry(fn, retries - 1, delay)
+		} else {
+			throw err
+		}
+	}
+}
+
 const fetchInitialPrices = async () => {
 	const now = Date.now()
 
@@ -33,10 +46,19 @@ const fetchInitialPrices = async () => {
 	if (cache.data && now - cache.timestamp < CACHE_DURATION) {
 		return cache.data
 	}
-	// TODO: make this more robust and have a retry mechanism, if internet is slow or something it fails and you have to restart the server
-	// Fetch new data and update the cache
+
 	const data = [
-		...(await Promise.all(CURRENCIES.slice(2).map(async (c) => [c, await btcToCurrency(c)] as const))),
+		...(await Promise.all(
+			CURRENCIES.slice(2).map(async (c) => {
+				try {
+					const price = await retry(() => btcToCurrency(c), 3, 1000)
+					return [c, price] as const
+				} catch (error) {
+					console.error(`Failed to fetch price for ${c}:`, error)
+					return [c, null] as const
+				}
+			}),
+		)),
 		['SATS', 1e8],
 		['BTC', 1],
 	]
