@@ -22,6 +22,7 @@
 	let search = writable('')
 
 	$: debouncedSearch = reactiveDebounce(search, 600)
+	$: $search, (page = 1)
 	$: stallsQuery = createStallsByFilterQuery({ pageSize, page, order: sort.value ?? 'desc', search: $debouncedSearch })
 </script>
 
