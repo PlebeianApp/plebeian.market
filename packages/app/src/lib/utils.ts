@@ -328,24 +328,36 @@ export function getHexColorFingerprintFromHexPubkey(input: string): string {
 	return `#${hexpub.slice(0, 6)}`
 }
 
-export async function resolveQuery<T>(queryFn: () => CreateQueryResult<T, Error>, maxRetries?: number, retryDelay?: number): Promise<T> {
-	const queryPromise = queryFn()
-	let retryCount = 0
+export async function resolveQuery<T>(
+	queryFn: () => CreateQueryResult<T, Error>,
+	maxRetries: number = 100,
+	retryDelay: number = 250,
+): Promise<T> {
+	const query = queryFn()
+	const maxWaitTime = maxRetries * retryDelay
+	const startTime = Date.now()
 
-	return new Promise((resolve, reject) => {
-		const check = async () => {
-			const currentQuery = get(queryPromise)
-			if (currentQuery.isFetched && currentQuery.data !== undefined) {
-				resolve(currentQuery.data)
-			} else if (retryCount < (maxRetries ?? 10)) {
-				retryCount++
-				setTimeout(check, retryDelay ?? 250)
-			} else {
-				reject(new Error('Max retries exceeded'))
-			}
+	const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+	for (let attempt = 0; attempt < maxRetries; attempt++) {
+		const currentQuery = get(query)
+
+		if (currentQuery.isSuccess && currentQuery.data !== undefined) {
+			return currentQuery.data
 		}
-		check()
-	})
+
+		if (currentQuery.isError) {
+			throw currentQuery.error || new Error('Query failed')
+		}
+
+		if (Date.now() - startTime >= maxWaitTime) {
+			throw new Error('Query timed out')
+		}
+
+		await wait(retryDelay)
+	}
+
+	throw new Error('Max retries exceeded')
 }
 
 export async function checkIfUserExists(userId?: string): Promise<boolean> {

@@ -27,9 +27,9 @@
 		appSettings: { isFirstTimeRunning, allowRegister },
 	} = data)
 
-	for (const [currency, price] of data.prices) {
-		queryClient.setQueryData(['currency-conversion', currency], price)
-	}
+	// for (const [currency, price] of data.prices) {
+	// 	queryClient.setQueryData(['currency-conversion', currency], price)
+	// }
 
 	$: isLoggedIn = $ndkStore && $ndkStore.activeUser
 
