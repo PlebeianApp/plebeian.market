@@ -54,7 +54,7 @@ export function createOrderMessage(
 ): OrderMessage {
 	return {
 		...checkoutForm,
-		id: createSlugId(`${buyerUserId}-${sellerUserId}-${stall.id}-${stall.shippingMethodName}`),
+		id: createSlugId(`order`),
 		status: ORDER_STATUS.PENDING,
 		type: 0,
 		buyerUserId,

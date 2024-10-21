@@ -165,7 +165,7 @@
 		paymentType: string,
 	): InvoiceMessage {
 		return {
-			id: createSlugId(`${order.id}-invoice`),
+			id: createSlugId(`inv`),
 			createdAt: Date.now(),
 			updatedAt: Date.now(),
 			orderId: order.id,
