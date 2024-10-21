@@ -9,7 +9,7 @@ export type RichCat = {
 }
 
 export const getAllCategories = async (filter: CatsFilter = catsFilterSchema.parse({})) => {
-	let query = db
+	const query = db
 		.select({
 			category: eventTags.tagValue,
 			productCount: countDistinct(products.id),
