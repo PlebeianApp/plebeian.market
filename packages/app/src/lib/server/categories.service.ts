@@ -1,7 +1,7 @@
 import type { CatsFilter } from '$lib/schema'
 import { catsFilterSchema } from '$lib/schema'
 
-import { and, BinaryOperator, count, countDistinct, db, desc, eq, eventTags, like, products, SQL, sql } from '@plebeian/database'
+import { and, countDistinct, db, desc, eq, eventTags, like, products, SQL } from '@plebeian/database'
 
 export type RichCat = {
 	name: string
