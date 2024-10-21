@@ -18,7 +18,7 @@ jobs:
       - run: pnpm install
       - run: pnpm db:setup
         working-directory: ./packages/database
-      - run: pnpm playwright install --with-deps
+      - run: pnpm playwright install
         working-directory: ./packages/app
       - run: pnpm test
         env:
