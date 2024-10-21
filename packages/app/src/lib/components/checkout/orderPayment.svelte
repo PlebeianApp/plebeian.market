@@ -320,7 +320,7 @@
 								/>
 							</div>
 						</Carousel.Item>
-
+						<!-- FIXME: there is an error sometimes when there are multiple v4v shares, it can jump and also generate non existent v4v shares invoices -->
 						{#each v4vShares as share (share.target)}
 							<Carousel.Item>
 								<div class="p-1">

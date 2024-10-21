@@ -80,7 +80,7 @@ export async function loginWithExtension(): Promise<boolean> {
 }
 
 export async function loginWithPrivateKey(key: string, password: string): Promise<boolean> {
-	key.trim()
+	key = key.trim()
 	try {
 		if (key.startsWith('ncryptsec')) {
 			try {
