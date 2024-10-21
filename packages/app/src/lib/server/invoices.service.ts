@@ -4,7 +4,8 @@ import { standardDisplayDateFormat } from '$lib/constants'
 import { formatSats } from '$lib/utils'
 import { format } from 'date-fns'
 
-import { db, eq, getTableColumns, Invoice, INVOICE_STATUS, invoices, InvoiceStatus, orderItems, orders, products } from '@plebeian/database'
+import type { Invoice, InvoiceStatus } from '@plebeian/database'
+import { db, eq, getTableColumns, INVOICE_STATUS, invoices, orderItems, orders, products } from '@plebeian/database'
 
 export type DisplayInvoice = Pick<
 	Invoice,
@@ -112,24 +113,24 @@ export const updateInvoiceStatus = async (invoiceId: string, newStatus: InvoiceS
 		error(401, 'Unauthorized')
 	}
 
-	if (newStatus === INVOICE_STATUS.PAID) {
-		const invoiceProducts = await db
-			.select({ ...getTableColumns(products) })
-			.from(orderItems)
-			.where(eq(orderItems.orderId, invoiceRes.orderId))
-			.innerJoin(products, eq(orderItems.productId, products.id))
-			.execute()
-
-		for (const product of invoiceProducts) {
-			await db
-				.update(products)
-				.set({
-					quantity: product.quantity - 1,
-				})
-				.where(eq(products.id, product.id))
-				.execute()
-		}
-	}
+	// if (newStatus === INVOICE_STATUS.PAID) {
+	// 	const invoiceProducts = await db
+	// 		.select({ ...getTableColumns(products) })
+	// 		.from(orderItems)
+	// 		.where(eq(orderItems.orderId, invoiceRes.orderId))
+	// 		.innerJoin(products, eq(orderItems.productId, products.id))
+	// 		.execute()
+	// 	for (const product of invoiceProducts) {
+	// 		const updateQty = await db
+	// 			.update(products)
+	// 			.set({
+	// 				quantity: product.quantity - 1,
+	// 			})
+	// 			.where(eq(products.id, product.id))
+	// 			.execute()
+	// 		console.log('updateQty', updateQty)
+	// 	}
+	// }
 
 	const [updatedInvoice] = await db
 		.update(invoices)

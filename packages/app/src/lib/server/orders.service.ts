@@ -1,4 +1,5 @@
 import type { OrdersFilter } from '$lib/schema'
+import { NDKEvent } from '@nostr-dev-kit/ndk'
 import { error } from '@sveltejs/kit'
 import { ordersFilterSchema } from '$lib/schema'
 
@@ -143,7 +144,6 @@ export const createOrder = async (order: Omit<Order, 'id'>): Promise<DisplayOrde
 
 export const updateOrderStatus = async (orderId: string, newStatus: OrderStatus, userId: string): Promise<DisplayOrder> => {
 	const [updatedOrder] = await db.update(orders).set({ status: newStatus, updatedAt: new Date() }).where(eq(orders.id, orderId)).returning()
-
 	if (updatedOrder) {
 		return {
 			...updatedOrder,
