@@ -1,7 +1,7 @@
 import type { CatsFilter } from '$lib/schema'
 import { catsFilterSchema } from '$lib/schema'
 
-import { and, count, countDistinct, db, desc, eq, eventTags, products, sql } from '@plebeian/database'
+import { and, BinaryOperator, count, countDistinct, db, desc, eq, eventTags, like, products, SQL, sql } from '@plebeian/database'
 
 export type RichCat = {
 	name: string
@@ -15,14 +15,18 @@ export const getAllCategories = async (filter: CatsFilter = catsFilterSchema.par
 			productCount: countDistinct(products.id),
 		})
 		.from(eventTags)
-		.where(eq(eventTags.tagName, 't'))
 		.$dynamic()
 
+	const where: SQL[] = [eq(eventTags.tagName, 't')]
+
 	if (filter.userId) {
-		query = query.where(eq(eventTags.userId, filter.userId))
+		where.push(eq(eventTags.userId, filter.userId))
 	}
 	if (filter.category) {
-		query = query.where(eq(eventTags.tagValue, filter.category))
+		where.push(eq(eventTags.tagValue, filter.category))
+	}
+	if (filter.search) {
+		where.push(like(eventTags.tagValue, `%${filter.search.replaceAll(' ', '%')}%`))
 	}
 
 	const categoriesWithCounts = await query
@@ -30,6 +34,7 @@ export const getAllCategories = async (filter: CatsFilter = catsFilterSchema.par
 		.groupBy(eventTags.tagValue)
 		.orderBy(desc(countDistinct(products.id)))
 		.limit(filter.pageSize)
+		.where(and(...where))
 		.offset((filter.page - 1) * filter.pageSize)
 
 	const richCats = categoriesWithCounts.map(({ category, productCount }) => ({
@@ -40,13 +45,7 @@ export const getAllCategories = async (filter: CatsFilter = catsFilterSchema.par
 	const [{ count: total } = { count: 0 }] = await db
 		.select({ count: countDistinct(eventTags.tagValue) })
 		.from(eventTags)
-		.where(
-			and(
-				filter.userId ? eq(eventTags.userId, filter.userId) : undefined,
-				eq(eventTags.tagName, 't'),
-				filter.category ? eq(eventTags.tagValue, filter.category) : undefined,
-			),
-		)
+		.where(and(eq(eventTags.tagName, 't'), ...where))
 		.execute()
 
 	if (richCats.length > 0) {
