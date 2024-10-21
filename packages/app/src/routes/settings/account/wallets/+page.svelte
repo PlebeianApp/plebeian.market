@@ -38,7 +38,6 @@
 			localWallets = localWallets.filter((wallet) => wallet.id !== deletedWalletId)
 		} else {
 			queryClient.invalidateQueries({ queryKey: ['walletDetails'] })
-			// await $deleteWalletMutation.mutateAsync({ userId: $ndkStore.activeUser?.pubkey!,  walletId: deletedWalletId})
 		}
 	}
 
