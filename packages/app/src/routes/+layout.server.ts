@@ -1,6 +1,7 @@
+import { currencyQueries } from '$lib/fetch/products.queries'
 import { getAllForbiddenWords } from '$lib/server/appSettings.service'
 import { getAppSettings } from '$lib/server/setup.service'
-import { btcToCurrency } from '$lib/utils'
+import { resolveQuery } from '$lib/utils'
 
 import type { AppSettings, PaymentDetailsMethod } from '@plebeian/database'
 import { CURRENCIES, PAYMENT_DETAILS_METHOD } from '@plebeian/database'
@@ -26,19 +27,6 @@ const cache: {
 
 const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes in milliseconds
 
-const retry = async <T>(fn: () => Promise<T>, retries: number, delay: number): Promise<T> => {
-	try {
-		return await fn()
-	} catch (err) {
-		if (retries > 0) {
-			await new Promise((resolve) => setTimeout(resolve, delay))
-			return retry(fn, retries - 1, delay)
-		} else {
-			throw err
-		}
-	}
-}
-
 const fetchInitialPrices = async () => {
 	const now = Date.now()
 
@@ -51,7 +39,8 @@ const fetchInitialPrices = async () => {
 		...(await Promise.all(
 			CURRENCIES.slice(2).map(async (c) => {
 				try {
-					const price = await retry(() => btcToCurrency(c), 3, 1000)
+					const price = await resolveQuery(() => currencyQueries[c])
+					console.log([c, price])
 					return [c, price] as const
 				} catch (error) {
 					console.error(`Failed to fetch price for ${c}:`, error)
@@ -66,7 +55,7 @@ const fetchInitialPrices = async () => {
 	cache.data = data
 	cache.timestamp = now
 
-	return data
+	return data as [string, number][]
 }
 
 export const prerender = false
