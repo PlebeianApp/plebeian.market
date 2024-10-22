@@ -3,9 +3,21 @@ import { usersFilterSchema } from '$lib/schema'
 import { decodePk } from '$lib/utils'
 
 import type { NewAppSettings, UserRoles } from '@plebeian/database'
-import { appSettings, db, eq, INITIAL_V4V_PLATFORM_SHARE_PERCENTAGE, sql, USER_META, USER_ROLES, userMeta, users } from '@plebeian/database'
+import {
+	appSettings,
+	db,
+	eq,
+	INITIAL_V4V_PM_SHARE_PERCENTAGE,
+	PM_NPUB,
+	sql,
+	USER_META,
+	USER_ROLES,
+	userMeta,
+	users,
+} from '@plebeian/database'
 
 import { getUsersByRole } from './users.service'
+import { setV4VSharesForUser } from './v4v.service'
 
 export type ExtendedAppSettings = NewAppSettings & {
 	adminsList?: string[]
@@ -35,7 +47,7 @@ const adminsToSync = async (appSettingsData: ExtendedAppSettings) => {
 		const operations = [
 			...newAdminIds.flatMap((id) => [
 				insertUsers([{ id }]),
-				// setV4VPlatformShareForUserByTarget(INITIAL_V4V_PLATFORM_SHARE_PERCENTAGE, id, 'platform'),
+				setV4VSharesForUser(id, [{ amount: INITIAL_V4V_PM_SHARE_PERCENTAGE, target: PM_NPUB }]),
 			]),
 			...(removedAdminIds.length ? [revokeAdmins(removedAdminIds)] : []),
 		]

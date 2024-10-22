@@ -1816,4 +1816,6 @@ export const V4V_DEFAULT_RECIPIENTS: { npub: string; paymentDetails: string }[] 
 
 export type ISO3 = (typeof COUNTRIES_ISO)[keyof typeof COUNTRIES_ISO]['iso3']
 
-export const INITIAL_V4V_PLATFORM_SHARE_PERCENTAGE = 0.1
+export const INITIAL_V4V_PM_SHARE_PERCENTAGE = 0.1
+
+export const PM_NPUB = 'npub1market6g3zl4mxwx5ugw56hfg0f7dy7jnnw8t380788mvdyrnwuqgep7hd'

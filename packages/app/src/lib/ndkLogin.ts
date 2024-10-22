@@ -17,6 +17,7 @@ import { userEventSchema } from '../schema/nostr-events'
 import { createRequest, queryClient } from './fetch/client'
 import { dmKind04Sub } from './nostrSubs/subs'
 import { manageUserRelays } from './nostrSubs/userRelayManager'
+import { cart } from './stores/cart'
 
 function unNullify<T extends object>(obj: T): T {
 	return Object.fromEntries(Object.entries(obj).filter(([_, v]) => v != null)) as unknown as T
@@ -79,6 +80,7 @@ export async function loginWithExtension(): Promise<boolean> {
 }
 
 export async function loginWithPrivateKey(key: string, password: string): Promise<boolean> {
+	key = key.trim()
 	try {
 		if (key.startsWith('ncryptsec')) {
 			try {
@@ -117,6 +119,7 @@ export async function logout() {
 	dmKind04Sub.unref()
 	localStorage.clear()
 	location.reload()
+	cart.clear()
 }
 
 export async function loginLocalDb(userPk: string, loginMethod: BaseAccount['type'], cSk?: string): Promise<boolean> {
