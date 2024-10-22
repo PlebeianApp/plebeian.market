@@ -23,7 +23,6 @@ export const CURRENCIES = [
 	'COP', // Colombian Peso
 	'PEN', // Peruvian Sol
 	'UYU', // Uruguayan Peso
-	'VEF', // Venezuelan Bolivar (note: highly volatile and subject to frequent changes)
 	'PHP', // Philippine Peso
 	'THB', // Thai Baht
 	'IDR', // Indonesian Rupiah
