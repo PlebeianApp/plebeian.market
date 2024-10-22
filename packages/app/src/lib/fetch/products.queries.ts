@@ -1,12 +1,12 @@
+import type { CreateQueryResult } from '@tanstack/svelte-query'
 import type { ProductsFilter } from '$lib/schema'
 import type { DisplayProduct } from '$lib/server/products.service'
-import { createQuery, CreateQueryResult } from '@tanstack/svelte-query'
+import { createQuery } from '@tanstack/svelte-query'
 import { numSatsInBtc } from '$lib/constants'
 import { aggregatorAddProducts } from '$lib/nostrSubs/data-aggregator'
 import { fetchUserProductData, normalizeProductsFromNostr } from '$lib/nostrSubs/utils'
 import { productsFilterSchema } from '$lib/schema'
 import { btcToCurrency, resolveQuery } from '$lib/utils'
-import { get } from 'svelte/store'
 
 import { CURRENCIES } from '@plebeian/database/constants'
 
