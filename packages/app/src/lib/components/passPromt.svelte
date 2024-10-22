@@ -23,7 +23,7 @@
 
 	let checked: boolean
 	async function loginWrapper(loginMethod: BaseAccount['type'], formData?: FormData) {
-		;(await login(loginMethod, formData)) ? toast.success('Login sucess!') : toast.error('Login error!')
+		;(await login(loginMethod, formData)) ? toast.success('Login success!') : toast.error('Login error!')
 		dialogOpen = false
 	}
 
