@@ -40,7 +40,6 @@ const fetchInitialPrices = async () => {
 			CURRENCIES.slice(2).map(async (c) => {
 				try {
 					const price = await resolveQuery(() => currencyQueries[c])
-					console.log([c, price])
 					return [c, price] as const
 				} catch (error) {
 					console.error(`Failed to fetch price for ${c}:`, error)
@@ -55,7 +54,7 @@ const fetchInitialPrices = async () => {
 	cache.data = data
 	cache.timestamp = now
 
-	return data as [string, number][]
+	return data
 }
 
 export const prerender = false
