@@ -7,6 +7,7 @@
 	import { createInvoicesByFilterQuery } from '$lib/fetch/invoices.queries'
 	import { updateOrderStatusMutation } from '$lib/fetch/order.mutations'
 	import { createPaymentsForUserQuery } from '$lib/fetch/payments.queries'
+	import { signProductStockMutation } from '$lib/fetch/products.mutations'
 	import { createProductQuery } from '$lib/fetch/products.queries'
 	import { toast } from 'svelte-sonner'
 	import { derived } from 'svelte/store'
@@ -54,8 +55,25 @@
 	$: invoices = createInvoicesByFilterQuery({ orderId: order.id })
 
 	const handleConfirmOrder = async (order: DisplayOrder): Promise<void> => {
-		await $updateOrderStatusMutation.mutateAsync({ orderId: order.id, status: 'confirmed' })
-		toast.success('Order confirmed')
+		try {
+			await $updateOrderStatusMutation.mutateAsync({ orderId: order.id, status: 'confirmed' })
+
+			for (const orderItem of order.orderItems) {
+				const productQuery = $productQueryResults.find((q) => q.data?.id === orderItem.productId)
+				const product = productQuery?.data
+				if (product) {
+					await $signProductStockMutation.mutateAsync({
+						product,
+						newQuantity: product.quantity,
+					})
+				}
+			}
+
+			toast.success('Order confirmed')
+		} catch (error) {
+			console.error('Error confirming order:', error)
+			toast.error('Failed to confirm order')
+		}
 	}
 
 	const handleMarkAsShipped = async (order: DisplayOrder): Promise<void> => {

@@ -157,3 +157,61 @@ export const deleteProductMutation = createMutation(
 	},
 	queryClient,
 )
+
+export const signProductStockMutation = createMutation(
+	{
+		mutationFn: async ({ product, newQuantity }: { product: DisplayProduct; newQuantity: number }) => {
+			const newEvent = createProductEvent(product, newQuantity)
+			if (!newEvent) return
+
+			await newEvent.sign() // TODO: publish instead of sign
+
+			return newEvent
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ['products'] })
+		},
+	},
+	queryClient,
+)
+
+export function createProductEvent(product: DisplayProduct, newQuantity?: number): NDKEvent | undefined {
+	const $ndkStore = get(ndkStore)
+	if (!$ndkStore.activeUser?.pubkey || !product.id) return
+
+	const stallCoordinates = parseCoordinatesString(`${KindProducts}:${$ndkStore.activeUser.pubkey}:${product.stallId}`)
+	const productCoordinates = parseCoordinatesString(product.id)
+
+	const transformedShipping =
+		product.shipping?.map((ship) => ({
+			id: ship.shippingId,
+			cost: ship.cost,
+		})) || undefined
+
+	const transformedImages = product.images?.filter((img) => img.imageUrl).map((img) => img.imageUrl!) || undefined
+
+	const eventContent = {
+		id: product.identifier,
+		stall_id: stallCoordinates.tagD!,
+		name: product.name,
+		currency: product.currency ?? undefined,
+		price: product.price,
+		quantity: newQuantity ?? product.quantity,
+		shipping: transformedShipping,
+		description: product.description?.trim() || undefined,
+		images: transformedImages,
+	}
+
+	const newEvent = new NDKEvent($ndkStore, {
+		kind: KindProducts,
+		pubkey: $ndkStore.activeUser.pubkey,
+		content: JSON.stringify(eventContent),
+		created_at: unixTimeNow(),
+		tags: [
+			['d', productCoordinates.tagD!],
+			...(product.categories || []).map((c) => ['t', c]),
+			...(stallCoordinates.coordinates ? [['a', stallCoordinates.coordinates!]] : []),
+		],
+	})
+	return newEvent
+}

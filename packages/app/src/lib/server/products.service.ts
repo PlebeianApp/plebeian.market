@@ -7,6 +7,7 @@ import { getImagesByProductId } from '$lib/server/productImages.service'
 import { customTagValue, getEventCoordinates, parseCoordinatesString } from '$lib/utils'
 import { format } from 'date-fns'
 
+import type { Product, ProductImage, ProductMeta, ProductShipping, ProductTypes } from '@plebeian/database'
 import {
 	and,
 	asc,
@@ -20,17 +21,12 @@ import {
 	getTableColumns,
 	inArray,
 	like,
-	Product,
 	PRODUCT_IMAGES_TYPE,
 	PRODUCT_META,
-	ProductImage,
 	productImages,
-	ProductMeta,
 	productMeta,
 	products,
-	ProductShipping,
 	productShipping,
-	ProductTypes,
 	sql,
 } from '@plebeian/database'
 

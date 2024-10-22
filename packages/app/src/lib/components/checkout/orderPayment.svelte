@@ -107,9 +107,9 @@
 		await tick()
 		paymentStatuses = [{ id: 'merchant', status: null }, ...v4vShares.map((share) => ({ id: share.target, status: null }))]
 	}
-
+	// TODO: improve this since all is mapped to pending
 	const statusMapping: Record<NonNullable<OrderPaymentStatus>, OrderStatus> = {
-		paid: ORDER_STATUS.PAID,
+		paid: ORDER_STATUS.PENDING,
 		expired: ORDER_STATUS.PENDING,
 		cancelled: ORDER_STATUS.PENDING,
 	}
