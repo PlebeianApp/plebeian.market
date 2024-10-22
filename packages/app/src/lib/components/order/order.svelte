@@ -64,7 +64,7 @@
 				if (product) {
 					await $signProductStockMutation.mutateAsync({
 						product,
-						newQuantity: product.quantity,
+						newQuantity: product.quantity, // TODO: if invoices are not paid, but merchant confirms the order we should reduce the stock here and then sign the event
 					})
 				}
 			}
