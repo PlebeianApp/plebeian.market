@@ -1,3 +1,4 @@
+import type { CreateQueryResult } from '@tanstack/svelte-query'
 import type { ProductsFilter } from '$lib/schema'
 import type { DisplayProduct } from '$lib/server/products.service'
 import { createQuery } from '@tanstack/svelte-query'
@@ -5,7 +6,7 @@ import { numSatsInBtc } from '$lib/constants'
 import { aggregatorAddProducts } from '$lib/nostrSubs/data-aggregator'
 import { fetchUserProductData, normalizeProductsFromNostr } from '$lib/nostrSubs/utils'
 import { productsFilterSchema } from '$lib/schema'
-import { btcToCurrency } from '$lib/utils'
+import { btcToCurrency, resolveQuery } from '$lib/utils'
 
 import { CURRENCIES } from '@plebeian/database/constants'
 
@@ -36,7 +37,7 @@ export const createProductQuery = (productId: string) =>
 						auth: false,
 					})
 					if (response) return response
-					throw Error
+					throw new Error(`failed fetching product: ${productId}`)
 				} catch {
 					const [_, userId, productIdentifier] = productId.split(':')
 					const { products: productsData } = await fetchUserProductData(userId, productIdentifier)
@@ -56,11 +57,24 @@ export const createProductQuery = (productId: string) =>
 		queryClient,
 	)
 
+type Currency = (typeof CURRENCIES)[number]
+type CurrencyQuery = Record<Currency, CreateQueryResult<number>>
+
+export const currencyQueries: CurrencyQuery = {} as CurrencyQuery
+
 for (const c of CURRENCIES) {
-	createQuery(
+	currencyQueries[c] = createQuery(
 		{
 			queryKey: ['currency-conversion', c],
 			staleTime: 1000 * 60 * 60,
+			queryFn: async () => {
+				const price = await btcToCurrency(c)
+				if (price == null) {
+					throw new Error(`failed fetching currency: ${c}`)
+				}
+				return price
+			},
+			retryDelay: 1000,
 		},
 		queryClient,
 	)
@@ -75,10 +89,7 @@ export const createCurrencyConversionQuery = (fromCurrency: string, amount: numb
 				if (['sats', 'sat'].includes(fromCurrency.toLowerCase())) {
 					return amount
 				}
-				const price = await queryClient.fetchQuery({
-					queryKey: ['currency-conversion', fromCurrency],
-					queryFn: () => btcToCurrency(fromCurrency),
-				})
+				const price = await resolveQuery(() => currencyQueries[fromCurrency as Currency])
 				const result = (amount / price) * numSatsInBtc
 				return result
 			},
