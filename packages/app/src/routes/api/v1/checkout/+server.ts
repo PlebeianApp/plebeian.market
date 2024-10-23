@@ -123,3 +123,7 @@ async function validateAndAuthorize(cartData: NormalizedCart, request: Request):
 
 	await authorize(request, buyerUserId, 'POST')
 }
+// TODO: implement update product qty
+// export const PUT = async ({ request }) => {
+
+// }

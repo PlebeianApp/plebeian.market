@@ -57,6 +57,7 @@ export const updateOrderStatusMutation = createMutation(
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ['orders'] })
+			queryClient.invalidateQueries({ queryKey: ['products'] })
 		},
 	},
 	queryClient,

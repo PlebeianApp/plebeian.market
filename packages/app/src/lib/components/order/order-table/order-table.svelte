@@ -130,14 +130,7 @@
 								{:else if cell.column.id === 'sellerUserId' || cell.column.id === 'buyerUserId'}
 									<MiniUser userId={cell.render().toString()} />
 								{:else if cell.column.id === 'status'}
-									<StatusCell
-										order={cell.row.original}
-										{orderMode}
-										{handleConfirmOrder}
-										{handleMarkAsShipped}
-										{handleMarkAsReceived}
-										{handleCancelOrder}
-									/>
+									{cell.render().toString()}
 								{:else if cell.column.id === 'stallId'}
 									<StallName stallId={cell.render().toString()} />
 								{:else}
