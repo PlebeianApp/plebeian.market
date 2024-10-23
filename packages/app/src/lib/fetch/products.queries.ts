@@ -67,7 +67,14 @@ for (const c of CURRENCIES) {
 		{
 			queryKey: ['currency-conversion', c],
 			staleTime: 1000 * 60 * 60,
-			queryFn: () => btcToCurrency(c),
+			queryFn: async () => {
+				const price = await btcToCurrency(c)
+				if (price == null) {
+					throw Error
+				}
+				return price
+			},
+			retryDelay: 1000,
 		},
 		queryClient,
 	)

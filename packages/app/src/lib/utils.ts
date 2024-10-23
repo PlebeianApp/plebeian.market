@@ -80,7 +80,7 @@ export const flyAndScale = (node: Element, params: FlyAndScaleParams = { y: -8, 
 	}
 }
 
-export async function btcToCurrency(currency: string) {
+export async function btcToCurrency(currency: string): Promise<number | null> {
 	try {
 		const { result } = await ofetch(`https://api.yadio.io/convert/1/btc/${currency}`)
 		return result
@@ -328,36 +328,24 @@ export function getHexColorFingerprintFromHexPubkey(input: string): string {
 	return `#${hexpub.slice(0, 6)}`
 }
 
-export async function resolveQuery<T>(
-	queryFn: () => CreateQueryResult<T, Error>,
-	maxRetries: number = 100,
-	retryDelay: number = 250,
-): Promise<T> {
-	const query = queryFn()
-	const maxWaitTime = maxRetries * retryDelay
+export async function resolveQuery<T>(queryFn: () => CreateQueryResult<T, Error>, timeout: number = 1000 * 60): Promise<T> {
 	const startTime = Date.now()
+	const query = queryFn()
+	let currentQuery = get(query)
 
-	const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
-
-	for (let attempt = 0; attempt < maxRetries; attempt++) {
-		const currentQuery = get(query)
-
-		if (currentQuery.isSuccess && currentQuery.data !== undefined) {
-			return currentQuery.data
-		}
-
-		if (currentQuery.isError) {
-			throw currentQuery.error || new Error('Query failed')
-		}
-
-		if (Date.now() - startTime >= maxWaitTime) {
+	while (!currentQuery.isSuccess && !currentQuery.isError) {
+		if (Date.now() - startTime > timeout) {
 			throw new Error('Query timed out')
 		}
-
-		await wait(retryDelay)
+		await new Promise((resolve) => setTimeout(resolve, 500))
+		currentQuery = get(query)
 	}
 
-	throw new Error('Max retries exceeded')
+	if (currentQuery.isFetched && !currentQuery.isError) {
+		return currentQuery.data
+	}
+
+	throw currentQuery.error || new Error('Price query failed')
 }
 
 export async function checkIfUserExists(userId?: string): Promise<boolean> {
