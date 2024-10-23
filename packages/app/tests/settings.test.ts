@@ -27,6 +27,7 @@ describe(
 			await page.goto(`http://${process.env.APP_HOST}:${process.env.APP_PORT}/`)
 			await login(page)
 			await page.waitForTimeout(1000)
+			await page.click('#menuButton')
 			await page.click('text=Settings')
 			await page.waitForSelector('h2>a[href="/settings"]', { timeout: 1000 })
 			await page.click('text=Profile')

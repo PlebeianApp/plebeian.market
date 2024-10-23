@@ -37,7 +37,7 @@ export async function teardownBrowser(browser: Browser): Promise<void> {
 }
 
 export async function login(page: Page): Promise<void> {
-	await page.click('#menuButton')
+	// aawait page.click('#menuButton')
 	await page.click('text=Log in')
 	await page.click('text=Private Key')
 	await page.waitForSelector('#signInSk')

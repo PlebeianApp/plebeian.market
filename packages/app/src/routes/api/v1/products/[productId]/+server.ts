@@ -1,7 +1,7 @@
 import { error, json } from '@sveltejs/kit'
 import { authorizeUserless } from '$lib/auth'
 import { KindProducts } from '$lib/constants'
-import { verifyAndPersistRawEvent } from '$lib/server/nostrEvents.service'
+import { verifyEventBody } from '$lib/server/nostrEvents.service'
 import { deleteProduct, getProductById, productExists, updateProduct } from '$lib/server/products.service'
 
 import type { RequestHandler } from './$types'
@@ -15,7 +15,7 @@ export const GET: RequestHandler = async ({ params, url: { searchParams } }) => 
 
 export const PUT: RequestHandler = async ({ params, request }) => {
 	try {
-		const verifiedEvent = await verifyAndPersistRawEvent(request, KindProducts)
+		const verifiedEvent = await verifyEventBody(request, KindProducts)
 		return json(await updateProduct(params.productId, verifiedEvent))
 	} catch (e) {
 		console.error(e)

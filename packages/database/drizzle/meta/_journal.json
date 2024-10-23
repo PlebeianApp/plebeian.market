@@ -1,19 +1,12 @@
 {
-  "version": "0",
+  "version": "7",
   "dialect": "sqlite",
   "entries": [
     {
       "idx": 0,
       "version": "6",
-      "when": 1726822621423,
-      "tag": "0000_gorgeous_tattoo",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "6",
-      "when": 1727865940707,
-      "tag": "0001_salty_hardball",
+      "when": 1728635074417,
+      "tag": "0000_late_mesmero",
       "breakpoints": true
     }
   ]

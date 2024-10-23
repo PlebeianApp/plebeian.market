@@ -57,56 +57,58 @@
 				><span class="i-tdesign-mail text-black w-6 h-6"></span></Button
 			>
 			<CartWithState />
-			<DropdownMenu.Root>
-				<DropdownMenu.Trigger id="menuButton">
-					<Button class="p-2 bg-white"><span class="i-tdesign-view-list text-black w-6 h-6"></span></Button>
-				</DropdownMenu.Trigger>
-				<DropdownMenu.Content>
-					<DropdownMenu.Group>
-						<DropdownMenu.Label>
-							<Auth />
-							{#if $ndkStore.activeUser}
-								My account
-							{/if}
-						</DropdownMenu.Label>
-						<DropdownMenu.Label>
-							{#if $balanceOfWorkingNWCs}
-								<div class="flex flex-col">
-									<section class=" inline-flex items-center">
-										<span class=" i-bitcoin-icons-satoshi-v1-outline w-6 h-6" />{$balanceOfWorkingNWCs} sats
-									</section>
-								</div>
-							{/if}
-						</DropdownMenu.Label>
-						{#if $ndkStore.activeUser}
-							<DropdownMenu.Separator />
-							<DropdownMenu.Item>
-								<a
-									href={`/p/${$ndkStore.activeUser.profile?.nip05 ? $ndkStore.activeUser.profile?.nip05 : $ndkStore.activeUser.pubkey}`}
-									class="inline-flex items-center gap-2 w-full"><span class="i-tdesign-user-1" />Profile</a
-								>
-							</DropdownMenu.Item>
-							<DropdownMenu.Item>
-								<a id="headerMenuSettings" href="/settings" class="inline-flex items-center gap-2 w-full"
-									><span class="i-tdesign-user-setting" />Settings</a
-								>
-							</DropdownMenu.Item>
-							<DropdownMenu.Item>
-								<a id="headerMenuDashboard" href="/dash" class="inline-flex items-center gap-2 w-full"
-									><span class=" i-tdesign-dashboard" />Dashboard</a
-								>
-							</DropdownMenu.Item>
-							<DropdownMenu.Item>
-								<Button id="headerMenuLogOut" variant="destructive" class="inline-flex items-center gap-2" on:click={() => logout()}
-									><span class="i-tdesign-user-arrow-right"></span>Log out</Button
-								>
-							</DropdownMenu.Item>
-						{/if}
-					</DropdownMenu.Group>
-				</DropdownMenu.Content>
-			</DropdownMenu.Root>
 			{#if $ndkStore.activeUser}
-				<CAvatar pubkey={$ndkStore.activeUser.pubkey} profile={$ndkStore.activeUser.profile} />
+				<DropdownMenu.Root>
+					<DropdownMenu.Trigger id="menuButton">
+						<Button class="p-2 bg-white"><span class="i-tdesign-view-list text-black w-6 h-6"></span></Button>
+					</DropdownMenu.Trigger>
+					<DropdownMenu.Content>
+						<DropdownMenu.Group>
+							<DropdownMenu.Label>
+								<Auth />
+								My account
+							</DropdownMenu.Label>
+							<DropdownMenu.Label>
+								{#if $balanceOfWorkingNWCs}
+									<div class="flex flex-col">
+										<section class=" inline-flex items-center">
+											<span class=" i-bitcoin-icons-satoshi-v1-outline w-6 h-6" />{$balanceOfWorkingNWCs} sats
+										</section>
+									</div>
+								{/if}
+							</DropdownMenu.Label>
+							{#if $ndkStore.activeUser}
+								<DropdownMenu.Separator />
+								<DropdownMenu.Item>
+									<a
+										href={`/p/${$ndkStore.activeUser.profile?.nip05 ? $ndkStore.activeUser.profile?.nip05 : $ndkStore.activeUser.pubkey}`}
+										class="inline-flex items-center gap-2 w-full"><span class="i-tdesign-user-1" />Profile</a
+									>
+								</DropdownMenu.Item>
+								<DropdownMenu.Item>
+									<a id="headerMenuSettings" href="/settings" class="inline-flex items-center gap-2 w-full"
+										><span class="i-tdesign-user-setting" />Settings</a
+									>
+								</DropdownMenu.Item>
+								<DropdownMenu.Item>
+									<a id="headerMenuDashboard" href="/dash" class="inline-flex items-center gap-2 w-full"
+										><span class=" i-tdesign-dashboard" />Dashboard</a
+									>
+								</DropdownMenu.Item>
+								<DropdownMenu.Item>
+									<Button id="headerMenuLogOut" variant="destructive" class="inline-flex items-center gap-2" on:click={() => logout()}
+										><span class="i-tdesign-user-arrow-right"></span>Log out</Button
+									>
+								</DropdownMenu.Item>
+							{/if}
+						</DropdownMenu.Group>
+					</DropdownMenu.Content>
+				</DropdownMenu.Root>
+				<a href={`/p/${$ndkStore.activeUser.profile?.nip05 ? $ndkStore.activeUser.profile?.nip05 : $ndkStore.activeUser.pubkey}`}>
+					<CAvatar pubkey={$ndkStore.activeUser.pubkey} profile={$ndkStore.activeUser.profile} />
+				</a>
+			{:else}
+				<Auth />
 			{/if}
 		</div>
 	</div>

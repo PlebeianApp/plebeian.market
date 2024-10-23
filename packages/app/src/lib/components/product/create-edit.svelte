@@ -23,7 +23,7 @@
 	import { get } from 'svelte/store'
 
 	import type { ProductImage } from '@plebeian/database'
-	import { createId } from '@plebeian/database/utils'
+	import { createSlugId } from '@plebeian/database/utils'
 
 	import { forbiddenPatternStore } from '../../../schema/nostr-events'
 	import Spinner from '../assets/spinner.svelte'
@@ -91,7 +91,8 @@
 	}
 
 	function addCategory() {
-		categories = [...categories, { key: createId(), name: `category ${categories.length + 1}`, checked: true }]
+		const name = `category ${categories.length + 1}`
+		categories = [...categories, { key: createSlugId(name), name, checked: true }]
 	}
 
 	async function handleSubmit(sEvent: SubmitEvent, stall: Partial<RichStall> | null) {
@@ -138,7 +139,7 @@
 	onMount(() => {
 		if (product?.categories?.length) {
 			categories = product.categories.map((categoryName) => ({
-				key: createId(),
+				key: createSlugId(categoryName),
 				name: categoryName,
 				checked: true,
 			}))

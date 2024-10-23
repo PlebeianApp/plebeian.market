@@ -5,9 +5,9 @@ import { createQuery } from '@tanstack/svelte-query'
 import ndkStore from '$lib/stores/ndk'
 import { get } from 'svelte/store'
 
-import type { OrderMessage, OrderStatus } from '@plebeian/database/constants'
+import type { OrderMessage } from '@plebeian/database/constants'
 import { ORDER_STATUS } from '@plebeian/database/constants'
-import { createId } from '@plebeian/database/utils'
+import { createSlugId } from '@plebeian/database/utils'
 
 export async function sendDM<T extends object>(content: T, recipientPubkey: string): Promise<boolean> {
 	const store = get(ndkStore)
@@ -54,7 +54,7 @@ export function createOrderMessage(
 ): OrderMessage {
 	return {
 		...checkoutForm,
-		id: createId(),
+		id: createSlugId(`order`),
 		status: ORDER_STATUS.PENDING,
 		type: 0,
 		buyerUserId,

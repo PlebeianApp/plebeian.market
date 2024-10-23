@@ -218,7 +218,6 @@ const main = async () => {
 			{ table: dbSchema.paymentDetails, data: paymentDetailsData.flat(1) },
 			{ table: dbSchema.shipping, data: shippingData.flat(1) },
 			{ table: dbSchema.shippingZones, data: uniqueShippingZonesData },
-			{ table: dbSchema.events, data: eventData.flat(1) },
 		]) {
 			await tx.insert(table).values(data).execute()
 		}

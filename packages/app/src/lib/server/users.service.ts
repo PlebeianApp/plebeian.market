@@ -4,9 +4,23 @@ import { error } from '@sveltejs/kit'
 import { usersFilterSchema } from '$lib/schema'
 
 import type { NewUser, User, UserMeta, UserRoles, UserTrustLevel } from '@plebeian/database'
-import { and, db, eq, inArray, products, sql, USER_META, USER_ROLES, userMeta, users } from '@plebeian/database'
+import {
+	and,
+	db,
+	eq,
+	inArray,
+	INITIAL_V4V_PM_SHARE_PERCENTAGE,
+	PM_NPUB,
+	products,
+	sql,
+	USER_META,
+	USER_ROLES,
+	userMeta,
+	users,
+} from '@plebeian/database'
 
 import { userEventSchema } from '../../schema/nostr-events'
+import { setV4VSharesForUser } from './v4v.service'
 
 export interface RichUser extends User {
 	role: UserRoles
@@ -248,9 +262,7 @@ export const createUser = async (
 			throw Error('Failed to create user')
 		}
 
-		// TODO: we need the platforms pubkey. users start out with no v4v share for now
-
-		// await setV4VPlatformShareForUserByTarget(INITIAL_V4V_PLATFORM_SHARE_PERCENTAGE, userMetaData.id, 'platform')
+		setV4VSharesForUser(user.id, [{ amount: INITIAL_V4V_PM_SHARE_PERCENTAGE, target: PM_NPUB }])
 
 		return userResult
 	} catch (e) {

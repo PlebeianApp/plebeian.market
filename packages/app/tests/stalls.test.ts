@@ -23,7 +23,7 @@ describe('stalls', async () => {
 		await page.goto(`http://${process.env.APP_HOST}:${process.env.APP_PORT}/`)
 		await page.click('text=Stall browser')
 		await page.waitForURL(`http://${process.env.APP_HOST}:${process.env.APP_PORT}/stalls`)
-		const pageTitle = await page.textContent('h2')
+		const pageTitle = await page.locator('h2').nth(1).textContent()
 		expect(pageTitle).toBe('Stalls')
 	})
 

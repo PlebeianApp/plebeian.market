@@ -18,7 +18,7 @@
 
 	import type { InvoiceMessage, OrderStatus, PaymentRequestMessage } from '@plebeian/database/constants'
 	import { ORDER_STATUS } from '@plebeian/database/constants'
-	import { createId } from '@plebeian/database/utils'
+	import { createId, createSlugId } from '@plebeian/database/utils'
 
 	import type { OrderPaymentStatus } from '../order/types'
 	import type { CheckoutPaymentEvent } from './types'
@@ -165,7 +165,7 @@
 		paymentType: string,
 	): InvoiceMessage {
 		return {
-			id: createId(),
+			id: createSlugId(`inv`),
 			createdAt: Date.now(),
 			updatedAt: Date.now(),
 			orderId: order.id,
@@ -320,7 +320,7 @@
 								/>
 							</div>
 						</Carousel.Item>
-
+						<!-- FIXME: there is an error sometimes when there are multiple v4v shares, it can jump and also generate non existent v4v shares invoices -->
 						{#each v4vShares as share (share.target)}
 							<Carousel.Item>
 								<div class="p-1">

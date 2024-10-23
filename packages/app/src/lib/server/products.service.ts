@@ -7,27 +7,30 @@ import { getImagesByProductId } from '$lib/server/productImages.service'
 import { customTagValue, getEventCoordinates, parseCoordinatesString } from '$lib/utils'
 import { format } from 'date-fns'
 
-import type { Product, ProductImage, ProductMeta, ProductShipping, ProductTypes } from '@plebeian/database'
 import {
 	and,
 	asc,
 	count,
-	createId,
 	createShippingCoordinates,
+	createSlugId,
 	db,
 	desc,
 	eq,
-	events,
 	eventTags,
 	getTableColumns,
 	inArray,
 	like,
+	Product,
 	PRODUCT_IMAGES_TYPE,
 	PRODUCT_META,
+	ProductImage,
 	productImages,
+	ProductMeta,
 	productMeta,
 	products,
+	ProductShipping,
 	productShipping,
+	ProductTypes,
 	sql,
 } from '@plebeian/database'
 
@@ -234,7 +237,7 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 				}
 
 				const insertSpecs: ProductMeta[] | undefined = parsedProduct.specs?.map((spec) => ({
-					id: createId(),
+					id: createSlugId(insertProduct.productName),
 					createdAt: new Date(productEvent.created_at * 1000),
 					updatedAt: new Date(productEvent.created_at * 1000),
 					productId: eventCoordinates.coordinates,
@@ -255,13 +258,6 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 					imageType: 'gallery',
 					imageOrder: index + 1,
 				}))
-
-				await db.insert(events).values({
-					id: eventCoordinates.coordinates,
-					author: productEvent.pubkey,
-					event: productEvent.content,
-					kind: productEvent.kind!,
-				})
 
 				const productResult = await db.insert(products).values(insertProduct).returning()
 

@@ -18,18 +18,18 @@ export const getV4VPlatformShareForUser = async (decodedOwnerPk: string) => {
 	}))
 }
 
-export const setV4VSharesForUser = async (decodedOwnerPk: string, shares: V4VShare[]) => {
+export const setV4VSharesForUser = async (pubkey: string, shares: V4VShare[]) => {
 	try {
 		await db.transaction(async (trx) => {
 			await trx
 				.delete(userMeta)
-				.where(and(eq(userMeta.userId, decodedOwnerPk), eq(userMeta.metaName, USER_META.V4V_SHARE.value)))
+				.where(and(eq(userMeta.userId, pubkey), eq(userMeta.metaName, USER_META.V4V_SHARE.value)))
 				.execute()
 
 			const newShares = shares.map((share) => ({
-				userId: decodedOwnerPk,
+				userId: pubkey,
 				metaName: USER_META.V4V_SHARE.value,
-				valueNumeric: share.amount,
+				valueNumeric: share.amount.toString(),
 				key: share.target,
 			}))
 
