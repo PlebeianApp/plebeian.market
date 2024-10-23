@@ -1,6 +1,7 @@
 import type { NDKKind } from '@nostr-dev-kit/ndk'
 
 import type { NonEmptyArray } from '@plebeian/database'
+import { COUNTRIES_ISO } from '@plebeian/database/constants'
 
 export const numSatsInBtc = 100_000_000
 export const standardDisplayDateFormat = 'dd-MM-yyyy'
@@ -47,4 +48,115 @@ export const DEFAULT_ZAP_AMOUNTS = [
 	{ displayText: '🚀 10,000 sats', amount: 10000 },
 	{ displayText: '🔥 100,000 sats', amount: 100000 },
 	{ displayText: '🤯 1,000,000 sats', amount: 1000000 },
+]
+
+export const SHIPPING_TEMPLATES = [
+	{
+		name: 'Worldwide Standard',
+		cost: '15.00',
+		countries: Object.values(COUNTRIES_ISO).map((country) => country.iso3),
+	},
+	{
+		name: 'Europe Standard',
+		cost: '8.00',
+		countries: [
+			'AUT',
+			'BEL',
+			'BGR',
+			'HRV',
+			'CYP',
+			'CZE',
+			'DNK',
+			'EST',
+			'FIN',
+			'FRA',
+			'DEU',
+			'GRC',
+			'HUN',
+			'IRL',
+			'ITA',
+			'LVA',
+			'LTU',
+			'LUX',
+			'MLT',
+			'NLD',
+			'POL',
+			'PRT',
+			'ROU',
+			'SVK',
+			'SVN',
+			'ESP',
+			'SWE',
+		],
+	},
+	{
+		name: 'Digital Delivery',
+		cost: '0.00',
+		countries: Object.values(COUNTRIES_ISO).map((country) => country.iso3),
+	},
+	{
+		name: 'Local Pickup',
+		cost: '0.00',
+		countries: [],
+	},
+	{
+		name: 'Express Worldwide',
+		cost: '30.00',
+		countries: Object.values(COUNTRIES_ISO).map((country) => country.iso3),
+	},
+	{
+		name: 'North America',
+		cost: '10.00',
+		countries: ['USA', 'CAN', 'MEX'],
+	},
+	{
+		name: 'South America',
+		cost: '12.00',
+		countries: ['ARG', 'BOL', 'BRA', 'CHL', 'COL', 'ECU', 'GUF', 'GUY', 'PRY', 'PER', 'SUR', 'URY', 'VEN'],
+	},
+	{
+		name: 'Asia Pacific',
+		cost: '14.00',
+		countries: ['CHN', 'JPN', 'KOR', 'TWN', 'HKG', 'SGP', 'THA', 'VNM', 'MYS', 'IDN', 'PHL', 'AUS', 'NZL'],
+	},
+	{
+		name: 'Middle East',
+		cost: '16.00',
+		countries: ['ARE', 'SAU', 'BHR', 'OMN', 'QAT', 'KWT', 'IRN', 'IRQ', 'ISR', 'JOR', 'LBN', 'SYR'],
+	},
+	{
+		name: 'Africa Standard',
+		cost: '18.00',
+		countries: ['ZAF', 'EGY', 'MAR', 'TUN', 'DZA', 'NGA', 'KEN', 'GHA', 'SEN', 'TZA', 'UGA', 'ETH'],
+	},
+	{
+		name: 'UK & Ireland',
+		cost: '6.00',
+		countries: ['GBR', 'IRL'],
+	},
+	{
+		name: 'Scandinavia',
+		cost: '9.00',
+		countries: ['DNK', 'FIN', 'ISL', 'NOR', 'SWE'],
+	},
+	{
+		name: 'Oceania',
+		cost: '20.00',
+		countries: ['AUS', 'NZL', 'FJI', 'PNG', 'SLB', 'VUT', 'NCL', 'WSM'],
+	},
+	{
+		name: 'DACH Region',
+		cost: '7.00',
+		countries: ['DEU', 'AUT', 'CHE'],
+	},
+	{
+		name: 'Benelux',
+		cost: '7.00',
+		countries: ['BEL', 'NLD', 'LUX'],
+	},
+	{
+		name: 'Mediterranean',
+		cost: '10.00',
+		countries: ['ESP', 'PRT', 'ITA', 'GRC', 'MLT', 'CYP', 'HRV', 'SVN'],
+	},
 ]

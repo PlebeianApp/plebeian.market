@@ -17,7 +17,7 @@
 	import { Label } from '$lib/components/ui/label'
 	import * as Popover from '$lib/components/ui/popover'
 	import { Textarea } from '$lib/components/ui/textarea'
-	import { KindStalls } from '$lib/constants'
+	import { KindStalls, SHIPPING_TEMPLATES } from '$lib/constants'
 	import { createStallFromNostrEvent, deleteStallMutation, updateStallFromNostrEvent } from '$lib/fetch/stalls.mutations'
 	import ndkStore from '$lib/stores/ndk'
 	import {
@@ -381,7 +381,13 @@
 							aria-expanded="true"
 							class="w-full max-w-full border-2 border-black justify-between truncate"
 						>
-							{item.countries.length ? item.countries.join(', ') : 'Select'}
+							{#if item.countries.length === 0}
+								Select
+							{:else if item.countries.length <= 2}
+								{item.countries.join(', ')}
+							{:else}
+								{item.countries.slice(0, 2).join(', ')} +{item.countries.length - 2}
+							{/if}
 						</Button>
 					</Popover.Trigger>
 					<Popover.Content class="w-[250px] max-h-[350px] overflow-y-auto p-0">
@@ -442,7 +448,33 @@
 		</div>
 	{/each}
 	<!-- TODO: Ensure at least one shipping method to persist stall -->
-	<div class="grid gap-1.5">
+	<div class="flex flex-row items-center gap-2">
+		<DropdownMenu.Root>
+			<DropdownMenu.Trigger asChild let:builder>
+				<Button data-tooltip="Add a predefined shipping template" variant="outline" builders={[builder]} class="font-bold ml-auto">
+					Add from Template
+				</Button>
+			</DropdownMenu.Trigger>
+			<DropdownMenu.Content class="w-56">
+				<DropdownMenu.Label>Shipping Templates</DropdownMenu.Label>
+				<DropdownMenu.Separator />
+				{#each SHIPPING_TEMPLATES as template}
+					<DropdownMenu.Item
+						on:click={() => {
+							const newMethod = new ShippingMethod(createId(), template.name, template.cost)
+							template.countries.forEach((country) => newMethod.addCountry(country))
+							shippingMethods = [...shippingMethods, newMethod]
+						}}
+					>
+						<div class="flex items-center gap-2">
+							<span class="font-semibold">{template.name}</span>
+							<span class="text-sm text-gray-600">{template.cost} {currency}</span>
+						</div>
+					</DropdownMenu.Item>
+				{/each}
+			</DropdownMenu.Content>
+		</DropdownMenu.Root>
+
 		<Button
 			data-tooltip="Provide different shipping options for your customers!"
 			on:click={() => addShipping()}
