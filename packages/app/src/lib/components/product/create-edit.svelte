@@ -311,15 +311,22 @@
 				<div class="flex flex-col gap-1.5">
 					{#each categories as category (category.key)}
 						<div class="flex items-center space-x-2">
-							<Checkbox id="terms" bind:checked={category.checked} />
-							<span
-								data-category-key={category.key}
-								class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-								contenteditable="true"
-								bind:textContent={category.name}
+							<Input
+								data-tooltip="Your category"
+								bind:value={category.name}
+								required
+								class={`border-2 w-fit-content border-black ${validationErrors['name'] ? 'ring-2 ring-red-500' : ''}`}
+								type="text"
+								name="category"
+								placeholder="e.g. Fancy Wears"
+							/>
+							<Button
+								on:click={() => {
+									categories = categories.filter((c) => c.key !== category.key)
+								}}
+								variant="outline"
+								class="font-bold text-red-500 border-0 h-full"><span class="i-tdesign-delete-1"></span></Button
 							>
-								{category.name}
-							</span>
 						</div>
 					{/each}
 				</div>
