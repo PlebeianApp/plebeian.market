@@ -37,7 +37,7 @@ export const createProductQuery = (productId: string) =>
 						auth: false,
 					})
 					if (response) return response
-					throw Error
+					throw new Error(`failed fetching product: ${productId}`)
 				} catch {
 					const [_, userId, productIdentifier] = productId.split(':')
 					const { products: productsData } = await fetchUserProductData(userId, productIdentifier)
@@ -70,7 +70,7 @@ for (const c of CURRENCIES) {
 			queryFn: async () => {
 				const price = await btcToCurrency(c)
 				if (price == null) {
-					throw Error
+					throw new Error(`failed fetching currency: ${c}`)
 				}
 				return price
 			},
