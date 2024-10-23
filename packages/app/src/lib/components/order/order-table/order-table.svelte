@@ -48,10 +48,6 @@
 			header: 'Status',
 		}),
 		table.column({
-			accessor: 'region',
-			header: 'Region',
-		}),
-		table.column({
 			accessor: 'stallId',
 			header: 'Stall',
 		}),
@@ -73,7 +69,6 @@
 			sellerUserId: 'w-48',
 			buyerUserId: 'w-48',
 			status: 'w-24',
-			region: 'w-32',
 			stallId: 'w-40',
 			createdAt: 'w-auto',
 		}
@@ -107,7 +102,7 @@
 					{#each headerRow.cells as cell (cell.id)}
 						<Subscribe attrs={cell.attrs()} let:attrs props={cell.props()} let:props>
 							<Table.Head {...attrs}>
-								{#if cell.id === 'sellerUserId' || cell.id === 'buyerUserId' || cell.id === 'status' || cell.id === 'region' || cell.id === 'createdAt'}
+								{#if cell.id === 'sellerUserId' || cell.id === 'buyerUserId' || cell.id === 'status' || cell.id === 'createdAt'}
 									<Button variant="ghost" class="border-none cursor-pointer" on:click={props.sort.toggle}>
 										<Render of={cell.render()} />
 									</Button>

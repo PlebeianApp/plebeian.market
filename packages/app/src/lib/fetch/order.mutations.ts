@@ -56,10 +56,7 @@ export const updateOrderStatusMutation = createMutation(
 			return null
 		},
 		onSuccess: () => {
-			const $ndkStore = get(ndkStore)
-			queryClient.invalidateQueries({ queryKey: ['orders', $ndkStore.activeUser?.pubkey] })
-			queryClient.invalidateQueries({ queryKey: ['orders', $ndkStore.activeUser?.pubkey, 'buyer'] })
-			queryClient.invalidateQueries({ queryKey: ['orders', $ndkStore.activeUser?.pubkey, 'seller'] })
+			queryClient.invalidateQueries({ queryKey: ['orders'] })
 		},
 	},
 	queryClient,

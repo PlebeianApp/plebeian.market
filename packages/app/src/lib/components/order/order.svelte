@@ -53,11 +53,6 @@
 	}
 
 	$: invoices = createInvoicesByFilterQuery({ orderId: order.id })
-	$: console.log(
-		'Invoices',
-		$invoices.data?.every((i) => i.invoiceStatus === 'paid'),
-	)
-	$: console.log('order', order)
 	const handleConfirmOrder = async (order: DisplayOrder): Promise<void> => {
 		try {
 			await $updateOrderStatusMutation.mutateAsync({ orderId: order.id, status: 'confirmed' })
