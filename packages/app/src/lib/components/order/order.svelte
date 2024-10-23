@@ -53,18 +53,25 @@
 	}
 
 	$: invoices = createInvoicesByFilterQuery({ orderId: order.id })
-
+	$: console.log(
+		'Invoices',
+		$invoices.data?.every((i) => i.invoiceStatus === 'paid'),
+	)
+	$: console.log('order', order)
 	const handleConfirmOrder = async (order: DisplayOrder): Promise<void> => {
 		try {
 			await $updateOrderStatusMutation.mutateAsync({ orderId: order.id, status: 'confirmed' })
-
+			const allInvoicesPaid = $invoices.data?.every((i) => i.invoiceStatus === 'paid')
 			for (const orderItem of order.orderItems) {
 				const productQuery = $productQueryResults.find((q) => q.data?.id === orderItem.productId)
 				const product = productQuery?.data
+				if (!product) continue
+				// If all invoices have been paid, the product quantity has already been reduced; if the invoices have not been paid, the product quantity must be reduced on the order confirmation.
+				const productQty = allInvoicesPaid ? product.quantity : product.quantity - orderItem.qty
 				if (product) {
 					await $signProductStockMutation.mutateAsync({
 						product,
-						newQuantity: product.quantity, // TODO: if invoices are not paid, but merchant confirms the order we should reduce the stock here and then sign the event
+						newQuantity: productQty,
 					})
 				}
 			}
