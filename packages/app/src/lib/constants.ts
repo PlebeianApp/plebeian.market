@@ -53,8 +53,8 @@ export const DEFAULT_ZAP_AMOUNTS = [
 export const SHIPPING_TEMPLATES = [
 	{
 		name: 'Worldwide Standard',
-		cost: '15.00',
-		countries: Object.values(COUNTRIES_ISO).map((country) => country.iso3),
+		cost: '0',
+		countries: null,
 	},
 	{
 		name: 'Europe Standard',
@@ -91,72 +91,72 @@ export const SHIPPING_TEMPLATES = [
 	},
 	{
 		name: 'Digital Delivery',
-		cost: '0.00',
-		countries: Object.values(COUNTRIES_ISO).map((country) => country.iso3),
+		cost: '0',
+		countries: null,
 	},
 	{
 		name: 'Local Pickup',
-		cost: '0.00',
-		countries: [],
+		cost: '0',
+		countries: null,
 	},
 	{
 		name: 'Express Worldwide',
-		cost: '30.00',
-		countries: Object.values(COUNTRIES_ISO).map((country) => country.iso3),
+		cost: '0',
+		countries: null,
 	},
 	{
 		name: 'North America',
-		cost: '10.00',
+		cost: '0',
 		countries: ['USA', 'CAN', 'MEX'],
 	},
 	{
 		name: 'South America',
-		cost: '12.00',
+		cost: '0',
 		countries: ['ARG', 'BOL', 'BRA', 'CHL', 'COL', 'ECU', 'GUF', 'GUY', 'PRY', 'PER', 'SUR', 'URY', 'VEN'],
 	},
 	{
 		name: 'Asia Pacific',
-		cost: '14.00',
+		cost: '0',
 		countries: ['CHN', 'JPN', 'KOR', 'TWN', 'HKG', 'SGP', 'THA', 'VNM', 'MYS', 'IDN', 'PHL', 'AUS', 'NZL'],
 	},
 	{
 		name: 'Middle East',
-		cost: '16.00',
+		cost: '0',
 		countries: ['ARE', 'SAU', 'BHR', 'OMN', 'QAT', 'KWT', 'IRN', 'IRQ', 'ISR', 'JOR', 'LBN', 'SYR'],
 	},
 	{
 		name: 'Africa Standard',
-		cost: '18.00',
+		cost: '0',
 		countries: ['ZAF', 'EGY', 'MAR', 'TUN', 'DZA', 'NGA', 'KEN', 'GHA', 'SEN', 'TZA', 'UGA', 'ETH'],
 	},
 	{
 		name: 'UK & Ireland',
-		cost: '6.00',
+		cost: '0',
 		countries: ['GBR', 'IRL'],
 	},
 	{
 		name: 'Scandinavia',
-		cost: '9.00',
+		cost: '0',
 		countries: ['DNK', 'FIN', 'ISL', 'NOR', 'SWE'],
 	},
 	{
 		name: 'Oceania',
-		cost: '20.00',
+		cost: '0',
 		countries: ['AUS', 'NZL', 'FJI', 'PNG', 'SLB', 'VUT', 'NCL', 'WSM'],
 	},
 	{
 		name: 'DACH Region',
-		cost: '7.00',
+		cost: '0',
 		countries: ['DEU', 'AUT', 'CHE'],
 	},
 	{
 		name: 'Benelux',
-		cost: '7.00',
+		cost: '0',
 		countries: ['BEL', 'NLD', 'LUX'],
 	},
 	{
 		name: 'Mediterranean',
-		cost: '10.00',
+		cost: '0	',
 		countries: ['ESP', 'PRT', 'ITA', 'GRC', 'MLT', 'CYP', 'HRV', 'SVN'],
 	},
 ]

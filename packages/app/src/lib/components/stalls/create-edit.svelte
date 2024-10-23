@@ -164,7 +164,6 @@
 	}
 
 	onMount(() => {
-		shippingMethods.length === 0 && addShipping()
 		if (stall?.geohash) {
 			geohashOfSelectedGeometry = stall.geohash
 			const { latitude, longitude } = geohash.decode(stall.geohash)
@@ -447,22 +446,27 @@
 			</div>
 		</div>
 	{/each}
-	<!-- TODO: Ensure at least one shipping method to persist stall -->
-	<div class="flex flex-row items-center gap-2">
+	<div class="flex gap-2 justify-end">
+		<Button
+			data-tooltip="Provide different shipping options for your customers!"
+			on:click={() => addShipping()}
+			variant="outline"
+			class={`font-bold ${!shippingMethods.length ? 'required-mark' : ''}`}>Add Shipping Method</Button
+		>
 		<DropdownMenu.Root>
 			<DropdownMenu.Trigger asChild let:builder>
-				<Button data-tooltip="Add a predefined shipping template" variant="outline" builders={[builder]} class="font-bold ml-auto">
+				<Button data-tooltip="Add a predefined shipping template" variant="outline" builders={[builder]} class="font-bold">
 					Add from Template
 				</Button>
 			</DropdownMenu.Trigger>
-			<DropdownMenu.Content class="w-56">
+			<DropdownMenu.Content>
 				<DropdownMenu.Label>Shipping Templates</DropdownMenu.Label>
 				<DropdownMenu.Separator />
 				{#each SHIPPING_TEMPLATES as template}
 					<DropdownMenu.Item
 						on:click={() => {
 							const newMethod = new ShippingMethod(createId(), template.name, template.cost)
-							template.countries.forEach((country) => newMethod.addCountry(country))
+							template.countries?.forEach((country) => newMethod.addCountry(country))
 							shippingMethods = [...shippingMethods, newMethod]
 						}}
 					>
@@ -474,13 +478,6 @@
 				{/each}
 			</DropdownMenu.Content>
 		</DropdownMenu.Root>
-
-		<Button
-			data-tooltip="Provide different shipping options for your customers!"
-			on:click={() => addShipping()}
-			variant="outline"
-			class={`font-bold ml-auto ${!shippingMethods.length ? 'required-mark' : ''}`}>Add Shipping Method</Button
-		>
 	</div>
 
 	<Button id="stall-save-button" type="submit" disabled={isLoading || !changed || !shippingMethods.length} class="w-full font-bold"
