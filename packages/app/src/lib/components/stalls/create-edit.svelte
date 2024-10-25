@@ -438,12 +438,13 @@
 				</Popover.Root>
 			</div>
 			<div class="h-full flex flex-col justify-end">
-				<div class="flex gap-1">
+				<div class="flex gap-1" data-testid={`shipping-actions-${i}`}>
 					<Button data-tooltip="Copy this method" on:click={() => addShipping(item.id)} variant="outline" class="font-bold border-0 h-full">
 						<span class="i-tdesign-copy"></span>
 					</Button>
 					<Button
 						data-tooltip="Remove this method"
+						data-testid={`remove-shipping-${i}`}
 						on:click={() => removeShipping(item.id)}
 						variant="outline"
 						class="font-bold text-red-500 border-0 h-full"
