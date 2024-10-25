@@ -379,8 +379,13 @@
 							role="combobox"
 							aria-expanded="true"
 							class="w-full max-w-full border-2 border-black justify-between truncate"
+							disabled={item.countries === null || item.name === 'Local Pickup'}
 						>
-							{#if item.countries.length === 0}
+							{#if item.countries === null}
+								All Countries
+							{:else if item.countries.length === 0 && item.name === 'Local Pickup'}
+								Local Pickup
+							{:else if item.countries.length === 0}
 								Select
 							{:else if item.countries.length <= 2}
 								{item.countries.join(', ')}
@@ -395,6 +400,7 @@
 							<Command.Empty>No country found.</Command.Empty>
 							<Command.Group>
 								{#each Object.values(COUNTRIES_ISO).toSorted((a, b) => {
+									if (item.countries === null) return 0
 									if (item.countries.includes(a.iso3) && item.countries.includes(b.iso3)) return 0
 									if (item.countries.includes(a.iso3)) return -1
 									if (item.countries.includes(b.iso3)) return 1
@@ -404,7 +410,7 @@
 										value={`${country.iso3} ${country.name}`}
 										onSelect={(currentValue) => {
 											const iso3 = currentValue.split(' ')[0]
-											if (item.countries.includes(iso3)) {
+											if (item.countries && item.countries.includes(iso3)) {
 												item.removeCountry(iso3)
 											} else {
 												item.addCountry(iso3)
@@ -415,7 +421,7 @@
 									>
 										<div class="flex items-center justify-between w-full">
 											<div class="flex items-center gap-2">
-												{#if item.countries.includes(country.iso3)}
+												{#if item.countries && item.countries.includes(country.iso3)}
 													<span class="i-tdesign-check text-green-500"></span>
 												{/if}
 												<span class="font-semibold">{country.iso3}</span>
@@ -465,7 +471,7 @@
 				{#each SHIPPING_TEMPLATES as template}
 					<DropdownMenu.Item
 						on:click={() => {
-							const newMethod = new ShippingMethod(createId(), template.name, template.cost)
+							const newMethod = new ShippingMethod(createId(), template.name, template.cost, [], template.countries)
 							template.countries?.forEach((country) => newMethod.addCountry(country))
 							shippingMethods = [...shippingMethods, newMethod]
 						}}

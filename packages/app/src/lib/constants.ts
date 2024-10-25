@@ -1,7 +1,6 @@
 import type { NDKKind } from '@nostr-dev-kit/ndk'
 
 import type { NonEmptyArray } from '@plebeian/database'
-import { COUNTRIES_ISO } from '@plebeian/database/constants'
 
 export const numSatsInBtc = 100_000_000
 export const standardDisplayDateFormat = 'dd-MM-yyyy'
@@ -97,7 +96,7 @@ export const SHIPPING_TEMPLATES = [
 	{
 		name: 'Local Pickup',
 		cost: '0',
-		countries: null,
+		countries: [],
 	},
 	{
 		name: 'Express Worldwide',
