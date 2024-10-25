@@ -58,8 +58,10 @@
 	}
 
 	let { name, description, currency, image: headerImage, geohash: geohashOfSelectedGeometry } = initialValues
-	let shippingMethods = initialValues.shipping.map((s) => new ShippingMethod(s.id, s.name, s.cost, s.regions, s.countries))
-
+	let shippingMethods =
+		initialValues.shipping.length > 0
+			? initialValues.shipping.map((s) => new ShippingMethod(s.id, s.name, s.cost, s.regions, s.countries))
+			: [new ShippingMethod(createId(), SHIPPING_TEMPLATES[0].name, SHIPPING_TEMPLATES[0].cost, [], SHIPPING_TEMPLATES[0].countries)]
 	let locationSearchOpen = false
 	let shippingFromInput = ''
 	let selectedLocation: Location | null = null
