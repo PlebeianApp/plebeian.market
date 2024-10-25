@@ -8,7 +8,7 @@ import ndkStore from '$lib/stores/ndk'
 import { parseCoordinatesString, shouldRegister, unixTimeNow } from '$lib/utils'
 import { get } from 'svelte/store'
 
-import { createProductEventSchema } from '../../schema/nostr-events'
+import { createProductEventSchema, forbiddenPatternStore } from '../../schema/nostr-events'
 import { createRequest, queryClient } from './client'
 
 declare module './client' {
@@ -96,6 +96,43 @@ export const editProductMutation = createMutation(
 		onSuccess: (data: DisplayProduct | undefined) => {
 			if (data) {
 				const $ndkStore = get(ndkStore)
+				queryClient.invalidateQueries({ queryKey: ['shipping'] })
+				queryClient.invalidateQueries({ queryKey: ['categories'] })
+				queryClient.invalidateQueries({ queryKey: ['stalls'] })
+			}
+		},
+	},
+	queryClient,
+)
+
+export const editProductFromEventMutation = createMutation(
+	{
+		mutationFn: async (productEvent: NDKEvent) => {
+			const $ndkStore = get(ndkStore)
+			if (!$ndkStore.activeUser?.pubkey) return
+
+			const productEventSchema = get(forbiddenPatternStore).createProductEventSchema
+			const validationResult = productEventSchema.safeParse(JSON.parse(productEvent.content))
+			console.log('Validation result', validationResult)
+			if (!validationResult.success) {
+				console.log('Validation error', validationResult.error)
+				return
+			}
+
+			const nostrEvent = await productEvent.toNostrEvent()
+			const _shouldRegister = await shouldRegister(undefined, undefined, $ndkStore.activeUser.pubkey)
+			if (_shouldRegister) {
+				// FIXME: error when updating product
+
+				const response = await createRequest(`PUT /api/v1/products/${validationResult.data.id}`, {
+					body: nostrEvent,
+				})
+				console.log('Observing response', response)
+				return response
+			}
+		},
+		onSuccess: (data: DisplayProduct | undefined) => {
+			if (data) {
 				queryClient.invalidateQueries({ queryKey: ['shipping'] })
 				queryClient.invalidateQueries({ queryKey: ['categories'] })
 				queryClient.invalidateQueries({ queryKey: ['stalls'] })

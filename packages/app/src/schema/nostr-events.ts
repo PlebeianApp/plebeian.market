@@ -34,6 +34,11 @@ export const shippingObjectSchema = z.object({
 	countries: z.array(z.string()).optional(),
 })
 
+export const productShippingObjectSchema = z.object({
+	id: z.string(),
+	cost: z.string(),
+})
+
 export const createProductEventSchema = (forbiddenPattern: RegExp) =>
 	z
 		.object({
@@ -59,7 +64,7 @@ export const createProductEventSchema = (forbiddenPattern: RegExp) =>
 			price: z.number(),
 			quantity: z.number().int(),
 			specs: z.array(z.tuple([z.string(), z.string()])).optional(),
-			shipping: z.array(shippingObjectSchema),
+			shipping: z.array(productShippingObjectSchema),
 		})
 		.partial()
 		.transform((data) => {

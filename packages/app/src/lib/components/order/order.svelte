@@ -7,7 +7,7 @@
 	import { createInvoicesByFilterQuery } from '$lib/fetch/invoices.queries'
 	import { updateOrderStatusMutation } from '$lib/fetch/order.mutations'
 	import { createPaymentsForUserQuery } from '$lib/fetch/payments.queries'
-	import { signProductStockMutation } from '$lib/fetch/products.mutations'
+	import { editProductFromEventMutation, signProductStockMutation } from '$lib/fetch/products.mutations'
 	import { createProductQuery } from '$lib/fetch/products.queries'
 	import { toast } from 'svelte-sonner'
 	import { derived } from 'svelte/store'
@@ -55,7 +55,8 @@
 	$: invoices = createInvoicesByFilterQuery({ orderId: order.id })
 	const handleConfirmOrder = async (order: DisplayOrder): Promise<void> => {
 		try {
-			await $updateOrderStatusMutation.mutateAsync({ orderId: order.id, status: 'confirmed' })
+			// TODO: uncomment this line
+			// await $updateOrderStatusMutation.mutateAsync({ orderId: order.id, status: 'confirmed' })
 			const allInvoicesPaid = $invoices.data?.every((i) => i.invoiceStatus === 'paid')
 			for (const orderItem of order.orderItems) {
 				const productQuery = $productQueryResults.find((q) => q.data?.id === orderItem.productId)
@@ -64,10 +65,13 @@
 				// If all invoices have been paid, the product quantity has already been reduced; if the invoices have not been paid, the product quantity must be reduced on the order confirmation.
 				const productQty = allInvoicesPaid ? product.quantity : product.quantity - orderItem.qty
 				if (product) {
-					await $signProductStockMutation.mutateAsync({
+					const productEvent = await $signProductStockMutation.mutateAsync({
 						product,
 						newQuantity: productQty,
 					})
+					console.log('Product event:', productEvent)
+					if (!productEvent) continue
+					await $editProductFromEventMutation.mutateAsync(productEvent)
 				}
 			}
 
