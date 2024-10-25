@@ -332,24 +332,35 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 export const updateProduct = async (productId: string, productEvent: NostrEvent): Promise<DisplayProduct | null> => {
 	try {
 		return await db.transaction(async (tx) => {
-			if (!cachedPattern) throw Error(`No forbidden pattern`)
+			if (!cachedPattern) {
+				throw Error(`No forbidden pattern`)
+			}
+
 			const eventCoordinates = getEventCoordinates(productEvent)
+			if (!eventCoordinates?.coordinates) {
+				throw new Error('Invalid event coordinates')
+			}
+
 			const productEventContent = JSON.parse(productEvent.content)
+
 			const parsedProduct = createProductEventSchema(cachedPattern).safeParse({
 				id: productId,
 				...productEventContent,
 			})
+
 			if (!parsedProduct.success) {
-				throw new Error(`Bad product schema: ${parsedProduct.error}`)
+				throw new Error(`Invalid product schema: ${parsedProduct.error.message}`)
 			}
 
 			const parsedProductData = parsedProduct.data
+			if (!parsedProductData?.stallId) {
+				throw new Error('Missing stall id')
+			}
+			const stallId = parseCoordinatesString(`${KindStalls}:${eventCoordinates.pubkey}:${parsedProductData.stallId}`)
+			if (!stallId.coordinates) {
+				throw new Error('Invalid stall coordinates')
+			}
 
-			const stallId = parsedProductData?.stallId?.startsWith(KindStalls.toString())
-				? parsedProductData?.stallId
-				: `${KindStalls}:${productEvent.pubkey}:${parsedProductData?.stallId}`
-			console.log('Observing parsed product data', parsedProductData)
-			// FIXME: Fix this: Cannot read properties of undefined (reading 'id')
 			try {
 				const [updatedProduct] = await tx
 					.update(products)
@@ -359,11 +370,11 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 						currency: parsedProductData.currency,
 						price: parsedProductData.price?.toString(),
 						extraCost: parsedProductData.shipping?.length ? parsedProductData.shipping[0].cost?.toString() : '0',
-						stallId,
+						stallId: stallId.coordinates,
 						productName: parsedProductData.name,
 						quantity: parsedProductData.quantity ?? undefined,
 					})
-					.where(eq(products.id, productId))
+					.where(eq(products.id, eventCoordinates?.coordinates))
 					.returning()
 
 				const existingImages = await tx.select().from(productImages).where(eq(productImages.productId, productId))
@@ -409,7 +420,6 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 				await tx.delete(productShipping).where(eq(productShipping.productId, productId))
 
 				if (parsedProductData.shipping && parsedProductData.shipping.length > 0) {
-					// TODO With the new product shipping coordinates we can have foreign key problems if we do not set the correct 'shippingId', we should improve this.
 					try {
 						await tx.insert(productShipping).values(
 							parsedProductData.shipping.map((shipping) => ({
@@ -417,7 +427,7 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 								shippingId:
 									shipping.id.split(':').length > 1
 										? shipping.id
-										: createShippingCoordinates(shipping.id, String(stallId.split(':').pop())),
+										: createShippingCoordinates(shipping.id, String(stallId.coordinates?.split(':').pop())),
 								productId: productId,
 							})),
 						)
@@ -451,16 +461,18 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 						.onConflictDoNothing({ target: [eventTags.tagName, eventTags.tagValue, eventTags.eventId] })
 				}
 
+				if (!updatedProduct) {
+					throw new Error(`Failed to update product: ${productId}`)
+				}
+
 				return toDisplayProduct(updatedProduct)
-				// if (!updatedProduct) {
-				// 	throw new Error(`Failed to update product: ${productId}`)
-				// }
 			} catch (e) {
 				throw new Error(`Failed to update product: ${productId}: ${e}`)
 			}
 		})
 	} catch (e) {
-		error(500, { message: `${e}` })
+		const errorMessage = e instanceof Error ? e.message : 'Unknown error occurred'
+		error(500, { message: errorMessage })
 	}
 }
 

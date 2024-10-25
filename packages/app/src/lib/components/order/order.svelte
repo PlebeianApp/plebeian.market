@@ -55,30 +55,45 @@
 	$: invoices = createInvoicesByFilterQuery({ orderId: order.id })
 	const handleConfirmOrder = async (order: DisplayOrder): Promise<void> => {
 		try {
-			// TODO: uncomment this line
-			// await $updateOrderStatusMutation.mutateAsync({ orderId: order.id, status: 'confirmed' })
-			const allInvoicesPaid = $invoices.data?.every((i) => i.invoiceStatus === 'paid')
-			for (const orderItem of order.orderItems) {
-				const productQuery = $productQueryResults.find((q) => q.data?.id === orderItem.productId)
-				const product = productQuery?.data
-				if (!product) continue
-				// If all invoices have been paid, the product quantity has already been reduced; if the invoices have not been paid, the product quantity must be reduced on the order confirmation.
-				const productQty = allInvoicesPaid ? product.quantity : product.quantity - orderItem.qty
-				if (product) {
+			const allInvoicesPaid = $invoices.data?.every((i) => i.invoiceStatus === 'paid') ?? false
+
+			await Promise.all(
+				order.orderItems.map(async (orderItem) => {
+					const product = $productQueryResults.find((q) => q.data?.id === orderItem.productId)?.data
+
+					if (!product) {
+						console.warn(`Product not found for order item: ${orderItem.productId}`)
+						return
+					}
+
+					const newQuantity = allInvoicesPaid ? product.quantity : product.quantity - orderItem.qty
+
 					const productEvent = await $signProductStockMutation.mutateAsync({
 						product,
-						newQuantity: productQty,
+						newQuantity,
 					})
-					console.log('Product event:', productEvent)
-					if (!productEvent) continue
-					await $editProductFromEventMutation.mutateAsync(productEvent)
-				}
-			}
+
+					if (!productEvent) {
+						console.warn(`Failed to sign product stock for: ${product.id}`)
+						return
+					}
+
+					if (!allInvoicesPaid) {
+						await $editProductFromEventMutation.mutateAsync(productEvent)
+					}
+				}),
+			)
+
+			// Update order status after all products are processed
+			await $updateOrderStatusMutation.mutateAsync({
+				orderId: order.id,
+				status: 'confirmed',
+			})
 
 			toast.success('Order confirmed')
 		} catch (error) {
 			console.error('Error confirming order:', error)
-			toast.error('Failed to confirm order')
+			toast.error(error instanceof Error ? error.message : 'Failed to confirm order')
 		}
 	}
 
@@ -93,6 +108,7 @@
 	}
 
 	const handleCancelOrder = async (order: DisplayOrder): Promise<void> => {
+		// TODO: handle stock qty mutation here in case the order is all paid, but cancels
 		await $updateOrderStatusMutation.mutateAsync({ orderId: order.id, status: 'cancelled' })
 		toast.success('Order cancelled')
 	}

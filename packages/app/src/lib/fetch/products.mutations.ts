@@ -107,36 +107,47 @@ export const editProductMutation = createMutation(
 
 export const editProductFromEventMutation = createMutation(
 	{
-		mutationFn: async (productEvent: NDKEvent) => {
+		mutationFn: async (productEvent: NDKEvent): Promise<DisplayProduct | undefined> => {
 			const $ndkStore = get(ndkStore)
-			if (!$ndkStore.activeUser?.pubkey) return
+			const pubkey = $ndkStore.activeUser?.pubkey
+
+			if (!pubkey) {
+				throw new Error('User not authenticated')
+			}
 
 			const productEventSchema = get(forbiddenPatternStore).createProductEventSchema
-			const validationResult = productEventSchema.safeParse(JSON.parse(productEvent.content))
-			console.log('Validation result', validationResult)
+
+			let parsedContent: unknown
+			try {
+				parsedContent = JSON.parse(productEvent.content)
+			} catch (e) {
+				throw new Error('Invalid product event content')
+			}
+
+			const validationResult = productEventSchema.safeParse(parsedContent)
+
 			if (!validationResult.success) {
-				console.log('Validation error', validationResult.error)
-				return
+				throw new Error(`Product validation failed: ${validationResult.error.message}`)
 			}
 
 			const nostrEvent = await productEvent.toNostrEvent()
-			const _shouldRegister = await shouldRegister(undefined, undefined, $ndkStore.activeUser.pubkey)
-			if (_shouldRegister) {
-				// FIXME: error when updating product
+			const shouldRegisterResult = await shouldRegister(undefined, undefined, pubkey)
 
-				const response = await createRequest(`PUT /api/v1/products/${validationResult.data.id}`, {
-					body: nostrEvent,
-				})
-				console.log('Observing response', response)
-				return response
+			if (!shouldRegisterResult) {
+				return
 			}
+
+			return createRequest(`PUT /api/v1/products/${validationResult.data.id}`, {
+				body: nostrEvent,
+			})
 		},
-		onSuccess: (data: DisplayProduct | undefined) => {
-			if (data) {
-				queryClient.invalidateQueries({ queryKey: ['shipping'] })
-				queryClient.invalidateQueries({ queryKey: ['categories'] })
-				queryClient.invalidateQueries({ queryKey: ['stalls'] })
-			}
+		onSuccess: (data?: DisplayProduct) => {
+			if (!data) return
+
+			const queriesToInvalidate = ['shipping', 'categories', 'stalls']
+			queriesToInvalidate.forEach((key) => {
+				queryClient.invalidateQueries({ queryKey: [key] })
+			})
 		},
 	},
 	queryClient,
