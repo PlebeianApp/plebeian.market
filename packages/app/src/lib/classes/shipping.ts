@@ -4,7 +4,7 @@ export class ShippingMethod {
 		public name: string,
 		public cost: string,
 		public regions: string[] = [],
-		public countries: string[] = [],
+		public countries: string[] | null = [],
 	) {}
 
 	addRegion(region: string) {
@@ -16,10 +16,12 @@ export class ShippingMethod {
 	}
 
 	addCountry(country: string) {
+		if (this.countries === null) this.countries = []
 		this.countries.push(country)
 	}
 
 	removeCountry(country: string) {
+		if (this.countries === null) this.countries = []
 		this.countries = this.countries.filter((z) => z !== country)
 	}
 

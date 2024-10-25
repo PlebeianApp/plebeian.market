@@ -17,7 +17,7 @@
 	import { Label } from '$lib/components/ui/label'
 	import * as Popover from '$lib/components/ui/popover'
 	import { Textarea } from '$lib/components/ui/textarea'
-	import { KindStalls } from '$lib/constants'
+	import { KindStalls, SHIPPING_TEMPLATES } from '$lib/constants'
 	import { createStallFromNostrEvent, deleteStallMutation, updateStallFromNostrEvent } from '$lib/fetch/stalls.mutations'
 	import ndkStore from '$lib/stores/ndk'
 	import {
@@ -58,8 +58,10 @@
 	}
 
 	let { name, description, currency, image: headerImage, geohash: geohashOfSelectedGeometry } = initialValues
-	let shippingMethods = initialValues.shipping.map((s) => new ShippingMethod(s.id, s.name, s.cost, s.regions, s.countries))
-
+	let shippingMethods =
+		initialValues.shipping.length > 0
+			? initialValues.shipping.map((s) => new ShippingMethod(s.id, s.name, s.cost, s.regions, s.countries))
+			: [new ShippingMethod(createId(), SHIPPING_TEMPLATES[0].name, SHIPPING_TEMPLATES[0].cost, [], SHIPPING_TEMPLATES[0].countries)]
 	let locationSearchOpen = false
 	let shippingFromInput = ''
 	let selectedLocation: Location | null = null
@@ -164,7 +166,6 @@
 	}
 
 	onMount(() => {
-		shippingMethods.length === 0 && addShipping()
 		if (stall?.geohash) {
 			geohashOfSelectedGeometry = stall.geohash
 			const { latitude, longitude } = geohash.decode(stall.geohash)
@@ -380,8 +381,19 @@
 							role="combobox"
 							aria-expanded="true"
 							class="w-full max-w-full border-2 border-black justify-between truncate"
+							disabled={item.countries === null || item.name === 'Local Pickup'}
 						>
-							{item.countries.length ? item.countries.join(', ') : 'Select'}
+							{#if item.countries === null}
+								All Countries
+							{:else if item.countries.length === 0 && item.name === 'Local Pickup'}
+								Local Pickup
+							{:else if item.countries.length === 0}
+								Select
+							{:else if item.countries.length <= 2}
+								{item.countries.join(', ')}
+							{:else}
+								{item.countries.slice(0, 2).join(', ')} +{item.countries.length - 2}
+							{/if}
 						</Button>
 					</Popover.Trigger>
 					<Popover.Content class="w-[250px] max-h-[350px] overflow-y-auto p-0">
@@ -390,6 +402,7 @@
 							<Command.Empty>No country found.</Command.Empty>
 							<Command.Group>
 								{#each Object.values(COUNTRIES_ISO).toSorted((a, b) => {
+									if (item.countries === null) return 0
 									if (item.countries.includes(a.iso3) && item.countries.includes(b.iso3)) return 0
 									if (item.countries.includes(a.iso3)) return -1
 									if (item.countries.includes(b.iso3)) return 1
@@ -399,7 +412,7 @@
 										value={`${country.iso3} ${country.name}`}
 										onSelect={(currentValue) => {
 											const iso3 = currentValue.split(' ')[0]
-											if (item.countries.includes(iso3)) {
+											if (item.countries && item.countries.includes(iso3)) {
 												item.removeCountry(iso3)
 											} else {
 												item.addCountry(iso3)
@@ -410,7 +423,7 @@
 									>
 										<div class="flex items-center justify-between w-full">
 											<div class="flex items-center gap-2">
-												{#if item.countries.includes(country.iso3)}
+												{#if item.countries && item.countries.includes(country.iso3)}
 													<span class="i-tdesign-check text-green-500"></span>
 												{/if}
 												<span class="font-semibold">{country.iso3}</span>
@@ -425,12 +438,13 @@
 				</Popover.Root>
 			</div>
 			<div class="h-full flex flex-col justify-end">
-				<div class="flex gap-1">
+				<div class="flex gap-1" data-testid={`shipping-actions-${i}`}>
 					<Button data-tooltip="Copy this method" on:click={() => addShipping(item.id)} variant="outline" class="font-bold border-0 h-full">
 						<span class="i-tdesign-copy"></span>
 					</Button>
 					<Button
 						data-tooltip="Remove this method"
+						data-testid={`remove-shipping-${i}`}
 						on:click={() => removeShipping(item.id)}
 						variant="outline"
 						class="font-bold text-red-500 border-0 h-full"
@@ -441,14 +455,38 @@
 			</div>
 		</div>
 	{/each}
-	<!-- TODO: Ensure at least one shipping method to persist stall -->
-	<div class="grid gap-1.5">
+	<div class="flex gap-2 justify-end">
 		<Button
 			data-tooltip="Provide different shipping options for your customers!"
 			on:click={() => addShipping()}
 			variant="outline"
-			class={`font-bold ml-auto ${!shippingMethods.length ? 'required-mark' : ''}`}>Add Shipping Method</Button
+			class={`font-bold ${!shippingMethods.length ? 'required-mark' : ''}`}>Add Shipping Method</Button
 		>
+		<DropdownMenu.Root>
+			<DropdownMenu.Trigger asChild let:builder>
+				<Button data-tooltip="Add a predefined shipping template" variant="outline" builders={[builder]} class="font-bold">
+					Add from Template
+				</Button>
+			</DropdownMenu.Trigger>
+			<DropdownMenu.Content>
+				<DropdownMenu.Label>Shipping Templates</DropdownMenu.Label>
+				<DropdownMenu.Separator />
+				{#each SHIPPING_TEMPLATES as template}
+					<DropdownMenu.Item
+						on:click={() => {
+							const newMethod = new ShippingMethod(createId(), template.name, template.cost, [], template.countries)
+							template.countries?.forEach((country) => newMethod.addCountry(country))
+							shippingMethods = [...shippingMethods, newMethod]
+						}}
+					>
+						<div class="flex items-center gap-2">
+							<span class="font-semibold">{template.name}</span>
+							<span class="text-sm text-gray-600">{template.cost} {currency}</span>
+						</div>
+					</DropdownMenu.Item>
+				{/each}
+			</DropdownMenu.Content>
+		</DropdownMenu.Root>
 	</div>
 
 	<Button id="stall-save-button" type="submit" disabled={isLoading || !changed || !shippingMethods.length} class="w-full font-bold"

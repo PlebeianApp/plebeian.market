@@ -20,7 +20,7 @@
 	async function fetchUserProfile() {
 		if (npub) {
 			const user = $ndkStore.getUser({ npub })
-			userProfile = await resolveQuery(() => createUserByIdQuery(user.pubkey), 10, 500)
+			userProfile = await resolveQuery(() => createUserByIdQuery(user.pubkey))
 			const res = await checkTargetUserHasLightningAddress(user.pubkey)
 
 			console.log('res', userProfile)

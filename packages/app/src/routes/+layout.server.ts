@@ -1,6 +1,7 @@
+import { currencyQueries } from '$lib/fetch/products.queries'
 import { getAllForbiddenWords } from '$lib/server/appSettings.service'
 import { getAppSettings } from '$lib/server/setup.service'
-import { btcToCurrency } from '$lib/utils'
+import { resolveQuery } from '$lib/utils'
 
 import type { AppSettings, PaymentDetailsMethod } from '@plebeian/database'
 import { CURRENCIES, PAYMENT_DETAILS_METHOD } from '@plebeian/database'
@@ -33,10 +34,19 @@ const fetchInitialPrices = async () => {
 	if (cache.data && now - cache.timestamp < CACHE_DURATION) {
 		return cache.data
 	}
-	// TODO: make this more robust and have a retry mechanism, if internet is slow or something it fails and you have to restart the server
-	// Fetch new data and update the cache
+
 	const data = [
-		...(await Promise.all(CURRENCIES.slice(2).map(async (c) => [c, await btcToCurrency(c)] as const))),
+		...(await Promise.all(
+			CURRENCIES.slice(2).map(async (c) => {
+				try {
+					const price = await resolveQuery(() => currencyQueries[c])
+					return [c, price] as const
+				} catch (error) {
+					console.error(`Failed to fetch price for ${c}:`, error)
+					return [c, null] as const
+				}
+			}),
+		)),
 		['SATS', 1e8],
 		['BTC', 1],
 	]
