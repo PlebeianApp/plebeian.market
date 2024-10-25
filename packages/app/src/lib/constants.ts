@@ -51,6 +51,11 @@ export const DEFAULT_ZAP_AMOUNTS = [
 
 export const SHIPPING_TEMPLATES = [
 	{
+		name: 'Local Pickup',
+		cost: '0',
+		countries: [],
+	},
+	{
 		name: 'Worldwide Standard',
 		cost: '0',
 		countries: null,
@@ -92,11 +97,6 @@ export const SHIPPING_TEMPLATES = [
 		name: 'Digital Delivery',
 		cost: '0',
 		countries: null,
-	},
-	{
-		name: 'Local Pickup',
-		cost: '0',
-		countries: [],
 	},
 	{
 		name: 'Express Worldwide',
