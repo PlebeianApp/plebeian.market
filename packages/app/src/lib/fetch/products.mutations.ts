@@ -8,7 +8,7 @@ import ndkStore from '$lib/stores/ndk'
 import { parseCoordinatesString, shouldRegister, unixTimeNow } from '$lib/utils'
 import { get } from 'svelte/store'
 
-import { createProductEventSchema } from '../../schema/nostr-events'
+import { createProductEventSchema, forbiddenPatternStore } from '../../schema/nostr-events'
 import { createRequest, queryClient } from './client'
 
 declare module './client' {
@@ -105,6 +105,54 @@ export const editProductMutation = createMutation(
 	queryClient,
 )
 
+export const editProductFromEventMutation = createMutation(
+	{
+		mutationFn: async (productEvent: NDKEvent): Promise<DisplayProduct | undefined> => {
+			const $ndkStore = get(ndkStore)
+			const pubkey = $ndkStore.activeUser?.pubkey
+
+			if (!pubkey) {
+				throw new Error('User not authenticated')
+			}
+
+			const productEventSchema = get(forbiddenPatternStore).createProductEventSchema
+
+			let parsedContent: unknown
+			try {
+				parsedContent = JSON.parse(productEvent.content)
+			} catch (e) {
+				throw new Error('Invalid product event content')
+			}
+
+			const validationResult = productEventSchema.safeParse(parsedContent)
+
+			if (!validationResult.success) {
+				throw new Error(`Product validation failed: ${validationResult.error.message}`)
+			}
+
+			const nostrEvent = await productEvent.toNostrEvent()
+			const shouldRegisterResult = await shouldRegister(undefined, undefined, pubkey)
+
+			if (!shouldRegisterResult) {
+				return
+			}
+
+			return createRequest(`PUT /api/v1/products/${validationResult.data.id}`, {
+				body: nostrEvent,
+			})
+		},
+		onSuccess: (data?: DisplayProduct) => {
+			if (!data) return
+
+			const queriesToInvalidate = ['shipping', 'categories', 'stalls']
+			queriesToInvalidate.forEach((key) => {
+				queryClient.invalidateQueries({ queryKey: [key] })
+			})
+		},
+	},
+	queryClient,
+)
+
 export const createProductsFromNostrMutation = createMutation(
 	{
 		mutationFn: async (products: Set<NDKEvent>) => {
@@ -157,3 +205,61 @@ export const deleteProductMutation = createMutation(
 	},
 	queryClient,
 )
+
+export const signProductStockMutation = createMutation(
+	{
+		mutationFn: async ({ product, newQuantity }: { product: DisplayProduct; newQuantity: number }) => {
+			const newEvent = createProductEvent(product, newQuantity)
+			if (!newEvent) return
+
+			await newEvent.sign() // TODO: publish instead of sign
+
+			return newEvent
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ['products'] })
+		},
+	},
+	queryClient,
+)
+
+export function createProductEvent(product: DisplayProduct, newQuantity?: number): NDKEvent | undefined {
+	const $ndkStore = get(ndkStore)
+	if (!$ndkStore.activeUser?.pubkey || !product.id) return
+
+	const stallCoordinates = parseCoordinatesString(`${KindProducts}:${$ndkStore.activeUser.pubkey}:${product.stallId}`)
+	const productCoordinates = parseCoordinatesString(product.id)
+
+	const transformedShipping =
+		product.shipping?.map((ship) => ({
+			id: ship.shippingId,
+			cost: ship.cost,
+		})) || undefined
+
+	const transformedImages = product.images?.filter((img) => img.imageUrl).map((img) => img.imageUrl!) || undefined
+
+	const eventContent = {
+		id: product.identifier,
+		stall_id: stallCoordinates.tagD!,
+		name: product.name,
+		currency: product.currency ?? undefined,
+		price: product.price,
+		quantity: newQuantity ?? product.quantity,
+		shipping: transformedShipping,
+		description: product.description?.trim() || undefined,
+		images: transformedImages,
+	}
+
+	const newEvent = new NDKEvent($ndkStore, {
+		kind: KindProducts,
+		pubkey: $ndkStore.activeUser.pubkey,
+		content: JSON.stringify(eventContent),
+		created_at: unixTimeNow(),
+		tags: [
+			['d', productCoordinates.tagD!],
+			...(product.categories || []).map((c) => ['t', c]),
+			...(stallCoordinates.coordinates ? [['a', stallCoordinates.coordinates!]] : []),
+		],
+	})
+	return newEvent
+}

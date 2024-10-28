@@ -18,7 +18,7 @@
 
 	import type { InvoiceMessage, OrderStatus, PaymentRequestMessage } from '@plebeian/database/constants'
 	import { ORDER_STATUS } from '@plebeian/database/constants'
-	import { createId, createSlugId } from '@plebeian/database/utils'
+	import { createSlugId } from '@plebeian/database/utils'
 
 	import type { OrderPaymentStatus } from '../order/types'
 	import type { CheckoutPaymentEvent } from './types'
@@ -56,6 +56,7 @@
 
 	$: allPaymentsPaid =
 		paymentStatuses.length > 0 && paymentStatuses.every((status) => ['paid', 'expired', 'cancelled'].includes(status.status ?? ''))
+
 	$: {
 		if (allPaymentsPaid) {
 			dispatch('valid', true)
@@ -106,12 +107,6 @@
 	async function initializePaymentStatuses() {
 		await tick()
 		paymentStatuses = [{ id: 'merchant', status: null }, ...v4vShares.map((share) => ({ id: share.target, status: null }))]
-	}
-
-	const statusMapping: Record<NonNullable<OrderPaymentStatus>, OrderStatus> = {
-		paid: ORDER_STATUS.PAID,
-		expired: ORDER_STATUS.PENDING,
-		cancelled: ORDER_STATUS.PENDING,
 	}
 
 	const paymentEventToStatus: Record<string, NonNullable<OrderPaymentStatus>> = {
@@ -199,15 +194,7 @@
 		await new Promise((resolve) => setTimeout(resolve, 1000))
 		// await sendDM(paymentRequestMessage, order.sellerUserId)
 		// await sendDM(invoice, order.sellerUserId)
-
-		const newOrderStatus = statusMapping[status]
-		if ($cart.orders[order.id].status !== newOrderStatus) {
-			cart.updateOrderStatus(order.id, newOrderStatus)
-			await new Promise((resolve) => setTimeout(resolve, 1000))
-			// await sendDM($cart.orders[order.id], order.sellerUserId)
-		}
 	}
-
 	$: {
 		order
 		cart.calculateStallTotal(stall, products).then((total) => (orderTotal = total))

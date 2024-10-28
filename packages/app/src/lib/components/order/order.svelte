@@ -7,6 +7,7 @@
 	import { createInvoicesByFilterQuery } from '$lib/fetch/invoices.queries'
 	import { updateOrderStatusMutation } from '$lib/fetch/order.mutations'
 	import { createPaymentsForUserQuery } from '$lib/fetch/payments.queries'
+	import { editProductFromEventMutation, signProductStockMutation } from '$lib/fetch/products.mutations'
 	import { createProductQuery } from '$lib/fetch/products.queries'
 	import { toast } from 'svelte-sonner'
 	import { derived } from 'svelte/store'
@@ -20,7 +21,6 @@
 	import ProductItem from '../product/product-item.svelte'
 	import StallName from '../stalls/stall-name.svelte'
 	import Button from '../ui/button/button.svelte'
-	import Separator from '../ui/separator/separator.svelte'
 	import InvoiceObservationsEdit from './invoice-observations-edit.svelte'
 	import MiniShipping from './mini-shipping.svelte'
 	import OrderActions from './order-actions.svelte'
@@ -52,10 +52,48 @@
 	}
 
 	$: invoices = createInvoicesByFilterQuery({ orderId: order.id })
-
 	const handleConfirmOrder = async (order: DisplayOrder): Promise<void> => {
-		await $updateOrderStatusMutation.mutateAsync({ orderId: order.id, status: 'confirmed' })
-		toast.success('Order confirmed')
+		try {
+			const allInvoicesPaid = $invoices.data?.every((i) => i.invoiceStatus === 'paid') ?? false
+
+			await Promise.all(
+				order.orderItems.map(async (orderItem) => {
+					const product = $productQueryResults.find((q) => q.data?.id === orderItem.productId)?.data
+
+					if (!product) {
+						console.warn(`Product not found for order item: ${orderItem.productId}`)
+						return
+					}
+
+					const newQuantity = allInvoicesPaid ? product.quantity : product.quantity - orderItem.qty
+
+					const productEvent = await $signProductStockMutation.mutateAsync({
+						product,
+						newQuantity,
+					})
+
+					if (!productEvent) {
+						console.warn(`Failed to sign product stock for: ${product.id}`)
+						return
+					}
+
+					if (!allInvoicesPaid) {
+						await $editProductFromEventMutation.mutateAsync(productEvent)
+					}
+				}),
+			)
+
+			// Update order status after all products are processed
+			await $updateOrderStatusMutation.mutateAsync({
+				orderId: order.id,
+				status: 'confirmed',
+			})
+
+			toast.success('Order confirmed')
+		} catch (error) {
+			console.error('Error confirming order:', error)
+			toast.error(error instanceof Error ? error.message : 'Failed to confirm order')
+		}
 	}
 
 	const handleMarkAsShipped = async (order: DisplayOrder): Promise<void> => {
@@ -120,136 +158,278 @@
 	}
 </script>
 
-<div>
-	<h2 class="text-2xl font-bold mb-4">{orderMode === 'sale' ? 'Sale Order' : 'Purchase Order'}</h2>
-	<div class="flex flex-col">
-		<div class="flex flex-row justify-between mb-4">
-			<div class="flex flex-col">
-				<p>Order ID: {order.id}</p>
-				<p>Created At: {new Date(order.createdAt).toLocaleDateString()}</p>
-				<p>Updated At: {new Date(order.updatedAt).toLocaleDateString()}</p>
-				<p>Status: {order.status}</p>
-				{#if order.shippingId}
-					<MiniShipping shippingMethodId={order.shippingId} />
-				{/if}
-			</div>
-			<div class="flex flex-col items-end">
-				{#if orderMode === 'sale'}
-					<div>Buyer:</div>
-					<MiniUser userId={order.buyerUserId} />
-				{:else}
-					<div>Seller:</div>
-					<MiniUser userId={order.sellerUserId} />
-				{/if}
-
-				<StallName stallId={order.stallId} />
-			</div>
-		</div>
-		<OrderActions
-			{orderMode}
-			orderStatus={order.status}
-			orderId={order.id}
-			on:confirmOrder={() => handleConfirmOrder(order)}
-			on:markAsShipped={() => handleMarkAsShipped(order)}
-			on:markAsReceived={() => handleMarkAsReceived(order)}
-			on:cancelOrder={() => handleCancelOrder(order)}
-		/>
-
-		<Separator class={'my-4'} />
+<div class="mx-auto">
+	<div class="bg-white rounded-lg shadow-sm p-4 md:p-6 space-y-6">
+		<!-- Header Section -->
 		<div>
-			<p>Address: {order.address}</p>
-			<p>Zip: {order.zip}</p>
-			<p>City: {order.city}</p>
-			<p>Country: {order.country}</p>
-			<p>Region: {order.region}</p>
+			<div class="flex flex-col sm:flex-row sm:items-center justify-between border-b pb-4 gap-3">
+				<div>
+					<h2 class="text-xl md:text-2xl font-bold flex flex-wrap items-center gap-2">
+						{orderMode === 'sale' ? 'Sale Order' : 'Purchase Order'}
+						<span class="text-sm font-normal text-gray-500">#{order.id}</span>
+					</h2>
+					<p class="text-sm text-gray-500 mt-1">
+						Created {new Date(order.createdAt).toLocaleDateString()}
+					</p>
+				</div>
+				<div>
+					<span
+						class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
+			  {order.status === 'completed'
+							? 'bg-green-100 text-green-800'
+							: order.status === 'cancelled'
+								? 'bg-red-100 text-red-800'
+								: order.status === 'shipped'
+									? 'bg-blue-100 text-blue-800'
+									: 'bg-gray-100 text-gray-800'}"
+					>
+						{order.status}
+					</span>
+				</div>
+			</div>
 		</div>
-		<Separator class={'my-4'} />
-		<div>
-			<p>Contact Name: {order.contactName}</p>
-			<p>Contact Phone: {order.contactPhone}</p>
-			<p>Contact Email: {order.contactEmail}</p>
-			<p>Observations: {order.observations}</p>
-		</div>
-	</div>
 
-	<Separator class={'my-4'} />
+		<!-- Order Info Section -->
+		<div class="bg-gray-50 rounded-lg p-4">
+			<div class="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-6">
+				<!-- Left Column: Order Details -->
+				<div class="space-y-4">
+					<div class="grid grid-cols-[100px_1fr] md:grid-cols-[120px_1fr] gap-x-4 gap-y-2">
+						<p class="text-gray-500">Last Update:</p>
+						<p class="font-medium">{new Date(order.updatedAt).toLocaleDateString()}</p>
 
-	<div class="grid grid-cols-1 md:grid-cols-2 gap-2 mt-8">
-		{#each $productQueryResults as query}
-			{#if query.isLoading}
-				<p>Loading...</p>
-			{:else if query.isError}
-				<p>Error: {query.error.message}</p>
-			{:else if query.isSuccess && query.data}
-				<ProductItem product={query.data} qtyPurchased={order.orderItems.find((oi) => oi.productId === query.data?.id)?.qty} />
-			{:else}
-				<p>No data available</p>
-			{/if}
-		{/each}
-	</div>
-
-	{#if $invoices.data && $invoices.data.length > 0}
-		<Separator class={'my-4'} />
-		<h3 class="text-xl font-semibold mt-8 mb-4">Invoices</h3>
-		<div class="space-y-4">
-			{#each $invoices.data as invoice (invoice.id)}
-				<div class="flex flex-col p-4 bg-gray-50 rounded-lg shadow transition-all duration-200 gap-3">
-					<InvoiceDisplay {invoice} />
-					{#if shouldRetry(invoice, orderMode)}
-						<DropdownMenu.Root>
-							<DropdownMenu.Trigger class="text-right"><Button class="w-32">Retry</Button></DropdownMenu.Trigger>
-							<DropdownMenu.Content>
-								<DropdownMenu.Group>
-									{#if relevantPaymentDetails.length > 0}
-										{#each relevantPaymentDetails as paymentDetail}
-											<DropdownMenu.Item on:click={() => (currentPaymentDetail = paymentDetail)}
-												>{paymentDetail.paymentMethod} - {paymentDetail.paymentDetails}</DropdownMenu.Item
-											>
-										{/each}
-									{:else}
-										No related payment details
-									{/if}
-								</DropdownMenu.Group>
-							</DropdownMenu.Content>
-						</DropdownMenu.Root>
-						{#if merchantPaymentDetail?.paymentDetails}
-							<PaymentProcessor
-								paymentDetail={merchantPaymentDetail}
-								amountSats={parseInt(invoice.totalAmount)}
-								paymentType="v4v"
-								on:paymentComplete={(e) => handlePaymentEvent(e, invoice.id)}
-								on:paymentExpired={(e) => handlePaymentEvent(e, invoice.id)}
-								on:paymentCancelled={(e) => handlePaymentEvent(e, invoice.id)}
-							/>
-						{/if}
-					{/if}
-
-					{#if invoice.type === 'v4v'}
-						{#if orderMode === 'purchase'}
-							<V4vInvoiceRetry {invoice} on:retryPayment={(ce) => handleRetryPayment(ce)} />
-							{#if currentPaymentDetail && currentPaymentDetail.paymentDetails === invoice.paymentDetails}
-								<PaymentProcessor
-									paymentDetail={currentPaymentDetail}
-									amountSats={parseInt(invoice.totalAmount)}
-									paymentType="v4v"
-									on:paymentComplete={(e) => handlePaymentEvent(e, invoice.id)}
-									on:paymentExpired={(e) => handlePaymentEvent(e, invoice.id)}
-									on:paymentCancelled={(e) => handlePaymentEvent(e, invoice.id)}
-								/>
-							{/if}
-						{:else if invoice.invoiceStatus !== 'paid' && invoice.invoiceStatus !== 'refunded'}
-							<div class="p-2 flex justify-between items-center gap-2">
-								<CheckPaymentDetail paymentDetails={invoice.paymentDetails} />
+						{#if order.shippingId}
+							<p class="text-gray-500">Shipping:</p>
+							<div class="flex items-center">
+								<MiniShipping shippingMethodId={order.shippingId} />
 							</div>
 						{/if}
-					{/if}
-					<InvoiceObservationsEdit
-						observations={invoice.observations ?? ''}
-						on:update={(ce) => handleInvoiceUpdate(invoice.id, ce)}
-						{orderMode}
-					/>
+					</div>
 				</div>
-			{/each}
+
+				<!-- Right Column: User and Stall -->
+				<div class="lg:border-l lg:pl-6 min-w-[240px] space-y-4 lg:space-y-0">
+					<!-- User Info -->
+					<div class="mb-4">
+						<p class="text-gray-500 mb-2 text-sm uppercase tracking-wider">
+							{orderMode === 'sale' ? 'Buyer' : 'Seller'}
+						</p>
+						<div class="bg-white rounded p-2.5 border shadow-sm">
+							<MiniUser userId={orderMode === 'sale' ? order.buyerUserId : order.sellerUserId} />
+						</div>
+					</div>
+
+					<!-- Stall Info -->
+					<div>
+						<p class="text-gray-500 mb-2 text-sm uppercase tracking-wider">Stall</p>
+						<div class="bg-white rounded p-2.5 border shadow-sm">
+							<StallName stallId={order.stallId} />
+						</div>
+					</div>
+				</div>
+			</div>
 		</div>
-	{/if}
+
+		<!-- Actions Section -->
+		<div class="bg-gray-50 rounded-lg p-4">
+			<p class="text-gray-500 mb-3 text-sm uppercase tracking-wider">Available Actions</p>
+			<div class="overflow-x-auto">
+				<OrderActions
+					{orderMode}
+					orderStatus={order.status}
+					orderId={order.id}
+					on:confirmOrder={() => handleConfirmOrder(order)}
+					on:markAsShipped={() => handleMarkAsShipped(order)}
+					on:markAsReceived={() => handleMarkAsReceived(order)}
+					on:cancelOrder={() => handleCancelOrder(order)}
+				/>
+			</div>
+		</div>
+
+		<!-- Rest of the sections -->
+		<div class="border-t pt-6">
+			<div class="space-y-6">
+				<!-- Shipping Details Section -->
+				<section>
+					<h3 class="font-medium text-lg mb-4">
+						<span>Shipping Details</span>
+					</h3>
+					<div class="bg-gray-50 rounded-lg p-4">
+						{#if order.address || order.zip || order.city || order.country || order.region}
+							<div class="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-4">
+								{#if order.address}
+									<div>
+										<p class="text-gray-500 text-sm">Address</p>
+										<p class="font-medium">{order.address}</p>
+									</div>
+								{/if}
+								{#if order.zip}
+									<div>
+										<p class="text-gray-500 text-sm">ZIP Code</p>
+										<p class="font-medium">{order.zip}</p>
+									</div>
+								{/if}
+								{#if order.city}
+									<div>
+										<p class="text-gray-500 text-sm">City</p>
+										<p class="font-medium">{order.city}</p>
+									</div>
+								{/if}
+								{#if order.country}
+									<div>
+										<p class="text-gray-500 text-sm">Country</p>
+										<p class="font-medium">{order.country}</p>
+									</div>
+								{/if}
+								{#if order.region}
+									<div>
+										<p class="text-gray-500 text-sm">Region</p>
+										<p class="font-medium">{order.region}</p>
+									</div>
+								{/if}
+							</div>
+						{:else}
+							<p class="text-gray-500 italic">No shipping details available</p>
+						{/if}
+					</div>
+				</section>
+
+				<!-- Contact Information Section -->
+				<section>
+					<h3 class="font-medium text-lg mb-4">
+						<span>Contact Information</span>
+					</h3>
+					<div class="bg-gray-50 rounded-lg p-4">
+						{#if order.contactName || order.contactPhone || order.contactEmail}
+							<div class="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-4">
+								{#if order.contactName}
+									<div>
+										<p class="text-gray-500 text-sm">Name</p>
+										<p class="font-medium">{order.contactName}</p>
+									</div>
+								{/if}
+								{#if order.contactPhone}
+									<div>
+										<p class="text-gray-500 text-sm">Phone</p>
+										<p class="font-medium">{order.contactPhone}</p>
+									</div>
+								{/if}
+								{#if order.contactEmail}
+									<div>
+										<p class="text-gray-500 text-sm">Email</p>
+										<p class="font-medium">{order.contactEmail}</p>
+									</div>
+								{/if}
+							</div>
+						{:else}
+							<p class="text-gray-500 italic">No contact information available</p>
+						{/if}
+
+						{#if order.observations?.trim()}
+							<div class="mt-4 pt-4 border-t">
+								<h4 class="text-gray-500 text-sm mb-1">Observations</h4>
+								<p class="whitespace-pre-wrap">{order.observations}</p>
+							</div>
+						{/if}
+					</div>
+				</section>
+
+				<!-- Products Section -->
+				<section>
+					<h3 class="font-medium text-lg mb-4">Products</h3>
+					<div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+						{#each $productQueryResults as query (query.data?.id)}
+							{#if query.isLoading}
+								<div class="animate-pulse bg-gray-100 rounded-lg h-32" />
+							{:else if query.isError}
+								<div class="text-red-500 p-4 rounded-lg border border-red-200 bg-red-50">
+									<p class="font-medium">Error loading product</p>
+									<p class="text-sm">{query.error.message}</p>
+								</div>
+							{:else if query.isSuccess && query.data}
+								<ProductItem product={query.data} qtyPurchased={order.orderItems.find((oi) => oi.productId === query.data?.id)?.qty} />
+							{:else}
+								<div class="text-gray-500 italic p-4 rounded-lg border border-gray-200">No data available</div>
+							{/if}
+						{/each}
+					</div>
+				</section>
+
+				<!-- Invoices Section -->
+				{#if $invoices.data?.length}
+					<section>
+						<h3 class="font-medium text-lg mb-4">Invoices</h3>
+						<div class="space-y-4">
+							{#each $invoices.data as invoice (invoice.id)}
+								<div class="flex flex-col p-4 bg-gray-50 rounded-lg shadow-sm gap-3">
+									<InvoiceDisplay {invoice} />
+
+									{#if shouldRetry(invoice, orderMode)}
+										<div class="flex flex-col sm:flex-row sm:justify-end gap-2">
+											<DropdownMenu.Root>
+												<DropdownMenu.Trigger>
+													<Button class="w-full sm:w-32">Retry</Button>
+												</DropdownMenu.Trigger>
+												<DropdownMenu.Content>
+													<DropdownMenu.Group>
+														{#if relevantPaymentDetails.length}
+															{#each relevantPaymentDetails as paymentDetail}
+																<DropdownMenu.Item on:click={() => (currentPaymentDetail = paymentDetail)}>
+																	{paymentDetail.paymentMethod} - {paymentDetail.paymentDetails}
+																</DropdownMenu.Item>
+															{/each}
+														{:else}
+															No related payment details
+														{/if}
+													</DropdownMenu.Group>
+												</DropdownMenu.Content>
+											</DropdownMenu.Root>
+										</div>
+									{/if}
+
+									{#if currentPaymentDetail}
+										<PaymentProcessor
+											paymentDetail={currentPaymentDetail}
+											amountSats={parseInt(invoice.totalAmount)}
+											paymentType="v4v"
+											on:paymentComplete={(e) => handlePaymentEvent(e, invoice.id)}
+											on:paymentExpired={(e) => handlePaymentEvent(e, invoice.id)}
+											on:paymentCancelled={(e) => handlePaymentEvent(e, invoice.id)}
+										/>
+									{/if}
+
+									{#if invoice.type === 'v4v'}
+										{#if orderMode === 'purchase'}
+											<V4vInvoiceRetry {invoice} on:retryPayment={handleRetryPayment} />
+											{#if currentPaymentDetail && currentPaymentDetail.paymentDetails === invoice.paymentDetails}
+												<PaymentProcessor
+													paymentDetail={currentPaymentDetail}
+													amountSats={parseInt(invoice.totalAmount)}
+													paymentType="v4v"
+													on:paymentComplete={(e) => handlePaymentEvent(e, invoice.id)}
+													on:paymentExpired={(e) => handlePaymentEvent(e, invoice.id)}
+													on:paymentCancelled={(e) => handlePaymentEvent(e, invoice.id)}
+												/>
+											{/if}
+										{:else if invoice.invoiceStatus !== 'paid' && invoice.invoiceStatus !== 'refunded'}
+											<div class="p-2 flex justify-between items-center gap-2">
+												<CheckPaymentDetail paymentDetails={invoice.paymentDetails} />
+											</div>
+										{/if}
+									{/if}
+									{#if order.observations?.trim()}
+										<InvoiceObservationsEdit
+											observations={invoice.observations ?? ''}
+											on:update={(ce) => handleInvoiceUpdate(invoice.id, ce)}
+											{orderMode}
+										/>
+									{/if}
+								</div>
+							{/each}
+						</div>
+					</section>
+				{/if}
+			</div>
+		</div>
+	</div>
 </div>

@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { LightningAddress } from '@getalby/lightning-tools'
+	import { createUserByIdQuery } from '$lib/fetch/users.queries'
+	import { decodePk, resolveQuery } from '$lib/utils'
 	import { onMount } from 'svelte'
 
 	import Spinner from '../assets/spinner.svelte'
@@ -11,6 +13,10 @@
 
 	onMount(async () => {
 		isLoading = true
+		if (paymentDetails.startsWith('npub')) {
+			const user = await resolveQuery(() => createUserByIdQuery(decodePk(paymentDetails)))
+			if (user?.lud16) paymentDetails = user.lud16
+		}
 		// TODO: Maybe we can leverage svelte query to avoid repeated network calls
 		const ln = new LightningAddress(paymentDetails)
 		await ln.fetch()

@@ -2,6 +2,8 @@
 	import type { DisplayInvoice } from '$lib/server/invoices.service'
 	import { LightningAddress } from '@getalby/lightning-tools'
 	import { Button } from '$lib/components/ui/button'
+	import { createUserByIdQuery } from '$lib/fetch/users.queries'
+	import { decodePk, resolveQuery } from '$lib/utils'
 	import { createEventDispatcher, onMount } from 'svelte'
 
 	export let invoice: DisplayInvoice
@@ -25,10 +27,15 @@
 		const min = ln.lnurlpData?.min
 		const max = ln.lnurlpData?.max
 
-		canBePaid = Number(invoice.totalAmount) >= min && Number(invoice.totalAmount) <= max
+		canBePaid = Number(invoice.totalAmount) <= max
 	}
 
-	onMount(() => {
+	onMount(async () => {
+		if (invoice.paymentDetails.startsWith('npub')) {
+			const user = await resolveQuery(() => createUserByIdQuery(decodePk(invoice.paymentDetails)))
+			if (user?.lud16) invoice.paymentDetails = user.lud16
+		}
+
 		fetchZapInfo()
 	})
 </script>

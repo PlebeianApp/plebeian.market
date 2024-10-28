@@ -36,10 +36,16 @@
 		{:else if orderStatus === 'confirmed'}
 			<Button on:click={handleMarkAsShipped}>Mark as Shipped</Button>
 			<Button on:click={handleCancelOrder}>Cancel Order</Button>
+		{:else}
+			No actions
 		{/if}
-	{:else if orderStatus === 'pending' || orderStatus === 'confirmed'}
-		<Button on:click={handleCancelOrder}>Cancel Order</Button>
-	{:else if orderStatus === 'shipped'}
-		<Button on:click={handleMarkAsReceived}>Mark as Received</Button>
+	{:else if orderMode === 'purchase'}
+		{#if orderStatus === 'pending'}
+			<Button on:click={handleCancelOrder}>Cancel Order</Button>
+		{:else if orderStatus === 'shipped'}
+			<Button on:click={handleMarkAsReceived}>Mark as Received</Button>
+		{:else}
+			No actions
+		{/if}
 	{/if}
 </div>

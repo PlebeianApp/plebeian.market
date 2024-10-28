@@ -15,6 +15,6 @@
 	</div>
 	<div class="flex flex-col text-sm text-right">
 		<span class="font-bold text-lg">{formatSats(parseFloat(invoice.totalAmount))} sats</span>
-		<span class="text-gray-600">{new Date(invoice.createdAt).toLocaleString()}</span>
+		<span class="text-gray-600">{invoice.createdAt}</span>
 	</div>
 </div>

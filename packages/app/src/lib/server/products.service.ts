@@ -7,6 +7,7 @@ import { getImagesByProductId } from '$lib/server/productImages.service'
 import { customTagValue, getEventCoordinates, parseCoordinatesString } from '$lib/utils'
 import { format } from 'date-fns'
 
+import type { Product, ProductImage, ProductMeta, ProductShipping, ProductTypes } from '@plebeian/database'
 import {
 	and,
 	asc,
@@ -20,17 +21,12 @@ import {
 	getTableColumns,
 	inArray,
 	like,
-	Product,
 	PRODUCT_IMAGES_TYPE,
 	PRODUCT_META,
-	ProductImage,
 	productImages,
-	ProductMeta,
 	productMeta,
 	products,
-	ProductShipping,
 	productShipping,
-	ProductTypes,
 	sql,
 } from '@plebeian/database'
 
@@ -336,129 +332,147 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 export const updateProduct = async (productId: string, productEvent: NostrEvent): Promise<DisplayProduct | null> => {
 	try {
 		return await db.transaction(async (tx) => {
-			if (!cachedPattern) throw Error(`No forbidden pattern`)
+			if (!cachedPattern) {
+				throw Error(`No forbidden pattern`)
+			}
+
 			const eventCoordinates = getEventCoordinates(productEvent)
+			if (!eventCoordinates?.coordinates) {
+				throw new Error('Invalid event coordinates')
+			}
+
 			const productEventContent = JSON.parse(productEvent.content)
+
 			const parsedProduct = createProductEventSchema(cachedPattern).safeParse({
 				id: productId,
 				...productEventContent,
 			})
+
 			if (!parsedProduct.success) {
-				throw new Error(`Bad product schema: ${parsedProduct.error}`)
+				throw new Error(`Invalid product schema: ${parsedProduct.error.message}`)
 			}
 
 			const parsedProductData = parsedProduct.data
-
-			const stallId = parsedProductData?.stallId?.startsWith(KindStalls.toString())
-				? parsedProductData?.stallId
-				: `${KindStalls}:${productEvent.pubkey}:${parsedProductData?.stallId}`
-
-			const [updatedProduct] = await tx
-				.update(products)
-				.set({
-					description: parsedProductData.description,
-					updatedAt: new Date(),
-					currency: parsedProductData.currency,
-					price: parsedProductData.price?.toString(),
-					extraCost: parsedProductData.shipping?.length ? parsedProductData.shipping[0].cost?.toString() : '0',
-					stallId,
-					productName: parsedProductData.name,
-					quantity: parsedProductData.quantity ?? undefined,
-				})
-				.where(eq(products.id, productId))
-				.returning()
-
-			if (!updatedProduct) {
-				throw new Error(`Failed to update product: ${productId}`)
+			if (!parsedProductData?.stallId) {
+				throw new Error('Missing stall id')
+			}
+			const stallId = parseCoordinatesString(`${KindStalls}:${eventCoordinates.pubkey}:${parsedProductData.stallId}`)
+			if (!stallId.coordinates) {
+				throw new Error('Invalid stall coordinates')
 			}
 
-			const existingImages = await tx.select().from(productImages).where(eq(productImages.productId, productId))
-			const newImages = parsedProductData.images?.filter((img) => !existingImages.find((eImg) => eImg.imageUrl === img)) ?? []
-			const removedImages = existingImages.filter((img) => img.imageUrl && !parsedProductData.images?.includes(img.imageUrl))
+			try {
+				const [updatedProduct] = await tx
+					.update(products)
+					.set({
+						description: parsedProductData.description,
+						updatedAt: new Date(),
+						currency: parsedProductData.currency,
+						price: parsedProductData.price?.toString(),
+						extraCost: parsedProductData.shipping?.length ? parsedProductData.shipping[0].cost?.toString() : '0',
+						stallId: stallId.coordinates,
+						productName: parsedProductData.name,
+						quantity: parsedProductData.quantity ?? undefined,
+					})
+					.where(eq(products.id, eventCoordinates?.coordinates))
+					.returning()
 
-			if (removedImages.length > 0) {
-				await tx.delete(productImages).where(
-					and(
-						eq(productImages.productId, productId),
-						inArray(
-							productImages.imageUrl,
-							removedImages.map((img) => img.imageUrl).filter((url): url is string => url !== null),
+				const existingImages = await tx.select().from(productImages).where(eq(productImages.productId, productId))
+				const newImages = parsedProductData.images?.filter((img) => !existingImages.find((eImg) => eImg.imageUrl === img)) ?? []
+				const removedImages = existingImages.filter((img) => img.imageUrl && !parsedProductData.images?.includes(img.imageUrl))
+
+				if (removedImages.length > 0) {
+					await tx.delete(productImages).where(
+						and(
+							eq(productImages.productId, productId),
+							inArray(
+								productImages.imageUrl,
+								removedImages.map((img) => img.imageUrl).filter((url): url is string => url !== null),
+							),
 						),
-					),
-				)
-			}
+					)
+				}
 
-			if (newImages.length > 0) {
-				const existingImagesCount = existingImages.length
-				await tx.insert(productImages).values(
-					newImages.map((img, index) => ({
-						createdAt: new Date(),
-						productId,
-						auctionId: null,
-						imageUrl: img,
-						imageType: PRODUCT_IMAGES_TYPE.GALLERY,
-						imageOrder: existingImagesCount + index,
-					})),
-				)
-			}
+				if (newImages.length > 0) {
+					const existingImagesCount = existingImages.length
+					await tx.insert(productImages).values(
+						newImages.map((img, index) => ({
+							createdAt: new Date(),
+							productId,
+							auctionId: null,
+							imageUrl: img,
+							imageType: PRODUCT_IMAGES_TYPE.GALLERY,
+							imageOrder: existingImagesCount + index,
+						})),
+					)
+				}
 
-			if (parsedProductData.images && parsedProductData.images.length > 0) {
-				for (let i = 0; i < parsedProductData.images.length; i++) {
-					const img = parsedProductData.images[i]
+				if (parsedProductData.images && parsedProductData.images.length > 0) {
+					for (let i = 0; i < parsedProductData.images.length; i++) {
+						const img = parsedProductData.images[i]
+						await tx
+							.update(productImages)
+							.set({ imageOrder: i })
+							.where(and(eq(productImages.productId, productId), eq(productImages.imageUrl, img)))
+					}
+				}
+
+				await tx.delete(productShipping).where(eq(productShipping.productId, productId))
+
+				if (parsedProductData.shipping && parsedProductData.shipping.length > 0) {
+					try {
+						await tx.insert(productShipping).values(
+							parsedProductData.shipping.map((shipping) => ({
+								cost: shipping.cost!,
+								shippingId:
+									shipping.id.split(':').length > 1
+										? shipping.id
+										: createShippingCoordinates(shipping.id, String(stallId.coordinates?.split(':').pop())),
+								productId: productId,
+							})),
+						)
+					} catch (e) {
+						console.error(e)
+						await tx.insert(productShipping).values(
+							parsedProductData.shipping.map((shipping) => ({
+								cost: shipping.cost!,
+								shippingId: shipping.id,
+								productId: productId,
+							})),
+						)
+					}
+				}
+				await tx.delete(eventTags).where(eq(eventTags.eventId, eventCoordinates?.coordinates as string))
+
+				if (productEvent.tags.length > 0) {
 					await tx
-						.update(productImages)
-						.set({ imageOrder: i })
-						.where(and(eq(productImages.productId, productId), eq(productImages.imageUrl, img)))
+						.insert(eventTags)
+						.values(
+							productEvent.tags.map((tag) => ({
+								tagName: tag[0],
+								tagValue: tag[1],
+								secondTagValue: tag[2],
+								thirdTagValue: tag[3],
+								userId: productEvent.pubkey,
+								eventId: eventCoordinates?.coordinates as string,
+								eventKind: productEvent.kind!,
+							})),
+						)
+						.onConflictDoNothing({ target: [eventTags.tagName, eventTags.tagValue, eventTags.eventId] })
 				}
-			}
 
-			await tx.delete(productShipping).where(eq(productShipping.productId, productId))
-
-			if (parsedProductData.shipping && parsedProductData.shipping.length > 0) {
-				// TODO With the new product shipping coordinates we can have foreign key problems if we do not set the correct 'shippingId', we should improve this.
-				try {
-					await tx.insert(productShipping).values(
-						parsedProductData.shipping.map((shipping) => ({
-							cost: shipping.cost!,
-							shippingId:
-								shipping.id.split(':').length > 1 ? shipping.id : createShippingCoordinates(shipping.id, String(stallId.split(':').pop())),
-							productId: productId,
-						})),
-					)
-				} catch (e) {
-					console.error(e)
-					await tx.insert(productShipping).values(
-						parsedProductData.shipping.map((shipping) => ({
-							cost: shipping.cost!,
-							shippingId: shipping.id,
-							productId: productId,
-						})),
-					)
+				if (!updatedProduct) {
+					throw new Error(`Failed to update product: ${productId}`)
 				}
-			}
-			await tx.delete(eventTags).where(eq(eventTags.eventId, eventCoordinates?.coordinates as string))
 
-			if (productEvent.tags.length > 0) {
-				await tx
-					.insert(eventTags)
-					.values(
-						productEvent.tags.map((tag) => ({
-							tagName: tag[0],
-							tagValue: tag[1],
-							secondTagValue: tag[2],
-							thirdTagValue: tag[3],
-							userId: productEvent.pubkey,
-							eventId: eventCoordinates?.coordinates as string,
-							eventKind: productEvent.kind!,
-						})),
-					)
-					.onConflictDoNothing({ target: [eventTags.tagName, eventTags.tagValue, eventTags.eventId] })
+				return toDisplayProduct(updatedProduct)
+			} catch (e) {
+				throw new Error(`Failed to update product: ${productId}: ${e}`)
 			}
-
-			return toDisplayProduct(updatedProduct)
 		})
 	} catch (e) {
-		error(500, { message: `${e}` })
+		const errorMessage = e instanceof Error ? e.message : 'Unknown error occurred'
+		error(500, { message: errorMessage })
 	}
 }
 
