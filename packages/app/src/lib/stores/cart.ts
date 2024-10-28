@@ -346,6 +346,15 @@ function createCart() {
 				return cart
 			})
 		},
+		updateInvoice: (invoice: InvoiceMessage) => {
+			update((state) => ({
+				...state,
+				invoices: {
+					...state.invoices,
+					[invoice.id]: invoice,
+				},
+			}))
+		},
 		addInvoice(invoice: InvoiceMessage) {
 			update((cart) => {
 				cart.invoices = {

@@ -13,6 +13,7 @@ const randomLengthArrayFromTo = (min: number, max: number) => {
 
 const WALLETED_USER_NPUB = 'npub1u2d97q0eeppas8t2t9lvqdxj7ltgv3pgp3wqe5w5w2e78yv3tk6q30rtnr'
 const WALLETED_USER_HEX = 'e29a5f01f9c843d81d6a597ec034d2f7d68644280c5c0cd1d472b3e391915db4'
+const XPUB = 'xpub6CK51df37SEz9q2EztLtHX6mE1NoAGBAKaQamafguE2vPq6pBuW5i9KVeb1SeJuhTsgD4ED8L8y66ocN68WEVc7BHYxHU6dmxHVJBHPLkYa'
 const WALLETED_USER_LUD16 = 'plebeianuser@coinos.io'
 
 const main = async () => {
@@ -56,7 +57,7 @@ const main = async () => {
 			userId: testUser.id,
 			createdAt: faker.date.recent(),
 			updatedAt: faker.date.future(),
-			name: faker.commerce.productMaterial(),
+			name: 'wallet stall ' + faker.commerce.productMaterial(),
 			description: faker.commerce.productDescription(),
 			identifier: itentifier1,
 			currency: 'USD',
@@ -66,7 +67,7 @@ const main = async () => {
 			userId: testUser.id,
 			createdAt: faker.date.recent(),
 			updatedAt: faker.date.future(),
-			name: faker.commerce.productMaterial(),
+			name: 'wallet stall ' + faker.commerce.productMaterial(),
 			description: faker.commerce.productDescription(),
 			identifier: itentifier2,
 			currency: 'BTC',
@@ -103,14 +104,23 @@ const main = async () => {
 		})
 	})
 
-	const paymentDetailsData = userStalls.map((stallsByUser) => {
-		return {
-			id: createId(),
-			userId: stallsByUser.userId,
-			stallId: stallsByUser.id,
-			paymentMethod: PAYMENT_DETAILS_METHOD.LIGHTNING_NETWORK,
-			paymentDetails: WALLETED_USER_LUD16,
-		} as PaymentDetail
+	const paymentDetailsData = userStalls.flatMap((stallsByUser) => {
+		return [
+			{
+				id: createId(),
+				userId: stallsByUser.userId,
+				stallId: stallsByUser.id,
+				paymentMethod: PAYMENT_DETAILS_METHOD.ON_CHAIN,
+				paymentDetails: XPUB, // Using the HEX value as a placeholder for an on-chain address
+			} as PaymentDetail,
+			{
+				id: createId(),
+				userId: stallsByUser.userId,
+				stallId: stallsByUser.id,
+				paymentMethod: PAYMENT_DETAILS_METHOD.LIGHTNING_NETWORK,
+				paymentDetails: WALLETED_USER_LUD16,
+			} as PaymentDetail,
+		]
 	})
 
 	const shippingData = userStalls.flatMap((stallsByUser) => {

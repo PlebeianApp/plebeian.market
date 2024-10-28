@@ -20,7 +20,7 @@
 	import { ORDER_STATUS } from '@plebeian/database/constants'
 	import { createSlugId } from '@plebeian/database/utils'
 
-	import type { OrderPaymentStatus } from '../order/types'
+	import type { InvoicePaymentStatus, OrderPaymentStatus } from '../order/types'
 	import type { CheckoutPaymentEvent } from './types'
 	import MiniStall from '../cart/mini-stall.svelte'
 	import ProductInCart from '../cart/product-in-cart.svelte'
@@ -41,6 +41,7 @@
 	let carouselCount = 0
 	let carouselCurrent = 0
 	let paymentStatuses: { id: string; status: OrderPaymentStatus }[] = []
+	let paymentInvoices: Record<string, string> = {}
 	let orderTotal: Awaited<ReturnType<typeof cart.calculateStallTotal>>
 	let v4vShares: ShareWithInvoice[] = []
 	let v4vTotalPercentage: number | null = null
@@ -107,6 +108,22 @@
 	async function initializePaymentStatuses() {
 		await tick()
 		paymentStatuses = [{ id: 'merchant', status: null }, ...v4vShares.map((share) => ({ id: share.target, status: null }))]
+
+		if (orderTotal) {
+			const merchantInvoice = createInvoice(
+				null,
+				null,
+				'pending',
+				orderTotal.subtotalInSats * (1 - (v4vTotalPercentage ?? 0)) + orderTotal.shippingInSats,
+				'merchant',
+			)
+			processPayment(merchantInvoice, 'pending')
+
+			for (const share of v4vShares) {
+				const v4vInvoice = createInvoice(null, null, 'pending', orderTotal.subtotalInSats * share.amount, share.target)
+				processPayment(v4vInvoice, 'pending')
+			}
+		}
 	}
 
 	const paymentEventToStatus: Record<string, NonNullable<OrderPaymentStatus>> = {
@@ -142,8 +159,20 @@
 		}
 
 		try {
-			const invoice = createInvoice(paymentRequest, proof, status, amountSats, paymentType)
-			processPayment(invoice, status)
+			if (paymentInvoices[paymentType]) {
+				const existingInvoice = $cart.invoices[paymentInvoices[paymentType]]
+				if (existingInvoice) {
+					existingInvoice.invoiceStatus = status
+					existingInvoice.updatedAt = Date.now()
+					if (proof) existingInvoice.proof = proof
+					if (paymentRequest) existingInvoice.paymentRequest = paymentRequest
+					cart.updateInvoice(existingInvoice)
+				}
+			} else {
+				const invoice = createInvoice(paymentRequest, proof, status, amountSats, paymentType)
+				processPayment(invoice, status)
+			}
+
 			paymentStatuses = paymentStatuses.map((s) => (s.id === paymentType ? { ...s, status } : s))
 			moveToNextPaymentProcessor()
 		} catch (error) {
@@ -155,11 +184,11 @@
 	function createInvoice(
 		paymentRequest: string | null,
 		preimage: string | null,
-		status: NonNullable<OrderPaymentStatus>,
+		status: NonNullable<InvoicePaymentStatus>,
 		amount: number,
 		paymentType: string,
 	): InvoiceMessage {
-		return {
+		const invoice = {
 			id: createSlugId(`inv`),
 			createdAt: Date.now(),
 			updatedAt: Date.now(),
@@ -171,9 +200,11 @@
 			paymentRequest: paymentRequest,
 			proof: preimage,
 		}
+		paymentInvoices[paymentType] = invoice.id
+		return invoice
 	}
 
-	async function processPayment(invoice: InvoiceMessage, status: NonNullable<OrderPaymentStatus>) {
+	async function processPayment(invoice: InvoiceMessage, status: NonNullable<InvoicePaymentStatus>) {
 		cart.addInvoice(invoice)
 
 		const paymentRequestMessage: PaymentRequestMessage = {
@@ -194,6 +225,13 @@
 		await new Promise((resolve) => setTimeout(resolve, 1000))
 		// await sendDM(paymentRequestMessage, order.sellerUserId)
 		// await sendDM(invoice, order.sellerUserId)
+
+		// const newOrderStatus = statusMapping[status]
+		// if ($cart.orders[order.id].status !== newOrderStatus) {
+		// 	cart.updateOrderStatus(order.id, newOrderStatus)
+		// 	await new Promise((resolve) => setTimeout(resolve, 1000))
+		// 	// await sendDM($cart.orders[order.id], order.sellerUserId)
+		// }
 	}
 	$: {
 		order
