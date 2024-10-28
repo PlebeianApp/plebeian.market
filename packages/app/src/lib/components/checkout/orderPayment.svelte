@@ -12,15 +12,13 @@
 	import { cart } from '$lib/stores/cart'
 	import ndkStore from '$lib/stores/ndk'
 	import { formatSats, resolveQuery } from '$lib/utils'
-	import { sendDM } from '$lib/utils/dm.utils'
 	import { createEventDispatcher, onMount, tick } from 'svelte'
 	import { toast } from 'svelte-sonner'
 
-	import type { InvoiceMessage, OrderStatus, PaymentRequestMessage } from '@plebeian/database/constants'
+	import type { InvoiceMessage, InvoiceStatus, OrderStatus, PaymentRequestMessage } from '@plebeian/database/constants'
 	import { ORDER_STATUS } from '@plebeian/database/constants'
 	import { createSlugId } from '@plebeian/database/utils'
 
-	import type { InvoicePaymentStatus, OrderPaymentStatus } from '../order/types'
 	import type { CheckoutPaymentEvent } from './types'
 	import MiniStall from '../cart/mini-stall.svelte'
 	import ProductInCart from '../cart/product-in-cart.svelte'
@@ -33,14 +31,18 @@
 	export let products: Record<string, CartProduct>
 
 	const dispatch = createEventDispatcher<{ valid: boolean }>()
+	type ShareWithInvoice = V4VDTO & {
+		canReceive: boolean
+		max: number
+		min: number
+		paymentDetail: RichPaymentDetail
+	}
 
-	type ShareWithInvoice = V4VDTO & { canReceive: boolean; max: number; min: number; paymentDetail: RichPaymentDetail }
-
-	// TODO: Maybe we can fetch invoices at the moment of render it. Right now they all starts at the same time which can lead to end expiry times
 	let api: CarouselAPI
 	let carouselCount = 0
 	let carouselCurrent = 0
-	let paymentStatuses: { id: string; status: OrderPaymentStatus }[] = []
+
+	let paymentStatuses: { id: string; status: InvoiceStatus }[] = []
 	let paymentInvoices: Record<string, string> = {}
 	let orderTotal: Awaited<ReturnType<typeof cart.calculateStallTotal>>
 	let v4vShares: ShareWithInvoice[] = []
@@ -48,6 +50,7 @@
 
 	const paymentDetails = createPaymentsForUserQuery(order.sellerUserId)
 	const v4vQuery = v4VForUserQuery(order.sellerUserId)
+
 	$: relevantPaymentDetails = $paymentDetails.data?.filter((payment) => payment.stallId === order.stallId || payment.stallId === null) ?? []
 	$: selectedPaymentDetail = relevantPaymentDetails[0] ?? null
 	$: selectedPaymentValue = selectedPaymentDetail && {
@@ -58,20 +61,20 @@
 	$: allPaymentsPaid =
 		paymentStatuses.length > 0 && paymentStatuses.every((status) => ['paid', 'expired', 'cancelled'].includes(status.status ?? ''))
 
-	$: {
-		if (allPaymentsPaid) {
-			dispatch('valid', true)
-		}
+	$: if (allPaymentsPaid) dispatch('valid', true)
+
+	$: if (api) {
+		carouselCount = api.scrollSnapList().length
+		carouselCurrent = api.selectedScrollSnap() + 1
+		api.on('select', () => {
+			carouselCurrent = api.selectedScrollSnap() + 1
+		})
 	}
 
-	$: {
-		if (api) {
-			carouselCount = api.scrollSnapList().length
-			carouselCurrent = api.selectedScrollSnap() + 1
-			api.on('select', () => {
-				carouselCurrent = api.selectedScrollSnap() + 1
-			})
-		}
+	const paymentEventToStatus: Record<string, NonNullable<InvoiceStatus>> = {
+		paymentComplete: 'paid',
+		paymentExpired: 'expired',
+		paymentCancelled: 'cancelled',
 	}
 
 	const v4vPaymentDetail: RichPaymentDetail = {
@@ -84,10 +87,21 @@
 		userId: order.sellerUserId,
 	}
 
+	function filterValidV4VShares(shares: ShareWithInvoice[], subtotalInSats: number) {
+		return shares.filter((share) => {
+			const amount = formatSats(subtotalInSats * share.amount, false)
+			return amount > 0
+		})
+	}
 	onMount(async () => {
 		if (!$v4vQuery.data) return
+		await initializeV4VShares()
+		await initializePaymentStatuses()
+	})
+
+	async function initializeV4VShares() {
 		const results = await Promise.all(
-			$v4vQuery.data.map(async (v4v) => {
+			$v4vQuery.data!.map(async (v4v) => {
 				const user = $ndkStore.getUser({ npub: v4v.target })
 				const userProfile = await resolveQuery(() => createUserByIdQuery(user.pubkey))
 				return {
@@ -99,92 +113,31 @@
 				} as ShareWithInvoice
 			}),
 		)
-
-		v4vShares = results
-		v4vTotalPercentage = results.reduce((sum, item) => sum + item.amount, 0)
-		await initializePaymentStatuses()
-	})
+		v4vShares = orderTotal ? filterValidV4VShares(results, orderTotal.subtotalInSats) : results
+		v4vTotalPercentage = v4vShares.reduce((sum, item) => sum + item.amount, 0)
+	}
 
 	async function initializePaymentStatuses() {
 		await tick()
 		paymentStatuses = [{ id: 'merchant', status: null }, ...v4vShares.map((share) => ({ id: share.target, status: null }))]
 
-		if (orderTotal) {
-			const merchantInvoice = createInvoice(
-				null,
-				null,
-				'pending',
-				orderTotal.subtotalInSats * (1 - (v4vTotalPercentage ?? 0)) + orderTotal.shippingInSats,
-				'merchant',
-			)
-			processPayment(merchantInvoice, 'pending')
+		if (!orderTotal) return
 
-			for (const share of v4vShares) {
-				const v4vInvoice = createInvoice(null, null, 'pending', orderTotal.subtotalInSats * share.amount, share.target)
-				processPayment(v4vInvoice, 'pending')
-			}
-		}
-	}
+		const merchantAmount = orderTotal.subtotalInSats * (1 - (v4vTotalPercentage ?? 0)) + orderTotal.shippingInSats
+		const merchantInvoice = createInvoice(null, null, 'pending', merchantAmount, 'merchant')
+		processPayment(merchantInvoice, 'pending')
 
-	const paymentEventToStatus: Record<string, NonNullable<OrderPaymentStatus>> = {
-		paymentComplete: 'paid',
-		paymentExpired: 'expired',
-		paymentCancelled: 'cancelled',
-	}
-
-	function moveToNextPaymentProcessor() {
-		if (api) {
-			const nextIndex = api.selectedScrollSnap() + 1
-			if (nextIndex < carouselCount) {
-				api.scrollTo(nextIndex)
-			} else {
-				api.scrollTo(0)
-			}
-		}
-	}
-
-	function handlePaymentEvent(event: CustomEvent<CheckoutPaymentEvent>) {
-		const { type } = event
-		const { paymentRequest, proof, amountSats, paymentType } = event.detail
-
-		const status = paymentEventToStatus[type]
-		if (!status) {
-			console.error(`Unknown payment event type: ${type}`)
-			return
-		}
-
-		if (!order?.id || !selectedPaymentDetail?.id) {
-			toast.error(`Invalid order or payment details`)
-			return
-		}
-
-		try {
-			if (paymentInvoices[paymentType]) {
-				const existingInvoice = $cart.invoices[paymentInvoices[paymentType]]
-				if (existingInvoice) {
-					existingInvoice.invoiceStatus = status
-					existingInvoice.updatedAt = Date.now()
-					if (proof) existingInvoice.proof = proof
-					if (paymentRequest) existingInvoice.paymentRequest = paymentRequest
-					cart.updateInvoice(existingInvoice)
-				}
-			} else {
-				const invoice = createInvoice(paymentRequest, proof, status, amountSats, paymentType)
-				processPayment(invoice, status)
-			}
-
-			paymentStatuses = paymentStatuses.map((s) => (s.id === paymentType ? { ...s, status } : s))
-			moveToNextPaymentProcessor()
-		} catch (error) {
-			console.error(`Error handling ${status} payment:`, error)
-			toast.error(`Failed to process ${status} payment: ${error instanceof Error ? error.message : 'Unknown error'}`)
+		for (const share of v4vShares) {
+			const v4vAmount = orderTotal.subtotalInSats * share.amount
+			const v4vInvoice = createInvoice(null, null, 'pending', v4vAmount, share.target)
+			processPayment(v4vInvoice, 'pending')
 		}
 	}
 
 	function createInvoice(
 		paymentRequest: string | null,
 		preimage: string | null,
-		status: NonNullable<InvoicePaymentStatus>,
+		status: NonNullable<InvoiceStatus>,
 		amount: number,
 		paymentType: string,
 	): InvoiceMessage {
@@ -194,17 +147,17 @@
 			updatedAt: Date.now(),
 			orderId: order.id,
 			totalAmount: formatSats(amount, false),
-			type: paymentType === 'merchant' ? 'merchant' : 'v4v',
+			type: (paymentType === 'merchant' ? 'merchant' : 'v4v') as 'v4v' | 'merchant',
 			invoiceStatus: status,
 			paymentId: paymentType === 'merchant' ? selectedPaymentDetail?.id : paymentType,
-			paymentRequest: paymentRequest,
+			paymentRequest,
 			proof: preimage,
 		}
 		paymentInvoices[paymentType] = invoice.id
 		return invoice
 	}
 
-	async function processPayment(invoice: InvoiceMessage, status: NonNullable<InvoicePaymentStatus>) {
+	async function processPayment(invoice: InvoiceMessage, status: NonNullable<InvoiceStatus>) {
 		cart.addInvoice(invoice)
 
 		const paymentRequestMessage: PaymentRequestMessage = {
@@ -225,14 +178,55 @@
 		await new Promise((resolve) => setTimeout(resolve, 1000))
 		// await sendDM(paymentRequestMessage, order.sellerUserId)
 		// await sendDM(invoice, order.sellerUserId)
-
-		// const newOrderStatus = statusMapping[status]
-		// if ($cart.orders[order.id].status !== newOrderStatus) {
-		// 	cart.updateOrderStatus(order.id, newOrderStatus)
-		// 	await new Promise((resolve) => setTimeout(resolve, 1000))
-		// 	// await sendDM($cart.orders[order.id], order.sellerUserId)
-		// }
 	}
+
+	function moveToNextPaymentProcessor() {
+		if (!api) return
+		const nextIndex = api.selectedScrollSnap() + 1
+		if (nextIndex < carouselCount) {
+			api.scrollTo(nextIndex)
+		} else {
+			api.scrollTo(0)
+		}
+	}
+
+	function handlePaymentEvent(event: CustomEvent<CheckoutPaymentEvent>) {
+		const { type } = event
+		const { paymentRequest, proof, amountSats, paymentType } = event.detail
+
+		const status = paymentEventToStatus[type]
+		if (!status || !order?.id || !selectedPaymentDetail?.id) {
+			toast.error(`Invalid order or payment details`)
+			return
+		}
+
+		try {
+			if (paymentInvoices[paymentType]) {
+				updateExistingInvoice(paymentType, status, proof ? proof : undefined, paymentRequest ? paymentRequest : undefined)
+			} else {
+				const invoice = createInvoice(paymentRequest, proof, status, amountSats, paymentType)
+				processPayment(invoice, status)
+			}
+
+			paymentStatuses = paymentStatuses.map((s) => (s.id === paymentType ? { ...s, status } : s))
+			moveToNextPaymentProcessor()
+		} catch (error) {
+			console.error(`Error handling ${status} payment:`, error)
+			toast.error(`Failed to process ${status} payment: ${error instanceof Error ? error.message : 'Unknown error'}`)
+		}
+	}
+
+	function updateExistingInvoice(paymentType: string, status: NonNullable<InvoiceStatus>, proof?: string, paymentRequest?: string) {
+		const existingInvoice = $cart.invoices[paymentInvoices[paymentType]]
+		if (!existingInvoice) return
+
+		existingInvoice.invoiceStatus = status
+		existingInvoice.updatedAt = Date.now()
+		if (proof) existingInvoice.proof = proof
+		if (paymentRequest) existingInvoice.paymentRequest = paymentRequest
+		cart.updateInvoice(existingInvoice)
+	}
+
 	$: {
 		order
 		cart.calculateStallTotal(stall, products).then((total) => (orderTotal = total))
@@ -345,7 +339,6 @@
 								/>
 							</div>
 						</Carousel.Item>
-						<!-- FIXME: there is an error sometimes when there are multiple v4v shares, it can jump and also generate non existent v4v shares invoices -->
 						{#each v4vShares as share (share.target)}
 							<Carousel.Item>
 								<div class="p-1">

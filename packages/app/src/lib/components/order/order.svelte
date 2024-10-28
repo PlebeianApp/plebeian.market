@@ -12,8 +12,10 @@
 	import { toast } from 'svelte-sonner'
 	import { derived } from 'svelte/store'
 
+	import type { InvoiceStatus } from '@plebeian/database/constants'
+
 	import type { CheckoutPaymentEvent } from '../checkout/types'
-	import type { OrderMode, OrderPaymentStatus } from './types'
+	import type { OrderMode } from './types'
 	import MiniUser from '../cart/mini-user.svelte'
 	import CheckPaymentDetail from '../common/check-payment-detail.svelte'
 	import InvoiceDisplay from '../common/invoice-display.svelte'
@@ -45,7 +47,7 @@
 		userId: order.sellerUserId,
 	}
 
-	const paymentEventToStatus: Record<string, NonNullable<OrderPaymentStatus>> = {
+	const paymentEventToStatus: Record<string, NonNullable<InvoiceStatus>> = {
 		paymentComplete: 'paid',
 		paymentExpired: 'expired',
 		paymentCancelled: 'cancelled',
