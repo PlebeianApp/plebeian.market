@@ -276,7 +276,7 @@
 	}
 
 	afterUpdate(() => {
-		if (shouldUpdateInvoice()) {
+		if (shouldUpdateInvoice() && normalizedAmount > 0) {
 			reset()
 			generateInvoice()
 			prevPaymentDetail = { ...paymentDetail }

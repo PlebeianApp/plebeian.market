@@ -219,8 +219,6 @@ export type BidStatus = ObjectValues<typeof BID_STATUS>
 
 export const ORDER_STATUS = {
 	PENDING: 'pending',
-	PARTIALLY_PAID: 'partiallyPaid',
-	PAID: 'paid',
 	CONFIRMED: 'confirmed',
 	SHIPPED: 'shipped',
 	COMPLETED: 'completed',
@@ -291,7 +289,7 @@ export const INVOICE_STATUS = {
 	REFUNDED: 'refunded',
 } as const
 
-export type InvoiceStatus = ObjectValues<typeof INVOICE_STATUS>
+export type InvoiceStatus = ObjectValues<typeof INVOICE_STATUS> | null
 
 // ISO 3166 Country codes
 
