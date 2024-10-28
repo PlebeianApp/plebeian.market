@@ -17,7 +17,6 @@
 	export let variant: 'singleMerchant' | 'multiMerchant'
 	export let merchant: CartUser | null = null
 	const dispatch = createEventDispatcher()
-
 	$: orders = merchant ? Object.values($cart.orders).filter((order) => order.sellerUserId === merchant.pubkey) : Object.values($cart.orders)
 
 	$: invoices = merchant
@@ -40,16 +39,54 @@
 		error = null
 
 		try {
-			const cartData: NormalizedCart = {
-				users: $cart.users,
-				stalls: $cart.stalls,
-				products: $cart.products,
-				orders: $cart.orders,
-				invoices: $cart.invoices,
+			// Filter cart data based on merchant
+			let filteredCartData: NormalizedCart = {
+				users: {},
+				stalls: {},
+				products: {},
+				orders: {},
+				invoices: {},
 			}
 
-			const result = await $persistOrdersAndInvoicesMutation.mutateAsync(cartData)
+			if (merchant) {
+				// Single merchant mode - filter data for specific merchant
+				filteredCartData.users = { [merchant.pubkey]: $cart.users[merchant.pubkey] }
 
+				// Filter stalls for this merchant
+				merchant.stalls.forEach((stallId) => {
+					filteredCartData.stalls[stallId] = $cart.stalls[stallId]
+
+					// Filter products for these stalls
+					$cart.stalls[stallId].products.forEach((productId) => {
+						filteredCartData.products[productId] = $cart.products[productId]
+					})
+				})
+
+				// Filter orders for this merchant
+				Object.entries($cart.orders).forEach(([orderId, order]) => {
+					if (order.sellerUserId === merchant.pubkey) {
+						filteredCartData.orders[orderId] = order
+
+						// Filter invoices for these orders
+						Object.entries($cart.invoices).forEach(([invoiceId, invoice]) => {
+							if (invoice.orderId === orderId) {
+								filteredCartData.invoices[invoiceId] = invoice
+							}
+						})
+					}
+				})
+			} else {
+				// Multi-merchant mode - use all cart data
+				filteredCartData = {
+					users: $cart.users,
+					stalls: $cart.stalls,
+					products: $cart.products,
+					orders: $cart.orders,
+					invoices: $cart.invoices,
+				}
+			}
+
+			const result = await $persistOrdersAndInvoicesMutation.mutateAsync(filteredCartData)
 			persistenceComplete = result.success
 			return result.success
 		} catch (err) {
