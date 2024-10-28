@@ -39,7 +39,6 @@
 		error = null
 
 		try {
-			// Filter cart data based on merchant
 			let filteredCartData: NormalizedCart = {
 				users: {},
 				stalls: {},
@@ -49,25 +48,20 @@
 			}
 
 			if (merchant) {
-				// Single merchant mode - filter data for specific merchant
 				filteredCartData.users = { [merchant.pubkey]: $cart.users[merchant.pubkey] }
 
-				// Filter stalls for this merchant
 				merchant.stalls.forEach((stallId) => {
 					filteredCartData.stalls[stallId] = $cart.stalls[stallId]
 
-					// Filter products for these stalls
 					$cart.stalls[stallId].products.forEach((productId) => {
 						filteredCartData.products[productId] = $cart.products[productId]
 					})
 				})
 
-				// Filter orders for this merchant
 				Object.entries($cart.orders).forEach(([orderId, order]) => {
 					if (order.sellerUserId === merchant.pubkey) {
 						filteredCartData.orders[orderId] = order
 
-						// Filter invoices for these orders
 						Object.entries($cart.invoices).forEach(([invoiceId, invoice]) => {
 							if (invoice.orderId === orderId) {
 								filteredCartData.invoices[invoiceId] = invoice
@@ -76,7 +70,6 @@
 					}
 				})
 			} else {
-				// Multi-merchant mode - use all cart data
 				filteredCartData = {
 					users: $cart.users,
 					stalls: $cart.stalls,

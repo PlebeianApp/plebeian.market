@@ -1,4 +1,3 @@
-<!-- OrderActions.svelte -->
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte'
 
@@ -35,7 +34,6 @@
 			<Button on:click={handleCancelOrder}>Cancel Order</Button>
 		{:else if orderStatus === 'confirmed'}
 			<Button on:click={handleMarkAsShipped}>Mark as Shipped</Button>
-			<Button on:click={handleCancelOrder}>Cancel Order</Button>
 		{:else}
 			No actions
 		{/if}
