@@ -24,6 +24,8 @@ import { cubicOut } from 'svelte/easing'
 import { derived, get } from 'svelte/store'
 import { twMerge } from 'tailwind-merge'
 
+import { PAYMENT_DETAILS_METHOD } from '@plebeian/database/constants'
+
 import type { EventCoordinates } from './interfaces'
 import type { NWCWallet } from './server/wallet.service'
 import { HEX_KEYS_REGEX, numSatsInBtc } from './constants'

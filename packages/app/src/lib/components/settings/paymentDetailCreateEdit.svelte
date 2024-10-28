@@ -14,9 +14,16 @@
 	import { deleteWalletMutation } from '$lib/fetch/wallets.mutations'
 	import { createOnChainIndexQuery } from '$lib/fetch/wallets.queries'
 	import ndkStore from '$lib/stores/ndk'
-	import { checkAddress, checkExtendedPublicKey, deriveAddresses, isExtendedPublicKey } from '$lib/utils/paymentDetails.utils'
+	import {
+		checkAddress,
+		checkExtendedPublicKey,
+		deriveAddresses,
+		isExtendedPublicKey,
+		parsePaymentDetailsFromClipboard,
+	} from '$lib/utils/paymentDetails.utils'
 	import { format } from 'date-fns'
 	import { NIP05_REGEX } from 'nostr-tools/nip05'
+	import { toast } from 'svelte-sonner'
 
 	import type { PaymentDetailsMethod } from '@plebeian/database/constants'
 	import { PAYMENT_DETAILS_METHOD } from '@plebeian/database/constants'
@@ -219,35 +226,66 @@
 	function handleCloseGuidance() {
 		showGuidance = false
 	}
+
+	async function handlePasteUnknownPaymentDetails() {
+		const result = await parsePaymentDetailsFromClipboard()
+
+		if (result.success && result.paymentDetails && result.method) {
+			setupPaymentDetail(result.paymentDetails, result.method)
+			isOpen = true
+
+			const message = {
+				[PAYMENT_DETAILS_METHOD.LIGHTNING_NETWORK]: 'Lightning Network',
+				[PAYMENT_DETAILS_METHOD.ON_CHAIN]: 'On Chain',
+			}[result.method]
+
+			toast.success(`${message} payment details pasted`)
+		} else {
+			toast.error(result.error || 'Unknown error')
+		}
+	}
 </script>
 
 <div class="border flex flex-col p-4 justify-between">
 	<Collapsible.Root bind:open={isOpen}>
-		<Collapsible.Trigger on:click={() => (isOpen = !isOpen)} class="flex flex-row w-full justify-between items-center gap-2">
-			{#if isEditing}
-				<div class="grid grid-flow-col grid-cols-[1fr_auto] gap-2">
-					<span class={paymentMethodIcons[editedPaymentDetail.paymentMethod] + ' w-6 h-6'} />
-					<span class="truncate">{editedPaymentDetail.paymentDetails}</span>
-				</div>
-				<div class="flex flex-row gap-2 items-center">
-					{#if editedPaymentDetail.stallId}
-						{#if editedPaymentDetail.isDefault}
-							<span class="i-mdi-star text-yellow-400 w-6 h-6" />
+		<div class="flex flex-row w-full justify-between items-center gap-2">
+			<Collapsible.Trigger on:click={() => (isOpen = !isOpen)} class="flex flex-row w-full justify-between items-center gap-2">
+				{#if isEditing}
+					<div class="grid grid-flow-col grid-cols-[1fr_auto] gap-2">
+						<span class={paymentMethodIcons[editedPaymentDetail.paymentMethod] + ' w-6 h-6'} />
+						<span class="truncate">{editedPaymentDetail.paymentDetails}</span>
+					</div>
+					<div class="flex flex-row gap-2 items-center">
+						{#if editedPaymentDetail.stallId}
+							{#if editedPaymentDetail.isDefault}
+								<span class="i-mdi-star text-yellow-400 w-6 h-6" />
+							{/if}
+							<span class="font-bold">{editedPaymentDetail.stallName}</span>
+							<span class="i-tdesign-store w-6 h-6" />
+						{:else}
+							<span class="font-bold">General</span>
+							<span class="i-mingcute-earth-2-line w-6 h-6" />
 						{/if}
-						<span class="font-bold">{editedPaymentDetail.stallName}</span>
-						<span class="i-tdesign-store w-6 h-6" />
-					{:else}
-						<span class="font-bold">General</span>
-						<span class="i-mingcute-earth-2-line w-6 h-6" />
-					{/if}
-				</div>
-			{:else}
-				<span class="flex items-center gap-2">
-					<span class="i-mingcute-plus-line w-6 h-6" />
-					Add new payment method
-				</span>
+					</div>
+				{:else}
+					<span class="flex items-center gap-2">
+						<span class="i-mingcute-plus-line w-6 h-6" />
+						Add new payment method
+					</span>
+				{/if}
+			</Collapsible.Trigger>
+			{#if !showGuidance && !paymentDetail}
+				<Button
+					on:click={handlePasteUnknownPaymentDetails}
+					size="icon"
+					variant="ghost"
+					data-tooltip="Paste payment details from clipboard and auto-detect."
+					class="text-destructive border-0"
+				>
+					<span class="i-mingcute-clipboard-fill text-black w-6 h-6"></span>
+				</Button>
 			{/if}
-		</Collapsible.Trigger>
+		</div>
 
 		<Collapsible.Content class="flex flex-col gap-4 py-4">
 			{#if showConfirmation}
@@ -262,6 +300,7 @@
 					userLightningAddress={$ndkStore.activeUser?.profile?.lud16}
 					on:setupPaymentDetail={handleSetupPaymentDetail}
 					on:closeGuidance={handleCloseGuidance}
+					on:paste={handlePasteUnknownPaymentDetails}
 				/>
 			{:else}
 				<form on:submit|preventDefault={validateAndConfirm} class="flex flex-col gap-4">
