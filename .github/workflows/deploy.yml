@@ -42,7 +42,8 @@ jobs:
       - name: Deploy on /deploy or push to main
         if: ${{ (github.event.comment.body == '/deploy' && github.event.issue.pull_request) || github.event_name == 'push' }}
         run: |
-          rsync --rsh="/usr/bin/sshpass -p \"${{ secrets.REMOTE_PASSWORD }}\" ssh -o StrictHostKeyChecking=no -l deployer" -avz --delete . ${{ secrets.REMOTE_USER }}@${{ vars.REMOTE_HOST }}:plebeian.market
+          PORT=${{ github.ref == 'refs/heads/main' && '4175' || '4173' }}
+          rsync --rsh="/usr/bin/sshpass -p \"${{ secrets.REMOTE_PASSWORD }}\" ssh -o StrictHostKeyChecking=no -l deployer" -avz --delete . ${{ secrets.REMOTE_USER }}@${{ vars.REMOTE_HOST }}:plebeian.market.$PORT
           sshpass -p "${{ secrets.REMOTE_PASSWORD }}" ssh -o StrictHostKeyChecking=no ${{ secrets.REMOTE_USER }}@${{ vars.REMOTE_HOST }} << 'EOF'
             PORT=${{ github.ref == 'refs/heads/main' && '4175' || '4173' }}
             cd plebeian.market.$PORT
