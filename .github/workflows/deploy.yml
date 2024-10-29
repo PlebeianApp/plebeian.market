@@ -41,12 +41,11 @@ jobs:
 
       - name: Deploy on /deploy or push to main
         if: ${{ (github.event.comment.body == '/deploy' && github.event.issue.pull_request) || github.event_name == 'push' }}
-        env:
-          PORT: ${{ github.ref == 'refs/heads/main' && '4175' || '4173' }}
         run: |
           rsync --rsh="/usr/bin/sshpass -p \"${{ secrets.REMOTE_PASSWORD }}\" ssh -o StrictHostKeyChecking=no -l deployer" -avz --delete . ${{ secrets.REMOTE_USER }}@${{ vars.REMOTE_HOST }}:plebeian.market
           sshpass -p "${{ secrets.REMOTE_PASSWORD }}" ssh -o StrictHostKeyChecking=no ${{ secrets.REMOTE_USER }}@${{ vars.REMOTE_HOST }} << 'EOF'
-            cd plebeian.market
+            PORT=${{ github.ref == 'refs/heads/main' && '4175' || '4173' }}
+            cd plebeian.market.$PORT
             mv .env.sample .env
             fuser -k $PORT/tcp || true
             pnpm i --frozen-lockfile
@@ -58,9 +57,8 @@ jobs:
 
       - name: Stop Deployment
         if: ${{ github.event.comment.body == '/takedown' && github.event.issue.pull_request }}
-        env:
-          PORT: ${{ github.ref == 'refs/heads/main' && '4175' || '4173' }}
         run: |
           sshpass -p "${{ secrets.REMOTE_PASSWORD }}" ssh -o StrictHostKeyChecking=no ${{ secrets.REMOTE_USER }}@${{ vars.REMOTE_HOST }} << 'EOF'
+            PORT=${{ github.ref == 'refs/heads/main' && '4175' || '4173' }}
             fuser -k $PORT/tcp || true
           EOF
