@@ -46,11 +46,8 @@ jobs:
         run: |
           rsync --rsh="/usr/bin/sshpass -p \"${{ secrets.REMOTE_PASSWORD }}\" ssh -o StrictHostKeyChecking=no -l deployer" -avz --delete . ${{ secrets.REMOTE_USER }}@${{ vars.REMOTE_HOST }}:plebeian.market.$PORT
           sshpass -p "${{ secrets.REMOTE_PASSWORD }}" ssh -o StrictHostKeyChecking=no ${{ secrets.REMOTE_USER }}@${{ vars.REMOTE_HOST }} << EOF
-            cd plebeian.market.$PORT
-            corepack enable
-            pnpm setup # Ensure pnpm is set up and available
-            export PATH=\$HOME/.local/share/pnpm:\$PATH # Add pnpm to PATH if it's installed locally
             PORT=${{ github.ref == 'refs/heads/main' && '4175' || '4173' }}
+            cd plebeian.market.$PORT
             mv .env.sample .env
             fuser -k \$PORT/tcp || true
             pnpm i --frozen-lockfile
@@ -65,5 +62,5 @@ jobs:
         run: |
           sshpass -p "${{ secrets.REMOTE_PASSWORD }}" ssh -o StrictHostKeyChecking=no ${{ secrets.REMOTE_USER }}@${{ vars.REMOTE_HOST }} << 'EOF'
             PORT=${{ github.ref == 'refs/heads/main' && '4175' || '4173' }}
-            fuser -k $PORT/tcp || true
+            fuser -k \$PORT/tcp || true
           EOF
