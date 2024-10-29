@@ -47,6 +47,7 @@ jobs:
           rsync --rsh="/usr/bin/sshpass -p \"${{ secrets.REMOTE_PASSWORD }}\" ssh -o StrictHostKeyChecking=no -l deployer" -avz --delete . ${{ secrets.REMOTE_USER }}@${{ vars.REMOTE_HOST }}:plebeian.market.$PORT
           sshpass -p "${{ secrets.REMOTE_PASSWORD }}" ssh -o StrictHostKeyChecking=no ${{ secrets.REMOTE_USER }}@${{ vars.REMOTE_HOST }} << EOF
             PORT=${{ github.ref == 'refs/heads/main' && '4175' || '4173' }}
+            touch hello
             cd plebeian.market.$PORT
             mv .env.sample .env
             fuser -k \$PORT/tcp || true
