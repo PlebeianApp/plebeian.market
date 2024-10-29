@@ -69,7 +69,7 @@ jobs:
             bash
             source ./.bashrc
             cat ./.bashrc
-            node -v
+            cat <(node -v)
             PORT=${{ github.ref == 'refs/heads/main' && '4175' || '4173' }}
             cd plebeian.market.${PORT}
             mv .env.sample .env
