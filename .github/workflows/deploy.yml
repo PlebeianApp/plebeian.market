@@ -3,16 +3,26 @@ name: Deploy
 on:
   issue_comment:
     types: [created]
+  push:
+    branches:
+      - main
 
 jobs:
   build-and-deploy:
-    if: ${{ github.event.comment.body == '/deploy' || github.event.comment.body == '/takedown' }}
+    if: ${{ github.event.comment.body == '/deploy' || github.event.comment.body == '/takedown' || github.event_name == 'push' }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout pull request 🏁
+      - name: Checkout code 🏁 (for issue comment)
+        if: ${{ github.event_name == 'issue_comment' }}
         uses: actions/checkout@v3
         with:
           ref: refs/pull/${{ github.event.issue.number }}/head
+
+      - name: Checkout code 🏁 (for push)
+        if: ${{ github.event_name == 'push' }}
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.ref }}
 
       - run: corepack enable
       - uses: actions/setup-node@v4
@@ -29,14 +39,16 @@ jobs:
       - run: pnpm db:init
       - run: pnpm build
 
-      - name: Deploy
-        if: ${{ github.event.comment.body == '/deploy' && github.event.issue.pull_request }}
+      - name: Deploy on /deploy or push to main
+        if: ${{ (github.event.comment.body == '/deploy' && github.event.issue.pull_request) || github.event_name == 'push' }}
+        env:
+          PORT: ${{ github.ref == 'refs/heads/main' && '4175' || '4173' }}
         run: |
           rsync --rsh="/usr/bin/sshpass -p \"${{ secrets.REMOTE_PASSWORD }}\" ssh -o StrictHostKeyChecking=no -l deployer" -avz --delete . ${{ secrets.REMOTE_USER }}@${{ vars.REMOTE_HOST }}:plebeian.market
           sshpass -p "${{ secrets.REMOTE_PASSWORD }}" ssh -o StrictHostKeyChecking=no ${{ secrets.REMOTE_USER }}@${{ vars.REMOTE_HOST }} << 'EOF'
             cd plebeian.market
             mv .env.sample .env
-            fuser -k 4173/tcp || true
+            fuser -k $PORT/tcp || true
             pnpm i --frozen-lockfile
             pnpm db:init
             nohup pnpm preview > preview.log 2>&1 &
@@ -46,8 +58,9 @@ jobs:
 
       - name: Stop Deployment
         if: ${{ github.event.comment.body == '/takedown' && github.event.issue.pull_request }}
+        env:
+          PORT: ${{ github.ref == 'refs/heads/main' && '4175' || '4173' }}
         run: |
           sshpass -p "${{ secrets.REMOTE_PASSWORD }}" ssh -o StrictHostKeyChecking=no ${{ secrets.REMOTE_USER }}@${{ vars.REMOTE_HOST }} << 'EOF'
-            fuser -k 4173/tcp || true
+            fuser -k $PORT/tcp || true
           EOF
-
