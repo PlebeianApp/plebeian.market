@@ -41,15 +41,18 @@ jobs:
 
       - name: Deploy on /deploy or push to main
         if: ${{ (github.event.comment.body == '/deploy' && github.event.issue.pull_request) || github.event_name == 'push' }}
+        env:
+          PORT: ${{ github.ref == 'refs/heads/main' && '4175' || '4173' }}
         run: |
-          PORT=${{ github.ref == 'refs/heads/main' && '4175' || '4173' }}
           rsync --rsh="/usr/bin/sshpass -p \"${{ secrets.REMOTE_PASSWORD }}\" ssh -o StrictHostKeyChecking=no -l deployer" -avz --delete . ${{ secrets.REMOTE_USER }}@${{ vars.REMOTE_HOST }}:plebeian.market.$PORT
-          sshpass -p "${{ secrets.REMOTE_PASSWORD }}" ssh -o StrictHostKeyChecking=no ${{ secrets.REMOTE_USER }}@${{ vars.REMOTE_HOST }} << 'EOF'
-            PORT=${{ github.ref == 'refs/heads/main' && '4175' || '4173' }}
+          sshpass -p "${{ secrets.REMOTE_PASSWORD }}" ssh -o StrictHostKeyChecking=no ${{ secrets.REMOTE_USER }}@${{ vars.REMOTE_HOST }} << EOF
             cd plebeian.market.$PORT
+            corepack enable
+            pnpm setup # Ensure pnpm is set up and available
+            export PATH=\$HOME/.local/share/pnpm:\$PATH # Add pnpm to PATH if it's installed locally
+            PORT=${{ github.ref == 'refs/heads/main' && '4175' || '4173' }}
             mv .env.sample .env
-            pwd
-            fuser -k $PORT/tcp || true
+            fuser -k \$PORT/tcp || true
             pnpm i --frozen-lockfile
             pnpm db:init
             nohup pnpm preview > preview.log 2>&1 &
