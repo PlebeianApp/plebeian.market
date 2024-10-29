@@ -1,9 +1,8 @@
 import { error } from '@sveltejs/kit'
 import { KindStalls } from '$lib/constants'
-import { stallExists } from '$lib/server/stalls.service'
+import { isValidNip05 } from '$lib/nostrSubs/load-utils'
 import { getUserIdByNip05 } from '$lib/server/users.service.js'
 import ndkStore from '$lib/stores/ndk'
-import { NIP05_REGEX } from 'nostr-tools/nip05'
 import { get } from 'svelte/store'
 
 import type { PageServerLoad } from './$types'
@@ -73,7 +72,7 @@ export const load: PageServerLoad = async ({ params }) => {
 	let processedInfo: ProcessedInfo
 
 	try {
-		if (NIP05_REGEX.test(root) && stallIdentifier) {
+		if (isValidNip05(root) && stallIdentifier) {
 			processedInfo = await processNip05(root, stallIdentifier)
 		} else if (root.split(':').length === 2) {
 			processedInfo = await processDirectId(root)

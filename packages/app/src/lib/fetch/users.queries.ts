@@ -54,13 +54,7 @@ export const createUserByIdQuery = (id: string) =>
 						aggregatorAddUser(userData, id)
 						return userData
 					} else if (!userData && id) {
-						// TODO Handle null profiles
-						// console.log("Seems that there is not that data",userData)
-						// const shouldReg = await shouldRegister(allowRegister, userExists, id);
-						// if (shouldReg) {
-						//   await ofetch('/p', { method: 'POST', body: { userId: id } });
-						//   console.log('Null user registered successfully', id);
-						// }
+						aggregatorAddUser(userData, id)
 						return { id }
 					}
 					return null

@@ -8,7 +8,8 @@ const userQueue: Set<NDKUserProfile> = new Set()
 const stallQueue: Set<NDKEvent> = new Set()
 const productQueue: Set<NDKEvent> = new Set()
 
-export function aggregatorAddUser(user: NDKUserProfile, userId: string) {
+export function aggregatorAddUser(user: NDKUserProfile | null, userId: string) {
+	if (!user) user = {} as NDKUserProfile
 	user.id = userId
 	userQueue.add(user)
 }

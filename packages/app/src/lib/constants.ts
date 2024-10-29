@@ -36,7 +36,7 @@ type LogoValue = (typeof availabeLogos)[number]['value']
 
 export const validUrls = Object.values(availabeLogos).map((logo) => logo.value) as NonEmptyArray<LogoValue>
 
-export const defaulRelaysUrls: string[] = ['wss://relay.nostr.band', 'wss://nos.lol', 'wss://relay.nostr.net']
+export const defaulRelaysUrls: string[] = ['wss://relay.nostr.band', 'wss://nos.lol', 'wss://relay.nostr.net', 'wss://relay.damus.io']
 
 export const DEFAULT_ZAP_AMOUNTS = [
 	{ displayText: '😊 10 sats', amount: 10 },
