@@ -179,17 +179,14 @@ async function normalizeNostrData<T>(
 	transformer: (data: T, coordinates: ReturnType<typeof getEventCoordinates>) => Partial<T>,
 ): Promise<NormalizedData<T>> {
 	const coordinates = getEventCoordinates(event)
-	if (!event.content || !coordinates) return { data: null, error: null }
-
+	if (!event.content || !coordinates?.coordinates) return { data: null, error: null }
 	const cachedEvent = await getCachedEvent(coordinates.coordinates)
 	if (cachedEvent && cachedEvent.createdAt === event.created_at) {
 		return { data: cachedEvent.data as Partial<T>, error: cachedEvent.parseError }
 	}
-
 	try {
 		const parsedContent = JSON.parse(event.content)
 		const { data, success, error: parseError } = schema.safeParse(parsedContent)
-
 		const result: NormalizedData<T> = {
 			data: success ? transformer(data, coordinates) : null,
 			error: parseError ?? null,
@@ -204,7 +201,6 @@ async function normalizeNostrData<T>(
 			data: result.data,
 			parseError: result.error,
 		}
-
 		await (cachedEvent ? updateCachedEvent(coordinates.coordinates, cacheData) : addCachedEvent(cacheData))
 
 		return result
@@ -252,20 +248,16 @@ async function processProduct(
 	userId: string,
 	stallId?: string,
 ): Promise<{ displayProduct: Partial<DisplayProduct>; event: NDKEvent } | null> {
-	const result = await normalizeNostrData<DisplayProduct>(
-		event,
-		get(forbiddenPatternStore).createProductEventSchema,
-		(data, coordinates) => ({
-			...data,
-			quantity: data.quantity as number,
-			images: createProductImages(data.images as unknown as string[], String(coordinates?.coordinates)),
-			userId,
-			createdAt: formatDate(event.created_at),
-			identifier: coordinates?.tagD,
-			id: coordinates?.coordinates,
-		}),
-	)
-
+	const schema = get(forbiddenPatternStore).createProductEventSchema
+	const result = await normalizeNostrData<DisplayProduct>(event, schema, (data, coordinates) => ({
+		...data,
+		quantity: data.quantity as number,
+		images: createProductImages(data.images as unknown as string[], String(coordinates?.coordinates)),
+		userId,
+		createdAt: formatDate(event.created_at),
+		identifier: coordinates?.tagD,
+		id: coordinates?.coordinates,
+	}))
 	if (result.data && (!stallId || result.data.stallId === stallId?.split(':')[2])) {
 		return { displayProduct: result.data, event }
 	}
@@ -299,11 +291,8 @@ export async function normalizeProductsFromNostr(
 	stallProducts: Set<NDKEvent>
 } | null> {
 	if (!productsData.size) return null
-
 	const processedProducts = await Promise.all(Array.from(productsData).map((event) => processProduct(event, userId, stallId)))
-
 	const validProducts = processedProducts.filter((product): product is NonNullable<typeof product> => product !== null)
-
 	if (!validProducts.length) return null
 
 	return {
