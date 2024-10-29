@@ -59,8 +59,7 @@ jobs:
       #     EOF
 
       - name: Deploy on /deploy or push to main
-        env:
-          PORT: ${{ github.ref == 'refs/heads/main' && '4175' || '4173' }}
+        if: ${{ (github.event.comment.body == '/deploy' && github.event.issue.pull_request) || github.event_name == 'push' }}
         uses: appleboy/ssh-action@master
         with:
           host: ${{ vars.REMOTE_HOST }}
@@ -68,9 +67,10 @@ jobs:
           password: ${{ secrets.REMOTE_PASSWORD }}
           script: |
             bash
+            PORT=${{ github.ref == 'refs/heads/main' && '4175' || '4173' }}
             cd plebeian.market.${PORT}
             mv .env.sample .env
-            fuser -k ${PORT}/tcp || true
+            fuser -k $PORT/tcp || true
             pnpm i --frozen-lockfile
             pnpm db:init
             nohup pnpm preview > preview.log 2>&1 &
