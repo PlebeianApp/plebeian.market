@@ -68,6 +68,7 @@ jobs:
           script: |
             bash
             source ./.bashrc
+            cat ./.bashrc
             PORT=${{ github.ref == 'refs/heads/main' && '4175' || '4173' }}
             cd plebeian.market.${PORT}
             mv .env.sample .env
