@@ -127,7 +127,7 @@
 		<main class="text-black">
 			<div class="px-4 lg:px-12">
 				<div class="container">
-					<h2 class="max-w-2xl">GM ser, plase provide the setup data...</h2>
+					<h2 class="max-w-2xl">Instance setup</h2>
 					<Separator class=" my-2" />
 					<form on:submit|preventDefault={handleSubmit} class="max-w-2xl flex flex-col gap-3">
 						<h3>Identity</h3>

@@ -17,7 +17,6 @@
 	export let variant: 'singleMerchant' | 'multiMerchant'
 	export let merchant: CartUser | null = null
 	const dispatch = createEventDispatcher()
-
 	$: orders = merchant ? Object.values($cart.orders).filter((order) => order.sellerUserId === merchant.pubkey) : Object.values($cart.orders)
 
 	$: invoices = merchant
@@ -40,16 +39,47 @@
 		error = null
 
 		try {
-			const cartData: NormalizedCart = {
-				users: $cart.users,
-				stalls: $cart.stalls,
-				products: $cart.products,
-				orders: $cart.orders,
-				invoices: $cart.invoices,
+			let filteredCartData: NormalizedCart = {
+				users: {},
+				stalls: {},
+				products: {},
+				orders: {},
+				invoices: {},
 			}
 
-			const result = await $persistOrdersAndInvoicesMutation.mutateAsync(cartData)
+			if (merchant) {
+				filteredCartData.users = { [merchant.pubkey]: $cart.users[merchant.pubkey] }
 
+				merchant.stalls.forEach((stallId) => {
+					filteredCartData.stalls[stallId] = $cart.stalls[stallId]
+
+					$cart.stalls[stallId].products.forEach((productId) => {
+						filteredCartData.products[productId] = $cart.products[productId]
+					})
+				})
+
+				Object.entries($cart.orders).forEach(([orderId, order]) => {
+					if (order.sellerUserId === merchant.pubkey) {
+						filteredCartData.orders[orderId] = order
+
+						Object.entries($cart.invoices).forEach(([invoiceId, invoice]) => {
+							if (invoice.orderId === orderId) {
+								filteredCartData.invoices[invoiceId] = invoice
+							}
+						})
+					}
+				})
+			} else {
+				filteredCartData = {
+					users: $cart.users,
+					stalls: $cart.stalls,
+					products: $cart.products,
+					orders: $cart.orders,
+					invoices: $cart.invoices,
+				}
+			}
+
+			const result = await $persistOrdersAndInvoicesMutation.mutateAsync(filteredCartData)
 			persistenceComplete = result.success
 			return result.success
 		} catch (err) {

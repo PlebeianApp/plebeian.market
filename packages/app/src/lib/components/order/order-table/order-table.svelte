@@ -4,17 +4,12 @@
 	import StallName from '$lib/components/stalls/stall-name.svelte'
 	import Button from '$lib/components/ui/button/button.svelte'
 	import * as Table from '$lib/components/ui/table'
-	import { updateOrderStatusMutation } from '$lib/fetch/order.mutations'
 	import { createEventDispatcher } from 'svelte'
 	import { createTable, Render, Subscribe } from 'svelte-headless-table'
 	import { addPagination, addSortBy } from 'svelte-headless-table/plugins'
-	import { toast } from 'svelte-sonner'
 	import { writable } from 'svelte/store'
 
-	import type { OrderStatus } from '@plebeian/database'
-
 	import type { OrderMode } from '../types'
-	import StatusCell from './status-cell.svelte'
 
 	export let orders: DisplayOrder[] = []
 	export let orderMode: 'list' | OrderMode
@@ -74,24 +69,6 @@
 		}
 		return widths[columnId] || 'w-auto'
 	}
-
-	async function updateOrderStatus(order: DisplayOrder, newStatus: OrderStatus): Promise<void> {
-		try {
-			const updateOrder = await $updateOrderStatusMutation.mutateAsync({ orderId: order.id, status: newStatus })
-			if (updateOrder) {
-				ordersStore.update((orders) => orders.map((o) => (o.id === order.id ? { ...o, status: newStatus } : o)))
-				toast.success(`Order ${newStatus}`)
-			}
-		} catch (error) {
-			console.error('Failed to update order status:', error)
-			toast.error('Failed to update order status')
-		}
-	}
-
-	const handleConfirmOrder = (order: DisplayOrder) => updateOrderStatus(order, 'confirmed')
-	const handleMarkAsShipped = (order: DisplayOrder) => updateOrderStatus(order, 'shipped')
-	const handleMarkAsReceived = (order: DisplayOrder) => updateOrderStatus(order, 'completed')
-	const handleCancelOrder = (order: DisplayOrder) => updateOrderStatus(order, 'cancelled')
 </script>
 
 <Table.Root {...$tableAttrs}>
