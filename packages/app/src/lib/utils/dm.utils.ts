@@ -1,20 +1,22 @@
-import type { CheckoutFormData } from '$lib/schema'
+import type { CheckoutFormData, OrderFilter } from '$lib/schema'
+import type { DisplayOrder } from '$lib/server/orders.service'
+import type { RichPaymentDetail } from '$lib/server/paymentDetails.service'
 import type { CartStall } from '$lib/stores/cart'
 import { NDKEvent } from '@nostr-dev-kit/ndk'
 import { createQuery } from '@tanstack/svelte-query'
 import ndkStore from '$lib/stores/ndk'
 import { get } from 'svelte/store'
 
-import type { OrderMessage } from '@plebeian/database/constants'
+import type { InvoiceMessage, OrderMessage, OrderStatusUpdateMessage, PaymentRequestMessage } from '@plebeian/database/constants'
 import { ORDER_STATUS } from '@plebeian/database/constants'
 import { createSlugId } from '@plebeian/database/utils'
 
 export async function sendDM<T extends object>(content: T, recipientPubkey: string): Promise<boolean> {
-	const store = get(ndkStore)
-	const recipient = store.getUser({ pubkey: recipientPubkey })
-	const dm = new NDKEvent(store)
+	const ndk = get(ndkStore)
+	const recipient = ndk.getUser({ pubkey: recipientPubkey })
+	const dm = new NDKEvent(ndk)
 	dm.kind = 4
-	dm.content = (await store.signer?.encrypt(recipient, JSON.stringify(content))) ?? ''
+	dm.content = (await ndk.signer?.encrypt(recipient, JSON.stringify(content))) ?? ''
 	dm.tags = [['p', recipient.pubkey]]
 
 	try {
@@ -65,5 +67,44 @@ export function createOrderMessage(
 			product_id: p,
 			quantity: cart.products[p]?.amount ?? 0,
 		})),
+	}
+}
+
+export function createPaymentRequestMessage(
+	invoice: InvoiceMessage,
+	order: OrderFilter,
+	selectedPaymentDetail: RichPaymentDetail,
+): PaymentRequestMessage {
+	return {
+		id: order.id,
+		payment_id: invoice.paymentId,
+		type: 1,
+		message: `Payment request for order ${order.id}, payment detail id: ${invoice.paymentId}`,
+		payment_options: [
+			{
+				type: selectedPaymentDetail!.paymentMethod,
+				link: invoice.paymentRequest,
+				paymentRequest: invoice.paymentRequest,
+			},
+		],
+	}
+}
+
+export function createOrderStatusUpdateMessage(order: DisplayOrder): OrderStatusUpdateMessage {
+	const message =
+		order.status === 'pending'
+			? 'Order is pending'
+			: order.status === 'shipped'
+				? 'Order shipped'
+				: order.status === 'completed'
+					? 'Order completed'
+					: 'Order cancelled'
+	return {
+		id: order.id,
+		type: 2,
+		message: message ?? '',
+		status: order.status,
+		paid: order.status === 'confirmed' ? true : false,
+		shipped: order.status === 'shipped' ? true : false,
 	}
 }

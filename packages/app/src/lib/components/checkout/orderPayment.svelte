@@ -12,11 +12,11 @@
 	import { cart } from '$lib/stores/cart'
 	import ndkStore from '$lib/stores/ndk'
 	import { formatSats, resolveQuery } from '$lib/utils'
+	import { createPaymentRequestMessage, sendDM } from '$lib/utils/dm.utils'
 	import { createEventDispatcher, onMount, tick } from 'svelte'
 	import { toast } from 'svelte-sonner'
 
-	import type { InvoiceMessage, InvoiceStatus, OrderStatus, PaymentRequestMessage } from '@plebeian/database/constants'
-	import { ORDER_STATUS } from '@plebeian/database/constants'
+	import type { InvoiceMessage, InvoiceStatus } from '@plebeian/database/constants'
 	import { createSlugId } from '@plebeian/database/utils'
 
 	import type { CheckoutPaymentEvent } from './types'
@@ -160,24 +160,13 @@
 	async function processPayment(invoice: InvoiceMessage, status: NonNullable<InvoiceStatus>) {
 		cart.addInvoice(invoice)
 
-		const paymentRequestMessage: PaymentRequestMessage = {
-			id: order.id,
-			payment_id: invoice.paymentId,
-			type: 1,
-			message: `Payment request for order ${order.id}, payment detail id: ${invoice.paymentId}`,
-			payment_options: [
-				{
-					type: selectedPaymentDetail!.paymentMethod,
-					link: invoice.paymentRequest,
-					paymentRequest: invoice.paymentRequest,
-				},
-			],
-		}
+		const paymentRequestMessage = createPaymentRequestMessage(invoice, order, selectedPaymentDetail)
 
 		// Simulate sending DMs (commented out for now)
+		// await new Promise((resolve) => setTimeout(resolve, 1000))
+		await sendDM(paymentRequestMessage, order.sellerUserId)
 		await new Promise((resolve) => setTimeout(resolve, 1000))
-		// await sendDM(paymentRequestMessage, order.sellerUserId)
-		// await sendDM(invoice, order.sellerUserId)
+		await sendDM(invoice, order.sellerUserId)
 	}
 
 	function moveToNextPaymentProcessor() {

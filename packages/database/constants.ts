@@ -281,6 +281,15 @@ export interface PaymentRequestMessage {
 	payment_options: PaymentOption[]
 }
 
+export interface OrderStatusUpdateMessage {
+	id: string
+	type: number
+	message: string
+	status: OrderStatus
+	paid: boolean
+	shipped: boolean
+}
+
 export const INVOICE_STATUS = {
 	PENDING: 'pending',
 	PAID: 'paid',
