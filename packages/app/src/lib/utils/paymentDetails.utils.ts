@@ -1,9 +1,10 @@
 import { HDKey } from '@scure/bip32'
 import { address as baddress, networks, payments } from 'bitcoinjs-lib'
 import * as bs58check from 'bs58check'
-import { NIP05_REGEX } from 'nostr-tools/nip05'
 
 import { PAYMENT_DETAILS_METHOD } from '@plebeian/database/constants'
+
+import { isValidNip05 } from './validation.utils'
 
 export type PaymentDetailsResult = {
 	success: boolean
@@ -65,9 +66,9 @@ export function isExtendedPublicKey(input: string): boolean {
 
 export async function parsePaymentDetailsFromClipboard(): Promise<PaymentDetailsResult> {
 	try {
-		const text = await navigator.clipboard.readText()
+		const text = (await navigator.clipboard.readText()).trim()
 
-		if (text.includes('@') && NIP05_REGEX.test(text)) {
+		if (isValidNip05(text)) {
 			return {
 				success: true,
 				paymentDetails: text,
@@ -75,7 +76,7 @@ export async function parsePaymentDetailsFromClipboard(): Promise<PaymentDetails
 			}
 		}
 
-		if (text.startsWith('bc1') || text.startsWith('xpub') || text.startsWith('zpub')) {
+		if (text.startsWith('bc1') || isExtendedPublicKey(text)) {
 			return {
 				success: true,
 				paymentDetails: text,

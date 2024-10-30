@@ -1,8 +1,8 @@
 import { error } from '@sveltejs/kit'
 import { KindStalls } from '$lib/constants'
-import { isValidNip05 } from '$lib/nostrSubs/load-utils'
 import { getUserIdByNip05 } from '$lib/server/users.service.js'
 import ndkStore from '$lib/stores/ndk'
+import { isValidNip05 } from '$lib/utils/validation.utils'
 import { get } from 'svelte/store'
 
 import type { PageServerLoad } from './$types'
