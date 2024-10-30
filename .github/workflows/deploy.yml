@@ -38,27 +38,14 @@ jobs:
       - run: pnpm install
       - run: pnpm db:init
       - run: pnpm build
+      - run: rm -rf node_modules **/node_modules .pnpm-store
 
       - name: Upload Assets
         if: ${{ (github.event.comment.body == '/deploy' && github.event.issue.pull_request) || github.event_name == 'push' }}
         env:
           PORT: ${{ github.ref == 'refs/heads/main' && '4175' || '4173' }}
         run: |
-          rsync --rsh="/usr/bin/sshpass -p \"${{ secrets.REMOTE_PASSWORD }}\" ssh -o StrictHostKeyChecking=no -l deployer" -azq --delete --chown=deployer:deployer . ${{ secrets.REMOTE_USER }}@${{ vars.REMOTE_HOST }}:plebeian.market.$PORT
-          # rsync --rsh="/usr/bin/sshpass -p \"${{ secrets.REMOTE_PASSWORD }}\" ssh -o StrictHostKeyChecking=no -l deployer" -azq --delete . ${{ secrets.REMOTE_USER }}@${{ vars.REMOTE_HOST }}:plebeian.market.$PORT
-
-      #     sshpass -p "${{ secrets.REMOTE_PASSWORD }}" ssh -o StrictHostKeyChecking=no -l deployer  ${{ secrets.REMOTE_USER }}@${{ vars.REMOTE_HOST }} << EOF
-      #       bash
-      #       PORT=${{ github.ref == 'refs/heads/main' && '4175' || '4173' }}
-      #       cd plebeian.market.$PORT
-      #       mv .env.sample .env
-      #       fuser -k \$PORT/tcp || true
-      #       pnpm i --frozen-lockfile
-      #       pnpm db:init
-      #       nohup pnpm preview > preview.log 2>&1 &
-      #       sleep 10
-      #       head -n 20 preview.log
-      #     EOF
+          rsync --rsh="/usr/bin/sshpass -p \"${{ secrets.REMOTE_PASSWORD }}\" ssh -o StrictHostKeyChecking=no -l deployer" -azq --delete . ${{ secrets.REMOTE_USER }}@${{ vars.REMOTE_HOST }}:plebeian.market.$PORT
 
       - name: Deploy on /deploy or push to main
         if: ${{ (github.event.comment.body == '/deploy' && github.event.issue.pull_request) || github.event_name == 'push' }}
@@ -78,7 +65,7 @@ jobs:
             fuser -k $PORT/tcp || true
             pnpm i --frozen-lockfile -f
             pnpm db:init
-            nohup pnpm preview > preview.log 2>&1 &
+            nohup pnpm preview --port=$PORT > preview.log 2>&1 &
             sleep 10
             head -n 20 preview.log
 
