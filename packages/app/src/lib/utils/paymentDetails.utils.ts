@@ -2,7 +2,19 @@ import { HDKey } from '@scure/bip32'
 import { address as baddress, networks, payments } from 'bitcoinjs-lib'
 import * as bs58check from 'bs58check'
 
+import { PAYMENT_DETAILS_METHOD } from '@plebeian/database/constants'
+
+import { isValidNip05 } from './validation.utils'
+
+export type PaymentDetailsResult = {
+	success: boolean
+	paymentDetails?: string
+	method?: (typeof PAYMENT_DETAILS_METHOD)[keyof typeof PAYMENT_DETAILS_METHOD]
+	error?: string
+}
+
 const XPUB_PREFIX = new Uint8Array([0x04, 0x88, 0xb2, 0x1e])
+
 export function checkExtendedPublicKey(input: string): boolean {
 	try {
 		bs58check.default.decode(input)
@@ -50,4 +62,37 @@ export function deriveAddresses(extendedKey: string, numAddressesToGenerate: num
 export function isExtendedPublicKey(input: string): boolean {
 	const result = input.startsWith('xpub') || input.startsWith('zpub')
 	return result
+}
+
+export async function parsePaymentDetailsFromClipboard(): Promise<PaymentDetailsResult> {
+	try {
+		const text = (await navigator.clipboard.readText()).trim()
+
+		if (isValidNip05(text)) {
+			return {
+				success: true,
+				paymentDetails: text,
+				method: PAYMENT_DETAILS_METHOD.LIGHTNING_NETWORK,
+			}
+		}
+
+		if (text.startsWith('bc1') || isExtendedPublicKey(text)) {
+			return {
+				success: true,
+				paymentDetails: text,
+				method: PAYMENT_DETAILS_METHOD.ON_CHAIN,
+			}
+		}
+
+		return {
+			success: false,
+			error: 'Unsupported payment details format',
+		}
+	} catch (error) {
+		console.error('Failed to read clipboard:', error)
+		return {
+			success: false,
+			error: 'Failed to read clipboard',
+		}
+	}
 }

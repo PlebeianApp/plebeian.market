@@ -38,7 +38,7 @@ export const createProductMutation = createMutation(
 				created_at: unixTimeNow(),
 				tags: [['d', product.id!], ...categories.map((c) => ['t', c]), ['a', stallCoordinates.coordinates!]],
 			})
-			console.log(newEvent.tags)
+
 			await newEvent.sign()
 			const _shouldRegister = await shouldRegister(undefined, undefined, $ndkStore.activeUser.pubkey)
 			if (_shouldRegister) {
@@ -95,7 +95,6 @@ export const editProductMutation = createMutation(
 		},
 		onSuccess: (data: DisplayProduct | undefined) => {
 			if (data) {
-				const $ndkStore = get(ndkStore)
 				queryClient.invalidateQueries({ queryKey: ['shipping'] })
 				queryClient.invalidateQueries({ queryKey: ['categories'] })
 				queryClient.invalidateQueries({ queryKey: ['stalls'] })

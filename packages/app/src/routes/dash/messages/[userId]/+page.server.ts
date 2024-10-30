@@ -1,4 +1,5 @@
-import { decodeNpub, isValidHexKey, isValidNip05, isValidNpub, processNip05 } from '$lib/nostrSubs/load-utils'
+import { decodeNpub, processNip05 } from '$lib/nostrSubs/load-utils'
+import { isValidHexKey, isValidNip05, isValidNpub } from '$lib/utils/validation.utils'
 
 import type { PageServerLoad } from './$types'
 

@@ -1,5 +1,4 @@
 <script lang="ts">
-	// paymentDetailCreateEdit.svelte
 	import type { RichPaymentDetail } from '$lib/server/paymentDetails.service'
 	import { LightningAddress } from '@getalby/lightning-tools'
 	import { Button } from '$lib/components/ui/button'
@@ -14,9 +13,16 @@
 	import { deleteWalletMutation } from '$lib/fetch/wallets.mutations'
 	import { createOnChainIndexQuery } from '$lib/fetch/wallets.queries'
 	import ndkStore from '$lib/stores/ndk'
-	import { checkAddress, checkExtendedPublicKey, deriveAddresses, isExtendedPublicKey } from '$lib/utils/paymentDetails.utils'
+	import {
+		checkAddress,
+		checkExtendedPublicKey,
+		deriveAddresses,
+		isExtendedPublicKey,
+		parsePaymentDetailsFromClipboard,
+	} from '$lib/utils/paymentDetails.utils'
+	import { isValidNip05 } from '$lib/utils/validation.utils'
 	import { format } from 'date-fns'
-	import { NIP05_REGEX } from 'nostr-tools/nip05'
+	import { toast } from 'svelte-sonner'
 
 	import type { PaymentDetailsMethod } from '@plebeian/database/constants'
 	import { PAYMENT_DETAILS_METHOD } from '@plebeian/database/constants'
@@ -29,18 +35,19 @@
 	export let paymentDetail: RichPaymentDetail | null = null
 	export let paymentDetailMethods: PaymentDetailsMethod[]
 	export let showGuidance: boolean = false
-	let confirmationType: onChainConfirmationType
-
-	type FormState = 'idle' | 'validating' | 'confirming' | 'submitting'
 
 	let isOpen = false
-	let formState: FormState = 'idle'
+	let formState: 'idle' | 'validating' | 'confirming' | 'submitting' = 'idle'
 	let validationMessage = ''
 	let showConfirmation = false
 	let tempValidatedValue = ''
+	let confirmationType: onChainConfirmationType
 
 	$: isEditing = !!paymentDetail
-	let editedPaymentDetail = paymentDetail
+	$: isDisabled = !editedPaymentDetail.stallId
+	$: if (!isOpen) validationMessage = ''
+
+	let editedPaymentDetail: RichPaymentDetail = paymentDetail
 		? { ...paymentDetail }
 		: {
 				id: '',
@@ -52,13 +59,17 @@
 				isDefault: false,
 			}
 
-	$: isDisabled = !editedPaymentDetail.stallId
 	$: stallsQuery = $ndkStore.activeUser?.pubkey
 		? createStallsByFilterQuery({
 				userId: $ndkStore.activeUser.pubkey,
 				pageSize: 999,
 			})
 		: null
+
+	$: onChainWalletIndexQuery =
+		paymentDetail?.paymentMethod === 'on-chain' && isExtendedPublicKey(editedPaymentDetail.paymentDetails)
+			? createOnChainIndexQuery(String($ndkStore.activeUser?.pubkey), paymentDetail.id)
+			: undefined
 
 	const paymentMethodLabels: Record<PaymentDetailsMethod, string> = {
 		[PAYMENT_DETAILS_METHOD.LIGHTNING_NETWORK]: 'Lightning Address',
@@ -72,7 +83,7 @@
 
 	const validationMethods: Record<PaymentDetailsMethod, (value: string) => Promise<boolean | 'needsConfirmation'>> = {
 		[PAYMENT_DETAILS_METHOD.LIGHTNING_NETWORK]: async (value) => {
-			if (NIP05_REGEX.test(value)) {
+			if (isValidNip05(value)) {
 				const ln = new LightningAddress(value)
 				await ln.fetch()
 				return !!ln.lnurlpData
@@ -83,7 +94,8 @@
 			if (isExtendedPublicKey(value)) {
 				confirmationType = 'extended_public_key'
 				return checkExtendedPublicKey(value) ? 'needsConfirmation' : false
-			} else if (value.startsWith('bc1')) {
+			}
+			if (value.startsWith('bc1')) {
 				confirmationType = 'single_address'
 				return checkAddress(value) ? 'needsConfirmation' : false
 			}
@@ -93,7 +105,6 @@
 
 	async function validateAndConfirm(event?: Event) {
 		if (event) event.preventDefault()
-
 		if (!editedPaymentDetail.paymentDetails) {
 			validationMessage = 'Please fill in the payment details'
 			return
@@ -122,17 +133,6 @@
 		}
 	}
 
-	function handleConfirmation() {
-		showConfirmation = false
-		handleSubmit()
-	}
-
-	function handleCancellation() {
-		showConfirmation = false
-		formState = 'idle'
-		validationMessage = 'Confirmation cancelled'
-	}
-
 	async function handleSubmit() {
 		formState = 'submitting'
 		validationMessage = 'Saving...'
@@ -155,9 +155,7 @@
 			}
 
 			isOpen = false
-			if (!isEditing) {
-				resetForm()
-			}
+			if (!isEditing) resetForm()
 			validationMessage = ''
 		} catch (error) {
 			validationMessage = 'An error occurred while saving'
@@ -179,27 +177,6 @@
 		}
 	}
 
-	function handleDelete() {
-		if (isEditing && editedPaymentDetail.id) {
-			$deletePaymentMethodMutation.mutate({
-				paymentDetailId: editedPaymentDetail.id,
-				userId: $ndkStore.activeUser?.pubkey as string,
-			})
-
-			if (editedPaymentDetail.paymentMethod == 'on-chain' && isExtendedPublicKey(editedPaymentDetail.paymentDetails)) {
-				$deleteWalletMutation.mutate({
-					userId: $ndkStore.activeUser?.pubkey as string,
-					paymentDetailId: editedPaymentDetail.id,
-				})
-			}
-		}
-	}
-	$: if (!isOpen) validationMessage = ''
-	$: onChainWalletIndexQuery =
-		paymentDetail?.paymentMethod == 'on-chain' && isExtendedPublicKey(editedPaymentDetail.paymentDetails)
-			? createOnChainIndexQuery(String($ndkStore.activeUser?.pubkey), paymentDetail.id)
-			: undefined
-
 	function setupPaymentDetail(paymentDetails: string, method: PaymentDetailsMethod) {
 		editedPaymentDetail = {
 			...editedPaymentDetail,
@@ -211,43 +188,103 @@
 		}
 		showGuidance = false
 	}
+
+	const handleConfirmation = () => {
+		showConfirmation = false
+		handleSubmit()
+	}
+
+	const handleCancellation = () => {
+		showConfirmation = false
+		formState = 'idle'
+		validationMessage = 'Confirmation cancelled'
+	}
+
+	const handleCancelInput = () => {
+		isOpen = false
+		resetForm()
+	}
+
+	const handleDelete = () => {
+		if (isEditing && editedPaymentDetail.id) {
+			$deletePaymentMethodMutation.mutate({
+				paymentDetailId: editedPaymentDetail.id,
+				userId: $ndkStore.activeUser?.pubkey as string,
+			})
+
+			if (editedPaymentDetail.paymentMethod === 'on-chain' && isExtendedPublicKey(editedPaymentDetail.paymentDetails)) {
+				$deleteWalletMutation.mutate({
+					userId: $ndkStore.activeUser?.pubkey as string,
+					paymentDetailId: editedPaymentDetail.id,
+				})
+			}
+		}
+	}
+
 	function handleSetupPaymentDetail(event: CustomEvent) {
 		const { paymentDetails, method } = event.detail
 		setupPaymentDetail(paymentDetails, method)
 	}
 
-	function handleCloseGuidance() {
+	const handleCloseGuidance = () => {
 		showGuidance = false
+	}
+
+	async function handlePasteUnknownPaymentDetails() {
+		const result = await parsePaymentDetailsFromClipboard()
+
+		if (result.success && result.paymentDetails && result.method) {
+			setupPaymentDetail(result.paymentDetails, result.method)
+			isOpen = true
+			toast.success(
+				`${result.method === PAYMENT_DETAILS_METHOD.LIGHTNING_NETWORK ? 'Lightning Network' : 'On Chain'} payment details pasted`,
+			)
+		} else {
+			toast.error(result.error || 'Unknown error')
+		}
 	}
 </script>
 
 <div class="border flex flex-col p-4 justify-between">
 	<Collapsible.Root bind:open={isOpen}>
-		<Collapsible.Trigger on:click={() => (isOpen = !isOpen)} class="flex flex-row w-full justify-between items-center gap-2">
-			{#if isEditing}
-				<div class="grid grid-flow-col grid-cols-[1fr_auto] gap-2">
-					<span class={paymentMethodIcons[editedPaymentDetail.paymentMethod] + ' w-6 h-6'} />
-					<span class="truncate">{editedPaymentDetail.paymentDetails}</span>
-				</div>
-				<div class="flex flex-row gap-2 items-center">
-					{#if editedPaymentDetail.stallId}
-						{#if editedPaymentDetail.isDefault}
-							<span class="i-mdi-star text-yellow-400 w-6 h-6" />
+		<div class="flex flex-row w-full justify-between items-center gap-2">
+			<Collapsible.Trigger on:click={() => (isOpen = !isOpen)} class="flex flex-row w-full justify-between items-center gap-2">
+				{#if isEditing}
+					<div class="grid grid-flow-col grid-cols-[1fr_auto] gap-2">
+						<span class={paymentMethodIcons[editedPaymentDetail.paymentMethod] + ' w-6 h-6'} />
+						<span class="truncate">{editedPaymentDetail.paymentDetails}</span>
+					</div>
+					<div class="flex flex-row gap-2 items-center">
+						{#if editedPaymentDetail.stallId}
+							{#if editedPaymentDetail.isDefault}
+								<span class="i-mdi-star text-yellow-400 w-6 h-6" />
+							{/if}
+							<span class="font-bold">{editedPaymentDetail.stallName}</span>
+							<span class="i-tdesign-store w-6 h-6" />
+						{:else}
+							<span class="font-bold">General</span>
+							<span class="i-mingcute-earth-2-line w-6 h-6" />
 						{/if}
-						<span class="font-bold">{editedPaymentDetail.stallName}</span>
-						<span class="i-tdesign-store w-6 h-6" />
-					{:else}
-						<span class="font-bold">General</span>
-						<span class="i-mingcute-earth-2-line w-6 h-6" />
-					{/if}
-				</div>
-			{:else}
-				<span class="flex items-center gap-2">
-					<span class="i-mingcute-plus-line w-6 h-6" />
-					Add new payment method
-				</span>
+					</div>
+				{:else}
+					<span class="flex items-center gap-2">
+						<span class="i-mingcute-plus-line w-6 h-6" />
+						Add new payment method
+					</span>
+				{/if}
+			</Collapsible.Trigger>
+			{#if !showGuidance && !paymentDetail}
+				<Button
+					on:click={handlePasteUnknownPaymentDetails}
+					size="icon"
+					variant="ghost"
+					data-tooltip="Paste payment details from clipboard and auto-detect."
+					class="text-destructive border-0"
+				>
+					<span class="i-mingcute-clipboard-fill text-black w-6 h-6"></span>
+				</Button>
 			{/if}
-		</Collapsible.Trigger>
+		</div>
 
 		<Collapsible.Content class="flex flex-col gap-4 py-4">
 			{#if showConfirmation}
@@ -262,10 +299,10 @@
 					userLightningAddress={$ndkStore.activeUser?.profile?.lud16}
 					on:setupPaymentDetail={handleSetupPaymentDetail}
 					on:closeGuidance={handleCloseGuidance}
+					on:paste={handlePasteUnknownPaymentDetails}
 				/>
 			{:else}
 				<form on:submit|preventDefault={validateAndConfirm} class="flex flex-col gap-4">
-					<!-- TODO: Improve ux by having a waila (what im looking at) function that determines the payment method -->
 					<div class="flex flex-row gap-4 items-start">
 						<div class="w-full">
 							<Label for="payment-details" class="font-medium">Payment Method</Label>
@@ -390,7 +427,7 @@
 								</Button>
 							{/if}
 
-							<Button variant="outline" on:click={() => (isOpen = false)} disabled={formState !== 'idle'} class="font-bold py-2 px-4">
+							<Button variant="outline" on:click={handleCancelInput} disabled={formState !== 'idle'} class="font-bold py-2 px-4">
 								Cancel
 							</Button>
 						</div>

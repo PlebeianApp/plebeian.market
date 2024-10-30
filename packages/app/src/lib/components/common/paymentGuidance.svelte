@@ -22,6 +22,10 @@
 	function closeGuidance() {
 		dispatch('closeGuidance')
 	}
+
+	function handlePaste() {
+		dispatch('paste')
+	}
 </script>
 
 <div class="space-y-4">
@@ -77,7 +81,15 @@
 				</div>
 
 				<div class="bg-secondary p-4 flex flex-col gap-2">
-					<h4 class="font-semibold">2. Set up manually</h4>
+					<h4 class="font-semibold">2. Paste from clipboard</h4>
+					<Button variant="outline" class="mt-2" on:click={handlePaste}
+						><span class="i-mingcute-clipboard-fill text-black w-6 h-6"></span> Paste</Button
+					>
+					<p>Paste your payment details from the clipboard and we'll auto-detect the method.</p>
+				</div>
+
+				<div class="bg-secondary p-4 flex flex-col gap-2">
+					<h4 class="font-semibold">3. Set up manually</h4>
 					<Button variant="outline" class="mt-2" on:click={closeGuidance}>Set Up Manually</Button>
 					<p>
 						If you don't have a lightning address yet, we recommend setting up one at <a
