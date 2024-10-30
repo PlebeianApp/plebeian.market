@@ -39,12 +39,14 @@ jobs:
       - run: pnpm db:init
       - run: pnpm build
 
-      - name: Deploy on /deploy or push to main
+      - name: Upload Assets
         if: ${{ (github.event.comment.body == '/deploy' && github.event.issue.pull_request) || github.event_name == 'push' }}
         env:
           PORT: ${{ github.ref == 'refs/heads/main' && '4175' || '4173' }}
         run: |
-          rsync --rsh="/usr/bin/sshpass -p \"${{ secrets.REMOTE_PASSWORD }}\" ssh -o StrictHostKeyChecking=no -l deployer" -azq --delete . ${{ secrets.REMOTE_USER }}@${{ vars.REMOTE_HOST }}:plebeian.market.$PORT
+          rsync --rsh="/usr/bin/sshpass -p \"${{ secrets.REMOTE_PASSWORD }}\" ssh -o StrictHostKeyChecking=no -l deployer" -azq --delete --chown=deployer:deployer . ${{ secrets.REMOTE_USER }}@${{ vars.REMOTE_HOST }}:plebeian.market.$PORT
+          # rsync --rsh="/usr/bin/sshpass -p \"${{ secrets.REMOTE_PASSWORD }}\" ssh -o StrictHostKeyChecking=no -l deployer" -azq --delete . ${{ secrets.REMOTE_USER }}@${{ vars.REMOTE_HOST }}:plebeian.market.$PORT
+
       #     sshpass -p "${{ secrets.REMOTE_PASSWORD }}" ssh -o StrictHostKeyChecking=no -l deployer  ${{ secrets.REMOTE_USER }}@${{ vars.REMOTE_HOST }} << EOF
       #       bash
       #       PORT=${{ github.ref == 'refs/heads/main' && '4175' || '4173' }}
