@@ -78,7 +78,7 @@ export const fetchActiveUserData = async (keyToLocalDb?: string): Promise<NDKUse
 	await user.fetchProfile({ cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY })
 
 	const userRelays = await ndk.fetchEvents({ authors: [user.pubkey], kinds: KindsRelays })
-	manageUserRelays(userRelays, 'add')
+	if (userRelays.size) manageUserRelays(userRelays, 'add')
 	ndkStore.set(ndk)
 
 	await loginLocalDb(user.pubkey, keyToLocalDb ? 'NSEC' : 'NIP07', keyToLocalDb)
@@ -89,7 +89,7 @@ export const fetchActiveUserData = async (keyToLocalDb?: string): Promise<NDKUse
 		await loginDb(user)
 	}
 
-	// invalidateAll()
+	invalidateAll()
 	return user
 }
 
@@ -144,9 +144,5 @@ export const logout = async () => {
 	dmKind04Sub.unref()
 	localStorage.clear()
 	cart.clear()
-	const ndk = get(ndkStore)
-	ndk.signer = undefined
-	ndk.activeUser = undefined
-	ndkStore.set(ndk)
-	goto('/')
+	goto('/', { invalidateAll: true })
 }

@@ -27,8 +27,8 @@
 
 	onMount(async () => {
 		const lastAccount = localStorage.getItem('last_account')
-		const autoLogin = localStorage.getItem('auto_login')
-		if (lastAccount && autoLogin != 'false') {
+		const autoLogin = localStorage.getItem('auto_login') ? JSON.parse(localStorage.getItem('auto_login') as string) : undefined
+		if (lastAccount && autoLogin) {
 			const accountInfo = await getAccount(lastAccount)
 			if (!accountInfo) return
 			if (accountInfo.type == 'NIP07') {
@@ -41,7 +41,7 @@
 	})
 </script>
 
-<PassPromt dialogOpen={showPassPromt} accointInfo={nsecAccInfo} />
+<PassPromt dialogOpen={showPassPromt} accointInfo={nsecAccInfo} on:loginComplete={handleLoginComplete} />
 
 <header class="sticky top-0 z-30 bg-black px-4 py-4 text-white lg:px-12">
 	<div class="container flex h-full w-full items-center justify-between">
@@ -102,8 +102,14 @@
 									>
 								</DropdownMenu.Item>
 								<DropdownMenu.Item>
-									<Button id="headerMenuLogOut" variant="destructive" class="inline-flex items-center gap-2" on:click={() => logout()}
-										><span class="i-tdesign-user-arrow-right"></span>Log out</Button
+									<Button
+										id="headerMenuLogOut"
+										variant="destructive"
+										class="inline-flex items-center gap-2"
+										on:click={() => {
+											logout()
+											loginComplete = false
+										}}><span class="i-tdesign-user-arrow-right"></span>Log out</Button
 									>
 								</DropdownMenu.Item>
 							{/if}

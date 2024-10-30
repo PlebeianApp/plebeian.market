@@ -14,11 +14,8 @@
 
 	export let selectedPubkey: string
 	$: messages = $groupedDMs[selectedPubkey] || []
-	$: activeUserMessages = $activeUserDMs[selectedPubkey] || []
-
-	let messageMixture: NDKEvent[] = []
 	$: {
-		messageMixture = [...messages, ...activeUserMessages].sort((a, b) => (a.created_at ?? 0) - (b.created_at ?? 0))
+		messages.sort((a, b) => (a.created_at ?? 0) - (b.created_at ?? 0))
 		scrollToBottom()
 	}
 
@@ -79,7 +76,7 @@
 	</div>
 
 	<div bind:this={messagesContainerRef} class="flex-grow overflow-y-auto p-4 space-y-4">
-		{#each messageMixture as message (message.id)}
+		{#each messages as message (message.id)}
 			<ChatBubble {message} {selectedPubkey} isCurrentUser={message.pubkey !== selectedPubkey} />
 		{/each}
 	</div>

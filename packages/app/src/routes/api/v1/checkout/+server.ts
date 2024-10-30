@@ -120,10 +120,5 @@ async function validateAndAuthorize(cartData: NormalizedCart, request: Request):
 	if (orders.some((order) => order.buyerUserId !== buyerUserId)) {
 		throw new Error('Inconsistent buyerUserIds found')
 	}
-
 	await authorize(request, buyerUserId, 'POST')
 }
-// TODO: implement update product qty
-// export const PUT = async ({ request }) => {
-
-// }

@@ -13,6 +13,7 @@ function extractRelayUrls(events: Set<NDKEvent>): Set<string> {
 		try {
 			switch (event.kind) {
 				case 3: {
+					if (!event.content.trim()) continue
 					const parsedContent = JSON.parse(event.content)
 					Object.entries(parsedContent)
 						.filter(

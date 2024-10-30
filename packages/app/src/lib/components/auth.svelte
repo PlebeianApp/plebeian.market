@@ -38,7 +38,7 @@
 		if (loginResult) {
 			toast.success('Login success!')
 			setupDMSubscription()
-			if (loginMethod == 'NIP07') {
+			if (loginMethod == 'NIP07' || dialogState.create == false) {
 				dispatch('loginComplete', true)
 			}
 		} else {
@@ -50,8 +50,8 @@
 		const key = generateSecretKey()
 		nsec = nsecEncode(key)
 		formData.append('key', nsec)
-		await handleLogin('NSEC', formData)
 		dialogState.create = true
+		await handleLogin('NSEC', formData)
 	}
 
 	async function handlePrivKeyConfirmation() {

@@ -30,31 +30,44 @@ export const dmKind04Sub: NDKEventStore<ExtendedBaseType<NDKEvent>> = ndk.storeS
 export const groupedDMs = derived(dmKind04Sub, ($dmKind04Sub) => {
 	const groups: Record<string, NDKEvent[]> = {}
 	const activeUser = get(ndkStore).activeUser
+
 	for (const event of $dmKind04Sub) {
-		if (event.pubkey === activeUser?.pubkey) continue
-		const pubkey = event.pubkey
+		let pubkey: string
+
+		if (event.pubkey === activeUser?.pubkey) {
+			const recipient = event.tagValue('p')
+			if (!recipient) continue
+			pubkey = recipient
+		} else {
+			pubkey = event.pubkey
+		}
+
 		if (!groups[pubkey]) {
 			groups[pubkey] = []
 		}
 		groups[pubkey].push(event)
 	}
 
-	return groups
-})
-
-export const activeUserDMs = derived(dmKind04Sub, ($dmKind04Sub) => {
-	const groups: Record<string, NDKEvent[]> = {}
-	const activeUser = get(ndkStore).activeUser
-	for (const event of $dmKind04Sub) {
-		if (event.pubkey !== activeUser?.pubkey) continue
-		const pubkey = event.tagValue('p')
-		if (pubkey && !groups[pubkey]) {
-			groups[pubkey] = []
-		}
-		if (pubkey) {
-			groups[pubkey].push(event)
-		}
+	for (const pubkey in groups) {
+		groups[pubkey].sort((a, b) => Number(b.created_at) - Number(a.created_at))
 	}
 
 	return groups
 })
+
+// export const activeUserDMs = derived(dmKind04Sub, ($dmKind04Sub) => {
+// 	const groups: Record<string, NDKEvent[]> = {}
+// 	const activeUser = get(ndkStore).activeUser
+// 	for (const event of $dmKind04Sub) {
+// 		if (event.pubkey !== activeUser?.pubkey) continue
+// 		const pubkey = event.tagValue('p')
+// 		if (pubkey && !groups[pubkey]) {
+// 			groups[pubkey] = []
+// 		}
+// 		if (pubkey) {
+// 			groups[pubkey].push(event)
+// 		}
+// 	}
+
+// 	return groups
+// })
