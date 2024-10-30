@@ -2,8 +2,7 @@ import type { NDKUser, NDKUserProfile } from '@nostr-dev-kit/ndk'
 import type { BaseAccount } from '$lib/stores/session'
 import { NDKNip07Signer, NDKPrivateKeySigner, NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk'
 import { error } from '@sveltejs/kit'
-import { invalidateAll } from '$app/navigation'
-import { page } from '$app/stores'
+import { goto, invalidateAll } from '$app/navigation'
 import { HEX_KEYS_REGEX, KindsRelays } from '$lib/constants'
 import ndkStore, { ndk } from '$lib/stores/ndk'
 import { addAccount, getAccount, updateAccount } from '$lib/stores/session'
@@ -90,7 +89,7 @@ export const fetchActiveUserData = async (keyToLocalDb?: string): Promise<NDKUse
 		await loginDb(user)
 	}
 
-	invalidateAll()
+	// invalidateAll()
 	return user
 }
 
@@ -145,5 +144,9 @@ export const logout = async () => {
 	dmKind04Sub.unref()
 	localStorage.clear()
 	cart.clear()
-	location.reload()
+	const ndk = get(ndkStore)
+	ndk.signer = undefined
+	ndk.activeUser = undefined
+	ndkStore.set(ndk)
+	goto('/')
 }

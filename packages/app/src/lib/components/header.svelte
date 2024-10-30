@@ -19,6 +19,12 @@
 
 	let showPassPromt: boolean = false
 	let nsecAccInfo: NsecAccount
+	let loginComplete: boolean = false
+
+	const handleLoginComplete = () => {
+		loginComplete = true
+	}
+
 	onMount(async () => {
 		const lastAccount = localStorage.getItem('last_account')
 		const autoLogin = localStorage.getItem('auto_login')
@@ -57,7 +63,7 @@
 				><span class="i-tdesign-mail text-black w-6 h-6"></span></Button
 			>
 			<CartWithState />
-			{#if $ndkStore.activeUser}
+			{#if $ndkStore.activeUser && loginComplete}
 				<DropdownMenu.Root>
 					<DropdownMenu.Trigger id="menuButton">
 						<Button class="p-2 bg-white"><span class="i-tdesign-view-list text-black w-6 h-6"></span></Button>
@@ -65,7 +71,7 @@
 					<DropdownMenu.Content>
 						<DropdownMenu.Group>
 							<DropdownMenu.Label>
-								<Auth />
+								<Auth on:loginComplete={handleLoginComplete} />
 								My account
 							</DropdownMenu.Label>
 							<DropdownMenu.Label>
@@ -108,7 +114,7 @@
 					<CAvatar pubkey={$ndkStore.activeUser.pubkey} profile={$ndkStore.activeUser.profile} />
 				</a>
 			{:else}
-				<Auth />
+				<Auth on:loginComplete={handleLoginComplete} />
 			{/if}
 		</div>
 	</div>
