@@ -74,7 +74,7 @@ jobs:
             cd plebeian.market.${PORT}
             mv .env.sample .env
             fuser -k $PORT/tcp || true
-            pnpm i --frozen-lockfile
+            pnpm i --frozen-lockfile -f
             pnpm db:init
             nohup pnpm preview > preview.log 2>&1 &
             sleep 10
