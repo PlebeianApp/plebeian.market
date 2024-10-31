@@ -77,7 +77,9 @@ export async function createRequest<K extends keyof Endpoints, RequestOperation 
 export const queryClient = new QueryClient({
 	defaultOptions: {
 		queries: {
-			staleTime: 1000 * 30,
+			staleTime: 1000 * 60 * 30,
+			retry: 3,
+			retryDelay: 1000,
 		},
 	},
 })

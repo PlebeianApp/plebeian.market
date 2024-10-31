@@ -5,7 +5,8 @@
 	import PassPromt from '$lib/components/passPromt.svelte'
 	import { Button } from '$lib/components/ui/button/index.js'
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
-	import { login, logout } from '$lib/ndkLogin'
+	import { isSuccessfulLogin, login, logout } from '$lib/ndkLogin'
+	import { unreadCounts } from '$lib/stores/chat-notifications'
 	import ndkStore from '$lib/stores/ndk'
 	import { balanceOfWorkingNWCs } from '$lib/stores/nwc'
 	import { getAccount } from '$lib/stores/session'
@@ -19,10 +20,12 @@
 
 	let showPassPromt: boolean = false
 	let nsecAccInfo: NsecAccount
+	let loginComplete: boolean | undefined
+
 	onMount(async () => {
 		const lastAccount = localStorage.getItem('last_account')
-		const autoLogin = localStorage.getItem('auto_login')
-		if (lastAccount && autoLogin != 'false') {
+		const autoLogin = localStorage.getItem('auto_login') ? JSON.parse(localStorage.getItem('auto_login') as string) : undefined
+		if (lastAccount && autoLogin) {
 			const accountInfo = await getAccount(lastAccount)
 			if (!accountInfo) return
 			if (accountInfo.type == 'NIP07') {
@@ -33,6 +36,7 @@
 			}
 		}
 	})
+	$: hasUnreadMessages = Object.values($unreadCounts).some((count) => count > 0)
 </script>
 
 <PassPromt dialogOpen={showPassPromt} accointInfo={nsecAccInfo} />
@@ -53,11 +57,14 @@
 			</div>
 		</section>
 		<div class="flex items-center gap-4">
-			<Button class="hidden sm:flex p-2 bg-[var(--neo-yellow)]" href="/dash/messages"
-				><span class="i-tdesign-mail text-black w-6 h-6"></span></Button
-			>
+			<Button class="hidden sm:flex p-2 bg-[var(--neo-yellow)] relative" href="/dash/messages">
+				<span class="i-tdesign-mail text-black w-6 h-6"></span>
+				{#if hasUnreadMessages}
+					<span class="notification-dot" />
+				{/if}
+			</Button>
 			<CartWithState />
-			{#if $ndkStore.activeUser}
+			{#if $ndkStore.activeUser && $isSuccessfulLogin}
 				<DropdownMenu.Root>
 					<DropdownMenu.Trigger id="menuButton">
 						<Button class="p-2 bg-white"><span class="i-tdesign-view-list text-black w-6 h-6"></span></Button>
@@ -96,8 +103,14 @@
 									>
 								</DropdownMenu.Item>
 								<DropdownMenu.Item>
-									<Button id="headerMenuLogOut" variant="destructive" class="inline-flex items-center gap-2" on:click={() => logout()}
-										><span class="i-tdesign-user-arrow-right"></span>Log out</Button
+									<Button
+										id="headerMenuLogOut"
+										variant="destructive"
+										class="inline-flex items-center gap-2"
+										on:click={() => {
+											logout()
+											loginComplete = false
+										}}><span class="i-tdesign-user-arrow-right"></span>Log out</Button
 									>
 								</DropdownMenu.Item>
 							{/if}

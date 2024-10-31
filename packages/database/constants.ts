@@ -236,7 +236,7 @@ export interface OrderMessage {
 	id: string
 	createdAt?: number
 	updatedAt?: number
-	type: number
+	type: 0
 	sellerUserId: string
 	buyerUserId: string
 	shippingId: string
@@ -276,9 +276,18 @@ export interface PaymentOption {
 export interface PaymentRequestMessage {
 	id: string
 	payment_id: string
-	type: number
+	type: 1
 	message: string
 	payment_options: PaymentOption[]
+}
+
+export interface OrderStatusUpdateMessage {
+	id: string
+	type: 2
+	message: string
+	status: OrderStatus
+	paid: boolean
+	shipped: boolean
 }
 
 export const INVOICE_STATUS = {

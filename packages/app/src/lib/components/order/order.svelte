@@ -9,6 +9,8 @@
 	import { createPaymentsForUserQuery } from '$lib/fetch/payments.queries'
 	import { editProductFromEventMutation, signProductStockMutation } from '$lib/fetch/products.mutations'
 	import { createProductQuery } from '$lib/fetch/products.queries'
+	import ndkStore from '$lib/stores/ndk'
+	import { createOrderStatusUpdateMessage, sendDM } from '$lib/utils/dm.utils'
 	import { toast } from 'svelte-sonner'
 	import { derived } from 'svelte/store'
 
@@ -34,7 +36,6 @@
 	let merchantPaymentDetail: RichPaymentDetail | undefined = undefined
 
 	let getUserProfileLoading: string | undefined = undefined
-
 	const paymentDetails = createPaymentsForUserQuery(order.sellerUserId)
 	$: relevantPaymentDetails = $paymentDetails.data?.filter((payment) => payment.stallId === order.stallId || payment.stallId === null) ?? []
 	const v4vPaymentDetail: RichPaymentDetail = {
@@ -85,11 +86,16 @@
 				}),
 			)
 
-			// Update order status after all products are processed
 			await $updateOrderStatusMutation.mutateAsync({
 				orderId: order.id,
 				status: 'confirmed',
 			})
+			order = {
+				...order,
+				status: 'confirmed',
+			}
+			const orderUpdateMessage = createOrderStatusUpdateMessage(order)
+			await sendDM(orderUpdateMessage, order.buyerUserId)
 
 			toast.success('Order confirmed')
 		} catch (error) {
@@ -100,16 +106,35 @@
 
 	const handleMarkAsShipped = async (order: DisplayOrder): Promise<void> => {
 		await $updateOrderStatusMutation.mutateAsync({ orderId: order.id, status: 'shipped' })
+		order = {
+			...order,
+			status: 'shipped',
+		}
+		const orderUpdateMessage = createOrderStatusUpdateMessage(order)
+		await sendDM(orderUpdateMessage, order.buyerUserId)
 		toast.success('Order marked as shipped')
 	}
 
 	const handleMarkAsReceived = async (order: DisplayOrder): Promise<void> => {
 		await $updateOrderStatusMutation.mutateAsync({ orderId: order.id, status: 'completed' })
+		order = {
+			...order,
+			status: 'completed',
+		}
+		const orderUpdateMessage = createOrderStatusUpdateMessage(order)
+		await sendDM(orderUpdateMessage, order.sellerUserId)
 		toast.success('Order marked as received')
 	}
 
 	const handleCancelOrder = async (order: DisplayOrder): Promise<void> => {
 		await $updateOrderStatusMutation.mutateAsync({ orderId: order.id, status: 'cancelled' })
+		order = {
+			...order,
+			status: 'cancelled',
+		}
+		const orderUpdateMessage = createOrderStatusUpdateMessage(order)
+		const recipientId = $ndkStore.activeUser?.pubkey === order.sellerUserId ? order.buyerUserId : order.sellerUserId
+		await sendDM(orderUpdateMessage, recipientId)
 		toast.success('Order cancelled')
 	}
 

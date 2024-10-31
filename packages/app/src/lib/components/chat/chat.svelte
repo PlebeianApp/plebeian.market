@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { NDKEvent } from '@nostr-dev-kit/ndk'
 	import { createUserByIdQuery, createUserRelaysByIdQuery } from '$lib/fetch/users.queries'
-	import { activeUserDMs, groupedDMs } from '$lib/nostrSubs/subs'
+	import { createDMSubscriptionManager, dmKind04Sub, groupedDMs } from '$lib/nostrSubs/subs'
 	import { manageUserRelays } from '$lib/nostrSubs/userRelayManager'
-	import ndkStore from '$lib/stores/ndk'
+	import { chatNotifications } from '$lib/stores/chat-notifications'
 	import { truncateString } from '$lib/utils'
+	import { sendDM } from '$lib/utils/dm.utils'
 	import { SendHorizontal } from 'lucide-svelte'
 	import { onDestroy, onMount } from 'svelte'
 
@@ -14,14 +14,14 @@
 
 	export let selectedPubkey: string
 	$: messages = $groupedDMs[selectedPubkey] || []
-	$: activeUserMessages = $activeUserDMs[selectedPubkey] || []
 
-	let messageMixture: NDKEvent[] = []
 	$: {
-		messageMixture = [...messages, ...activeUserMessages].sort((a, b) => (a.created_at ?? 0) - (b.created_at ?? 0))
+		messages.sort((a, b) => (a.created_at ?? 0) - (b.created_at ?? 0))
 		scrollToBottom()
+		if (messages.length > 0) {
+			chatNotifications.markAllRead(selectedPubkey)
+		}
 	}
-
 	let messagesContainerRef: HTMLDivElement
 	let message = ''
 
@@ -29,12 +29,7 @@
 	const userRelays = createUserRelaysByIdQuery(selectedPubkey)
 	const handleSend = async () => {
 		if (message.trim()) {
-			const recipient = $ndkStore.getUser({ pubkey: selectedPubkey })
-			const dm = new NDKEvent($ndkStore)
-			dm.kind = 4
-			dm.content = (await $ndkStore.signer?.encrypt(recipient, message)) ?? ''
-			dm.tags = [['p', recipient.pubkey]]
-			await dm.publish()
+			await sendDM(message, selectedPubkey)
 			message = ''
 			document.querySelector<HTMLTextAreaElement>('textarea[name="message"]')?.focus()
 		}
@@ -57,14 +52,17 @@
 		manageUserRelays($userRelays.data, 'add')
 	}
 
+	const dmManager = createDMSubscriptionManager(dmKind04Sub)
+
+	onMount(async () => {
+		dmManager.loadConversationHistory(selectedPubkey)
+		scrollToBottom()
+	})
+
 	onDestroy(() => {
 		if ($userRelays.data) {
 			manageUserRelays($userRelays.data, 'remove')
 		}
-	})
-
-	onMount(async () => {
-		scrollToBottom()
 	})
 </script>
 
@@ -79,7 +77,7 @@
 	</div>
 
 	<div bind:this={messagesContainerRef} class="flex-grow overflow-y-auto p-4 space-y-4">
-		{#each messageMixture as message (message.id)}
+		{#each messages as message (message.id)}
 			<ChatBubble {message} {selectedPubkey} isCurrentUser={message.pubkey !== selectedPubkey} />
 		{/each}
 	</div>

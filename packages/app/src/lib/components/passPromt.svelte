@@ -6,7 +6,7 @@
 	import { Skeleton } from '$lib/components/ui/skeleton/index.js'
 	import { standardDisplayDateFormat } from '$lib/constants'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
-	import { login } from '$lib/ndkLogin'
+	import { isSuccessfulLogin, login } from '$lib/ndkLogin'
 	import { type BaseAccount, type NsecAccount } from '$lib/stores/session'
 	import { format } from 'date-fns'
 	import { npubEncode } from 'nostr-tools/nip19'
@@ -25,6 +25,7 @@
 	async function loginWrapper(loginMethod: BaseAccount['type'], formData?: FormData) {
 		;(await login(loginMethod, formData)) ? toast.success('Login sucess!') : toast.error('Login error!')
 		dialogOpen = false
+		isSuccessfulLogin.set(true)
 	}
 
 	$: {
