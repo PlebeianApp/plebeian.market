@@ -23,7 +23,6 @@
 	}
 
 	$: orderUrl = `order/${$ndkStore.activeUser?.pubkey == message.buyerUserId ? 'sales' : 'purchases'}/${message.id}`
-	$: console.log(orderUrl)
 </script>
 
 <div class="bg-accent/80 rounded-md p-3">

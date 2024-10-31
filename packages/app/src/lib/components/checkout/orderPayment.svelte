@@ -125,12 +125,12 @@
 
 		const merchantAmount = orderTotal.subtotalInSats * (1 - (v4vTotalPercentage ?? 0)) + orderTotal.shippingInSats
 		const merchantInvoice = createInvoice(null, null, 'pending', merchantAmount, 'merchant')
-		processPayment(merchantInvoice, 'pending')
+		cart.addInvoice(merchantInvoice)
 
 		for (const share of v4vShares) {
 			const v4vAmount = orderTotal.subtotalInSats * share.amount
 			const v4vInvoice = createInvoice(null, null, 'pending', v4vAmount, share.target)
-			processPayment(v4vInvoice, 'pending')
+			cart.addInvoice(v4vInvoice)
 		}
 	}
 
@@ -155,18 +155,6 @@
 		}
 		paymentInvoices[paymentType] = invoice.id
 		return invoice
-	}
-
-	async function processPayment(invoice: InvoiceMessage, status: NonNullable<InvoiceStatus>) {
-		cart.addInvoice(invoice)
-
-		const paymentRequestMessage = createPaymentRequestMessage(invoice, order, selectedPaymentDetail)
-
-		// Simulate sending DMs (commented out for now)
-		// await new Promise((resolve) => setTimeout(resolve, 1000))
-		await sendDM(paymentRequestMessage, order.sellerUserId)
-		await new Promise((resolve) => setTimeout(resolve, 1000))
-		await sendDM(invoice, order.sellerUserId)
 	}
 
 	function moveToNextPaymentProcessor() {
@@ -194,7 +182,7 @@
 				updateExistingInvoice(paymentType, status, proof ? proof : undefined, paymentRequest ? paymentRequest : undefined)
 			} else {
 				const invoice = createInvoice(paymentRequest, proof, status, amountSats, paymentType)
-				processPayment(invoice, status)
+				cart.addInvoice(invoice)
 			}
 
 			paymentStatuses = paymentStatuses.map((s) => (s.id === paymentType ? { ...s, status } : s))
@@ -205,7 +193,7 @@
 		}
 	}
 
-	function updateExistingInvoice(paymentType: string, status: NonNullable<InvoiceStatus>, proof?: string, paymentRequest?: string) {
+	async function updateExistingInvoice(paymentType: string, status: NonNullable<InvoiceStatus>, proof?: string, paymentRequest?: string) {
 		const existingInvoice = $cart.invoices[paymentInvoices[paymentType]]
 		if (!existingInvoice) return
 
@@ -214,6 +202,12 @@
 		if (proof) existingInvoice.proof = proof
 		if (paymentRequest) existingInvoice.paymentRequest = paymentRequest
 		cart.updateInvoice(existingInvoice)
+
+		// Send Invoice DMs
+		const paymentRequestMessage = createPaymentRequestMessage(existingInvoice, order, selectedPaymentDetail)
+		await sendDM(paymentRequestMessage, order.sellerUserId)
+		await new Promise((resolve) => setTimeout(resolve, 1000))
+		await sendDM(existingInvoice, order.sellerUserId)
 	}
 
 	$: {

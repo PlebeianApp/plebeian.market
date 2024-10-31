@@ -86,7 +86,6 @@
 				}),
 			)
 
-			// Update order status after all products are processed
 			await $updateOrderStatusMutation.mutateAsync({
 				orderId: order.id,
 				status: 'confirmed',

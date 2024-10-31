@@ -2,6 +2,7 @@
 	import { createUserByIdQuery, createUserRelaysByIdQuery } from '$lib/fetch/users.queries'
 	import { groupedDMs } from '$lib/nostrSubs/subs'
 	import { manageUserRelays } from '$lib/nostrSubs/userRelayManager'
+	import { chatNotifications } from '$lib/stores/chat-notifications'
 	import { truncateString } from '$lib/utils'
 	import { sendDM } from '$lib/utils/dm.utils'
 	import { SendHorizontal } from 'lucide-svelte'
@@ -12,16 +13,17 @@
 	import ChatBubble from './chat-bubble.svelte'
 
 	export let selectedPubkey: string
-	// TODO: add notifications buble
 	// TODO: add load more button to load messages from a chat
-	// TODO: Fix dms sent during checkout, we are sending to much dms
-	// FIXME: Messages in the type: 2 dms, they are incorrect
 	$: messages = $groupedDMs[selectedPubkey] || []
+
 	$: {
 		messages.sort((a, b) => (a.created_at ?? 0) - (b.created_at ?? 0))
 		scrollToBottom()
+		// Mark messages as read when they're viewed
+		if (messages.length > 0) {
+			chatNotifications.markAllRead(selectedPubkey)
+		}
 	}
-
 	let messagesContainerRef: HTMLDivElement
 	let message = ''
 

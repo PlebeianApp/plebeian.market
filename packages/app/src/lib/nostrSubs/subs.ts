@@ -1,6 +1,5 @@
 import type { NDKEvent } from '@nostr-dev-kit/ndk'
 import type { ExtendedBaseType, NDKEventStore } from '@nostr-dev-kit/ndk-svelte'
-import { NDKKind } from '@nostr-dev-kit/ndk'
 import { page } from '$app/stores'
 import { KindStalls } from '$lib/constants'
 import ndkStore from '$lib/stores/ndk'
@@ -54,20 +53,3 @@ export const groupedDMs = derived(dmKind04Sub, ($dmKind04Sub) => {
 
 	return groups
 })
-
-// export const activeUserDMs = derived(dmKind04Sub, ($dmKind04Sub) => {
-// 	const groups: Record<string, NDKEvent[]> = {}
-// 	const activeUser = get(ndkStore).activeUser
-// 	for (const event of $dmKind04Sub) {
-// 		if (event.pubkey !== activeUser?.pubkey) continue
-// 		const pubkey = event.tagValue('p')
-// 		if (pubkey && !groups[pubkey]) {
-// 			groups[pubkey] = []
-// 		}
-// 		if (pubkey) {
-// 			groups[pubkey].push(event)
-// 		}
-// 	}
-
-// 	return groups
-// })

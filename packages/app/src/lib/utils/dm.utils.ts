@@ -7,7 +7,13 @@ import { createQuery } from '@tanstack/svelte-query'
 import ndkStore from '$lib/stores/ndk'
 import { get } from 'svelte/store'
 
-import type { InvoiceMessage, OrderMessage, OrderStatusUpdateMessage, PaymentRequestMessage } from '@plebeian/database/constants'
+import type {
+	InvoiceMessage,
+	OrderMessage,
+	OrderStatus,
+	OrderStatusUpdateMessage,
+	PaymentRequestMessage,
+} from '@plebeian/database/constants'
 import { ORDER_STATUS } from '@plebeian/database/constants'
 import { createSlugId } from '@plebeian/database/utils'
 
@@ -94,20 +100,22 @@ export function createPaymentRequestMessage(
 }
 
 export function createOrderStatusUpdateMessage(order: DisplayOrder): OrderStatusUpdateMessage {
-	const message =
-		order.status === 'pending'
-			? 'Order is pending'
-			: order.status === 'shipped'
-				? 'Order shipped'
-				: order.status === 'completed'
-					? 'Order completed'
-					: 'Order cancelled'
+	const statusMessages: Record<OrderStatus, string> = {
+		confirmed: 'Order confirmed',
+		pending: 'Order is pending',
+		shipped: 'Order shipped',
+		completed: 'Order completed',
+		cancelled: 'Order cancelled',
+	}
+
+	const message = statusMessages[order.status] ?? ''
+
 	return {
 		id: order.id,
 		type: 2,
-		message: message ?? '',
+		message,
 		status: order.status,
-		paid: order.status === 'confirmed' ? true : false,
-		shipped: order.status === 'shipped' ? true : false,
+		paid: order.status === 'confirmed' || order.status === 'shipped' || order.status === 'completed',
+		shipped: order.status === 'shipped',
 	}
 }

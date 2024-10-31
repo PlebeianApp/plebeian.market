@@ -5,7 +5,8 @@
 	import PassPromt from '$lib/components/passPromt.svelte'
 	import { Button } from '$lib/components/ui/button/index.js'
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
-	import { login, logout } from '$lib/ndkLogin'
+	import { isSuccessfulLogin, login, logout } from '$lib/ndkLogin'
+	import { unreadCounts } from '$lib/stores/chat-notifications'
 	import ndkStore from '$lib/stores/ndk'
 	import { balanceOfWorkingNWCs } from '$lib/stores/nwc'
 	import { getAccount } from '$lib/stores/session'
@@ -19,11 +20,7 @@
 
 	let showPassPromt: boolean = false
 	let nsecAccInfo: NsecAccount
-	let loginComplete: boolean = false
-	// TODO: improve loging, test failling
-	const handleLoginComplete = () => {
-		loginComplete = true
-	}
+	let loginComplete: boolean | undefined
 
 	onMount(async () => {
 		const lastAccount = localStorage.getItem('last_account')
@@ -39,9 +36,10 @@
 			}
 		}
 	})
+	$: hasUnreadMessages = Object.values($unreadCounts).some((count) => count > 0)
 </script>
 
-<PassPromt dialogOpen={showPassPromt} accointInfo={nsecAccInfo} on:loginComplete={handleLoginComplete} />
+<PassPromt dialogOpen={showPassPromt} accointInfo={nsecAccInfo} />
 
 <header class="sticky top-0 z-30 bg-black px-4 py-4 text-white lg:px-12">
 	<div class="container flex h-full w-full items-center justify-between">
@@ -59,11 +57,14 @@
 			</div>
 		</section>
 		<div class="flex items-center gap-4">
-			<Button class="hidden sm:flex p-2 bg-[var(--neo-yellow)]" href="/dash/messages"
-				><span class="i-tdesign-mail text-black w-6 h-6"></span></Button
-			>
+			<Button class="hidden sm:flex p-2 bg-[var(--neo-yellow)] relative" href="/dash/messages">
+				<span class="i-tdesign-mail text-black w-6 h-6"></span>
+				{#if hasUnreadMessages}
+					<span class="notification-dot" />
+				{/if}
+			</Button>
 			<CartWithState />
-			{#if $ndkStore.activeUser && loginComplete}
+			{#if $ndkStore.activeUser && $isSuccessfulLogin}
 				<DropdownMenu.Root>
 					<DropdownMenu.Trigger id="menuButton">
 						<Button class="p-2 bg-white"><span class="i-tdesign-view-list text-black w-6 h-6"></span></Button>
@@ -71,7 +72,7 @@
 					<DropdownMenu.Content>
 						<DropdownMenu.Group>
 							<DropdownMenu.Label>
-								<Auth on:loginComplete={handleLoginComplete} />
+								<Auth />
 								My account
 							</DropdownMenu.Label>
 							<DropdownMenu.Label>
@@ -120,7 +121,7 @@
 					<CAvatar pubkey={$ndkStore.activeUser.pubkey} profile={$ndkStore.activeUser.profile} />
 				</a>
 			{:else}
-				<Auth on:loginComplete={handleLoginComplete} />
+				<Auth />
 			{/if}
 		</div>
 	</div>

@@ -7,21 +7,16 @@
 	import { Label } from '$lib/components/ui/label/index.js'
 	import { Separator } from '$lib/components/ui/separator'
 	import * as Tabs from '$lib/components/ui/tabs/index.js'
-	import { login } from '$lib/ndkLogin'
+	import { isSuccessfulLogin, login } from '$lib/ndkLogin'
 	import { dmKind04Sub } from '$lib/nostrSubs/subs'
 	import ndkStore from '$lib/stores/ndk'
 	import { type BaseAccount } from '$lib/stores/session'
 	import { copyToClipboard } from '$lib/utils'
 	import { generateSecretKey } from 'nostr-tools'
 	import { nsecEncode } from 'nostr-tools/nip19'
-	import { createEventDispatcher } from 'svelte'
 	import { toast } from 'svelte-sonner'
 
 	import Pattern from './Pattern.svelte'
-
-	const dispatch = createEventDispatcher<{
-		loginComplete: boolean
-	}>()
 
 	let checked = false
 
@@ -39,7 +34,7 @@
 			toast.success('Login success!')
 			setupDMSubscription()
 			if (loginMethod == 'NIP07' || dialogState.create == false) {
-				dispatch('loginComplete', true)
+				isSuccessfulLogin.set(true)
 			}
 		} else {
 			toast.error('Login error!')
@@ -55,7 +50,7 @@
 	}
 
 	async function handlePrivKeyConfirmation() {
-		dispatch('loginComplete', true)
+		isSuccessfulLogin.set(true)
 		dialogState.create = false
 	}
 
