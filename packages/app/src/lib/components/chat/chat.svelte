@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { createUserByIdQuery, createUserRelaysByIdQuery } from '$lib/fetch/users.queries'
-	import { groupedDMs } from '$lib/nostrSubs/subs'
+	import { createDMSubscriptionManager, dmKind04Sub, groupedDMs } from '$lib/nostrSubs/subs'
 	import { manageUserRelays } from '$lib/nostrSubs/userRelayManager'
 	import { chatNotifications } from '$lib/stores/chat-notifications'
 	import { truncateString } from '$lib/utils'
@@ -13,13 +13,11 @@
 	import ChatBubble from './chat-bubble.svelte'
 
 	export let selectedPubkey: string
-	// TODO: add load more button to load messages from a chat
 	$: messages = $groupedDMs[selectedPubkey] || []
 
 	$: {
 		messages.sort((a, b) => (a.created_at ?? 0) - (b.created_at ?? 0))
 		scrollToBottom()
-		// Mark messages as read when they're viewed
 		if (messages.length > 0) {
 			chatNotifications.markAllRead(selectedPubkey)
 		}
@@ -54,14 +52,17 @@
 		manageUserRelays($userRelays.data, 'add')
 	}
 
+	const dmManager = createDMSubscriptionManager(dmKind04Sub)
+
+	onMount(async () => {
+		dmManager.loadConversationHistory(selectedPubkey)
+		scrollToBottom()
+	})
+
 	onDestroy(() => {
 		if ($userRelays.data) {
 			manageUserRelays($userRelays.data, 'remove')
 		}
-	})
-
-	onMount(async () => {
-		scrollToBottom()
 	})
 </script>
 
