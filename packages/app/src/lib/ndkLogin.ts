@@ -12,7 +12,7 @@ import { decrypt } from 'nostr-tools/nip49'
 import { get, writable } from 'svelte/store'
 
 import { userEventSchema } from '../schema/nostr-events'
-import { createRequest } from './fetch/client'
+import { createRequest, queryClient } from './fetch/client'
 import { userFromNostr } from './fetch/users.mutations'
 import { createUserExistsQuery } from './fetch/users.queries'
 import { dmKind04Sub } from './nostrSubs/subs'
@@ -88,7 +88,7 @@ export const fetchActiveUserData = async (keyToLocalDb?: string): Promise<NDKUse
 	if (await shouldRegister(allowRegister, userExists)) {
 		await loginDb(user)
 	}
-
+	// FIXME: when a user sign up for first time the settings are not shown as a existing user, they have to refresh
 	invalidateAll()
 	return user
 }
@@ -128,6 +128,8 @@ export const loginDb = async (user: NDKUser) => {
 				profile: body.data as NDKUserProfile,
 				pubkey: user.pubkey,
 			})
+
+			queryClient.invalidateQueries({ queryKey: ['users', 'exists'] })
 			return
 		}
 
