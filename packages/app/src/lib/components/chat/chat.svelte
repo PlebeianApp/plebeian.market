@@ -1,10 +1,9 @@
 <script lang="ts">
-	import { NDKEvent } from '@nostr-dev-kit/ndk'
 	import { createUserByIdQuery, createUserRelaysByIdQuery } from '$lib/fetch/users.queries'
-	import { activeUserDMs, groupedDMs } from '$lib/nostrSubs/subs'
+	import { groupedDMs } from '$lib/nostrSubs/subs'
 	import { manageUserRelays } from '$lib/nostrSubs/userRelayManager'
-	import ndkStore from '$lib/stores/ndk'
 	import { truncateString } from '$lib/utils'
+	import { sendDM } from '$lib/utils/dm.utils'
 	import { SendHorizontal } from 'lucide-svelte'
 	import { onDestroy, onMount } from 'svelte'
 
@@ -13,6 +12,10 @@
 	import ChatBubble from './chat-bubble.svelte'
 
 	export let selectedPubkey: string
+	// TODO: add notifications buble
+	// TODO: add load more button to load messages from a chat
+	// TODO: Fix dms sent during checkout, we are sending to much dms
+	// FIXME: Messages in the type: 2 dms, they are incorrect
 	$: messages = $groupedDMs[selectedPubkey] || []
 	$: {
 		messages.sort((a, b) => (a.created_at ?? 0) - (b.created_at ?? 0))
@@ -26,12 +29,7 @@
 	const userRelays = createUserRelaysByIdQuery(selectedPubkey)
 	const handleSend = async () => {
 		if (message.trim()) {
-			const recipient = $ndkStore.getUser({ pubkey: selectedPubkey })
-			const dm = new NDKEvent($ndkStore)
-			dm.kind = 4
-			dm.content = (await $ndkStore.signer?.encrypt(recipient, message)) ?? ''
-			dm.tags = [['p', recipient.pubkey]]
-			await dm.publish()
+			await sendDM(message, selectedPubkey)
 			message = ''
 			document.querySelector<HTMLTextAreaElement>('textarea[name="message"]')?.focus()
 		}

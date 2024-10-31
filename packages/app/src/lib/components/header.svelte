@@ -20,7 +20,7 @@
 	let showPassPromt: boolean = false
 	let nsecAccInfo: NsecAccount
 	let loginComplete: boolean = false
-
+	// TODO: improve loging, test failling
 	const handleLoginComplete = () => {
 		loginComplete = true
 	}

@@ -11,16 +11,19 @@ import type { InvoiceMessage, OrderMessage, OrderStatusUpdateMessage, PaymentReq
 import { ORDER_STATUS } from '@plebeian/database/constants'
 import { createSlugId } from '@plebeian/database/utils'
 
-export async function sendDM<T extends object>(content: T, recipientPubkey: string): Promise<boolean> {
+export async function sendDM<T extends object>(content: T | string, recipientPubkey: string): Promise<boolean> {
 	const ndk = get(ndkStore)
 	const recipient = ndk.getUser({ pubkey: recipientPubkey })
 	const dm = new NDKEvent(ndk)
+	const dmContent = content instanceof Object ? JSON.stringify(content) : content
 	dm.kind = 4
-	dm.content = (await ndk.signer?.encrypt(recipient, JSON.stringify(content))) ?? ''
+	dm.content = (await ndk.signer?.encrypt(recipient, dmContent)) ?? ''
 	dm.tags = [['p', recipient.pubkey]]
 
 	try {
+		// await dm.sign()
 		await dm.publish()
+
 		return true
 	} catch (error) {
 		return false
