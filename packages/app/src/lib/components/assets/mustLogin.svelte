@@ -1,5 +1,12 @@
 <script>
-	import Auth from '../auth.svelte'
+	import { dialogs } from '$lib/stores/dialog'
+
+	import AuthDialog from '../dialogs/authDialog.svelte'
+	import { Button } from '../ui/button'
+
+	function showAuthDialog() {
+		dialogs.show(AuthDialog, {})
+	}
 </script>
 
 <div class=" flex flex-col items-center text-center justify-center w-fit gap-4">
@@ -28,6 +35,8 @@
 		></svg
 	>
 	<div>
-		<Auth />
+		<Button on:click={showAuthDialog} class="flex items-center cursor-pointer gap-2 w-full">
+			<span class="i-tdesign-user-1" />Log in
+		</Button>
 	</div>
 </div>
