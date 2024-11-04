@@ -12,11 +12,13 @@
 	import { QueryClientProvider } from '@tanstack/svelte-query'
 	import { afterNavigate, goto } from '$app/navigation'
 	import RelayWidget from '$lib/components/assets/relayWidget.svelte'
+	import BetaDialog from '$lib/components/dialogs/betaDialog.svelte'
 	import Drawer from '$lib/components/drawer.svelte'
 	import SellStuffAdvert from '$lib/components/sell-stuff-advert.svelte'
 	import DialogManager from '$lib/components/ui/dialogManager.svelte'
 	import { queryClient } from '$lib/fetch/client'
 	import { processQueuedInsertions } from '$lib/nostrSubs/data-aggregator'
+	import { dialogs } from '$lib/stores/dialog'
 	import ndkStore from '$lib/stores/ndk'
 	import { initNdkNWCs } from '$lib/stores/nwc'
 	import { cleanupCachedEvents } from '$lib/stores/session'
@@ -131,6 +133,7 @@
 				hideTooltip()
 			}
 		})
+		dialogs.show(BetaDialog)
 	})
 
 	$: if (isLoggedIn) {
