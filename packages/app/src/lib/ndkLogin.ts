@@ -9,7 +9,7 @@ import { addAccount, getAccount, updateAccount } from '$lib/stores/session'
 import { bytesToHex, checkIfUserExists, createNcryptSec, hexToBytes, resolveQuery, shouldRegister } from '$lib/utils'
 import { nsecEncode } from 'nostr-tools/nip19'
 import { decrypt } from 'nostr-tools/nip49'
-import { get, writable } from 'svelte/store'
+import { get } from 'svelte/store'
 
 import { userEventSchema } from '../schema/nostr-events'
 import { createRequest, queryClient } from './fetch/client'
@@ -21,7 +21,6 @@ import { cart } from './stores/cart'
 import { getAppSettings, setupNDKSigner, unNullify } from './utils/login.utils'
 
 type LoginResult = Promise<boolean>
-export const isSuccessfulLogin = writable(false)
 export const login = async (loginMethod: BaseAccount['type'], formData?: FormData, autoLogin?: boolean): LoginResult => {
 	if (autoLogin) localStorage.setItem('auto_login', 'true')
 

@@ -14,9 +14,9 @@
 	import RelayWidget from '$lib/components/assets/relayWidget.svelte'
 	import Drawer from '$lib/components/drawer.svelte'
 	import SellStuffAdvert from '$lib/components/sell-stuff-advert.svelte'
+	import DialogManager from '$lib/components/ui/dialogManager.svelte'
 	import { queryClient } from '$lib/fetch/client'
 	import { processQueuedInsertions } from '$lib/nostrSubs/data-aggregator'
-	import { dmKind04Sub } from '$lib/nostrSubs/subs'
 	import ndkStore from '$lib/stores/ndk'
 	import { initNdkNWCs } from '$lib/stores/nwc'
 	import { cleanupCachedEvents } from '$lib/stores/session'
@@ -196,6 +196,7 @@
 			<section class="fixed bottom-0">
 				<RelayWidget />
 			</section>
+			<DialogManager />
 		</div>
 	{/if}
 </QueryClientProvider>
