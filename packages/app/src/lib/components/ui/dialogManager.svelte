@@ -3,11 +3,28 @@
 
 	import ManagedDialog from './managedDialog.svelte'
 
-	$: ({ open, component, props } = $dialogs)
+	$: ({ open, currentDialog } = $dialogs)
+
+	function handleClose() {
+		if (currentDialog) {
+			dialogs.hide(currentDialog.id)
+		}
+	}
+
+	function handleAction() {
+		if (currentDialog) {
+			dialogs.handleAction()
+		}
+	}
+
+	$: dialogProps = {
+		...currentDialog?.props,
+		...(currentDialog?.onAction ? { handleAction } : {}),
+	}
 </script>
 
-<ManagedDialog {open}>
-	{#if component}
-		<svelte:component this={component} {...props} />
+<ManagedDialog {open} onClose={handleClose} onAction={handleAction}>
+	{#if currentDialog?.component}
+		<svelte:component this={currentDialog.component} {...dialogProps} />
 	{/if}
 </ManagedDialog>

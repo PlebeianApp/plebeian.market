@@ -10,7 +10,7 @@
 	}
 
 	function handlePrivKeyConfirmation() {
-		dialogs.reset()
+		dialogs.hide()
 	}
 </script>
 

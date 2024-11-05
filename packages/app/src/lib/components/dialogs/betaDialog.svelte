@@ -3,6 +3,10 @@
 
 	import { Button } from '../ui/button'
 	import Separator from '../ui/separator/separator.svelte'
+
+	function handleAccept() {
+		dialogs.hide()
+	}
 </script>
 
 <div class=" flex flex-col gap-2">
@@ -17,5 +21,5 @@
 		> describing your problem.
 	</p>
 
-	<Button on:click={() => dialogs.reset()} class="w-full font-bold">I understand</Button>
+	<Button on:click={handleAccept} class="w-full font-bold">I understand</Button>
 </div>

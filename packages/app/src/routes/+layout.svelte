@@ -21,7 +21,7 @@
 	import { dialogs } from '$lib/stores/dialog'
 	import ndkStore from '$lib/stores/ndk'
 	import { initNdkNWCs } from '$lib/stores/nwc'
-	import { cleanupCachedEvents } from '$lib/stores/session'
+	import { cleanupCachedEvents, getAllAccounts } from '$lib/stores/session'
 
 	import type { LayoutData } from './$types'
 
@@ -67,7 +67,7 @@
 	})
 
 	// Tooltips on elements with the tooltip attribute
-	onMount(() => {
+	onMount(async () => {
 		const tooltip = document.querySelector('#tooltip') as HTMLDivElement
 		const tooltipContent = document.querySelector('#tooltip-content') as HTMLDivElement
 		const arrowElement = document.querySelector('#arrow') as HTMLDivElement
@@ -133,7 +133,10 @@
 				hideTooltip()
 			}
 		})
-		dialogs.show(BetaDialog)
+		const localUsers = await getAllAccounts()
+		if (!localUsers?.length) {
+			dialogs.show(BetaDialog)
+		}
 	})
 
 	$: if (isLoggedIn) {
