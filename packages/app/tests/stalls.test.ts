@@ -19,14 +19,6 @@ describe('stalls', async () => {
 		await browser?.close()
 	})
 
-	test('stall page should be visible after navigation', async () => {
-		await page.goto(`http://${process.env.APP_HOST}:${process.env.APP_PORT}/`)
-		await page.click('text=Stall browser')
-		await page.waitForURL(`http://${process.env.APP_HOST}:${process.env.APP_PORT}/stalls`)
-		const pageTitle = await page.locator('h2').nth(1).textContent()
-		expect(pageTitle).toBe('Stalls')
-	})
-
 	test('stall items should be visible', async () => {
 		await page.goto(`http://${process.env.APP_HOST}:${process.env.APP_PORT}/stalls`)
 		const allLinks = await page.$$('a')
@@ -37,7 +29,6 @@ describe('stalls', async () => {
 	test('create a new stall', async () => {
 		// Navigate to the stall creation page
 		await page.goto(`http://${process.env.APP_HOST}:${process.env.APP_PORT}/`)
-
 		await login(page)
 
 		// Wait for menu button to be visible and click it

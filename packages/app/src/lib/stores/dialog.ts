@@ -32,7 +32,7 @@ const createInitialState = (): DialogState => ({
 	open: false,
 })
 
-const ANIMATION_DELAY = 300
+const ANIMATION_DELAY = 10
 
 function createDialogStore() {
 	const store = writable<DialogState>(createInitialState())

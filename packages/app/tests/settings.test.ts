@@ -1,12 +1,15 @@
 import type { Browser, Page } from 'playwright'
 import { chromium } from 'playwright'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
 import { opts } from './globalSetup'
-import { login } from './utils/testUtils'
+import { login, retryClick, waitForSelectorWithLogging } from './utils/testUtils'
 
 describe(
 	'settings',
+	{
+		sequential: true,
+	},
 	async () => {
 		let browser: Browser
 		let page: Page
@@ -14,39 +17,73 @@ describe(
 		beforeAll(async () => {
 			browser = await chromium.launch(opts)
 			page = await browser.newPage()
-			await page.goto(`http://${process.env.APP_HOST}:${process.env.APP_PORT}/settings`)
-			await page.waitForSelector('text=You must login')
-			await login(page)
+			page.setDefaultTimeout(30000)
 		})
 
 		afterAll(async () => {
 			await browser?.close()
 		})
 
+		beforeEach(async () => {
+			const url = `http://${process.env.APP_HOST}:${process.env.APP_PORT}/`
+			await page.goto(url)
+		})
+
 		it('should navigate to user settings and submit the form', async () => {
-			await page.goto(`http://${process.env.APP_HOST}:${process.env.APP_PORT}/`)
 			await login(page)
-			await page.waitForTimeout(1000)
-			await page.click('#menuButton')
-			await page.click('text=Settings')
-			await page.waitForSelector('h2>a[href="/settings"]', { timeout: 1000 })
-			await page.click('text=Profile')
-			await page.fill('#name', 'Test User')
-			await page.fill('#about', 'This is a test bio')
-			await page.fill('#nip05', 'test@example.com')
-			await page.click('#userDataSubmit', { delay: 100 })
+
+			await waitForSelectorWithLogging(page, '#menuButton', 'menu button')
+			await retryClick(page, '#menuButton')
+
+			await waitForSelectorWithLogging(page, 'text=Settings', 'settings option')
+			await retryClick(page, 'text=Settings')
+
+			await waitForSelectorWithLogging(page, 'h2>a[href="/settings"]', 'settings page header')
+
+			await waitForSelectorWithLogging(page, 'text=Profile', 'profile section')
+			await retryClick(page, 'text=Profile')
+
+			const formFields = {
+				'#name': 'Test User',
+				'#about': 'This is a test bio',
+				'#nip05': 'test@example.com',
+			}
+
+			for (const [selector, value] of Object.entries(formFields)) {
+				await waitForSelectorWithLogging(page, selector, `form field ${selector}`)
+				await page.fill(selector, value)
+			}
+
+			await waitForSelectorWithLogging(page, '#userDataSubmit', 'submit button')
+			await retryClick(page, '#userDataSubmit')
+
+			await waitForSelectorWithLogging(page, '#name', 'name field after submission')
 			const userName = await page.inputValue('#name')
-			expect(userName).toBeDefined()
+			expect(userName).toBe('Test User')
 		})
 
 		it('should navigate to account deletion and submit the form', async () => {
-			await page.click('text=Delete account', { delay: 1000 })
-			await page.waitForSelector('#accountDeletionChallenge')
+			await login(page)
+
+			await waitForSelectorWithLogging(page, '#menuButton', 'menu button')
+			await retryClick(page, '#menuButton')
+
+			await waitForSelectorWithLogging(page, 'text=Settings', 'settings option')
+			await retryClick(page, 'text=Settings')
+
+			await waitForSelectorWithLogging(page, 'h2>a[href="/settings"]', 'settings page header')
+
+			await waitForSelectorWithLogging(page, 'text=Delete account', 'delete account button')
+			await retryClick(page, 'text=Delete account')
+
+			await waitForSelectorWithLogging(page, '#accountDeletionChallenge', 'deletion challenge input')
 			await page.fill('#accountDeletionChallenge', 'DELETE')
-			await page.click('#executeDeletion')
+
+			await waitForSelectorWithLogging(page, '#executeDeletion:not([disabled])', 'enabled deletion button')
+			await retryClick(page, '#executeDeletion')
+
 			const deleteInput = await page.inputValue('#accountDeletionChallenge')
 			expect(deleteInput).toBe('DELETE')
 		})
 	},
-	{ sequential: true },
 )
