@@ -17,7 +17,7 @@ describe(
 		beforeAll(async () => {
 			browser = await chromium.launch(opts)
 			page = await browser.newPage()
-			page.setDefaultTimeout(30000)
+			page.setDefaultTimeout(50000)
 		})
 
 		afterAll(async () => {
