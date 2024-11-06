@@ -135,21 +135,12 @@ export const loginDb = async (user: NDKUser) => {
 		if (!userExists) {
 			const body = userEventSchema.safeParse(userProfile)
 			if (!body.success) throw Error(JSON.stringify(body.error))
-			dialogs.show(
-				RegisterDialog,
-				{},
-				{
-					onAction: async () => {
-						await get(createUserFromNostrMutation).mutateAsync({
-							profile: body.data as NDKUserProfile,
-							pubkey: user.pubkey,
-						})
+			await get(createUserFromNostrMutation).mutateAsync({
+				profile: body.data as NDKUserProfile,
+				pubkey: user.pubkey,
+			})
 
-						queryClient.invalidateQueries({ queryKey: ['users', 'exists'] })
-					},
-				},
-			)
-
+			await queryClient.invalidateQueries({ queryKey: ['users', 'exists'] })
 			return
 		}
 

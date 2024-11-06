@@ -29,7 +29,7 @@
 			toast.success('Login success!')
 			setupDMSubscription()
 			if (loginMethod == 'NIP07' || !nsec) {
-				dialogs.hide()
+				dialogs.clearAll()
 			}
 		} else {
 			toast.error('Login error!')
@@ -41,7 +41,8 @@
 		nsec = nsecEncode(key)
 		formData.append('key', nsec)
 		await handleLogin('NSEC', formData, checked)
-		dialogs.hide()
+		dialogs.clearAll()
+
 		dialogs.show(SaveKeyDialog, { nsec })
 	}
 
