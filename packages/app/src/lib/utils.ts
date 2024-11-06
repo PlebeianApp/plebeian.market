@@ -24,14 +24,14 @@ import { cubicOut } from 'svelte/easing'
 import { derived, get } from 'svelte/store'
 import { twMerge } from 'tailwind-merge'
 
-import { PAYMENT_DETAILS_METHOD } from '@plebeian/database/constants'
+import type { UserRoles } from '@plebeian/database'
 
 import type { EventCoordinates } from './interfaces'
 import type { NWCWallet } from './server/wallet.service'
 import { HEX_KEYS_REGEX, numSatsInBtc } from './constants'
 import { createProductExistsQuery } from './fetch/products.queries'
 import { createStallExistsQuery } from './fetch/stalls.queries'
-import { createUserExistsQuery } from './fetch/users.queries'
+import { createUserExistsQuery, createUserRoleByIdQuery } from './fetch/users.queries'
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs))
@@ -353,6 +353,11 @@ export async function resolveQuery<T>(queryFn: () => CreateQueryResult<T, Error>
 export async function checkIfUserExists(userId?: string): Promise<boolean> {
 	if (userId) return await resolveQuery(() => createUserExistsQuery(userId))
 	return false
+}
+
+export async function getUserRole(userId?: string): Promise<UserRoles | null> {
+	if (userId) return await resolveQuery(() => createUserRoleByIdQuery(userId))
+	return null
 }
 
 export async function checkIfStallExists(stallId?: string): Promise<boolean> {
