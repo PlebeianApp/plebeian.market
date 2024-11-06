@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Selected } from 'bits-ui'
+	import AdminActions from '$lib/components/common/admin-actions.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
 	import * as Accordion from '$lib/components/ui/accordion'
 	import Badge from '$lib/components/ui/badge/badge.svelte'
@@ -130,6 +131,7 @@
 					<span>currency: {currency}</span>
 					<span>created: {createDate}</span>
 				</div>
+				<AdminActions type="stall" id={stall.id} />
 			</div>
 
 			{#if isMyStall}
