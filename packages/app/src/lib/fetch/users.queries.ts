@@ -1,4 +1,4 @@
-import type { NDKRelaySet, NDKUserProfile } from '@nostr-dev-kit/ndk'
+import type { NDKUserProfile } from '@nostr-dev-kit/ndk'
 import type { UsersFilter } from '$lib/schema'
 import type { RichUser } from '$lib/server/users.service'
 import { createQuery } from '@tanstack/svelte-query'
@@ -9,7 +9,7 @@ import { usersFilterSchema } from '$lib/schema'
 import ndkStore from '$lib/stores/ndk'
 import { derived } from 'svelte/store'
 
-import type { UserMeta } from '@plebeian/database'
+import type { UserMeta, UserRoles } from '@plebeian/database'
 
 import { createRequest, queryClient } from './client'
 
@@ -17,6 +17,7 @@ declare module './client' {
 	interface Endpoints {
 		[k: `GET /api/v1/users/${string}`]: Operation<string, 'GET', never, never, RichUser | NDKUserProfile, never>
 		[k: `GET /api/v1/users/${string}?exists`]: Operation<string, 'GET', never, never, boolean, never>
+		[k: `GET /api/v1/users/${string}/role`]: Operation<string, 'GET', never, never, UserRoles, never>
 		'GET /api/v1/users': Operation<'/api/v1/users', 'GET', never, never, UserMeta[], UsersFilter>
 	}
 }
@@ -39,6 +40,21 @@ export const activeUserQuery = createQuery(
 	})),
 	queryClient,
 )
+
+export const createUserRoleByIdQuery = (id: string) =>
+	createQuery<UserRoles>(
+		{
+			queryKey: ['users', 'role', id],
+			queryFn: async () => {
+				const role = await createRequest(`GET /api/v1/users/${id}/role`, {
+					auth: true,
+				})
+				return role
+			},
+		},
+		queryClient,
+	)
+
 export const createUserByIdQuery = (id: string) =>
 	createQuery<NDKUserProfile | null>(
 		{
@@ -98,12 +114,11 @@ export const createUsersByRoleQuery = (filter: Partial<UsersFilter>) =>
 		{
 			queryKey: ['users', ...Object.values(filter)],
 			queryFn: async () => {
-				console.log(filter, 'filter')
-				const user = await createRequest(`GET /api/v1/users`, {
+				const users = await createRequest(`GET /api/v1/users`, {
 					params: usersFilterSchema.parse(filter),
 					auth: true,
 				})
-				return user
+				return users
 			},
 		},
 		queryClient,
