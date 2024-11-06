@@ -18,6 +18,7 @@ export const load = async () => {
 			root: '/settings/app',
 			links: [
 				{ title: '⚙️ App Miscellanea', href: '/settings/app/misc', description: 'Manage app identity and other settings', public: false },
+				{ title: '👥 Team', href: '/settings/app/team', description: 'Manage team members and their roles', public: false },
 				{ title: '🚫 Blacklists', href: '/settings/app/blacklists', description: 'Manage blocked users and content', public: false },
 				// { title: 'Instance relay', href: '/settings/app/relay', description: 'Configure instance relay settings' },
 				// { title: 'Media services', href: '/settings/app/media', description: 'Manage media services' },
