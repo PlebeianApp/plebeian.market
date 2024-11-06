@@ -10,13 +10,14 @@
 	import V4vRecipientEdit from '$lib/components/v4v/v4v-recipient-edit.svelte'
 	import { setV4VForUserMutation } from '$lib/fetch/v4v.mutations'
 	import { v4VForUserQuery } from '$lib/fetch/v4v.queries'
-	import { decimalToPercentage, decodePk, getHexColorFingerprintFromHexPubkey, nav_back } from '$lib/utils'
+	import ndkStore from '$lib/stores/ndk'
+	import { decimalToPercentage, getHexColorFingerprintFromHexPubkey, nav_back } from '$lib/utils'
 	import { toast } from 'svelte-sonner'
 
 	import type { PageData } from './$types'
 
 	export let data: PageData
-	const { appSettings, activeUser } = data
+	const { appSettings } = data
 	let v4vTotal = [0]
 	let initialTotalSet = false
 	let hoveredRecipient: string | null = null
@@ -29,7 +30,7 @@
 	$: shouldGlow = v4vTotal[0] > 0.14
 	$: emojiClass = shouldGlow ? 'wiggle-shake-glow' : shouldShake ? 'wiggle-shake' : shouldWiggle ? 'wiggle' : ''
 	$: emoji = v4vTotal[0] > 0.14 ? '🤙' : v4vTotal[0] > 0.09 ? '🤙' : v4vTotal[0] > 0.04 ? '🤙' : v4vTotal[0] < 0.01 ? '💩' : '🎁'
-	$: v4vByUser = v4VForUserQuery(activeUser?.id ?? '')
+	$: v4vByUser = v4VForUserQuery($ndkStore.activeUser?.pubkey ?? '')
 	let v4vRecipients: V4VDTO[] = []
 
 	$: {
@@ -53,10 +54,8 @@
 		const { npub, percentage } = event.detail
 		const oldPercentage = v4vRecipients.find((item) => item.target === npub)?.amount || 0
 
-		// Calculate the total percentage excluding the current recipient
 		const totalOthers = v4vRecipients.reduce((sum, item) => (item.target !== npub ? sum + item.amount : sum), 0)
 
-		// Adjust other recipients' percentages proportionally
 		v4vRecipients = v4vRecipients.map((item) => {
 			if (item.target === npub) {
 				return { ...item, amount: percentage }
@@ -66,7 +65,6 @@
 			}
 		})
 
-		// Normalize to ensure total is exactly 1
 		const total = v4vRecipients.reduce((sum, item) => sum + item.amount, 0)
 		v4vRecipients = v4vRecipients.map((item) => ({
 			...item,
@@ -82,7 +80,6 @@
 		}
 		const newRecipient = { target: npub, amount: percentage }
 
-		// Adjust existing recipients' percentages
 		const totalExisting = v4vRecipients.reduce((sum, item) => sum + item.amount, 0)
 		const adjustmentFactor = (1 - percentage) / totalExisting
 
@@ -91,7 +88,6 @@
 			amount: Number((item.amount * adjustmentFactor).toFixed(6)),
 		}))
 
-		// Add new recipient
 		v4vRecipients = [...v4vRecipients, newRecipient]
 
 		newRecipientFormVisible = false
@@ -133,13 +129,11 @@
 			amount: Number((recipient.amount * totalPercentage).toFixed(6)),
 		}))
 
-		// Ensure the sum of all amounts equals the total percentage
 		const sum = adjustedRecipients.reduce((acc, r) => acc + r.amount, 0)
 		const roundedTotal = Number(totalPercentage.toFixed(6))
 
 		if (Math.abs(sum - roundedTotal) > 0.000001) {
 			const diff = roundedTotal - sum
-			// Add the difference to the largest recipient to maintain the total
 			const largestRecipient = adjustedRecipients.reduce((max, r) => (r.amount > max.amount ? r : max))
 			largestRecipient.amount = Number((largestRecipient.amount + diff).toFixed(6))
 		}
