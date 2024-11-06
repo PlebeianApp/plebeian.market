@@ -2,7 +2,7 @@ import { error } from '@sveltejs/kit'
 import { decodeJwtToEvent } from '$lib/server/nostrAuth.service'
 import { findCustomTags } from '$lib/utils'
 
-import { getUserById, isUserAdmin, userExists } from './server/users.service'
+import { getUserById, getUserRole, isUserAdmin, userExists } from './server/users.service'
 
 const authorizeUserless = async (request: Request, method: string): Promise<string> => {
 	const authorizationHeader = request.headers.get('Authorization')
@@ -58,4 +58,25 @@ const authorizeAdmin = async (request: Request, method: string): Promise<boolean
 	throw error(401, 'Invalid Token')
 }
 
-export { authorize, authorizeAdmin, authorizeUserless }
+const authorizeEditorOrAdmin = async (request: Request, method: string): Promise<boolean> => {
+	const authorizationHeader = request.headers.get('Authorization')
+
+	if (!authorizationHeader) {
+		throw error(401, 'Authorization header missing')
+	}
+
+	const token = decodeJwtToEvent(authorizationHeader)
+
+	if (token.pubkey && findCustomTags(token.tags, 'method')[0] === method) {
+		const userRole = await getUserRole(token.pubkey)
+
+		if (userRole === 'admin' || userRole === 'editor') {
+			return true
+		}
+		throw error(403, 'User is not authorized')
+	}
+
+	throw error(401, 'Invalid Token')
+}
+
+export { authorize, authorizeAdmin, authorizeUserless, authorizeEditorOrAdmin }
