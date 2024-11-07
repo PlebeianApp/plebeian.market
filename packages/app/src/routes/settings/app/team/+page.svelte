@@ -1,21 +1,17 @@
 <script lang="ts">
-	import { invalidateAll } from '$app/navigation'
+	import type { NDKUserProfile } from '@nostr-dev-kit/ndk'
 	import { page } from '$app/stores'
 	import MiniUser from '$lib/components/cart/mini-user.svelte'
 	import { Button } from '$lib/components/ui/button'
 	import * as Collapsible from '$lib/components/ui/collapsible'
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
 	import { Input } from '$lib/components/ui/input'
-	import { addForbiddenWordMutation, deleteForbiddenWordMutation } from '$lib/fetch/settingsMeta.mutations.js'
-	import { setUserRoleMutation } from '$lib/fetch/users.mutations.js'
-	import { createUsersByRoleQuery } from '$lib/fetch/users.queries.js'
+	import { setUserRoleMutation, userFromNostrMutation } from '$lib/fetch/users.mutations.js'
+	import { createUserByIdQuery, createUsersByRoleQuery } from '$lib/fetch/users.queries.js'
 	import ndkStore from '$lib/stores/ndk'
-	import { nav_back } from '$lib/utils'
+	import { decodePk, nav_back } from '$lib/utils'
 	import { toast } from 'svelte-sonner'
 
-	import type { PageData } from './$types.js'
-
-	let newWord = ''
 	export let data
 	const linkDetails = data.menuItems.find((item) => item.value === 'app-settings')?.links.find((item) => item.href === $page.url.pathname)
 
@@ -23,27 +19,41 @@
 	const editors = createUsersByRoleQuery({ role: 'editor' })
 	const plebs = createUsersByRoleQuery({ role: 'pleb' })
 
-	let isCollapsibleOpen = false
+	let isAddUserOpen = false
+	let npub = ''
+
+	let newUserProfile: NDKUserProfile | null = null
+
+	$: userProfileQuery = npub ? createUserByIdQuery(decodePk(npub)) : null
+
+	$: {
+		if ($userProfileQuery?.data) {
+			newUserProfile = $userProfileQuery.data
+		}
+	}
 
 	async function handleSetUserRole(userId: string, role: string) {
 		await $setUserRoleMutation.mutateAsync({ userId, role })
 		toast.success('User role updated successfully!')
 	}
 
-	async function handleAddWord() {
-		if (newWord.trim()) {
-			try {
-				await $addForbiddenWordMutation.mutateAsync(newWord.trim())
-
-				toast.success('Word added to blacklist successfully!')
-				newWord = ''
-				await invalidateAll()
-				isCollapsibleOpen = false
-			} catch (error) {
-				console.error('Failed to add word to blacklist', error)
-				toast.error('Failed to add word to blacklist')
-			}
+	async function handleAddNostrUser(role: string, npub: string) {
+		const pkFromNpub = decodePk(npub)
+		if (!pkFromNpub || !newUserProfile) {
+			toast.error('Invalid npub')
+			return
 		}
+
+		try {
+			await $userFromNostrMutation.mutateAsync({ pubkey: pkFromNpub, profile: newUserProfile })
+			await $setUserRoleMutation.mutateAsync({ userId: pkFromNpub, role })
+		} catch (e) {
+			toast.error('Failed to add user')
+			return
+		}
+		isAddUserOpen = false
+		npub = ''
+		toast.success('User added successfully!')
 	}
 </script>
 
@@ -59,6 +69,27 @@
 			</section>
 		</div>
 	</div>
+	<Collapsible.Root class="border-black border p-2" bind:open={isAddUserOpen}>
+		<Collapsible.Trigger class="flex flex-row w-full items-center justify-between gap-2 mr-4">
+			Add User by npub
+			<span class="i-mdi-plus w-6 h-6" />
+		</Collapsible.Trigger>
+		<Collapsible.Content>
+			<div class="mt-4 space-y-4">
+				{#if npub}
+					{@const pkFromNpub = decodePk(npub)}
+					<MiniUser userId={pkFromNpub} />
+				{:else}
+					<Input bind:value={npub} placeholder="Enter npub" />
+				{/if}
+				<div class="flex justify-end space-x-2">
+					<Button variant="outline" on:click={() => ((npub = ''), (isAddUserOpen = false))}>Cancel</Button>
+					<Button on:click={() => handleAddNostrUser('admin', npub)}>Set as Admin</Button>
+					<Button on:click={() => handleAddNostrUser('editor', npub)}>Set as Editor</Button>
+				</div>
+			</div>
+		</Collapsible.Content>
+	</Collapsible.Root>
 
 	{#if $admins.data}
 		<h3 class="text-lg font-bold">Admins</h3>
