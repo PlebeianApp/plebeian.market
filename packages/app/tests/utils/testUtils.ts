@@ -44,7 +44,7 @@ export async function login(page: Page): Promise<void> {
 	await page.fill('#signInSk', config.testUserPrivateKey)
 	await page.fill('#signInPass', config.testUserPassword)
 	await page.click('#signInSubmit')
-	await page.waitForTimeout(10000)
+	await page.waitForTimeout(1000)
 	await page.keyboard.press('Escape')
 }
 

@@ -98,8 +98,6 @@ export const fetchActiveUserData = async (keyToLocalDb?: string): Promise<NDKUse
 
 	if (await shouldRegister(allowRegister, userExists)) {
 		await loginDb(user)
-		// FIXME: when a user sign up for first time the settings are not shown as a existing user, they have to refresh
-		// await invalidateAll()
 	}
 
 	return user
@@ -135,12 +133,14 @@ export const loginDb = async (user: NDKUser) => {
 		if (!userExists) {
 			const body = userEventSchema.safeParse(userProfile)
 			if (!body.success) throw Error(JSON.stringify(body.error))
-			await get(createUserFromNostrMutation).mutateAsync({
+			const userMutation = await get(createUserFromNostrMutation).mutateAsync({
 				profile: body.data as NDKUserProfile,
 				pubkey: user.pubkey,
 			})
 
-			await queryClient.invalidateQueries({ queryKey: ['users', 'exists'] })
+			if (userMutation) {
+				await queryClient.setQueryData(['users', 'exists', userMutation.id], true)
+			}
 			return
 		}
 
@@ -157,6 +157,5 @@ export const logout = async () => {
 	dmKind04Sub.unref()
 	localStorage.clear()
 	cart.clear()
-	goto('/', { invalidateAll: true })
-	location.reload()
+	location.replace('/')
 }

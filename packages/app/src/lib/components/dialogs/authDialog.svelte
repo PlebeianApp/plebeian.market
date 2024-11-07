@@ -16,13 +16,16 @@
 	import { nsecEncode } from 'nostr-tools/nip19'
 	import { toast } from 'svelte-sonner'
 
+	import Spinner from '../assets/spinner.svelte'
 	import Pattern from '../Pattern.svelte'
 	import SaveKeyDialog from './saveKeyDialog.svelte'
 
 	let checked = false
 	let nsec: ReturnType<typeof nsecEncode> | null = null
+	let loading = false
 
 	async function handleLogin(loginMethod: BaseAccount['type'], formData?: FormData, autoLogin?: boolean) {
+		loading = true
 		const loginResult = await login(loginMethod, formData, autoLogin)
 
 		if (loginResult) {
@@ -34,16 +37,18 @@
 		} else {
 			toast.error('Login error!')
 		}
+		loading = false
 	}
 
 	async function handleSignUp(formData: FormData) {
+		loading = true
 		const key = generateSecretKey()
 		nsec = nsecEncode(key)
 		formData.append('key', nsec)
 		await handleLogin('NSEC', formData, checked)
 		dialogs.clearAll()
-
 		dialogs.show(SaveKeyDialog, { nsec })
+		loading = false
 	}
 
 	function setupDMSubscription() {
@@ -64,10 +69,14 @@
 	<Dialog.Header class="relative w-full bg-black text-center text-white py-8 flex items-center">
 		<Pattern />
 		<div class="flex flex-row gap-2 items-center">
-			<a href="/"><img src="/logo.svg" alt="logo" class="w-16" /></a>
-			<span class="relative z-10 text-left text-lg font-bold text-primary">plebeian<br />market</span>
+			{#if loading}
+				<Spinner size={60} />
+			{:else}
+				<img src="/logo.svg" alt="logo" class="w-16" />
+			{/if}
 		</div>
 	</Dialog.Header>
+
 	<Tabs.Root value="nip07" class="p-4">
 		<Tabs.List class="w-full justify-around bg-transparent">
 			<Tabs.Trigger value="nip07" class={activeTab}>Extension</Tabs.Trigger>
