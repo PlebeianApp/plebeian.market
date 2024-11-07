@@ -85,7 +85,6 @@ export const productMeta = sqliteTable('product_meta', {
 		.default(sql`(unixepoch())`),
 })
 
-// Product meta
 export const stallMeta = sqliteTable('stall_meta', {
 	id: text('id')
 		.primaryKey()

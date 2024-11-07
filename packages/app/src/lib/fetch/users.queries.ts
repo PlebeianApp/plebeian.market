@@ -18,7 +18,7 @@ declare module './client' {
 		[k: `GET /api/v1/users/${string}`]: Operation<string, 'GET', never, never, RichUser | NDKUserProfile, never>
 		[k: `GET /api/v1/users/${string}?exists`]: Operation<string, 'GET', never, never, boolean, never>
 		[k: `GET /api/v1/users/${string}/role`]: Operation<string, 'GET', never, never, UserRoles, never>
-		'GET /api/v1/users': Operation<'/api/v1/users', 'GET', never, never, UserMeta[], UsersFilter>
+		'GET /api/v1/users': Operation<'/api/v1/users', 'GET', never, never, string[], UsersFilter>
 	}
 }
 
@@ -110,7 +110,7 @@ export const createUserExistsQuery = (id: string) =>
 	)
 
 export const createUsersByRoleQuery = (filter: Partial<UsersFilter>) =>
-	createQuery<UserMeta[]>(
+	createQuery<string[]>(
 		{
 			queryKey: ['users', ...Object.values(filter)],
 			queryFn: async () => {

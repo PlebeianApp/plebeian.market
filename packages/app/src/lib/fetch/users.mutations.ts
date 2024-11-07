@@ -7,13 +7,21 @@ import { deleteAccount } from '$lib/stores/session'
 import { get } from 'svelte/store'
 
 import type { User } from '@plebeian/database'
+import type { UserRoles } from '@plebeian/database/constants'
 
 import { createRequest, queryClient } from './client'
 
 declare module './client' {
 	interface Endpoints {
 		[k: `PUT /api/v1/users/${string}`]: Operation<string, 'PUT', never, Partial<RichUser> | NDKUserProfile, User, never>
-		[k: `PUT /api/v1/users/${string}/role`]: Operation<string, 'PUT', never, { role: string; userId: string } | NDKUserProfile, User, never>
+		[k: `PUT /api/v1/users/${string}/role`]: Operation<
+			string,
+			'PUT',
+			never,
+			{ role: UserRoles; userId: string } | NDKUserProfile,
+			User,
+			never
+		>
 		'POST /api/v1/users': Operation<string, 'POST', never, { id: string } & NDKUser['profile'], User, never>
 		[k: `DELETE /api/v1/users/${string}`]: Operation<string, 'DELETE', never, never, boolean, never>
 		[k: `POST /api/v1/users/${string}`]: Operation<string, 'POST', never, NDKUserProfile, User, never>
@@ -48,7 +56,7 @@ export const userDataMutation = createMutation(
 export const setUserRoleMutation = createMutation(
 	{
 		mutationKey: [],
-		mutationFn: async ({ userId, role }: { userId: string; role: string }) => {
+		mutationFn: async ({ userId, role }: { userId: string; role: UserRoles }) => {
 			const user = await createRequest(`PUT /api/v1/users/${userId}/role`, {
 				auth: true,
 				body: { role },
@@ -67,12 +75,8 @@ export const userDeleteAccountMutation = createMutation(
 	{
 		mutationFn: async (userId?: string) => {
 			const $ndkStore = get(ndkStore)
-			const ndkUser = $ndkStore.getUser({
-				hexpubkey: $ndkStore.activeUser?.pubkey,
-			})
-
 			if ($ndkStore.activeUser?.pubkey) {
-				const id = userId ?? ndkUser.pubkey
+				const id = userId ?? $ndkStore.activeUser.pubkey
 				const deleted = await createRequest(`DELETE /api/v1/users/${id}`, {
 					auth: true,
 				})

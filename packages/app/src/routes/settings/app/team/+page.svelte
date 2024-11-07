@@ -12,13 +12,16 @@
 	import { decodePk, nav_back } from '$lib/utils'
 	import { toast } from 'svelte-sonner'
 
-	export let data
+	import type { UserRoles } from '@plebeian/database/constants'
+
+	import type { PageData } from '../$types.js'
+
+	export let data: PageData
 	const linkDetails = data.menuItems.find((item) => item.value === 'app-settings')?.links.find((item) => item.href === $page.url.pathname)
 
 	const admins = createUsersByRoleQuery({ role: 'admin' })
 	const editors = createUsersByRoleQuery({ role: 'editor' })
 	const plebs = createUsersByRoleQuery({ role: 'pleb' })
-
 	let isAddUserOpen = false
 	let npub = ''
 
@@ -32,12 +35,12 @@
 		}
 	}
 
-	async function handleSetUserRole(userId: string, role: string) {
+	async function handleSetUserRole(userId: string, role: UserRoles) {
 		await $setUserRoleMutation.mutateAsync({ userId, role })
 		toast.success('User role updated successfully!')
 	}
 
-	async function handleAddNostrUser(role: string, npub: string) {
+	async function handleAddNostrUser(role: UserRoles, npub: string) {
 		const pkFromNpub = decodePk(npub)
 		if (!pkFromNpub || !newUserProfile) {
 			toast.error('Invalid npub')

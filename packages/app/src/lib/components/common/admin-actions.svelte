@@ -69,18 +69,19 @@
 			</DropdownMenu.Trigger>
 			<DropdownMenu.Content>
 				<DropdownMenu.Group>
-					{#if !isFeatured}
-						<DropdownMenu.Item on:click={handleFeature}>
-							Feature {type}
-						</DropdownMenu.Item>
-					{:else}
-						<DropdownMenu.Item on:click={handleUnfeature}>
-							Unfeature {type}
-						</DropdownMenu.Item>
+					{#if type != 'user'}
+						{#if !isFeatured}
+							<DropdownMenu.Item on:click={handleFeature}>
+								Feature {type}
+							</DropdownMenu.Item>
+						{:else}
+							<DropdownMenu.Item on:click={handleUnfeature}>
+								Unfeature {type}
+							</DropdownMenu.Item>
+						{/if}
+
+						<DropdownMenu.Separator />
 					{/if}
-
-					<DropdownMenu.Separator />
-
 					<DropdownMenu.Item class="text-red-500" on:click={handleDelete}>
 						Delete {type}
 					</DropdownMenu.Item>

@@ -80,15 +80,11 @@ export const updateStallFromNostrEvent = createMutation(
 export const setStallFeaturedMutation = createMutation(
 	{
 		mutationFn: async ({ stallId, featured }: { stallId: string; featured: boolean }) => {
-			const $ndkStore = get(ndkStore)
-			if ($ndkStore.activeUser?.pubkey) {
-				const response = await createRequest(`POST /api/v1/stalls/${stallId}/featured`, {
-					body: { featured },
-					auth: true,
-				})
-				return response
-			}
-			return null
+			const response = await createRequest(`POST /api/v1/stalls/${stallId}/featured`, {
+				body: { featured },
+				auth: true,
+			})
+			return response
 		},
 		onSuccess: ({ id }: { id: string }) => {
 			console.log('setStallFeaturedMutation', id)

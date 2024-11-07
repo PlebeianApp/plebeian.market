@@ -185,14 +185,11 @@ export const createProductsFromNostrMutation = createMutation(
 export const setProductFeaturedMutation = createMutation(
 	{
 		mutationFn: async ({ productId, featured }: { productId: string; featured: boolean }) => {
-			const $ndkStore = get(ndkStore)
-			if ($ndkStore.activeUser?.pubkey) {
-				const response = await createRequest(`POST /api/v1/products/${productId}/featured`, {
-					body: { featured },
-					auth: true,
-				})
-				return response
-			}
+			const response = await createRequest(`POST /api/v1/products/${productId}/featured`, {
+				body: { featured },
+				auth: true,
+			})
+			return response
 		},
 		onSuccess: ({ id }: { id: string }) => {
 			if (id) {

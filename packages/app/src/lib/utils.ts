@@ -24,7 +24,7 @@ import { cubicOut } from 'svelte/easing'
 import { derived, get } from 'svelte/store'
 import { twMerge } from 'tailwind-merge'
 
-import type { UserRoles } from '@plebeian/database'
+import type { UserRoles } from '@plebeian/database/constants'
 
 import type { EventCoordinates } from './interfaces'
 import type { NWCWallet } from './server/wallet.service'
