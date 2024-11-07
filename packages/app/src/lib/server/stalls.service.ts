@@ -71,17 +71,26 @@ const createZone = (country: string | null, region: string | null, shippingResul
 	stallId: shippingResult.stallId,
 })
 
-const getZonesToInsert = (shippingResult: Shipping, regions?: string[], countries?: string[]) => {
-	if (regions?.length && countries?.length) {
-		return regions.flatMap((region: string) => (countries ?? []).map((country: string) => createZone(country, region, shippingResult)))
-	} else if (regions?.length) {
-		return regions.map((region: string) => createZone(null, region, shippingResult))
-	} else if (countries?.length) {
-		const z = (countries ?? []).map((country: string) => createZone(country, null, shippingResult))
-		return z
-	} else {
-		return []
+const getZonesToInsert = (shippingResult: Shipping, regions: string[] | null, countries: string[] | null) => {
+	console.log('Input:', { regions, countries })
+
+	if (regions === null || countries === null) {
+		return [createZone(countries === null ? null : null, regions === null ? null : null, shippingResult)]
 	}
+
+	const hasRegions = regions.length > 0
+	const hasCountries = countries.length > 0
+
+	if (!hasRegions && !hasCountries) return []
+
+	if (hasRegions && !hasCountries) {
+		return regions.map((region) => createZone(null, region, shippingResult))
+	}
+	if (!hasRegions && hasCountries) {
+		return countries.map((country) => createZone(country, null, shippingResult))
+	}
+
+	return regions.flatMap((region) => countries.map((country) => createZone(country, region, shippingResult)))
 }
 
 const resolveStalls = async (stall: Stall): Promise<RichStall> => {
@@ -105,16 +114,6 @@ const resolveStalls = async (stall: Stall): Promise<RichStall> => {
 			.execute()
 	).map((product) => product.count)
 
-	// const [orderCount] = (
-	// 	await db
-	// 		.select({
-	// 			count: sql<number>`cast(count(${orders.id}) as int)`,
-	// 		})
-	// 		.from(orders)
-	// 		.where(eq(orders.stallId, stall.id))
-	// 		.execute()
-	// ).map((order) => order.count)
-
 	const [image] = await db
 		.select()
 		.from(eventTags)
@@ -132,7 +131,6 @@ const resolveStalls = async (stall: Stall): Promise<RichStall> => {
 	}
 
 	const shippingInfo = await getShippingByStallId(stall.id)
-
 	if (!shippingInfo) {
 		error(404, 'not found')
 	}
@@ -149,7 +147,6 @@ const resolveStalls = async (stall: Stall): Promise<RichStall> => {
 		userName: ownerRes.userName,
 		userNip05: ownerRes.userNip05,
 		productCount,
-		// orderCount,
 		paymentMethods,
 		image: image?.tagValue ?? undefined,
 		identifier: parseCoordinatesString(stall.id).tagD!,
@@ -297,7 +294,8 @@ export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall 
 						.returning()
 
 					if (shippingResult) {
-						const zonesToInsert = getZonesToInsert(shippingResult, method.regions, method.countries)
+						const zonesToInsert = getZonesToInsert(shippingResult, method.regions ?? null, method.countries ?? null)
+						console.log('About to insert zones:', zonesToInsert)
 						if (zonesToInsert.length > 0) {
 							await tx.insert(shippingZones).values(zonesToInsert)
 						}
@@ -407,7 +405,7 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
 						.returning()
 
 					if (shippingResult) {
-						const zonesToInsert = getZonesToInsert(shippingResult, method.regions, method.countries)
+						const zonesToInsert = getZonesToInsert(shippingResult, method.regions ?? null, method.countries ?? null)
 						if (zonesToInsert.length > 0) {
 							await tx.insert(shippingZones).values(zonesToInsert)
 						}

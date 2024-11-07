@@ -30,8 +30,8 @@ export const shippingObjectSchema = z.object({
 	id: z.string(),
 	name: z.string().optional(),
 	cost: z.preprocess((value) => (typeof value === 'number' ? value.toString() : value), z.string().optional()),
-	regions: z.array(z.string()).optional(),
-	countries: z.array(z.string()).optional(),
+	regions: z.array(z.string()).optional().nullable(),
+	countries: z.array(z.string()).optional().nullable(),
 })
 
 export const productShippingObjectSchema = z.object({

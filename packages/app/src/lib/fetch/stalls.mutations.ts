@@ -93,9 +93,7 @@ export const deleteStallMutation = createMutation(
 		},
 		onSuccess: (stallId: string | null) => {
 			const $ndkStore = get(ndkStore)
-
 			console.log('deleted stall', stallId)
-
 			queryClient.invalidateQueries({ queryKey: ['stalls', $ndkStore.activeUser?.pubkey] })
 			queryClient.invalidateQueries({ queryKey: ['products', $ndkStore.activeUser?.pubkey] })
 			queryClient.invalidateQueries({ queryKey: ['categories', $ndkStore.activeUser?.pubkey] })

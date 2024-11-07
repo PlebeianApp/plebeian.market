@@ -36,16 +36,19 @@ export const getShippingByStallId = async (stallId: string): Promise<RichShippin
 		},
 	})
 
-	const shippingInfos: RichShippingInfo[] = shippingResult.map((shipping) => ({
-		id: String(shipping.id),
-		name: shipping.name as string,
-		cost: shipping.cost,
-		isDefault: shipping.isDefault,
-		regions: shipping.shippingZones.map((zone) => zone.regionCode).filter((region) => region !== null) as string[],
-		countries: shipping.shippingZones.map((zone) => zone.countryCode).filter((country) => country !== null) as string[],
-	}))
+	return shippingResult.map((shipping) => {
+		const nullRegionZone = shipping.shippingZones.find((zone) => zone.regionCode === null)
+		const nullCountryZone = shipping.shippingZones.find((zone) => zone.countryCode === null)
 
-	return shippingInfos
+		return {
+			id: String(shipping.id),
+			name: shipping.name as string,
+			cost: shipping.cost,
+			isDefault: shipping.isDefault,
+			regions: nullRegionZone ? null : shipping.shippingZones.map((zone) => zone.regionCode).filter((r): r is string => r !== null),
+			countries: nullCountryZone ? null : shipping.shippingZones.map((zone) => zone.countryCode).filter((c): c is string => c !== null),
+		}
+	})
 }
 
 export const getShippingZonesByStallId = async (stallId: string): Promise<{ regions: string[]; countries: string[] }> => {
