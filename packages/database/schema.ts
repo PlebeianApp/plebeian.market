@@ -348,7 +348,7 @@ export const bids = sqliteTable('bids', {
 		.references(() => auctions.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
 	userId: text('user_id')
 		.notNull()
-		.references(() => users.id),
+		.references(() => users.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
 	bidAmount: numeric('bid_amount').notNull(),
 	bidStatus: text('bid_status', { enum: Object.values(BID_STATUS) as NonEmptyArray<BidStatus> })
 		.notNull()
