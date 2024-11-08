@@ -37,11 +37,35 @@ export async function teardownBrowser(browser: Browser): Promise<void> {
 }
 
 export async function login(page: Page): Promise<void> {
-	// aawait page.click('#menuButton')
-	await page.click('text=Log in')
+	await page.keyboard.press('Escape')
+	await retryClick(page, 'text=Log in')
 	await page.click('text=Private Key')
 	await page.waitForSelector('#signInSk')
 	await page.fill('#signInSk', config.testUserPrivateKey)
 	await page.fill('#signInPass', config.testUserPassword)
 	await page.click('#signInSubmit')
+	await page.waitForTimeout(1000)
+	await page.keyboard.press('Escape')
+}
+
+export async function retryClick(page: Page, selector: string, maxAttempts = 3) {
+	for (let i = 0; i < maxAttempts; i++) {
+		try {
+			await page.waitForSelector(selector, { state: 'visible', timeout: 2000 })
+			await page.click(selector)
+			return
+		} catch (error) {
+			if (i === maxAttempts - 1) throw error
+			await page.waitForTimeout(1000)
+		}
+	}
+}
+
+export async function waitForSelectorWithLogging(page: Page, selector: string, description: string) {
+	try {
+		await page.waitForSelector(selector, { state: 'visible', timeout: 30000 })
+	} catch (error) {
+		console.error(`Failed to find ${description}:`, error)
+		throw error
+	}
 }

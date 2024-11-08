@@ -12,14 +12,16 @@
 	import { QueryClientProvider } from '@tanstack/svelte-query'
 	import { afterNavigate, goto } from '$app/navigation'
 	import RelayWidget from '$lib/components/assets/relayWidget.svelte'
+	import BetaDialog from '$lib/components/dialogs/betaDialog.svelte'
 	import Drawer from '$lib/components/drawer.svelte'
 	import SellStuffAdvert from '$lib/components/sell-stuff-advert.svelte'
+	import DialogManager from '$lib/components/ui/dialogManager.svelte'
 	import { queryClient } from '$lib/fetch/client'
 	import { processQueuedInsertions } from '$lib/nostrSubs/data-aggregator'
-	import { dmKind04Sub } from '$lib/nostrSubs/subs'
+	import { dialogs } from '$lib/stores/dialog'
 	import ndkStore from '$lib/stores/ndk'
 	import { initNdkNWCs } from '$lib/stores/nwc'
-	import { cleanupCachedEvents } from '$lib/stores/session'
+	import { cleanupCachedEvents, getAllAccounts } from '$lib/stores/session'
 
 	import type { LayoutData } from './$types'
 
@@ -65,7 +67,7 @@
 	})
 
 	// Tooltips on elements with the tooltip attribute
-	onMount(() => {
+	onMount(async () => {
 		const tooltip = document.querySelector('#tooltip') as HTMLDivElement
 		const tooltipContent = document.querySelector('#tooltip-content') as HTMLDivElement
 		const arrowElement = document.querySelector('#arrow') as HTMLDivElement
@@ -131,6 +133,10 @@
 				hideTooltip()
 			}
 		})
+		const localUsers = await getAllAccounts()
+		if (!localUsers?.length) {
+			dialogs.show(BetaDialog)
+		}
 	})
 
 	$: if (isLoggedIn) {
@@ -196,6 +202,7 @@
 			<section class="fixed bottom-0">
 				<RelayWidget />
 			</section>
+			<DialogManager />
 		</div>
 	{/if}
 </QueryClientProvider>

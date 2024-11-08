@@ -14,12 +14,14 @@ import { get, writable } from 'svelte/store'
 import type { UserRoles } from '@plebeian/database'
 
 import { userEventSchema } from '../schema/nostr-events'
+import RegisterDialog from './components/dialogs/registerDialog.svelte'
 import { createRequest, queryClient } from './fetch/client'
 import { createUserFromNostrMutation } from './fetch/users.mutations'
 import { createUserExistsQuery } from './fetch/users.queries'
 import { dmKind04Sub } from './nostrSubs/subs'
 import { manageUserRelays } from './nostrSubs/userRelayManager'
 import { cart } from './stores/cart'
+import { dialogs } from './stores/dialog'
 import { getAppSettings, setupNDKSigner, unNullify } from './utils/login.utils'
 
 type LoginResult = Promise<boolean>
@@ -97,8 +99,7 @@ export const fetchActiveUserData = async (keyToLocalDb?: string): Promise<NDKUse
 	if (await shouldRegister(allowRegister, userExists)) {
 		await loginDb(user)
 	}
-	// FIXME: when a user sign up for first time the settings are not shown as a existing user, they have to refresh
-	invalidateAll()
+
 	return user
 }
 
@@ -132,13 +133,14 @@ export const loginDb = async (user: NDKUser) => {
 		if (!userExists) {
 			const body = userEventSchema.safeParse(userProfile)
 			if (!body.success) throw Error(JSON.stringify(body.error))
-
-			await get(createUserFromNostrMutation).mutateAsync({
+			const userMutation = await get(createUserFromNostrMutation).mutateAsync({
 				profile: body.data as NDKUserProfile,
 				pubkey: user.pubkey,
 			})
 
-			queryClient.invalidateQueries({ queryKey: ['users', 'exists'] })
+			if (userMutation) {
+				await queryClient.setQueryData(['users', 'exists', userMutation.id], true)
+			}
 			return
 		}
 
@@ -155,6 +157,5 @@ export const logout = async () => {
 	dmKind04Sub.unref()
 	localStorage.clear()
 	cart.clear()
-	goto('/', { invalidateAll: true })
-	location.reload()
+	location.replace('/')
 }
