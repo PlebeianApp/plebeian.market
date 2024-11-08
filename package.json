@@ -14,6 +14,7 @@
     "format:fix": "pnpm --filter \"./packages/**\" --parallel --stream -r run format:fix",
     "db:setup": "pnpm --filter './packages/database' run db:setup",
     "db:init": "pnpm --filter './packages/database' run db:init",
+    "db:initMock": "pnpm --filter './packages/database' run db:initMock",
     "test:fresh": "pnpm db:setup && pnpm --parallel --stream -r run test",
     "test": "pnpm --parallel --stream -r run test",
     "studio": "cd packages/database && pnpm drizzle-kit studio"

@@ -392,7 +392,6 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 			if (!eventCoordinates?.coordinates) {
 				throw new Error('Invalid event coordinates')
 			}
-
 			const productEventContent = JSON.parse(productEvent.content)
 
 			const parsedProduct = createProductEventSchema(cachedPattern).safeParse({
@@ -428,15 +427,14 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 					})
 					.where(eq(products.id, eventCoordinates?.coordinates))
 					.returning()
-
-				const existingImages = await tx.select().from(productImages).where(eq(productImages.productId, productId))
+				const existingImages = await tx.select().from(productImages).where(eq(productImages.productId, eventCoordinates.coordinates))
 				const newImages = parsedProductData.images?.filter((img) => !existingImages.find((eImg) => eImg.imageUrl === img)) ?? []
 				const removedImages = existingImages.filter((img) => img.imageUrl && !parsedProductData.images?.includes(img.imageUrl))
 
 				if (removedImages.length > 0) {
 					await tx.delete(productImages).where(
 						and(
-							eq(productImages.productId, productId),
+							eq(productImages.productId, eventCoordinates.coordinates),
 							inArray(
 								productImages.imageUrl,
 								removedImages.map((img) => img.imageUrl).filter((url): url is string => url !== null),
@@ -450,7 +448,7 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 					await tx.insert(productImages).values(
 						newImages.map((img, index) => ({
 							createdAt: new Date(),
-							productId,
+							productId: eventCoordinates.coordinates,
 							auctionId: null,
 							imageUrl: img,
 							imageType: PRODUCT_IMAGES_TYPE.GALLERY,
@@ -465,11 +463,11 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 						await tx
 							.update(productImages)
 							.set({ imageOrder: i })
-							.where(and(eq(productImages.productId, productId), eq(productImages.imageUrl, img)))
+							.where(and(eq(productImages.productId, eventCoordinates.coordinates), eq(productImages.imageUrl, img)))
 					}
 				}
 
-				await tx.delete(productShipping).where(eq(productShipping.productId, productId))
+				await tx.delete(productShipping).where(eq(productShipping.productId, eventCoordinates.coordinates))
 
 				if (parsedProductData.shipping && parsedProductData.shipping.length > 0) {
 					try {
@@ -480,7 +478,7 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 									shipping.id.split(':').length > 1
 										? shipping.id
 										: createShippingCoordinates(shipping.id, String(stallId.coordinates?.split(':').pop())),
-								productId: productId,
+								productId: eventCoordinates.coordinates,
 							})),
 						)
 					} catch (e) {
@@ -489,7 +487,7 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 							parsedProductData.shipping.map((shipping) => ({
 								cost: shipping.cost!,
 								shippingId: shipping.id,
-								productId: productId,
+								productId: eventCoordinates.coordinates,
 							})),
 						)
 					}

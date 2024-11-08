@@ -15,10 +15,7 @@
 	import type { PageData } from './$types'
 
 	export let data: PageData
-	const {
-		activeUser,
-		appSettings: { allowRegister },
-	} = data
+	const { activeUser } = data
 
 	let stallsMode: 'list' | 'create' | 'edit' = 'list'
 	let nostrStalls: Partial<RichStall>[] = []
@@ -27,13 +24,11 @@
 		userId: $ndkStore.activeUser?.pubkey,
 		pageSize: 999,
 	})
-
 	$: stallsMixture = mergeWithExisting($stallsQuery?.data?.stalls ?? [], nostrStalls, 'identifier')
 
 	$: stallsMode === 'list' ? $stallsQuery?.refetch() : null
 
 	let currentStall: Partial<RichStall> | null = null
-
 	const linkDetails = data.menuItems
 		.find((item) => item.value === 'account-settings')
 		?.links.find((item) => item.href === $page.url.pathname)

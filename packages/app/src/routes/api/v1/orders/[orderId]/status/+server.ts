@@ -9,7 +9,6 @@ export const PUT = async ({ params, request }) => {
 	try {
 		const userId = await authorizeUserless(request, 'PUT')
 		const isAuthorized = await isAuthorizedToUpdateOrderStatus(orderId, userId, status)
-
 		if (!isAuthorized) {
 			throw error(403, 'Forbidden')
 		}

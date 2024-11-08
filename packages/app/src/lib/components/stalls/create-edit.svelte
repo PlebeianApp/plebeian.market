@@ -32,6 +32,7 @@
 	import { validateForm } from '$lib/utils/zod.utils'
 	import geohash from 'ngeohash'
 	import { createEventDispatcher, onMount } from 'svelte'
+	import { toast } from 'svelte-sonner'
 	import { get } from 'svelte/store'
 
 	import { COUNTRIES_ISO, CURRENCIES } from '@plebeian/database/constants'
@@ -150,7 +151,7 @@
 		})
 
 		try {
-			const [, userExists] = await Promise.all([newEvent.sign(), checkIfUserExists($ndkStore.activeUser.pubkey)])
+			const [, userExists] = await Promise.all([newEvent.publish(), checkIfUserExists($ndkStore.activeUser.pubkey)])
 			if (await shouldRegister(allowRegister, userExists)) {
 				const nostrEvent = await newEvent.toNostrEvent()
 				await (stall?.id
@@ -197,9 +198,10 @@
 		}
 
 		validationErrors = validateForm(formData, get(forbiddenPatternStore).createStallEventContentSchema)
-
 		if (Object.keys(validationErrors).length === 0) {
 			await create(event)
+		} else {
+			Object.values(validationErrors).forEach((error) => toast.error(`${error}`))
 		}
 	}
 

@@ -14,9 +14,9 @@
 		"db:generate": "drizzle-kit generate",
 		"db:migrate": "tsx ./migrate.ts",
 		"db:seed": "tsx ./seed.ts && tsx ./seed-wallet-user.ts",
-		"db:init:seed": "tsx ./init-seed.ts",
 		"db:setup": "pnpm run db:generate && pnpm db:migrate && pnpm db:seed",
-		"db:init": "pnpm run db:generate && pnpm db:migrate && pnpm db:init:seed"
+		"db:init": "pnpm run db:generate && pnpm db:migrate && tsx ./init-seed.ts",
+		"db:initMock": "pnpm run db:generate && pnpm db:migrate && tsx ./init-seed-mock.ts"
 	},
 	"exports": {
 		".": "./index.ts",
