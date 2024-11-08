@@ -35,13 +35,11 @@ export const load = async () => {
 			],
 		},
 		{
-			title: '✨ Circular Economy Community Builder',
-			description: 'Configure community contributions preferences',
-			value: 'cecb-settings',
-			root: '/settings/cecb',
-			links: [
-				{ title: '💪 Contribute', href: '/settings/cecb', description: 'Configure community contributions preferences', public: true },
-			],
+			title: '✨ Value 4 value',
+			description: 'Configure value 4 value preferences',
+			value: 'v4v-settings',
+			root: '/settings/v4v',
+			links: [{ title: '💪 Contribute', href: '/settings/v4v', description: 'Configure value 4 value preferences', public: true }],
 		},
 	]
 	return {
