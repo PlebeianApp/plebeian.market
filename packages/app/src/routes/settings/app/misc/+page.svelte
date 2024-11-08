@@ -197,39 +197,6 @@
 							type="email"
 						/>
 						<Separator class=" my-2" />
-						<h3>Crew</h3>
-						{#each adminsList as admin}
-							{#if admin != npubEncode(appSettings.instancePk)}
-								<div class=" grid grid-cols-[1fr_auto] items-center">
-									<span class="truncate">{admin}</span>
-									<Button
-										type="button"
-										size="icon"
-										variant="outline"
-										class=" bg-red-500"
-										on:click={() => (adminsList = adminsList.filter((value) => value !== admin))}
-									>
-										<span class="i-mdi-trash-can"></span>
-									</Button>
-								</div>
-							{/if}
-						{/each}
-						<textarea name="adminsList" value={adminsList} hidden />
-						<Input type="text" bind:value={inputValue} />
-						<Button
-							type="button"
-							on:click={() => {
-								inputValue = inputValue.trim()
-								if (inputValue) {
-									adminsList = [...adminsList, inputValue]
-									inputValue = ''
-								}
-							}}
-						>
-							Add Admin
-						</Button>
-
-						<Separator class=" my-2" />
 						<h3>Miscellanea</h3>
 						<div class="flex flex-row items-center justify-center gap-4">
 							<div class="flex-grow">

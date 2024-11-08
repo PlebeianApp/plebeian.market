@@ -46,7 +46,7 @@
 			toast.error('Invalid npub')
 			return
 		}
-
+		// FIXME: Add a new user as admin or editor is failing, returning status 500
 		try {
 			await $userFromNostrMutation.mutateAsync({ pubkey: pkFromNpub, profile: newUserProfile })
 			await $setUserRoleMutation.mutateAsync({ userId: pkFromNpub, role })
