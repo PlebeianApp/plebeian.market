@@ -4,6 +4,7 @@
 	import type { RichStall } from '$lib/server/stalls.service'
 	import { goto } from '$app/navigation'
 	import { page } from '$app/stores'
+	import AdminActions from '$lib/components/common/admin-actions.svelte'
 	import InteractiveZapButton from '$lib/components/common/interactive-zap-button.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
 	import StallItem from '$lib/components/stalls/stall-item.svelte'
@@ -92,7 +93,10 @@
 						<CAvatar pubkey={id} profile={$userProfileQuery.data} />
 					</div>
 					<div class="flex flex-col">
-						<h1 class="text-3xl">{name ?? `Unnamed user`}</h1>
+						<div class="flex flex-row gap-2">
+							<h1 class="text-3xl">{name ?? `Unnamed user`}</h1>
+							<AdminActions type="user" {id} />
+						</div>
 						{#if about}
 							{@const truncatedAbout = truncateText(about)}
 							{#if truncatedAbout !== about}

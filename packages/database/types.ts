@@ -58,6 +58,9 @@ export type NewMetaType = InferInsertModel<typeof dbSchema.metaTypes>
 export type ProductMeta = InferSelectModel<typeof dbSchema.productMeta>
 export type NewProductMeta = InferInsertModel<typeof dbSchema.productMeta>
 
+export type StallMeta = InferSelectModel<typeof dbSchema.stallMeta>
+export type NewStallMeta = InferInsertModel<typeof dbSchema.stallMeta>
+
 export type AppSettings = InferSelectModel<typeof dbSchema.appSettings>
 export type NewAppSettings = InferInsertModel<typeof dbSchema.appSettings>
 

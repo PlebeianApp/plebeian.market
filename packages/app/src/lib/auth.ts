@@ -2,7 +2,12 @@ import { error } from '@sveltejs/kit'
 import { decodeJwtToEvent } from '$lib/server/nostrAuth.service'
 import { findCustomTags } from '$lib/utils'
 
-import { getUserById, isUserAdmin, userExists } from './server/users.service'
+import { getOrderById } from './server/orders.service'
+import { getProductById } from './server/products.service'
+import { getStallById } from './server/stalls.service'
+import { getUserById, getUserRole, isUserAdmin, userExists } from './server/users.service'
+
+type ResourceType = 'user' | 'stall' | 'product' | 'order'
 
 const authorizeUserless = async (request: Request, method: string): Promise<string> => {
 	const authorizationHeader = request.headers.get('Authorization')
@@ -58,4 +63,74 @@ const authorizeAdmin = async (request: Request, method: string): Promise<boolean
 	throw error(401, 'Invalid Token')
 }
 
-export { authorize, authorizeAdmin, authorizeUserless }
+const authorizeEditorOrAdmin = async (request: Request, method: string): Promise<boolean> => {
+	const authorizationHeader = request.headers.get('Authorization')
+
+	if (!authorizationHeader) {
+		throw error(401, 'Authorization header missing')
+	}
+
+	const token = decodeJwtToEvent(authorizationHeader)
+
+	if (token.pubkey && findCustomTags(token.tags, 'method')[0] === method) {
+		const userRole = await getUserRole(token.pubkey)
+
+		if (userRole === 'admin' || userRole === 'editor') {
+			return true
+		}
+		throw error(403, 'User is not authorized')
+	}
+
+	throw error(401, 'Invalid Token')
+}
+
+const resourceOwnerMap = {
+	user: async (resourceId: string) => resourceId,
+	stall: async (resourceId: string) => (await getStallById(resourceId)).userId,
+	product: async (resourceId: string) => (await getProductById(resourceId)).userId,
+	order: async (resourceId: string) => (await getOrderById(resourceId)).buyerUserId,
+} as const
+
+const getResourceOwner = async (resourceType: ResourceType, resourceId: string): Promise<string> => {
+	const getOwner = resourceOwnerMap[resourceType]
+	if (!getOwner) {
+		throw error(400, 'Invalid resource type')
+	}
+	return getOwner(resourceId)
+}
+
+const authorizeContextual = async (request: Request, resourceType: ResourceType, resourceId: string, method: string): Promise<boolean> => {
+	const authorizationHeader = request.headers.get('Authorization')
+
+	if (!authorizationHeader) {
+		throw error(401, 'Authorization header missing')
+	}
+
+	const token = decodeJwtToEvent(authorizationHeader)
+	const requestMethod = findCustomTags(token.tags, 'method')[0]
+
+	if (!token.pubkey || requestMethod !== method) {
+		throw error(401, 'Invalid Token')
+	}
+
+	try {
+		const userRole = await getUserRole(token.pubkey)
+		if (userRole === 'admin' || userRole === 'editor') {
+			return true
+		}
+
+		const resourceOwner = await getResourceOwner(resourceType, resourceId)
+		if (token.pubkey === resourceOwner) {
+			return true
+		}
+
+		throw error(403, 'User is not authorized')
+	} catch (e) {
+		if (e.status) {
+			throw e
+		}
+		throw error(500, 'Internal Server Error')
+	}
+}
+
+export { authorize, authorizeAdmin, authorizeContextual, authorizeEditorOrAdmin, authorizeUserless }

@@ -7,7 +7,7 @@ import { invalidateAll } from '$app/navigation'
 import { KindProducts, KindsRelays, KindStalls, standardDisplayDateFormat } from '$lib/constants'
 import { createProductsFromNostrMutation } from '$lib/fetch/products.mutations'
 import { createStallFromNostrEvent } from '$lib/fetch/stalls.mutations'
-import { userFromNostr } from '$lib/fetch/users.mutations'
+import { createUserFromNostrMutation } from '$lib/fetch/users.mutations'
 import ndkStore from '$lib/stores/ndk'
 import { addCachedEvent, getCachedEvent, updateCachedEvent } from '$lib/stores/session'
 import { getEventCoordinates } from '$lib/utils'
@@ -151,9 +151,9 @@ export async function fetchProductData(
 }
 
 export async function handleUserNostrData(userData: NDKUserProfile, userId: string): Promise<boolean> {
-	const $userFromNostr = get(userFromNostr)
+	const $createUserFromNostrMutation = get(createUserFromNostrMutation)
 	userData.id = userId
-	const userMutation = await $userFromNostr.mutateAsync({ profile: userData, pubkey: userId })
+	const userMutation = await $createUserFromNostrMutation.mutateAsync({ profile: userData, pubkey: userId })
 	return userMutation ? true : false
 }
 

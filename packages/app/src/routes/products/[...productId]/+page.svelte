@@ -2,10 +2,12 @@
 	import type { CarouselAPI } from '$lib/components/ui/carousel/context'
 	import type { StallCoordinatesType } from '$lib/stores/drawer-ui'
 	import Spinner from '$lib/components/assets/spinner.svelte'
+	import AdminActions from '$lib/components/common/admin-actions.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
 	import Badge from '$lib/components/ui/badge/badge.svelte'
 	import Button from '$lib/components/ui/button/button.svelte'
 	import * as Carousel from '$lib/components/ui/carousel'
+	import * as Collapsible from '$lib/components/ui/collapsible'
 	import Input from '$lib/components/ui/input/input.svelte'
 	import * as Tabs from '$lib/components/ui/tabs/index.js'
 	import { KindStalls } from '$lib/constants'
@@ -157,6 +159,7 @@
 					{:else}
 						<Button disabled>Out of stock</Button>
 					{/if}
+					<AdminActions type="product" id={productRes.id} />
 				</div>
 				<span class="my-8 font-bold"
 					>Sold by <a
@@ -177,11 +180,28 @@
 				{#if $productsQuery.data.categories}
 					<article>
 						<h4 class="font-bold">Categories</h4>
-						<div class=" inline-flex gap-2">
-							<!-- TODO: Improve categories visualization, right now overflows if there are too many, also they should navigate to category page -->
-							{#each $productsQuery.data.categories as category}
-								<Badge variant="secondary" class=" w-fit">{category}</Badge>
+						<div class="inline-flex flex-wrap gap-2">
+							{#each $productsQuery.data.categories.slice(0, 4) as category}
+								<Badge variant="secondary" class="w-fit">
+									<a href={`/category/${encodeURIComponent(category)}`}>{category}</a>
+								</Badge>
 							{/each}
+							{#if $productsQuery.data.categories.length > 4}
+								<Collapsible.Root>
+									<Collapsible.Trigger class="text-sm text-muted-foreground hover:underline">
+										+{$productsQuery.data.categories.length - 4} more
+									</Collapsible.Trigger>
+									<Collapsible.Content>
+										<div class="mt-2 inline-flex flex-wrap gap-2">
+											{#each $productsQuery.data.categories.slice(4) as category}
+												<Badge variant="secondary" class="w-fit">
+													<a href={`/category/${encodeURIComponent(category)}`}>{category}</a>
+												</Badge>
+											{/each}
+										</div>
+									</Collapsible.Content>
+								</Collapsible.Root>
+							{/if}
 						</div>
 					</article>
 				{/if}

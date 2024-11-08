@@ -28,6 +28,7 @@ import {
 	products,
 	productShipping,
 	sql,
+	stallMeta,
 } from '@plebeian/database'
 
 import { createProductEventSchema } from '../../schema/nostr-events'
@@ -43,6 +44,7 @@ export type DisplayProduct = Pick<Product, 'id' | 'description' | 'currency' | '
 	images: ProductImage[]
 	shipping: ProductShipping[]
 	categories?: string[]
+	isFeatured: boolean
 }
 
 export const toDisplayProduct = async (product: Product): Promise<DisplayProduct> => {
@@ -56,6 +58,12 @@ export const toDisplayProduct = async (product: Product): Promise<DisplayProduct
 	const categories = await db.query.eventTags.findMany({
 		where: and(eq(eventTags.eventId, product.id), eq(eventTags.tagName, 't')),
 	})
+
+	const [featuredMeta] = await db
+		.select()
+		.from(productMeta)
+		.where(and(eq(productMeta.productId, product.id), eq(productMeta.metaName, 'is_global_featured')))
+		.execute()
 
 	return {
 		id: product.id,
@@ -72,6 +80,7 @@ export const toDisplayProduct = async (product: Product): Promise<DisplayProduct
 		stallId: parseCoordinatesString(product.stallId).tagD!,
 		shipping,
 		categories: categories.map((c) => c.tagValue),
+		isFeatured: featuredMeta?.valueBoolean ?? false,
 	}
 }
 
@@ -164,6 +173,49 @@ export const getProductById = async (productId: string): Promise<DisplayProduct>
 	}
 
 	return await toDisplayProduct(productRes)
+}
+
+export const setProductMetaFeatured = async (productId: string, featured: boolean) => {
+	const existingMeta = await db
+		.select()
+		.from(productMeta)
+		.where(and(eq(productMeta.productId, productId), eq(productMeta.metaName, 'is_global_featured')))
+		.execute()
+
+	let resultProductId
+
+	if (existingMeta.length > 0) {
+		const [updatedMeta] = await db
+			.update(productMeta)
+			.set({ valueBoolean: featured })
+			.where(and(eq(productMeta.productId, productId), eq(productMeta.metaName, 'is_global_featured')))
+			.returning()
+		if (!updatedMeta.productId) {
+			throw new Error('Failed to update product meta')
+		}
+		resultProductId = updatedMeta.productId
+	} else {
+		const [updatedMeta] = await db
+			.insert(productMeta)
+			.values({
+				productId,
+				metaName: 'is_global_featured',
+				valueBoolean: featured,
+				createdAt: new Date(),
+				updatedAt: new Date(),
+			})
+			.returning()
+		if (!updatedMeta.productId) {
+			throw new Error('Failed to insert product meta')
+		}
+		resultProductId = updatedMeta.productId
+	}
+
+	if (!resultProductId) {
+		throw new Error('Failed to update product meta')
+	}
+
+	return resultProductId
 }
 
 export const createProducts = async (productEvents: NostrEvent[]) => {
@@ -476,17 +528,13 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 	}
 }
 
-export const deleteProduct = async (productId: string, userId: string): Promise<string> => {
+export const deleteProduct = async (productId: string): Promise<string> => {
 	const productResult = await db.query.products.findFirst({
-		where: and(eq(products.id, productId), eq(products.userId, userId)),
+		where: eq(products.id, productId),
 	})
 
 	if (!productResult) {
 		error(404, 'Not found')
-	}
-
-	if (productResult.userId !== userId) {
-		error(401, 'Unauthorized')
 	}
 
 	try {

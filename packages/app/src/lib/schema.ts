@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
-import type { InvoiceStatus, InvoiceType, OrderStatus } from '@plebeian/database/constants'
-import { INVOICE_STATUS, INVOICE_TYPE, ORDER_STATUS } from '@plebeian/database/constants'
+import type { InvoiceStatus, InvoiceType, OrderStatus, UserRoles } from '@plebeian/database/constants'
+import { INVOICE_STATUS, INVOICE_TYPE, ORDER_STATUS, USER_ROLES } from '@plebeian/database/constants'
 
 import { validUrls } from './constants'
 
@@ -23,7 +23,7 @@ export type AuctionsFilter = z.infer<typeof auctionsFilterSchema>
 export const usersFilterSchema = generalFilterSchema.extend({
 	orderBy: z.enum(['createdAt']).default('createdAt'),
 	userId: z.string().optional(),
-	role: z.string().optional(),
+	role: z.enum(Object.values(USER_ROLES) as NonEmptyArray<UserRoles>).optional(),
 })
 
 export type UsersFilter = z.infer<typeof usersFilterSchema>

@@ -16,6 +16,7 @@ declare module './client' {
 		'POST /api/v1/products': Operation<string, 'POST', never, NostrEvent[], DisplayProduct[], never>
 		[k: `PUT /api/v1/products/${string}`]: Operation<string, 'PUT', never, NostrEvent, DisplayProduct, never>
 		[k: `DELETE /api/v1/products/${string}`]: Operation<string, 'DELETE', never, string, string, never>
+		[k: `POST /api/v1/products/${string}/featured`]: Operation<string, 'POST', never, { featured: boolean }, { id: string }, never>
 	}
 }
 export type Category = { key: string; name: string; checked: boolean }
@@ -89,6 +90,7 @@ export const editProductMutation = createMutation(
 			if (_shouldRegister) {
 				const response = await createRequest(`PUT /api/v1/products/${product.id}`, {
 					body: nostrEvent,
+					auth: true,
 				})
 				return response
 			}
@@ -175,6 +177,24 @@ export const createProductsFromNostrMutation = createMutation(
 				queryClient.invalidateQueries({ queryKey: ['shipping', data[0].stallId] })
 				queryClient.invalidateQueries({ queryKey: ['categories'] })
 				queryClient.invalidateQueries({ queryKey: ['stalls'] })
+			}
+		},
+	},
+	queryClient,
+)
+
+export const setProductFeaturedMutation = createMutation(
+	{
+		mutationFn: async ({ productId, featured }: { productId: string; featured: boolean }) => {
+			const response = await createRequest(`POST /api/v1/products/${productId}/featured`, {
+				body: { featured },
+				auth: true,
+			})
+			return response
+		},
+		onSuccess: ({ id }: { id: string }) => {
+			if (id) {
+				queryClient.invalidateQueries({ queryKey: ['products', id] })
 			}
 		},
 	},

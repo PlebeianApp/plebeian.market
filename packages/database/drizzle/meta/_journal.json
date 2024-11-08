@@ -1,12 +1,12 @@
 {
-  "version": "7",
+  "version": "0",
   "dialect": "sqlite",
   "entries": [
     {
       "idx": 0,
       "version": "6",
-      "when": 1728635074417,
-      "tag": "0000_late_mesmero",
+      "when": 1730986921858,
+      "tag": "0000_silky_jetstream",
       "breakpoints": true
     }
   ]

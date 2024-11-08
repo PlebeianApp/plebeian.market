@@ -25,6 +25,7 @@ import {
 	shipping,
 	shippingZones,
 	sql,
+	stallMeta,
 	stalls,
 	users,
 } from '@plebeian/database'
@@ -50,6 +51,7 @@ export type RichStall = {
 	identifier: string
 	shipping: Partial<RichShippingInfo>[]
 	geohash?: string
+	isFeatured: boolean
 }
 
 export type DisplayStall = {
@@ -127,6 +129,12 @@ const resolveStalls = async (stall: Stall): Promise<RichStall> => {
 		.where(and(eq(eventTags.eventId, stall.id), eq(eventTags.tagName, 'g')))
 		.execute()
 
+	const [featuredMeta] = await db
+		.select()
+		.from(stallMeta)
+		.where(and(eq(stallMeta.stallId, stall.id), eq(stallMeta.metaName, 'is_global_featured')))
+		.execute()
+
 	if (!ownerRes.userId) {
 		error(404, 'Not found')
 	}
@@ -155,6 +163,7 @@ const resolveStalls = async (stall: Stall): Promise<RichStall> => {
 		identifier: parseCoordinatesString(stall.id).tagD!,
 		shipping: shippingInfo,
 		geohash: geo?.tagValue ?? undefined,
+		isFeatured: featuredMeta?.valueBoolean ?? false,
 	}
 }
 
@@ -237,6 +246,90 @@ export const getStallsByCatName = async (catName: string): Promise<RichStall[]> 
 	}
 
 	throw new Error('404: Not found')
+}
+
+// export const setProductMetaFeatured = async (productId: string, featured: boolean) => {
+// 	const existingMeta = await db
+// 		.select()
+// 		.from(productMeta)
+// 		.where(and(eq(productMeta.productId, productId), eq(productMeta.metaName, 'is_global_featured')))
+// 		.execute()
+
+// 	let resultProductId
+
+// 	if (existingMeta.length > 0) {
+// 		const [updatedMeta] = await db
+// 			.update(productMeta)
+// 			.set({ valueBoolean: featured })
+// 			.where(and(eq(productMeta.productId, productId), eq(productMeta.metaName, 'is_global_featured')))
+// 			.returning()
+// 		if (!updatedMeta.productId) {
+// 			throw new Error('Failed to update product meta')
+// 		}
+// 		resultProductId = updatedMeta.productId
+// 	} else {
+// 		const [updatedMeta] = await db
+// 			.insert(productMeta)
+// 			.values({
+// 				productId,
+// 				metaName: 'is_global_featured',
+// 				valueBoolean: featured,
+// 				createdAt: new Date(),
+// 				updatedAt: new Date(),
+// 			})
+// 			.returning()
+// 		if (!updatedMeta.productId) {
+// 			throw new Error('Failed to insert product meta')
+// 		}
+// 		resultProductId = updatedMeta.productId
+// 	}
+
+// 	if (!resultProductId) {
+// 		throw new Error('Failed to update product meta')
+// 	}
+// }
+
+export const setStallMetaFeatured = async (stallId: string, featured: boolean) => {
+	const existingMeta = await db
+		.select()
+		.from(stallMeta)
+		.where(and(eq(stallMeta.stallId, stallId), eq(stallMeta.metaName, 'is_global_featured')))
+		.execute()
+
+	let resultStallId
+
+	if (existingMeta.length > 0) {
+		const [updatedMeta] = await db
+			.update(stallMeta)
+			.set({ valueBoolean: featured })
+			.where(and(eq(stallMeta.stallId, stallId), eq(stallMeta.metaName, 'is_global_featured')))
+			.returning()
+		if (!updatedMeta.stallId) {
+			throw new Error('Failed to update stall meta')
+		}
+		resultStallId = updatedMeta.stallId
+	} else {
+		const [updatedMeta] = await db
+			.insert(stallMeta)
+			.values({
+				stallId: stallId,
+				metaName: 'is_global_featured',
+				valueBoolean: featured,
+				createdAt: new Date(),
+				updatedAt: new Date(),
+			})
+			.returning()
+		if (!updatedMeta.stallId) {
+			throw new Error('Failed to insert stall meta')
+		}
+		resultStallId = updatedMeta.stallId
+	}
+
+	if (!resultStallId) {
+		throw new Error('Failed to update stall meta')
+	}
+
+	return resultStallId
 }
 
 export const getStallsByUserId = async (userId: string): Promise<RichStall[]> => {
@@ -438,7 +531,7 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
 	}
 }
 
-export const deleteStall = async (stallId: string, userId: string): Promise<string> => {
+export const deleteStall = async (stallId: string): Promise<string> => {
 	const stallResult = await db.query.stalls.findFirst({
 		where: eq(stalls.id, stallId),
 	})
@@ -447,9 +540,6 @@ export const deleteStall = async (stallId: string, userId: string): Promise<stri
 		error(404, 'Not found')
 	}
 
-	if (stallResult.userId !== userId) {
-		error(401, 'Unauthorized')
-	}
 	const deleteSuccess = await db.delete(stalls).where(eq(stalls.id, stallId)).returning()
 
 	if (deleteSuccess) {
