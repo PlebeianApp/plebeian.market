@@ -25,7 +25,7 @@ const createToken = async (url: string, method: HttpMethod): Promise<`Nostr ${st
 	authEvent.kind = KindHttpAuth
 	authEvent.tags = [uTag, methodTag]
 	await authEvent.toNostrEvent()
-	await authEvent.publish()
+	await authEvent.sign()
 	const strEvent = JSON.stringify(authEvent.rawEvent())
 	const strEventB64 = btoa(strEvent)
 	return `Nostr ${strEventB64}`
