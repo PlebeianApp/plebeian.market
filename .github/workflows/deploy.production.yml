@@ -38,7 +38,7 @@ jobs:
         env:
           PORT: 4173
         run: |
-          rsync --rsh="/usr/bin/sshpass -p \"${{ secrets.REMOTE_PASSWORD }}\" ssh -o StrictHostKeyChecking=no -l deployer" -azq --delete . ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:plebeian.market.$PORT
+          rsync --rsh="/usr/bin/sshpass -p \"${{ secrets.REMOTE_PASSWORD }}\" ssh -o StrictHostKeyChecking=no -l ${{ secrets.REMOTE_USER }}" -azq --delete . ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:plebeian.market.$PORT
 
       - name: Deploy on /deploy or push to main
         if: ${{ (github.event.comment.body == '/deploy' && github.event.issue.pull_request) || github.event_name == 'push' }}
