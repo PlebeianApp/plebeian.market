@@ -46,13 +46,13 @@ jobs:
         env:
           PORT: ${{ github.ref == 'refs/heads/main' && '4175' || '4173' }}
         run: |
-          rsync --rsh="/usr/bin/sshpass -p \"${{ secrets.REMOTE_PASSWORD }}\" ssh -o StrictHostKeyChecking=no -l deployer" -azq --delete . ${{ secrets.REMOTE_USER }}@${{ vars.REMOTE_HOST }}:plebeian.market.$PORT
+          rsync --rsh="/usr/bin/sshpass -p \"${{ secrets.REMOTE_PASSWORD }}\" ssh -o StrictHostKeyChecking=no -l deployer" -azq --delete . ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:plebeian.market.$PORT
 
       - name: Deploy on /deploy or push to main
         if: ${{ (github.event.comment.body == '/deploy' && github.event.issue.pull_request) || github.event_name == 'push' }}
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ vars.REMOTE_HOST }}
+          host: ${{ secrets.REMOTE_HOST }}
           username: ${{ secrets.REMOTE_USER }}
           password: ${{ secrets.REMOTE_PASSWORD }}
           script: |
@@ -69,7 +69,7 @@ jobs:
       - name: Stop Deployment
         if: ${{ github.event.comment.body == '/takedown' && github.event.issue.pull_request }}
         run: |
-          sshpass -p "${{ secrets.REMOTE_PASSWORD }}" ssh -o StrictHostKeyChecking=no ${{ secrets.REMOTE_USER }}@${{ vars.REMOTE_HOST }} << 'EOF'
+          sshpass -p "${{ secrets.REMOTE_PASSWORD }}" ssh -o StrictHostKeyChecking=no ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} << 'EOF'
             PORT=${{ github.ref == 'refs/heads/main' && '4175' || '4173' }}
             fuser -k \$PORT/tcp || true
           EOF
