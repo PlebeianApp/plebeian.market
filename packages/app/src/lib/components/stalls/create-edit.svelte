@@ -151,7 +151,7 @@
 		})
 
 		try {
-			const [, userExists] = await Promise.all([newEvent.sign(), checkIfUserExists($ndkStore.activeUser.pubkey)])
+			const [, userExists] = await Promise.all([newEvent.publish(), checkIfUserExists($ndkStore.activeUser.pubkey)])
 			if (await shouldRegister(allowRegister, userExists)) {
 				const nostrEvent = await newEvent.toNostrEvent()
 				await (stall?.id

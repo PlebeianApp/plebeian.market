@@ -40,7 +40,7 @@ export const createProductMutation = createMutation(
 				tags: [['d', product.id!], ...categories.map((c) => ['t', c]), ['a', stallCoordinates.coordinates!]],
 			})
 
-			await newEvent.sign()
+			await newEvent.publish()
 			const _shouldRegister = await shouldRegister(undefined, undefined, $ndkStore.activeUser.pubkey)
 			if (_shouldRegister) {
 				const response = get(createProductsFromNostrMutation).mutateAsync(new Set([newEvent]))
@@ -84,7 +84,7 @@ export const editProductMutation = createMutation(
 					...(stallCoordinates.coordinates ? [['a', stallCoordinates.coordinates!]] : []),
 				],
 			})
-			await newEvent.sign()
+			await newEvent.publish()
 			const nostrEvent = await newEvent.toNostrEvent()
 			const _shouldRegister = await shouldRegister(undefined, undefined, $ndkStore.activeUser.pubkey)
 			if (_shouldRegister) {
@@ -231,7 +231,7 @@ export const signProductStockMutation = createMutation(
 			const newEvent = createProductEvent(product, newQuantity)
 			if (!newEvent) return
 
-			await newEvent.sign() // TODO: publish instead of sign
+			await newEvent.publish() // TODO: publish instead of sign
 
 			return newEvent
 		},
