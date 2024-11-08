@@ -22,7 +22,7 @@
 	let hoveredRecipient: string | null = null
 	let newRecipientFormVisible = false
 
-	const details = data.menuItems.find((item) => item.value === 'v4v-settings')
+	const details = data.menuItems.find((item) => item.value === 'cecb-settings')
 	$: emojiSize = 16 + v4vTotal[0] * 100
 	$: shouldWiggle = v4vTotal[0] > 0.04
 	$: shouldShake = v4vTotal[0] > 0.09
@@ -33,7 +33,7 @@
 	let v4vRecipients: V4VDTO[] = []
 
 	$: {
-		if ($v4vByUser.data && !initialTotalSet) {
+		if ($v4vByUser && $v4vByUser.data && !initialTotalSet) {
 			const total = $v4vByUser.data.reduce((sum, item) => sum + item.amount, 0)
 			v4vTotal = [total]
 			initialTotalSet = true
