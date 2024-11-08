@@ -28,6 +28,7 @@
 </script>
 
 <div class="flex justify-end gap-4">
+	<!-- FIXME: we are having a sqlite foreign key constraint error -->
 	{#if orderMode === 'sale'}
 		{#if orderStatus === 'pending'}
 			<Button on:click={handleConfirmOrder}>Confirm Order</Button>
