@@ -3,10 +3,19 @@ import { createId } from '@paralleldrive/cuid2'
 import { sql } from 'drizzle-orm'
 
 import type { AppSettingsMetaName, DigitalProductMetaName, ProductMetaName, UserMetaName } from './constants'
-import { APP_SETTINGS_META, DIGITAL_PRODUCT_META, GENERAL_META, META_NAMES, PRODUCT_META, USER_META } from './constants'
+import {
+	APP_SETTINGS_META,
+	DIGITAL_PRODUCT_META,
+	GENERAL_META,
+	META_NAMES,
+	PRODUCT_META,
+	USER_META,
+	USER_ROLES,
+	USER_TRUST_LEVEL,
+} from './constants'
 import { db } from './database'
 import { devUser1, devUser2, devUser3, devUser4, devUser5, FORBIDDEN_WORDS } from './fixtures'
-import { AppMeta, AppSettings, User } from './types'
+import { AppMeta, AppSettings, User, UserMeta } from './types'
 
 const randomHexValue = () => {
 	return faker.string.hexadecimal({
@@ -120,6 +129,43 @@ const main = async () => {
 		})
 		.filter(Boolean)
 
+	const userMetaData = userIds.flatMap((userId) => {
+		return metaTypeData
+			.flat(2)
+			.filter((metaType) => metaType.scope === 'users')
+			.map((metaType) => {
+				const { name } = metaType
+				let valueText: string | null = null
+				const valueBoolean: boolean | null = null
+				const valueNumeric: number | null = null
+				const key: string | null = null
+
+				if (name == USER_META.TRUST_LVL.value) {
+					valueText = faker.helpers.arrayElement(Object.values(USER_TRUST_LEVEL))
+				} else if (name == USER_META.ROLE.value) {
+					if (userId.id === devUser1.pk) {
+						valueText = USER_ROLES.ADMIN
+					} else {
+						valueText = faker.helpers.arrayElement(Object.values(USER_ROLES))
+					}
+				}
+
+				const userMeta = {
+					id: createId(),
+					userId: userId.id,
+					metaName: name,
+					valueText: valueText,
+					valueBoolean: valueBoolean,
+					valueNumeric: valueNumeric,
+					key: key,
+					createdAt: faker.date.recent(),
+					updatedAt: faker.date.future(),
+				} as UserMeta
+
+				return userMeta
+			})
+	})
+
 	db.run(sql`PRAGMA foreign_keys = OFF;`)
 
 	console.log('Reset start')
@@ -151,6 +197,7 @@ const main = async () => {
 		for (const { table, data } of [
 			{ table: dbSchema.appSettings, data: appSettings },
 			{ table: dbSchema.users, data: fullUsers },
+			{ table: dbSchema.userMeta, data: userMetaData.flat(1) },
 			{ table: dbSchema.appSettingsMeta, data: appMetaData.flat(1) },
 			{ table: dbSchema.metaTypes, data: metaTypeData.flat(1) },
 		]) {
