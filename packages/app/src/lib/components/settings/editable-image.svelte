@@ -1,5 +1,4 @@
 <script lang="ts">
-	// packages/app/src/lib/components/settings/editable-image.svelte
 	import { NostrBuildUploader } from '@nostrify/nostrify/uploaders'
 	import * as Collapsible from '$lib/components/ui/collapsible'
 	import * as Dialog from '$lib/components/ui/dialog/index.js'
