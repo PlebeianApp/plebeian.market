@@ -60,7 +60,6 @@
 		])
 		dmKind04Sub.ref()
 	}
-	$: console.log('remember', checked)
 	const activeTab =
 		'w-full font-bold border-b-2 border-black text-black data-[state=active]:border-b-primary data-[state=active]:text-primary'
 </script>
