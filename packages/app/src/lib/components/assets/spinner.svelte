@@ -1,10 +1,11 @@
 <script lang="ts">
 	export let size = 25
+	export let color = 'currentColor'
 
 	const sizeFormatted = `${size}px`
 </script>
 
-<div class="spinner" style={`width: ${sizeFormatted}; height: ${sizeFormatted};`}>
+<div class="spinner" style={`width: ${sizeFormatted}; height: ${sizeFormatted}; --spinner-color: ${color};`}>
 	<div class="double-bounce1"></div>
 	<div class="double-bounce2"></div>
 </div>
@@ -20,7 +21,7 @@
 		width: 100%;
 		height: 100%;
 		border-radius: 50%;
-		background-color: #333;
+		background-color: var(--spinner-color);
 		opacity: 0.6;
 		position: absolute;
 		top: 0;

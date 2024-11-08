@@ -6,22 +6,27 @@ import { goto, invalidateAll } from '$app/navigation'
 import { HEX_KEYS_REGEX, KindsRelays } from '$lib/constants'
 import ndkStore, { ndk } from '$lib/stores/ndk'
 import { addAccount, getAccount, updateAccount } from '$lib/stores/session'
-import { bytesToHex, checkIfUserExists, createNcryptSec, hexToBytes, resolveQuery, shouldRegister } from '$lib/utils'
+import { bytesToHex, checkIfUserExists, createNcryptSec, getUserRole, hexToBytes, resolveQuery, shouldRegister } from '$lib/utils'
 import { nsecEncode } from 'nostr-tools/nip19'
 import { decrypt } from 'nostr-tools/nip49'
 import { get, writable } from 'svelte/store'
 
+import type { UserRoles } from '@plebeian/database'
+
 import { userEventSchema } from '../schema/nostr-events'
+import RegisterDialog from './components/dialogs/registerDialog.svelte'
 import { createRequest, queryClient } from './fetch/client'
-import { userFromNostr } from './fetch/users.mutations'
+import { createUserFromNostrMutation } from './fetch/users.mutations'
 import { createUserExistsQuery } from './fetch/users.queries'
 import { dmKind04Sub } from './nostrSubs/subs'
 import { manageUserRelays } from './nostrSubs/userRelayManager'
 import { cart } from './stores/cart'
+import { dialogs } from './stores/dialog'
 import { getAppSettings, setupNDKSigner, unNullify } from './utils/login.utils'
 
 type LoginResult = Promise<boolean>
 export const isSuccessfulLogin = writable(false)
+export const currentUserRole = writable<UserRoles>('pleb')
 export const login = async (loginMethod: BaseAccount['type'], formData?: FormData, autoLogin?: boolean): LoginResult => {
 	if (autoLogin) localStorage.setItem('auto_login', 'true')
 
@@ -81,15 +86,20 @@ export const fetchActiveUserData = async (keyToLocalDb?: string): Promise<NDKUse
 	if (userRelays.size) manageUserRelays(userRelays, 'add')
 	ndkStore.set(ndk)
 
-	await loginLocalDb(user.pubkey, keyToLocalDb ? 'NSEC' : 'NIP07', keyToLocalDb)
+	const [userExists, allowRegister, userRole] = await Promise.all([
+		checkIfUserExists(user.pubkey),
+		getAppSettings(),
+		getUserRole(user.pubkey),
+	])
 
-	const [userExists, allowRegister] = await Promise.all([checkIfUserExists(user.pubkey), getAppSettings()])
+	currentUserRole.set(userRole)
+
+	await loginLocalDb(user.pubkey, keyToLocalDb ? 'NSEC' : 'NIP07', keyToLocalDb)
 
 	if (await shouldRegister(allowRegister, userExists)) {
 		await loginDb(user)
 	}
-	// FIXME: when a user sign up for first time the settings are not shown as a existing user, they have to refresh
-	invalidateAll()
+
 	return user
 }
 
@@ -123,13 +133,14 @@ export const loginDb = async (user: NDKUser) => {
 		if (!userExists) {
 			const body = userEventSchema.safeParse(userProfile)
 			if (!body.success) throw Error(JSON.stringify(body.error))
-
-			await get(userFromNostr).mutateAsync({
+			const userMutation = await get(createUserFromNostrMutation).mutateAsync({
 				profile: body.data as NDKUserProfile,
 				pubkey: user.pubkey,
 			})
 
-			queryClient.invalidateQueries({ queryKey: ['users', 'exists'] })
+			if (userMutation) {
+				await queryClient.setQueryData(['users', 'exists', userMutation.id], true)
+			}
 			return
 		}
 
@@ -146,6 +157,5 @@ export const logout = async () => {
 	dmKind04Sub.unref()
 	localStorage.clear()
 	cart.clear()
-	goto('/', { invalidateAll: true })
-	location.reload()
+	location.replace('/')
 }

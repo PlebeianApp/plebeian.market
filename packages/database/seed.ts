@@ -19,6 +19,8 @@ import {
 	PRODUCT_META,
 	PRODUCT_TYPES,
 	ProductMetaName,
+	STALL_META,
+	StallMetaName,
 	USER_META,
 	USER_ROLES,
 	USER_TRUST_LEVEL,
@@ -55,6 +57,7 @@ import {
 	Shipping,
 	ShippingZone,
 	Stall,
+	StallMeta,
 	User,
 	UserMeta,
 } from './types'
@@ -115,6 +118,12 @@ const main = async () => {
 		) {
 			scope = 'products'
 		} else if (
+			Object.values(STALL_META)
+				.map((meta) => meta.value)
+				.includes(metaName as StallMetaName['value'])
+		) {
+			scope = 'stalls'
+		} else if (
 			Object.values(APP_SETTINGS_META)
 				.map((meta) => meta.value)
 				.includes(metaName as AppSettingsMetaName['value'])
@@ -134,6 +143,7 @@ const main = async () => {
 			...Object.entries(PRODUCT_META),
 			...Object.entries(DIGITAL_PRODUCT_META),
 			...Object.entries(APP_SETTINGS_META),
+			...Object.entries(STALL_META),
 			...Object.entries(USER_META),
 			...Object.entries(GENERAL_META),
 		].map(([_, { value, dataType }]) => ({ value, dataType }))
@@ -560,6 +570,40 @@ const main = async () => {
 
 		return productMeta
 	})
+
+	const stallMetaData = metaTypeData
+		.flat(2)
+		.filter((metaType) => metaType.scope === 'stalls')
+		.map((metaType) => {
+			const { dataType, name } = metaType
+			let valueText: string | null = null
+			let valueBoolean: boolean | null = null
+			let valueInteger: number | null = null
+			let valueNumeric: number | null = null
+
+			if (dataType == 'text') {
+				valueText = faker.string.uuid()
+			} else if (dataType == 'boolean') {
+				valueBoolean = faker.datatype.boolean()
+			} else if (dataType == 'integer') {
+				valueInteger = faker.number.int()
+			} else if (dataType == 'numeric') {
+				valueNumeric = faker.number.float({ fractionDigits: 2 })
+			}
+			const stallMeta = {
+				id: createId(),
+				key: null,
+				stallId: null,
+				metaName: name,
+				valueText: valueText,
+				valueBoolean: valueBoolean,
+				valueNumeric: valueNumeric ? valueNumeric.toString() : null,
+				createdAt: faker.date.recent(),
+				updatedAt: faker.date.future(),
+			} as StallMeta
+
+			return stallMeta
+		})
 
 	const productImagesData = productData.flat(2).map((product) => {
 		const images = randomLengthArrayFromTo(0, 4).map((_, index) => {

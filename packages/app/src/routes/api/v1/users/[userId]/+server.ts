@@ -1,6 +1,6 @@
 import type { NDKUserProfile } from '@nostr-dev-kit/ndk'
 import { error, json } from '@sveltejs/kit'
-import { authorize, authorizeUserless } from '$lib/auth'
+import { authorize, authorizeContextual, authorizeUserless } from '$lib/auth'
 import { usersFilterSchema } from '$lib/schema'
 import { createUser, deleteUser, getRichUsers, getUserById, updateUser, updateUserFromNostr, userExists } from '$lib/server/users.service'
 
@@ -41,7 +41,7 @@ export const GET: RequestHandler = async ({ params, request, url: { searchParams
 export const PUT: RequestHandler = async ({ params, request }) => {
 	const { userId } = params
 	try {
-		await authorize(request, userId, 'PUT')
+		await authorizeContextual(request, 'user', userId, request.method)
 		const body = await request.json()
 		return json(await updateUser(userId, body))
 	} catch (e) {
@@ -81,12 +81,12 @@ export const DELETE: RequestHandler = async ({ params, request }) => {
 	const { userId } = params
 
 	try {
-		await authorize(request, userId, 'DELETE')
+		await authorizeContextual(request, 'user', userId, request.method)
 		return json(await deleteUser(userId))
 	} catch (e) {
 		if (e.status) {
-			error(e.status, e.message)
+			throw error(e.status, e.message)
 		}
-		error(500, JSON.stringify(e))
+		throw error(500, JSON.stringify(e))
 	}
 }

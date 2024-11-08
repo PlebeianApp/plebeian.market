@@ -262,7 +262,9 @@ export const createUser = async (
 			throw Error('Failed to create user')
 		}
 
-		setV4VSharesForUser(user.id, [{ amount: INITIAL_V4V_PM_SHARE_PERCENTAGE, target: PM_NPUB }])
+		await createUserMeta(userResult.id, role, trustLevel)
+
+		await setV4VSharesForUser(user.id, [{ amount: INITIAL_V4V_PM_SHARE_PERCENTAGE, target: PM_NPUB }])
 
 		return userResult
 	} catch (e) {
@@ -279,6 +281,32 @@ export const createUser = async (
 		}
 	}
 }
+
+export const getUserRole = async (userId: string): Promise<UserRoles> => {
+	const [role] = await db
+		.select({ valueText: userMeta.valueText })
+		.from(userMeta)
+		.where(and(eq(userMeta.userId, userId), eq(userMeta.metaName, USER_META.ROLE.value)))
+		.execute()
+	return role?.valueText as UserRoles
+}
+
+export const updateUserRole = async (userId: string, role: UserRoles): Promise<User> => {
+	const targetUser = await getUserById(userId)
+
+	if (!targetUser) {
+		throw Error('User not found')
+	}
+
+	const success = await updateUserMeta(userId, role)
+
+	if (!success) {
+		throw Error('Failed to update user role')
+	}
+
+	return targetUser
+}
+
 export const updateUser = async (userId: string, userProfile: RichUser): Promise<User> => {
 	try {
 		const insertUser: Partial<User> = {
@@ -360,6 +388,23 @@ export const updateUserFromNostr = async (userId: string, userProfile: NDKUserPr
 	}
 }
 
+export const createUserMeta = async (userId: string, role?: UserRoles, trustLevel?: UserTrustLevel): Promise<UserMeta[]> => {
+	try {
+		const result = await Promise.all([
+			role && db.insert(userMeta).values({ userId, metaName: USER_META.ROLE.value, valueText: role }).returning(),
+			trustLevel && db.insert(userMeta).values({ userId, metaName: USER_META.TRUST_LVL.value, valueText: trustLevel }).returning(),
+		]).then((results) => results.flat().filter((result): result is UserMeta => result !== undefined))
+
+		return result
+	} catch (e) {
+		if (e instanceof Error) {
+			error(500, { message: e.message })
+		} else {
+			error(500, { message: 'Internal Server Error' })
+		}
+	}
+}
+
 export const updateUserMeta = async (userId: string, role?: UserRoles, trustLevel?: UserTrustLevel): Promise<UserMeta[]> => {
 	try {
 		const result = await Promise.all([
@@ -425,6 +470,12 @@ export const usersExists = async (userIds: string[], returnExisting: boolean = f
 	} else {
 		return userIds.filter((userId) => !resultIds.has(userId))
 	}
+}
+
+export const isUserEditor = async (userId: string): Promise<boolean> => {
+	const userMeta = await getUserMetaByUserId(userId)
+	const editorRole = userMeta.find((meta) => meta.metaName === USER_META.ROLE.value && meta.valueText === USER_ROLES.EDITOR)
+	return editorRole !== undefined
 }
 
 export const isUserAdmin = async (userId: string): Promise<boolean> => {

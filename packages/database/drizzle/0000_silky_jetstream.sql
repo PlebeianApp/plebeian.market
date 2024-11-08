@@ -55,7 +55,7 @@ CREATE TABLE `bids` (
 	`bid_amount` numeric NOT NULL,
 	`bid_status` text DEFAULT 'pending' NOT NULL,
 	FOREIGN KEY (`auction_id`) REFERENCES `auctions`(`id`) ON UPDATE cascade ON DELETE cascade,
-	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action
+	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE cascade ON DELETE cascade
 );
 --> statement-breakpoint
 CREATE TABLE `event_tags` (
@@ -215,6 +215,20 @@ CREATE TABLE `shipping_zones` (
 	`country_code` text,
 	FOREIGN KEY (`shipping_id`) REFERENCES `shipping`(`id`) ON UPDATE no action ON DELETE cascade,
 	FOREIGN KEY (`stall_id`) REFERENCES `stalls`(`id`) ON UPDATE cascade ON DELETE cascade
+);
+--> statement-breakpoint
+CREATE TABLE `stall_meta` (
+	`id` text PRIMARY KEY NOT NULL,
+	`stall_id` text,
+	`meta_name` text NOT NULL,
+	`key` text,
+	`value_text` text,
+	`value_boolean` integer,
+	`value_number` numeric,
+	`created_at` integer DEFAULT (unixepoch()) NOT NULL,
+	`updated_at` integer DEFAULT (unixepoch()) NOT NULL,
+	FOREIGN KEY (`stall_id`) REFERENCES `stalls`(`id`) ON UPDATE cascade ON DELETE cascade,
+	FOREIGN KEY (`meta_name`) REFERENCES `meta_types`(`name`) ON UPDATE cascade ON DELETE cascade
 );
 --> statement-breakpoint
 CREATE TABLE `stalls` (

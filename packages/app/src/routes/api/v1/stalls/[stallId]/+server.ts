@@ -1,5 +1,5 @@
 import { error, json } from '@sveltejs/kit'
-import { authorizeUserless } from '$lib/auth'
+import { authorizeContextual, authorizeUserless } from '$lib/auth'
 import { KindStalls } from '$lib/constants'
 import { verifyEventBody } from '$lib/server/nostrEvents.service'
 import { createStall, deleteStall, getStallById, stallExists, updateStall } from '$lib/server/stalls.service'
@@ -23,7 +23,9 @@ export const POST: RequestHandler = async ({ params, request }) => {
 }
 
 export const PUT: RequestHandler = async ({ params, request }) => {
+	const { stallId } = params
 	try {
+		await authorizeContextual(request, 'stall', stallId, request.method)
 		const verifiedEvent = await verifyEventBody(request, KindStalls)
 		return json(await updateStall(params.stallId, verifiedEvent))
 	} catch (e) {
@@ -32,9 +34,11 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 }
 
 export const DELETE: RequestHandler = async ({ request, params }) => {
+	const { stallId } = params
+
 	try {
-		const userId = await authorizeUserless(request, 'DELETE')
-		return json(await deleteStall(params.stallId, userId))
+		await authorizeContextual(request, 'stall', stallId, request.method)
+		return json(await deleteStall(stallId))
 	} catch (e) {
 		error(500, `${e}`)
 	}

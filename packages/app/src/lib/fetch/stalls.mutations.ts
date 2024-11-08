@@ -1,10 +1,8 @@
 import type { NostrEvent } from '@nostr-dev-kit/ndk'
 import type { EventCoordinates } from '$lib/interfaces'
-import type { StallsFilter } from '$lib/schema'
 import type { DisplayStall } from '$lib/server/stalls.service'
 import { error } from '@sveltejs/kit'
 import { createMutation } from '@tanstack/svelte-query'
-import { stallsFilterSchema } from '$lib/schema'
 import ndkStore from '$lib/stores/ndk'
 import { getEventCoordinates } from '$lib/utils'
 import { get } from 'svelte/store'
@@ -16,6 +14,7 @@ declare module './client' {
 		[k: `POST /api/v1/stalls/${string}`]: Operation<string, 'POST', never, NostrEvent, DisplayStall, never>
 		[k: `PUT /api/v1/stalls/${string}`]: Operation<string, 'POST', never, NostrEvent, DisplayStall, never>
 		[k: `DELETE /api/v1/stalls/${string}`]: Operation<string, 'DELETE', never, string, string, never>
+		[k: `POST /api/v1/stalls/${string}/featured`]: Operation<string, 'POST', never, { featured: boolean }, { id: string }, never>
 	}
 }
 
@@ -54,6 +53,7 @@ export const updateStallFromNostrEvent = createMutation(
 			try {
 				const response = await createRequest(`PUT /api/v1/stalls/${stallId}`, {
 					body: stallEvent,
+					auth: true,
 				})
 				if (!response) {
 					return null
@@ -72,6 +72,25 @@ export const updateStallFromNostrEvent = createMutation(
 					queryKey: ['stalls', data.userId],
 				})
 				await queryClient.invalidateQueries({ queryKey: ['shipping', data.id] })
+			}
+		},
+	},
+	queryClient,
+)
+
+export const setStallFeaturedMutation = createMutation(
+	{
+		mutationFn: async ({ stallId, featured }: { stallId: string; featured: boolean }) => {
+			const response = await createRequest(`POST /api/v1/stalls/${stallId}/featured`, {
+				body: { featured },
+				auth: true,
+			})
+			return response
+		},
+		onSuccess: ({ id }: { id: string }) => {
+			console.log('setStallFeaturedMutation', id)
+			if (id) {
+				queryClient.invalidateQueries({ queryKey: ['stalls', id] })
 			}
 		},
 	},

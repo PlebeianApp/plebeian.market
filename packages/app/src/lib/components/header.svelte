@@ -1,12 +1,12 @@
 <script lang="ts">
 	import type { NsecAccount } from '$lib/stores/session'
 	import { page } from '$app/stores'
-	import Auth from '$lib/components/auth.svelte'
 	import PassPromt from '$lib/components/passPromt.svelte'
 	import { Button } from '$lib/components/ui/button/index.js'
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
-	import { isSuccessfulLogin, login, logout } from '$lib/ndkLogin'
+	import { login, logout } from '$lib/ndkLogin'
 	import { unreadCounts } from '$lib/stores/chat-notifications'
+	import { dialogs } from '$lib/stores/dialog'
 	import ndkStore from '$lib/stores/ndk'
 	import { balanceOfWorkingNWCs } from '$lib/stores/nwc'
 	import { getAccount } from '$lib/stores/session'
@@ -14,6 +14,7 @@
 
 	import type { PageData } from '../../routes/$types'
 	import CartWithState from './cart/cart-with-state.svelte'
+	import AuthDialog from './dialogs/authDialog.svelte'
 	import CAvatar from './ui/custom-components/c-avatar.svelte'
 
 	$: ({ appSettings } = $page.data as PageData)
@@ -37,6 +38,10 @@
 		}
 	})
 	$: hasUnreadMessages = Object.values($unreadCounts).some((count) => count > 0)
+
+	function showAuthDialog() {
+		dialogs.show(AuthDialog, {})
+	}
 </script>
 
 <PassPromt dialogOpen={showPassPromt} accointInfo={nsecAccInfo} />
@@ -64,17 +69,14 @@
 				{/if}
 			</Button>
 			<CartWithState />
-			{#if $ndkStore.activeUser && $isSuccessfulLogin}
+			{#if $ndkStore.activeUser}
 				<DropdownMenu.Root>
 					<DropdownMenu.Trigger id="menuButton">
 						<Button class="p-2 bg-white"><span class="i-tdesign-view-list text-black w-6 h-6"></span></Button>
 					</DropdownMenu.Trigger>
 					<DropdownMenu.Content>
 						<DropdownMenu.Group>
-							<DropdownMenu.Label>
-								<Auth />
-								My account
-							</DropdownMenu.Label>
+							<DropdownMenu.Label>My account</DropdownMenu.Label>
 							<DropdownMenu.Label>
 								{#if $balanceOfWorkingNWCs}
 									<div class="flex flex-col">
@@ -121,7 +123,9 @@
 					<CAvatar pubkey={$ndkStore.activeUser.pubkey} profile={$ndkStore.activeUser.profile} />
 				</a>
 			{:else}
-				<Auth />
+				<Button on:click={showAuthDialog} class="flex items-center cursor-pointer gap-2 w-full">
+					<span class="i-tdesign-user-1" />Log in
+				</Button>
 			{/if}
 		</div>
 	</div>

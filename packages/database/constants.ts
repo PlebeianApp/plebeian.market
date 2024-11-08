@@ -104,6 +104,13 @@ export const PRODUCT_META: Record<
 
 export type ProductMetaName = ObjectValues<typeof PRODUCT_META>
 
+export const STALL_META: Record<string, MetaInterface<'is_user_featured' | 'is_global_featured'>> = {
+	IS_USER_FEATURED: { value: 'is_user_featured', dataType: 'boolean' },
+	IS_GLOBAL_FEATURED: { value: 'is_global_featured', dataType: 'boolean' },
+} as const
+
+export type StallMetaName = ObjectValues<typeof STALL_META>
+
 export const DIGITAL_PRODUCT_META: Record<string, MetaInterface<'license_key' | 'download_link' | 'mime_type' | 'sha256_hash'>> = {
 	LICENSE_KEY: { value: 'license_key', dataType: 'text' },
 	DOWNLOAD_LINK: { value: 'download_link', dataType: 'text' },
@@ -137,7 +144,7 @@ export const GENERAL_META: Record<string, MetaInterface<'comments'>> = {
 export type GeneralMetaName = ObjectValues<typeof GENERAL_META>
 
 export const META_NAMES = Object.fromEntries([
-	...Object.entries({ ...PRODUCT_META, ...DIGITAL_PRODUCT_META, ...APP_SETTINGS_META, ...USER_META, ...GENERAL_META }).map(
+	...Object.entries({ ...PRODUCT_META, ...STALL_META, ...DIGITAL_PRODUCT_META, ...APP_SETTINGS_META, ...USER_META, ...GENERAL_META }).map(
 		([key, { value }]) => [key, value],
 	),
 ]) as Record<string, string>

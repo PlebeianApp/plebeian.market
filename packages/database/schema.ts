@@ -85,6 +85,27 @@ export const productMeta = sqliteTable('product_meta', {
 		.default(sql`(unixepoch())`),
 })
 
+export const stallMeta = sqliteTable('stall_meta', {
+	id: text('id')
+		.primaryKey()
+		.$defaultFn(() => createId()),
+	stallId: text('stall_id').references(() => stalls.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
+	metaName: text('meta_name')
+		.notNull()
+		.references(() => metaTypes.name, { onDelete: 'cascade', onUpdate: 'cascade' }),
+	key: text('key'),
+	valueText: text('value_text'),
+	valueBoolean: integer('value_boolean', { mode: 'boolean' }),
+
+	valueNumeric: numeric('value_number'),
+	createdAt: integer('created_at', { mode: 'timestamp' })
+		.notNull()
+		.default(sql`(unixepoch())`),
+	updatedAt: integer('updated_at', { mode: 'timestamp' })
+		.notNull()
+		.default(sql`(unixepoch())`),
+})
+
 // App settings meta
 export const appSettingsMeta = sqliteTable('app_meta', {
 	id: text('id')
@@ -327,7 +348,7 @@ export const bids = sqliteTable('bids', {
 		.references(() => auctions.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
 	userId: text('user_id')
 		.notNull()
-		.references(() => users.id),
+		.references(() => users.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
 	bidAmount: numeric('bid_amount').notNull(),
 	bidStatus: text('bid_status', { enum: Object.values(BID_STATUS) as NonEmptyArray<BidStatus> })
 		.notNull()
