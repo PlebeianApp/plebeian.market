@@ -55,10 +55,11 @@
 	}
 
 	$: invoices = createInvoicesByFilterQuery({ orderId: order.id })
+
 	const handleConfirmOrder = async (order: DisplayOrder): Promise<void> => {
 		try {
 			const allInvoicesPaid = $invoices.data?.every((i) => i.invoiceStatus === 'paid') ?? false
-
+			// TODO: Optimize product update and order update, too many api calls
 			await Promise.all(
 				order.orderItems.map(async (orderItem) => {
 					const product = $productQueryResults.find((q) => q.data?.id === orderItem.productId)?.data
@@ -95,7 +96,7 @@
 				status: 'confirmed',
 			}
 			const orderUpdateMessage = createOrderStatusUpdateMessage(order)
-			await sendDM(orderUpdateMessage, order.buyerUserId)
+			// await sendDM(orderUpdateMessage, order.buyerUserId)
 
 			toast.success('Order confirmed')
 		} catch (error) {
@@ -365,7 +366,7 @@
 				<section>
 					<h3 class="font-medium text-lg mb-4">Products</h3>
 					<div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-						{#each $productQueryResults as query (query.data?.id)}
+						{#each $productQueryResults as query}
 							{#if query.isLoading}
 								<div class="animate-pulse bg-gray-100 rounded-lg h-32" />
 							{:else if query.isError}
