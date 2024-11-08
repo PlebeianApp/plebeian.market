@@ -94,7 +94,7 @@ export const userDeleteAccountMutation = createMutation(
 	queryClient,
 )
 
-export const userFromNostr = createMutation(
+export const createUserFromNostrMutation = createMutation(
 	{
 		mutationKey: [],
 		mutationFn: async ({ profile, pubkey }: { profile: NDKUserProfile; pubkey: string }) => {
@@ -112,13 +112,14 @@ export const userFromNostr = createMutation(
 	queryClient,
 )
 
-export const userFromNostrMutation = createMutation(
+export const updateUserFromNostrMutation = createMutation(
 	{
 		mutationKey: [],
 		mutationFn: async ({ profile, pubkey }: { profile: NDKUserProfile | null; pubkey: string }) => {
 			if (profile) {
 				const user = await createRequest(`PUT /api/v1/users/${pubkey}`, {
 					body: profile,
+					auth: true,
 				})
 				return user
 			}

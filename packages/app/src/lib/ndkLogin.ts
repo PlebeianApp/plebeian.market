@@ -15,7 +15,7 @@ import type { UserRoles } from '@plebeian/database'
 
 import { userEventSchema } from '../schema/nostr-events'
 import { createRequest, queryClient } from './fetch/client'
-import { userFromNostr } from './fetch/users.mutations'
+import { createUserFromNostrMutation } from './fetch/users.mutations'
 import { createUserExistsQuery } from './fetch/users.queries'
 import { dmKind04Sub } from './nostrSubs/subs'
 import { manageUserRelays } from './nostrSubs/userRelayManager'
@@ -133,7 +133,7 @@ export const loginDb = async (user: NDKUser) => {
 			const body = userEventSchema.safeParse(userProfile)
 			if (!body.success) throw Error(JSON.stringify(body.error))
 
-			await get(userFromNostr).mutateAsync({
+			await get(createUserFromNostrMutation).mutateAsync({
 				profile: body.data as NDKUserProfile,
 				pubkey: user.pubkey,
 			})

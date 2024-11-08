@@ -262,7 +262,7 @@ export const createUser = async (
 			throw Error('Failed to create user')
 		}
 
-		await updateUserMeta(userResult.id, role, trustLevel)
+		await createUserMeta(userResult.id, role, trustLevel)
 
 		await setV4VSharesForUser(user.id, [{ amount: INITIAL_V4V_PM_SHARE_PERCENTAGE, target: PM_NPUB }])
 
@@ -379,6 +379,23 @@ export const updateUserFromNostr = async (userId: string, userProfile: NDKUserPr
 		} else {
 			throw Error('Failed to update user from nostr')
 		}
+	} catch (e) {
+		if (e instanceof Error) {
+			error(500, { message: e.message })
+		} else {
+			error(500, { message: 'Internal Server Error' })
+		}
+	}
+}
+
+export const createUserMeta = async (userId: string, role?: UserRoles, trustLevel?: UserTrustLevel): Promise<UserMeta[]> => {
+	try {
+		const result = await Promise.all([
+			role && db.insert(userMeta).values({ userId, metaName: USER_META.ROLE.value, valueText: role }).returning(),
+			trustLevel && db.insert(userMeta).values({ userId, metaName: USER_META.TRUST_LVL.value, valueText: trustLevel }).returning(),
+		]).then((results) => results.flat().filter((result): result is UserMeta => result !== undefined))
+
+		return result
 	} catch (e) {
 		if (e instanceof Error) {
 			error(500, { message: e.message })

@@ -6,7 +6,7 @@
 	import * as Collapsible from '$lib/components/ui/collapsible'
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
 	import { Input } from '$lib/components/ui/input'
-	import { setUserRoleMutation, userFromNostrMutation } from '$lib/fetch/users.mutations.js'
+	import { createUserFromNostrMutation, setUserRoleMutation } from '$lib/fetch/users.mutations.js'
 	import { createUserByIdQuery, createUsersByRoleQuery } from '$lib/fetch/users.queries.js'
 	import ndkStore from '$lib/stores/ndk'
 	import { decodePk, nav_back } from '$lib/utils'
@@ -46,9 +46,8 @@
 			toast.error('Invalid npub')
 			return
 		}
-		// FIXME: Add a new user as admin or editor is failing, returning status 500
 		try {
-			await $userFromNostrMutation.mutateAsync({ pubkey: pkFromNpub, profile: newUserProfile })
+			await $createUserFromNostrMutation.mutateAsync({ pubkey: pkFromNpub, profile: newUserProfile })
 			await $setUserRoleMutation.mutateAsync({ userId: pkFromNpub, role })
 		} catch (e) {
 			toast.error('Failed to add user')
