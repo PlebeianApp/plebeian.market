@@ -1,8 +1,7 @@
 import type { NDKUserProfile } from '@nostr-dev-kit/ndk'
 import { error, json } from '@sveltejs/kit'
-import { authorize, authorizeEditorOrAdmin, authorizeUserless } from '$lib/auth'
+import { authorize, authorizeContextual, authorizeUserless } from '$lib/auth'
 import { usersFilterSchema } from '$lib/schema'
-import { decodeJwtToEvent } from '$lib/server/nostrAuth.service'
 import { createUser, deleteUser, getRichUsers, getUserById, updateUser, updateUserFromNostr, userExists } from '$lib/server/users.service'
 
 import type { RequestHandler } from './$types'
@@ -42,7 +41,7 @@ export const GET: RequestHandler = async ({ params, request, url: { searchParams
 export const PUT: RequestHandler = async ({ params, request }) => {
 	const { userId } = params
 	try {
-		await authorize(request, userId, 'PUT')
+		await authorizeContextual(request, 'user', userId, request.method)
 		const body = await request.json()
 		return json(await updateUser(userId, body))
 	} catch (e) {
@@ -79,34 +78,15 @@ export const POST: RequestHandler = async ({ request, params: { userId } }) => {
 }
 
 export const DELETE: RequestHandler = async ({ params, request }) => {
-	const authorizationHeader = request.headers.get('Authorization')
 	const { userId } = params
 
-	if (!authorizationHeader) {
-		throw error(401, 'Authorization header missing')
-	}
-
-	const token = decodeJwtToEvent(authorizationHeader)
-
-	console.log(token.pubkey, userId)
-
-	if (token.pubkey !== userId) {
-		try {
-			await authorizeEditorOrAdmin(request, 'DELETE')
-			console.log('authorized')
-			return json(await deleteUser(userId))
-		} catch (e) {
-			throw error(401, 'Invalid Token')
+	try {
+		await authorizeContextual(request, 'user', userId, request.method)
+		return json(await deleteUser(userId))
+	} catch (e) {
+		if (e.status) {
+			throw error(e.status, e.message)
 		}
-	} else {
-		try {
-			await authorize(request, userId, 'DELETE')
-			return json(await deleteUser(userId))
-		} catch (e) {
-			if (e.status) {
-				error(e.status, e.message)
-			}
-			throw error(500, JSON.stringify(e))
-		}
+		throw error(500, JSON.stringify(e))
 	}
 }

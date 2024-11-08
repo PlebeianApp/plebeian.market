@@ -90,6 +90,7 @@ export const editProductMutation = createMutation(
 			if (_shouldRegister) {
 				const response = await createRequest(`PUT /api/v1/products/${product.id}`, {
 					body: nostrEvent,
+					auth: true,
 				})
 				return response
 			}

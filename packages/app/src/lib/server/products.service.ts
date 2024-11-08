@@ -528,17 +528,13 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 	}
 }
 
-export const deleteProduct = async (productId: string, userId: string): Promise<string> => {
+export const deleteProduct = async (productId: string): Promise<string> => {
 	const productResult = await db.query.products.findFirst({
-		where: and(eq(products.id, productId), eq(products.userId, userId)),
+		where: eq(products.id, productId),
 	})
 
 	if (!productResult) {
 		error(404, 'Not found')
-	}
-
-	if (productResult.userId !== userId) {
-		error(401, 'Unauthorized')
 	}
 
 	try {

@@ -53,6 +53,7 @@ export const updateStallFromNostrEvent = createMutation(
 			try {
 				const response = await createRequest(`PUT /api/v1/stalls/${stallId}`, {
 					body: stallEvent,
+					auth: true,
 				})
 				if (!response) {
 					return null

@@ -1,5 +1,5 @@
 import { error, json } from '@sveltejs/kit'
-import { authorizeUserless } from '$lib/auth'
+import { authorizeContextual } from '$lib/auth'
 import { KindProducts } from '$lib/constants'
 import { verifyEventBody } from '$lib/server/nostrEvents.service'
 import { deleteProduct, getProductById, productExists, updateProduct } from '$lib/server/products.service'
@@ -14,7 +14,9 @@ export const GET: RequestHandler = async ({ params, url: { searchParams } }) => 
 }
 
 export const PUT: RequestHandler = async ({ params, request }) => {
+	const { productId } = params
 	try {
+		await authorizeContextual(request, 'product', productId, request.method)
 		const verifiedEvent = await verifyEventBody(request, KindProducts)
 		return json(await updateProduct(params.productId, verifiedEvent))
 	} catch (e) {
@@ -24,9 +26,10 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 }
 
 export const DELETE: RequestHandler = async ({ request, params }) => {
+	const { productId } = params
 	try {
-		const userId = await authorizeUserless(request, 'DELETE')
-		return json(await deleteProduct(params.productId, userId))
+		await authorizeContextual(request, 'product', productId, request.method)
+		return json(await deleteProduct(params.productId))
 	} catch (e) {
 		error(401, 'Unauthorized')
 	}

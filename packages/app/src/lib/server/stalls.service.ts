@@ -531,7 +531,7 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
 	}
 }
 
-export const deleteStall = async (stallId: string, userId: string): Promise<string> => {
+export const deleteStall = async (stallId: string): Promise<string> => {
 	const stallResult = await db.query.stalls.findFirst({
 		where: eq(stalls.id, stallId),
 	})
@@ -540,9 +540,6 @@ export const deleteStall = async (stallId: string, userId: string): Promise<stri
 		error(404, 'Not found')
 	}
 
-	if (stallResult.userId !== userId) {
-		error(401, 'Unauthorized')
-	}
 	const deleteSuccess = await db.delete(stalls).where(eq(stalls.id, stallId)).returning()
 
 	if (deleteSuccess) {
