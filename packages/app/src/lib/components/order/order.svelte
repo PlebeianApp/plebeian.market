@@ -96,7 +96,7 @@
 				status: 'confirmed',
 			}
 			const orderUpdateMessage = createOrderStatusUpdateMessage(order)
-			// await sendDM(orderUpdateMessage, order.buyerUserId)
+			await sendDM(orderUpdateMessage, order.buyerUserId)
 
 			toast.success('Order confirmed')
 		} catch (error) {
