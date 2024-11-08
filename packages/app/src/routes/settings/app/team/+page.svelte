@@ -22,17 +22,22 @@
 	const admins = createUsersByRoleQuery({ role: 'admin' })
 	const editors = createUsersByRoleQuery({ role: 'editor' })
 	const plebs = createUsersByRoleQuery({ role: 'pleb' })
+
 	let isAddUserOpen = false
 	let npub = ''
-
 	let newUserProfile: NDKUserProfile | null = null
 
 	$: userProfileQuery = npub ? createUserByIdQuery(decodePk(npub)) : null
-
 	$: {
 		if ($userProfileQuery?.data) {
 			newUserProfile = $userProfileQuery.data
 		}
+	}
+
+	function resetForm() {
+		npub = ''
+		newUserProfile = null
+		isAddUserOpen = false
 	}
 
 	async function handleSetUserRole(userId: string, role: UserRoles) {
@@ -49,20 +54,18 @@
 		try {
 			await $createUserFromNostrMutation.mutateAsync({ pubkey: pkFromNpub, profile: newUserProfile })
 			await $setUserRoleMutation.mutateAsync({ userId: pkFromNpub, role })
+			resetForm()
+			toast.success('User added successfully!')
 		} catch (e) {
-			toast.error('Failed to add user')
-			return
+			toast.error(`Failed to add user`)
 		}
-		isAddUserOpen = false
-		npub = ''
-		toast.success('User added successfully!')
 	}
 </script>
 
 <div class="pb-4 space-y-2 max-w-2xl">
 	<div>
-		<div class=" flex items-center gap-1">
-			<Button size="icon" variant="outline" class=" border-none" on:click={() => nav_back()}>
+		<div class="flex items-center gap-1">
+			<Button size="icon" variant="outline" class="border-none" on:click={() => nav_back()}>
 				<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
 			</Button>
 			<section>
@@ -71,6 +74,7 @@
 			</section>
 		</div>
 	</div>
+
 	<Collapsible.Root class="border-black border p-2" bind:open={isAddUserOpen}>
 		<Collapsible.Trigger class="flex flex-row w-full items-center justify-between gap-2 mr-4">
 			Add User by npub
@@ -79,13 +83,12 @@
 		<Collapsible.Content>
 			<div class="mt-4 space-y-4">
 				{#if npub}
-					{@const pkFromNpub = decodePk(npub)}
-					<MiniUser userId={pkFromNpub} />
+					<MiniUser userId={decodePk(npub)} />
 				{:else}
 					<Input bind:value={npub} placeholder="Enter npub" />
 				{/if}
 				<div class="flex justify-end space-x-2">
-					<Button variant="outline" on:click={() => ((npub = ''), (isAddUserOpen = false))}>Cancel</Button>
+					<Button variant="outline" on:click={resetForm}>Cancel</Button>
 					<Button on:click={() => handleAddNostrUser('admin', npub)}>Set as Admin</Button>
 					<Button on:click={() => handleAddNostrUser('editor', npub)}>Set as Editor</Button>
 				</div>

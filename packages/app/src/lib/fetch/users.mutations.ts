@@ -8,6 +8,7 @@ import { get } from 'svelte/store'
 
 import type { User } from '@plebeian/database'
 import type { UserRoles } from '@plebeian/database/constants'
+import { USER_ROLES } from '@plebeian/database/constants'
 
 import { createRequest, queryClient } from './client'
 
@@ -45,7 +46,6 @@ export const userDataMutation = createMutation(
 		},
 		onSuccess: (data: User | null) => {
 			const $ndkStore = get(ndkStore)
-
 			queryClient.invalidateQueries({ queryKey: ['user', $ndkStore.activeUser?.pubkey] })
 			queryClient.setQueryData(['user', $ndkStore.activeUser?.pubkey], data)
 		},
@@ -63,9 +63,10 @@ export const setUserRoleMutation = createMutation(
 			})
 			return user
 		},
-		onSuccess: (data: User | null) => {
-			queryClient.invalidateQueries({ queryKey: ['users'] })
-			queryClient.setQueryData(['users', data?.id], data)
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ['users', ...Object.values({ role: USER_ROLES.ADMIN })] })
+			queryClient.invalidateQueries({ queryKey: ['users', ...Object.values({ role: USER_ROLES.EDITOR })] })
+			queryClient.invalidateQueries({ queryKey: ['users', ...Object.values({ role: USER_ROLES.PLEB })] })
 		},
 	},
 	queryClient,
@@ -105,7 +106,6 @@ export const createUserFromNostrMutation = createMutation(
 		},
 		onSuccess: (data: User | null) => {
 			console.log('User registered sucesfully', data)
-			queryClient.invalidateQueries({ queryKey: ['user', data?.id] })
 			queryClient.setQueryData(['user', data?.id], data)
 		},
 	},
