@@ -61,7 +61,6 @@ jobs:
             mv .env.sample .env
             fuser -k $PORT/tcp || true
             pnpm i --frozen-lockfile -f
-            pnpm db:initMock
             nohup pnpm preview --port=$PORT > preview.log 2>&1 &
             sleep 10
             head -n 20 preview.log
