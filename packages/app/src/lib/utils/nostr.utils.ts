@@ -5,7 +5,7 @@ import { get } from 'svelte/store'
 export async function publishEvent(event: NDKEvent): Promise<boolean> {
 	const isTest = get(page).data?.isTest
 	try {
-		if (isTest) {
+		if (isTest || import.meta.env.MODE === 'development') {
 			await event.sign()
 		} else {
 			await event.publish()
