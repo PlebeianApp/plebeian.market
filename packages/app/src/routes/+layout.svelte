@@ -11,6 +11,7 @@
 
 	import { QueryClientProvider } from '@tanstack/svelte-query'
 	import { afterNavigate, goto } from '$app/navigation'
+	import { externalLinks } from '$lib/actions/external-links'
 	import RelayWidget from '$lib/components/assets/relayWidget.svelte'
 	import BetaDialog from '$lib/components/dialogs/betaDialog.svelte'
 	import Drawer from '$lib/components/drawer.svelte'
@@ -191,7 +192,7 @@
 	{:else}
 		<div class="min-h-screen flex flex-col font-sans">
 			<Header />
-			<section class="flex-1">
+			<section class="flex-1" use:externalLinks>
 				<slot />
 			</section>
 			<Drawer />

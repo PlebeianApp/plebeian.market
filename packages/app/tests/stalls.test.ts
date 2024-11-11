@@ -4,7 +4,7 @@ import { chromium } from 'playwright'
 import { afterAll, beforeAll, describe, test } from 'vitest'
 
 import { opts } from './globalSetup'
-import { login, safeClick } from './utils/testUtils'
+import { login } from './utils/testUtils'
 
 describe('stalls', async () => {
 	let browser: Browser
@@ -28,6 +28,7 @@ describe('stalls', async () => {
 
 	test('create a new stall', async () => {
 		// Navigate to the stall creation page
+		// console.log("Looking variables", dev,import.meta.env.VITEST)
 		await page.goto(`http://${process.env.APP_HOST}:${process.env.APP_PORT}/`)
 		await login(page)
 
@@ -54,7 +55,7 @@ describe('stalls', async () => {
 
 		// Fill form fields with waits
 		await page.waitForSelector('input[name="title"]')
-		await page.fill('input[name="title"]', 'My super Stall')
+		await page.fill('input[name="title"]', 'my super test Stall')
 		await page.fill('textarea[name="description"]', 'This is a super stall description')
 
 		// Select currency with explicit waits
@@ -92,8 +93,8 @@ describe('stalls', async () => {
 		await page.click('#stall-save-button')
 
 		// Wait for stall to appear and verify
-		await page.waitForSelector('text=My super Stall')
-		const stallName = await page.textContent('text=My super Stall')
-		expect(stallName).toBe('My super Stall')
+		await page.waitForSelector('text=my super test Stall')
+		const stallName = await page.textContent('text=my super test Stall')
+		expect(stallName).toBe('my super test Stall')
 	})
 })

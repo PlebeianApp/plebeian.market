@@ -78,6 +78,9 @@
 		color: red;
 		margin-left: 0.25rem;
 	}
+	.external-link {
+		@apply text-primary hover:underline;
+	}
 }
 
 /* Box shadow */
