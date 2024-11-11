@@ -2,7 +2,7 @@ import type { NDKEvent } from '@nostr-dev-kit/ndk'
 
 export async function publishEvent(event: NDKEvent): Promise<boolean> {
 	try {
-		if (import.meta.env.VITEST) {
+		if (import.meta.env.DEV) {
 			await event.sign()
 		} else {
 			await event.publish()
