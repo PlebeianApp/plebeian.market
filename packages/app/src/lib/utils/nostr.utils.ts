@@ -1,12 +1,14 @@
 import type { NDKEvent } from '@nostr-dev-kit/ndk'
+import { page } from '$app/stores'
+import { get } from 'svelte/store'
 
 export async function publishEvent(event: NDKEvent): Promise<boolean> {
-	console.log('Publishing event:', import.meta.env)
+	const isTest = get(page).data?.isTest
 	try {
-		if (import.meta.env) {
+		if (isTest) {
 			await event.sign()
 		} else {
-			// await event.publish()
+			await event.publish()
 		}
 		return true
 	} catch (error) {

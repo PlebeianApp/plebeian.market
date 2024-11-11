@@ -14,6 +14,7 @@ export const load: PageServerLoad = async () => {
 		appSettings: (await getAppSettings()) as AppSettings,
 		forbiddenWords: await getAllForbiddenWords(),
 		paymentDetailsMethod: Object.values(PAYMENT_DETAILS_METHOD) as unknown as PaymentDetailsMethod,
+		isTest: process.env.MODE === 'test',
 	}
 }
 
