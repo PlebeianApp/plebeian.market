@@ -5,7 +5,7 @@ export async function publishEvent(event: NDKEvent): Promise<boolean> {
 		if (import.meta.env.DEV) {
 			await event.sign()
 		} else {
-			await event.publish()
+			// await event.publish()
 		}
 		return true
 	} catch (error) {

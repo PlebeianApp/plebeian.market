@@ -14,6 +14,8 @@ export const handle: Handle = async ({ event, resolve }) => {
 		import.meta.env.PROD,
 		'>>>import.meta.env.MODE',
 		import.meta.env.MODE,
+		'>>>import.meta.env.APP_PORT',
+		import.meta.env,
 	)
 	event.url.pathname.startsWith('/api/') && console.log(event.request.method, event.url.pathname)
 	if (event.url.pathname.startsWith('/api/') && !event.url.pathname.startsWith('/api/v1/products') && (await limiter.isLimited(event))) {
