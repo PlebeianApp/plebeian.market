@@ -16,7 +16,7 @@
 	import { createProductMutation, deleteProductMutation, editProductMutation } from '$lib/fetch/products.mutations'
 	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
 	import ndkStore from '$lib/stores/ndk'
-	import { prepareProductData, validateProduct } from '$lib/utils/product.utils'
+	import { prepareProductData } from '$lib/utils/product.utils'
 	import { validateForm } from '$lib/utils/zod.utils'
 	import { createEventDispatcher, onMount } from 'svelte'
 	import { toast } from 'svelte-sonner'

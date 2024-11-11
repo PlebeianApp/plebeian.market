@@ -55,7 +55,7 @@ describe('stalls', async () => {
 
 		// Fill form fields with waits
 		await page.waitForSelector('input[name="title"]')
-		await page.fill('input[name="title"]', 'my super test Stall')
+		await page.fill('input[name="title"]', 'My super Stall')
 		await page.fill('textarea[name="description"]', 'This is a super stall description')
 
 		// Select currency with explicit waits
@@ -93,8 +93,8 @@ describe('stalls', async () => {
 		await page.click('#stall-save-button')
 
 		// Wait for stall to appear and verify
-		await page.waitForSelector('text=my super test Stall')
-		const stallName = await page.textContent('text=my super test Stall')
-		expect(stallName).toBe('my super test Stall')
+		await page.waitForSelector('text=My super Stall')
+		const stallName = await page.textContent('text=My super Stall')
+		expect(stallName).toBe('My super Stall')
 	})
 })

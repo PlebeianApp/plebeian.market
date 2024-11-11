@@ -6,6 +6,7 @@ import { createMutation } from '@tanstack/svelte-query'
 import { KindProducts, KindStalls } from '$lib/constants'
 import ndkStore from '$lib/stores/ndk'
 import { parseCoordinatesString, shouldRegister, unixTimeNow } from '$lib/utils'
+import { publishEvent } from '$lib/utils/nostr.utils'
 import { get } from 'svelte/store'
 
 import { createProductEventSchema, forbiddenPatternStore } from '../../schema/nostr-events'
@@ -40,7 +41,7 @@ export const createProductMutation = createMutation(
 				tags: [['d', product.id!], ...categories.map((c) => ['t', c]), ['a', stallCoordinates.coordinates!]],
 			})
 
-			await newEvent.publish()
+			await publishEvent(newEvent)
 			const _shouldRegister = await shouldRegister(undefined, undefined, $ndkStore.activeUser.pubkey)
 			if (_shouldRegister) {
 				const response = get(createProductsFromNostrMutation).mutateAsync(new Set([newEvent]))
@@ -84,7 +85,7 @@ export const editProductMutation = createMutation(
 					...(stallCoordinates.coordinates ? [['a', stallCoordinates.coordinates!]] : []),
 				],
 			})
-			await newEvent.publish()
+			await publishEvent(newEvent)
 			const nostrEvent = await newEvent.toNostrEvent()
 			const _shouldRegister = await shouldRegister(undefined, undefined, $ndkStore.activeUser.pubkey)
 			if (_shouldRegister) {
@@ -231,7 +232,7 @@ export const signProductStockMutation = createMutation(
 			const newEvent = createProductEvent(product, newQuantity)
 			if (!newEvent) return
 
-			await newEvent.publish() // TODO: publish instead of sign
+			await publishEvent(newEvent)
 
 			return newEvent
 		},
