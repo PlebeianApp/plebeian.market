@@ -3,15 +3,12 @@ import { SvelteKitPWA } from '@vite-pwa/sveltekit'
 import tsconfigPaths from 'vite-tsconfig-paths'
 import { defineConfig } from 'vitest/config'
 
-export default defineConfig(({ mode, command }) => {
+export default defineConfig(({ mode }) => {
 	return {
 		test: {
 			testTimeout: 25_000,
 			hookTimeout: 25_000,
 			globalSetup: './tests/globalSetup.ts',
-			env: {
-				VITEST: 'true',
-			},
 			// alias: {
 			// 	$lib: new URL('./src/lib', import.meta.url).pathname,
 			// },
@@ -62,10 +59,6 @@ export default defineConfig(({ mode, command }) => {
 			alias: {
 				$lib: './src/lib',
 			},
-		},
-		define: {
-			'import.meta.env.VAR': JSON.stringify(mode),
-			'import.meta.env.COMMAND': JSON.stringify(command),
 		},
 	}
 })
