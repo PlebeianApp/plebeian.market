@@ -8,6 +8,8 @@ dotenv.config({
 	path: '../../.env',
 })
 
+process.env.VITEST = 'true'
+
 let server: PreviewServer
 
 let teardownHappened = false

@@ -7,16 +7,7 @@ const limiter = new RateLimiter({
 })
 
 export const handle: Handle = async ({ event, resolve }) => {
-	console.log(
-		'>>>import.meta.env.DEV',
-		import.meta.env.DEV,
-		'>>>import.meta.env.PROD',
-		import.meta.env.PROD,
-		'>>>import.meta.env.MODE',
-		import.meta.env.MODE,
-		'>>>import.meta.env.APP_PORT',
-		import.meta.env,
-	)
+	console.log('>>>import.meta.env', import.meta.env)
 	event.url.pathname.startsWith('/api/') && console.log(event.request.method, event.url.pathname)
 	if (event.url.pathname.startsWith('/api/') && !event.url.pathname.startsWith('/api/v1/products') && (await limiter.isLimited(event))) {
 		throw error(429)
