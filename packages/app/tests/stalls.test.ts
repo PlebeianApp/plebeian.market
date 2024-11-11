@@ -4,7 +4,7 @@ import { chromium } from 'playwright'
 import { afterAll, beforeAll, describe, test } from 'vitest'
 
 import { opts } from './globalSetup'
-import { login, safeClick } from './utils/testUtils'
+import { login } from './utils/testUtils'
 
 describe('stalls', async () => {
 	let browser: Browser
@@ -28,6 +28,7 @@ describe('stalls', async () => {
 
 	test('create a new stall', async () => {
 		// Navigate to the stall creation page
+		// console.log("Looking variables", dev,import.meta.env.VITEST)
 		await page.goto(`http://${process.env.APP_HOST}:${process.env.APP_PORT}/`)
 		await login(page)
 

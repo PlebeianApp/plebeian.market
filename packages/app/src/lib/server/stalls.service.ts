@@ -388,7 +388,6 @@ export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall 
 
 					if (shippingResult) {
 						const zonesToInsert = getZonesToInsert(shippingResult, method.regions ?? null, method.countries ?? null)
-						console.log('About to insert zones:', zonesToInsert)
 						if (zonesToInsert.length > 0) {
 							await tx.insert(shippingZones).values(zonesToInsert)
 						}

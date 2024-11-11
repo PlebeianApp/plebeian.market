@@ -29,12 +29,3 @@ export function prepareProductData(
 
 	return productData
 }
-
-export function validateProduct(productData: unknown) {
-	const result = get(forbiddenPatternStore).createProductEventSchema.safeParse(productData)
-	if (!result.success) {
-		displayZodErrors(result.error)
-		return { success: false }
-	}
-	return { success: true, data: result.data }
-}

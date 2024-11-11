@@ -17,6 +17,8 @@ import type {
 import { ORDER_STATUS } from '@plebeian/database/constants'
 import { createSlugId } from '@plebeian/database/utils'
 
+import { publishEvent } from './nostr.utils'
+
 export async function sendDM<T extends object>(content: T | string, recipientPubkey: string): Promise<boolean> {
 	const ndk = get(ndkStore)
 	const recipient = ndk.getUser({ pubkey: recipientPubkey })
@@ -27,8 +29,7 @@ export async function sendDM<T extends object>(content: T | string, recipientPub
 	dm.tags = [['p', recipient.pubkey]]
 
 	try {
-		// await dm.sign()
-		await dm.publish()
+		await publishEvent(dm)
 
 		return true
 	} catch (error) {

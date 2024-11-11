@@ -9,6 +9,7 @@
 	import { Label } from '$lib/components/ui/label/index.js'
 	import Textarea from '$lib/components/ui/textarea/textarea.svelte'
 	import { userDataMutation } from '$lib/fetch/users.mutations'
+	import { createUserExistsQuery } from '$lib/fetch/users.queries'
 	import ndkStore from '$lib/stores/ndk'
 	import { nav_back } from '$lib/utils'
 	import { toast } from 'svelte-sonner'
@@ -17,9 +18,9 @@
 	import { userEventSchema } from '../../../../schema/nostr-events'
 
 	export let data: PageData
-	$: ({ activeUser, userExist } = data)
 
-	$: editingActiveUser = activeUser ?? ({} as RichUser)
+	$: userExist = createUserExistsQuery($ndkStore.activeUser?.pubkey ?? '')
+	$: editingActiveUser = $ndkStore.activeUser?.profile ?? ({} as RichUser)
 
 	const handleSubmit = async (event: SubmitEvent) => {
 		event.preventDefault()
@@ -30,7 +31,7 @@
 			formObject[key] = typeof value === 'string' ? (value.trim() === '' ? undefined : value.trim()) : undefined
 		}
 
-		if (activeUser?.id) formObject.id = activeUser.id
+		if ($ndkStore.activeUser?.pubkey) formObject.id = $ndkStore.activeUser.pubkey
 		formObject.banner = editingActiveUser.banner ?? undefined
 		formObject.image = editingActiveUser.image ?? undefined
 
@@ -53,7 +54,7 @@
 		if (userExist) {
 			try {
 				await $userDataMutation.mutateAsync(filteredProfile)
-				await ndkUser.publish()
+				await ndkUser.sign()
 				toast.success('User data updated')
 			} catch (error) {
 				console.error(error)
@@ -71,7 +72,7 @@
 	}
 </script>
 
-{#if activeUser}
+{#if $ndkStore.activeUser?.pubkey}
 	<form on:submit={handleSubmit}>
 		<div class="pb-4 space-y-2">
 			<div class="flex items-center gap-1">
@@ -96,7 +97,7 @@
 
 			<div class="grid w-full items-center gap-1.5">
 				<Label for="name" class="font-bold">Name</Label>
-				<Input value={activeUser?.name} type="text" id="name" name="name" placeholder={editingActiveUser?.name} />
+				<Input value={editingActiveUser.name} type="text" id="name" name="name" placeholder={editingActiveUser?.name} />
 			</div>
 
 			<div class="grid w-full items-center gap-1.5">
@@ -117,17 +118,17 @@
 
 			<div class="grid w-full items-center gap-1.5">
 				<Label for="nip05" class="font-bold">Nostr address (NIP05)</Label>
-				<Input value={activeUser?.nip05} type="text" id="nip05" name="nip05" placeholder={editingActiveUser?.nip05} />
+				<Input value={editingActiveUser?.nip05} type="text" id="nip05" name="nip05" placeholder={editingActiveUser?.nip05} />
 			</div>
 
 			<div class="grid w-full items-center gap-1.5">
 				<Label for="lud16" class="font-bold">Lightning address (LUD16)</Label>
-				<Input value={activeUser?.lud16} type="text" id="lud16" name="lud16" placeholder={editingActiveUser?.lud16} />
+				<Input value={editingActiveUser?.lud16} type="text" id="lud16" name="lud16" placeholder={editingActiveUser?.lud16} />
 			</div>
 
 			<div class="grid w-full items-center gap-1.5">
 				<Label for="lud06" class="font-bold">LNURL (LUD06)</Label>
-				<Input value={activeUser?.lud06} type="text" id="lud06" name="lud06" placeholder={editingActiveUser?.lud06} />
+				<Input value={editingActiveUser?.lud06} type="text" id="lud06" name="lud06" placeholder={editingActiveUser?.lud06} />
 			</div>
 
 			<Button id="userDataSubmit" class="w-full font-bold" type="submit">Save</Button>

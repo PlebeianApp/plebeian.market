@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Selected } from 'bits-ui'
 	import AdminActions from '$lib/components/common/admin-actions.svelte'
+	import TruncatedText from '$lib/components/common/truncatedText.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
 	import * as Accordion from '$lib/components/ui/accordion'
 	import Badge from '$lib/components/ui/badge/badge.svelte'
@@ -63,21 +64,8 @@
 				{#if name}
 					<h1 class="text-3xl">{truncateText(name, 50)}</h1>
 				{/if}
-
 				{#if description}
-					{@const _description = truncateText(description, 256)}
-					{#if _description !== description}
-						<p class="break-words">{showFullDescription ? description : _description}</p>
-						<Button variant="outline" size="icon" on:click={() => (showFullDescription = !showFullDescription)}>
-							{#if !showFullDescription}
-								<span class=" i-mdi-plus" />
-							{:else}
-								<span class=" i-mdi-minus" />
-							{/if}
-						</Button>
-					{:else}
-						<p class="break-words">{description}</p>
-					{/if}
+					<TruncatedText text={description} />
 				{/if}
 			</div>
 			<div class="flex flex-row gap-12">

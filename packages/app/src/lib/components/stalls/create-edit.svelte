@@ -29,6 +29,7 @@
 		shouldRegister,
 		unixTimeNow,
 	} from '$lib/utils'
+	import { publishEvent } from '$lib/utils/nostr.utils'
 	import { validateForm } from '$lib/utils/zod.utils'
 	import geohash from 'ngeohash'
 	import { createEventDispatcher, onMount } from 'svelte'
@@ -151,7 +152,7 @@
 		})
 
 		try {
-			const [, userExists] = await Promise.all([newEvent.publish(), checkIfUserExists($ndkStore.activeUser.pubkey)])
+			const [, userExists] = await Promise.all([publishEvent(newEvent), checkIfUserExists($ndkStore.activeUser.pubkey)])
 			if (await shouldRegister(allowRegister, userExists)) {
 				const nostrEvent = await newEvent.toNostrEvent()
 				await (stall?.id
