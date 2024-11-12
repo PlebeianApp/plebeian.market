@@ -16,6 +16,8 @@
 	import { createProductMutation, deleteProductMutation, editProductMutation } from '$lib/fetch/products.mutations'
 	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
 	import ndkStore from '$lib/stores/ndk'
+	import { parseCoordinatesString } from '$lib/utils'
+	import { requestDeletion } from '$lib/utils/nostr.utils'
 	import { prepareProductData } from '$lib/utils/product.utils'
 	import { validateForm } from '$lib/utils/zod.utils'
 	import { createEventDispatcher, onMount } from 'svelte'
@@ -32,8 +34,8 @@
 
 	const dispatch = createEventDispatcher<{ success: unknown; error: unknown }>()
 	export let product: Partial<DisplayProduct> | null = null
-	export let forStall: StallCoordinatesType | null = null
-
+	export let forStall: string | null = null
+	if (forStall) forStall = parseCoordinatesString(forStall).coordinates || null
 	let isLoading = false
 	let stall: Partial<RichStall> | null = null
 	let categories: Category[] = []
@@ -161,8 +163,11 @@
 	async function handleDelete() {
 		if (!product?.id) return
 		await $deleteProductMutation.mutateAsync(product.id)
+		await requestDeletion(product.id)
 		dispatch('success', null)
 	}
+
+	$: console.log('product Id', product?.id)
 </script>
 
 {#if $stallsQuery.isLoading}

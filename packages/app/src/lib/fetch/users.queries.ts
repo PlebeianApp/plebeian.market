@@ -2,6 +2,7 @@ import type { NDKUserProfile } from '@nostr-dev-kit/ndk'
 import type { UsersFilter } from '$lib/schema'
 import type { RichUser } from '$lib/server/users.service'
 import { createQuery } from '@tanstack/svelte-query'
+import { browser } from '$app/environment'
 import { invalidateAll } from '$app/navigation'
 import { aggregatorAddUser, checkIfOldProfile } from '$lib/nostrSubs/data-aggregator'
 import { fetchUserData, fetchUserRelays } from '$lib/nostrSubs/utils'
@@ -76,7 +77,7 @@ export const createUserByIdQuery = (id: string) =>
 					return null
 				}
 			},
-			enabled: !!id,
+			enabled: !!id && !!browser,
 		},
 		queryClient,
 	)
