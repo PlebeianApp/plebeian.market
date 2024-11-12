@@ -1,48 +1,40 @@
-import { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk'
+import { NDKEvent } from '@nostr-dev-kit/ndk'
 import { page } from '$app/stores'
-import ndkStore from '$lib/stores/ndk'
-import { parseCoordinatesString } from '$lib/utils'
+import { fetchAddressableEvent } from '$lib/nostrSubs/utils'
 import { get } from 'svelte/store'
 
-export async function publishEvent(event: NDKEvent): Promise<boolean> {
+export async function publishEvent(event: NDKEvent): Promise<NDKEvent | null> {
 	const isTest = get(page).data?.isTest
 	try {
 		if (isTest || import.meta.env.MODE === 'development') {
+			console.log('Signing event:', event)
 			await event.sign()
 		} else {
-			await event.publish()
+			console.log('Publishing event:', event)
+			const publish = await event.publish()
+			console.log('Event published:', publish)
 		}
-		return true
+		return event
 	} catch (error) {
 		console.error('Error publishing event:', error)
-		return false
+		return null
 	}
 }
 
-export async function requestDeletion(
-	eventCoordinates?: string,
-	eventId?: string,
-	reason?: string,
-	publish: boolean = true,
-): Promise<NDKEvent> {
-	const $ndkStore = get(ndkStore)
-	const deletionEvent = new NDKEvent($ndkStore)
+export async function deleteEvent(eventCoordinates?: string, reason?: string, publish: boolean = true): Promise<NDKEvent | null> {
+	if (!eventCoordinates) return null
 
-	if (eventCoordinates) {
-		const parsedCoordinates = parseCoordinatesString(eventCoordinates)
-		deletionEvent.kind = NDKKind.EventDeletion
-		deletionEvent.content = reason || ''
-		deletionEvent.tags = [['a', parsedCoordinates.coordinates!]]
-	}
+	const event = await fetchAddressableEvent(eventCoordinates)
+	if (!event) return null
 
-	if (eventId) {
-		deletionEvent.kind = NDKKind.EventDeletion
-		deletionEvent.content = reason || ''
-		deletionEvent.tags = [['e', eventId]]
-	}
-	if (publish) {
-		await publishEvent(deletionEvent)
-	}
+	const emptyEvent = event
+	const dTag = emptyEvent.tagValue('d')
 
-	return deletionEvent
+	emptyEvent.content = ''
+	emptyEvent.tags = dTag ? [['d', dTag], ['deleted']] : [['deleted']]
+	// TODO: Improve relay event reception. Retry publishing if just one relay receives the event
+	const publishedEmptyEvent = await publishEvent(emptyEvent)
+	if (!publishedEmptyEvent) return null
+
+	return await publishedEmptyEvent.delete(reason, publish)
 }

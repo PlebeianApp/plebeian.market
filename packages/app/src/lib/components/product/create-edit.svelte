@@ -17,7 +17,7 @@
 	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
 	import ndkStore from '$lib/stores/ndk'
 	import { parseCoordinatesString } from '$lib/utils'
-	import { requestDeletion } from '$lib/utils/nostr.utils'
+	import { deleteEvent } from '$lib/utils/nostr.utils'
 	import { prepareProductData } from '$lib/utils/product.utils'
 	import { validateForm } from '$lib/utils/zod.utils'
 	import { createEventDispatcher, onMount } from 'svelte'
@@ -162,8 +162,12 @@
 
 	async function handleDelete() {
 		if (!product?.id) return
-		await $deleteProductMutation.mutateAsync(product.id)
-		await requestDeletion(product.id)
+		try {
+			await $deleteProductMutation.mutateAsync(product.id)
+		} catch (error) {
+			console.error('Error deleting product:', error)
+		}
+		await deleteEvent(product.id)
 		dispatch('success', null)
 	}
 

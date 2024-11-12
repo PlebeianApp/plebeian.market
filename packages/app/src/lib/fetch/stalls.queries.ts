@@ -1,3 +1,4 @@
+import type { NDKEvent } from '@nostr-dev-kit/ndk'
 import type { NormalizedData } from '$lib/nostrSubs/utils'
 import type { StallsFilter } from '$lib/schema'
 import type { RichStall } from '$lib/server/stalls.service'
@@ -34,6 +35,19 @@ export const createStallQuery = (stallId: string) =>
 					}
 					return { stall: null }
 				}
+			},
+			enabled: !!stallId,
+		},
+		queryClient,
+	)
+
+export const createStallFromNostrQuery = (stallId: string) =>
+	createQuery<{ stall: NDKEvent | null }>(
+		{
+			queryKey: ['stalls', 'event', stallId],
+			queryFn: async () => {
+				const { stallNostrRes: stallData } = await fetchStallData(stallId)
+				return { stall: stallData }
 			},
 			enabled: !!stallId,
 		},
