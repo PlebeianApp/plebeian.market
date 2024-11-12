@@ -7,6 +7,7 @@ import { aggregatorAddProducts } from '$lib/nostrSubs/data-aggregator'
 import { fetchUserProductData, normalizeProductsFromNostr } from '$lib/nostrSubs/utils'
 import { productsFilterSchema } from '$lib/schema'
 import { btcToCurrency, resolveQuery } from '$lib/utils'
+import {createCurrencyAmountConversionKey, createCurrencyConversionKey, createProductByFilterKey, createProductExistsKey, createProductKey} from './keys'
 
 import { CURRENCIES } from '@plebeian/database/constants'
 
@@ -30,7 +31,7 @@ declare module './client' {
 export const createProductQuery = (productId: string) =>
 	createQuery<DisplayProduct | null>(
 		{
-			queryKey: ['products', productId],
+			queryKey: createProductKey(productId),
 			queryFn: async () => {
 				try {
 					const response = await createRequest(`GET /api/v1/products/${productId}`, {
@@ -65,7 +66,7 @@ export const currencyQueries: CurrencyQuery = {} as CurrencyQuery
 for (const c of CURRENCIES) {
 	currencyQueries[c] = createQuery(
 		{
-			queryKey: ['currency-conversion', c],
+			queryKey: createCurrencyConversionKey(c),
 			staleTime: 1000 * 60 * 60,
 			queryFn: async () => {
 				const price = await btcToCurrency(c)
@@ -83,7 +84,7 @@ for (const c of CURRENCIES) {
 export const createCurrencyConversionQuery = (fromCurrency: string, amount: number) =>
 	createQuery<number | null>(
 		{
-			queryKey: ['currency-conversion', fromCurrency, amount],
+			queryKey: createCurrencyAmountConversionKey(fromCurrency, amount),
 			queryFn: async () => {
 				if (!fromCurrency || !amount) return null
 				if (['sats', 'sat'].includes(fromCurrency.toLowerCase())) {
@@ -102,7 +103,7 @@ export const createCurrencyConversionQuery = (fromCurrency: string, amount: numb
 export const createProductsByFilterQuery = (filter: Partial<ProductsFilter>) =>
 	createQuery<{ total: number; products: Partial<DisplayProduct>[] } | null>(
 		{
-			queryKey: ['products', ...Object.values(filter)],
+			queryKey: createProductByFilterKey(filter),
 			queryFn: async () => {
 				try {
 					const response = await createRequest('GET /api/v1/products', {
@@ -152,7 +153,7 @@ export const createProductsByFilterQuery = (filter: Partial<ProductsFilter>) =>
 export const createProductExistsQuery = (id: string) =>
 	createQuery<boolean>(
 		{
-			queryKey: ['products', 'exists', id],
+			queryKey: createProductExistsKey(id),
 			queryFn: async () => {
 				const stallExists = await createRequest(`GET /api/v1/products/${id}?exists`, {})
 				return stallExists
