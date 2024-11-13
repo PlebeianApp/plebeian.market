@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button'
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
-	import { deleteProductMutation, setProductFeaturedMutation } from '$lib/fetch/products.mutations'
-	import { deleteStallMutation, setStallFeaturedMutation } from '$lib/fetch/stalls.mutations'
-	import { userDeleteAccountMutation } from '$lib/fetch/users.mutations'
+	import { setProductBannedMutation, setProductFeaturedMutation } from '$lib/fetch/products.mutations'
+	import { setStallBannedMutation, setStallFeaturedMutation } from '$lib/fetch/stalls.mutations'
+	import { setUserBannedMutation } from '$lib/fetch/users.mutations'
 	import { currentUserRole } from '$lib/ndkLogin'
 	import { toast } from 'svelte-sonner'
 
@@ -17,13 +17,13 @@
 		try {
 			switch (type) {
 				case 'stall':
-					await $deleteStallMutation.mutateAsync(id)
+					await $setStallBannedMutation.mutateAsync({ stallId: id, banned: true })
 					break
 				case 'product':
-					await $deleteProductMutation.mutateAsync(id)
+					await $setProductBannedMutation.mutateAsync({ productId: id, banned: true })
 					break
 				case 'user':
-					await $userDeleteAccountMutation.mutateAsync(id)
+					await $setUserBannedMutation.mutateAsync({ userId: id, banned: true })
 					break
 			}
 			toast.success(`${type} deleted successfully`)
@@ -83,7 +83,7 @@
 						<DropdownMenu.Separator />
 					{/if}
 					<DropdownMenu.Item class="text-red-500" on:click={handleDelete}>
-						Delete {type}
+						Ban {type}
 					</DropdownMenu.Item>
 				</DropdownMenu.Group>
 			</DropdownMenu.Content>
