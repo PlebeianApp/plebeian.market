@@ -3,7 +3,6 @@
 	import type { DisplayProduct } from '$lib/server/products.service'
 	import type { RichShippingInfo } from '$lib/server/shipping.service'
 	import type { RichStall } from '$lib/server/stalls.service'
-	import type { StallCoordinatesType } from '$lib/stores/drawer-ui'
 	import type { ValidationErrors } from '$lib/utils/zod.utils'
 	import Button from '$lib/components/ui/button/button.svelte'
 	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte'
@@ -170,8 +169,6 @@
 		await deleteEvent(product.id)
 		dispatch('success', null)
 	}
-
-	$: console.log('product Id', product?.id)
 </script>
 
 {#if $stallsQuery.isLoading}

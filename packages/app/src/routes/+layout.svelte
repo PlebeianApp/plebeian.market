@@ -12,6 +12,7 @@
 	import { QueryClientProvider } from '@tanstack/svelte-query'
 	import { afterNavigate, goto } from '$app/navigation'
 	import { externalLinks } from '$lib/actions/external-links'
+	import RelayReportWidget from '$lib/components/assets/relayReportWidget.svelte'
 	import RelayWidget from '$lib/components/assets/relayWidget.svelte'
 	import BetaDialog from '$lib/components/dialogs/betaDialog.svelte'
 	import Drawer from '$lib/components/drawer.svelte'
@@ -22,6 +23,7 @@
 	import { dialogs } from '$lib/stores/dialog'
 	import ndkStore from '$lib/stores/ndk'
 	import { initNdkNWCs } from '$lib/stores/nwc'
+	import { relayReports } from '$lib/stores/relayReports'
 	import { cleanupCachedEvents, getAllAccounts } from '$lib/stores/session'
 
 	import type { LayoutData } from './$types'
@@ -200,8 +202,11 @@
 				<SellStuffAdvert />
 			{/if}
 			<Footer />
-			<section class="fixed bottom-0">
+			<section class="fixed bottom-0 flex">
 				<RelayWidget />
+				{#if $relayReports?.length}
+					<RelayReportWidget />
+				{/if}
 			</section>
 			<DialogManager />
 		</div>
