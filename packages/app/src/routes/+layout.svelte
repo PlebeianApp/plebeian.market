@@ -24,7 +24,7 @@
 	import ndkStore from '$lib/stores/ndk'
 	import { initNdkNWCs } from '$lib/stores/nwc'
 	import { relayReports } from '$lib/stores/relayReports'
-	import { cleanupCachedEvents, getAllAccounts } from '$lib/stores/session'
+	import { cleanupCachedEvents, getAllAccounts, sessions } from '$lib/stores/session'
 
 	import type { LayoutData } from './$types'
 
@@ -60,7 +60,15 @@
 				},
 			})
 		}
-		cleanupCachedEvents()
+		// localStorage.setItem('forbiddenPattern', (data.forbiddenWords.forbiddenPattern as RegExp).toString())
+		const userForbiddenPattern = localStorage.getItem('forbiddenPattern')
+		const instanceForbiddenPattern = data.forbiddenWords.forbiddenPattern.toString()
+		if (instanceForbiddenPattern == userForbiddenPattern) {
+			cleanupCachedEvents()
+		} else {
+			sessions.cachedEvents.clear()
+			localStorage.setItem('forbiddenPattern', instanceForbiddenPattern)
+		}
 	})
 
 	$: webManifestLink = pwaInfo ? pwaInfo.webManifest.linkTag : ''
