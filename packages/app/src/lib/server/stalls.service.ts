@@ -178,6 +178,7 @@ export const getAllStalls = async (filter: StallsFilter = stallsFilterSchema.par
 				filter.userId ? eq(stalls.userId, filter.userId) : undefined,
 				filter.stallId ? eq(stalls.id, filter.stallId) : undefined,
 				filter.search ? like(stalls.name, `%${filter.search.replaceAll(' ', '%')}%`) : undefined,
+				eq(stalls.banned, false),
 			),
 		)
 		.execute()
@@ -190,6 +191,7 @@ export const getAllStalls = async (filter: StallsFilter = stallsFilterSchema.par
 				filter.userId ? eq(stalls.userId, filter.userId) : undefined,
 				filter.stallId ? eq(stalls.id, filter.stallId) : undefined,
 				filter.search ? like(stalls.name, `%${filter.search.replaceAll(' ', '%')}%`) : undefined,
+				eq(stalls.banned, false),
 			),
 		)
 		.execute()
@@ -207,7 +209,11 @@ export const getAllStalls = async (filter: StallsFilter = stallsFilterSchema.par
 }
 
 export const getStallById = async (id: string): Promise<RichStall> => {
-	const [uniqueStall] = await db.select().from(stalls).where(eq(stalls.id, id)).execute()
+	const [uniqueStall] = await db
+		.select()
+		.from(stalls)
+		.where(and(eq(stalls.id, id), eq(stalls.banned, false)))
+		.execute()
 	if (!uniqueStall) {
 		error(404, 'Stall not found')
 	}
@@ -224,7 +230,7 @@ const stallsByCatNamePrepared = db
 	.from(stalls)
 	.leftJoin(products, eq(stalls.id, products.stallId))
 	.leftJoin(eventTags, eq(products.id, eventTags.eventId))
-	.where(and(eq(eventTags.tagValue, sql.placeholder('catName')), eq(eventTags.tagName, 't')))
+	.where(and(eq(eventTags.tagValue, sql.placeholder('catName')), eq(eventTags.tagName, 't'), eq(stalls.banned, false)))
 	.groupBy(stalls.id)
 	.prepare()
 
@@ -328,7 +334,11 @@ export const setStallMetaFeatured = async (stallId: string, featured: boolean) =
 }
 
 export const getStallsByUserId = async (userId: string): Promise<RichStall[]> => {
-	const stallsResult = await db.select().from(stalls).where(eq(stalls.userId, userId)).execute()
+	const stallsResult = await db
+		.select()
+		.from(stalls)
+		.where(and(eq(stalls.userId, userId), eq(stalls.banned, false)))
+		.execute()
 
 	const richStalls = await Promise.all(
 		stallsResult.map(async (stall) => {
@@ -523,6 +533,20 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
 	} catch (e) {
 		console.error(`Error updating stall: ${e}`)
 		return null
+	}
+}
+
+export const getBannedStalls = async () => {
+	const stallsResult = await db.query.stalls.findMany({
+		where: eq(stalls.banned, true),
+	})
+	return stallsResult
+}
+
+export const setStallBanned = async (stallId: string, banned: boolean) => {
+	const [updatedStall] = await db.update(stalls).set({ banned }).where(eq(stalls.id, stallId)).returning()
+	if (!updatedStall) {
+		throw new Error('Failed to update stall')
 	}
 }
 

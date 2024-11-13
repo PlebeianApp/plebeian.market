@@ -89,7 +89,7 @@ export const getProductsByUserId = async (filter: ProductsFilter = productsFilte
 	const productsResult = await db
 		.select()
 		.from(products)
-		.where(filter.userId ? eq(products.userId, filter.userId) : undefined)
+		.where(and(filter.userId ? eq(products.userId, filter.userId) : undefined, eq(products.banned, false)))
 		.limit(filter.pageSize)
 		.execute()
 
@@ -98,7 +98,7 @@ export const getProductsByUserId = async (filter: ProductsFilter = productsFilte
 	const [{ count: total } = { count: 0 }] = await db
 		.select({ count: count() })
 		.from(products)
-		.where(filter.userId ? eq(products.userId, filter.userId) : undefined)
+		.where(and(filter.userId ? eq(products.userId, filter.userId) : undefined, eq(products.banned, false)))
 
 	if (displayProducts) {
 		return { total, products: displayProducts }
@@ -117,12 +117,15 @@ export const getProductsByStallId = async (stallId: string, filter: ProductsFilt
 		.select()
 		.from(products)
 		.orderBy(filter.order === 'asc' ? asc(orderBy) : desc(orderBy))
-		.where(eq(products.stallId, stallId))
+		.where(and(eq(products.stallId, stallId), eq(products.banned, false)))
 		.execute()
 
 	const displayProducts: DisplayProduct[] = await Promise.all(productsResult.map(toDisplayProduct))
 
-	const [{ count: total } = { count: 0 }] = await db.select({ count: count() }).from(products).where(eq(products.stallId, stallId))
+	const [{ count: total } = { count: 0 }] = await db
+		.select({ count: count() })
+		.from(products)
+		.where(and(eq(products.stallId, stallId), eq(products.banned, false)))
 
 	if (displayProducts) {
 		return { total, products: displayProducts }
@@ -154,6 +157,7 @@ export const getAllProducts = async (filter: ProductsFilter = productsFilterSche
 			and(
 				filter.userId ? eq(products.userId, filter.userId) : undefined,
 				filter.search ? like(products.productName, `%${filter.search.replaceAll(' ', '%')}%`) : undefined,
+				eq(products.banned, false),
 			),
 		)
 
@@ -167,13 +171,34 @@ export const getAllProducts = async (filter: ProductsFilter = productsFilterSche
 }
 
 export const getProductById = async (productId: string): Promise<DisplayProduct> => {
-	const [productRes] = await db.select().from(products).where(eq(products.id, productId)).execute()
+	const [productRes] = await db
+		.select()
+		.from(products)
+		.where(and(eq(products.id, productId), eq(products.banned, false)))
+		.execute()
 
 	if (!productRes) {
 		error(404, 'Not found')
 	}
 
 	return await toDisplayProduct(productRes)
+}
+
+export const getBannedProducts = async (filter: ProductsFilter = productsFilterSchema.parse({})) => {
+	const productsResult = await db.query.products.findMany({
+		where: and(eq(products.banned, true)),
+	})
+
+	const displayProducts: DisplayProduct[] = await Promise.all(productsResult.map(toDisplayProduct))
+
+	return displayProducts
+}
+
+export const setProductBanned = async (productId: string, banned: boolean) => {
+	const [updatedProduct] = await db.update(products).set({ banned }).where(eq(products.id, productId)).returning()
+	if (!updatedProduct) {
+		throw new Error('Failed to update product')
+	}
 }
 
 export const setProductMetaFeatured = async (productId: string, featured: boolean) => {
@@ -556,7 +581,7 @@ const preparedProductsByCatName = db
 	.select({ ...getTableColumns(products) })
 	.from(products)
 	.leftJoin(eventTags, eq(products.id, eventTags.eventId))
-	.where(and(eq(eventTags.tagValue, sql.placeholder('category')), eq(eventTags.tagName, 't')))
+	.where(and(eq(eventTags.tagValue, sql.placeholder('category')), eq(eventTags.tagName, 't'), eq(products.banned, false)))
 	.limit(sql.placeholder('limit'))
 	.offset(sql.placeholder('offset'))
 	.prepare()
