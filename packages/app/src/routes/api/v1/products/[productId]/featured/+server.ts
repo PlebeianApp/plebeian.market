@@ -13,7 +13,6 @@ export const POST = async ({ params, request }) => {
 	try {
 		await authorizeEditorOrAdmin(request, 'POST')
 		const resultProductId = await setProductMetaFeatured(productId, featured)
-		console.log('setProductFeatured', resultProductId)
 		return json({ id: resultProductId })
 	} catch (err) {
 		throw error(500, `Failed to update product featured status: ${err.message}`)
