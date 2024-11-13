@@ -38,7 +38,7 @@
 	let zapDialogOpen = false
 	let spinnerShown = false
 	let advancedSettingsOpen = false
-	let canUseWebln = 'webln' in window
+	let canUseWebln = typeof window !== 'undefined' ? 'webln' in window : false
 
 	$: zapAmountSats = 21
 	$: user = $ndkStore.getUser({ pubkey: userIdToZap })
