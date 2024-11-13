@@ -6,6 +6,7 @@ import { derived } from 'svelte/store'
 import type { ProductImage } from '@plebeian/database'
 
 import { createRequest, queryClient } from './client'
+import { createProductImagesForUserKey } from './keys'
 
 declare module './client' {
 	interface Endpoints {
@@ -15,7 +16,7 @@ declare module './client' {
 
 export const productImagesForUserQuery = createQuery(
 	derived(ndkStore, ($ndkStore) => ({
-		queryKey: ['productImages', $ndkStore.activeUser?.pubkey],
+		queryKey: $ndkStore.activeUser?.pubkey ? createProductImagesForUserKey($ndkStore.activeUser?.pubkey) : [''],
 		queryFn: async () => {
 			if ($ndkStore.activeUser?.pubkey) {
 				const user = await createRequest(`GET /api/v1/product-images?userId=${$ndkStore.activeUser.pubkey}`, {

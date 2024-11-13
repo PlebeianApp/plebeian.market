@@ -50,6 +50,7 @@ export const createProductMutation = createMutation(
 		},
 		onSuccess: (data: DisplayProduct[] | undefined | null) => {
 			if (data) {
+				// TODO: we should iterate over all queries and remove those that start with products, this approach is not correct
 				queryClient.invalidateQueries({ queryKey: ['products'] })
 				queryClient.invalidateQueries({ queryKey: ['shipping'] })
 				queryClient.invalidateQueries({ queryKey: ['categories'] })

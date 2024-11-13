@@ -12,6 +12,7 @@ import { derived } from 'svelte/store'
 import type { UserMeta, UserRoles } from '@plebeian/database'
 
 import { createRequest, queryClient } from './client'
+import { createUserExistsKey, createUserKey, createUserRelaysKey, createUserRoleKey, createUsersByFilterKey } from './keys'
 
 declare module './client' {
 	interface Endpoints {
@@ -24,7 +25,7 @@ declare module './client' {
 
 export const activeUserQuery = createQuery(
 	derived(ndkStore, ($ndkStore) => ({
-		queryKey: ['user', $ndkStore.activeUser?.pubkey],
+		queryKey: $ndkStore.activeUser?.pubkey ? createUserKey($ndkStore.activeUser?.pubkey) : ['user'],
 		queryFn: async () => {
 			if ($ndkStore.activeUser?.pubkey) {
 				const user = (await createRequest(`GET /api/v1/users/${$ndkStore.activeUser.pubkey}`, {
@@ -44,7 +45,7 @@ export const activeUserQuery = createQuery(
 export const createUserRoleByIdQuery = (id: string) =>
 	createQuery<UserRoles>(
 		{
-			queryKey: ['users', 'role', id],
+			queryKey: createUserRoleKey(id),
 			queryFn: async () => {
 				const role = await createRequest(`GET /api/v1/users/${id}/role`, {
 					auth: true,
@@ -58,7 +59,7 @@ export const createUserRoleByIdQuery = (id: string) =>
 export const createUserByIdQuery = (id: string) =>
 	createQuery<NDKUserProfile | null>(
 		{
-			queryKey: ['users', id],
+			queryKey: createUserKey(id),
 			queryFn: async () => {
 				try {
 					const result = (await createRequest(`GET /api/v1/users/${id}`, {})) as NDKUserProfile
@@ -84,7 +85,7 @@ export const createUserByIdQuery = (id: string) =>
 export const createUserRelaysByIdQuery = (id: string) =>
 	createQuery(
 		{
-			queryKey: ['usersRelays', id],
+			queryKey: createUserRelaysKey(id),
 			queryFn: async () => {
 				const { userRelays } = await fetchUserRelays(id)
 				if (userRelays) {
@@ -99,7 +100,7 @@ export const createUserRelaysByIdQuery = (id: string) =>
 export const createUserExistsQuery = (id: string) =>
 	createQuery<boolean>(
 		{
-			queryKey: ['users', 'exists', id],
+			queryKey: createUserExistsKey(id),
 			queryFn: async () => {
 				const user = await createRequest(`GET /api/v1/users/${id}?exists`, {})
 				return user
@@ -109,10 +110,10 @@ export const createUserExistsQuery = (id: string) =>
 		queryClient,
 	)
 
-export const createUsersByRoleQuery = (filter: Partial<UsersFilter>) =>
+export const createUsersByFilterQuery = (filter: Partial<UsersFilter>) =>
 	createQuery<string[]>(
 		{
-			queryKey: ['users', ...Object.values(filter)],
+			queryKey: createUsersByFilterKey(filter),
 			queryFn: async () => {
 				const users = await createRequest(`GET /api/v1/users`, {
 					params: usersFilterSchema.parse(filter),

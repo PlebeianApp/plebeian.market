@@ -1,6 +1,7 @@
 import { createQuery } from '@tanstack/svelte-query'
 
 import { createRequest, queryClient } from './client'
+import { createV4VForUserKey } from './keys'
 
 type V4VURL = `/api/v1/v4v?userId=${string}`
 
@@ -26,7 +27,7 @@ declare module './client' {
 export const v4VForUserQuery = (userId: string) =>
 	createQuery<V4VDTO[]>(
 		{
-			queryKey: ['v4v', userId],
+			queryKey: createV4VForUserKey(userId),
 			queryFn: async () => {
 				try {
 					return await createRequest(`GET ${buildV4VURL({ userId })}`, { auth: false })

@@ -2,6 +2,7 @@ import type { RichShippingInfo } from '$lib/server/shipping.service'
 import { createQuery } from '@tanstack/svelte-query'
 
 import { createRequest, queryClient } from './client'
+import { createShippingKey, createShippingMethodKey } from './keys'
 
 declare module './client' {
 	interface Endpoints {
@@ -12,7 +13,7 @@ declare module './client' {
 export const createShippingQuery = (stallId: string) =>
 	createQuery<RichShippingInfo[]>(
 		{
-			queryKey: ['shipping', stallId],
+			queryKey: createShippingKey(stallId),
 			queryFn: async () => {
 				const response = await createRequest(`GET /api/v1/shipping/${stallId}`, {})
 				return response
@@ -24,7 +25,7 @@ export const createShippingQuery = (stallId: string) =>
 export const createShippingMethodQuery = (methodId: string) =>
 	createQuery<RichShippingInfo[]>(
 		{
-			queryKey: ['shipping', methodId],
+			queryKey: createShippingMethodKey(methodId),
 			queryFn: async () => {
 				const response = await createRequest(`GET /api/v1/shipping?methodId=${methodId}`, {})
 				return response

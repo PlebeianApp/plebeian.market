@@ -7,7 +7,7 @@
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
 	import { Input } from '$lib/components/ui/input'
 	import { createUserFromNostrMutation, setUserRoleMutation } from '$lib/fetch/users.mutations.js'
-	import { createUserByIdQuery, createUsersByRoleQuery } from '$lib/fetch/users.queries.js'
+	import { createUserByIdQuery, createUsersByFilterQuery } from '$lib/fetch/users.queries.js'
 	import ndkStore from '$lib/stores/ndk'
 	import { decodePk, nav_back } from '$lib/utils'
 	import { toast } from 'svelte-sonner'
@@ -19,9 +19,9 @@
 	export let data: PageData
 	const linkDetails = data.menuItems.find((item) => item.value === 'app-settings')?.links.find((item) => item.href === $page.url.pathname)
 
-	const admins = createUsersByRoleQuery({ role: 'admin' })
-	const editors = createUsersByRoleQuery({ role: 'editor' })
-	const plebs = createUsersByRoleQuery({ role: 'pleb' })
+	const admins = createUsersByFilterQuery({ role: 'admin' })
+	const editors = createUsersByFilterQuery({ role: 'editor' })
+	const plebs = createUsersByFilterQuery({ role: 'pleb' })
 
 	let isAddUserOpen = false
 	let npub = ''

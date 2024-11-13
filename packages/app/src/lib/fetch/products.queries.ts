@@ -7,11 +7,17 @@ import { aggregatorAddProducts } from '$lib/nostrSubs/data-aggregator'
 import { fetchUserProductData, normalizeProductsFromNostr } from '$lib/nostrSubs/utils'
 import { productsFilterSchema } from '$lib/schema'
 import { btcToCurrency, resolveQuery } from '$lib/utils'
-import {createCurrencyAmountConversionKey, createCurrencyConversionKey, createProductByFilterKey, createProductExistsKey, createProductKey} from './keys'
 
 import { CURRENCIES } from '@plebeian/database/constants'
 
 import { createRequest, queryClient } from './client'
+import {
+	createCurrencyAmountConversionKey,
+	createCurrencyConversionKey,
+	createProductByFilterKey,
+	createProductExistsKey,
+	createProductKey,
+} from './keys'
 
 declare module './client' {
 	interface Endpoints {
