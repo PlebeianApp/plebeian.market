@@ -283,17 +283,17 @@ importers:
         specifier: workspace:*
         version: link:../../tooling/prettier
       better-sqlite3:
-        specifier: ^9.6.0
-        version: 9.6.0
+        specifier: 11.5.0
+        version: 11.5.0
       dotenv:
         specifier: ^16.4.5
         version: 16.4.5
       drizzle-orm:
-        specifier: ^0.32.2
-        version: 0.32.2(@types/better-sqlite3@7.6.11)(better-sqlite3@9.6.0)(kysely@0.27.3)
+        specifier: 0.36.1
+        version: 0.36.1(@types/better-sqlite3@7.6.11)(better-sqlite3@11.5.0)(kysely@0.27.3)
       drizzle-zod:
-        specifier: ^0.5.1
-        version: 0.5.1(drizzle-orm@0.32.2(@types/better-sqlite3@7.6.11)(better-sqlite3@9.6.0)(kysely@0.27.3))(zod@3.23.8)
+        specifier: 0.5.1
+        version: 0.5.1(drizzle-orm@0.36.1(@types/better-sqlite3@7.6.11)(better-sqlite3@11.5.0)(kysely@0.27.3))(zod@3.23.8)
     devDependencies:
       '@faker-js/faker':
         specifier: ^8.4.1
@@ -302,8 +302,8 @@ importers:
         specifier: ^7.6.11
         version: 7.6.11
       drizzle-kit:
-        specifier: 0.23.0
-        version: 0.23.0
+        specifier: 0.28.0
+        version: 0.28.0
       prettier:
         specifier: ^3.3.3
         version: 3.3.3
@@ -1039,6 +1039,9 @@ packages:
   '@commitlint/types@19.5.0':
     resolution: {integrity: sha512-DSHae2obMSMkAtTBSOulg5X7/z+rGLxcXQIkg3OmWvY6wifojge5uVMydfhUvs7yQj+V7jNmRZ2Xzl8GJyqRgg==}
     engines: {node: '>=v18'}
+
+  '@drizzle-team/brocli@0.10.2':
+    resolution: {integrity: sha512-z33Il7l5dKjUgGULTqBsQBQwckHh5AbIuxhdsIxDDiZAzBOrZO6q9ogcWC65kU382AfynTfgNumVcNIjuIua6w==}
 
   '@egoist/tailwindcss-icons@1.8.0':
     resolution: {integrity: sha512-75LfllKL2lq0sGH+wcpsn/sLtJ0kMkDWmcZTLAB76QLDTmfsFu4QHwZVbtCD2woGyKl9c8KvtOUW9JSjRqOVtA==}
@@ -2438,6 +2441,9 @@ packages:
   bech32@2.0.0:
     resolution: {integrity: sha512-LcknSilhIGatDAsY1ak2I8VtGaHNhgMSYVxFrGLXv+xLHytaKZKcaUJJUE7qmBr7h33o5YQwP55pMI0xmkpJwg==}
 
+  better-sqlite3@11.5.0:
+    resolution: {integrity: sha512-e/6eggfOutzoK0JWiU36jsisdWoHOfN9iWiW/SieKvb7SAa6aGNmBM/UKyp+/wWSXpLlWNN8tCPwoDNPhzUvuQ==}
+
   better-sqlite3@9.6.0:
     resolution: {integrity: sha512-yR5HATnqeYNVnkaUTf4bOP2dJSnyhP4puJN/QPRyx4YkBEEUxib422n2XzPqDEHjQQqazoYoADdAm5vE15+dAQ==}
 
@@ -2866,17 +2872,18 @@ packages:
     resolution: {integrity: sha512-ZmdL2rui+eB2YwhsWzjInR8LldtZHGDoQ1ugH85ppHKwpUHL7j7rN0Ti9NCnGiQbhaZ11FpR+7ao1dNsmduNUg==}
     engines: {node: '>=12'}
 
-  drizzle-kit@0.23.0:
-    resolution: {integrity: sha512-w9jE97z193dd4jzAyj4Uv2SOh8Ydue70Ki6W0awy4bGM1aPXan6zD6Yv+nNTA6oGgNTDl2MJFxutjHG4fden5g==}
+  drizzle-kit@0.28.0:
+    resolution: {integrity: sha512-KqI+CS2Ga9GYIrXpxpCDUJJrH/AT/k4UY0Pb4oRgQEGkgN1EdCnqp664cXgwPWjDr5RBtTsjZipw8+8C//K63A==}
     hasBin: true
 
-  drizzle-orm@0.32.2:
-    resolution: {integrity: sha512-3fXKzPzrgZIcnWCSLiERKN5Opf9Iagrag75snfFlKeKSYB1nlgPBshzW3Zn6dQymkyiib+xc4nIz0t8U+Xdpuw==}
+  drizzle-orm@0.36.1:
+    resolution: {integrity: sha512-F4hbimnMEhyWzDowQB4xEuVJJWXLHZYD7FYwvo8RImY+N7pStGqsbfmT95jDbec1s4qKmQbiuxEDZY90LRrfIw==}
     peerDependencies:
       '@aws-sdk/client-rds-data': '>=3'
       '@cloudflare/workers-types': '>=3'
-      '@electric-sql/pglite': '>=0.1.1'
-      '@libsql/client': '*'
+      '@electric-sql/pglite': '>=0.2.0'
+      '@libsql/client': '>=0.10.0'
+      '@libsql/client-wasm': '>=0.10.0'
       '@neondatabase/serverless': '>=0.1'
       '@op-engineering/op-sqlite': '>=2'
       '@opentelemetry/api': ^1.4.1
@@ -2909,6 +2916,8 @@ packages:
       '@electric-sql/pglite':
         optional: true
       '@libsql/client':
+        optional: true
+      '@libsql/client-wasm':
         optional: true
       '@neondatabase/serverless':
         optional: true
@@ -6353,6 +6362,8 @@ snapshots:
       '@types/conventional-commits-parser': 5.0.0
       chalk: 5.3.0
 
+  '@drizzle-team/brocli@0.10.2': {}
+
   '@egoist/tailwindcss-icons@1.8.0(tailwindcss@3.4.3)':
     dependencies:
       '@iconify/utils': 2.1.24
@@ -7635,6 +7646,11 @@ snapshots:
 
   bech32@2.0.0: {}
 
+  better-sqlite3@11.5.0:
+    dependencies:
+      bindings: 1.5.0
+      prebuild-install: 7.1.2
+
   better-sqlite3@9.6.0:
     dependencies:
       bindings: 1.5.0
@@ -8063,23 +8079,24 @@ snapshots:
 
   dotenv@16.4.5: {}
 
-  drizzle-kit@0.23.0:
+  drizzle-kit@0.28.0:
     dependencies:
+      '@drizzle-team/brocli': 0.10.2
       '@esbuild-kit/esm-loader': 2.6.5
       esbuild: 0.19.12
       esbuild-register: 3.6.0(esbuild@0.19.12)
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.32.2(@types/better-sqlite3@7.6.11)(better-sqlite3@9.6.0)(kysely@0.27.3):
+  drizzle-orm@0.36.1(@types/better-sqlite3@7.6.11)(better-sqlite3@11.5.0)(kysely@0.27.3):
     optionalDependencies:
       '@types/better-sqlite3': 7.6.11
-      better-sqlite3: 9.6.0
+      better-sqlite3: 11.5.0
       kysely: 0.27.3
 
-  drizzle-zod@0.5.1(drizzle-orm@0.32.2(@types/better-sqlite3@7.6.11)(better-sqlite3@9.6.0)(kysely@0.27.3))(zod@3.23.8):
+  drizzle-zod@0.5.1(drizzle-orm@0.36.1(@types/better-sqlite3@7.6.11)(better-sqlite3@11.5.0)(kysely@0.27.3))(zod@3.23.8):
     dependencies:
-      drizzle-orm: 0.32.2(@types/better-sqlite3@7.6.11)(better-sqlite3@9.6.0)(kysely@0.27.3)
+      drizzle-orm: 0.36.1(@types/better-sqlite3@7.6.11)(better-sqlite3@11.5.0)(kysely@0.27.3)
       zod: 3.23.8
 
   eastasianwidth@0.2.0: {}
