@@ -133,6 +133,39 @@ export const getProductsByStallId = async (stallId: string, filter: ProductsFilt
 	error(404, 'Not found')
 }
 
+export const getFeaturedProducts = async (filter: ProductsFilter = productsFilterSchema.parse({})) => {
+	const orderBy = {
+		createdAt: products.createdAt,
+		price: products.price,
+	}[filter.orderBy]
+
+	const productsResult = await db
+		.select({
+			...getTableColumns(products),
+		})
+		.from(products)
+		.innerJoin(productMeta, eq(products.id, productMeta.productId))
+		.where(and(eq(productMeta.metaName, 'is_global_featured'), eq(productMeta.valueBoolean, true), eq(products.banned, false)))
+		.orderBy(filter.order === 'asc' ? asc(orderBy) : desc(orderBy))
+		.limit(filter.pageSize)
+		.offset((filter.page - 1) * filter.pageSize)
+		.execute()
+
+	const [{ count: total } = { count: 0 }] = await db
+		.select({ count: count() })
+		.from(products)
+		.innerJoin(productMeta, eq(products.id, productMeta.productId))
+		.where(and(eq(productMeta.metaName, 'is_global_featured'), eq(productMeta.valueBoolean, true), eq(products.banned, false)))
+
+	const displayProducts: DisplayProduct[] = await Promise.all(productsResult.map(toDisplayProduct))
+
+	if (displayProducts) {
+		return { total, products: displayProducts }
+	}
+
+	error(404, 'Not found')
+}
+
 export const getAllProducts = async (filter: ProductsFilter = productsFilterSchema.parse({})) => {
 	const orderBy = {
 		createdAt: products.createdAt,
