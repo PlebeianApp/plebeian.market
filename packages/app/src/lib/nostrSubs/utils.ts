@@ -10,7 +10,7 @@ import { createStallFromNostrEvent } from '$lib/fetch/stalls.mutations'
 import { createUserFromNostrMutation } from '$lib/fetch/users.mutations'
 import ndkStore from '$lib/stores/ndk'
 import { addCachedEvent, getCachedEvent, updateCachedEvent } from '$lib/stores/session'
-import { getEventCoordinates } from '$lib/utils'
+import { getEventCoordinates, parseCoordinatesString } from '$lib/utils'
 import { format } from 'date-fns'
 import { get } from 'svelte/store'
 import { ZodError, ZodSchema } from 'zod'
@@ -41,6 +41,28 @@ export async function fetchStallData(
 		: await $ndkStore.fetchEvent(stallFilter, { cacheUsage: subCacheUsage ?? NDKSubscriptionCacheUsage.PARALLEL })
 
 	return { stallNostrRes }
+}
+
+export async function fetchAddressableEvent(coordinates: string, subCacheUsage?: NDKSubscriptionCacheUsage): Promise<NDKEvent | null> {
+	const parsed = parseCoordinatesString(coordinates)
+	if (!parsed.coordinates) return null
+
+	const $ndkStore = get(ndkStore)
+
+	const filter = {
+		kinds: [Number(parsed.kind)],
+		authors: [String(parsed.pubkey)],
+		'#d': [String(parsed.tagD)],
+	}
+
+	try {
+		return await $ndkStore.fetchEvent(filter, {
+			cacheUsage: subCacheUsage ?? NDKSubscriptionCacheUsage.PARALLEL,
+		})
+	} catch (error) {
+		console.error('Error fetching addressable event:', error)
+		return null
+	}
 }
 
 export async function fetchUserStallsData(userId: string): Promise<{

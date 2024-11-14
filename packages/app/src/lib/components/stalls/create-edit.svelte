@@ -29,7 +29,7 @@
 		shouldRegister,
 		unixTimeNow,
 	} from '$lib/utils'
-	import { publishEvent } from '$lib/utils/nostr.utils'
+	import { deleteEvent, publishEvent } from '$lib/utils/nostr.utils'
 	import { validateForm } from '$lib/utils/zod.utils'
 	import geohash from 'ngeohash'
 	import { createEventDispatcher, onMount } from 'svelte'
@@ -208,7 +208,12 @@
 
 	async function handleDelete() {
 		if (!stall?.id) return
-		await $deleteStallMutation.mutateAsync(stall.id)
+		try {
+			await $deleteStallMutation.mutateAsync(stall.id)
+		} catch (error) {
+			console.error('Error deleting stall:', error)
+		}
+		await deleteEvent(stall.id)
 		dispatch('success', null)
 	}
 </script>

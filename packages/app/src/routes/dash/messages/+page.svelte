@@ -62,7 +62,7 @@
 			</div>
 		{:else}
 			<div class="h-full overflow-y-auto flex flex-col gap-2">
-				{#each Object.entries($groupedDMs) as [pubkey, messages]}
+				{#each Object.entries($groupedDMs) as [pubkey, messages] (pubkey)}
 					<ConversationListItem {pubkey} lastMessagets={Number(messages[0].created_at)} onSelect={selectConversation} />
 				{/each}
 			</div>

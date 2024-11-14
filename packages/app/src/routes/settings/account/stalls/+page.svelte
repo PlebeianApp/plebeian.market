@@ -15,7 +15,6 @@
 	import type { PageData } from './$types'
 
 	export let data: PageData
-	const { activeUser } = data
 
 	let stallsMode: 'list' | 'create' | 'edit' = 'list'
 	let nostrStalls: Partial<RichStall>[] = []
@@ -41,9 +40,9 @@
 	}
 
 	onMount(async () => {
-		if (!activeUser?.id) return
+		if (!$ndkStore.activeUser?.pubkey) return
 		try {
-			const { stallNostrRes } = await fetchUserStallsData(activeUser.id)
+			const { stallNostrRes } = await fetchUserStallsData($ndkStore.activeUser.pubkey)
 			if (stallNostrRes) {
 				nostrStalls = (await Promise.all([...stallNostrRes].map(normalizeStallData)))
 					.map(({ data }) => data as Partial<RichStall>)

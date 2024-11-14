@@ -2,6 +2,7 @@ import type { CreateQueryResult } from '@tanstack/svelte-query'
 import type { ProductsFilter } from '$lib/schema'
 import type { DisplayProduct } from '$lib/server/products.service'
 import { createQuery } from '@tanstack/svelte-query'
+import { browser } from '$app/environment'
 import { numSatsInBtc } from '$lib/constants'
 import { aggregatorAddProducts } from '$lib/nostrSubs/data-aggregator'
 import { fetchUserProductData, normalizeProductsFromNostr } from '$lib/nostrSubs/utils'
@@ -145,6 +146,7 @@ export const createProductsByFilterQuery = (filter: Partial<ProductsFilter>) =>
 
 				return null
 			},
+			enabled: !!browser,
 		},
 		queryClient,
 	)

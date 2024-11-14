@@ -1,6 +1,6 @@
 import type { NDKEvent, NDKFilter } from '@nostr-dev-kit/ndk'
 import type { ExtendedBaseType, NDKEventStore } from '@nostr-dev-kit/ndk-svelte'
-import { NDKKind } from '@nostr-dev-kit/ndk'
+import { NDKKind, NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk'
 import { page } from '$app/stores'
 import { KindStalls } from '$lib/constants'
 import ndkStore from '$lib/stores/ndk'
@@ -22,7 +22,7 @@ if (typeof window !== 'undefined') {
 
 export const stallsSub: NDKEventStore<ExtendedBaseType<NDKEvent>> = ndk.storeSubscribe(
 	{ kinds: [KindStalls], limit: 100 },
-	{ closeOnEose: true, autoStart: false },
+	{ closeOnEose: true, autoStart: false, cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY },
 )
 
 export const dmKind04Sub: NDKEventStore<ExtendedBaseType<NDKEvent>> = ndk.storeSubscribe({}, { closeOnEose: false, autoStart: false })
@@ -88,7 +88,6 @@ export function createDMSubscriptionManager(dmKind04Sub: NDKEventStore<ExtendedB
 			return `${authors}-${tags}`
 		}
 
-		// Process all filters at once using spread operator
 		;[...existingFilters, ...newFilters].forEach((filter) => {
 			const key = createFilterKey(filter)
 			const existing = filterMap.get(key)

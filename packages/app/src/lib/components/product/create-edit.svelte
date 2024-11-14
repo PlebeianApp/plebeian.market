@@ -3,7 +3,6 @@
 	import type { DisplayProduct } from '$lib/server/products.service'
 	import type { RichShippingInfo } from '$lib/server/shipping.service'
 	import type { RichStall } from '$lib/server/stalls.service'
-	import type { StallCoordinatesType } from '$lib/stores/drawer-ui'
 	import type { ValidationErrors } from '$lib/utils/zod.utils'
 	import Button from '$lib/components/ui/button/button.svelte'
 	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte'
@@ -16,6 +15,8 @@
 	import { createProductMutation, deleteProductMutation, editProductMutation } from '$lib/fetch/products.mutations'
 	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
 	import ndkStore from '$lib/stores/ndk'
+	import { parseCoordinatesString } from '$lib/utils'
+	import { deleteEvent } from '$lib/utils/nostr.utils'
 	import { prepareProductData } from '$lib/utils/product.utils'
 	import { validateForm } from '$lib/utils/zod.utils'
 	import { createEventDispatcher, onMount } from 'svelte'
@@ -32,8 +33,8 @@
 
 	const dispatch = createEventDispatcher<{ success: unknown; error: unknown }>()
 	export let product: Partial<DisplayProduct> | null = null
-	export let forStall: StallCoordinatesType | null = null
-
+	export let forStall: string | null = null
+	if (forStall) forStall = parseCoordinatesString(forStall).coordinates || null
 	let isLoading = false
 	let stall: Partial<RichStall> | null = null
 	let categories: Category[] = []
@@ -160,7 +161,12 @@
 
 	async function handleDelete() {
 		if (!product?.id) return
-		await $deleteProductMutation.mutateAsync(product.id)
+		try {
+			await $deleteProductMutation.mutateAsync(product.id)
+		} catch (error) {
+			console.error('Error deleting product:', error)
+		}
+		await deleteEvent(product.id)
 		dispatch('success', null)
 	}
 </script>

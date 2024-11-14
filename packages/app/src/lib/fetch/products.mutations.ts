@@ -206,21 +206,15 @@ export const deleteProductMutation = createMutation(
 	{
 		mutationKey: [],
 		mutationFn: async (productId: string) => {
-			const $ndkStore = get(ndkStore)
-
-			if ($ndkStore.activeUser?.pubkey) {
-				const res = await createRequest(`DELETE /api/v1/products/${productId}`, {
-					auth: true,
-				})
-				return res
-			}
-			return null
+			const res = await createRequest(`DELETE /api/v1/products/${productId}`, {
+				auth: true,
+			})
+			return res
 		},
-		onSuccess: (productId: string | null) => {
+		onSuccess: () => {
 			const $ndkStore = get(ndkStore)
 			queryClient.invalidateQueries({ queryKey: ['products', $ndkStore.activeUser?.pubkey] })
-			queryClient.invalidateQueries({ queryKey: ['categories'] })
-			queryClient.invalidateQueries({ queryKey: ['stalls'] })
+			queryClient.invalidateQueries({ queryKey: ['stalls', $ndkStore.activeUser?.pubkey] })
 		},
 	},
 	queryClient,

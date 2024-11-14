@@ -23,7 +23,7 @@ class SessionDexie extends Dexie {
 	}
 }
 
-const sessions = new SessionDexie()
+export const sessions = new SessionDexie()
 // Account types
 export type BaseAccount = {
 	hexPubKey: string

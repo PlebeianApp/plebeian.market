@@ -19,10 +19,9 @@ const productTypeValidator = (value: unknown) => {
 }
 
 export const forbiddenPatternStore = derived(page, ($page) => {
-	const forbiddenPattern = ($page.data as PageData).forbiddenWords.forbiddenPattern
 	return {
-		createProductEventSchema: createProductEventSchema(forbiddenPattern),
-		createStallEventContentSchema: createStallEventContentSchema(forbiddenPattern),
+		createProductEventSchema: createProductEventSchema(($page.data as PageData).forbiddenWords.forbiddenPattern),
+		createStallEventContentSchema: createStallEventContentSchema(($page.data as PageData).forbiddenWords.forbiddenPattern),
 	}
 })
 
