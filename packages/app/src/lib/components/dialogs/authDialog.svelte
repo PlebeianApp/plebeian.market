@@ -30,7 +30,6 @@
 
 		if (loginResult) {
 			toast.success('Login success!')
-			setupDMSubscription()
 			if (loginMethod == 'NIP07' || !nsec) {
 				dialogs.clearAll()
 			}
@@ -51,15 +50,6 @@
 		loading = false
 	}
 
-	function setupDMSubscription() {
-		if (!$ndkStore.activeUser) return
-
-		dmKind04Sub.changeFilters([
-			{ kinds: [NDKKind.EncryptedDirectMessage], limit: 50, '#p': [$ndkStore.activeUser.pubkey] },
-			{ kinds: [NDKKind.EncryptedDirectMessage], limit: 50, authors: [$ndkStore.activeUser.pubkey] },
-		])
-		dmKind04Sub.ref()
-	}
 	const activeTab =
 		'w-full font-bold border-b-2 border-black text-black data-[state=active]:border-b-primary data-[state=active]:text-primary'
 </script>

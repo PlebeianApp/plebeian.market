@@ -32,7 +32,9 @@
 			localStorage.setItem('auto_login', `${checked}`)
 		}
 	}
+
 	$: userQuery = createUserByIdQuery(accointInfo?.hexPubKey)
+
 	onMount(() => {
 		if (localStorage.getItem('auto_login') == 'true') {
 			checked = true

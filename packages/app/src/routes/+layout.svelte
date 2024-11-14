@@ -25,6 +25,7 @@
 	import { initNdkNWCs } from '$lib/stores/nwc'
 	import { relayReports } from '$lib/stores/relayReports'
 	import { cleanupCachedEvents, getAllAccounts, sessions } from '$lib/stores/session'
+	import { setupDMSubscription } from '$lib/utils/dm.utils'
 
 	import type { LayoutData } from './$types'
 
@@ -152,6 +153,7 @@
 
 	$: if (isLoggedIn) {
 		initNdkNWCs()
+		setupDMSubscription()
 	}
 </script>
 
