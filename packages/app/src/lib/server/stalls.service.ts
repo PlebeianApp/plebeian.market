@@ -544,10 +544,30 @@ export const getBannedStalls = async () => {
 }
 
 export const setStallBanned = async (stallId: string, banned: boolean) => {
-	const [updatedStall] = await db.update(stalls).set({ banned }).where(eq(stalls.id, stallId)).returning()
-	if (!updatedStall) {
-		throw new Error('Failed to update stall')
-	}
+	return await db.transaction(async (tx) => {
+		const stallProducts = await tx.select({ id: products.id }).from(products).where(eq(products.stallId, stallId)).execute()
+
+		if (stallProducts.length > 0) {
+			await tx
+				.update(products)
+				.set({ banned })
+				.where(
+					inArray(
+						products.id,
+						stallProducts.map((p) => p.id),
+					),
+				)
+				.execute()
+		}
+
+		const [updatedStall] = await tx.update(stalls).set({ banned }).where(eq(stalls.id, stallId)).returning()
+
+		if (!updatedStall) {
+			throw new Error('Failed to update stall')
+		}
+
+		return updatedStall
+	})
 }
 
 export const deleteStall = async (stallId: string): Promise<string> => {

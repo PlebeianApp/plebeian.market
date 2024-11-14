@@ -28,7 +28,6 @@ import {
 	products,
 	productShipping,
 	sql,
-	stallMeta,
 } from '@plebeian/database'
 
 import { createProductEventSchema } from '../../schema/nostr-events'
@@ -147,6 +146,7 @@ export const getAllProducts = async (filter: ProductsFilter = productsFilterSche
 		where: and(
 			filter.userId ? eq(products.userId, filter.userId) : undefined,
 			filter.search ? like(products.productName, `%${filter.search.replaceAll(' ', '%')}%`) : undefined,
+			eq(products.banned, false),
 		),
 	})
 
@@ -196,9 +196,12 @@ export const getBannedProducts = async (filter: ProductsFilter = productsFilterS
 
 export const setProductBanned = async (productId: string, banned: boolean) => {
 	const [updatedProduct] = await db.update(products).set({ banned }).where(eq(products.id, productId)).returning()
+	console.log('BAN updatedProduct', updatedProduct)
 	if (!updatedProduct) {
 		throw new Error('Failed to update product')
 	}
+
+	return updatedProduct.id
 }
 
 export const setProductMetaFeatured = async (productId: string, featured: boolean) => {
@@ -580,8 +583,8 @@ export const deleteProduct = async (productId: string): Promise<string> => {
 const preparedProductsByCatName = db
 	.select({ ...getTableColumns(products) })
 	.from(products)
-	.leftJoin(eventTags, eq(products.id, eventTags.eventId))
-	.where(and(eq(eventTags.tagValue, sql.placeholder('category')), eq(eventTags.tagName, 't'), eq(products.banned, false)))
+	.leftJoin(eventTags, and(eq(products.id, eventTags.eventId), eq(products.banned, false)))
+	.where(and(eq(eventTags.tagValue, sql.placeholder('category')), eq(eventTags.tagName, 't')))
 	.limit(sql.placeholder('limit'))
 	.offset(sql.placeholder('offset'))
 	.prepare()

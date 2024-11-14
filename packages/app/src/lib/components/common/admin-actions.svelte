@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button'
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
-	import { setProductBannedMutation, setProductFeaturedMutation } from '$lib/fetch/products.mutations'
-	import { setStallBannedMutation, setStallFeaturedMutation } from '$lib/fetch/stalls.mutations'
-	import { setUserBannedMutation } from '$lib/fetch/users.mutations'
+	import { deleteProductMutation, setProductBannedMutation, setProductFeaturedMutation } from '$lib/fetch/products.mutations'
+	import { deleteStallMutation, setStallBannedMutation, setStallFeaturedMutation } from '$lib/fetch/stalls.mutations'
+	import { setUserBannedMutation, userDeleteAccountMutation } from '$lib/fetch/users.mutations'
 	import { currentUserRole } from '$lib/ndkLogin'
 	import { toast } from 'svelte-sonner'
 
@@ -13,7 +13,7 @@
 
 	$: userRole = $currentUserRole ?? 'pleb'
 
-	const handleDelete = async () => {
+	const handleBan = async () => {
 		try {
 			switch (type) {
 				case 'stall':
@@ -24,6 +24,25 @@
 					break
 				case 'user':
 					await $setUserBannedMutation.mutateAsync({ userId: id, banned: true })
+					break
+			}
+			toast.success(`${type} banned successfully`)
+		} catch (error) {
+			toast.error(`Failed to ban ${type}`)
+		}
+	}
+
+	const handleDelete = async () => {
+		try {
+			switch (type) {
+				case 'stall':
+					await $deleteStallMutation.mutateAsync(id)
+					break
+				case 'product':
+					await $deleteProductMutation.mutateAsync(id)
+					break
+				case 'user':
+					await $userDeleteAccountMutation.mutateAsync(id)
 					break
 			}
 			toast.success(`${type} deleted successfully`)
@@ -82,8 +101,20 @@
 
 						<DropdownMenu.Separator />
 					{/if}
+					<DropdownMenu.Item class="text-red-500" on:click={handleBan}>
+						<span>Ban {type}</span>
+						<span
+							data-tooltip="This will ban the {type} and all associated items downstream. The {type} will be kept in the database but will not be visible to users."
+							class="i-mingcute-question-line w-6 h-6 ml-2"
+						/>
+					</DropdownMenu.Item>
+
 					<DropdownMenu.Item class="text-red-500" on:click={handleDelete}>
-						Ban {type}
+						<span>Delete {type}</span>
+						<span
+							data-tooltip="This will delete the {type} and all associated items downstream. The {type} will be removed from the database and might be written back when encountered again."
+							class="i-mingcute-question-line w-6 h-6 ml-2"
+						/>
 					</DropdownMenu.Item>
 				</DropdownMenu.Group>
 			</DropdownMenu.Content>

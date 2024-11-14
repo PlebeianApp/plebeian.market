@@ -13,6 +13,7 @@ import {
 	PM_NPUB,
 	products,
 	sql,
+	stalls,
 	USER_META,
 	USER_ROLES,
 	userMeta,
@@ -459,10 +460,45 @@ export const getBannedUsers = async () => {
 }
 
 export const setUserBanned = async (userId: string, banned: boolean) => {
-	const [updatedUser] = await db.update(users).set({ banned }).where(eq(users.id, userId)).returning()
-	if (!updatedUser) {
-		throw new Error('Failed to update user')
-	}
+	return await db.transaction(async (tx) => {
+		const userStalls = await tx.select({ id: stalls.id }).from(stalls).where(eq(stalls.userId, userId)).execute()
+
+		const userProducts = await tx.select({ id: products.id }).from(products).where(eq(products.userId, userId)).execute()
+
+		if (userProducts.length > 0) {
+			await tx
+				.update(products)
+				.set({ banned })
+				.where(
+					inArray(
+						products.id,
+						userProducts.map((p) => p.id),
+					),
+				)
+				.execute()
+		}
+
+		if (userStalls.length > 0) {
+			await tx
+				.update(stalls)
+				.set({ banned })
+				.where(
+					inArray(
+						stalls.id,
+						userStalls.map((s) => s.id),
+					),
+				)
+				.execute()
+		}
+
+		const [updatedUser] = await tx.update(users).set({ banned }).where(eq(users.id, userId)).returning()
+
+		if (!updatedUser) {
+			throw new Error('Failed to update user')
+		}
+
+		return updatedUser
+	})
 }
 
 export const deleteUser = async (userId: string): Promise<boolean> => {

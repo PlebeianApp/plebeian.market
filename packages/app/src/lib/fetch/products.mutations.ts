@@ -225,6 +225,7 @@ export const setProductBannedMutation = createMutation(
 		},
 		onSuccess: ({ id }: { id: string }) => {
 			if (id) {
+				if (!id) return
 				queryClient.invalidateQueries({ queryKey: ['products', id] })
 				queryClient.invalidateQueries({ queryKey: ['products'] })
 				goto('/')
@@ -243,10 +244,13 @@ export const deleteProductMutation = createMutation(
 			})
 			return res
 		},
-		onSuccess: () => {
+		onSuccess: (productId: string | null) => {
+			if (!productId) return
 			const $ndkStore = get(ndkStore)
 			queryClient.invalidateQueries({ queryKey: ['products', $ndkStore.activeUser?.pubkey] })
+			queryClient.invalidateQueries({ queryKey: ['categories'] })
 			queryClient.invalidateQueries({ queryKey: ['stalls', $ndkStore.activeUser?.pubkey] })
+			goto('/')
 		},
 	},
 	queryClient,
