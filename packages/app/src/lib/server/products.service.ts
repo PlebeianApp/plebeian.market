@@ -36,7 +36,8 @@ import { cachedPattern } from './appSettings.service'
 import { stallExists } from './stalls.service'
 import { getNip05ByUserId } from './users.service'
 
-export type DisplayProduct = Pick<Product, 'id' | 'description' | 'currency' | 'quantity' | 'userId' | 'identifier' | 'stallId'> & {
+export type DisplayProduct = Pick<Product, 'id' | 'description' | 'currency' | 'quantity' | 'userId' | 'identifier'> & {
+	stall_id: string
 	name: Product['productName']
 	userNip05: string | null
 	createdAt: string
@@ -77,7 +78,7 @@ export const toDisplayProduct = async (product: Product): Promise<DisplayProduct
 		currency: product.currency,
 		quantity: product.quantity,
 		images: images,
-		stallId: parseCoordinatesString(product.stallId).tagD!,
+		stall_id: parseCoordinatesString(product.stallId).tagD!,
 		shipping,
 		categories: categories.map((c) => c.tagValue),
 		isFeatured: featuredMeta?.valueBoolean ?? false,
@@ -248,9 +249,9 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 					throw Error('Bad product schema')
 				}
 
-				const stallId = parsedProduct.stallId?.startsWith(`${KindStalls}`)
-					? parsedProduct.stallId
-					: `${KindStalls}:${productEvent.pubkey}:${parsedProduct.stallId}`
+				const stallId = parsedProduct.stall_id?.startsWith(`${KindStalls}`)
+					? parsedProduct.stall_id
+					: `${KindStalls}:${productEvent.pubkey}:${parsedProduct.stall_id}`
 
 				const stall = await stallExists(stallId)
 
@@ -404,10 +405,10 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 			}
 
 			const parsedProductData = parsedProduct.data
-			if (!parsedProductData?.stallId) {
+			if (!parsedProductData?.stall_id) {
 				throw new Error('Missing stall id')
 			}
-			const stallId = parseCoordinatesString(`${KindStalls}:${eventCoordinates.pubkey}:${parsedProductData.stallId}`)
+			const stallId = parseCoordinatesString(`${KindStalls}:${eventCoordinates.pubkey}:${parsedProductData.stall_id}`)
 			if (!stallId.coordinates) {
 				throw new Error('Invalid stall coordinates')
 			}

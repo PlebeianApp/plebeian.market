@@ -20,7 +20,7 @@
 
 	let isMyProduct = false
 
-	const stallCoordinates: Partial<EventCoordinates> = parseCoordinatesString(`${KindStalls}:${userId}:${product.stallId}`)
+	const stallCoordinates: Partial<EventCoordinates> = parseCoordinatesString(`${KindStalls}:${userId}:${product.stall_id}`)
 	const productCoordinates: Partial<EventCoordinates> = parseCoordinatesString(`${KindProducts}:${userId}:${id}`)
 
 	$: priceQuery = createCurrencyConversionQuery(String(currency), Number(price))

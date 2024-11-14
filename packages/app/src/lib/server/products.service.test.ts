@@ -54,7 +54,7 @@ describe('products service', () => {
 			quantity: 1,
 			shipping: [],
 			images: [],
-			stallId: 'testStallId',
+			stall_id: 'testStallId',
 			categories: expect.any(Array),
 		})
 	})
@@ -127,7 +127,7 @@ describe('products service', () => {
 			createdAt: expect.any(String),
 			currency: stall.currency,
 			description: 'Hello Description',
-			stallId: stall.id.split(':')[2],
+			stall_id: stall.id.split(':')[2],
 			identifier: identifier,
 			userId: devUser1.pk,
 			userNip05: expect.any(String),
@@ -163,7 +163,7 @@ describe('products service', () => {
 			id: targetProduct.id,
 			createdAt: expect.any(String),
 			currency: targetProduct.currency,
-			stallId: stall.id.split(':')[2],
+			stall_id: stall.id.split(':')[2],
 			description: targetProduct.description,
 			images: expect.any(Array),
 			isFeatured: expect.any(Boolean),

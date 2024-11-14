@@ -280,7 +280,7 @@ async function processProduct(
 		identifier: coordinates?.tagD,
 		id: coordinates?.coordinates,
 	}))
-	if (result.data && (!stallId || result.data.stallId === stallId?.split(':')[2])) {
+	if (result.data && (!stallId || result.data.stall_id === stallId)) {
 		return { displayProduct: result.data, event }
 	}
 

@@ -35,15 +35,14 @@
 	$: productsQuery = createProductsByFilterQuery({ userId: id })
 	$: stallsMixture = mergeWithExisting($stallsQuery?.data?.stalls ?? [], nostrStalls, 'id')
 	$: productsMixture = stallsMixture.length
-		? mergeWithExisting($productsQuery?.data?.products ?? [], toDisplayProducts, 'id').filter((product) =>
-				$stallsQuery.data?.stalls.some((stall) => stall.identifier == product.stallId),
+		? mergeWithExisting($productsQuery?.data?.products ?? [], toDisplayProducts, 'stall_id').filter((product) =>
+				$stallsQuery.data?.stalls.some((stall) => stall.identifier == product.stall_id),
 			)
 		: []
 
 	onMount(async () => {
 		if (!id) return
 		const [{ stallNostrRes }, { products: productsData }] = await Promise.all([fetchUserStallsData(id), fetchUserProductData(id)])
-
 		nostrStalls = stallNostrRes
 			? (await Promise.all([...stallNostrRes].map(normalizeStallData)))
 					.filter(

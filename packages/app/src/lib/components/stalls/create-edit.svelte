@@ -152,14 +152,14 @@
 		})
 
 		try {
-			const [, userExists] = await Promise.all([publishEvent(newEvent), checkIfUserExists($ndkStore.activeUser.pubkey)])
-			if (await shouldRegister(allowRegister, userExists)) {
+			const [publishedEvent, userExists] = await Promise.all([publishEvent(newEvent), checkIfUserExists($ndkStore.activeUser.pubkey)])
+			if ((await shouldRegister(allowRegister, userExists)) && publishedEvent) {
 				const nostrEvent = await newEvent.toNostrEvent()
 				await (stall?.id
 					? $updateStallFromNostrEvent.mutateAsync([stall.id, nostrEvent])
 					: $createStallFromNostrEvent.mutateAsync(nostrEvent))
 			}
-			dispatch('success', null)
+			publishedEvent && dispatch('success', null)
 		} catch (error) {
 			console.error('Error creating or updating stall:', error)
 			dispatch('error', error)

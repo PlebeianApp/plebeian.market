@@ -7,7 +7,7 @@ import { numSatsInBtc } from '$lib/constants'
 import { aggregatorAddProducts } from '$lib/nostrSubs/data-aggregator'
 import { fetchUserProductData, normalizeProductsFromNostr } from '$lib/nostrSubs/utils'
 import { productsFilterSchema } from '$lib/schema'
-import { btcToCurrency, resolveQuery } from '$lib/utils'
+import { btcToCurrency, parseCoordinatesString, resolveQuery } from '$lib/utils'
 
 import { CURRENCIES } from '@plebeian/database/constants'
 
@@ -118,7 +118,8 @@ export const createProductsByFilterQuery = (filter: Partial<ProductsFilter>) =>
 
 					if (filter.stallId) {
 						if (productsData?.size) {
-							const result = await normalizeProductsFromNostr(productsData, userId, filter.stallId)
+							const parsedStallIdString = parseCoordinatesString(filter.stallId)
+							const result = await normalizeProductsFromNostr(productsData, userId, parsedStallIdString.tagD)
 							if (result) {
 								const { toDisplayProducts, stallProducts } = result
 								aggregatorAddProducts(stallProducts)
