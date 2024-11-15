@@ -47,7 +47,7 @@ const standardProductColumns = {
 		.references(() => users.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
 	identifier: text('identifier').notNull(),
 	productName: text('product_name').notNull(),
-	description: text('description').notNull(),
+	description: text('description'),
 	currency: text('currency'),
 	quantity: integer('quantity').notNull(),
 	extraCost: numeric('extra_cost').notNull().default('0'),

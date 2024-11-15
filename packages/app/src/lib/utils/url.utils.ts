@@ -55,6 +55,28 @@ export class URLProcessor {
 		return hex
 	}
 
+	private static isNumeric(value: string): boolean {
+		return /^\d+$/.test(value)
+	}
+
+	private static parseCoordinate(coordinate: string): { kind?: number; userId: string; identifier?: string } {
+		const parts = coordinate.split(':')
+
+		if (parts.length === 2) {
+			return { userId: parts[0], identifier: parts[1] }
+		}
+
+		if (parts.length === 3) {
+			const [kindStr, userId, identifier] = parts
+			if (!this.isNumeric(kindStr)) {
+				throw error(400, 'Invalid kind in coordinate')
+			}
+			return { kind: parseInt(kindStr), userId, identifier }
+		}
+
+		throw error(400, 'Invalid coordinate format')
+	}
+
 	static async processUserIdentifier(userIdentifier: string, options?: URLProcessorOptions): Promise<string> {
 		const { allowedFormats = DEFAULT_OPTIONS.allowedFormats } = options ?? {}
 
@@ -85,14 +107,18 @@ export class URLProcessor {
 		if (parts.length === 0 || parts.length > 2) throw error(400, 'Invalid URL format')
 
 		if (parts.length === 1 && parts[0].includes(':')) {
-			const [userPart, identifier] = parts[0].split(':')
-			const userId = await this.processUserIdentifier(userPart, options)
+			const coordinate = this.parseCoordinate(parts[0])
+			const userId = await this.processUserIdentifier(coordinate.userId, options)
 
-			if (options?.requireIdentifier && !identifier) {
+			if (options?.requireIdentifier && !coordinate.identifier) {
 				throw error(400, 'Identifier is required')
 			}
 
-			return { userId, identifier, kind: options?.kind }
+			return {
+				userId,
+				identifier: coordinate.identifier,
+				kind: coordinate.kind ?? options?.kind,
+			}
 		}
 
 		const userId = await this.processUserIdentifier(parts[0], options)
