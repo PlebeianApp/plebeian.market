@@ -1,6 +1,13 @@
 import type { NDKEvent, NDKUserProfile } from '@nostr-dev-kit/ndk'
 import { queryClient } from '$lib/fetch/client'
-import { checkIfUserExists, getElapsedTimeInDays, getEventCoordinates, shouldRegister } from '$lib/utils'
+import {
+	checkIfProductExists,
+	checkIfStallExists,
+	checkIfUserExists,
+	getElapsedTimeInDays,
+	getEventCoordinates,
+	shouldRegister,
+} from '$lib/utils'
 
 import { fetchUserData, handleProductNostrData, handleStallNostrData, handleUserNostrData } from './utils'
 
@@ -54,10 +61,18 @@ async function processBatch(userIds: string[], allowRegister: boolean) {
 			}
 			if (userProducts.size > 0 && userStalls.length) {
 				for (const stall of userStalls) {
-					await handleStallNostrData(stall)
+					const stallExists = await checkIfStallExists(stall.id)
+					if (!stallExists) {
+						await handleStallNostrData(stall)
+					}
 				}
 				try {
-					await handleProductNostrData(userProducts)
+					for (const product of userProducts) {
+						const productExists = await checkIfProductExists(product.id)
+						if (!productExists) {
+							await handleProductNostrData(userProducts)
+						}
+					}
 				} catch {
 					console.warn('Cannot insert products')
 				}
