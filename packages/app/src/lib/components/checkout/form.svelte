@@ -57,9 +57,9 @@
 		<Input type="tel" bind:value={formData.contactPhone} />
 	</Label>
 	<Label>
-		<span class="required-mark">{FormLabels.contactEmail}</span>
+		<span>{FormLabels.contactEmail}</span>
 		{#if validationErrors.contactEmail}<span class="text-red-500">{validationErrors.contactEmail}</span>{/if}
-		<Input type="email" bind:value={formData.contactEmail} required />
+		<Input type="email" bind:value={formData.contactEmail} />
 	</Label>
 	<Label>
 		<span class="required-mark">{FormLabels.address}</span>
