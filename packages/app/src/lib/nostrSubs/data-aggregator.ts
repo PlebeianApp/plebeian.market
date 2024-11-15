@@ -49,32 +49,49 @@ async function processBatch(userIds: string[], allowRegister: boolean) {
 
 	for (const userId of batchUserIds) {
 		const userExists = await checkIfUserExists(userId)
-		const shouldRegisterUser = await shouldRegister(allowRegister, userExists, userId)
+		const shouldRegisterUser = await shouldRegister(allowRegister, userExists.exists, userId)
+
+		if (userExists.banned) {
+			continue
+		}
 
 		if (shouldRegisterUser) {
 			const user = Array.from(userQueue).find((u) => u.id === userId)
 			const userStalls = Array.from(stallQueue).filter((stall) => getEventCoordinates(stall)?.pubkey === userId)
 			const userProducts = new Set(Array.from(productQueue).filter((product) => getEventCoordinates(product)?.pubkey === userId))
 
-			if (user && !userExists) {
+			if (user && !userExists.exists) {
 				await handleUserNostrData(user, userId)
 			}
+
 			if (userProducts.size > 0 && userStalls.length) {
 				for (const stall of userStalls) {
-					const stallExists = await checkIfStallExists(stall.id)
-					if (!stallExists) {
+					const stallPubkey = getEventCoordinates(stall)?.pubkey
+					const stallExists = await checkIfStallExists(
+						`${getEventCoordinates(stall)?.kind}:${stallPubkey}:${getEventCoordinates(stall)?.tagD}`,
+					)
+
+					if (stallExists.banned) {
+						continue
+					}
+
+					if (!stallExists.exists) {
 						await handleStallNostrData(stall)
 					}
-				}
-				try {
-					for (const product of userProducts) {
-						const productExists = await checkIfProductExists(product.id)
-						if (!productExists) {
-							await handleProductNostrData(userProducts)
+
+					try {
+						for (const product of userProducts) {
+							const productExists = await checkIfProductExists(
+								`${getEventCoordinates(product)?.kind}:${getEventCoordinates(product)?.pubkey}:${getEventCoordinates(product)?.tagD}`,
+							)
+
+							if (!productExists.exists && !productExists.banned) {
+								await handleProductNostrData(userProducts)
+							}
 						}
+					} catch {
+						console.warn('Cannot insert products')
 					}
-				} catch {
-					console.warn('Cannot insert products')
 				}
 			}
 		}

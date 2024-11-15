@@ -1,5 +1,5 @@
 import type { NostrEvent } from '@nostr-dev-kit/ndk'
-import type { EventCoordinates } from '$lib/interfaces'
+import type { EventCoordinates, ExistsResult } from '$lib/interfaces'
 import type { StallsFilter } from '$lib/schema'
 import { error } from '@sveltejs/kit'
 import { KindStalls, standardDisplayDateFormat } from '$lib/constants'
@@ -588,11 +588,18 @@ export const deleteStall = async (stallId: string): Promise<string> => {
 	error(500, 'Failed to delete stall')
 }
 
-export const stallExists = async (stallId: string): Promise<boolean> => {
-	const result = await db
-		.select({ id: sql`1` })
-		.from(stalls)
-		.where(eq(stalls.id, stallId))
-		.limit(1)
-	return result.length > 0
+export const stallExists = async (stallId: string): Promise<ExistsResult> => {
+	const [result] = await db.select().from(stalls).where(eq(stalls.id, stallId)).limit(1)
+
+	if (!result) {
+		return {
+			exists: false,
+			banned: false,
+		}
+	}
+
+	return {
+		exists: true,
+		banned: result.banned,
+	}
 }

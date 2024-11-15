@@ -30,6 +30,7 @@ import {
 	sql,
 } from '@plebeian/database'
 
+import type { ExistsResult } from './users.service'
 import { createProductEventSchema } from '../../schema/nostr-events'
 import { cachedPattern } from './appSettings.service'
 import { stallExists } from './stalls.service'
@@ -648,11 +649,18 @@ export const getProductsByCatName = async (filter: ProductsFilter): Promise<{ to
 	return { total, products: displayProducts }
 }
 
-export const productExists = async (productId: string): Promise<boolean> => {
-	const result = await db
-		.select({ id: sql`1` })
-		.from(products)
-		.where(eq(products.id, productId))
-		.limit(1)
-	return result.length > 0
+export const productExists = async (productId: string): Promise<ExistsResult> => {
+	const [result] = await db.select().from(products).where(eq(products.id, productId)).limit(1)
+
+	if (!result) {
+		return {
+			exists: false,
+			banned: false,
+		}
+	}
+
+	return {
+		exists: true,
+		banned: result.banned,
+	}
 }

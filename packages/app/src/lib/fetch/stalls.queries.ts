@@ -1,4 +1,5 @@
 import type { NDKEvent } from '@nostr-dev-kit/ndk'
+import type { ExistsResult } from '$lib/interfaces'
 import type { NormalizedData } from '$lib/nostrSubs/utils'
 import type { StallsFilter } from '$lib/schema'
 import type { RichStall } from '$lib/server/stalls.service'
@@ -14,7 +15,7 @@ declare module './client' {
 	interface Endpoints {
 		'GET /api/v1/stalls': Operation<'/api/v1/stalls', 'GET', never, never, { total: number; stalls: RichStall[] }, StallsFilter>
 		[k: `GET /api/v1/stalls/${string}`]: Operation<string, 'GET', never, never, RichStall, never>
-		[k: `GET /api/v1/stalls/${string}?exists`]: Operation<string, 'GET', never, never, boolean, never>
+		[k: `GET /api/v1/stalls/${string}?exists`]: Operation<string, 'GET', never, never, ExistsResult, never>
 	}
 }
 
@@ -89,7 +90,7 @@ export const createStallsByFilterQuery = (filter: Partial<StallsFilter>) =>
 	)
 
 export const createStallExistsQuery = (id: string) =>
-	createQuery<boolean>(
+	createQuery<ExistsResult>(
 		{
 			queryKey: ['stalls', 'exists', id],
 			queryFn: async () => {

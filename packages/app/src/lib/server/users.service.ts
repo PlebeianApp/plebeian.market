@@ -28,6 +28,8 @@ export interface RichUser extends User {
 	trustLevel: UserTrustLevel
 }
 
+export type ExistsResult = { exists: boolean; banned: boolean }
+
 const resolveUser = async (user: User): Promise<RichUser> => {
 	try {
 		const [roleRes] = await db
@@ -518,13 +520,20 @@ export const deleteUser = async (userId: string): Promise<boolean> => {
 		}
 	}
 }
-export const userExists = async (userId: string): Promise<boolean> => {
-	const result = await db
-		.select({ id: sql`1` })
-		.from(users)
-		.where(eq(users.id, userId))
-		.limit(1)
-	return result.length > 0
+export const userExists = async (userId: string): Promise<ExistsResult> => {
+	const [result] = await db.select().from(users).where(eq(users.id, userId)).limit(1)
+
+	if (!result) {
+		return {
+			exists: false,
+			banned: false,
+		}
+	}
+
+	return {
+		exists: true,
+		banned: result.banned,
+	}
 }
 
 export const usersExists = async (userIds: string[], returnExisting: boolean = false): Promise<string[]> => {

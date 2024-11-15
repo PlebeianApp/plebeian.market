@@ -8,3 +8,5 @@ export interface EventCoordinates {
 export interface FormDataWithEntries extends FormData {
 	entries(): IterableIterator<[string, string]>
 }
+
+export type ExistsResult = { exists: boolean; banned: boolean }
