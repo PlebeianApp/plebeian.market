@@ -1,6 +1,5 @@
 <script lang="ts">
 	import type { CarouselAPI } from '$lib/components/ui/carousel/context'
-	import type { StallCoordinatesType } from '$lib/stores/drawer-ui'
 	import Spinner from '$lib/components/assets/spinner.svelte'
 	import AdminActions from '$lib/components/common/admin-actions.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
@@ -38,7 +37,7 @@
 	}
 
 	$: userProfileQuery = user.id ? createUserByIdQuery(user.id) : null
-	$: stallCoordinates = parseCoordinatesString(`${KindStalls}:${user.id}:${$productsQuery.data?.stallId}`).coordinates
+	$: stallCoordinates = parseCoordinatesString(`${KindStalls}:${user.id}:${$productsQuery.data?.stall_id}`).coordinates
 	$: priceQuery = createCurrencyConversionQuery($productsQuery.data?.currency as string, $productsQuery.data?.price as number)
 
 	$: otherProducts = user.id ? createProductsByFilterQuery({ userId: user.id, pageSize: 3 }) : null

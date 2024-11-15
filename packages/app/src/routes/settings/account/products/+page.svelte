@@ -25,11 +25,11 @@
 		userId: $ndkStore.activeUser?.pubkey,
 		pageSize: 999,
 	})
-	$: productsMixture = mergeWithExisting($productsQuery?.data?.products ?? [], toDisplayProducts, 'id').filter((product) =>
-		$stallsQuery.data?.stalls.some((stall) => stall.identifier == product.stallId),
+	$: productsMixture = mergeWithExisting($productsQuery?.data?.products ?? [], toDisplayProducts, 'stall_id').filter((product) =>
+		$stallsQuery.data?.stalls.some((stall) => stall.identifier == product.stall_id),
 	)
 
-	$: productsMode === 'list' ? $productsQuery?.refetch() : null
+	// $: productsMode === 'list' ? $productsQuery?.refetch() : null
 
 	let currentProduct: Partial<DisplayProduct> | null = null
 

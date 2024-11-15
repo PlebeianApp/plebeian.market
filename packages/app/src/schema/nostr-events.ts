@@ -66,13 +66,13 @@ export const createProductEventSchema = (forbiddenPattern: RegExp) =>
 			shipping: z.array(productShippingObjectSchema),
 		})
 		.partial()
-		.transform((data) => {
-			const { stall_id, ...rest } = data
-			return {
-				...rest,
-				stallId: data.stall_id,
-			}
-		})
+// .transform((data) => {
+// 	const { stall_id, ...rest } = data
+// 	return {
+// 		...rest,
+// 		stallId: data.stall_id,
+// 	}
+// })
 
 export const auctionEventSchema = z.object({
 	id: z.string(),

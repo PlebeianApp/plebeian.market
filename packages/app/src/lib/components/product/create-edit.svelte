@@ -47,7 +47,7 @@
 		pageSize: 999,
 	})
 
-	$: currentStallIdentifier = forStall?.split(':')[2] || product?.stallId || $stallsQuery.data?.stalls[0]?.identifier
+	$: currentStallIdentifier = forStall?.split(':')[2] || product?.stall_id || $stallsQuery.data?.stalls[0]?.identifier
 
 	$: {
 		if ($stallsQuery.data?.stalls.length) {
@@ -58,10 +58,10 @@
 	$: {
 		currentShippings =
 			stall?.shipping
-				?.filter((s) => product?.shipping?.some((sh) => s.id == sh.shippingId.split(':')[0] || s.id == sh.shippingId))
+				?.filter((s) => product?.shipping?.some((sh) => s.id == sh.shippingId?.split(':')[0] || s.id == sh.shippingId))
 				.map((s) => ({
 					shipping: s,
-					extraCost: product?.shipping?.find((sh) => s.id == sh.shippingId.split(':')[0] || s.id == sh.shippingId)?.cost ?? '',
+					extraCost: product?.shipping?.find((sh) => s.id == sh.shippingId?.split(':')[0] || s.id == sh.shippingId)?.cost ?? '',
 				})) ?? []
 	}
 
@@ -122,13 +122,11 @@
 			const categoriesData = categories.filter((c) => c.checked).map((c) => c.name)
 
 			if (product) {
-				await $editProductMutation.mutateAsync({ product: { stallId: productData.stall_id, ...productData }, categories: categoriesData })
+				await $editProductMutation.mutateAsync({ product: { ...productData }, categories: categoriesData })
 			} else {
-				await $createProductMutation.mutateAsync({ product: { stallId: productData.stall_id, ...productData }, categories: categoriesData })
+				await $createProductMutation.mutateAsync({ product: { ...productData }, categories: categoriesData })
 			}
 
-			toast.success(`Product ${product ? 'updated' : 'created'}!`)
-			queryClient.invalidateQueries({ queryKey: ['products', $ndkStore.activeUser?.pubkey] })
 			dispatch('success', null)
 		} catch (error) {
 			toast.error(`Failed to ${product ? 'update' : 'create'} product: ${error instanceof Error ? error.message : String(error)}`)

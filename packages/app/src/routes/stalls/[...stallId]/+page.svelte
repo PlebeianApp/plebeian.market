@@ -20,7 +20,6 @@
 
 	export let data: PageData
 	const { stall, user } = data
-	let showFullDescription = false
 
 	let sort: Selected<'asc' | 'desc'> = {
 		label: 'Latest',
@@ -33,10 +32,10 @@
 	$: userProfileQuery = createUserByIdQuery(String(user.id))
 
 	$: stallQuery = createStallQuery(stall.id)
+
 	$: productsQuery = createProductsByFilterQuery({
 		stallId: stall.id,
 	})
-
 	let isMyStall = false
 
 	$: {

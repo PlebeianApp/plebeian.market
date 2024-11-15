@@ -74,8 +74,6 @@ const createZone = (country: string | null, region: string | null, shippingResul
 })
 
 const getZonesToInsert = (shippingResult: Shipping, regions: string[] | null, countries: string[] | null) => {
-	console.log('Input:', { regions, countries })
-
 	if (regions === null || countries === null) {
 		return [createZone(countries === null ? null : null, regions === null ? null : null, shippingResult)]
 	}
