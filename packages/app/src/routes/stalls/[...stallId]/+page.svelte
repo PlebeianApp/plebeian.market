@@ -67,7 +67,7 @@
 					<TruncatedText text={description} />
 				{/if}
 			</div>
-			<div class="flex flex-row gap-12">
+			<div class="flex sm:flex-row flex-col gap-12">
 				<section class="w-fit">
 					{#if $userProfileQuery.data?.name || $userProfileQuery.data?.displayName}
 						<a href={`/p/${$userProfileQuery.data?.nip05 ? $userProfileQuery.data?.nip05 : user.id}`} class="flex flex-col items-center">

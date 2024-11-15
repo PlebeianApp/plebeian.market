@@ -5,6 +5,7 @@
 	import { Button } from '$lib/components/ui/button/index.js'
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
 	import { login, logout } from '$lib/ndkLogin'
+	import { breakpoint } from '$lib/stores/breakpoint'
 	import { unreadCounts } from '$lib/stores/chat-notifications'
 	import { dialogs } from '$lib/stores/dialog'
 	import ndkStore from '$lib/stores/ndk'
@@ -52,7 +53,7 @@
 			<a href="/">
 				<div class="flex items-center">
 					<img src={appSettings.logoUrl} alt="logo" class="w-16 px-2" />
-					<span class="font-semibold text-2xl">{appSettings.instanceName}</span>
+					<span class="font-semibold text-md sm:text-2xl">{appSettings.instanceName}</span>
 				</div>
 			</a>
 			<div class="hidden lg:flex mx-8 gap-8">
@@ -68,7 +69,11 @@
 					<span class="notification-dot" />
 				{/if}
 			</Button>
-			<CartWithState />
+
+			<div class="hidden sm:flex gap-2">
+				<CartWithState />
+			</div>
+
 			{#if $ndkStore.activeUser}
 				<DropdownMenu.Root>
 					<DropdownMenu.Trigger id="menuButton">
@@ -104,11 +109,37 @@
 										><span class=" i-tdesign-dashboard" />Dashboard</a
 									>
 								</DropdownMenu.Item>
+								{#if $breakpoint !== 'lg'}
+									<DropdownMenu.Separator />
+
+									<DropdownMenu.Item>
+										<a class="hover:underline font-semibold" href="/stalls/">Stall Browser</a>
+									</DropdownMenu.Item>
+									<DropdownMenu.Item>
+										<a class="hover:underline font-semibold" href="/market">Market Square</a>
+									</DropdownMenu.Item>
+									<DropdownMenu.Item>
+										<a class="hover:underline font-semibold" href="/">Plebeian Planet</a>
+									</DropdownMenu.Item>
+
+									<DropdownMenu.Separator />
+
+									<DropdownMenu.Item class="flex items-center justify-between gap-2">
+										<Button class="p-2 bg-[var(--neo-yellow)] relative" href="/dash/messages">
+											<span class="i-tdesign-mail text-black w-6 h-6"></span>
+											{#if hasUnreadMessages}
+												<span class="notification-dot" />
+											{/if}
+										</Button>
+
+										<CartWithState />
+									</DropdownMenu.Item>
+								{/if}
 								<DropdownMenu.Item>
 									<Button
 										id="headerMenuLogOut"
 										variant="destructive"
-										class="inline-flex items-center gap-2"
+										class="inline-flex items-center gap-2 w-full"
 										on:click={() => {
 											logout()
 											loginComplete = false

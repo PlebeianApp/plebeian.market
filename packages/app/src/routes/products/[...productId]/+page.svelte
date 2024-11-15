@@ -12,6 +12,7 @@
 	import { KindStalls } from '$lib/constants'
 	import { createCurrencyConversionQuery, createProductQuery, createProductsByFilterQuery } from '$lib/fetch/products.queries'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
+	import { breakpoint } from '$lib/stores/breakpoint'
 	import { handleAddToCart } from '$lib/stores/cart'
 	import { openDrawerForProduct } from '$lib/stores/drawer-ui'
 	import { cn, formatSats, parseCoordinatesString, stringToHexColor, truncateText } from '$lib/utils'
@@ -64,7 +65,7 @@
 </script>
 
 {#if $productsQuery.data && user.id}
-	<div class="container">
+	<div class="sm:container sm:p-0 p-4">
 		<div class="grid grid-cols-1 gap-6 md:grid-cols-2 mb-4">
 			<div class="flex flex-col gap-1">
 				{#key $productsQuery.data.identifier}
@@ -126,7 +127,7 @@
 					</h3>
 				{/if}
 				<h3 class="my-8 font-bold">Stock: {$productsQuery.data.quantity}</h3>
-				<div class="flex w-1/2 flex-row gap-1">
+				<div class="flex sm:w-1/2 w-full flex-row gap-1">
 					<Button class="border-2 border-black" size="icon" variant="outline" on:click={handleDecrement} disabled={qtyToCart <= 1}>
 						<span class="i-mdi-minus w-4 h-4"></span>
 					</Button>
@@ -153,7 +154,7 @@
 						<Button
 							class="ml-2"
 							on:click={() => handleAddToCart(String($productsQuery.data?.userId), String(stallCoordinates), $productsQuery.data)}
-							>Add to cart</Button
+							>{$breakpoint !== 'lg' ? 'Add' : 'Add to cart'}</Button
 						>
 					{:else}
 						<Button disabled>Out of stock</Button>
@@ -170,7 +171,7 @@
 				</span>
 				{#if $productsQuery.data.description}
 					<article>
-						<h4 class="text-2xl font-bold">Details</h4>
+						<h4 class="sm:text-2xl text-xl font-bold">Details</h4>
 						<p>
 							{truncateText($productsQuery.data.description)}
 						</p>
@@ -208,8 +209,8 @@
 		</div>
 	</div>
 	{#if $productsQuery.data.description}
-		<div class="container bg-gray-50 flex flex-col items-center p-10">
-			<Tabs.Root class="w-[45%]">
+		<div class="sm:container sm:p-0 p-4 bg-gray-50 flex flex-col items-center">
+			<Tabs.Root class="sm:w-[45%] w-full">
 				<Tabs.List class="w-full justify-around bg-transparent">
 					<Tabs.Trigger value="description" class={activeTab}>Description</Tabs.Trigger>
 					<Tabs.Trigger disabled value="comments" class={activeTab}>Comments</Tabs.Trigger>

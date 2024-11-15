@@ -18,7 +18,7 @@
 	$: categoriesQuery = createCategoriesByFilterQuery({ pageSize, page, search: $debouncedSearch })
 </script>
 
-<div class="flex flex-col gap-6">
+<div class="flex flex-col gap-4 sm:gap-6">
 	<h2>Categories</h2>
 	<Input class="" type="search" placeholder="Search..." bind:value={$search} />
 	{#if $categoriesQuery.isLoading}
@@ -28,12 +28,10 @@
 			<div class="flex flex-col">
 				<main class="text-black">
 					<div class="lg:px-12">
-						<div class="container">
-							<div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-								{#each $categoriesQuery.data?.categories as cat (cat.name)}
-									<CatCompactItem {cat} />
-								{/each}
-							</div>
+						<div class="grid auto-cols-max grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-24xl:grid-cols-5">
+							{#each $categoriesQuery.data?.categories as cat (cat.name)}
+								<CatCompactItem {cat} />
+							{/each}
 						</div>
 					</div>
 				</main>
