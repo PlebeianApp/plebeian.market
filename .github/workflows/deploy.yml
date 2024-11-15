@@ -63,6 +63,7 @@ jobs:
             fuser -k $PORT/tcp || true
             pnpm i --frozen-lockfile -f
             pnpm db:initMock
+            cd packages/app
             nohup node build > preview.log 2>&1 &
             sleep 10
             head -n 20 preview.log
