@@ -3,7 +3,9 @@
 	import { page } from '$app/stores'
 	import MustLogin from '$lib/components/assets/mustLogin.svelte'
 	import * as Accordion from '$lib/components/ui/accordion'
+	import * as Menubar from '$lib/components/ui/menubar'
 	import { activeUserQuery, createUserExistsQuery } from '$lib/fetch/users.queries'
+	import { breakpoint } from '$lib/stores/breakpoint'
 	import ndkStore from '$lib/stores/ndk'
 
 	import type { PageData } from './$types'
@@ -18,36 +20,68 @@
 </script>
 
 {#if $ndkStore.activeUser?.pubkey}
-	<div class="max-w-4xl mx-auto p-4">
-		<div class="grid grid-cols-[200px_1fr] gap-2">
-			<div class="w-full">
-				<h2><a href="/settings">Settings</a></h2>
-				<Accordion.Root bind:value>
+	{#if $breakpoint !== 'lg'}
+		<div class="max-w-2xl mx-auto p-2">
+			<div class="w-full space-y-4">
+				<h4><a href="/settings">Settings</a></h4>
+				<Menubar.Root>
 					{#each menuItems as item}
-						{#if $activeUserQuery.data?.role === 'admin' || item.value !== 'app-settings'}
-							<Accordion.Item value={item.value}>
-								<Accordion.Trigger>
-									<span id={item.value}>{item.title}</span>
-								</Accordion.Trigger>
-								<Accordion.Content>
-									<ul class="pl-4 space-y-1">
-										{#each item.links as link}
-											{#if link.public || $userExist?.data}
-												<li><a class={$page.url.pathname == link.href ? ' font-bold' : ''} href={link.href}>{link.title}</a></li>
-											{/if}
-										{/each}
-									</ul>
-								</Accordion.Content>
-							</Accordion.Item>
-						{/if}
+						<Menubar.Menu>
+							<Menubar.Trigger class="text-xs p-4"><span id={item.value}>{item.title}</span></Menubar.Trigger>
+							<Menubar.Content>
+								{#if $activeUserQuery.data?.role === 'admin' || item.value !== 'app-settings'}
+									{#each item.links as link}
+										{#if link.public || $userExist?.data}
+											<Menubar.Item
+												><li>
+													<a class={$page.url.pathname == link.href ? ' font-bold' : ''} href={link.href}>{link.title}</a>
+												</li></Menubar.Item
+											>
+										{/if}
+									{/each}
+								{/if}
+							</Menubar.Content>
+						</Menubar.Menu>
 					{/each}
-				</Accordion.Root>
-			</div>
-			<div class="w-full">
-				<slot />
+				</Menubar.Root>
+
+				<div class="w-full">
+					<slot />
+				</div>
 			</div>
 		</div>
-	</div>
+	{:else}
+		<div class="max-w-4xl mx-auto p-4">
+			<div class="grid grid-cols-[200px_1fr] gap-2">
+				<div class="w-full">
+					<h2><a href="/settings">Settings</a></h2>
+					<Accordion.Root bind:value>
+						{#each menuItems as item}
+							{#if $activeUserQuery.data?.role === 'admin' || item.value !== 'app-settings'}
+								<Accordion.Item value={item.value}>
+									<Accordion.Trigger>
+										<span id={item.value}>{item.title}</span>
+									</Accordion.Trigger>
+									<Accordion.Content>
+										<ul class="pl-4 space-y-1">
+											{#each item.links as link}
+												{#if link.public || $userExist?.data}
+													<li><a class={$page.url.pathname == link.href ? ' font-bold' : ''} href={link.href}>{link.title}</a></li>
+												{/if}
+											{/each}
+										</ul>
+									</Accordion.Content>
+								</Accordion.Item>
+							{/if}
+						{/each}
+					</Accordion.Root>
+				</div>
+				<div class="w-full">
+					<slot />
+				</div>
+			</div>
+		</div>
+	{/if}
 {:else}
 	<div class="flex justify-center p-24">
 		<MustLogin />
