@@ -2,7 +2,8 @@ import { error } from '@sveltejs/kit'
 import { KindStalls } from '$lib/constants'
 import { getUserIdByNip05 } from '$lib/server/users.service.js'
 import ndkStore from '$lib/stores/ndk'
-import { isValidNip05 } from '$lib/utils/validation.utils'
+import { decodePk } from '$lib/utils'
+import { isValidNip05, isValidNpub } from '$lib/utils/validation.utils'
 import { get } from 'svelte/store'
 
 import type { PageServerLoad } from './$types'
@@ -61,7 +62,7 @@ const getStallInfo = async (stallId: string, stallIdentifier?: string): Promise<
 		// exist: await stallExists(stallId).catch(() => false),
 	}
 }
-
+// TODO: improve url handling, KEEP WORKING ON THIS TO MAKE IT MORE ROBUST AND UNIVERSAL FOR THE WHOLE PLATFORM
 export const load: PageServerLoad = async ({ params }) => {
 	const parts = params.stallId.split('/')
 	if (parts.length < 1 || parts.length > 2) {
@@ -76,6 +77,9 @@ export const load: PageServerLoad = async ({ params }) => {
 			processedInfo = await processNip05(root, stallIdentifier)
 		} else if (root.split(':').length === 2) {
 			processedInfo = await processDirectId(root)
+		} else if (isValidNpub(root) && stallIdentifier) {
+			const builtId = `${decodePk(root)}:${stallIdentifier}`
+			processedInfo = await processDirectId(builtId)
 		} else {
 			processedInfo = await processFullId(root)
 		}
