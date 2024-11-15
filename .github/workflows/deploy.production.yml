@@ -48,7 +48,8 @@ jobs:
           username: ${{ secrets.REMOTE_USER }}
           password: ${{ secrets.REMOTE_PASSWORD }}
           script: |
-            PORT=4173
+            export ORIGIN=https://prod.plebeian.market
+            export PORT=4173
             cd plebeian.market.${PORT}
             mv .env.sample .env
             fuser -k $PORT/tcp || true
