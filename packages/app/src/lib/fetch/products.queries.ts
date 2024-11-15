@@ -115,7 +115,6 @@ export const createProductsByFilterQuery = (filter: Partial<ProductsFilter>) =>
 					const userId = (filter.stallId && filter.stallId.split(':')[1]) || filter?.userId || null
 					if (!userId) return null
 					const { products: productsData } = await fetchUserProductData(userId)
-
 					if (filter.stallId) {
 						if (productsData?.size) {
 							const parsedStallIdString = parseCoordinatesString(filter.stallId)

@@ -260,7 +260,15 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 					throw Error('Stall not found')
 				}
 
-				const parentId = customTagValue(productEvent.tags, 'a').find((tag) => tag.startsWith(KindProducts.toString())) || null
+				let parentId = customTagValue(productEvent.tags, 'a').find((tag) => tag.startsWith(KindProducts.toString())) || null
+
+				if (parentId) {
+					const parentProduct = await productExists(parentId)
+					if (!parentProduct) {
+						console.error(`createProducts: Parent product not found for event ${productEvent.id}, parent id: ${parentId}`)
+						parentId = null
+					}
+				}
 
 				const extraCost = parsedProduct.shipping?.length ? parsedProduct.shipping[0].cost : 0
 
