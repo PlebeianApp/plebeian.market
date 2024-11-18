@@ -26,7 +26,7 @@ import { twMerge } from 'tailwind-merge'
 
 import type { UserRoles } from '@plebeian/database/constants'
 
-import type { EventCoordinates } from './interfaces'
+import type { EventCoordinates, MenuItem } from './interfaces'
 import type { NWCWallet } from './server/wallet.service'
 import { HEX_KEYS_REGEX, numSatsInBtc } from './constants'
 import { createProductExistsQuery } from './fetch/products.queries'
@@ -546,4 +546,8 @@ export function getInvoiceStatusColor(status: string): string {
 		default:
 			return 'text-gray-600'
 	}
+}
+
+export const shouldShowItem = (item: MenuItem, userExist?: boolean, userRole?: UserRoles) => {
+	return item.public || userExist || userRole === 'admin'
 }

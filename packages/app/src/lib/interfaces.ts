@@ -8,3 +8,17 @@ export interface EventCoordinates {
 export interface FormDataWithEntries extends FormData {
 	entries(): IterableIterator<[string, string]>
 }
+
+export interface MenuItem {
+	title: string
+	description: string
+	value: string
+	root: string
+	links: Array<{
+		title: string
+		href: string
+		description: string
+		public?: boolean
+	}>
+	public?: boolean
+}
