@@ -18,7 +18,8 @@ const authorizeUserless = async (request: Request, method: string): Promise<stri
 
 	const token = decodeJwtToEvent(authorizationHeader)
 	if (token.pubkey && findCustomTags(token.tags, 'method')[0] === method) {
-		if (await userExists(token.pubkey)) {
+		const uExists = await userExists(token.pubkey)
+		if (uExists.exists && !uExists.banned) {
 			return token.pubkey
 		}
 		throw error(401, 'User does not exist')

@@ -367,15 +367,16 @@ export async function checkIfProductExists(productId: string): Promise<ExistsRes
 	return await resolveQuery(() => createProductExistsQuery(productId))
 }
 
-export async function shouldRegister(allowRegister?: boolean, userExists?: boolean, userId?: string): Promise<boolean> {
+export async function shouldRegister(allowRegister?: boolean, userExists?: ExistsResult, userId?: string): Promise<boolean> {
+	if (allowRegister == undefined && userExists == undefined && userId == undefined) return false
 	if (allowRegister == undefined) allowRegister = get(page).data.appSettings.allowRegister
-	if (allowRegister || userExists) {
+	if (allowRegister || (userExists?.exists && !userExists?.banned)) {
 		return true
 	}
 
-	const res = userId ? await checkIfUserExists(userId) : { exists: false }
+	const res = userId ? await checkIfUserExists(userId) : { exists: false, banned: false }
 
-	return res.exists
+	return res.exists && !res.banned
 }
 
 export function unixTimeNow() {

@@ -4,7 +4,7 @@ import { NSchema as n } from '@nostrify/nostrify'
 import { error } from '@sveltejs/kit'
 import { verifyEvent } from 'nostr-tools'
 
-import { db, eq, inArray, sql, users } from '@plebeian/database'
+import { db, users } from '@plebeian/database'
 
 import { userExists, usersExists } from './users.service'
 
@@ -23,14 +23,14 @@ export const verifyEventBody = async (event: Request, kind: NDKKind): Promise<Ve
 
 export const ensureAuthorExists = async (pubkey: string): Promise<boolean> => {
 	const authorExists = await userExists(pubkey)
-	if (!authorExists) {
+	if (!authorExists.exists) {
 		const [newUser] = await db.insert(users).values({ id: pubkey }).returning()
 		if (!newUser.id) {
 			error(500, 'Failed to insert user')
 		}
 		return !!newUser.id
 	}
-	return authorExists
+	return authorExists.exists
 }
 
 export const ensureAuthorsExists = async (pubkeys: string[]): Promise<{ id: string }[]> => {

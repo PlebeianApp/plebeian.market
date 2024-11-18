@@ -49,11 +49,7 @@ async function processBatch(userIds: string[], allowRegister: boolean) {
 
 	for (const userId of batchUserIds) {
 		const userExists = await checkIfUserExists(userId)
-		const shouldRegisterUser = await shouldRegister(allowRegister, userExists.exists, userId)
-
-		if (userExists.banned) {
-			continue
-		}
+		const shouldRegisterUser = await shouldRegister(allowRegister, userExists, userId)
 
 		if (shouldRegisterUser) {
 			const user = Array.from(userQueue).find((u) => u.id === userId)

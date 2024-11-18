@@ -326,7 +326,7 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 
 				if (parentId) {
 					const parentProduct = await productExists(parentId)
-					if (!parentProduct) {
+					if (!parentProduct.exists && !parentProduct.banned) {
 						console.error(`createProducts: Parent product not found for event ${productEvent.id}, parent id: ${parentId}`)
 						parentId = null
 					}
@@ -353,6 +353,7 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 					userId: productEvent.pubkey,
 					stallId: stallId,
 					quantity: parsedProduct.quantity ?? 0,
+					banned: false,
 				}
 
 				const insertSpecs: ProductMeta[] | undefined = parsedProduct.specs?.map((spec) => ({
