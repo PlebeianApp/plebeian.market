@@ -7,6 +7,7 @@
 	import { activeUserQuery, createUserExistsQuery } from '$lib/fetch/users.queries'
 	import { breakpoint } from '$lib/stores/breakpoint'
 	import ndkStore from '$lib/stores/ndk'
+	import { shouldShowItem } from '$lib/utils'
 
 	import type { PageData } from './$types'
 
@@ -26,22 +27,24 @@
 				<h4><a href="/settings">Settings</a></h4>
 				<Menubar.Root>
 					{#each menuItems as item}
-						<Menubar.Menu>
-							<Menubar.Trigger class="text-xs p-4"><span id={item.value}>{item.title}</span></Menubar.Trigger>
-							<Menubar.Content>
-								{#if $activeUserQuery.data?.role === 'admin' || item.value !== 'app-settings'}
-									{#each item.links as link}
-										{#if link.public || ($userExist?.data?.exists && !$userExist?.data?.banned)}
-											<Menubar.Item
-												><li>
-													<a class={$page.url.pathname == link.href ? ' font-bold' : ''} href={link.href}>{link.title}</a>
-												</li></Menubar.Item
-											>
-										{/if}
-									{/each}
-								{/if}
-							</Menubar.Content>
-						</Menubar.Menu>
+						{#if shouldShowItem(item, $userExist?.data?.exists, $activeUserQuery.data?.role)}
+							<Menubar.Menu>
+								<Menubar.Trigger class="text-xs p-4"><span id={item.value}>{item.title}</span></Menubar.Trigger>
+								<Menubar.Content>
+									{#if $activeUserQuery.data?.role === 'admin' || item.value !== 'app-settings'}
+										{#each item.links as link}
+											{#if link.public || ($userExist?.data?.exists && !$userExist?.data?.banned)}
+												<Menubar.Item>
+													<li>
+														<a class={$page.url.pathname == link.href ? ' font-bold' : ''} href={link.href}>{link.title}</a>
+													</li>
+												</Menubar.Item>
+											{/if}
+										{/each}
+									{/if}
+								</Menubar.Content>
+							</Menubar.Menu>
+						{/if}
 					{/each}
 				</Menubar.Root>
 
@@ -57,21 +60,23 @@
 					<h2><a href="/settings">Settings</a></h2>
 					<Accordion.Root bind:value>
 						{#each menuItems as item}
-							{#if $activeUserQuery.data?.role === 'admin' || item.value !== 'app-settings'}
-								<Accordion.Item value={item.value}>
-									<Accordion.Trigger>
-										<span id={item.value}>{item.title}</span>
-									</Accordion.Trigger>
-									<Accordion.Content>
-										<ul class="pl-4 space-y-1">
-											{#each item.links as link}
-												{#if link.public || $userExist?.data}
-													<li><a class={$page.url.pathname == link.href ? ' font-bold' : ''} href={link.href}>{link.title}</a></li>
-												{/if}
-											{/each}
-										</ul>
-									</Accordion.Content>
-								</Accordion.Item>
+							{#if shouldShowItem(item)}
+								{#if $activeUserQuery.data?.role === 'admin' || item.value !== 'app-settings'}
+									<Accordion.Item value={item.value}>
+										<Accordion.Trigger>
+											<span id={item.value}>{item.title}</span>
+										</Accordion.Trigger>
+										<Accordion.Content>
+											<ul class="pl-4 space-y-1">
+												{#each item.links as link}
+													{#if link.public || $userExist?.data}
+														<li><a class={$page.url.pathname == link.href ? ' font-bold' : ''} href={link.href}>{link.title}</a></li>
+													{/if}
+												{/each}
+											</ul>
+										</Accordion.Content>
+									</Accordion.Item>
+								{/if}
 							{/if}
 						{/each}
 					</Accordion.Root>
