@@ -370,6 +370,7 @@ export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall 
 				id: coordinates,
 				createdAt: new Date(stallEvent.created_at * 1000),
 				updatedAt: new Date(stallEvent.created_at * 1000),
+				banned: false,
 				name: data.name,
 				identifier: tagD,
 				description: data.description as string,
