@@ -94,6 +94,12 @@
 	function addCategory() {
 		const name = `category ${categories.length + 1}`
 		categories = [...categories, { key: createSlugId(name), name, checked: true }]
+		setTimeout(() => {
+			const inputs = document.querySelectorAll('input[type="text"]')
+			const lastInput = inputs[inputs.length - 1] as HTMLInputElement
+			lastInput?.focus()
+			lastInput?.select()
+		}, 0)
 	}
 
 	async function handleSubmit(sEvent: SubmitEvent, stall: Partial<RichStall> | null) {
@@ -316,14 +322,17 @@
 					{#each categories as category (category.key)}
 						<div class="flex items-center space-x-2">
 							<Checkbox id="terms" bind:checked={category.checked} />
-							<span
-								data-category-key={category.key}
-								class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-								contenteditable="true"
-								bind:textContent={category.name}
-							>
-								{category.name}
-							</span>
+							<Input
+								bind:value={category.name}
+								class="border-2 border-black"
+								type="text"
+								on:keydown={(e) => {
+									if (e.key === 'Enter') {
+										e.preventDefault()
+										addCategory()
+									}
+								}}
+							/>
 						</div>
 					{/each}
 				</div>
@@ -406,7 +415,7 @@
 						data-tooltip={currentShippings.length === stall?.shipping?.length
 							? 'Add few shipping methods to the stall first'
 							: 'Add shipping methods available for this product'}
-						on:click={() => (currentShippings = [...currentShippings, { shipping: null, extraCost: '' }])}
+						on:click={() => (currentShippings = [...currentShippings, { shipping: null, extraCost: '0' }])}
 						disabled={currentShippings.length === stall?.shipping?.length}
 						variant="outline"
 						class={`font-bold ml-auto`}>Add Shipping Method</Button
