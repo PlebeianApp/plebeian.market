@@ -159,6 +159,7 @@
 
 	async function handleDelete() {
 		if (!product?.id) return
+		isLoading = true
 		try {
 			await $deleteProductMutation.mutateAsync(product.id)
 		} catch (error) {
@@ -166,6 +167,7 @@
 		}
 		await deleteEvent(product.id)
 		dispatch('success', null)
+		isLoading = false
 	}
 </script>
 
