@@ -26,7 +26,7 @@ import { twMerge } from 'tailwind-merge'
 
 import type { UserRoles } from '@plebeian/database/constants'
 
-import type { EventCoordinates, MenuItem } from './interfaces'
+import type { EventCoordinates, ExistsResult, MenuItem } from './interfaces'
 import type { NWCWallet } from './server/wallet.service'
 import { HEX_KEYS_REGEX, numSatsInBtc } from './constants'
 import { createProductExistsQuery } from './fetch/products.queries'
@@ -350,9 +350,8 @@ export async function resolveQuery<T>(queryFn: () => CreateQueryResult<T, Error>
 	throw currentQuery.error || new Error('Price query failed')
 }
 
-export async function checkIfUserExists(userId?: string): Promise<boolean> {
-	if (userId) return await resolveQuery(() => createUserExistsQuery(userId))
-	return false
+export async function checkIfUserExists(userId: string): Promise<ExistsResult> {
+	return await resolveQuery(() => createUserExistsQuery(userId))
 }
 
 export async function getUserRole(userId?: string): Promise<UserRoles | null> {
@@ -360,22 +359,24 @@ export async function getUserRole(userId?: string): Promise<UserRoles | null> {
 	return null
 }
 
-export async function checkIfStallExists(stallId?: string): Promise<boolean> {
-	if (stallId) return await resolveQuery(() => createStallExistsQuery(stallId))
-	return false
+export async function checkIfStallExists(stallId: string): Promise<ExistsResult> {
+	return await resolveQuery(() => createStallExistsQuery(stallId))
 }
 
-export async function checkIfProductExists(productId?: string): Promise<boolean> {
-	if (productId) return await resolveQuery(() => createProductExistsQuery(productId))
-	return false
+export async function checkIfProductExists(productId: string): Promise<ExistsResult> {
+	return await resolveQuery(() => createProductExistsQuery(productId))
 }
 
-export async function shouldRegister(allowRegister?: boolean, userExists?: boolean, userId?: string): Promise<boolean> {
+export async function shouldRegister(allowRegister?: boolean, userExists?: ExistsResult, userId?: string): Promise<boolean> {
+	if (allowRegister == undefined && userExists == undefined && userId == undefined) return false
 	if (allowRegister == undefined) allowRegister = get(page).data.appSettings.allowRegister
-	if (allowRegister || userExists) {
+	if (allowRegister || (userExists?.exists && !userExists?.banned)) {
 		return true
 	}
-	return userId ? await checkIfUserExists(userId) : false
+
+	const res = userId ? await checkIfUserExists(userId) : { exists: false, banned: false }
+
+	return res.exists && !res.banned
 }
 
 export function unixTimeNow() {

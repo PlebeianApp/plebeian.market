@@ -30,6 +30,14 @@ describe('stalls', async () => {
 		// Navigate to the stall creation page
 		// console.log("Looking variables", dev,import.meta.env.VITEST)
 		await page.goto(`http://${process.env.APP_HOST}:${process.env.APP_PORT}/`)
+
+		try {
+			await page.waitForSelector('text=I understand')
+			await page.getByText('I understand').click()
+		} catch (error) {
+			console.log('No registration dialog', page)
+		}
+
 		await login(page)
 
 		// Wait for menu button to be visible and click it

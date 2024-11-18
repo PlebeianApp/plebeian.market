@@ -1,5 +1,4 @@
 <script lang="ts">
-	import type { MenuItem } from '$lib/interfaces'
 	import Separator from '$lib/components/ui/separator/separator.svelte'
 	import { activeUserQuery, createUserExistsQuery } from '$lib/fetch/users.queries'
 	import ndkStore from '$lib/stores/ndk'
@@ -13,7 +12,7 @@
 </script>
 
 {#each menuItems as item}
-	{#if shouldShowItem(item, $userExist?.data, $activeUserQuery.data?.role)}
+	{#if shouldShowItem(item, $userExist?.data?.exists, $activeUserQuery.data?.role)}
 		{#if $activeUserQuery.data?.role === 'admin' || item.value !== 'app-settings'}
 			<div class="pb-4 space-y-2">
 				<section>
@@ -24,7 +23,7 @@
 				</section>
 				<ul>
 					{#each item.links as link}
-						{#if link.public || $userExist?.data}
+						{#if link.public || ($userExist?.data?.exists && !$userExist?.data?.banned)}
 							<li>
 								<a href={link.href}>
 									<p class={link.title == 'Delete account' ? 'text-[hsl(var(--destructive))]' : ''}>{link.title}</p>

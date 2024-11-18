@@ -22,3 +22,5 @@ export interface MenuItem {
 	}>
 	public?: boolean
 }
+
+export type ExistsResult = { exists: boolean; banned: boolean }

@@ -55,6 +55,7 @@ describe('/users', () => {
 
 		expect(result).toStrictEqual({
 			about: 'Software Developer',
+			banned: false,
 			banner: 'https://example.com/banner.jpg',
 			createdAt: expect.any(String),
 			displayName: 'John',

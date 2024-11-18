@@ -3,6 +3,7 @@ import type { DisplayProduct } from '$lib/server/products.service'
 import type { z } from 'zod'
 import { NDKEvent } from '@nostr-dev-kit/ndk'
 import { createMutation } from '@tanstack/svelte-query'
+import { goto } from '$app/navigation'
 import { KindProducts, KindStalls } from '$lib/constants'
 import ndkStore from '$lib/stores/ndk'
 import { parseCoordinatesString, shouldRegister, unixTimeNow } from '$lib/utils'
@@ -19,6 +20,7 @@ declare module './client' {
 		[k: `PUT /api/v1/products/${string}`]: Operation<string, 'PUT', never, NostrEvent, DisplayProduct, never>
 		[k: `DELETE /api/v1/products/${string}`]: Operation<string, 'DELETE', never, string, string, never>
 		[k: `POST /api/v1/products/${string}/featured`]: Operation<string, 'POST', never, { featured: boolean }, { id: string }, never>
+		[k: `POST /api/v1/products/${string}/ban`]: Operation<string, 'POST', never, { banned: boolean }, { id: string }, never>
 	}
 }
 export type Category = { key: string; name: string; checked: boolean }
@@ -211,6 +213,28 @@ export const setProductFeaturedMutation = createMutation(
 	queryClient,
 )
 
+export const setProductBannedMutation = createMutation(
+	{
+		mutationKey: [],
+		mutationFn: async ({ productId, banned }: { productId: string; banned: boolean }) => {
+			const response = await createRequest(`POST /api/v1/products/${productId}/ban`, {
+				body: { banned },
+				auth: true,
+			})
+			return response
+		},
+		onSuccess: ({ id }: { id: string }) => {
+			if (id) {
+				if (!id) return
+				queryClient.invalidateQueries({ queryKey: ['products', id] })
+				queryClient.invalidateQueries({ queryKey: ['products'] })
+				goto('/')
+			}
+		},
+	},
+	queryClient,
+)
+
 export const deleteProductMutation = createMutation(
 	{
 		mutationKey: [],
@@ -220,10 +244,13 @@ export const deleteProductMutation = createMutation(
 			})
 			return res
 		},
-		onSuccess: () => {
+		onSuccess: (productId: string | null) => {
+			if (!productId) return
 			const $ndkStore = get(ndkStore)
 			queryClient.invalidateQueries({ queryKey: ['products', $ndkStore.activeUser?.pubkey] })
+			queryClient.invalidateQueries({ queryKey: ['categories'] })
 			queryClient.invalidateQueries({ queryKey: ['stalls', $ndkStore.activeUser?.pubkey] })
+			goto('/')
 		},
 	},
 	queryClient,

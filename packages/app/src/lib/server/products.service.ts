@@ -28,9 +28,9 @@ import {
 	products,
 	productShipping,
 	sql,
-	stallMeta,
 } from '@plebeian/database'
 
+import type { ExistsResult } from './users.service'
 import { createProductEventSchema } from '../../schema/nostr-events'
 import { cachedPattern } from './appSettings.service'
 import { stallExists } from './stalls.service'
@@ -89,7 +89,7 @@ export const getProductsByUserId = async (filter: ProductsFilter = productsFilte
 	const productsResult = await db
 		.select()
 		.from(products)
-		.where(filter.userId ? eq(products.userId, filter.userId) : undefined)
+		.where(and(filter.userId ? eq(products.userId, filter.userId) : undefined, eq(products.banned, false)))
 		.limit(filter.pageSize)
 		.execute()
 
@@ -98,7 +98,7 @@ export const getProductsByUserId = async (filter: ProductsFilter = productsFilte
 	const [{ count: total } = { count: 0 }] = await db
 		.select({ count: count() })
 		.from(products)
-		.where(filter.userId ? eq(products.userId, filter.userId) : undefined)
+		.where(and(filter.userId ? eq(products.userId, filter.userId) : undefined, eq(products.banned, false)))
 
 	if (displayProducts) {
 		return { total, products: displayProducts }
@@ -117,12 +117,48 @@ export const getProductsByStallId = async (stallId: string, filter: ProductsFilt
 		.select()
 		.from(products)
 		.orderBy(filter.order === 'asc' ? asc(orderBy) : desc(orderBy))
-		.where(eq(products.stallId, stallId))
+		.where(and(eq(products.stallId, stallId), eq(products.banned, false)))
 		.execute()
 
 	const displayProducts: DisplayProduct[] = await Promise.all(productsResult.map(toDisplayProduct))
 
-	const [{ count: total } = { count: 0 }] = await db.select({ count: count() }).from(products).where(eq(products.stallId, stallId))
+	const [{ count: total } = { count: 0 }] = await db
+		.select({ count: count() })
+		.from(products)
+		.where(and(eq(products.stallId, stallId), eq(products.banned, false)))
+
+	if (displayProducts) {
+		return { total, products: displayProducts }
+	}
+
+	error(404, 'Not found')
+}
+
+export const getFeaturedProducts = async (filter: ProductsFilter = productsFilterSchema.parse({})) => {
+	const orderBy = {
+		createdAt: products.createdAt,
+		price: products.price,
+	}[filter.orderBy]
+
+	const productsResult = await db
+		.select({
+			...getTableColumns(products),
+		})
+		.from(products)
+		.innerJoin(productMeta, eq(products.id, productMeta.productId))
+		.where(and(eq(productMeta.metaName, 'is_global_featured'), eq(productMeta.valueBoolean, true), eq(products.banned, false)))
+		.orderBy(filter.order === 'asc' ? asc(orderBy) : desc(orderBy))
+		.limit(filter.pageSize)
+		.offset((filter.page - 1) * filter.pageSize)
+		.execute()
+
+	const [{ count: total } = { count: 0 }] = await db
+		.select({ count: count() })
+		.from(products)
+		.innerJoin(productMeta, eq(products.id, productMeta.productId))
+		.where(and(eq(productMeta.metaName, 'is_global_featured'), eq(productMeta.valueBoolean, true), eq(products.banned, false)))
+
+	const displayProducts: DisplayProduct[] = await Promise.all(productsResult.map(toDisplayProduct))
 
 	if (displayProducts) {
 		return { total, products: displayProducts }
@@ -144,6 +180,7 @@ export const getAllProducts = async (filter: ProductsFilter = productsFilterSche
 		where: and(
 			filter.userId ? eq(products.userId, filter.userId) : undefined,
 			filter.search ? like(products.productName, `%${filter.search.replaceAll(' ', '%')}%`) : undefined,
+			eq(products.banned, false),
 		),
 	})
 
@@ -154,6 +191,7 @@ export const getAllProducts = async (filter: ProductsFilter = productsFilterSche
 			and(
 				filter.userId ? eq(products.userId, filter.userId) : undefined,
 				filter.search ? like(products.productName, `%${filter.search.replaceAll(' ', '%')}%`) : undefined,
+				eq(products.banned, false),
 			),
 		)
 
@@ -167,13 +205,37 @@ export const getAllProducts = async (filter: ProductsFilter = productsFilterSche
 }
 
 export const getProductById = async (productId: string): Promise<DisplayProduct> => {
-	const [productRes] = await db.select().from(products).where(eq(products.id, productId)).execute()
+	const [productRes] = await db
+		.select()
+		.from(products)
+		.where(and(eq(products.id, productId), eq(products.banned, false)))
+		.execute()
 
 	if (!productRes) {
 		error(404, 'Not found')
 	}
 
 	return await toDisplayProduct(productRes)
+}
+
+export const getBannedProducts = async (filter: ProductsFilter = productsFilterSchema.parse({})) => {
+	const productsResult = await db.query.products.findMany({
+		where: and(eq(products.banned, true)),
+	})
+
+	const displayProducts: DisplayProduct[] = await Promise.all(productsResult.map(toDisplayProduct))
+
+	return displayProducts
+}
+
+export const setProductBanned = async (productId: string, banned: boolean) => {
+	const [updatedProduct] = await db.update(products).set({ banned }).where(eq(products.id, productId)).returning()
+	console.log('BAN updatedProduct', updatedProduct)
+	if (!updatedProduct) {
+		throw new Error('Failed to update product')
+	}
+
+	return updatedProduct.id
 }
 
 export const setProductMetaFeatured = async (productId: string, featured: boolean) => {
@@ -264,7 +326,7 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 
 				if (parentId) {
 					const parentProduct = await productExists(parentId)
-					if (!parentProduct) {
+					if (!parentProduct.exists && !parentProduct.banned) {
 						console.error(`createProducts: Parent product not found for event ${productEvent.id}, parent id: ${parentId}`)
 						parentId = null
 					}
@@ -291,6 +353,7 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 					userId: productEvent.pubkey,
 					stallId: stallId,
 					quantity: parsedProduct.quantity ?? 0,
+					banned: false,
 				}
 
 				const insertSpecs: ProductMeta[] | undefined = parsedProduct.specs?.map((spec) => ({
@@ -555,7 +618,7 @@ export const deleteProduct = async (productId: string): Promise<string> => {
 const preparedProductsByCatName = db
 	.select({ ...getTableColumns(products) })
 	.from(products)
-	.leftJoin(eventTags, eq(products.id, eventTags.eventId))
+	.leftJoin(eventTags, and(eq(products.id, eventTags.eventId), eq(products.banned, false)))
 	.where(and(eq(eventTags.tagValue, sql.placeholder('category')), eq(eventTags.tagName, 't')))
 	.limit(sql.placeholder('limit'))
 	.offset(sql.placeholder('offset'))
@@ -587,11 +650,18 @@ export const getProductsByCatName = async (filter: ProductsFilter): Promise<{ to
 	return { total, products: displayProducts }
 }
 
-export const productExists = async (productId: string): Promise<boolean> => {
-	const result = await db
-		.select({ id: sql`1` })
-		.from(products)
-		.where(eq(products.id, productId))
-		.limit(1)
-	return result.length > 0
+export const productExists = async (productId: string): Promise<ExistsResult> => {
+	const [result] = await db.select().from(products).where(eq(products.id, productId)).limit(1)
+
+	if (!result) {
+		return {
+			exists: false,
+			banned: false,
+		}
+	}
+
+	return {
+		exists: true,
+		banned: result.banned,
+	}
 }

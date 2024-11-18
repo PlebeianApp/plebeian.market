@@ -38,6 +38,10 @@ const standardColumns = {
 		.default(sql`(unixepoch())`),
 }
 
+const bannableItemColumns = {
+	banned: integer('banned', { mode: 'boolean' }).notNull().default(false),
+}
+
 const standardProductColumns = {
 	stallId: text('stall_id')
 		.notNull()
@@ -132,6 +136,7 @@ export type NonEmptyArray<T> = [T, ...T[]]
 // Users table
 export const users = sqliteTable('users', {
 	...standardColumns,
+	...bannableItemColumns,
 	name: text('name'),
 	displayName: text('display_name'),
 	about: text('about'),
@@ -171,6 +176,7 @@ export const stalls = sqliteTable(
 	'stalls',
 	{
 		...standardColumns,
+		...bannableItemColumns,
 		name: text('name').notNull(),
 		description: text('description').notNull(),
 		identifier: text('identifier').notNull(),
@@ -289,6 +295,7 @@ export const products = sqliteTable(
 	{
 		...standardColumns,
 		...standardProductColumns,
+		...bannableItemColumns,
 		productType: text('product_type', { enum: Object.values(PRODUCT_TYPES) as NonEmptyArray<ProductTypes> })
 			.notNull()
 			.default('simple'),

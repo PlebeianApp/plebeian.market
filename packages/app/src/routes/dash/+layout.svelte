@@ -4,28 +4,33 @@
 	import MustLogin from '$lib/components/assets/mustLogin.svelte'
 	import * as Accordion from '$lib/components/ui/accordion'
 	import * as Menubar from '$lib/components/ui/menubar'
+	import { createUserExistsQuery, createUserRoleByIdQuery } from '$lib/fetch/users.queries'
 	import { breakpoint } from '$lib/stores/breakpoint'
+	import ndkStore from '$lib/stores/ndk'
 	import { shouldShowItem } from '$lib/utils'
 
 	import type { PageData } from './$types'
 
 	export let data: PageData
-	$: ({ menuItems, activeUser, userExist } = data)
+	$: ({ menuItems } = data)
 	let value: string
 
 	afterNavigate(() => {
 		value = menuItems.find((item) => `/${$page.url.pathname.split('/').slice(1, 3).join('/')}` === item.root)?.value || ''
 	})
+
+	$: activeUserRole = $ndkStore.activeUser?.pubkey ? createUserRoleByIdQuery($ndkStore.activeUser?.pubkey) : undefined
+	$: userExist = $ndkStore.activeUser?.pubkey ? createUserExistsQuery($ndkStore.activeUser?.pubkey) : undefined
 </script>
 
-{#if activeUser?.id}
+{#if $ndkStore.activeUser?.pubkey}
 	{#if $breakpoint !== 'lg'}
 		<div class="max-w-2xl mx-auto p-2">
 			<div class="w-full space-y-4">
 				<h4><a href="/settings">Settings</a></h4>
 				<Menubar.Root>
 					{#each menuItems as item}
-						{#if shouldShowItem(item, userExist, activeUser?.role)}
+						{#if shouldShowItem(item, $userExist?.data?.exists, $activeUserRole?.data)}
 							<Menubar.Menu>
 								<Menubar.Trigger class="text-xs p-4"><span id={item.value}>{item.title}</span></Menubar.Trigger>
 								<Menubar.Content>
@@ -56,7 +61,7 @@
 					<h2><a href="/dash">Dashboard</a></h2>
 					<Accordion.Root bind:value>
 						{#each menuItems as item}
-							{#if shouldShowItem(item, userExist, activeUser?.role)}
+							{#if shouldShowItem(item, $userExist?.data?.exists, $activeUserRole?.data)}
 								<Accordion.Item value={item.value}>
 									<Accordion.Trigger>
 										<span id={item.value}>{item.title}</span>

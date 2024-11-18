@@ -27,7 +27,7 @@
 				<h4><a href="/settings">Settings</a></h4>
 				<Menubar.Root>
 					{#each menuItems as item}
-						{#if shouldShowItem(item, $userExist?.data, $activeUserQuery.data?.role)}
+						{#if shouldShowItem(item, $userExist?.data?.exists, $activeUserQuery.data?.role)}
 							<Menubar.Menu>
 								<Menubar.Trigger class="text-xs p-4"><span id={item.value}>{item.title}</span></Menubar.Trigger>
 								<Menubar.Content>
@@ -69,7 +69,7 @@
 										<Accordion.Content>
 											<ul class="pl-4 space-y-1">
 												{#each item.links as link}
-													{#if link.public || $userExist?.data}
+													{#if link.public || ($userExist?.data?.exists && !$userExist?.data?.banned)}
 														<li><a class={$page.url.pathname == link.href ? ' font-bold' : ''} href={link.href}>{link.title}</a></li>
 													{/if}
 												{/each}
