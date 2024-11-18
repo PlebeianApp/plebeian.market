@@ -5,11 +5,12 @@
 	import * as Accordion from '$lib/components/ui/accordion'
 	import * as Menubar from '$lib/components/ui/menubar'
 	import { breakpoint } from '$lib/stores/breakpoint'
+	import ndkStore from '$lib/stores/ndk'
 
 	import type { PageData } from './$types'
 
 	export let data: PageData
-	$: ({ menuItems, activeUser, userExist } = data)
+	$: ({ menuItems } = data)
 	let value: string
 
 	afterNavigate(() => {
@@ -17,7 +18,7 @@
 	})
 </script>
 
-{#if activeUser?.id}
+{#if $ndkStore.activeUser?.pubkey}
 	{#if $breakpoint !== 'lg'}
 		<div class="max-w-2xl mx-auto p-2">
 			<div class="w-full space-y-4">

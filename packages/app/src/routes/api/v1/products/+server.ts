@@ -4,6 +4,7 @@ import { productsFilterSchema } from '$lib/schema'
 import {
 	createProducts,
 	getAllProducts,
+	getFeaturedProducts,
 	getProductsByCatName,
 	getProductsByStallId,
 	getProductsByUserId,
@@ -20,6 +21,8 @@ export async function GET({ url: { searchParams } }) {
 		return json(await getProductsByUserId(filter.data))
 	} else if (filter.data.stallId) {
 		return json(await getProductsByStallId(filter.data.stallId, filter.data))
+	} else if (filter.data.featured) {
+		return json(await getFeaturedProducts(filter.data))
 	} else {
 		return json(await getAllProducts(filter.data))
 	}

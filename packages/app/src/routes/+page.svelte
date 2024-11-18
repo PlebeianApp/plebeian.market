@@ -3,6 +3,7 @@
 	import Pattern from '$lib/components/Pattern.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
 	import { Button } from '$lib/components/ui/button/index.js'
+	import { createProductsByFilterQuery } from '$lib/fetch/products.queries'
 	import { openDrawerForNewStall } from '$lib/stores/drawer-ui'
 
 	import type { PageData } from './$types'
@@ -10,9 +11,11 @@
 	export let data: PageData
 
 	$: ({
-		homeProducts: { featured, products },
 		appSettings: { isFirstTimeRunning },
 	} = data)
+
+	$: productQuery = createProductsByFilterQuery({ pageSize: 8 })
+	$: featuredProductsQuery = createProductsByFilterQuery({ featured: true })
 </script>
 
 {#if !isFirstTimeRunning}
@@ -24,12 +27,12 @@
 					<h1 class="relative z-10">Sell stuff for sats</h1>
 					<Button class="relative z-10 p-6 text-xl font-bold" on:click={openDrawerForNewStall}>List my stuff</Button>
 				</div>
-				{#if featured?.length}
+				{#if $featuredProductsQuery.data?.products?.length}
 					<div class=" bg-primary px-4 py-20 lg:px-12">
 						<div class="container">
 							<h2>Featured Collections</h2>
 							<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-								{#each featured as item (item.id)}
+								{#each $featuredProductsQuery.data?.products as item (item.id)}
 									<ProductItem product={item} />
 								{/each}
 							</div>
@@ -41,12 +44,12 @@
 						<CatMenu />
 					</div>
 				</div>
-				{#if products?.length}
+				{#if $productQuery.data?.products?.length}
 					<div class=" px-4 py-20 lg:px-12">
 						<div class="container flex flex-col items-center">
 							<h2>Products</h2>
 							<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-								{#each products as item (item.id)}
+								{#each $productQuery.data?.products as item (item.id)}
 									<ProductItem product={item} />
 								{/each}
 							</div>

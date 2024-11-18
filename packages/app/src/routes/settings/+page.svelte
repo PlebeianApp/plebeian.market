@@ -21,7 +21,7 @@
 			</section>
 			<ul>
 				{#each item.links as link}
-					{#if link.public || $userExist?.data}
+					{#if link.public || ($userExist?.data?.exists && !$userExist?.data?.banned)}
 						<li>
 							<a href={link.href}>
 								<p class={link.title == 'Delete account' ? 'text-[hsl(var(--destructive))]' : ''}>{link.title}</p>

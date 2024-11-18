@@ -31,7 +31,7 @@
 							<Menubar.Content>
 								{#if $activeUserQuery.data?.role === 'admin' || item.value !== 'app-settings'}
 									{#each item.links as link}
-										{#if link.public || $userExist?.data}
+										{#if link.public || ($userExist?.data?.exists && !$userExist?.data?.banned)}
 											<Menubar.Item
 												><li>
 													<a class={$page.url.pathname == link.href ? ' font-bold' : ''} href={link.href}>{link.title}</a>

@@ -51,15 +51,18 @@
 
 		ndkUser.profile = filteredProfile as NDKUserProfile
 
-		if (userExist) {
+		if ($userExist?.data?.exists && !$userExist?.data?.banned) {
 			try {
 				await $userDataMutation.mutateAsync(filteredProfile)
-				await ndkUser.sign()
+				await ndkUser.publish()
 				toast.success('User data updated')
 			} catch (error) {
 				console.error(error)
 				toast.error('Failed to update user data')
 			}
+		} else {
+			await ndkUser.publish()
+			toast.success('User data updated')
 		}
 	}
 

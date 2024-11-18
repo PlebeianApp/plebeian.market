@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "699ea491-7190-4b26-a3ec-ffefcb35ac03",
+  "id": "0aca5d5a-4940-4969-9aba-d41d4988d1c0",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "app_settings": {
@@ -1326,6 +1326,14 @@
           "autoincrement": false,
           "default": "'0'"
         },
+        "banned": {
+          "name": "banned",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
         "product_type": {
           "name": "product_type",
           "type": "text",
@@ -1719,6 +1727,14 @@
           "autoincrement": false,
           "default": "(unixepoch())"
         },
+        "banned": {
+          "name": "banned",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
         "name": {
           "name": "name",
           "type": "text",
@@ -1909,6 +1925,14 @@
           "notNull": true,
           "autoincrement": false,
           "default": "(unixepoch())"
+        },
+        "banned": {
+          "name": "banned",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
         },
         "name": {
           "name": "name",

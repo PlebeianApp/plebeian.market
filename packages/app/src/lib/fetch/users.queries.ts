@@ -1,4 +1,5 @@
 import type { NDKUserProfile } from '@nostr-dev-kit/ndk'
+import type { ExistsResult } from '$lib/interfaces'
 import type { UsersFilter } from '$lib/schema'
 import type { RichUser } from '$lib/server/users.service'
 import { createQuery } from '@tanstack/svelte-query'
@@ -17,7 +18,7 @@ import { createRequest, queryClient } from './client'
 declare module './client' {
 	interface Endpoints {
 		[k: `GET /api/v1/users/${string}`]: Operation<string, 'GET', never, never, RichUser | NDKUserProfile, never>
-		[k: `GET /api/v1/users/${string}?exists`]: Operation<string, 'GET', never, never, boolean, never>
+		[k: `GET /api/v1/users/${string}?exists`]: Operation<string, 'GET', never, never, ExistsResult, never>
 		[k: `GET /api/v1/users/${string}/role`]: Operation<string, 'GET', never, never, UserRoles, never>
 		'GET /api/v1/users': Operation<'/api/v1/users', 'GET', never, never, string[], UsersFilter>
 	}
@@ -98,7 +99,7 @@ export const createUserRelaysByIdQuery = (id: string) =>
 	)
 
 export const createUserExistsQuery = (id: string) =>
-	createQuery<boolean>(
+	createQuery<ExistsResult>(
 		{
 			queryKey: ['users', 'exists', id],
 			queryFn: async () => {

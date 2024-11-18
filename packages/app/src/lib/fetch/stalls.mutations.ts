@@ -3,6 +3,7 @@ import type { EventCoordinates } from '$lib/interfaces'
 import type { DisplayStall } from '$lib/server/stalls.service'
 import { error } from '@sveltejs/kit'
 import { createMutation } from '@tanstack/svelte-query'
+import { goto } from '$app/navigation'
 import ndkStore from '$lib/stores/ndk'
 import { getEventCoordinates } from '$lib/utils'
 import { get } from 'svelte/store'
@@ -15,6 +16,7 @@ declare module './client' {
 		[k: `PUT /api/v1/stalls/${string}`]: Operation<string, 'POST', never, NostrEvent, DisplayStall, never>
 		[k: `DELETE /api/v1/stalls/${string}`]: Operation<string, 'DELETE', never, string, string, never>
 		[k: `POST /api/v1/stalls/${string}/featured`]: Operation<string, 'POST', never, { featured: boolean }, { id: string }, never>
+		[k: `POST /api/v1/stalls/${string}/ban`]: Operation<string, 'POST', never, { banned: boolean }, { id: string }, never>
 	}
 }
 
@@ -116,6 +118,27 @@ export const deleteStallMutation = createMutation(
 			queryClient.invalidateQueries({ queryKey: ['stalls', $ndkStore.activeUser?.pubkey] })
 			queryClient.invalidateQueries({ queryKey: ['products', $ndkStore.activeUser?.pubkey] })
 			queryClient.invalidateQueries({ queryKey: ['categories', $ndkStore.activeUser?.pubkey] })
+		},
+	},
+	queryClient,
+)
+
+export const setStallBannedMutation = createMutation(
+	{
+		mutationKey: [],
+		mutationFn: async ({ stallId, banned }: { stallId: string; banned: boolean }) => {
+			const response = await createRequest(`POST /api/v1/stalls/${stallId}/ban`, {
+				body: { banned },
+				auth: true,
+			})
+			return response
+		},
+		onSuccess: ({ id }: { id: string }) => {
+			if (id) {
+				queryClient.invalidateQueries({ queryKey: ['stalls', id] })
+				queryClient.invalidateQueries({ queryKey: ['stalls'] })
+				goto('/')
+			}
 		},
 	},
 	queryClient,

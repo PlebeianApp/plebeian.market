@@ -1,10 +1,13 @@
 <script lang="ts">
 	import Separator from '$lib/components/ui/separator/separator.svelte'
+	import { createUserExistsQuery } from '$lib/fetch/users.queries'
+	import ndkStore from '$lib/stores/ndk'
 
 	import type { PageData } from './$types'
 
 	export let data: PageData
-	$: ({ menuItems, activeUser, userExist } = data)
+	$: ({ menuItems } = data)
+	$: userExist = $ndkStore.activeUser?.pubkey ? createUserExistsQuery($ndkStore.activeUser?.pubkey) : undefined
 </script>
 
 {#each menuItems as item}
@@ -17,7 +20,7 @@
 		</section>
 		<ul>
 			{#each item.links as link}
-				{#if userExist}
+				{#if $userExist?.data?.exists && !$userExist?.data?.banned}
 					<li>
 						<a href={link.href}>
 							<p class={link.title == 'Delete account' ? 'text-[hsl(var(--destructive))]' : ''}>{link.title}</p>

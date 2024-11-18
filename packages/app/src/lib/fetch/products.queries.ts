@@ -1,4 +1,5 @@
 import type { CreateQueryResult } from '@tanstack/svelte-query'
+import type { ExistsResult } from '$lib/interfaces'
 import type { ProductsFilter } from '$lib/schema'
 import type { DisplayProduct } from '$lib/server/products.service'
 import { createQuery } from '@tanstack/svelte-query'
@@ -24,7 +25,7 @@ declare module './client' {
 			ProductsFilter
 		>
 		[k: `GET /api/v1/products/${string}`]: Operation<string, 'GET', never, never, DisplayProduct, never>
-		[k: `GET /api/v1/products/${string}?exists`]: Operation<string, 'GET', never, never, boolean, never>
+		[k: `GET /api/v1/products/${string}?exists`]: Operation<string, 'GET', never, never, ExistsResult, never>
 	}
 }
 
@@ -152,7 +153,7 @@ export const createProductsByFilterQuery = (filter: Partial<ProductsFilter>) =>
 	)
 
 export const createProductExistsQuery = (id: string) =>
-	createQuery<boolean>(
+	createQuery<ExistsResult>(
 		{
 			queryKey: ['products', 'exists', id],
 			queryFn: async () => {
