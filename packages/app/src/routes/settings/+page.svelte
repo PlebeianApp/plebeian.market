@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { MenuItem } from '$lib/interfaces'
 	import Separator from '$lib/components/ui/separator/separator.svelte'
 	import { activeUserQuery, createUserExistsQuery } from '$lib/fetch/users.queries'
 	import ndkStore from '$lib/stores/ndk'

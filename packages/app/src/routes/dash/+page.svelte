@@ -10,6 +10,7 @@
 	$: ({ menuItems } = data)
 	$: activeUserRole = $ndkStore.activeUser?.pubkey ? createUserRoleByIdQuery($ndkStore.activeUser?.pubkey) : undefined
 	$: userExist = $ndkStore.activeUser?.pubkey ? createUserExistsQuery($ndkStore.activeUser?.pubkey) : undefined
+	$: activeUserRole = $ndkStore.activeUser?.pubkey ? createUserRoleByIdQuery($ndkStore.activeUser?.pubkey) : undefined
 </script>
 
 {#each menuItems as item}

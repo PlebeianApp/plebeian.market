@@ -1,5 +1,7 @@
+import type { MenuItem } from '$lib/interfaces'
+
 export const load = async () => {
-	const menuItems = [
+	const menuItems: MenuItem[] = [
 		{
 			title: '🛍️ Orders',
 			description: 'View and manage your orders',

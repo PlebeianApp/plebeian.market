@@ -8,6 +8,7 @@
 	import { breakpoint } from '$lib/stores/breakpoint'
 	import ndkStore from '$lib/stores/ndk'
 	import { shouldShowItem } from '$lib/utils'
+	import { shouldShowItem } from '$lib/utils'
 
 	import type { PageData } from './$types'
 
@@ -33,7 +34,7 @@
 								<Menubar.Content>
 									{#if $activeUserQuery.data?.role === 'admin' || item.value !== 'app-settings'}
 										{#each item.links as link}
-											{#if link.public || $userExist?.data}
+											{#if link.public || ($userExist?.data?.exists && !$userExist?.data?.banned)}
 												<Menubar.Item>
 													<li>
 														<a class={$page.url.pathname == link.href ? ' font-bold' : ''} href={link.href}>{link.title}</a>
@@ -69,7 +70,7 @@
 										<Accordion.Content>
 											<ul class="pl-4 space-y-1">
 												{#each item.links as link}
-													{#if link.public || ($userExist?.data?.exists && !$userExist?.data?.banned)}
+													{#if link.public || $userExist?.data}
 														<li><a class={$page.url.pathname == link.href ? ' font-bold' : ''} href={link.href}>{link.title}</a></li>
 													{/if}
 												{/each}
