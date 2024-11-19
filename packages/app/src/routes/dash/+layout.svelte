@@ -60,7 +60,7 @@
 					<h2><a href="/settings">Settings</a></h2>
 					<Accordion.Root bind:value>
 						{#each menuItems as item}
-							{#if shouldShowItem(item)}
+							{#if shouldShowItem(item, $userExist?.data?.exists, $activeUserQuery.data?.role)}
 								{#if $activeUserQuery.data?.role === 'admin' || item.value !== 'app-settings'}
 									<Accordion.Item value={item.value}>
 										<Accordion.Trigger>

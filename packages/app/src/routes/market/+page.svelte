@@ -5,7 +5,7 @@
 	import { onDestroy, onMount } from 'svelte'
 	import { derived } from 'svelte/store'
 
-	const uniqueStallsStore = derived(stallsSub, ($stallsSub) => {
+	const uniqueStallsStore = derived(stallsSub ?? [], ($stallsSub) => {
 		if ($stallsSub.length <= 1) return $stallsSub
 
 		const dTagSet = new Set($stallsSub.map((stall) => stall.dTag))
@@ -14,12 +14,12 @@
 		return [...new Map($stallsSub.map((stall) => [stall.dTag, stall])).values()]
 	})
 	onMount(() => {
-		if (!$stallsSub.length) {
-			stallsSub.ref()
+		if (!$stallsSub?.length) {
+			stallsSub?.ref()
 		}
 	})
 	onDestroy(() => {
-		stallsSub.unref()
+		stallsSub?.unref()
 	})
 </script>
 
@@ -30,7 +30,7 @@
 				<div class="container">
 					<h2>Stalls</h2>
 					<div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-						{#if $stallsSub.length}
+						{#if $stallsSub?.length}
 							{#each $uniqueStallsStore as stall (stall.dTag)}
 								{#if stall}
 									<StallItem stallData={stall} />

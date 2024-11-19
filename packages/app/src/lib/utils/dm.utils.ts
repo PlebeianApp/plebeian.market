@@ -126,9 +126,9 @@ export function setupDMSubscription() {
 	const $ndkStore = get(ndkStore)
 	if (!$ndkStore.activeUser) return
 
-	dmKind04Sub.changeFilters([
+	dmKind04Sub?.changeFilters([
 		{ kinds: [NDKKind.EncryptedDirectMessage], limit: 50, '#p': [$ndkStore.activeUser.pubkey] },
 		{ kinds: [NDKKind.EncryptedDirectMessage], limit: 50, authors: [$ndkStore.activeUser.pubkey] },
 	])
-	dmKind04Sub.ref()
+	dmKind04Sub?.ref()
 }

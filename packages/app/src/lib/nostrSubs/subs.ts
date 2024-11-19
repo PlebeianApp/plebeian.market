@@ -8,7 +8,7 @@ import { derived, get } from 'svelte/store'
 
 import type { AppSettings } from '@plebeian/database'
 
-const ndk = get(ndkStore)
+const ndk = typeof window !== 'undefined' ? get(ndkStore) : undefined
 
 let appSettings: AppSettings
 
@@ -20,14 +20,17 @@ if (typeof window !== 'undefined') {
 	})
 }
 
-export const stallsSub: NDKEventStore<ExtendedBaseType<NDKEvent>> = ndk.storeSubscribe(
+export const stallsSub: NDKEventStore<ExtendedBaseType<NDKEvent>> | undefined = ndk?.storeSubscribe(
 	{ kinds: [KindStalls], limit: 100 },
 	{ closeOnEose: true, autoStart: false, cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY },
 )
 
-export const dmKind04Sub: NDKEventStore<ExtendedBaseType<NDKEvent>> = ndk.storeSubscribe({}, { closeOnEose: false, autoStart: false })
+export const dmKind04Sub: NDKEventStore<ExtendedBaseType<NDKEvent>> | undefined = ndk?.storeSubscribe(
+	{},
+	{ closeOnEose: false, autoStart: false },
+)
 
-export const groupedDMs = derived(dmKind04Sub, ($dmKind04Sub) => {
+export const groupedDMs = derived(dmKind04Sub ?? [], ($dmKind04Sub) => {
 	const groups: Record<string, NDKEvent[]> = {}
 	const activeUser = get(ndkStore).activeUser
 

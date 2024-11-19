@@ -230,7 +230,7 @@
 							type="text"
 							pattern="^(?!.*\\.\\.)[0-9]*([.][0-9]+)?"
 							name="price"
-							placeholder="e.g. $30"
+							placeholder="e.g. 30"
 							required
 							value={product?.price ?? ''}
 						/>

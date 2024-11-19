@@ -151,7 +151,7 @@ export const loginDb = async (user: NDKUser) => {
 }
 
 export const logout = async () => {
-	dmKind04Sub.unref()
+	dmKind04Sub?.unref()
 	localStorage.clear()
 	cart.clear()
 	location.replace('/')
