@@ -13,6 +13,7 @@
 	import { onMount } from 'svelte'
 	import { toast } from 'svelte-sonner'
 
+	import Spinner from './assets/spinner.svelte'
 	import Pattern from './Pattern.svelte'
 	import Checkbox from './ui/checkbox/checkbox.svelte'
 	import CAvatar from './ui/custom-components/c-avatar.svelte'
@@ -20,10 +21,13 @@
 
 	export let dialogOpen = false
 	export let accointInfo: NsecAccount
+	let loading = false
 
 	let checked: boolean
 	async function loginWrapper(loginMethod: BaseAccount['type'], formData?: FormData) {
+		loading = true
 		;(await login(loginMethod, formData)) ? toast.success('Login sucess!') : toast.error('Login error!')
+		loading = false
 		dialogOpen = false
 	}
 
@@ -49,8 +53,11 @@
 		<Dialog.Header class="relative w-full bg-black text-center text-white py-8 flex items-center">
 			<Pattern />
 			<div class="flex flex-row gap-2 items-center">
-				<a href="/"><img src="/logo.svg" alt="logo" class="w-16" /></a>
-				<span class="relative z-10 text-left text-lg font-bold text-primary">plebeian<br />market</span>
+				{#if loading}
+					<Spinner size={60} />
+				{:else}
+					<img src="/logo.svg" alt="logo" class="w-16" />
+				{/if}
 			</div>
 		</Dialog.Header>
 		<section class="p-4 flex flex-col gap-2">
@@ -87,7 +94,7 @@
 					value={accointInfo.cSk}
 				/>
 				<Input required class="border-black border-2 required-mark" name="password" placeholder="Password" type="password" />
-				<Button type="submit">Sign in</Button>
+				<Button type="submit" disabled={loading}>Sign in</Button>
 			</form>
 			<div class="flex items-center space-x-2">
 				<Checkbox id="terms" bind:checked aria-labelledby="terms-label" />
