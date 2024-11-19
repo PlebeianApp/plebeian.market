@@ -7,7 +7,7 @@
 	import { openDrawerForNewProductForStall, openDrawerForStall } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
 	import { stringToHexColor, truncateString, truncateText } from '$lib/utils'
-	import { Edit, MoreVertical, Plus } from 'lucide-svelte' // Changed to MoreVertical
+	import { Edit, MoreVertical, Plus } from 'lucide-svelte'
 	import { npubEncode } from 'nostr-tools/nip19'
 	import { onMount } from 'svelte'
 

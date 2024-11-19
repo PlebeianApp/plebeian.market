@@ -21,13 +21,13 @@
 
 	export let dialogOpen = false
 	export let accointInfo: NsecAccount
-	let loading = false
+	let isLoading = false
 
 	let checked: boolean
 	async function loginWrapper(loginMethod: BaseAccount['type'], formData?: FormData) {
-		loading = true
+		isLoading = true
 		;(await login(loginMethod, formData)) ? toast.success('Login sucess!') : toast.error('Login error!')
-		loading = false
+		isLoading = false
 		dialogOpen = false
 	}
 
@@ -53,7 +53,7 @@
 		<Dialog.Header class="relative w-full bg-black text-center text-white py-8 flex items-center">
 			<Pattern />
 			<div class="flex flex-row gap-2 items-center">
-				{#if loading}
+				{#if isLoading}
 					<Spinner size={60} />
 				{:else}
 					<img src="/logo.svg" alt="logo" class="w-16" />
@@ -94,7 +94,7 @@
 					value={accointInfo.cSk}
 				/>
 				<Input required class="border-black border-2 required-mark" name="password" placeholder="Password" type="password" />
-				<Button type="submit" disabled={loading}>Sign in</Button>
+				<Button type="submit" disabled={isLoading}>Sign in</Button>
 			</form>
 			<div class="flex items-center space-x-2">
 				<Checkbox id="terms" bind:checked aria-labelledby="terms-label" />
