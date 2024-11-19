@@ -36,7 +36,7 @@
 		<Card.Header class="p-0">
 			{#if images?.length && !imageLoadError}
 				{@const mainImage = images.find((img) => img.imageOrder === 0) || images[0]}
-				<div class="relative aspect-[10/9]">
+				<div class="relative w-full h-72">
 					<img
 						class="object-cover w-full h-full"
 						src={mainImage.imageUrl}

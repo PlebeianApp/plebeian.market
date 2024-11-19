@@ -31,74 +31,70 @@
 		<main class="text-black">
 			<div class="px-4 lg:px-12">
 				<h1>Market</h1>
-				<div class="container flex flex-col gap-6">
+				<div class="container">
 					<div class="gap-2 flex flex-col">
 						<CatMenu />
-					</div>
-					<div class="py-20 flex flex-col gap-2">
-						<h2>Stalls</h2>
-
-						<div class="flex flex-col gap-2">
-							<Input class="" type="search" placeholder="Search..." bind:value={$search} />
-							<Select.Root selected={sort} onSelectedChange={onSortSelectedChange}>
-								<Select.Trigger class="w-[100px]">
-									<Select.Value placeholder="Sort" />
-								</Select.Trigger>
-								<Select.Content>
-									<Select.Item value="desc">Latest</Select.Item>
-									<Select.Item value="asc">Oldest</Select.Item>
-								</Select.Content>
-							</Select.Root>
-						</div>
-
-						{#if $stallsQuery.error}
-							<p>{JSON.stringify($stallsQuery.error)}</p>
-						{/if}
-
-						{#if $stallsQuery.isLoading}
-							<div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-								{#each [...Array(6)] as _, i}
-									<Skeleton class="h-4 w-[200px]" />
-								{/each}
-							</div>
-						{/if}
-
-						{#if $stallsQuery.isError}
-							<p>Error: {$stallsQuery.error}</p>
-						{/if}
-
-						{#if $stallsQuery.data?.stalls}
-							<div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-								{#each $stallsQuery.data.stalls as item (item.id)}
-									<StallItem stallData={item} />
-								{/each}
-							</div>
-							<Pagination.Root bind:page count={$stallsQuery.data?.total} perPage={pageSize} let:pages let:currentPage>
-								<Pagination.Content>
-									<Pagination.Item>
-										<Pagination.PrevButton />
-									</Pagination.Item>
-									{#each pages as page (page.key)}
-										{#if page.type === 'ellipsis'}
-											<Pagination.Item>
-												<Pagination.Ellipsis />
-											</Pagination.Item>
-										{:else}
-											<Pagination.Item>
-												<Pagination.Link {page} isActive={currentPage == page.value}>
-													{page.value}
-												</Pagination.Link>
-											</Pagination.Item>
-										{/if}
+						<div class=" flex flex-col gap-2">
+							{#if $stallsQuery.isLoading}
+								<div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+									{#each [...Array(6)] as _, i}
+										<Skeleton class="h-4 w-[200px]" />
 									{/each}
-									<Pagination.Item>
-										<Pagination.NextButton />
-									</Pagination.Item>
-								</Pagination.Content>
-							</Pagination.Root>
-						{:else}
-							No results for your query :)
-						{/if}
+								</div>
+							{/if}
+							{#if $stallsQuery.data?.stalls}
+								<h2>Stalls</h2>
+								<div class="flex flex-col gap-2">
+									<Input class="" type="search" placeholder="Search..." bind:value={$search} />
+									<Select.Root selected={sort} onSelectedChange={onSortSelectedChange}>
+										<Select.Trigger class="w-[100px]">
+											<Select.Value placeholder="Sort" />
+										</Select.Trigger>
+										<Select.Content>
+											<Select.Item value="desc">Latest</Select.Item>
+											<Select.Item value="asc">Oldest</Select.Item>
+										</Select.Content>
+									</Select.Root>
+								</div>
+
+								<div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+									{#each $stallsQuery.data.stalls as item (item.id)}
+										<StallItem stallData={item} />
+									{/each}
+								</div>
+								<div class="py-4">
+									<Pagination.Root bind:page count={$stallsQuery.data?.total} perPage={pageSize} let:pages let:currentPage>
+										<Pagination.Content>
+											<Pagination.Item>
+												<Pagination.PrevButton />
+											</Pagination.Item>
+											{#each pages as page (page.key)}
+												{#if page.type === 'ellipsis'}
+													<Pagination.Item>
+														<Pagination.Ellipsis />
+													</Pagination.Item>
+												{:else}
+													<Pagination.Item>
+														<Pagination.Link {page} isActive={currentPage == page.value}>
+															{page.value}
+														</Pagination.Link>
+													</Pagination.Item>
+												{/if}
+											{/each}
+											<Pagination.Item>
+												<Pagination.NextButton />
+											</Pagination.Item>
+										</Pagination.Content>
+									</Pagination.Root>
+								</div>
+							{:else}
+								<div class=" px-4 py-20 lg:px-12">
+									<div class=" flex flex-col items-center">
+										<h2>Nothing yet...</h2>
+									</div>
+								</div>
+							{/if}
+						</div>
 					</div>
 				</div>
 			</div>

@@ -23,7 +23,7 @@
 		<Skeleton class=" h-12 w-full" />
 		<Skeleton class=" h-12 w-full" />
 		<Skeleton class=" h-12 w-full" />
-	{:else if $categoriesQuery.data?.categories.length}
+	{:else if $categoriesQuery.data?.categories?.length}
 		<h3>Categories</h3>
 		<Input class="" type="search" placeholder="Search..." bind:value={$search} />
 		<div class="flex flex-col gap-6">

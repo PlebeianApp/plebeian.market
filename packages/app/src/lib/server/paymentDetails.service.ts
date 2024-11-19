@@ -160,3 +160,8 @@ export const setDefaultPaymentDetail = async (paymentDetailId: string, stallId: 
 
 	return enrichWithStallName(updatedPaymentDetail)
 }
+
+export const countPaymentDetailsByUserId = async (userId: string): Promise<number> => {
+	const exists = await db.$count(paymentDetails, eq(paymentDetails.userId, userId))
+	return exists
+}
