@@ -16,7 +16,7 @@ export const FormLabels: { [key: string]: string } = {
 	region: 'Region',
 	contactPhone: 'Phone',
 	contactEmail: 'Email',
-	observations: 'Observations',
+	additionalInfo: 'Additional Information',
 }
 
 export type CheckoutPaymentEvent = {

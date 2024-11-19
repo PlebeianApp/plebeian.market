@@ -429,7 +429,7 @@ const main = async () => {
 					contactName: faker.person.firstName(),
 					contactPhone: faker.phone.number(),
 					contactEmail: faker.internet.email(),
-					observations: faker.lorem.sentence(),
+					additionalInfo: faker.lorem.sentence(),
 				} as Order
 			})
 		})

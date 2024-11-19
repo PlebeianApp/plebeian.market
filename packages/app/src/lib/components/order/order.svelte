@@ -353,10 +353,10 @@
 							<p class="text-gray-500 italic">No contact information available</p>
 						{/if}
 
-						{#if order.observations?.trim()}
+						{#if order.additionalInfo?.trim()}
 							<div class="mt-4 pt-4 border-t">
-								<h4 class="text-gray-500 text-sm mb-1">Observations</h4>
-								<p class="whitespace-pre-wrap">{order.observations}</p>
+								<h4 class="text-gray-500 text-sm mb-1">Additional Information</h4>
+								<p class="whitespace-pre-wrap">{order.additionalInfo}</p>
 							</div>
 						{/if}
 					</div>
@@ -445,7 +445,7 @@
 											</div>
 										{/if}
 									{/if}
-									{#if order.observations?.trim()}
+									{#if order.additionalInfo?.trim()}
 										<InvoiceObservationsEdit
 											observations={invoice.observations ?? ''}
 											on:update={(ce) => handleInvoiceUpdate(invoice.id, ce)}

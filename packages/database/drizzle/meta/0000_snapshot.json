@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "0aca5d5a-4940-4969-9aba-d41d4988d1c0",
+  "id": "35a86fef-414d-42e4-bd54-6f9a8496b781",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "app_settings": {
@@ -95,7 +95,8 @@
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
+      "uniqueConstraints": {},
+      "checkConstraints": {}
     },
     "app_meta": {
       "name": "app_meta",
@@ -196,7 +197,8 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
+      "uniqueConstraints": {},
+      "checkConstraints": {}
     },
     "auctions": {
       "name": "auctions",
@@ -341,7 +343,8 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
+      "uniqueConstraints": {},
+      "checkConstraints": {}
     },
     "bids": {
       "name": "bids",
@@ -429,7 +432,8 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
+      "uniqueConstraints": {},
+      "checkConstraints": {}
     },
     "event_tags": {
       "name": "event_tags",
@@ -503,14 +507,15 @@
       "compositePrimaryKeys": {
         "event_tags_tag_name_tag_value_event_id_pk": {
           "columns": [
-            "event_id",
             "tag_name",
-            "tag_value"
+            "tag_value",
+            "event_id"
           ],
           "name": "event_tags_tag_name_tag_value_event_id_pk"
         }
       },
-      "uniqueConstraints": {}
+      "uniqueConstraints": {},
+      "checkConstraints": {}
     },
     "invoices": {
       "name": "invoices",
@@ -613,7 +618,8 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
+      "uniqueConstraints": {},
+      "checkConstraints": {}
     },
     "meta_types": {
       "name": "meta_types",
@@ -650,7 +656,8 @@
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
+      "uniqueConstraints": {},
+      "checkConstraints": {}
     },
     "order_items": {
       "name": "order_items",
@@ -715,7 +722,8 @@
           "name": "order_items_order_id_product_id_pk"
         }
       },
-      "uniqueConstraints": {}
+      "uniqueConstraints": {},
+      "checkConstraints": {}
     },
     "orders": {
       "name": "orders",
@@ -835,8 +843,8 @@
           "notNull": false,
           "autoincrement": false
         },
-        "observations": {
-          "name": "observations",
+        "additionalInfo": {
+          "name": "additionalInfo",
           "type": "text",
           "primaryKey": false,
           "notNull": false,
@@ -886,7 +894,8 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
+      "uniqueConstraints": {},
+      "checkConstraints": {}
     },
     "payment_details": {
       "name": "payment_details",
@@ -965,7 +974,8 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
+      "uniqueConstraints": {},
+      "checkConstraints": {}
     },
     "product_images": {
       "name": "product_images",
@@ -1048,14 +1058,15 @@
       "compositePrimaryKeys": {
         "product_images_product_id_auction_id_image_url_pk": {
           "columns": [
+            "product_id",
             "auction_id",
-            "image_url",
-            "product_id"
+            "image_url"
           ],
           "name": "product_images_product_id_auction_id_image_url_pk"
         }
       },
-      "uniqueConstraints": {}
+      "uniqueConstraints": {},
+      "checkConstraints": {}
     },
     "product_meta": {
       "name": "product_meta",
@@ -1176,7 +1187,8 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
+      "uniqueConstraints": {},
+      "checkConstraints": {}
     },
     "product_shipping": {
       "name": "product_shipping",
@@ -1241,7 +1253,8 @@
           "name": "product_shipping_product_id_shipping_id_pk"
         }
       },
-      "uniqueConstraints": {}
+      "uniqueConstraints": {},
+      "checkConstraints": {}
     },
     "products": {
       "name": "products",
@@ -1415,7 +1428,8 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
+      "uniqueConstraints": {},
+      "checkConstraints": {}
     },
     "shipping": {
       "name": "shipping",
@@ -1510,7 +1524,8 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
+      "uniqueConstraints": {},
+      "checkConstraints": {}
     },
     "shipping_zones": {
       "name": "shipping_zones",
@@ -1598,7 +1613,8 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
+      "uniqueConstraints": {},
+      "checkConstraints": {}
     },
     "stall_meta": {
       "name": "stall_meta",
@@ -1699,7 +1715,8 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
+      "uniqueConstraints": {},
+      "checkConstraints": {}
     },
     "stalls": {
       "name": "stalls",
@@ -1797,7 +1814,8 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
+      "uniqueConstraints": {},
+      "checkConstraints": {}
     },
     "user_meta": {
       "name": "user_meta",
@@ -1898,7 +1916,8 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
+      "uniqueConstraints": {},
+      "checkConstraints": {}
     },
     "users": {
       "name": "users",
@@ -2015,9 +2034,11 @@
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
+      "uniqueConstraints": {},
+      "checkConstraints": {}
     }
   },
+  "views": {},
   "enums": {},
   "_meta": {
     "schemas": {},

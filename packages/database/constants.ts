@@ -257,7 +257,7 @@ export interface OrderMessage {
 	contactName: string
 	contactPhone?: string
 	contactEmail?: string
-	observations?: string
+	additionalInfo?: string
 	items: OrderMessageItem[]
 }
 
