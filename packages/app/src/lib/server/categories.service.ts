@@ -17,7 +17,7 @@ export const getAllCategories = async (filter: CatsFilter = catsFilterSchema.par
 		.from(eventTags)
 		.$dynamic()
 
-	const where: SQL[] = [eq(eventTags.tagName, 't')]
+	const where: SQL[] = [eq(eventTags.tagName, 't'), eq(products.banned, false)]
 
 	if (filter.userId) {
 		where.push(eq(eventTags.userId, filter.userId))
@@ -45,7 +45,8 @@ export const getAllCategories = async (filter: CatsFilter = catsFilterSchema.par
 	const [{ count: total } = { count: 0 }] = await db
 		.select({ count: countDistinct(eventTags.tagValue) })
 		.from(eventTags)
-		.where(and(eq(eventTags.tagName, 't'), ...where))
+		.innerJoin(products, eq(products.id, eventTags.eventId))
+		.where(and(eq(eventTags.tagName, 't'), eq(products.banned, false), ...where))
 		.execute()
 
 	if (richCats.length > 0) {
