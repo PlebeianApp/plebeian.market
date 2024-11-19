@@ -27,6 +27,7 @@
 	<div class="flex flex-col">
 		<main class="text-black">
 			<div class="px-4 lg:px-12">
+				<h1>Square</h1>
 				<div class="container">
 					<h2>Stalls</h2>
 					<div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">

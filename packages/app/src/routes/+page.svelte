@@ -25,38 +25,46 @@
 				<div class="relative w-full bg-black py-20 text-center text-white">
 					<Pattern />
 					<h1 class="relative z-10">Sell stuff for sats</h1>
-					<Button class="relative z-10 p-6 text-xl font-bold" on:click={openDrawerForNewStall}>List my stuff</Button>
 				</div>
-				{#if $featuredProductsQuery.data?.products?.length}
-					<div class=" bg-primary px-4 py-20 lg:px-12">
-						<div class="container">
-							<h2>Featured Collections</h2>
-							<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-								{#each $featuredProductsQuery.data?.products as item (item.id)}
-									<ProductItem product={item} />
-								{/each}
+				<div class="container">
+					{#if $featuredProductsQuery.data?.products?.length}
+						<div class=" bg-primary px-4 py-20 lg:px-12">
+							<div>
+								<h2>Featured Collections</h2>
+								<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+									{#each $featuredProductsQuery.data?.products as item (item.id)}
+										<ProductItem product={item} />
+									{/each}
+								</div>
 							</div>
 						</div>
+					{/if}
+					<div class="py-5 lg:px-12">
+						<div>
+							<CatMenu />
+						</div>
 					</div>
-				{/if}
-				<div class="py-5 lg:px-12">
-					<div class="container">
-						<CatMenu />
-					</div>
-				</div>
-				{#if $productQuery.data?.products?.length}
-					<div class=" px-4 py-20 lg:px-12">
-						<div class="container flex flex-col items-center">
+					{#if $productQuery.data?.products?.length}
+						<div class=" px-4 py-20 lg:px-12">
 							<h2>Products</h2>
-							<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-								{#each $productQuery.data?.products as item (item.id)}
-									<ProductItem product={item} />
-								{/each}
+
+							<div class=" flex flex-col items-center">
+								<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+									{#each $productQuery.data?.products as item (item.id)}
+										<ProductItem product={item} />
+									{/each}
+								</div>
+								<Button class="mt-6 p-4 font-bold" href="/products">Explore products</Button>
 							</div>
-							<Button class="mt-6 p-4 font-bold" href="/products">Explore products</Button>
 						</div>
-					</div>
-				{/if}
+					{:else}
+						<div class=" px-4 py-20 lg:px-12">
+							<div class=" flex flex-col items-center">
+								<h2>No products yet...</h2>
+							</div>
+						</div>
+					{/if}
+				</div>
 			</main>
 		</div>
 	</div>

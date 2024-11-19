@@ -57,9 +57,8 @@
 				</div>
 			</a>
 			<div class="hidden lg:flex mx-8 gap-8">
-				<a class="hover:underline font-semibold" href="/stalls/">Stall Browser</a>
-				<a class="hover:underline font-semibold" href="/market">Market Square</a>
-				<a class="hover:underline font-semibold" href="/">Plebeian Planet</a>
+				<a class="hover:underline font-semibold" href="/stalls/">Market</a>
+				<a class="hover:underline font-semibold" href="/square">Square</a>
 			</div>
 		</section>
 		<div class="flex items-center gap-4">
@@ -116,7 +115,7 @@
 										<a class="hover:underline font-semibold" href="/stalls/">Stall Browser</a>
 									</DropdownMenu.Item>
 									<DropdownMenu.Item>
-										<a class="hover:underline font-semibold" href="/market">Market Square</a>
+										<a class="hover:underline font-semibold" href="/square">Market Square</a>
 									</DropdownMenu.Item>
 									<DropdownMenu.Item>
 										<a class="hover:underline font-semibold" href="/">Plebeian Planet</a>
