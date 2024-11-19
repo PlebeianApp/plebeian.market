@@ -17,6 +17,8 @@
 
 	let collapsibleOpen = Array(Object.values($cart.users).length).fill(false)
 	collapsibleOpen[0] = true
+
+	$: isLocalPickup = Object.values($cart.stalls).every((o) => o.shippingMethodName === 'Local Pickup')
 </script>
 
 <div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-1 md:grid-cols-2">
@@ -50,6 +52,6 @@
 	</div>
 	<div class="flex flex-col gap-2">
 		<h2>Order details</h2>
-		<CheckoutForm on:validate={handleFormValidation} />
+		<CheckoutForm on:validate={handleFormValidation} {isLocalPickup} />
 	</div>
 </div>

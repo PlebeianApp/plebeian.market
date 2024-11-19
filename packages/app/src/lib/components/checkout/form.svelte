@@ -12,6 +12,8 @@
 
 	import { FormLabels } from './types'
 
+	export let isLocalPickup = false
+
 	const dispatch = createEventDispatcher<{
 		validate: { valid: boolean }
 	}>()
@@ -26,6 +28,21 @@
 		country: '',
 		region: '',
 		observations: '',
+	}
+
+	$: if (isLocalPickup) {
+		formData.country = 'Local Pickup'
+		formData.zip = 'Local Pickup'
+		formData.city = 'Local Pickup'
+		formData.address = 'Local Pickup'
+		formData.contactName = 'Local Pickup'
+	} else {
+		formData.country = ''
+		formData.zip = ''
+		formData.city = ''
+		formData.address = ''
+		formData.contactName = ''
+		formData.contactPhone = ''
 	}
 
 	let validationErrors: ValidationErrors = {}
@@ -49,7 +66,7 @@
 	<Label>
 		<span class="required-mark">{FormLabels.contactName}</span>
 		{#if validationErrors.contactName}<span class="text-red-500">{validationErrors.contactName}</span>{/if}
-		<Input type="text" bind:value={formData.contactName} required />
+		<Input type="text" bind:value={formData.contactName} disabled={isLocalPickup} />
 	</Label>
 	<Label>
 		{FormLabels.contactPhone}
@@ -64,27 +81,27 @@
 	<Label>
 		<span class="required-mark">{FormLabels.address}</span>
 		{#if validationErrors.address}<span class="text-red-500">{validationErrors.address}</span>{/if}
-		<Input type="text" bind:value={formData.address} required />
+		<Input type="text" bind:value={formData.address} disabled={isLocalPickup} />
 	</Label>
 	<Label>
 		<span class="required-mark">{FormLabels.zip}</span>
 		{#if validationErrors.zip}<span class="text-red-500">{validationErrors.zip}</span>{/if}
-		<Input type="text" bind:value={formData.zip} required />
+		<Input type="text" bind:value={formData.zip} disabled={isLocalPickup} />
 	</Label>
 	<Label>
 		<span class="required-mark">{FormLabels.city}</span>
 		{#if validationErrors.city}<span class="text-red-500">{validationErrors.city}</span>{/if}
-		<Input type="text" bind:value={formData.city} required />
+		<Input type="text" bind:value={formData.city} disabled={isLocalPickup} />
 	</Label>
 	<Label>
 		<span class="required-mark">{FormLabels.country}</span>
 		{#if validationErrors.country}<span class="text-red-500">{validationErrors.country}</span>{/if}
-		<Input type="text" bind:value={formData.country} required />
+		<Input type="text" bind:value={formData.country} disabled={isLocalPickup} />
 	</Label>
 	<Label>
 		{FormLabels.region}
 		{#if validationErrors.region}<span class="text-red-500">{validationErrors.region}</span>{/if}
-		<Input type="text" bind:value={formData.region} />
+		<Input type="text" bind:value={formData.region} disabled={isLocalPickup} />
 	</Label>
 	<Label>
 		{FormLabels.observations}

@@ -47,7 +47,7 @@
 							{@const method = $stallQuery.data?.stall?.shipping?.find((m) => m.id === currentShippingMethodId)}
 							{#if method}
 								{getMethodDisplayName(method)}
-								<span>{method.cost}</span>
+								<span class="ml-2">{method.cost}</span>
 							{/if}
 						{:else}
 							Select shipping method
