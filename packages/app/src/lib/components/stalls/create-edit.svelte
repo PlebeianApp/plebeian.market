@@ -208,6 +208,7 @@
 
 	async function handleDelete() {
 		if (!stall?.id) return
+		isLoading = true
 		try {
 			await $deleteStallMutation.mutateAsync(stall.id)
 		} catch (error) {
@@ -215,6 +216,7 @@
 		}
 		await deleteEvent(stall.id)
 		dispatch('success', null)
+		isLoading = false
 	}
 </script>
 
@@ -501,6 +503,6 @@
 		>Save</Button
 	>
 	{#if stall?.id}
-		<Button type="button" variant="destructive" on:click={handleDelete}>Delete</Button>
+		<Button type="button" variant="destructive" disabled={isLoading} on:click={handleDelete}>Delete</Button>
 	{/if}
 </form>

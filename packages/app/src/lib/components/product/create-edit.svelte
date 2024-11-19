@@ -159,6 +159,7 @@
 
 	async function handleDelete() {
 		if (!product?.id) return
+		isLoading = true
 		try {
 			await $deleteProductMutation.mutateAsync(product.id)
 		} catch (error) {
@@ -166,6 +167,7 @@
 		}
 		await deleteEvent(product.id)
 		dispatch('success', null)
+		isLoading = false
 	}
 </script>
 
@@ -228,7 +230,7 @@
 							type="text"
 							pattern="^(?!.*\\.\\.)[0-9]*([.][0-9]+)?"
 							name="price"
-							placeholder="e.g. $30"
+							placeholder="e.g. 30"
 							required
 							value={product?.price ?? ''}
 						/>
@@ -416,7 +418,7 @@
 
 			<Button disabled={isLoading} type="submit" class="w-full font-bold my-4">Save</Button>
 			{#if product?.id}
-				<Button type="button" variant="destructive" class="w-full" on:click={handleDelete}>Delete</Button>
+				<Button type="button" variant="destructive" disabled={isLoading} class="w-full" on:click={handleDelete}>Delete</Button>
 			{/if}
 		</Tabs.Root>
 	</form>

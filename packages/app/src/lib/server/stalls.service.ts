@@ -104,15 +104,7 @@ const resolveStalls = async (stall: Stall): Promise<RichStall> => {
 		.where(eq(users.id, stall.userId))
 		.execute()
 
-	const [productCount] = (
-		await db
-			.select({
-				count: sql<number>`cast(count(${stalls.id}) as int)`,
-			})
-			.from(products)
-			.where(eq(products.stallId, stall.id))
-			.execute()
-	).map((product) => product.count)
+	const productCount = await db.$count(products, eq(products.stallId, stall.id))
 
 	const [image] = await db
 		.select()

@@ -56,10 +56,9 @@
 					<span class="font-semibold text-md sm:text-2xl">{appSettings.instanceName}</span>
 				</div>
 			</a>
-			<div class="hidden lg:flex mx-8 gap-8">
-				<a class="hover:underline font-semibold" href="/stalls/">Stall Browser</a>
-				<a class="hover:underline font-semibold" href="/market">Market Square</a>
-				<a class="hover:underline font-semibold" href="/">Plebeian Planet</a>
+			<div class="hidden sm:flex mx-8 gap-8">
+				<a class="hover:underline font-semibold" href="/stalls/">Market</a>
+				<a class="hover:underline font-semibold" href="/square">Square</a>
 			</div>
 		</section>
 		<div class="flex items-center gap-4">
@@ -113,15 +112,11 @@
 									<DropdownMenu.Separator />
 
 									<DropdownMenu.Item>
-										<a class="hover:underline font-semibold" href="/stalls/">Stall Browser</a>
+										<a class="hover:underline font-semibold" href="/stalls/">Market</a>
 									</DropdownMenu.Item>
 									<DropdownMenu.Item>
-										<a class="hover:underline font-semibold" href="/market">Market Square</a>
+										<a class="hover:underline font-semibold" href="/square">Square</a>
 									</DropdownMenu.Item>
-									<DropdownMenu.Item>
-										<a class="hover:underline font-semibold" href="/">Plebeian Planet</a>
-									</DropdownMenu.Item>
-
 									<DropdownMenu.Separator />
 
 									<DropdownMenu.Item class="flex items-center justify-between gap-2">

@@ -1,3 +1,3 @@
-<div class="py-4 pb-12">
+<div class="py-8 pb-12">
 	<slot />
 </div>
