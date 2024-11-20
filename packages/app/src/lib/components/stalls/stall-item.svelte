@@ -3,47 +3,45 @@
 	import type { RichStall } from '$lib/server/stalls.service'
 	import * as Card from '$lib/components/ui/card/index'
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
+	import { createUserByIdQuery } from '$lib/fetch/users.queries'
 	import { normalizeStallData } from '$lib/nostrSubs/utils'
 	import { openDrawerForNewProductForStall, openDrawerForStall } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
-	import { stringToHexColor, truncateString, truncateText } from '$lib/utils'
+	import { resolveQuery, stringToHexColor, truncateString, truncateText } from '$lib/utils'
 	import { Edit, MoreVertical, Plus } from 'lucide-svelte'
 	import { npubEncode } from 'nostr-tools/nip19'
 	import { onMount } from 'svelte'
 
 	import { Button } from '../ui/button'
 
+	// TODO: Improve reactivity
+
 	export let stallData: Partial<RichStall> | NDKEvent
+
 	let stall: Partial<RichStall> = {}
-	let processing = false
-
 	$: isMyStall = $ndkStore.activeUser?.pubkey === stall?.userId
-
-	$: if (stallData && !processing) {
-		processing = true
+	async function processStallData() {
+		if (!stallData) return
 
 		if ('kind' in stallData) {
-			normalizeStallData(stallData).then(async ({ data: parsedStall, error: parseError }) => {
-				if (!parsedStall || parseError) {
-					processing = false
-					return
-				}
+			const { data: parsedStall, error: parseError } = await normalizeStallData(stallData)
+			if (!parsedStall || parseError) return
 
-				const user = $ndkStore.getUser({ pubkey: stallData.author.pubkey })
-				const userProfile = await user.fetchProfile()
+			const user = $ndkStore.getUser({ pubkey: stallData.author.pubkey })
+			const userProfile = await resolveQuery(() => createUserByIdQuery(user.pubkey, true, true))
 
-				stall = {
-					...parsedStall,
-					userName: userProfile?.name || userProfile?.displayName || '',
-					userNip05: userProfile?.nip05,
-				}
-				processing = false
-			})
+			stall = {
+				...parsedStall,
+				userName: userProfile?.name || userProfile?.displayName || '',
+				userNip05: userProfile?.nip05,
+			}
 		} else {
 			stall = stallData
-			processing = false
 		}
 	}
+
+	onMount(processStallData)
+
 	$: stallUrl = stall.userNip05
 		? `/stalls/${stall.userNip05.toLowerCase()}/${stall.identifier}`
 		: `/stalls/${stall.id?.replace(/^30017:/, '')}`
@@ -129,5 +127,28 @@
 				</Card.Footer>
 			</div>
 		</a>
+
+		<!-- Action buttons outside the link -->
+		<div class="absolute top-2 right-2 z-10">
+			{#if isMyStall && stall.id}
+				<DropdownMenu.Root>
+					<DropdownMenu.Trigger asChild let:builder>
+						<Button builders={[builder]} variant="ghost" size="icon" class="h-8 w-8 p-0 hover:bg-white">
+							<MoreVertical class="h-5 w-5" />
+						</Button>
+					</DropdownMenu.Trigger>
+					<DropdownMenu.Content align="end" class="min-w-[8rem]">
+						<DropdownMenu.Item class="cursor-pointer" on:click={() => handleStallAction('edit')}>
+							<Edit class="mr-2 h-4 w-4" />
+							<span>Edit stall</span>
+						</DropdownMenu.Item>
+						<DropdownMenu.Item class="cursor-pointer" on:click={() => handleStallAction('add')}>
+							<Plus class="mr-2 h-4 w-4" />
+							<span>Add product</span>
+						</DropdownMenu.Item>
+					</DropdownMenu.Content>
+				</DropdownMenu.Root>
+			{/if}
+		</div>
 	</Card.Root>
 {/if}

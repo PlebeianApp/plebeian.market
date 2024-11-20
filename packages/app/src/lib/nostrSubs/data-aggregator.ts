@@ -1,11 +1,13 @@
 import type { NDKEvent, NDKUserProfile } from '@nostr-dev-kit/ndk'
 import { queryClient } from '$lib/fetch/client'
+import { createUserByIdQuery } from '$lib/fetch/users.queries'
 import {
 	checkIfProductExists,
 	checkIfStallExists,
 	checkIfUserExists,
 	getElapsedTimeInDays,
 	getEventCoordinates,
+	resolveQuery,
 	shouldRegister,
 } from '$lib/utils'
 
@@ -52,7 +54,8 @@ async function processBatch(userIds: string[], allowRegister: boolean) {
 		const shouldRegisterUser = await shouldRegister(allowRegister, userExists, userId)
 
 		if (shouldRegisterUser) {
-			const user = Array.from(userQueue).find((u) => u.id === userId)
+			let user = Array.from(userQueue).find((u) => u.id === userId)
+			if (!user) user = (await resolveQuery(() => createUserByIdQuery(userId))) ?? undefined
 			const userStalls = Array.from(stallQueue).filter((stall) => getEventCoordinates(stall)?.pubkey === userId)
 			const userProducts = new Set(Array.from(productQueue).filter((product) => getEventCoordinates(product)?.pubkey === userId))
 
@@ -62,10 +65,9 @@ async function processBatch(userIds: string[], allowRegister: boolean) {
 
 			if (userProducts.size > 0 && userStalls.length) {
 				for (const stall of userStalls) {
-					const stallPubkey = getEventCoordinates(stall)?.pubkey
-					const stallExists = await checkIfStallExists(
-						`${getEventCoordinates(stall)?.kind}:${stallPubkey}:${getEventCoordinates(stall)?.tagD}`,
-					)
+					const stallCoordinates = getEventCoordinates(stall)
+					const stallPubkey = stallCoordinates?.pubkey
+					const stallExists = await checkIfStallExists(`${stallCoordinates?.kind}:${stallPubkey}:${stallCoordinates?.tagD}`)
 
 					if (stallExists.banned) {
 						continue
@@ -77,8 +79,9 @@ async function processBatch(userIds: string[], allowRegister: boolean) {
 
 					try {
 						for (const product of userProducts) {
+							const productCoordinates = getEventCoordinates(product)
 							const productExists = await checkIfProductExists(
-								`${getEventCoordinates(product)?.kind}:${getEventCoordinates(product)?.pubkey}:${getEventCoordinates(product)?.tagD}`,
+								`${productCoordinates?.kind}:${productCoordinates?.pubkey}:${productCoordinates?.tagD}`,
 							)
 
 							if (!productExists.exists && !productExists.banned) {

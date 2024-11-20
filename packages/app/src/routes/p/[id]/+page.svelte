@@ -53,11 +53,11 @@
 
 		toDisplayProducts = productsData?.size ? (await normalizeProductsFromNostr(productsData, id))?.toDisplayProducts ?? [] : []
 	})
-	const handleFollow = () => {
-		const user = $ndkStore.getUser({ pubkey: id })
-		// await user.follow();
-		following = true
-	}
+	// const handleFollow = () => {
+	// 	const user = $ndkStore.getUser({ pubkey: id })
+	// 	// await user.follow();
+	// 	following = true
+	// }
 
 	const handleUnfollow = () => {
 		const user = $ndkStore.getUser({ pubkey: id })
@@ -65,10 +65,10 @@
 		following = false
 	}
 
-	const handleThreeDots = () => {
-		const user = $ndkStore.getUser({ pubkey: id })
-		// await user.zap();
-	}
+	// const handleThreeDots = () => {
+	// 	const user = $ndkStore.getUser({ pubkey: id })
+	// 	// await user.zap();
+	// }
 
 	const handleSendMessage = () => {
 		const user = $ndkStore.getUser({ pubkey: id })
@@ -121,16 +121,16 @@
 									</DropdownMenu.Content>
 								</DropdownMenu.Root>
 							{/if}
-							<Button size="icon" variant="secondary" on:click={handleThreeDots}>
+							<!-- <Button size="icon" variant="secondary" on:click={handleThreeDots}>
 								<span class="i-mdi-dots-horizontal w-6 h-6" />
-							</Button>
+							</Button> -->
 							<InteractiveZapButton userIdToZap={id} profile={$userProfileQuery.data} />
 							<Button size="icon" variant="secondary" on:click={handleSendMessage}>
 								<span class="i-mdi-message-bubble w-6 h-6" />
 							</Button>
-							<Button class="w-1/2 lg:w-auto" on:click={following ? handleUnfollow : handleFollow}>
+							<!-- <Button class="w-1/2 lg:w-auto" on:click={following ? handleUnfollow : handleFollow}>
 								{following ? 'Unfollow' : 'Follow'}
-							</Button>
+							</Button> -->
 						</div>
 					</div>
 				</div>

@@ -25,7 +25,7 @@
 	let messagesContainerRef: HTMLDivElement
 	let message = ''
 
-	const userProfileQuery = createUserByIdQuery(selectedPubkey)
+	const userProfileQuery = createUserByIdQuery(selectedPubkey, true, true)
 	const userRelays = createUserRelaysByIdQuery(selectedPubkey)
 	const handleSend = async () => {
 		if (message.trim()) {
@@ -78,7 +78,9 @@
 
 	<div bind:this={messagesContainerRef} class="flex-grow overflow-y-auto p-4 space-y-4">
 		{#each messages as message (message.id)}
-			<ChatBubble {message} {selectedPubkey} isCurrentUser={message.pubkey !== selectedPubkey} />
+			{#if $userProfileQuery.data}
+				<ChatBubble {message} {selectedPubkey} userProfile={$userProfileQuery.data} isCurrentUser={message.pubkey !== selectedPubkey} />
+			{/if}
 		{/each}
 	</div>
 

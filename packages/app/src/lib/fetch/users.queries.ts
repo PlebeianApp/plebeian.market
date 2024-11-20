@@ -58,24 +58,33 @@ export const createUserRoleByIdQuery = (id: string) =>
 		queryClient,
 	)
 
-export const createUserByIdQuery = (id: string) =>
+export const createUserByIdQuery = (id: string, nostrOnly = false, skipAggregator = false) =>
 	createQuery<NDKUserProfile | null>(
 		{
 			queryKey: createUsersByFilterKey({ userId: id }),
 			queryFn: async () => {
 				try {
-					const result = (await createRequest(`GET /api/v1/users/${id}`, {})) as NDKUserProfile
-					if (result.updated_at) checkIfOldProfile(id, Number(result.updated_at))
-					return result
-				} catch (error) {
-					const { userProfile: userData } = await fetchUserData(id)
-					if (userData) {
-						aggregatorAddUser(userData, id)
-						return userData
-					} else if (!userData && id) {
-						aggregatorAddUser(userData, id)
-						return { id }
+					if (!nostrOnly) {
+						try {
+							const result = (await createRequest(`GET /api/v1/users/${id}`, {})) as NDKUserProfile
+							if (result?.updated_at) {
+								checkIfOldProfile(id, Number(result.updated_at))
+							}
+							return result
+						} catch {
+							// Silently ignore
+						}
 					}
+
+					const { userProfile: userData } = await fetchUserData(id)
+
+					if (userData && !skipAggregator) {
+						aggregatorAddUser(userData, id)
+					}
+
+					return userData ? userData : id ? { id } : null
+				} catch (error) {
+					console.error('Error fetching user profile:', error)
 					return null
 				}
 			},
