@@ -3,7 +3,6 @@
 	import type { DisplayProduct } from '$lib/server/products.service'
 	import type { RichShippingInfo } from '$lib/server/shipping.service'
 	import type { RichStall } from '$lib/server/stalls.service'
-	import type { StallCoordinatesType } from '$lib/stores/drawer-ui'
 	import type { ValidationErrors } from '$lib/utils/zod.utils'
 	import Button from '$lib/components/ui/button/button.svelte'
 	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte'
@@ -16,6 +15,8 @@
 	import { createProductMutation, deleteProductMutation, editProductMutation } from '$lib/fetch/products.mutations'
 	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
 	import ndkStore from '$lib/stores/ndk'
+	import { parseCoordinatesString } from '$lib/utils'
+	import { deleteEvent } from '$lib/utils/nostr.utils'
 	import { prepareProductData } from '$lib/utils/product.utils'
 	import { validateForm } from '$lib/utils/zod.utils'
 	import { createEventDispatcher, onMount } from 'svelte'
@@ -32,8 +33,8 @@
 
 	const dispatch = createEventDispatcher<{ success: unknown; error: unknown }>()
 	export let product: Partial<DisplayProduct> | null = null
-	export let forStall: StallCoordinatesType | null = null
-
+	export let forStall: string | null = null
+	if (forStall) forStall = parseCoordinatesString(forStall).coordinates || null
 	let isLoading = false
 	let stall: Partial<RichStall> | null = null
 	let categories: Category[] = []
@@ -46,7 +47,7 @@
 		pageSize: 999,
 	})
 
-	$: currentStallIdentifier = forStall?.split(':')[2] || product?.stallId || $stallsQuery.data?.stalls[0]?.identifier
+	$: currentStallIdentifier = forStall?.split(':')[2] || product?.stall_id || $stallsQuery.data?.stalls[0]?.identifier
 
 	$: {
 		if ($stallsQuery.data?.stalls.length) {
@@ -57,10 +58,10 @@
 	$: {
 		currentShippings =
 			stall?.shipping
-				?.filter((s) => product?.shipping?.some((sh) => s.id == sh.shippingId.split(':')[0] || s.id == sh.shippingId))
+				?.filter((s) => product?.shipping?.some((sh) => s.id == sh.shippingId?.split(':')[0] || s.id == sh.shippingId))
 				.map((s) => ({
 					shipping: s,
-					extraCost: product?.shipping?.find((sh) => s.id == sh.shippingId.split(':')[0] || s.id == sh.shippingId)?.cost ?? '',
+					extraCost: product?.shipping?.find((sh) => s.id == sh.shippingId?.split(':')[0] || s.id == sh.shippingId)?.cost ?? '',
 				})) ?? []
 	}
 
@@ -121,13 +122,11 @@
 			const categoriesData = categories.filter((c) => c.checked).map((c) => c.name)
 
 			if (product) {
-				await $editProductMutation.mutateAsync({ product: { stallId: productData.stall_id, ...productData }, categories: categoriesData })
+				await $editProductMutation.mutateAsync({ product: { ...productData }, categories: categoriesData })
 			} else {
-				await $createProductMutation.mutateAsync({ product: { stallId: productData.stall_id, ...productData }, categories: categoriesData })
+				await $createProductMutation.mutateAsync({ product: { ...productData }, categories: categoriesData })
 			}
 
-			toast.success(`Product ${product ? 'updated' : 'created'}!`)
-			queryClient.invalidateQueries({ queryKey: ['products', $ndkStore.activeUser?.pubkey] })
 			dispatch('success', null)
 		} catch (error) {
 			toast.error(`Failed to ${product ? 'update' : 'create'} product: ${error instanceof Error ? error.message : String(error)}`)
@@ -160,8 +159,15 @@
 
 	async function handleDelete() {
 		if (!product?.id) return
-		await $deleteProductMutation.mutateAsync(product.id)
+		isLoading = true
+		try {
+			await $deleteProductMutation.mutateAsync(product.id)
+		} catch (error) {
+			console.error('Error deleting product:', error)
+		}
+		await deleteEvent(product.id)
 		dispatch('success', null)
+		isLoading = false
 	}
 </script>
 
@@ -224,7 +230,7 @@
 							type="text"
 							pattern="^(?!.*\\.\\.)[0-9]*([.][0-9]+)?"
 							name="price"
-							placeholder="e.g. $30"
+							placeholder="e.g. 30"
 							required
 							value={product?.price ?? ''}
 						/>
@@ -412,7 +418,7 @@
 
 			<Button disabled={isLoading} type="submit" class="w-full font-bold my-4">Save</Button>
 			{#if product?.id}
-				<Button type="button" variant="destructive" class="w-full" on:click={handleDelete}>Delete</Button>
+				<Button type="button" variant="destructive" disabled={isLoading} class="w-full" on:click={handleDelete}>Delete</Button>
 			{/if}
 		</Tabs.Root>
 	</form>

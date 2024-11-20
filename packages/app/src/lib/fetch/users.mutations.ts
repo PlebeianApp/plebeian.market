@@ -26,6 +26,7 @@ declare module './client' {
 		'POST /api/v1/users': Operation<string, 'POST', never, { id: string } & NDKUser['profile'], User, never>
 		[k: `DELETE /api/v1/users/${string}`]: Operation<string, 'DELETE', never, never, boolean, never>
 		[k: `POST /api/v1/users/${string}`]: Operation<string, 'POST', never, NDKUserProfile, User, never>
+		[k: `POST /api/v1/users/${string}/ban`]: Operation<string, 'POST', never, { banned: boolean }, { id: string }, never>
 	}
 }
 
@@ -128,6 +129,27 @@ export const updateUserFromNostrMutation = createMutation(
 		onSuccess: (data: User | null) => {
 			queryClient.invalidateQueries({ queryKey: ['users', data?.id] })
 			queryClient.setQueryData(['users', data?.id], data)
+		},
+	},
+	queryClient,
+)
+
+export const setUserBannedMutation = createMutation(
+	{
+		mutationKey: [],
+		mutationFn: async ({ userId, banned }: { userId: string; banned: boolean }) => {
+			const response = await createRequest(`POST /api/v1/users/${userId}/ban`, {
+				body: { banned },
+				auth: true,
+			})
+			return response
+		},
+		onSuccess: ({ id }: { id: string }) => {
+			if (id) {
+				queryClient.invalidateQueries({ queryKey: ['users', id] })
+				queryClient.invalidateQueries({ queryKey: ['users'] })
+				goto('/')
+			}
 		},
 	},
 	queryClient,

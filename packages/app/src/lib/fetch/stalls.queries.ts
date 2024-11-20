@@ -1,7 +1,10 @@
+import type { NDKEvent } from '@nostr-dev-kit/ndk'
+import type { ExistsResult } from '$lib/interfaces'
 import type { NormalizedData } from '$lib/nostrSubs/utils'
 import type { StallsFilter } from '$lib/schema'
 import type { RichStall } from '$lib/server/stalls.service'
 import { createQuery } from '@tanstack/svelte-query'
+import { browser } from '$app/environment'
 import { aggregatorAddStall } from '$lib/nostrSubs/data-aggregator'
 import { fetchStallData, fetchUserStallsData, normalizeStallData } from '$lib/nostrSubs/utils'
 import { stallsFilterSchema } from '$lib/schema'
@@ -13,7 +16,7 @@ declare module './client' {
 	interface Endpoints {
 		'GET /api/v1/stalls': Operation<'/api/v1/stalls', 'GET', never, never, { total: number; stalls: RichStall[] }, StallsFilter>
 		[k: `GET /api/v1/stalls/${string}`]: Operation<string, 'GET', never, never, RichStall, never>
-		[k: `GET /api/v1/stalls/${string}?exists`]: Operation<string, 'GET', never, never, boolean, never>
+		[k: `GET /api/v1/stalls/${string}?exists`]: Operation<string, 'GET', never, never, ExistsResult, never>
 	}
 }
 
@@ -34,6 +37,19 @@ export const createStallQuery = (stallId: string) =>
 					}
 					return { stall: null }
 				}
+			},
+			enabled: !!stallId,
+		},
+		queryClient,
+	)
+
+export const createStallFromNostrQuery = (stallId: string) =>
+	createQuery<{ stall: NDKEvent | null }>(
+		{
+			queryKey: ['stalls', 'event', stallId],
+			queryFn: async () => {
+				const { stallNostrRes: stallData } = await fetchStallData(stallId)
+				return { stall: stallData }
 			},
 			enabled: !!stallId,
 		},
@@ -69,12 +85,13 @@ export const createStallsByFilterQuery = (filter: Partial<StallsFilter>) =>
 				}
 				return null
 			},
+			enabled: !!browser,
 		},
 		queryClient,
 	)
 
 export const createStallExistsQuery = (id: string) =>
-	createQuery<boolean>(
+	createQuery<ExistsResult>(
 		{
 			queryKey: createStallExistsKey(id),
 			queryFn: async () => {

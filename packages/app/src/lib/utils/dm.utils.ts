@@ -2,8 +2,9 @@ import type { CheckoutFormData, OrderFilter } from '$lib/schema'
 import type { DisplayOrder } from '$lib/server/orders.service'
 import type { RichPaymentDetail } from '$lib/server/paymentDetails.service'
 import type { CartStall } from '$lib/stores/cart'
-import { NDKEvent } from '@nostr-dev-kit/ndk'
+import { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk'
 import { createQuery } from '@tanstack/svelte-query'
+import { dmKind04Sub } from '$lib/nostrSubs/subs'
 import ndkStore from '$lib/stores/ndk'
 import { get } from 'svelte/store'
 
@@ -119,4 +120,15 @@ export function createOrderStatusUpdateMessage(order: DisplayOrder): OrderStatus
 		paid: order.status === 'confirmed' || order.status === 'shipped' || order.status === 'completed',
 		shipped: order.status === 'shipped',
 	}
+}
+
+export function setupDMSubscription() {
+	const $ndkStore = get(ndkStore)
+	if (!$ndkStore.activeUser) return
+
+	dmKind04Sub?.changeFilters([
+		{ kinds: [NDKKind.EncryptedDirectMessage], limit: 50, '#p': [$ndkStore.activeUser.pubkey] },
+		{ kinds: [NDKKind.EncryptedDirectMessage], limit: 50, authors: [$ndkStore.activeUser.pubkey] },
+	])
+	dmKind04Sub?.ref()
 }

@@ -1,23 +1,11 @@
-import { decodeNpub, processNip05 } from '$lib/nostrSubs/load-utils'
-import { isValidHexKey, isValidNip05, isValidNpub } from '$lib/utils/validation.utils'
+import { URLProcessor } from '$lib/utils/url.utils'
 
 import type { PageServerLoad } from './$types'
 
 export const load: PageServerLoad = async ({ params }): Promise<{ id: string }> => {
-	const { id: inputId } = params
-
 	try {
-		let processedUserId = ''
-
-		if (isValidNip05(inputId)) {
-			processedUserId = await processNip05(inputId)
-		} else if (isValidNpub(inputId)) {
-			processedUserId = decodeNpub(inputId) || ''
-		} else if (isValidHexKey(inputId)) {
-			processedUserId = inputId
-		}
-
-		return { id: processedUserId }
+		const { userId } = await URLProcessor.parseURL(params.id)
+		return { id: userId }
 	} catch (e) {
 		console.error('Error processing user data:', e)
 		return { id: '' }

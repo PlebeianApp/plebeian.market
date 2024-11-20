@@ -43,10 +43,13 @@
 	{/if}
 
 	{#if isOpen}
-		<div class={`bg-white flex flex-col gap-2 ${mode == 'widget' && 'w-fit p-2 border-black border-2'}`}>
+		<div class={`bg-white flex flex-col fixed bottom-0 z-50 gap-2 ${mode == 'widget' && 'w-fit p-2 border-black border-2'}`}>
+			<Button size="icon" variant="ghost" on:click={() => (isOpen = !isOpen)}>
+				<span class="i-mdi-close w-5 h-5" />
+			</Button>
 			{#if $ndkStore.pool?.relays.size}
 				<section>
-					Explicit relays ({$ndkStore.pool?.relays.size}):
+					<span class=" font-bold">Explicit relays</span> ({$ndkStore.pool?.relays.size}):
 					<ScrollArea class={`${$ndkStore.pool?.relays.size > 10 ? 'h-72' : ''}`}>
 						{#each $ndkStore.pool.relays.values() as relay (relay.url)}
 							<RelayList {relay} relayType="kind3" />
@@ -61,7 +64,7 @@
 			{/if}
 			{#if $ndkStore.outboxPool?.relays.size}
 				<section>
-					Outbox relays ({$ndkStore.outboxPool?.relays.size}):
+					<span class=" font-bold">Outbox relays</span> ({$ndkStore.outboxPool?.relays.size}):
 					<ScrollArea class={`${$ndkStore.outboxPool?.relays.size > 10 ? 'h-72' : ''}`}>
 						{#each $ndkStore.outboxPool.relays.values() as relay (relay.url)}
 							<RelayList {relay} relayType="outbox" />

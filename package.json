@@ -15,6 +15,9 @@
     "db:setup": "pnpm --filter './packages/database' run db:setup",
     "db:init": "pnpm --filter './packages/database' run db:init",
     "db:initMock": "pnpm --filter './packages/database' run db:initMock",
+    "db:check": "pnpm --filter './packages/database' run db:check",
+		"db:push": "pnpm --filter './packages/database' run db:push",
+		"db:migrate": "pnpm --filter './packages/database' run db:migrate",
     "test:fresh": "pnpm db:setup && pnpm --parallel --stream -r run test",
     "test": "pnpm --parallel --stream -r run test",
     "studio": "cd packages/database && pnpm drizzle-kit studio"

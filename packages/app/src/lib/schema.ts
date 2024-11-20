@@ -33,6 +33,7 @@ export const productsFilterSchema = generalFilterSchema.extend({
 	stallId: z.string().optional(),
 	userId: z.string().optional(),
 	category: z.string().optional(),
+	featured: z.coerce.boolean().optional(),
 })
 
 export type ProductsFilter = z.infer<typeof productsFilterSchema>

@@ -3,10 +3,12 @@ import type { DisplayProduct } from '$lib/server/products.service'
 import type { z } from 'zod'
 import { NDKEvent } from '@nostr-dev-kit/ndk'
 import { createMutation } from '@tanstack/svelte-query'
+import { goto } from '$app/navigation'
 import { KindProducts, KindStalls } from '$lib/constants'
 import ndkStore from '$lib/stores/ndk'
 import { parseCoordinatesString, shouldRegister, unixTimeNow } from '$lib/utils'
 import { publishEvent } from '$lib/utils/nostr.utils'
+import { toast } from 'svelte-sonner'
 import { get } from 'svelte/store'
 
 import { createProductEventSchema, forbiddenPatternStore } from '../../schema/nostr-events'
@@ -18,6 +20,7 @@ declare module './client' {
 		[k: `PUT /api/v1/products/${string}`]: Operation<string, 'PUT', never, NostrEvent, DisplayProduct, never>
 		[k: `DELETE /api/v1/products/${string}`]: Operation<string, 'DELETE', never, string, string, never>
 		[k: `POST /api/v1/products/${string}/featured`]: Operation<string, 'POST', never, { featured: boolean }, { id: string }, never>
+		[k: `POST /api/v1/products/${string}/ban`]: Operation<string, 'POST', never, { banned: boolean }, { id: string }, never>
 	}
 }
 export type Category = { key: string; name: string; checked: boolean }
@@ -27,7 +30,7 @@ export const createProductMutation = createMutation(
 		mutationFn: async ({ product, categories }: { product: z.infer<typeof productSchema>; categories: string[] }) => {
 			const $ndkStore = get(ndkStore)
 			if (!$ndkStore.activeUser?.pubkey) return
-			const stallCoordinates = parseCoordinatesString(`${KindStalls}:${$ndkStore.activeUser.pubkey}:${product.stallId}`)
+			const stallCoordinates = parseCoordinatesString(`${KindStalls}:${$ndkStore.activeUser.pubkey}:${product.stall_id}`)
 			const evContent = {
 				...product,
 				stall_id: stallCoordinates.tagD!,
@@ -41,12 +44,15 @@ export const createProductMutation = createMutation(
 				tags: [['d', product.id!], ...categories.map((c) => ['t', c]), ['a', stallCoordinates.coordinates!]],
 			})
 
-			await publishEvent(newEvent)
+			const publishedEvent = await publishEvent(newEvent)
 			const _shouldRegister = await shouldRegister(undefined, undefined, $ndkStore.activeUser.pubkey)
-			if (_shouldRegister) {
-				const response = get(createProductsFromNostrMutation).mutateAsync(new Set([newEvent]))
+			if (_shouldRegister && publishedEvent) {
+				const response = await get(createProductsFromNostrMutation).mutateAsync(new Set([newEvent]))
+				if (response) toast.success(`Product created!`)
 				return response
 			}
+			if (publishedEvent) toast.success(`Product created!`)
+			else toast.error(`Failed to create product!`)
 		},
 		onSuccess: (data: DisplayProduct[] | undefined | null) => {
 			if (data) {
@@ -55,6 +61,7 @@ export const createProductMutation = createMutation(
 				queryClient.invalidateQueries({ queryKey: ['shipping'] })
 				queryClient.invalidateQueries({ queryKey: ['categories'] })
 				queryClient.invalidateQueries({ queryKey: ['stalls'] })
+				queryClient.invalidateQueries({ queryKey: ['products', data[0]?.userId] })
 			}
 		},
 	},
@@ -67,12 +74,13 @@ export const editProductMutation = createMutation(
 			const $ndkStore = get(ndkStore)
 			if (!$ndkStore.activeUser?.pubkey || !product.id) return
 
-			const stallCoordinates = parseCoordinatesString(`${KindStalls}:${$ndkStore.activeUser.pubkey}:${product.stallId}`)
+			const stallCoordinates = parseCoordinatesString(`${KindStalls}:${$ndkStore.activeUser.pubkey}:${product.stall_id}`)
 			const productCoordinates = parseCoordinatesString(product.id)
 
 			const evContent = {
 				...product,
-				stall_id: parseCoordinatesString(product.stallId!).tagD,
+				id: productCoordinates.tagD!,
+				stall_id: parseCoordinatesString(product.stall_id!).tagD,
 			}
 
 			const newEvent = new NDKEvent($ndkStore, {
@@ -86,22 +94,26 @@ export const editProductMutation = createMutation(
 					...(stallCoordinates.coordinates ? [['a', stallCoordinates.coordinates!]] : []),
 				],
 			})
-			await publishEvent(newEvent)
+			const publishedEvent = await publishEvent(newEvent)
 			const nostrEvent = await newEvent.toNostrEvent()
 			const _shouldRegister = await shouldRegister(undefined, undefined, $ndkStore.activeUser.pubkey)
-			if (_shouldRegister) {
+			if (_shouldRegister && publishedEvent) {
 				const response = await createRequest(`PUT /api/v1/products/${product.id}`, {
 					body: nostrEvent,
 					auth: true,
 				})
+				if (response) toast.success(`Product updated!`)
 				return response
 			}
+			if (publishedEvent) toast.success(`Product updated!`)
+			else toast.error(`Failed to update product!`)
 		},
 		onSuccess: (data: DisplayProduct | undefined) => {
 			if (data) {
 				queryClient.invalidateQueries({ queryKey: ['shipping'] })
 				queryClient.invalidateQueries({ queryKey: ['categories'] })
 				queryClient.invalidateQueries({ queryKey: ['stalls'] })
+				queryClient.invalidateQueries({ queryKey: ['products', data?.userId] })
 			}
 		},
 	},
@@ -176,7 +188,7 @@ export const createProductsFromNostrMutation = createMutation(
 			console.log('Products inserted in db successfully: ', data?.length)
 			if (data) {
 				queryClient.invalidateQueries({ queryKey: ['products', data[0].userId] })
-				queryClient.invalidateQueries({ queryKey: ['shipping', data[0].stallId] })
+				queryClient.invalidateQueries({ queryKey: ['shipping', data[0].stall_id] })
 				queryClient.invalidateQueries({ queryKey: ['categories'] })
 				queryClient.invalidateQueries({ queryKey: ['stalls'] })
 			}
@@ -203,25 +215,44 @@ export const setProductFeaturedMutation = createMutation(
 	queryClient,
 )
 
+export const setProductBannedMutation = createMutation(
+	{
+		mutationKey: [],
+		mutationFn: async ({ productId, banned }: { productId: string; banned: boolean }) => {
+			const response = await createRequest(`POST /api/v1/products/${productId}/ban`, {
+				body: { banned },
+				auth: true,
+			})
+			return response
+		},
+		onSuccess: ({ id }: { id: string }) => {
+			if (id) {
+				if (!id) return
+				queryClient.invalidateQueries({ queryKey: ['products', id] })
+				queryClient.invalidateQueries({ queryKey: ['products'] })
+				goto('/')
+			}
+		},
+	},
+	queryClient,
+)
+
 export const deleteProductMutation = createMutation(
 	{
 		mutationKey: [],
 		mutationFn: async (productId: string) => {
-			const $ndkStore = get(ndkStore)
-
-			if ($ndkStore.activeUser?.pubkey) {
-				const res = await createRequest(`DELETE /api/v1/products/${productId}`, {
-					auth: true,
-				})
-				return res
-			}
-			return null
+			const res = await createRequest(`DELETE /api/v1/products/${productId}`, {
+				auth: true,
+			})
+			return res
 		},
 		onSuccess: (productId: string | null) => {
+			if (!productId) return
 			const $ndkStore = get(ndkStore)
 			queryClient.invalidateQueries({ queryKey: ['products', $ndkStore.activeUser?.pubkey] })
 			queryClient.invalidateQueries({ queryKey: ['categories'] })
-			queryClient.invalidateQueries({ queryKey: ['stalls'] })
+			queryClient.invalidateQueries({ queryKey: ['stalls', $ndkStore.activeUser?.pubkey] })
+			goto('/')
 		},
 	},
 	queryClient,
@@ -248,7 +279,7 @@ export function createProductEvent(product: DisplayProduct, newQuantity?: number
 	const $ndkStore = get(ndkStore)
 	if (!$ndkStore.activeUser?.pubkey || !product.id) return
 
-	const stallCoordinates = parseCoordinatesString(`${KindProducts}:${$ndkStore.activeUser.pubkey}:${product.stallId}`)
+	const stallCoordinates = parseCoordinatesString(`${KindProducts}:${$ndkStore.activeUser.pubkey}:${product.stall_id}`)
 	const productCoordinates = parseCoordinatesString(product.id)
 
 	const transformedShipping =

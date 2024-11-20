@@ -1,6 +1,13 @@
 import type { NDKEvent, NDKUserProfile } from '@nostr-dev-kit/ndk'
 import { queryClient } from '$lib/fetch/client'
-import { checkIfUserExists, getElapsedTimeInDays, getEventCoordinates, shouldRegister } from '$lib/utils'
+import {
+	checkIfProductExists,
+	checkIfStallExists,
+	checkIfUserExists,
+	getElapsedTimeInDays,
+	getEventCoordinates,
+	shouldRegister,
+} from '$lib/utils'
 
 import { fetchUserData, handleProductNostrData, handleStallNostrData, handleUserNostrData } from './utils'
 
@@ -49,17 +56,38 @@ async function processBatch(userIds: string[], allowRegister: boolean) {
 			const userStalls = Array.from(stallQueue).filter((stall) => getEventCoordinates(stall)?.pubkey === userId)
 			const userProducts = new Set(Array.from(productQueue).filter((product) => getEventCoordinates(product)?.pubkey === userId))
 
-			if (user && !userExists) {
+			if (user && !userExists.exists) {
 				await handleUserNostrData(user, userId)
 			}
+
 			if (userProducts.size > 0 && userStalls.length) {
 				for (const stall of userStalls) {
-					await handleStallNostrData(stall)
-				}
-				try {
-					await handleProductNostrData(userProducts)
-				} catch {
-					console.warn('Cannot insert products')
+					const stallPubkey = getEventCoordinates(stall)?.pubkey
+					const stallExists = await checkIfStallExists(
+						`${getEventCoordinates(stall)?.kind}:${stallPubkey}:${getEventCoordinates(stall)?.tagD}`,
+					)
+
+					if (stallExists.banned) {
+						continue
+					}
+
+					if (!stallExists.exists) {
+						await handleStallNostrData(stall)
+					}
+
+					try {
+						for (const product of userProducts) {
+							const productExists = await checkIfProductExists(
+								`${getEventCoordinates(product)?.kind}:${getEventCoordinates(product)?.pubkey}:${getEventCoordinates(product)?.tagD}`,
+							)
+
+							if (!productExists.exists && !productExists.banned) {
+								await handleProductNostrData(userProducts)
+							}
+						}
+					} catch {
+						console.warn('Cannot insert products')
+					}
 				}
 			}
 		}

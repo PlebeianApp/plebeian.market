@@ -40,7 +40,7 @@ export const load = async () => {
 			value: 'cecb-settings',
 			root: '/settings/cecb',
 			links: [
-				{ title: '💪 Contribute', href: '/settings/cecb', description: 'Configure community contributions preferences', public: true },
+				{ title: '💪 Contribute', href: '/settings/cecb', description: 'Configure community contributions preferences', public: false },
 			],
 		},
 	]

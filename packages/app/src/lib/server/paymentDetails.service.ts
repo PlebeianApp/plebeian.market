@@ -1,6 +1,6 @@
 import { error } from '@sveltejs/kit'
-import { checkAddress, checkExtendedPublicKey, deriveAddresses, isExtendedPublicKey } from '$lib/utils/paymentDetails.utils'
-import { LN_ADDRESS_REGEX } from '$lib/utils/zap.utils'
+import { checkAddress, checkExtendedPublicKey, deriveAddresses } from '$lib/utils/paymentDetails.utils'
+import { NIP05_REGEX } from 'nostr-tools/nip05'
 
 import type { PaymentDetail } from '@plebeian/database'
 import { and, db, eq, isNull, or, paymentDetails } from '@plebeian/database'
@@ -71,7 +71,7 @@ export const getPaymentDetailsByUserId = async (userId: string): Promise<RichPay
 	const processDetail = async (detail: PaymentDetail) => {
 		switch (detail.paymentMethod) {
 			case 'ln':
-				return LN_ADDRESS_REGEX.test(detail.paymentDetails) ? detail : null
+				return NIP05_REGEX.test(detail.paymentDetails) ? detail : null
 			case 'on-chain':
 				if (checkExtendedPublicKey(detail.paymentDetails)) {
 					return renderOnChainPaymentDetail(detail)
@@ -159,4 +159,9 @@ export const setDefaultPaymentDetail = async (paymentDetailId: string, stallId: 
 		.returning()
 
 	return enrichWithStallName(updatedPaymentDetail)
+}
+
+export const countPaymentDetailsByUserId = async (userId: string): Promise<number> => {
+	const exists = await db.$count(paymentDetails, eq(paymentDetails.userId, userId))
+	return exists
 }

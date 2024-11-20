@@ -3,9 +3,7 @@
 	import CreateEditStall from '$lib/components/stalls/create-edit.svelte'
 	import { ScrollArea } from '$lib/components/ui/scroll-area/index.js'
 	import * as Sheet from '$lib/components/ui/sheet/index.js'
-	import { deleteProductMutation } from '$lib/fetch/products.mutations'
 	import { createProductQuery } from '$lib/fetch/products.queries'
-	import { deleteStallMutation } from '$lib/fetch/stalls.mutations'
 	import { createStallQuery } from '$lib/fetch/stalls.queries'
 	import { closeDrawer, drawerUI } from '$lib/stores/drawer-ui'
 	import { toast } from 'svelte-sonner'
@@ -34,15 +32,6 @@
 	function handleSuccess() {
 		closeDrawer()
 	}
-
-	async function handleDelete() {
-		if ($drawerUI.drawerType === 'stall' && $stallQuery?.data?.stall?.id) {
-			await $deleteStallMutation.mutateAsync($stallQuery?.data?.stall?.id)
-		} else if ($drawerUI.drawerType === 'product' && $productQuery?.data?.id) {
-			await $deleteProductMutation.mutateAsync($productQuery?.data?.id)
-		}
-		closeDrawer()
-	}
 </script>
 
 <Sheet.Root bind:open={isOpen} onOutsideClick={closeDrawer}>
@@ -60,9 +49,6 @@
 					{:else if $drawerUI.drawerType === 'product' || $drawerUI.drawerType === 'stall'}
 						{#if $drawerUI.id}
 							<span>Edit {$drawerUI.drawerType}</span>
-							<Button on:click={handleDelete} size="icon" variant="ghost" class="text-destructive border-0">
-								<span class="i-tdesign-delete-1 w-4 h-4" />
-							</Button>
 						{:else}
 							<span>Create new {$drawerUI.drawerType}</span>
 						{/if}

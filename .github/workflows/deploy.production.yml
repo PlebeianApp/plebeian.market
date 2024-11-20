@@ -48,12 +48,14 @@ jobs:
           username: ${{ secrets.REMOTE_USER }}
           password: ${{ secrets.REMOTE_PASSWORD }}
           script: |
-            PORT=4173
+            export ORIGIN=https://prod.plebeian.market
+            export PORT=4173
             cd plebeian.market.${PORT}
             mv .env.sample .env
             fuser -k $PORT/tcp || true
             pnpm i --frozen-lockfile -f
             pnpm db:init
+            cd packages/app
             nohup pnpm preview --port=$PORT > preview.log 2>&1 &
             sleep 10
             head -n 20 preview.log

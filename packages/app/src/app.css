@@ -107,6 +107,7 @@
 	display: none;
 	width: max-content;
 	position: absolute;
+	max-width: 400px;
 	background: #333;
 	color: white;
 	font-weight: bold;
@@ -114,6 +115,7 @@
 	border-radius: 4px;
 	font-size: 90%;
 	z-index: 999999;
+	word-wrap: break-word;
 }
 
 #arrow {

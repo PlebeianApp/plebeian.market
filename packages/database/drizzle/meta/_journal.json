@@ -1,12 +1,19 @@
 {
-  "version": "0",
+  "version": "7",
   "dialect": "sqlite",
   "entries": [
     {
       "idx": 0,
       "version": "6",
-      "when": 1730986921858,
-      "tag": "0000_silky_jetstream",
+      "when": 1731932051045,
+      "tag": "0000_conscious_bloodstorm",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1732046359698,
+      "tag": "0001_brave_peter_quill",
       "breakpoints": true
     }
   ]

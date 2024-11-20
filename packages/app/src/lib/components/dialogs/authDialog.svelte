@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { NDKKind } from '@nostr-dev-kit/ndk'
 	import { Button } from '$lib/components/ui/button'
 	import { Checkbox } from '$lib/components/ui/checkbox'
 	import * as Dialog from '$lib/components/ui/dialog'
@@ -8,9 +7,7 @@
 	import { Separator } from '$lib/components/ui/separator'
 	import * as Tabs from '$lib/components/ui/tabs'
 	import { login } from '$lib/ndkLogin'
-	import { dmKind04Sub } from '$lib/nostrSubs/subs'
 	import { dialogs } from '$lib/stores/dialog'
-	import ndkStore from '$lib/stores/ndk'
 	import { type BaseAccount } from '$lib/stores/session'
 	import { generateSecretKey } from 'nostr-tools'
 	import { nsecEncode } from 'nostr-tools/nip19'
@@ -30,7 +27,6 @@
 
 		if (loginResult) {
 			toast.success('Login success!')
-			setupDMSubscription()
 			if (loginMethod == 'NIP07' || !nsec) {
 				dialogs.clearAll()
 			}
@@ -51,15 +47,6 @@
 		loading = false
 	}
 
-	function setupDMSubscription() {
-		if (!$ndkStore.activeUser) return
-
-		dmKind04Sub.changeFilters([
-			{ kinds: [NDKKind.EncryptedDirectMessage], limit: 50, '#p': [$ndkStore.activeUser.pubkey] },
-			{ kinds: [NDKKind.EncryptedDirectMessage], limit: 50, authors: [$ndkStore.activeUser.pubkey] },
-		])
-		dmKind04Sub.ref()
-	}
 	const activeTab =
 		'w-full font-bold border-b-2 border-black text-black data-[state=active]:border-b-primary data-[state=active]:text-primary'
 </script>

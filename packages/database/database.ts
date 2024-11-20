@@ -10,4 +10,6 @@ const require = createRequire(import.meta.url)
 const Database = require('better-sqlite3') as typeof import('better-sqlite3')
 
 const sqlite = new Database(config.dbCredentials.url)
+sqlite.pragma('journal_mode = WAL')
+sqlite.pragma('synchronous = NORMAL')
 export const db = drizzle(sqlite, { schema })

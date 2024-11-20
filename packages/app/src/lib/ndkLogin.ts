@@ -2,7 +2,6 @@ import type { NDKUser, NDKUserProfile } from '@nostr-dev-kit/ndk'
 import type { BaseAccount } from '$lib/stores/session'
 import { NDKNip07Signer, NDKPrivateKeySigner, NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk'
 import { error } from '@sveltejs/kit'
-import { goto, invalidateAll } from '$app/navigation'
 import { HEX_KEYS_REGEX, KindsRelays } from '$lib/constants'
 import ndkStore, { ndk } from '$lib/stores/ndk'
 import { addAccount, getAccount, updateAccount } from '$lib/stores/session'
@@ -14,14 +13,12 @@ import { get, writable } from 'svelte/store'
 import type { UserRoles } from '@plebeian/database'
 
 import { userEventSchema } from '../schema/nostr-events'
-import RegisterDialog from './components/dialogs/registerDialog.svelte'
 import { createRequest, queryClient } from './fetch/client'
 import { createUserFromNostrMutation } from './fetch/users.mutations'
 import { createUserExistsQuery } from './fetch/users.queries'
 import { dmKind04Sub } from './nostrSubs/subs'
 import { manageUserRelays } from './nostrSubs/userRelayManager'
 import { cart } from './stores/cart'
-import { dialogs } from './stores/dialog'
 import { getAppSettings, setupNDKSigner, unNullify } from './utils/login.utils'
 
 type LoginResult = Promise<boolean>
@@ -130,7 +127,7 @@ export const loginDb = async (user: NDKUser) => {
 		const userExists = await resolveQuery(() => createUserExistsQuery(user.pubkey))
 		const userProfile = unNullify({ id: user.pubkey, ...user.profile })
 
-		if (!userExists) {
+		if (!userExists.exists && !userExists.banned) {
 			const body = userEventSchema.safeParse(userProfile)
 			if (!body.success) throw Error(JSON.stringify(body.error))
 			const userMutation = await get(createUserFromNostrMutation).mutateAsync({
@@ -139,7 +136,7 @@ export const loginDb = async (user: NDKUser) => {
 			})
 
 			if (userMutation) {
-				await queryClient.setQueryData(['users', 'exists', userMutation.id], true)
+				await queryClient.setQueryData(['users', 'exists', user.pubkey], { exists: true, banned: false })
 			}
 			return
 		}
@@ -154,7 +151,7 @@ export const loginDb = async (user: NDKUser) => {
 }
 
 export const logout = async () => {
-	dmKind04Sub.unref()
+	dmKind04Sub?.unref()
 	localStorage.clear()
 	cart.clear()
 	location.replace('/')

@@ -1,12 +1,8 @@
 import type { DisplayProduct } from '$lib/server/products.service'
 import type { RichStall } from '$lib/server/stalls.service'
-import { get } from 'svelte/store'
 
 import type { ProductImage } from '@plebeian/database'
 import { createSlugId } from '@plebeian/database/utils'
-
-import { forbiddenPatternStore } from '../../schema/nostr-events'
-import { displayZodErrors } from './zod.utils'
 
 export function prepareProductData(
 	formData: FormData,

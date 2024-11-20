@@ -13,6 +13,7 @@ import {
 	PM_NPUB,
 	products,
 	sql,
+	stalls,
 	USER_META,
 	USER_ROLES,
 	userMeta,
@@ -26,6 +27,8 @@ export interface RichUser extends User {
 	role: UserRoles
 	trustLevel: UserTrustLevel
 }
+
+export type ExistsResult = { exists: boolean; banned: boolean }
 
 const resolveUser = async (user: User): Promise<RichUser> => {
 	try {
@@ -65,11 +68,16 @@ export const getAllUsers = async (filter: UsersFilter = usersFilterSchema.parse(
 			createdAt: products.createdAt,
 		}[filter.orderBy]
 
+		console.log('filter', filter)
+
 		const usersResult = await db.query.users.findMany({
+			where: (users, { eq }) => eq(users.banned, false),
 			limit: filter.pageSize,
 			offset: (filter.page - 1) * filter.pageSize,
 			orderBy: (users, { asc, desc }) => (filter.order === 'asc' ? asc(orderBy) : desc(orderBy)),
 		})
+
+		console.log(usersResult)
 
 		return usersResult
 	} catch (e) {
@@ -93,7 +101,7 @@ export const getRichUsers = async (filter: UsersFilter = usersFilterSchema.parse
 			.from(users)
 			.limit(filter.pageSize)
 			.offset((filter.page - 1) * filter.pageSize)
-			.where(and(filter.userId ? eq(users.id, filter.userId) : undefined))
+			.where(and(filter.userId ? eq(users.id, filter.userId) : undefined, eq(users.banned, false)))
 			.execute()
 
 		const richUsers = await Promise.all(
@@ -137,7 +145,11 @@ export const getUsersByRole = async (filter: UsersFilter = usersFilterSchema.par
 
 export const getUserById = async (id: string): Promise<User> => {
 	try {
-		const [user] = await db.select().from(users).where(eq(users.id, id)).execute()
+		const [user] = await db
+			.select()
+			.from(users)
+			.where(and(eq(users.id, id), eq(users.banned, false)))
+			.execute()
 
 		if (!user) {
 			throw new Error('Not found')
@@ -191,7 +203,12 @@ export const getUserByNip05 = async (nip05addr: string): Promise<User> => {
 
 export const getUserIdByNip05 = async (nip05addr: string): Promise<string | null> => {
 	try {
-		const [user] = await db.select({ id: users.id }).from(users).where(eq(users.nip05, nip05addr)).limit(1).execute()
+		const [user] = await db
+			.select({ id: users.id })
+			.from(users)
+			.where(and(eq(users.nip05, nip05addr), eq(users.banned, false)))
+			.limit(1)
+			.execute()
 
 		if (!user) {
 			return null
@@ -210,7 +227,11 @@ export const getUserIdByNip05 = async (nip05addr: string): Promise<string | null
 export const getUserForProduct = async (productId: string): Promise<User> => {
 	try {
 		const [product] = await db.select().from(products).where(eq(products.id, productId)).execute()
-		const [user] = await db.select().from(users).where(eq(users.id, product.userId)).execute()
+		const [user] = await db
+			.select()
+			.from(users)
+			.where(and(eq(users.id, product.userId), eq(users.banned, false)))
+			.execute()
 
 		if (!user) {
 			throw new Error('Not found')
@@ -237,6 +258,7 @@ export const createUser = async (
 		if (!parsedUserProfile.success) {
 			throw Error(JSON.stringify(parsedUserProfile.error))
 		}
+
 		const userMetaData = parsedUserProfile.data
 
 		const insertUser: NewUser = {
@@ -432,6 +454,55 @@ export const updateUserMeta = async (userId: string, role?: UserRoles, trustLeve
 	}
 }
 
+export const getBannedUsers = async () => {
+	const usersResult = await db.query.users.findMany({
+		where: eq(users.banned, true),
+	})
+	return usersResult
+}
+
+export const setUserBanned = async (userId: string, banned: boolean) => {
+	return await db.transaction(async (tx) => {
+		const userStalls = await tx.select({ id: stalls.id }).from(stalls).where(eq(stalls.userId, userId)).execute()
+
+		const userProducts = await tx.select({ id: products.id }).from(products).where(eq(products.userId, userId)).execute()
+
+		if (userProducts.length > 0) {
+			await tx
+				.update(products)
+				.set({ banned })
+				.where(
+					inArray(
+						products.id,
+						userProducts.map((p) => p.id),
+					),
+				)
+				.execute()
+		}
+
+		if (userStalls.length > 0) {
+			await tx
+				.update(stalls)
+				.set({ banned })
+				.where(
+					inArray(
+						stalls.id,
+						userStalls.map((s) => s.id),
+					),
+				)
+				.execute()
+		}
+
+		const [updatedUser] = await tx.update(users).set({ banned }).where(eq(users.id, userId)).returning()
+
+		if (!updatedUser) {
+			throw new Error('Failed to update user')
+		}
+
+		return updatedUser
+	})
+}
+
 export const deleteUser = async (userId: string): Promise<boolean> => {
 	try {
 		const userResult = await db.delete(users).where(eq(users.id, userId)).returning()
@@ -449,13 +520,20 @@ export const deleteUser = async (userId: string): Promise<boolean> => {
 		}
 	}
 }
-export const userExists = async (userId: string): Promise<boolean> => {
-	const result = await db
-		.select({ id: sql`1` })
-		.from(users)
-		.where(eq(users.id, userId))
-		.limit(1)
-	return result.length > 0
+export const userExists = async (userId: string): Promise<ExistsResult> => {
+	const [result] = await db.select().from(users).where(eq(users.id, userId)).limit(1)
+
+	if (!result) {
+		return {
+			exists: false,
+			banned: false,
+		}
+	}
+
+	return {
+		exists: true,
+		banned: result.banned,
+	}
 }
 
 export const usersExists = async (userIds: string[], returnExisting: boolean = false): Promise<string[]> => {

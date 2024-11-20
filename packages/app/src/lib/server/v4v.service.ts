@@ -1,11 +1,15 @@
 import { and, db, eq, USER_META, userMeta } from '@plebeian/database'
 
+import { countPaymentDetailsByUserId } from './paymentDetails.service'
+
 export type V4VShare = {
 	amount: number
 	target: string
 }
 
 export const getV4VPlatformShareForUser = async (decodedOwnerPk: string) => {
+	const userPaymentDetails = await countPaymentDetailsByUserId(decodedOwnerPk)
+	if (!userPaymentDetails) return []
 	const platformShares = await db
 		.select()
 		.from(userMeta)

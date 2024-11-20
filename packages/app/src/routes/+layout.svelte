@@ -12,6 +12,7 @@
 	import { QueryClientProvider } from '@tanstack/svelte-query'
 	import { afterNavigate, goto } from '$app/navigation'
 	import { externalLinks } from '$lib/actions/external-links'
+	import RelayReportWidget from '$lib/components/assets/relayReportWidget.svelte'
 	import RelayWidget from '$lib/components/assets/relayWidget.svelte'
 	import BetaDialog from '$lib/components/dialogs/betaDialog.svelte'
 	import Drawer from '$lib/components/drawer.svelte'
@@ -22,7 +23,9 @@
 	import { dialogs } from '$lib/stores/dialog'
 	import ndkStore from '$lib/stores/ndk'
 	import { initNdkNWCs } from '$lib/stores/nwc'
-	import { cleanupCachedEvents, getAllAccounts } from '$lib/stores/session'
+	import { relayReports } from '$lib/stores/relayReports'
+	import { cleanupCachedEvents, getAllAccounts, sessions } from '$lib/stores/session'
+	import { setupDMSubscription } from '$lib/utils/dm.utils'
 
 	import type { LayoutData } from './$types'
 
@@ -58,7 +61,15 @@
 				},
 			})
 		}
-		cleanupCachedEvents()
+		// localStorage.setItem('forbiddenPattern', (data.forbiddenWords.forbiddenPattern as RegExp).toString())
+		const userForbiddenPattern = localStorage.getItem('forbiddenPattern')
+		const instanceForbiddenPattern = data.forbiddenWords.forbiddenPattern.toString()
+		if (instanceForbiddenPattern == userForbiddenPattern) {
+			cleanupCachedEvents()
+		} else {
+			sessions.cachedEvents.clear()
+			localStorage.setItem('forbiddenPattern', instanceForbiddenPattern)
+		}
 	})
 
 	$: webManifestLink = pwaInfo ? pwaInfo.webManifest.linkTag : ''
@@ -142,6 +153,7 @@
 
 	$: if (isLoggedIn) {
 		initNdkNWCs()
+		setupDMSubscription()
 	}
 </script>
 
@@ -200,8 +212,11 @@
 				<SellStuffAdvert />
 			{/if}
 			<Footer />
-			<section class="fixed bottom-0">
+			<section class="fixed bottom-0 flex">
 				<RelayWidget />
+				{#if $relayReports?.length}
+					<RelayReportWidget />
+				{/if}
 			</section>
 			<DialogManager />
 		</div>

@@ -1,12 +1,14 @@
 import type { CreateQueryResult } from '@tanstack/svelte-query'
+import type { ExistsResult } from '$lib/interfaces'
 import type { ProductsFilter } from '$lib/schema'
 import type { DisplayProduct } from '$lib/server/products.service'
 import { createQuery } from '@tanstack/svelte-query'
+import { browser } from '$app/environment'
 import { numSatsInBtc } from '$lib/constants'
 import { aggregatorAddProducts } from '$lib/nostrSubs/data-aggregator'
 import { fetchUserProductData, normalizeProductsFromNostr } from '$lib/nostrSubs/utils'
 import { productsFilterSchema } from '$lib/schema'
-import { btcToCurrency, resolveQuery } from '$lib/utils'
+import { btcToCurrency, parseCoordinatesString, resolveQuery } from '$lib/utils'
 
 import { CURRENCIES } from '@plebeian/database/constants'
 
@@ -30,7 +32,7 @@ declare module './client' {
 			ProductsFilter
 		>
 		[k: `GET /api/v1/products/${string}`]: Operation<string, 'GET', never, never, DisplayProduct, never>
-		[k: `GET /api/v1/products/${string}?exists`]: Operation<string, 'GET', never, never, boolean, never>
+		[k: `GET /api/v1/products/${string}?exists`]: Operation<string, 'GET', never, never, ExistsResult, never>
 	}
 }
 
@@ -121,10 +123,10 @@ export const createProductsByFilterQuery = (filter: Partial<ProductsFilter>) =>
 					const userId = (filter.stallId && filter.stallId.split(':')[1]) || filter?.userId || null
 					if (!userId) return null
 					const { products: productsData } = await fetchUserProductData(userId)
-
 					if (filter.stallId) {
 						if (productsData?.size) {
-							const result = await normalizeProductsFromNostr(productsData, userId, filter.stallId)
+							const parsedStallIdString = parseCoordinatesString(filter.stallId)
+							const result = await normalizeProductsFromNostr(productsData, userId, parsedStallIdString.tagD)
 							if (result) {
 								const { toDisplayProducts, stallProducts } = result
 								aggregatorAddProducts(stallProducts)
@@ -152,12 +154,13 @@ export const createProductsByFilterQuery = (filter: Partial<ProductsFilter>) =>
 
 				return null
 			},
+			enabled: !!browser,
 		},
 		queryClient,
 	)
 
 export const createProductExistsQuery = (id: string) =>
-	createQuery<boolean>(
+	createQuery<ExistsResult>(
 		{
 			queryKey: createProductExistsKey(id),
 			queryFn: async () => {

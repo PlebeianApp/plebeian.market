@@ -19,10 +19,9 @@ const productTypeValidator = (value: unknown) => {
 }
 
 export const forbiddenPatternStore = derived(page, ($page) => {
-	const forbiddenPattern = ($page.data as PageData).forbiddenWords.forbiddenPattern
 	return {
-		createProductEventSchema: createProductEventSchema(forbiddenPattern),
-		createStallEventContentSchema: createStallEventContentSchema(forbiddenPattern),
+		createProductEventSchema: createProductEventSchema(($page.data as PageData).forbiddenWords.forbiddenPattern),
+		createStallEventContentSchema: createStallEventContentSchema(($page.data as PageData).forbiddenWords.forbiddenPattern),
 	}
 })
 
@@ -67,13 +66,13 @@ export const createProductEventSchema = (forbiddenPattern: RegExp) =>
 			shipping: z.array(productShippingObjectSchema),
 		})
 		.partial()
-		.transform((data) => {
-			const { stall_id, ...rest } = data
-			return {
-				...rest,
-				stallId: data.stall_id,
-			}
-		})
+// .transform((data) => {
+// 	const { stall_id, ...rest } = data
+// 	return {
+// 		...rest,
+// 		stallId: data.stall_id,
+// 	}
+// })
 
 export const auctionEventSchema = z.object({
 	id: z.string(),

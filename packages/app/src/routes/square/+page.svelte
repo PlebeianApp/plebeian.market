@@ -3,17 +3,23 @@
 	import StallItem from '$lib/components/stalls/stall-item.svelte'
 	import { stallsSub } from '$lib/nostrSubs/subs'
 	import { onDestroy, onMount } from 'svelte'
+	import { derived } from 'svelte/store'
 
-	stallsSub.onEose(() => {
-		console.log('Stalls sub EOSE')
+	const uniqueStallsStore = derived(stallsSub ?? [], ($stallsSub) => {
+		if ($stallsSub.length <= 1) return $stallsSub
+
+		const dTagSet = new Set($stallsSub.map((stall) => stall.dTag))
+		if (dTagSet.size === $stallsSub.length) return $stallsSub
+
+		return [...new Map($stallsSub.map((stall) => [stall.dTag, stall])).values()]
 	})
 	onMount(() => {
-		if (!$stallsSub.length) {
-			stallsSub.ref()
+		if (!$stallsSub?.length) {
+			stallsSub?.ref()
 		}
 	})
 	onDestroy(() => {
-		stallsSub.unref()
+		stallsSub?.unref()
 	})
 </script>
 
@@ -21,11 +27,12 @@
 	<div class="flex flex-col">
 		<main class="text-black">
 			<div class="px-4 lg:px-12">
+				<h1>Square</h1>
 				<div class="container">
 					<h2>Stalls</h2>
 					<div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-						{#if $stallsSub.length}
-							{#each $stallsSub as stall (stall.id)}
+						{#if $stallsSub?.length}
+							{#each $uniqueStallsStore as stall (stall.dTag)}
 								{#if stall}
 									<StallItem stallData={stall} />
 								{/if}

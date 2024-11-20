@@ -1,5 +1,5 @@
 import type { NostrEvent } from '@nostr-dev-kit/ndk'
-import type { EventCoordinates } from '$lib/interfaces'
+import type { EventCoordinates, ExistsResult } from '$lib/interfaces'
 import type { StallsFilter } from '$lib/schema'
 import { error } from '@sveltejs/kit'
 import { KindStalls, standardDisplayDateFormat } from '$lib/constants'
@@ -74,8 +74,6 @@ const createZone = (country: string | null, region: string | null, shippingResul
 })
 
 const getZonesToInsert = (shippingResult: Shipping, regions: string[] | null, countries: string[] | null) => {
-	console.log('Input:', { regions, countries })
-
 	if (regions === null || countries === null) {
 		return [createZone(countries === null ? null : null, regions === null ? null : null, shippingResult)]
 	}
@@ -106,15 +104,7 @@ const resolveStalls = async (stall: Stall): Promise<RichStall> => {
 		.where(eq(users.id, stall.userId))
 		.execute()
 
-	const [productCount] = (
-		await db
-			.select({
-				count: sql<number>`cast(count(${stalls.id}) as int)`,
-			})
-			.from(products)
-			.where(eq(products.stallId, stall.id))
-			.execute()
-	).map((product) => product.count)
+	const productCount = await db.$count(products, eq(products.stallId, stall.id))
 
 	const [image] = await db
 		.select()
@@ -180,6 +170,7 @@ export const getAllStalls = async (filter: StallsFilter = stallsFilterSchema.par
 				filter.userId ? eq(stalls.userId, filter.userId) : undefined,
 				filter.stallId ? eq(stalls.id, filter.stallId) : undefined,
 				filter.search ? like(stalls.name, `%${filter.search.replaceAll(' ', '%')}%`) : undefined,
+				eq(stalls.banned, false),
 			),
 		)
 		.execute()
@@ -192,6 +183,7 @@ export const getAllStalls = async (filter: StallsFilter = stallsFilterSchema.par
 				filter.userId ? eq(stalls.userId, filter.userId) : undefined,
 				filter.stallId ? eq(stalls.id, filter.stallId) : undefined,
 				filter.search ? like(stalls.name, `%${filter.search.replaceAll(' ', '%')}%`) : undefined,
+				eq(stalls.banned, false),
 			),
 		)
 		.execute()
@@ -209,7 +201,11 @@ export const getAllStalls = async (filter: StallsFilter = stallsFilterSchema.par
 }
 
 export const getStallById = async (id: string): Promise<RichStall> => {
-	const [uniqueStall] = await db.select().from(stalls).where(eq(stalls.id, id)).execute()
+	const [uniqueStall] = await db
+		.select()
+		.from(stalls)
+		.where(and(eq(stalls.id, id), eq(stalls.banned, false)))
+		.execute()
 	if (!uniqueStall) {
 		error(404, 'Stall not found')
 	}
@@ -226,7 +222,7 @@ const stallsByCatNamePrepared = db
 	.from(stalls)
 	.leftJoin(products, eq(stalls.id, products.stallId))
 	.leftJoin(eventTags, eq(products.id, eventTags.eventId))
-	.where(and(eq(eventTags.tagValue, sql.placeholder('catName')), eq(eventTags.tagName, 't')))
+	.where(and(eq(eventTags.tagValue, sql.placeholder('catName')), eq(eventTags.tagName, 't'), eq(stalls.banned, false)))
 	.groupBy(stalls.id)
 	.prepare()
 
@@ -330,7 +326,11 @@ export const setStallMetaFeatured = async (stallId: string, featured: boolean) =
 }
 
 export const getStallsByUserId = async (userId: string): Promise<RichStall[]> => {
-	const stallsResult = await db.select().from(stalls).where(eq(stalls.userId, userId)).execute()
+	const stallsResult = await db
+		.select()
+		.from(stalls)
+		.where(and(eq(stalls.userId, userId), eq(stalls.banned, false)))
+		.execute()
 
 	const richStalls = await Promise.all(
 		stallsResult.map(async (stall) => {
@@ -362,6 +362,7 @@ export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall 
 				id: coordinates,
 				createdAt: new Date(stallEvent.created_at * 1000),
 				updatedAt: new Date(stallEvent.created_at * 1000),
+				banned: false,
 				name: data.name,
 				identifier: tagD,
 				description: data.description as string,
@@ -528,6 +529,40 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
 	}
 }
 
+export const getBannedStalls = async () => {
+	const stallsResult = await db.query.stalls.findMany({
+		where: eq(stalls.banned, true),
+	})
+	return stallsResult
+}
+
+export const setStallBanned = async (stallId: string, banned: boolean) => {
+	return await db.transaction(async (tx) => {
+		const stallProducts = await tx.select({ id: products.id }).from(products).where(eq(products.stallId, stallId)).execute()
+
+		if (stallProducts.length > 0) {
+			await tx
+				.update(products)
+				.set({ banned })
+				.where(
+					inArray(
+						products.id,
+						stallProducts.map((p) => p.id),
+					),
+				)
+				.execute()
+		}
+
+		const [updatedStall] = await tx.update(stalls).set({ banned }).where(eq(stalls.id, stallId)).returning()
+
+		if (!updatedStall) {
+			throw new Error('Failed to update stall')
+		}
+
+		return updatedStall
+	})
+}
+
 export const deleteStall = async (stallId: string): Promise<string> => {
 	const stallResult = await db.query.stalls.findFirst({
 		where: eq(stalls.id, stallId),
@@ -546,11 +581,18 @@ export const deleteStall = async (stallId: string): Promise<string> => {
 	error(500, 'Failed to delete stall')
 }
 
-export const stallExists = async (stallId: string): Promise<boolean> => {
-	const result = await db
-		.select({ id: sql`1` })
-		.from(stalls)
-		.where(eq(stalls.id, stallId))
-		.limit(1)
-	return result.length > 0
+export const stallExists = async (stallId: string): Promise<ExistsResult> => {
+	const [result] = await db.select().from(stalls).where(eq(stalls.id, stallId)).limit(1)
+
+	if (!result) {
+		return {
+			exists: false,
+			banned: false,
+		}
+	}
+
+	return {
+		exists: true,
+		banned: result.banned,
+	}
 }

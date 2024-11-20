@@ -29,7 +29,7 @@
 		shouldRegister,
 		unixTimeNow,
 	} from '$lib/utils'
-	import { publishEvent } from '$lib/utils/nostr.utils'
+	import { deleteEvent, publishEvent } from '$lib/utils/nostr.utils'
 	import { validateForm } from '$lib/utils/zod.utils'
 	import geohash from 'ngeohash'
 	import { createEventDispatcher, onMount } from 'svelte'
@@ -152,14 +152,14 @@
 		})
 
 		try {
-			const [, userExists] = await Promise.all([publishEvent(newEvent), checkIfUserExists($ndkStore.activeUser.pubkey)])
-			if (await shouldRegister(allowRegister, userExists)) {
+			const [publishedEvent, userExists] = await Promise.all([publishEvent(newEvent), checkIfUserExists($ndkStore.activeUser.pubkey)])
+			if ((await shouldRegister(allowRegister, userExists)) && publishedEvent) {
 				const nostrEvent = await newEvent.toNostrEvent()
 				await (stall?.id
 					? $updateStallFromNostrEvent.mutateAsync([stall.id, nostrEvent])
 					: $createStallFromNostrEvent.mutateAsync(nostrEvent))
 			}
-			dispatch('success', null)
+			publishedEvent && dispatch('success', null)
 		} catch (error) {
 			console.error('Error creating or updating stall:', error)
 			dispatch('error', error)
@@ -208,8 +208,15 @@
 
 	async function handleDelete() {
 		if (!stall?.id) return
-		await $deleteStallMutation.mutateAsync(stall.id)
+		isLoading = true
+		try {
+			await $deleteStallMutation.mutateAsync(stall.id)
+		} catch (error) {
+			console.error('Error deleting stall:', error)
+		}
+		await deleteEvent(stall.id)
 		dispatch('success', null)
+		isLoading = false
 	}
 </script>
 
@@ -496,6 +503,6 @@
 		>Save</Button
 	>
 	{#if stall?.id}
-		<Button type="button" variant="destructive" on:click={handleDelete}>Delete</Button>
+		<Button type="button" variant="destructive" disabled={isLoading} on:click={handleDelete}>Delete</Button>
 	{/if}
 </form>

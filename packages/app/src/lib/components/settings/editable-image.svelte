@@ -1,5 +1,4 @@
 <script lang="ts">
-	// packages/app/src/lib/components/settings/editable-image.svelte
 	import { NostrBuildUploader } from '@nostrify/nostrify/uploaders'
 	import * as Collapsible from '$lib/components/ui/collapsible'
 	import * as Dialog from '$lib/components/ui/dialog/index.js'
@@ -111,8 +110,12 @@
 		</div>
 	{/if}
 
-	<Button on:click={() => (imageChoiceDialogOpen = true)} variant="ghost" class="absolute top-1 right-1 font-bold text-red-500 border-0">
-		<span class="i-mdi-pencil-outline text-white w-6 h-6" />
+	<Button
+		on:click={() => (imageChoiceDialogOpen = true)}
+		variant="outline"
+		class="absolute top-1 right-1 font-bold border-current border-2"
+	>
+		<span class="i-mdi-pencil-outline text-current w-6 h-6" />
 	</Button>
 	<Dialog.Root bind:open={imageChoiceDialogOpen}>
 		<Dialog.Content class="max-w-[66vw]">
