@@ -11,7 +11,7 @@ import type { PageServerLoad } from './$types'
 export const load: PageServerLoad = async () => {
 	return {
 		prices: await fetchInitialPrices(),
-		appSettings: (await getAppSettings()) as AppSettings,
+		appSettings: await getAppSettings(),
 		forbiddenWords: await getAllForbiddenWords(),
 		paymentDetailsMethod: Object.values(PAYMENT_DETAILS_METHOD) as unknown as PaymentDetailsMethod,
 		isTest: process.env.MODE === 'test',

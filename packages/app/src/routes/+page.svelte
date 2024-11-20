@@ -14,7 +14,7 @@
 	$: featuredProductsQuery = createProductsByFilterQuery({ featured: true })
 </script>
 
-{#if !data.appSettings.isFirstTimeRunning}
+{#if !data.appSettings?.isFirstTimeRunning}
 	<div class="flex min-h-screen w-full flex-col">
 		<div class="flex flex-col">
 			<main class="text-black">

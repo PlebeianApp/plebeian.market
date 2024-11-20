@@ -27,6 +27,6 @@ const getHomeProducts = async () => {
 
 export const load: PageServerLoad = async () => {
 	const homeProducts = await getHomeProducts()
-	const appSettings = (await getAppSettings()) as AppSettings
+	const appSettings = await getAppSettings()
 	return { homeProducts, appSettings }
 }

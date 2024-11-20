@@ -30,7 +30,6 @@
 	import type { LayoutData } from './$types'
 
 	export let data: LayoutData
-	console.log('data', data)
 
 	for (const [currency, price] of data.prices) {
 		queryClient.setQueryData(['currency-conversion', currency], price)
@@ -39,7 +38,7 @@
 	$: isLoggedIn = $ndkStore && $ndkStore.activeUser
 
 	onMount(async () => {
-		if (data.appSettings.isFirstTimeRunning) {
+		if (data.appSettings?.isFirstTimeRunning) {
 			goto('/setup', { invalidateAll: true })
 		}
 		if (pwaInfo) {
@@ -73,7 +72,7 @@
 	$: webManifestLink = pwaInfo ? pwaInfo.webManifest.linkTag : ''
 
 	afterNavigate(() => {
-		processQueuedInsertions(data.appSettings.allowRegister)
+		processQueuedInsertions(data.appSettings?.allowRegister)
 	})
 
 	// Tooltips on elements with the tooltip attribute
@@ -197,7 +196,7 @@
 </svelte:head>
 
 <QueryClientProvider client={queryClient}>
-	{#if data.appSettings.isFirstTimeRunning}
+	{#if data.appSettings?.isFirstTimeRunning}
 		<slot />
 	{:else}
 		<div class="min-h-screen flex flex-col font-sans">
