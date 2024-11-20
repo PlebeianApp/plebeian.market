@@ -2,6 +2,7 @@ import type { NormalizedCart } from '$lib/stores/cart'
 import { createMutation } from '@tanstack/svelte-query'
 
 import { createRequest, queryClient } from './client'
+import { createInvoiceKey, createOrderKey } from './keys'
 
 declare module './client' {
 	interface Endpoints {
@@ -19,8 +20,8 @@ export const persistOrdersAndInvoicesMutation = createMutation(
 			})
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ['orders'] })
-			queryClient.invalidateQueries({ queryKey: ['invoices'] })
+			queryClient.invalidateQueries({ queryKey: createOrderKey('') })
+			queryClient.invalidateQueries({ queryKey: createInvoiceKey('') })
 		},
 	},
 	queryClient,

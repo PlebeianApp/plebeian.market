@@ -11,10 +11,10 @@ import { usersFilterSchema } from '$lib/schema'
 import ndkStore from '$lib/stores/ndk'
 import { derived } from 'svelte/store'
 
-import type { UserMeta, UserRoles } from '@plebeian/database'
+import type { UserRoles } from '@plebeian/database'
 
 import { createRequest, queryClient } from './client'
-import { createUserExistsKey, createUserKey, createUserRelaysKey, createUserRoleKey, createUsersByFilterKey } from './keys'
+import { createUserExistsKey, createUserRelaysKey, createUserRoleKey, createUsersByFilterKey } from './keys'
 
 declare module './client' {
 	interface Endpoints {
@@ -27,7 +27,7 @@ declare module './client' {
 
 export const activeUserQuery = createQuery(
 	derived(ndkStore, ($ndkStore) => ({
-		queryKey: $ndkStore.activeUser?.pubkey ? createUserKey($ndkStore.activeUser?.pubkey) : ['user'],
+		queryKey: $ndkStore.activeUser?.pubkey ? createUsersByFilterKey({ userId: $ndkStore.activeUser?.pubkey }) : ['user'],
 		queryFn: async () => {
 			if ($ndkStore.activeUser?.pubkey) {
 				const user = (await createRequest(`GET /api/v1/users/${$ndkStore.activeUser.pubkey}`, {
@@ -61,7 +61,7 @@ export const createUserRoleByIdQuery = (id: string) =>
 export const createUserByIdQuery = (id: string) =>
 	createQuery<NDKUserProfile | null>(
 		{
-			queryKey: createUserKey(id),
+			queryKey: createUsersByFilterKey({ userId: id }),
 			queryFn: async () => {
 				try {
 					const result = (await createRequest(`GET /api/v1/users/${id}`, {})) as NDKUserProfile

@@ -15,7 +15,6 @@ export const getV4VPlatformShareForUser = async (decodedOwnerPk: string) => {
 		.from(userMeta)
 		.where(and(eq(userMeta.metaName, USER_META.V4V_SHARE.value), eq(userMeta.userId, decodedOwnerPk)))
 		.execute()
-
 	return platformShares.map((platformShare) => ({
 		amount: platformShare.valueNumeric,
 		target: platformShare.key,

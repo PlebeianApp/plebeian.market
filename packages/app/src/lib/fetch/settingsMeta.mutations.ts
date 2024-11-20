@@ -1,6 +1,7 @@
 import { createMutation } from '@tanstack/svelte-query'
 
 import { createRequest, queryClient } from './client'
+import { createSettingsMetaKey } from './keys'
 
 declare module './client' {
 	interface Endpoints {
@@ -19,7 +20,7 @@ export const addForbiddenWordMutation = createMutation(
 			return response
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ['settings-meta', 'word_blacklist'] })
+			queryClient.invalidateQueries({ queryKey: createSettingsMetaKey('word_blacklist') })
 		},
 	},
 	queryClient,
@@ -35,7 +36,7 @@ export const deleteForbiddenWordMutation = createMutation(
 			return response
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ['settings-meta', 'word_blacklist'] })
+			queryClient.invalidateQueries({ queryKey: createSettingsMetaKey('word_blacklist') })
 		},
 	},
 	queryClient,

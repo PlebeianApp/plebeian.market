@@ -10,7 +10,7 @@ import { fetchStallData, fetchUserStallsData, normalizeStallData } from '$lib/no
 import { stallsFilterSchema } from '$lib/schema'
 
 import { createRequest, queryClient } from './client'
-import { createStallExistsKey, createStallKey, createStallsByFilterKey } from './keys'
+import { createStallExistsKey, createStallsByFilterKey } from './keys'
 
 declare module './client' {
 	interface Endpoints {
@@ -23,7 +23,7 @@ declare module './client' {
 export const createStallQuery = (stallId: string) =>
 	createQuery<{ stall: Partial<RichStall> | null }>(
 		{
-			queryKey: createStallKey(stallId),
+			queryKey: createStallsByFilterKey({ stallId: stallId }),
 			queryFn: async () => {
 				try {
 					const stall = await createRequest(`GET /api/v1/stalls/${stallId}`, {})

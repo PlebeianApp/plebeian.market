@@ -4,7 +4,6 @@
 	import ProductItem from '$lib/components/product/product-item.svelte'
 	import { Button } from '$lib/components/ui/button/index.js'
 	import { createProductsByFilterQuery } from '$lib/fetch/products.queries'
-	import { openDrawerForNewStall } from '$lib/stores/drawer-ui'
 
 	import type { PageData } from './$types'
 

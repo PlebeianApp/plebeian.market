@@ -6,7 +6,7 @@ type QueryKey = ReadonlyArray<unknown>
 
 export const createProductKey = (id: string): QueryKey => ['products', id]
 
-export const createProductByFilterKey = (filter: Partial<ProductsFilter>) => ['products', 'filter', ...Object.values(filter)]
+export const createProductByFilterKey = (filter: Partial<ProductsFilter>) => ['products', ...Object.values(filter)]
 
 export const createProductExistsKey = (id: string) => ['products', 'exists', id]
 
@@ -25,17 +25,17 @@ export const createUserRelaysKey = (pubkey: string) => ['relays', ...createUserK
 
 export const createUserExistsKey = (pubkey: string) => ['exists', ...createUserKey(pubkey)]
 
-export const createUsersByFilterKey = (filter: Partial<UsersFilter>) => ['users', 'filter', ...Object.values(filter)]
+export const createUsersByFilterKey = (filter: Partial<UsersFilter>) => ['users', ...Object.values(filter)]
 
 export const createOrderKey = (orderId: string) => ['orders', orderId]
 
-export const createOrdersByUserAndRoleKey = (userId: string, role: 'buyer' | 'seller') => ['orders', 'list', userId, role]
+export const createOrdersByUserAndRoleKey = (userId: string, role: 'buyer' | 'seller') => ['orders', userId, role]
 
-export const createOrdersByFilterKey = (filter: Partial<OrdersFilter>) => ['orders', 'list', 'filter', ...Object.values(filter)]
+export const createOrdersByFilterKey = (filter: Partial<OrdersFilter>) => ['orders', ...Object.values(filter)]
 
 export const createStallKey = (stallId: string) => ['stalls', stallId]
 
-export const createStallsByFilterKey = (filter: Partial<StallsFilter>) => ['stalls', 'filter', ...Object.values(filter)]
+export const createStallsByFilterKey = (filter: Partial<StallsFilter>) => ['stalls', ...Object.values(filter)]
 
 export const createStallExistsKey = (id: string) => ['stalls', 'exists', id]
 
@@ -66,10 +66,10 @@ export const createMempoolAddressTransactionsKey = (address: string) => ['mempoo
 
 export const createInvoiceKey = (id: string) => ['invoices', id]
 
-export const createInvoicesByFilterKey = (filter: Partial<InvoicesFilter>) => ['invoices', 'filter', ...Object.values(filter)]
+export const createInvoicesByFilterKey = (filter: Partial<InvoicesFilter>) => ['invoices', ...Object.values(filter)]
 
 export const createProductImagesForUserKey = (pubkey: string) => ['product-images', pubkey]
 
-export const createCategoriesByFilterKey = (filter: Partial<CatsFilter>) => ['categories', 'filter', ...Object.values(filter)]
+export const createCategoriesByFilterKey = (filter: Partial<CatsFilter>) => ['categories', ...Object.values(filter)]
 
 export const createSettingsMetaKey = (key: AppSettingsMetaName['value']) => ['settings-meta', key]
