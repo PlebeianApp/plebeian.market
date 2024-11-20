@@ -78,6 +78,7 @@ export const editProductMutation = createMutation(
 
 			const evContent = {
 				...product,
+				id: productCoordinates.tagD!,
 				stall_id: parseCoordinatesString(product.stall_id!).tagD,
 			}
 
