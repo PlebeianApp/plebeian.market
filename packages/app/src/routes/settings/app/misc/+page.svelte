@@ -77,7 +77,7 @@
 	}
 
 	onMount(() => {
-		logoUrl = appSettings.logoUrl
+		logoUrl = appSettings?.logoUrl ?? ""
 		selectedCurrency = { value: appSettings.defaultCurrency, label: appSettings.defaultCurrency }
 	})
 </script>
@@ -145,7 +145,7 @@
 											aria-expanded={open}
 											class="w-full justify-between border-black border-2"
 										>
-											{#if appSettings.logoUrl}
+											{#if appSettings?.logoUrl}
 												{availabeLogos.find((logo) => logo.value === logoUrl)?.label || logoUrl}
 											{:else}
 												<span class=" opacity-50">Select logo</span>
