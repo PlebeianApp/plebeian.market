@@ -9,15 +9,11 @@
 
 	export let data: PageData
 
-	$: ({
-		appSettings: { isFirstTimeRunning },
-	} = data)
-
 	$: productQuery = createProductsByFilterQuery({ pageSize: 8 })
 	$: featuredProductsQuery = createProductsByFilterQuery({ featured: true })
 </script>
 
-{#if !isFirstTimeRunning}
+{#if !data.appSettings?.isFirstTimeRunning}
 	<div class="flex min-h-screen w-full flex-col">
 		<div class="flex flex-col">
 			<main class="text-black">

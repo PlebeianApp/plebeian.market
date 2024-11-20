@@ -2,7 +2,7 @@ import { error } from '@sveltejs/kit'
 import { usersFilterSchema } from '$lib/schema'
 import { decodePk } from '$lib/utils'
 
-import type { NewAppSettings, UserRoles } from '@plebeian/database'
+import type { AppSettings, NewAppSettings, UserRoles } from '@plebeian/database'
 import {
 	appSettings,
 	db,
@@ -28,7 +28,7 @@ export const isInitialSetup = async (): Promise<boolean> => {
 	return appSettingsRes.isFirstTimeRunning
 }
 
-export const getAppSettings = async () => {
+export const getAppSettings = async (): Promise<AppSettings | undefined> => {
 	const [appSettingsRes] = await db.select().from(appSettings).execute()
 	return appSettingsRes
 }

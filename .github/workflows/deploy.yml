@@ -38,7 +38,7 @@ jobs:
       - run: sudo apt install sshpass rsync
       - run: pnpm install
       - name: Check and apply database migrations
-        - run: pnpm db:migrate
+        run: pnpm db:migrate
       - run: pnpm build
       - run: rm -rf node_modules **/node_modules .pnpm-store
 
