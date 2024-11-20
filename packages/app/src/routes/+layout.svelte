@@ -30,6 +30,7 @@
 	import type { LayoutData } from './$types'
 
 	export let data: LayoutData
+	console.log('data', data)
 
 	for (const [currency, price] of data.prices) {
 		queryClient.setQueryData(['currency-conversion', currency], price)
