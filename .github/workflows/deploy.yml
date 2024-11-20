@@ -71,7 +71,7 @@ jobs:
             pnpm db:migrate
             
             cd packages/app
-            nohup node build > preview.log 2>&1 &
+            nohup pnpm preview --port=$PORT > preview.log 2>&1 &
             sleep 10
             head -n 20 preview.log
 
