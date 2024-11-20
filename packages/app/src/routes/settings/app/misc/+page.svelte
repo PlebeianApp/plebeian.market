@@ -77,7 +77,7 @@
 	}
 
 	onMount(() => {
-		logoUrl = appSettings?.logoUrl ?? ""
+		logoUrl = appSettings?.logoUrl ?? ''
 		selectedCurrency = { value: appSettings.defaultCurrency, label: appSettings.defaultCurrency }
 	})
 </script>
