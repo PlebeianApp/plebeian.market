@@ -25,6 +25,7 @@
 		checkIfUserExists,
 		createChangeTracker,
 		debounce,
+		getGeohashAccuracyText,
 		searchLocation,
 		shouldRegister,
 		unixTimeNow,
@@ -218,6 +219,24 @@
 		dispatch('success', null)
 		isLoading = false
 	}
+
+	function handleLocationUpdated(
+		event: CustomEvent<{ lat: number; lon: number; boundingbox: [number, number, number, number]; isDragged: boolean }>,
+	) {
+		const { lat, lon, boundingbox, isDragged } = event.detail
+		const accuracy = calculateGeohashAccuracy(boundingbox)
+		geohashOfSelectedGeometry = geohash.encode(lat, lon, accuracy)
+
+		selectedLocation = {
+			place_id: isDragged ? 'marker' : '',
+			display_name: isDragged
+				? `Location at marker (${geohashOfSelectedGeometry} - ${getGeohashAccuracyText(geohashOfSelectedGeometry)})`
+				: selectedLocation?.display_name || '',
+			lat: String(lat),
+			lon: String(lon),
+			boundingbox,
+		}
+	}
 </script>
 
 <form class="flex flex-col gap-4 grow" on:submit={handleSubmit}>
@@ -271,18 +290,27 @@
 		{/if}
 	</div>
 
-	<Collapsible.Root>
+	<Collapsible.Root class="flex flex-col gap-2">
 		<Collapsible.Trigger asChild let:builder>
 			<Button builders={[builder]} variant="ghost" size="sm" class="w-full p-0">
 				<Label for="from" class="font-bold">Shipping From (Recommended)</Label>
 				<span class="i-ion-chevron-expand" />
 			</Button>
 		</Collapsible.Trigger>
-		<Collapsible.Content>
-			{#if geohashOfSelectedGeometry}
-				<small class="ml-2 text-gray-500">Geohash: {geohashOfSelectedGeometry}</small>
-			{/if}
-			<Leaflet geoJSON={mapGeoJSON} />
+		<Collapsible.Content class="flex flex-col gap-2">
+			<div class="flex items-center gap-2">
+				<span
+					class="i-mdi-information-outline"
+					data-tooltip="Geohash is a compact representation of a geographic coordinate system. It's used to quickly identify the location of a point on a map. The accuracy is the number of characters in the geohash and is determined by your zoom level."
+				></span>
+				{#if geohashOfSelectedGeometry}
+					<small class="text-gray-500">Geohash: {geohashOfSelectedGeometry}</small>
+				{:else}
+					<small class="text-gray-500">No location selected - click on the map to set a marker or search for a location</small>
+				{/if}
+			</div>
+
+			<Leaflet geoJSON={mapGeoJSON} on:locationUpdated={handleLocationUpdated} />
 			<Popover.Root bind:open={locationSearchOpen} let:ids>
 				<Popover.Trigger asChild let:builder>
 					<Button
