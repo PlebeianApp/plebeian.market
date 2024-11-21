@@ -45,8 +45,8 @@
 
 					map.flyToBounds(
 						[
-							[geoJSON.boundingbox[0], geoJSON.boundingbox[2]],
-							[geoJSON.boundingbox[1], geoJSON.boundingbox[3]],
+							[geoJSON.boundingbox[0], geoJSON.boundingbox[1]],
+							[geoJSON.boundingbox[2], geoJSON.boundingbox[3]],
 						],
 						{ duration: 1 },
 					)
@@ -110,6 +110,7 @@
 						lat: geoJSON.geometry.coordinates[1],
 						lon: geoJSON.geometry.coordinates[0],
 						boundingbox,
+						isDragged: true,
 					})
 				}
 			})

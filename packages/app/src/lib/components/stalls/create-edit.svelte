@@ -46,6 +46,7 @@
 	import Separator from '../ui/separator/separator.svelte'
 
 	export let stall: Partial<RichStall> | null = null
+	let shippingFromOpen = false
 	const dispatch = createEventDispatcher<{ success: unknown; error: unknown }>()
 	const {
 		appSettings: { allowRegister, defaultCurrency },
@@ -113,14 +114,13 @@
 			type: 'Feature',
 			geometry: { type: 'Point', coordinates: [lon, lat] },
 			properties: {},
-			boundingbox,
+			boundingbox: [boundingbox[0], boundingbox[2], boundingbox[1], boundingbox[3]],
 		}
 
 		const [minLat, maxLat, minLon, maxLon] = boundingbox
 		const centerLat = (minLat + maxLat) / 2
 		const centerLon = (minLon + maxLon) / 2
 		const accuracy = calculateGeohashAccuracy(boundingbox)
-
 		geohashOfSelectedGeometry = geohash.encode(centerLat, centerLon, accuracy)
 		selectedLocation = location
 	}
@@ -171,17 +171,20 @@
 	onMount(() => {
 		if (stall?.geohash) {
 			geohashOfSelectedGeometry = stall.geohash
+			shippingFromOpen = true
 			const { latitude, longitude } = geohash.decode(stall.geohash)
 			const boundingbox = geohash.decode_bbox(stall.geohash)
+
 			mapGeoJSON = {
 				type: 'Feature',
 				geometry: { type: 'Point', coordinates: [longitude, latitude] },
 				properties: {},
 				boundingbox,
 			}
+
 			selectedLocation = {
 				place_id: '',
-				display_name: '',
+				display_name: `Location at marker (${geohashOfSelectedGeometry} - ${getGeohashAccuracyText(geohashOfSelectedGeometry)})`,
 				lat: String(latitude),
 				lon: String(longitude),
 				boundingbox,
@@ -290,7 +293,7 @@
 		{/if}
 	</div>
 
-	<Collapsible.Root class="flex flex-col gap-2">
+	<Collapsible.Root bind:open={shippingFromOpen} class="flex flex-col gap-2">
 		<Collapsible.Trigger asChild let:builder>
 			<Button builders={[builder]} variant="ghost" size="sm" class="w-full p-0">
 				<Label for="from" class="font-bold">Shipping From (Recommended)</Label>
