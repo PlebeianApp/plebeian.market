@@ -63,7 +63,7 @@
 	const cleanupFunctions: (() => void)[] = []
 
 	async function generateInvoice() {
-		if (isLoading || invoice) return
+		if (isLoading || invoice || normalizedAmount == 0) return
 		isLoading = true
 		try {
 			if (LN_ADDRESS_REGEX.test(paymentDetail.paymentDetails)) {
@@ -331,7 +331,11 @@
 			</Collapsible.Content>
 		</Collapsible.Root>
 	{:else}
-		<p>Generating invoice...</p>
+		{#if normalizedAmount}
+			<p>Generating invoice...</p>
+		{:else}
+			<p>No amount specified, or amount is too small</p>
+		{/if}
 		<Button variant="outline" on:click={handleSkipInvalidPayment}>Skip Payment</Button>
 	{/if}
 

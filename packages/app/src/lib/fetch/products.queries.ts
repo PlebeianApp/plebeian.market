@@ -98,12 +98,18 @@ export const createCurrencyConversionQuery = (fromCurrency: string, amount: numb
 				if (['sats', 'sat'].includes(fromCurrency.toLowerCase())) {
 					return amount
 				}
-				const price = await resolveQuery(() => currencyQueries[fromCurrency as Currency], 1000)
-				const result = (amount / price) * numSatsInBtc
-				return result
+
+				try {
+					const price = await resolveQuery(() => currencyQueries[fromCurrency as Currency], 5000)
+					return price ? (amount / price) * numSatsInBtc : null
+				} catch (error) {
+					console.error(`Currency conversion failed for ${fromCurrency}:`, error)
+					return null
+				}
 			},
-			enabled: amount > 0,
+			enabled: Boolean(fromCurrency && amount > 0),
 			staleTime: 1000 * 60 * 60,
+			retry: 2,
 		},
 		queryClient,
 	)

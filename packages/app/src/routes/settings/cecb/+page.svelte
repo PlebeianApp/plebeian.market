@@ -32,7 +32,6 @@
 	$: emoji = v4vTotal[0] > 0.14 ? '🤙' : v4vTotal[0] > 0.09 ? '🤙' : v4vTotal[0] > 0.04 ? '🤙' : v4vTotal[0] < 0.01 ? '💩' : '🎁'
 	$: v4vByUser = $privatePaymentsQuery?.data?.length ? v4VForUserQuery($ndkStore.activeUser?.pubkey ?? '') : undefined
 	let v4vRecipients: V4VDTO[] = []
-
 	$: {
 		if ($v4vByUser && $v4vByUser.data && !initialTotalSet) {
 			const total = $v4vByUser.data.reduce((sum, item) => sum + item.amount, 0)
@@ -178,8 +177,8 @@
 	{:else}
 		<Alert.Root class="bg-[var(--neo-blue)]">
 			<Alert.Description
-				>{appSettings.instanceName} is powered by your generosity. Your contribution is the only thing that enables us to continue creating free
-				and open source solutions 🙏🙇‍♂️
+				>{appSettings?.instanceName} is powered by your generosity. Your contribution is the only thing that enables us to continue creating
+				free and open source solutions 🙏🙇‍♂️
 			</Alert.Description>
 		</Alert.Root>
 	{/if}
