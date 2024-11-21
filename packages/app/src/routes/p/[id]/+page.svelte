@@ -139,9 +139,11 @@
 				<div class="container">
 					<h2>Stalls</h2>
 					<div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-						{#each stallsMixture as item (item.id)}
-							<StallItem stallData={item} />
-						{/each}
+						{#key stallsMixture}
+							{#each stallsMixture as item (item.id)}
+								<StallItem stallData={item} />
+							{/each}
+						{/key}
 					</div>
 				</div>
 			{/if}
