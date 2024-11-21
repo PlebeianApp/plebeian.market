@@ -6,6 +6,7 @@ import { get } from 'svelte/store'
 import type { Invoice, InvoiceStatus } from '@plebeian/database'
 
 import { createRequest, queryClient } from './client'
+import { createInvoiceKey, createOrderKey } from './keys'
 
 declare module './client' {
 	interface Endpoints {
@@ -36,8 +37,8 @@ export const createInvoiceMutation = createMutation(
 		},
 		onSuccess: (data: DisplayInvoice | null) => {
 			if (data) {
-				queryClient.invalidateQueries({ queryKey: ['invoices'] })
-				queryClient.invalidateQueries({ queryKey: ['orders'] })
+				queryClient.invalidateQueries({ queryKey: createInvoiceKey('') })
+				queryClient.invalidateQueries({ queryKey: createOrderKey('') })
 			}
 		},
 	},
@@ -69,8 +70,7 @@ export const updateInvoiceStatusMutation = createMutation(
 		},
 		onSuccess: (data: DisplayInvoice | null) => {
 			if (data) {
-				queryClient.invalidateQueries({ queryKey: ['invoices', data.id] })
-				queryClient.invalidateQueries({ queryKey: ['invoices', data.orderId] })
+				queryClient.invalidateQueries({ queryKey: createInvoiceKey(data.id) })
 			}
 		},
 	},

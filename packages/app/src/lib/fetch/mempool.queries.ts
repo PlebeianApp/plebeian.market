@@ -2,6 +2,7 @@
 import { createQuery } from '@tanstack/svelte-query'
 
 import { queryClient } from './client'
+import { createMempoolAddressTransactionsKey } from './keys'
 
 interface MempoolTransaction {
 	txid: string
@@ -51,7 +52,7 @@ const MEMPOOL_API_BASE = 'https://mempool.space/api'
 export const createMempoolAddressTransactionsQuery = (address: string, amountSats: number) =>
 	createQuery<MempoolTransaction[]>(
 		{
-			queryKey: ['mempoolAddressTransactions', address],
+			queryKey: createMempoolAddressTransactionsKey(address),
 			queryFn: async () => {
 				const response = await fetch(`${MEMPOOL_API_BASE}/address/${address}/txs`)
 				if (!response.ok) {

@@ -4,15 +4,16 @@
 	import type { OrderFilter } from '$lib/schema'
 	import type { RichPaymentDetail } from '$lib/server/paymentDetails.service'
 	import type { CartProduct, CartStall } from '$lib/stores/cart'
+	import * as Button from '$lib/components/ui/button'
 	import * as Carousel from '$lib/components/ui/carousel/index.js'
-	import * as Select from '$lib/components/ui/select'
 	import { createPaymentsForUserQuery } from '$lib/fetch/payments.queries'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
 	import { v4VForUserQuery } from '$lib/fetch/v4v.queries'
 	import { cart } from '$lib/stores/cart'
 	import ndkStore from '$lib/stores/ndk'
-	import { formatSats, resolveQuery } from '$lib/utils'
+	import { cn, formatSats, resolveQuery } from '$lib/utils'
 	import { createPaymentRequestMessage, sendDM } from '$lib/utils/dm.utils'
+	import { paymentMethodIcons } from '$lib/utils/paymentDetails.utils'
 	import { createEventDispatcher, onMount, tick } from 'svelte'
 	import { toast } from 'svelte-sonner'
 
@@ -53,10 +54,6 @@
 
 	$: relevantPaymentDetails = $paymentDetails.data?.filter((payment) => payment.stallId === order.stallId || payment.stallId === null) ?? []
 	$: selectedPaymentDetail = relevantPaymentDetails[0] ?? null
-	$: selectedPaymentValue = selectedPaymentDetail && {
-		label: `${selectedPaymentDetail.paymentMethod} - ${selectedPaymentDetail.paymentDetails}`,
-		value: selectedPaymentDetail,
-	}
 
 	$: allPaymentsPaid =
 		paymentStatuses.length > 0 && paymentStatuses.every((status) => ['paid', 'expired', 'cancelled'].includes(status.status ?? ''))
@@ -214,6 +211,9 @@
 		order
 		cart.calculateStallTotal(stall, products).then((total) => (orderTotal = total))
 	}
+	function handleSelection(paymentDetail: (typeof relevantPaymentDetails)[number]) {
+		selectedPaymentDetail = paymentDetail
+	}
 </script>
 
 <div class="flex flex-row gap-8">
@@ -289,22 +289,26 @@
 	</div>
 
 	<div class="w-1/2 mt-4 flex flex-col items-center gap-4">
-		<Select.Root
-			selected={selectedPaymentValue ?? undefined}
-			onSelectedChange={(s) => {
-				if (!s) return
-				selectedPaymentDetail = s.value
-			}}
-		>
-			<Select.Trigger class="w-full">
-				<Select.Value placeholder="Select a payment method" />
-			</Select.Trigger>
-			<Select.Content>
-				{#each relevantPaymentDetails as paymentDetail}
-					<Select.Item value={paymentDetail} label={`${paymentDetail.paymentMethod} - ${paymentDetail.paymentDetails}`} />
-				{/each}
-			</Select.Content>
-		</Select.Root>
+		<div class="flex flex-row items-center gap-2">
+			{#each relevantPaymentDetails as paymentDetail}
+				<Button.Root
+					variant="outline"
+					class={cn(
+						'flex items-center justify-center px-6 py-3',
+						'transition-all duration-200 hover:border-primary',
+						selectedPaymentDetail?.paymentMethod === paymentDetail.paymentMethod
+							? 'border-2 border-primary bg-primary/5'
+							: 'border hover:bg-accent/50',
+					)}
+					on:click={() => handleSelection(paymentDetail)}
+				>
+					<div class="flex items-center gap-2">
+						<span class={paymentMethodIcons[paymentDetail.paymentMethod] + ' w-5 h-5'} />
+						{paymentDetail.paymentMethod}
+					</div>
+				</Button.Root>
+			{/each}
+		</div>
 
 		{#if v4vShares.length > 0}
 			{#if selectedPaymentDetail && orderTotal}

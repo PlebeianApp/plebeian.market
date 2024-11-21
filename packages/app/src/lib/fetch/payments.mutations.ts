@@ -8,6 +8,7 @@ import { get } from 'svelte/store'
 import { PAYMENT_DETAILS_METHOD } from '@plebeian/database/constants'
 
 import { createRequest, queryClient } from './client'
+import { createPrivatePaymentsKey } from './keys'
 import { persistOnChainIndexWalletMutation } from './wallets.mutations'
 
 export type PostStall = {
@@ -61,7 +62,8 @@ export const persistPaymentMethodMutation = createMutation(
 		},
 		onSuccess: () => {
 			const $ndkStore = get(ndkStore)
-			queryClient.invalidateQueries({ queryKey: ['paymentDetailsPrivate', $ndkStore.activeUser?.pubkey] })
+			if (!$ndkStore.activeUser?.pubkey) return
+			queryClient.invalidateQueries({ queryKey: createPrivatePaymentsKey($ndkStore.activeUser?.pubkey) })
 		},
 	},
 	queryClient,
@@ -89,7 +91,8 @@ export const updatePaymentMethodMutation = createMutation(
 		},
 		onSuccess: () => {
 			const $ndkStore = get(ndkStore)
-			queryClient.invalidateQueries({ queryKey: ['paymentDetailsPrivate', $ndkStore.activeUser?.pubkey] })
+			if (!$ndkStore.activeUser?.pubkey) return
+			queryClient.invalidateQueries({ queryKey: createPrivatePaymentsKey($ndkStore.activeUser?.pubkey) })
 		},
 	},
 	queryClient,
@@ -110,7 +113,8 @@ export const deletePaymentMethodMutation = createMutation(
 		},
 		onSuccess: () => {
 			const $ndkStore = get(ndkStore)
-			queryClient.invalidateQueries({ queryKey: ['paymentDetailsPrivate', $ndkStore.activeUser?.pubkey] })
+			if (!$ndkStore.activeUser?.pubkey) return
+			queryClient.invalidateQueries({ queryKey: createPrivatePaymentsKey($ndkStore.activeUser?.pubkey) })
 		},
 	},
 	queryClient,
@@ -129,8 +133,10 @@ export const setDefaultPaymentMethodForStallMutation = createMutation(
 			}
 			return null
 		},
-		onSuccess: (data) => {
-			queryClient.invalidateQueries({ queryKey: ['paymentDetailsPrivate', data?.stallId] })
+		onSuccess: () => {
+			const $ndkStore = get(ndkStore)
+			if (!$ndkStore.activeUser?.pubkey) return
+			queryClient.invalidateQueries({ queryKey: createPrivatePaymentsKey($ndkStore.activeUser?.pubkey) })
 		},
 	},
 	queryClient,

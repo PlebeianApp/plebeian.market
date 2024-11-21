@@ -13,6 +13,7 @@ import { get } from 'svelte/store'
 
 import { createProductEventSchema, forbiddenPatternStore } from '../../schema/nostr-events'
 import { createRequest, queryClient } from './client'
+import { createCategoriesByFilterKey, createProductByFilterKey, createProductKey, createShippingKey, createStallsByFilterKey } from './keys'
 
 declare module './client' {
 	interface Endpoints {
@@ -56,11 +57,12 @@ export const createProductMutation = createMutation(
 		},
 		onSuccess: (data: DisplayProduct[] | undefined | null) => {
 			if (data) {
-				queryClient.invalidateQueries({ queryKey: ['products'] })
-				queryClient.invalidateQueries({ queryKey: ['shipping'] })
-				queryClient.invalidateQueries({ queryKey: ['categories'] })
-				queryClient.invalidateQueries({ queryKey: ['stalls'] })
-				queryClient.invalidateQueries({ queryKey: ['products', data[0]?.userId] })
+				// TODO: we should iterate over all queries and remove those that start with products, this approach is not correct
+				queryClient.invalidateQueries({ queryKey: createProductByFilterKey({}) })
+				queryClient.invalidateQueries({ queryKey: createShippingKey('') })
+				queryClient.invalidateQueries({ queryKey: createCategoriesByFilterKey({}) })
+				queryClient.invalidateQueries({ queryKey: createStallsByFilterKey({}) })
+				queryClient.invalidateQueries({ queryKey: createProductByFilterKey({ userId: data[0]?.userId }) })
 			}
 		},
 	},
@@ -109,10 +111,10 @@ export const editProductMutation = createMutation(
 		},
 		onSuccess: (data: DisplayProduct | undefined) => {
 			if (data) {
-				queryClient.invalidateQueries({ queryKey: ['shipping'] })
-				queryClient.invalidateQueries({ queryKey: ['categories'] })
-				queryClient.invalidateQueries({ queryKey: ['stalls'] })
-				queryClient.invalidateQueries({ queryKey: ['products', data?.userId] })
+				queryClient.invalidateQueries({ queryKey: createProductByFilterKey({}) })
+				queryClient.invalidateQueries({ queryKey: createShippingKey(data.stall_id) })
+				queryClient.invalidateQueries({ queryKey: createCategoriesByFilterKey({}) })
+				queryClient.invalidateQueries({ queryKey: createStallsByFilterKey({ stallId: data.stall_id }) })
 			}
 		},
 	},
@@ -158,10 +160,9 @@ export const editProductFromEventMutation = createMutation(
 		onSuccess: (data?: DisplayProduct) => {
 			if (!data) return
 
-			const queriesToInvalidate = ['shipping', 'categories', 'stalls']
-			queriesToInvalidate.forEach((key) => {
-				queryClient.invalidateQueries({ queryKey: [key] })
-			})
+			queryClient.invalidateQueries({ queryKey: createShippingKey(data.stall_id) })
+			queryClient.invalidateQueries({ queryKey: createCategoriesByFilterKey({}) })
+			queryClient.invalidateQueries({ queryKey: createStallsByFilterKey({ stallId: data.stall_id }) })
 		},
 	},
 	queryClient,
@@ -186,10 +187,10 @@ export const createProductsFromNostrMutation = createMutation(
 		onSuccess: (data: DisplayProduct[] | undefined | null) => {
 			console.log('Products inserted in db successfully: ', data?.length)
 			if (data) {
-				queryClient.invalidateQueries({ queryKey: ['products', data[0].userId] })
-				queryClient.invalidateQueries({ queryKey: ['shipping', data[0].stall_id] })
-				queryClient.invalidateQueries({ queryKey: ['categories'] })
-				queryClient.invalidateQueries({ queryKey: ['stalls'] })
+				queryClient.invalidateQueries({ queryKey: createProductByFilterKey({ userId: data[0].userId }) })
+				queryClient.invalidateQueries({ queryKey: createShippingKey(data[0].stall_id) })
+				queryClient.invalidateQueries({ queryKey: createCategoriesByFilterKey({}) })
+				queryClient.invalidateQueries({ queryKey: createStallsByFilterKey({ stallId: data[0].stall_id }) })
 			}
 		},
 	},
@@ -207,7 +208,7 @@ export const setProductFeaturedMutation = createMutation(
 		},
 		onSuccess: ({ id }: { id: string }) => {
 			if (id) {
-				queryClient.invalidateQueries({ queryKey: ['products', id] })
+				queryClient.invalidateQueries({ queryKey: createProductKey(id) })
 			}
 		},
 	},
@@ -227,8 +228,7 @@ export const setProductBannedMutation = createMutation(
 		onSuccess: ({ id }: { id: string }) => {
 			if (id) {
 				if (!id) return
-				queryClient.invalidateQueries({ queryKey: ['products', id] })
-				queryClient.invalidateQueries({ queryKey: ['products'] })
+				queryClient.invalidateQueries({ queryKey: createProductKey(id) })
 				goto('/')
 			}
 		},
@@ -248,9 +248,9 @@ export const deleteProductMutation = createMutation(
 		onSuccess: (productId: string | null) => {
 			if (!productId) return
 			const $ndkStore = get(ndkStore)
-			queryClient.invalidateQueries({ queryKey: ['products', $ndkStore.activeUser?.pubkey] })
-			queryClient.invalidateQueries({ queryKey: ['categories'] })
-			queryClient.invalidateQueries({ queryKey: ['stalls', $ndkStore.activeUser?.pubkey] })
+			queryClient.invalidateQueries({ queryKey: createProductByFilterKey({}) })
+			queryClient.invalidateQueries({ queryKey: createCategoriesByFilterKey({ userId: $ndkStore.activeUser?.pubkey }) })
+			queryClient.invalidateQueries({ queryKey: createStallsByFilterKey({ userId: $ndkStore.activeUser?.pubkey }) })
 			goto('/')
 		},
 	},
@@ -268,7 +268,7 @@ export const signProductStockMutation = createMutation(
 			return newEvent
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ['products'] })
+			queryClient.invalidateQueries({ queryKey: createProductByFilterKey({}) })
 		},
 	},
 	queryClient,

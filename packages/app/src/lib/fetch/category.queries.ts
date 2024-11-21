@@ -2,9 +2,9 @@ import type { CatsFilter } from '$lib/schema'
 import type { RichCat } from '$lib/server/categories.service'
 import { createQuery } from '@tanstack/svelte-query'
 import { catsFilterSchema } from '$lib/schema'
-import { get } from 'svelte/store'
 
 import { createRequest, queryClient } from './client'
+import { createCategoriesByFilterKey } from './keys'
 
 declare module './client' {
 	interface Endpoints {
@@ -15,7 +15,7 @@ declare module './client' {
 export const createCategoriesByFilterQuery = (filter: Partial<CatsFilter>) =>
 	createQuery(
 		{
-			queryKey: ['categories', ...Object.values(filter)],
+			queryKey: createCategoriesByFilterKey(filter),
 			queryFn: async () => {
 				const response = await createRequest('GET /api/v1/category', {
 					params: catsFilterSchema.parse(filter),

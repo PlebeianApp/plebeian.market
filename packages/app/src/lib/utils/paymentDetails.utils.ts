@@ -2,6 +2,7 @@ import { HDKey } from '@scure/bip32'
 import { address as baddress, networks, payments } from 'bitcoinjs-lib'
 import * as bs58check from 'bs58check'
 
+import type { PaymentDetailsMethod } from '@plebeian/database/constants'
 import { PAYMENT_DETAILS_METHOD } from '@plebeian/database/constants'
 
 import { isValidNip05 } from './validation.utils'
@@ -95,4 +96,14 @@ export async function parsePaymentDetailsFromClipboard(): Promise<PaymentDetails
 			error: 'Failed to read clipboard',
 		}
 	}
+}
+
+export const paymentMethodLabels: Record<PaymentDetailsMethod, string> = {
+	[PAYMENT_DETAILS_METHOD.LIGHTNING_NETWORK]: 'Lightning Address',
+	[PAYMENT_DETAILS_METHOD.ON_CHAIN]: 'Onchain Address',
+}
+
+export const paymentMethodIcons: Record<PaymentDetailsMethod, string> = {
+	[PAYMENT_DETAILS_METHOD.LIGHTNING_NETWORK]: 'i-mingcute-lightning-line',
+	[PAYMENT_DETAILS_METHOD.ON_CHAIN]: 'i-mingcute-anchor-line',
 }

@@ -6,7 +6,6 @@ import { z } from 'zod'
 
 export async function GET({ request, url: { searchParams } }) {
 	const userId = searchParams.get('userId')
-
 	if (!userId) {
 		error(400, 'Invalid request')
 	}

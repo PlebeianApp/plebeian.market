@@ -11,7 +11,7 @@
 	export let lastMessagets: number
 	export let onSelect: (pubkey: string) => void
 
-	$: userProfileQuery = createUserByIdQuery(pubkey)
+	$: userProfileQuery = createUserByIdQuery(pubkey, true, true)
 	$: unreadCount = $unreadCounts[pubkey] || 0
 </script>
 

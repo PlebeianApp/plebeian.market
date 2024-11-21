@@ -1,5 +1,4 @@
 import type { OrderFilter } from '$lib/schema'
-import type { DisplayOrder } from '$lib/server/orders.service'
 import { createMutation } from '@tanstack/svelte-query'
 import ndkStore from '$lib/stores/ndk'
 import { get } from 'svelte/store'
@@ -7,6 +6,7 @@ import { get } from 'svelte/store'
 import type { Order, OrderStatus } from '@plebeian/database'
 
 import { createRequest, queryClient } from './client'
+import { createOrderKey, createProductByFilterKey } from './keys'
 
 declare module './client' {
 	interface Endpoints {
@@ -40,6 +40,7 @@ export const updateOrderMutation = createMutation(
 	},
 	queryClient,
 )
+
 export const updateOrderStatusMutation = createMutation(
 	{
 		mutationKey: [],
@@ -56,8 +57,8 @@ export const updateOrderStatusMutation = createMutation(
 			return null
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ['orders'] })
-			queryClient.invalidateQueries({ queryKey: ['products'] })
+			queryClient.invalidateQueries({ queryKey: createOrderKey('') })
+			queryClient.invalidateQueries({ queryKey: createProductByFilterKey({}) })
 		},
 	},
 	queryClient,

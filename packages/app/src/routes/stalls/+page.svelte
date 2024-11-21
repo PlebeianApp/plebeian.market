@@ -58,9 +58,11 @@
 								</div>
 
 								<div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-									{#each $stallsQuery.data.stalls as item (item.id)}
-										<StallItem stallData={item} />
-									{/each}
+									{#key $stallsQuery.data.stalls}
+										{#each $stallsQuery.data.stalls as item (item.id)}
+											<StallItem stallData={item} />
+										{/each}
+									{/key}
 								</div>
 								<div class="py-4">
 									<Pagination.Root bind:page count={$stallsQuery.data?.total} perPage={pageSize} let:pages let:currentPage>

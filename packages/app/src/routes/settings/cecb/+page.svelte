@@ -1,5 +1,4 @@
 <script lang="ts">
-	// +page.svelte (current)
 	import type { V4VDTO } from '$lib/fetch/v4v.queries'
 	import * as Alert from '$lib/components/ui/alert/index.js'
 	import { Button } from '$lib/components/ui/button/index.js'
@@ -8,6 +7,7 @@
 	import { Slider } from '$lib/components/ui/slider/index.js'
 	import * as Tooltip from '$lib/components/ui/tooltip/index.js'
 	import V4vRecipientEdit from '$lib/components/v4v/v4v-recipient-edit.svelte'
+	import { privatePaymentsQuery } from '$lib/fetch/payments.queries'
 	import { setV4VForUserMutation } from '$lib/fetch/v4v.mutations'
 	import { v4VForUserQuery } from '$lib/fetch/v4v.queries'
 	import ndkStore from '$lib/stores/ndk'
@@ -30,9 +30,8 @@
 	$: shouldGlow = v4vTotal[0] > 0.14
 	$: emojiClass = shouldGlow ? 'wiggle-shake-glow' : shouldShake ? 'wiggle-shake' : shouldWiggle ? 'wiggle' : ''
 	$: emoji = v4vTotal[0] > 0.14 ? '🤙' : v4vTotal[0] > 0.09 ? '🤙' : v4vTotal[0] > 0.04 ? '🤙' : v4vTotal[0] < 0.01 ? '💩' : '🎁'
-	$: v4vByUser = v4VForUserQuery($ndkStore.activeUser?.pubkey ?? '')
+	$: v4vByUser = $privatePaymentsQuery?.data?.length ? v4VForUserQuery($ndkStore.activeUser?.pubkey ?? '') : undefined
 	let v4vRecipients: V4VDTO[] = []
-
 	$: {
 		if ($v4vByUser && $v4vByUser.data && !initialTotalSet) {
 			const total = $v4vByUser.data.reduce((sum, item) => sum + item.amount, 0)
@@ -52,7 +51,6 @@
 	}
 	function handleIndividualPercentageChange(event: CustomEvent<{ npub: string; percentage: number }>) {
 		const { npub, percentage } = event.detail
-		const oldPercentage = v4vRecipients.find((item) => item.target === npub)?.amount || 0
 
 		const totalOthers = v4vRecipients.reduce((sum, item) => (item.target !== npub ? sum + item.amount : sum), 0)
 
@@ -156,7 +154,7 @@
 	}
 </script>
 
-<div class="pb-4 space-y-6">
+<div class="pb-4 space-y-6 px-2">
 	<div>
 		<div class="flex items-center gap-1">
 			<Button size="icon" variant="outline" class="border-none" on:click={() => nav_back()}>
@@ -169,13 +167,21 @@
 		</div>
 	</div>
 
-	<Alert.Root class="bg-[var(--neo-blue)]">
-		<Alert.Description
-			>{appSettings.instanceName} is powered by your generosity. Your contribution is the only thing that enables us to continue creating free
-			and open source solutions 🙏🙇‍♂️
-		</Alert.Description>
-	</Alert.Root>
-
+	{#if !$privatePaymentsQuery?.data?.length}
+		<Alert.Root variant="destructive">
+			<Alert.Description>
+				It seems you don't have any defined payment details. Please go to <a class="underline" href="/settings/account/payments">Payments</a
+				> and establish at least one.
+			</Alert.Description>
+		</Alert.Root>
+	{:else}
+		<Alert.Root class="bg-[var(--neo-blue)]">
+			<Alert.Description
+				>{appSettings?.instanceName} is powered by your generosity. Your contribution is the only thing that enables us to continue creating
+				free and open source solutions 🙏🙇‍♂️
+			</Alert.Description>
+		</Alert.Root>
+	{/if}
 	<Label class="font-bold">Value for value contribution ({displayValue}%)</Label>
 	<Slider bind:value={v4vTotal} max={1} step={0.01} />
 
@@ -242,7 +248,7 @@
 		</div>
 	</div>
 
-	{#if $v4vByUser.data}
+	{#if $v4vByUser?.data}
 		{#each v4vRecipients as v4v (v4v.target)}
 			<div class={hoveredRecipient === v4v.target ? 'highlight-edit' : ''}>
 				<V4vRecipientEdit
