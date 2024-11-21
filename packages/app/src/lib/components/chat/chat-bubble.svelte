@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { NDKEvent, NDKUserProfile } from '@nostr-dev-kit/ndk'
 	import type { ComponentType } from 'svelte'
+	import { createUserByIdQuery } from '$lib/fetch/users.queries'
 	import { createDecryptedMessage } from '$lib/utils/dm.utils'
 
 	import type { MessageObject } from './message-parser'
@@ -14,7 +15,7 @@
 	export let message: NDKEvent
 	export let selectedPubkey: string
 	export let isCurrentUser: boolean
-	export let userProfile: NDKUserProfile
+	$: userProfile = createUserByIdQuery(message.pubkey, true, true)
 
 	let decryptedContent = createDecryptedMessage(message, selectedPubkey)
 
@@ -47,7 +48,7 @@
 
 <div class="flex {isCurrentUser ? 'justify-end' : 'justify-start'}">
 	<div class="flex {isCurrentUser ? 'flex-row-reverse' : 'flex-row'} items-end max-w-[95%] gap-2">
-		<CAvatar pubkey={message.pubkey} profile={userProfile} />
+		<CAvatar pubkey={message.pubkey} profile={$userProfile.data} />
 
 		{#if $decryptedContent.data}
 			{@const parsed = parseMessage($decryptedContent.data)}

@@ -7,6 +7,7 @@
 
 	export let pubkey: string
 	export let profile: NDKUserProfile | undefined | null
+
 	const truncatedPubkey = truncateString(pubkey)
 	const hexColorFromPubkey = getHexColorFingerprintFromHexPubkey(pubkey)
 </script>

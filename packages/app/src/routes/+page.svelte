@@ -9,7 +9,7 @@
 
 	export let data: PageData
 
-	$: productQuery = createProductsByFilterQuery({ pageSize: 8 })
+	$: productQuery = createProductsByFilterQuery({ pageSize: 8, order: 'asc' })
 	$: featuredProductsQuery = createProductsByFilterQuery({ featured: true })
 </script>
 

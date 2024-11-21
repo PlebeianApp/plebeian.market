@@ -79,7 +79,7 @@
 	<div bind:this={messagesContainerRef} class="flex-grow overflow-y-auto p-4 space-y-4">
 		{#each messages as message (message.id)}
 			{#if $userProfileQuery.data}
-				<ChatBubble {message} {selectedPubkey} userProfile={$userProfileQuery.data} isCurrentUser={message.pubkey !== selectedPubkey} />
+				<ChatBubble {message} {selectedPubkey} isCurrentUser={message.pubkey !== selectedPubkey} />
 			{/if}
 		{/each}
 	</div>

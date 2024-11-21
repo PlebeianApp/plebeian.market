@@ -71,7 +71,6 @@
 	// }
 
 	const handleSendMessage = () => {
-		const user = $ndkStore.getUser({ pubkey: id })
 		goto(`/dash/messages/${$page.params.id}`)
 	}
 </script>
