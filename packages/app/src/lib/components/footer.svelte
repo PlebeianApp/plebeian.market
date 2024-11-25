@@ -27,7 +27,7 @@
 				<a class="border-2 border-white p-1 inline-flex justify-center items-center" href="https://t.me/PlebeianMarket"
 					><span class="i-mingcute-telegram-line text-white w-6 h-6"></span></a
 				>
-				<a class="border-2 border-white p-1 inline-flex justify-center items-center" href="https://github.com/PlebeianTech/plebeian-market"
+				<a class="border-2 border-white p-1 inline-flex justify-center items-center" href="https://github.com/PlebeianTech/plebeian.market"
 					><span class="i-tdesign-logo-github text-white w-6 h-6"></span></a
 				>
 			</div>

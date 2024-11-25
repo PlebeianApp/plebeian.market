@@ -393,12 +393,50 @@ export const calculateGeohashAccuracy = (boundingbox: [number, number, number, n
 	const lonDiff = maxLon - minLon
 	const maxDiff = Math.max(latDiff, lonDiff)
 
-	if (maxDiff < 0.0001) return 9 // ~5m
-	if (maxDiff < 0.001) return 8 // ~40m
-	if (maxDiff < 0.01) return 7 // ~150m
-	if (maxDiff < 0.1) return 6 // ~1km
-	if (maxDiff < 1) return 5 // ~5km
-	return 4 // ~20km
+	if (maxDiff < 0.000023) return 12 // ±0.074m × 0.019m
+	if (maxDiff < 0.000093) return 11 // ±0.149m × 0.149m
+	if (maxDiff < 0.00037) return 10 // ±0.596m × 0.596m
+	if (maxDiff < 0.0015) return 9 // ±2.4km × 2.4km
+	if (maxDiff < 0.006) return 8 // ±19km × 19km
+	if (maxDiff < 0.024) return 7 // ±76km × 76km
+	if (maxDiff < 0.096) return 6 // ±610km × 610km
+	if (maxDiff < 0.384) return 5 // ±2.4km × 2.4km
+	if (maxDiff < 1.536) return 4 // ±19km × 19km
+	if (maxDiff < 6.144) return 3 // ±76km × 76km
+	if (maxDiff < 24.576) return 2 // ±610km × 610km
+	return 1 // ±2500km × 2500km
+}
+
+export function getGeohashAccuracyText(geohash: string): string {
+	const length = geohash.length
+	switch (length) {
+		case 1:
+			return '±2500km'
+		case 2:
+			return '±630km'
+		case 3:
+			return '±78km'
+		case 4:
+			return '±20km'
+		case 5:
+			return '±2.4km'
+		case 6:
+			return '±610m'
+		case 7:
+			return '±76m'
+		case 8:
+			return '±19m'
+		case 9:
+			return '±2.4m'
+		case 10:
+			return '±60cm'
+		case 11:
+			return '±7.4cm'
+		case 12:
+			return '±1.9cm'
+		default:
+			return 'unknown accuracy'
+	}
 }
 
 export const debounce = (func: (...args: unknown[]) => void, delay: number) => {
@@ -424,7 +462,6 @@ export const searchLocation = async (query: string): Promise<Location[]> => {
 		{ parseResponse: JSON.parse },
 	)
 	if (!response || !Array.isArray(response)) return []
-	console.log(response[0])
 	return response.map(
 		(item: Location): Location => ({
 			place_id: item.place_id,
