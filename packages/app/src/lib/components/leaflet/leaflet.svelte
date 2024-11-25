@@ -3,7 +3,7 @@
 	import { browser } from '$app/environment'
 	import { createEventDispatcher, onDestroy, onMount } from 'svelte'
 
-	export const markerSvg = `<svg style="width:30px;height:30px" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" stroke="currentColor"><path d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"></path></svg>`
+	export const markerSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 25 25"><path fill="currentColor" d="M12 6.5A2.5 2.5 0 0 1 14.5 9a2.5 2.5 0 0 1-2.5 2.5A2.5 2.5 0 0 1 9.5 9A2.5 2.5 0 0 1 12 6.5M12 2a7 7 0 0 1 7 7c0 5.25-7 13-7 13S5 14.25 5 9a7 7 0 0 1 7-7m0 2a5 5 0 0 0-5 5c0 1 0 3 5 9.71C17 12 17 10 17 9a5 5 0 0 0-5-5"/></svg>`
 	let iconURL = 'data:image/svg+xml,' + encodeURIComponent(markerSvg)
 
 	interface GeoJSONWithBoundingBox extends GeoJSON.Feature<GeoJSON.Point> {
@@ -26,8 +26,12 @@
 			const leaflet = await import('leaflet')
 			await import('leaflet/dist/leaflet.css')
 
-			leaflet.Icon.Default.mergeOptions({
-				iconUrl: iconURL,
+			const defaultIcon = new leaflet.DivIcon({
+				html: markerSvg,
+				className: 'custom-marker-icon',
+				iconSize: [50, 50],
+				iconAnchor: [25, 50],
+				popupAnchor: [0, -25],
 			})
 
 			updateGeoJSON = () => {
@@ -38,7 +42,7 @@
 					currentMarker = leaflet
 						.geoJSON(geoJSON, {
 							pointToLayer: (feature, latlng) => {
-								return leaflet.marker(latlng, { draggable: true })
+								return leaflet.marker(latlng, { draggable: true, icon: defaultIcon })
 							},
 						})
 						.addTo(map)
@@ -90,7 +94,7 @@
 						map.removeLayer(currentMarker)
 					}
 
-					currentMarker = leaflet.marker(e.latlng, { draggable: true }).addTo(map)
+					currentMarker = leaflet.marker(e.latlng, { draggable: true, icon: defaultIcon }).addTo(map)
 
 					dispatch('locationUpdated', {
 						lat: e.latlng.lat,
@@ -146,8 +150,12 @@
 
 <style>
 	div {
-		height: 300px;
+		height: 400px;
 		width: 100%;
 		z-index: 0;
+	}
+
+	:global(.custom-marker-icon) {
+		border: none;
 	}
 </style>
