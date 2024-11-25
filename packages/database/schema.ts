@@ -392,7 +392,7 @@ export const orders = sqliteTable('orders', {
 	contactName: text('contact_name').notNull(), // Can be encrypted
 	contactPhone: text('contact_phone'), // Can be encrypted
 	contactEmail: text('contact_email'), // Can be encrypted
-	observations: text('observations'), // Can be encrypted
+	additionalInfo: text('additionalInfo'), // Can be encrypted
 })
 // Order items
 export const orderItems = sqliteTable(

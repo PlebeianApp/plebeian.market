@@ -66,7 +66,7 @@ CREATE TABLE `event_tags` (
 	`event_id` text NOT NULL,
 	`user_id` text NOT NULL,
 	`event_kind` integer NOT NULL,
-	PRIMARY KEY(`event_id`, `tag_name`, `tag_value`),
+	PRIMARY KEY(`tag_name`, `tag_value`, `event_id`),
 	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE cascade ON DELETE cascade
 );
 --> statement-breakpoint
@@ -118,7 +118,7 @@ CREATE TABLE `orders` (
 	`contact_name` text NOT NULL,
 	`contact_phone` text,
 	`contact_email` text,
-	`observations` text,
+	`additionalInfo` text,
 	FOREIGN KEY (`seller_user_id`) REFERENCES `users`(`id`) ON UPDATE cascade ON DELETE cascade,
 	FOREIGN KEY (`shipping_id`) REFERENCES `shipping`(`id`) ON UPDATE no action ON DELETE set null,
 	FOREIGN KEY (`stall_id`) REFERENCES `stalls`(`id`) ON UPDATE cascade ON DELETE cascade
@@ -142,7 +142,7 @@ CREATE TABLE `product_images` (
 	`image_type` text DEFAULT 'gallery' NOT NULL,
 	`image_order` integer DEFAULT 0 NOT NULL,
 	`created_at` integer DEFAULT (unixepoch()) NOT NULL,
-	PRIMARY KEY(`auction_id`, `image_url`, `product_id`),
+	PRIMARY KEY(`product_id`, `auction_id`, `image_url`),
 	FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON UPDATE cascade ON DELETE set null,
 	FOREIGN KEY (`auction_id`) REFERENCES `auctions`(`id`) ON UPDATE cascade ON DELETE set null
 );
@@ -218,6 +218,7 @@ CREATE TABLE `shipping_zones` (
 	FOREIGN KEY (`stall_id`) REFERENCES `stalls`(`id`) ON UPDATE cascade ON DELETE cascade
 );
 --> statement-breakpoint
+CREATE UNIQUE INDEX `shipping_zones_shipping_id_region_code_country_code_unique` ON `shipping_zones` (`shipping_id`,`region_code`,`country_code`);--> statement-breakpoint
 CREATE TABLE `stall_meta` (
 	`id` text PRIMARY KEY NOT NULL,
 	`stall_id` text,
@@ -245,6 +246,7 @@ CREATE TABLE `stalls` (
 	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE cascade ON DELETE cascade
 );
 --> statement-breakpoint
+CREATE UNIQUE INDEX `stalls_id_currency_unique` ON `stalls` (`id`,`currency`);--> statement-breakpoint
 CREATE TABLE `user_meta` (
 	`id` text PRIMARY KEY NOT NULL,
 	`user_id` text,
@@ -276,6 +278,3 @@ CREATE TABLE `users` (
 	`zap_Service` text,
 	`last_login` integer
 );
---> statement-breakpoint
-CREATE UNIQUE INDEX `shipping_zones_shipping_id_region_code_country_code_unique` ON `shipping_zones` (`shipping_id`,`region_code`,`country_code`);--> statement-breakpoint
-CREATE UNIQUE INDEX `stalls_id_currency_unique` ON `stalls` (`id`,`currency`);

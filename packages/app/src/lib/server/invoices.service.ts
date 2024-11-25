@@ -66,7 +66,7 @@ export const createInvoice = async (invoice: Omit<Invoice, 'id' | 'createdAt' | 
 	return toDisplayInvoice(newInvoice)
 }
 
-export const updateInvoiceObservations = async (invoiceId: string, observations: string, userId: string): Promise<DisplayInvoice> => {
+export const updateInvoiceObservations = async (invoiceId: string, additionalInfo: string, userId: string): Promise<DisplayInvoice> => {
 	const [invoiceRes] = await db.select().from(invoices).where(eq(invoices.id, invoiceId)).execute()
 	const [orderRes] = await db
 		.select({
@@ -85,7 +85,7 @@ export const updateInvoiceObservations = async (invoiceId: string, observations:
 
 	const [updatedInvoice] = await db
 		.update(invoices)
-		.set({ observations, updatedAt: new Date() })
+		.set({ additionalInfo, updatedAt: new Date() })
 		.where(eq(invoices.id, invoiceId))
 		.returning()
 

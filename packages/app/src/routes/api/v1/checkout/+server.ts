@@ -14,7 +14,7 @@ function convertToOrderInDb(order: OrderMessage) {
 		region: order.region || null,
 		contactPhone: order.contactPhone || null,
 		contactEmail: order.contactEmail || null,
-		observations: order.observations || null,
+		additionalInfo: order.additionalInfo || null,
 	})
 }
 

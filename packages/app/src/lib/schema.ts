@@ -107,7 +107,7 @@ export const orderSchema = z.object({
 	contactName: z.string(),
 	contactPhone: z.string().optional(),
 	contactEmail: z.string().optional(),
-	observations: z.string().optional(),
+	additionalInfo: z.string().optional(),
 	items: z.array(
 		z.object({
 			product_id: z.string(),
@@ -153,7 +153,7 @@ export const checkoutFormSchema = z.object({
 	city: z.string().min(1, 'City is required'),
 	country: z.string().min(1, 'Country is required'),
 	region: z.string().optional(),
-	observations: z.string().optional(),
+	additionalInfo: z.string().optional(),
 })
 
 export type CheckoutFormData = z.infer<typeof checkoutFormSchema>
@@ -175,7 +175,7 @@ export const OrderInDbSchema = z.object({
 	contactName: z.string(),
 	contactPhone: z.string().nullable(),
 	contactEmail: z.string().nullable(),
-	observations: z.string().nullable(),
+	additionalInfo: z.string().nullable(),
 })
 
 export const OrderItemInDbSchema = z.object({

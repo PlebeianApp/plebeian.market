@@ -23,7 +23,7 @@ export type DisplayOrder = Pick<
 	| 'contactName'
 	| 'contactPhone'
 	| 'contactEmail'
-	| 'observations'
+	| 'additionalInfo'
 > & {
 	orderItems: {
 		productId: string

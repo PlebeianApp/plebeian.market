@@ -35,9 +35,9 @@
 			<div class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
 				<span class="text-muted-foreground">Status</span>
 				<span>{message.status}</span>
-				{#if message.observations}
+				{#if message.additionalInfo}
 					<span class="text-muted-foreground">Notes</span>
-					<span>{message.observations}</span>
+					<span>{message.additionalInfo}</span>
 				{/if}
 			</div>
 
