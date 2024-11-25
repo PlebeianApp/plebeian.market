@@ -56,7 +56,7 @@
 
 {#await processStallData()}
 	<Card.Root
-		class="relative flex flex-col h-[44vh] border-2 border-black hover:border-primary transition-colors duration-200 text-black overflow-hidden group"
+		class="relative flex flex-col border-2 border-black hover:border-primary transition-colors duration-200 text-black overflow-hidden min-h-96"
 	>
 		<a href={stallUrl} class="flex flex-col flex-1">
 			<Card.Header class="p-0 flex-shrink-0">
@@ -95,26 +95,30 @@
 				</Card.Footer>
 			</div>
 		</a>
-	</Card.Root>{:then value}
+	</Card.Root>
+{:then value}
 	{#if stall.id}
 		<Card.Root
-			class="relative flex flex-col h-[44vh] border-2 border-black hover:border-primary transition-colors duration-200 text-black overflow-hidden group"
+			class="relative flex flex-col border-2 border-black hover:border-primary transition-colors duration-200 text-black overflow-hidden min-h-96"
 		>
 			<a href={stallUrl} class="flex flex-col flex-1">
 				<Card.Header class="p-0 flex-shrink-0">
 					{#if stall.image}
-						<img src={stall.image} alt="" class="object-cover w-full h-[25vh]" />
+						<div class="relative w-full max-h-56 overflow-hidden">
+							<img src={stall.image} alt={stall.name || 'Stall image'} class="object-cover w-full h-full" />
+						</div>
 					{:else}
-						<div style={`background-color: ${stringToHexColor(stall.id)}`} class="h-[5vh]" />
+						<div style={`background-color: ${stringToHexColor(stall.id)}`} class="h-14 w-full" />
 					{/if}
 				</Card.Header>
 
 				<div class="flex flex-col flex-1 overflow-hidden">
-					<Card.Content class="p-2 flex-1 min-h-0">
-						<div class="flex items-start justify-between">
+					<Card.Content class="p-2 flex-1">
+						<div class="flex items-start justify-between mb-2">
 							<a href={stallUrl} class="flex-1">
-								<h3 class="text-xl font-bold line-clamp-1">{stall.name}</h3>
+								<h3 class="text-sm font-bold line-clamp-2">{stall.name}</h3>
 							</a>
+
 							{#if isMyStall && stall.id}
 								<DropdownMenu.Root>
 									<DropdownMenu.Trigger asChild let:builder>
@@ -137,8 +141,8 @@
 						</div>
 
 						{#if stall.description}
-							<a href={stallUrl} class="block mt-1">
-								<p class="text-sm font-light line-clamp-3">
+							<a href={stallUrl} class="block">
+								<p class="line-clamp-3">
 									{stall.description}
 								</p>
 							</a>
@@ -146,15 +150,15 @@
 					</Card.Content>
 
 					<Card.Footer class="mt-auto p-2 border-t border-black/10">
-						<div class="grid gap-1 w-full text-sm">
+						<div class="grid gap-1 w-full">
 							<div class="flex items-center justify-between">
-								<span class="font-medium">Currency:</span>
-								<span>{stall.currency}</span>
+								<span>Currency:</span>
+								<span class=" font-bold">{stall.currency}</span>
 							</div>
 							{#if stall.userName}
 								<div class="flex items-center justify-between">
-									<span class="font-medium">Owner:</span>
-									<span>{stall.userName}</span>
+									<span>Owner:</span>
+									<span class=" font-bold">{stall.userName}</span>
 								</div>
 							{/if}
 							<div class="flex items-center justify-end">

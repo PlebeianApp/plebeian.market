@@ -51,8 +51,8 @@
 			{@const { image, name, description, currency, createDate, shipping } = $stallQuery.data.stall}
 			<div class="flex flex-col gap-2">
 				{#if image}
-					<div class="border-black border-2 w-full h-[25vh] relative overflow-hidden">
-						<img src={image} alt="profile" class="absolute top-0 left-0 w-full h-full object-cover object-top" />
+					<div class="border-black border-2 w-full h-auto max-h-[45vh] overflow-hidden flex items-center justify-center">
+						<img src={image} alt="stall-cover" />
 					</div>
 				{:else}
 					<div

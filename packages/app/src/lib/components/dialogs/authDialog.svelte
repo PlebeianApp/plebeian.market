@@ -46,7 +46,6 @@
 		dialogs.show(SaveKeyDialog, { nsec })
 		loading = false
 	}
-
 	const activeTab =
 		'w-full font-bold border-b-2 border-black text-black data-[state=active]:border-b-primary data-[state=active]:text-primary'
 </script>
@@ -67,29 +66,35 @@
 		<Tabs.List class="w-full justify-around bg-transparent">
 			<Tabs.Trigger value="nip07" class={activeTab}>Extension</Tabs.Trigger>
 			<Tabs.Trigger value="sk" class={activeTab}>Private Key</Tabs.Trigger>
-			<Tabs.Trigger disabled value="nip46" class={activeTab}>Advanced</Tabs.Trigger>
 			<Tabs.Trigger value="create" class={activeTab}>Sign up</Tabs.Trigger>
+			<Tabs.Trigger disabled value="nip46" class={activeTab}>Advanced</Tabs.Trigger>
 		</Tabs.List>
 
 		<Tabs.Content value="nip07" class="flex flex-col gap-2">
 			<Button
 				on:click={() => handleLogin('NIP07', undefined, checked)}
-				variant="outline"
+				variant="default"
 				class="w-full border-black border-2 font-bold flex items-center gap-1"
+				disabled={!window.nostr}
 			>
 				<span class="text-black text-md">Sign in with extension</span>
 				<span class="i-mdi-puzzle-outline text-black w-6 h-6"> </span>
 			</Button>
-			<span>
-				Recommended method. Use
-				<a class="underline" href="https://chrome.google.com/webstore/detail/nos2x/kpgefcfmnafjgpblomihpgmejjdanjjp">nos2x</a>,
-				<a class="underline" href="https://chromewebstore.google.com/detail/nostr-connect/ampjiinddmggbhpebhaegmjkbbeofoaj">nostrconnect</a
-				>,
-				<a class="underline" href="https://getalby.com/">alby</a> or similar.
-			</span>
+			{#if !window.nostr}
+				<span>
+					It appears that you don't have an extension installed. You may want to consider using one of the recommended methods.
+					<a class="underline" href="https://chrome.google.com/webstore/detail/nos2x/kpgefcfmnafjgpblomihpgmejjdanjjp">nos2x</a>,
+					<a class="underline" href="https://chromewebstore.google.com/detail/nostr-connect/ampjiinddmggbhpebhaegmjkbbeofoaj"
+						>nostrconnect</a
+					>,
+					<a class="underline" href="https://getalby.com/">alby</a> or similar.
+				</span>
+			{/if}
 		</Tabs.Content>
 
 		<Tabs.Content value="sk" class="flex flex-col gap-2">
+			<span> Sign in using an existing private key (nsec). </span>
+			<p class="font-bold">For enhanced security, consider using a browser extension.</p>
 			<form
 				class="flex flex-col gap-2"
 				on:submit|preventDefault={(sEvent) => handleLogin('NSEC', new FormData(sEvent.currentTarget, sEvent.submitter), checked)}
@@ -113,8 +118,9 @@
 
 		<Tabs.Content value="create" class="flex flex-col gap-2">
 			<span>
-				We use nostr's private/public key pair system to generate accounts (keys). They act as your username and password.
-				<a href="/" class="underline">Learn more</a>.
+				After signing up, we'll generate a unique Nostr keypair, which serves as your username and password. Your private key will be
+				displayed - please save it securely to ensure account recovery.
+				<a href="https://nostr.how/en/get-started" class="underline">Learn more</a>.
 			</span>
 			<form
 				class="flex flex-col gap-2"
@@ -142,6 +148,9 @@
 			<p class="text-center">
 				Don't have an account?
 				<Tabs.Trigger value="create" class="underline cursor-pointer p-0">Sign up</Tabs.Trigger>
+			</p>
+			<p class="text-center">
+				<a href="https://nostr.how/en/get-started" class="underline">Learn more about nostr</a>
 			</p>
 		</div>
 	</Tabs.Root>
