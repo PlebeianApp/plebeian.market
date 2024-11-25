@@ -57,7 +57,7 @@
 									</Select.Root>
 								</div>
 
-								<div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+								<div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
 									{#key $stallsQuery.data.stalls}
 										{#each $stallsQuery.data.stalls as item (item.id)}
 											<StallItem stallData={item} />

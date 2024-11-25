@@ -104,7 +104,7 @@ export const createCurrencyConversionQuery = (fromCurrency: string, amount: numb
 					return price ? (amount / price) * numSatsInBtc : null
 				} catch (error) {
 					console.error(`Currency conversion failed for ${fromCurrency}:`, error)
-					return null
+					throw error
 				}
 			},
 			enabled: Boolean(fromCurrency && amount > 0),
