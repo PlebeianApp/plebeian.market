@@ -9,6 +9,7 @@ import { getEventCoordinates } from '$lib/utils'
 import { get } from 'svelte/store'
 
 import { createRequest, queryClient } from './client'
+import { createCategoriesByFilterKey, createProductByFilterKey, createShippingKey, createStallsByFilterKey } from './keys'
 
 declare module './client' {
 	interface Endpoints {
@@ -41,8 +42,8 @@ export const createStallFromNostrEvent = createMutation(
 		onSuccess: (data: DisplayStall | null) => {
 			if (data) {
 				console.log('Stall inserted in db successfully', data)
-				queryClient.invalidateQueries({ queryKey: ['stalls', data.userId] })
-				queryClient.invalidateQueries({ queryKey: ['shippings', data.userId] })
+				queryClient.invalidateQueries({ queryKey: createStallsByFilterKey({ userId: data.userId }) })
+				queryClient.invalidateQueries({ queryKey: createShippingKey(data.id) })
 			}
 		},
 	},
@@ -71,9 +72,11 @@ export const updateStallFromNostrEvent = createMutation(
 			if (data) {
 				console.log('Stall inserted in db successfully', data)
 				await queryClient.invalidateQueries({
-					queryKey: ['stalls', data.userId],
+					queryKey: createStallsByFilterKey({}),
 				})
-				await queryClient.invalidateQueries({ queryKey: ['shipping', data.id] })
+				await queryClient.invalidateQueries({
+					queryKey: createShippingKey(data.id),
+				})
 			}
 		},
 	},
@@ -92,7 +95,7 @@ export const setStallFeaturedMutation = createMutation(
 		onSuccess: ({ id }: { id: string }) => {
 			console.log('setStallFeaturedMutation', id)
 			if (id) {
-				queryClient.invalidateQueries({ queryKey: ['stalls', id] })
+				queryClient.invalidateQueries({ queryKey: createStallsByFilterKey({ stallId: id }) })
 			}
 		},
 	},
@@ -114,10 +117,15 @@ export const deleteStallMutation = createMutation(
 		},
 		onSuccess: (stallId: string | null) => {
 			const $ndkStore = get(ndkStore)
-			console.log('deleted stall', stallId)
-			queryClient.invalidateQueries({ queryKey: ['stalls', $ndkStore.activeUser?.pubkey] })
-			queryClient.invalidateQueries({ queryKey: ['products', $ndkStore.activeUser?.pubkey] })
-			queryClient.invalidateQueries({ queryKey: ['categories', $ndkStore.activeUser?.pubkey] })
+			if ($ndkStore.activeUser?.pubkey) {
+				queryClient.invalidateQueries({ queryKey: createStallsByFilterKey({ userId: $ndkStore.activeUser.pubkey }) })
+				queryClient.invalidateQueries({
+					queryKey: createProductByFilterKey({ userId: $ndkStore.activeUser.pubkey }),
+				})
+				queryClient.invalidateQueries({
+					queryKey: createCategoriesByFilterKey({ userId: $ndkStore.activeUser.pubkey }),
+				})
+			}
 		},
 	},
 	queryClient,
@@ -135,8 +143,8 @@ export const setStallBannedMutation = createMutation(
 		},
 		onSuccess: ({ id }: { id: string }) => {
 			if (id) {
-				queryClient.invalidateQueries({ queryKey: ['stalls', id] })
-				queryClient.invalidateQueries({ queryKey: ['stalls'] })
+				queryClient.invalidateQueries({ queryKey: createStallsByFilterKey({ stallId: id }) })
+				queryClient.invalidateQueries({ queryKey: createStallsByFilterKey({}) })
 				goto('/')
 			}
 		},

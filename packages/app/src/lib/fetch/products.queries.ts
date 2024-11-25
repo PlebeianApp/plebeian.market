@@ -13,6 +13,13 @@ import { btcToCurrency, parseCoordinatesString, resolveQuery } from '$lib/utils'
 import { CURRENCIES } from '@plebeian/database/constants'
 
 import { createRequest, queryClient } from './client'
+import {
+	createCurrencyAmountConversionKey,
+	createCurrencyConversionKey,
+	createProductByFilterKey,
+	createProductExistsKey,
+	createProductKey,
+} from './keys'
 
 declare module './client' {
 	interface Endpoints {
@@ -32,7 +39,7 @@ declare module './client' {
 export const createProductQuery = (productId: string) =>
 	createQuery<DisplayProduct | null>(
 		{
-			queryKey: ['products', productId],
+			queryKey: createProductKey(productId),
 			queryFn: async () => {
 				try {
 					const response = await createRequest(`GET /api/v1/products/${productId}`, {
@@ -67,7 +74,7 @@ export const currencyQueries: CurrencyQuery = {} as CurrencyQuery
 for (const c of CURRENCIES) {
 	currencyQueries[c] = createQuery(
 		{
-			queryKey: ['currency-conversion', c],
+			queryKey: createCurrencyConversionKey(c),
 			staleTime: 1000 * 60 * 60,
 			queryFn: async () => {
 				const price = await btcToCurrency(c)
@@ -85,18 +92,24 @@ for (const c of CURRENCIES) {
 export const createCurrencyConversionQuery = (fromCurrency: string, amount: number) =>
 	createQuery<number | null>(
 		{
-			queryKey: ['currency-conversion', fromCurrency, amount],
+			queryKey: createCurrencyAmountConversionKey(fromCurrency, amount),
 			queryFn: async () => {
 				if (!fromCurrency || !amount) return null
 				if (['sats', 'sat'].includes(fromCurrency.toLowerCase())) {
 					return amount
 				}
-				const price = await resolveQuery(() => currencyQueries[fromCurrency as Currency])
-				const result = (amount / price) * numSatsInBtc
-				return result
+
+				try {
+					const price = await resolveQuery(() => currencyQueries[fromCurrency as Currency], 5000)
+					return price ? (amount / price) * numSatsInBtc : null
+				} catch (error) {
+					console.error(`Currency conversion failed for ${fromCurrency}:`, error)
+					return null
+				}
 			},
-			enabled: amount > 0,
+			enabled: Boolean(fromCurrency && amount > 0),
 			staleTime: 1000 * 60 * 60,
+			retry: 2,
 		},
 		queryClient,
 	)
@@ -104,7 +117,7 @@ export const createCurrencyConversionQuery = (fromCurrency: string, amount: numb
 export const createProductsByFilterQuery = (filter: Partial<ProductsFilter>) =>
 	createQuery<{ total: number; products: Partial<DisplayProduct>[] } | null>(
 		{
-			queryKey: ['products', ...Object.values(filter)],
+			queryKey: createProductByFilterKey(filter),
 			queryFn: async () => {
 				try {
 					const response = await createRequest('GET /api/v1/products', {
@@ -155,7 +168,7 @@ export const createProductsByFilterQuery = (filter: Partial<ProductsFilter>) =>
 export const createProductExistsQuery = (id: string) =>
 	createQuery<ExistsResult>(
 		{
-			queryKey: ['products', 'exists', id],
+			queryKey: createProductExistsKey(id),
 			queryFn: async () => {
 				const stallExists = await createRequest(`GET /api/v1/products/${id}?exists`, {})
 				return stallExists

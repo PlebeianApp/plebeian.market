@@ -38,7 +38,7 @@ jobs:
       - run: sudo apt install sshpass rsync
       - run: pnpm install
       - name: Check and apply database migrations
-        run: pnpm db:migrate
+        run: pnpm db:init
       - run: pnpm build
       - run: rm -rf node_modules **/node_modules .pnpm-store
 
@@ -47,7 +47,7 @@ jobs:
         env:
           PORT: ${{ github.ref == 'refs/heads/main' && '4175' || '4173' }}
         run: |
-          rsync --rsh="/usr/bin/sshpass -p \"${{ secrets.REMOTE_PASSWORD }}\" ssh -o StrictHostKeyChecking=no -l ${{ secrets.REMOTE_USER }}" -azq --delete . ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:plebeian.market.$PORT
+          rsync --rsh="/usr/bin/sshpass -p \"${{ secrets.REMOTE_PASSWORD }}\" ssh -o StrictHostKeyChecking=no -l ${{ secrets.REMOTE_USER }}" -azq --delete --exclude='sqlite.db' . ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:plebeian.market.$PORT
 
       - name: Deploy on /deploy or push to main
         if: ${{ (github.event.comment.body == '/deploy' && github.event.issue.pull_request) || github.event_name == 'push' }}
@@ -61,9 +61,9 @@ jobs:
             export ORIGIN=${{ github.ref == 'refs/heads/main' && 'https://staging.plebeian.market' || 'https://dev.plebeian.market' }}
             cd plebeian.market.${PORT}
             mv .env.sample .env
-            fuser -k $PORT/tcp || true
             pnpm i --frozen-lockfile -f
             pnpm db:migrate
+            fuser -k $PORT/tcp || true
             cd packages/app
             nohup node build > preview.log 2>&1 &
             sleep 10

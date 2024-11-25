@@ -10,6 +10,7 @@ import { fetchStallData, fetchUserStallsData, normalizeStallData } from '$lib/no
 import { stallsFilterSchema } from '$lib/schema'
 
 import { createRequest, queryClient } from './client'
+import { createStallExistsKey, createStallsByFilterKey } from './keys'
 
 declare module './client' {
 	interface Endpoints {
@@ -22,7 +23,7 @@ declare module './client' {
 export const createStallQuery = (stallId: string) =>
 	createQuery<{ stall: Partial<RichStall> | null }>(
 		{
-			queryKey: ['stalls', stallId],
+			queryKey: createStallsByFilterKey({ stallId: stallId }),
 			queryFn: async () => {
 				try {
 					const stall = await createRequest(`GET /api/v1/stalls/${stallId}`, {})
@@ -58,7 +59,7 @@ export const createStallFromNostrQuery = (stallId: string) =>
 export const createStallsByFilterQuery = (filter: Partial<StallsFilter>) =>
 	createQuery<{ total: number; stalls: Partial<RichStall>[] } | null>(
 		{
-			queryKey: ['stalls', ...Object.values(filter)],
+			queryKey: createStallsByFilterKey(filter),
 			queryFn: async () => {
 				const response = await createRequest('GET /api/v1/stalls', {
 					params: stallsFilterSchema.parse(filter),
@@ -92,7 +93,7 @@ export const createStallsByFilterQuery = (filter: Partial<StallsFilter>) =>
 export const createStallExistsQuery = (id: string) =>
 	createQuery<ExistsResult>(
 		{
-			queryKey: ['stalls', 'exists', id],
+			queryKey: createStallExistsKey(id),
 			queryFn: async () => {
 				const stallExists = await createRequest(`GET /api/v1/stalls/${id}?exists`, {})
 				return stallExists

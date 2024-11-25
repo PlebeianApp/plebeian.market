@@ -4,6 +4,7 @@ import { createQuery } from '@tanstack/svelte-query'
 import { ordersFilterSchema } from '$lib/schema'
 
 import { createRequest, queryClient } from './client'
+import { createOrderKey, createOrdersByFilterKey, createOrdersByUserAndRoleKey } from './keys'
 
 declare module './client' {
 	interface Endpoints {
@@ -23,7 +24,7 @@ declare module './client' {
 export const createOrderQuery = (orderId: string) =>
 	createQuery<DisplayOrder>(
 		{
-			queryKey: ['orders', orderId],
+			queryKey: createOrderKey(orderId),
 			queryFn: async () => {
 				return await createRequest(`GET /api/v1/orders/${orderId}`, {
 					auth: true,
@@ -36,7 +37,7 @@ export const createOrderQuery = (orderId: string) =>
 export const createOrdersByUserAndRoleQuery = (userId: string, role: 'buyer' | 'seller') =>
 	createQuery<{ total: number; orders: DisplayOrder[] }>(
 		{
-			queryKey: ['orders', userId, role, 'list'],
+			queryKey: createOrdersByUserAndRoleKey(userId, role),
 			queryFn: async () => {
 				return await createRequest('GET /api/v1/orders', {
 					auth: true,
@@ -51,10 +52,10 @@ export const createOrdersByUserAndRoleQuery = (userId: string, role: 'buyer' | '
 		queryClient,
 	)
 
-export const createOrdersQuery = (filter: Partial<OrdersFilter> = ordersFilterSchema.parse({})) =>
+export const createOrdersByFilterQuery = (filter: Partial<OrdersFilter> = ordersFilterSchema.parse({})) =>
 	createQuery<{ total: number; orders: DisplayOrder[] }>(
 		{
-			queryKey: ['orders', 'list', ...Object.values(filter)],
+			queryKey: createOrdersByFilterKey(filter),
 			queryFn: async () => {
 				return await createRequest('GET /api/v1/orders', {
 					auth: true,

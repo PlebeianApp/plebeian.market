@@ -17,36 +17,41 @@
 
 	export let product: Partial<DisplayProduct>
 	export let qtyPurchased: number | undefined = undefined
-	let { images, name, currency, price, userNip05, identifier, id, userId, quantity } = product
 
 	let isMyProduct = false
 
-	const stallCoordinates: Partial<EventCoordinates> = parseCoordinatesString(`${KindStalls}:${userId}:${product.stall_id}`)
-	const productCoordinates: Partial<EventCoordinates> = parseCoordinatesString(`${KindProducts}:${userId}:${id}`)
+	const stallCoordinates: Partial<EventCoordinates> = parseCoordinatesString(`${KindStalls}:${product.userId}:${product.stall_id}`)
+	const productCoordinates: Partial<EventCoordinates> = parseCoordinatesString(`${KindProducts}:${product.userId}:${product.id}`)
 
-	$: priceQuery = createCurrencyConversionQuery(String(currency), Number(price))
-	$: isMyProduct = $ndkStore.activeUser?.pubkey ? $ndkStore.activeUser.pubkey === userId : false
+	$: priceQuery = createCurrencyConversionQuery(String(product.currency), Number(product.price))
+	$: isMyProduct = $ndkStore.activeUser?.pubkey ? $ndkStore.activeUser.pubkey === product.userId : false
 	let imageLoadError = false
 </script>
 
 <Card.Root
 	class="relative flex flex-col border-2 border-black hover:border-primary transition-colors duration-200 text-black overflow-hidden"
 >
-	<a href={userNip05 ? `/products/${userNip05}/${identifier}` : `/products/${productCoordinates.coordinates}`} class="flex-shrink-0">
+	<a
+		href={product.userNip05 ? `/products/${product.userNip05}/${product.identifier}` : `/products/${productCoordinates.coordinates}`}
+		class="flex-shrink-0"
+	>
 		<Card.Header class="p-0">
-			{#if images?.length && !imageLoadError}
-				{@const mainImage = images.find((img) => img.imageOrder === 0) || images[0]}
+			{#if product.images?.length && !imageLoadError}
+				{@const mainImage = product.images.find((img) => img.imageOrder === 0) || product.images[0]}
 				<div class="relative w-full h-72">
 					<img
 						class="object-cover w-full h-full"
 						src={mainImage.imageUrl}
-						alt={name || 'Product image'}
+						alt={product.name || 'Product image'}
 						on:error={() => (imageLoadError = true)}
 					/>
 				</div>
 			{:else}
 				<div class="flex items-center justify-center aspect-[10/9]">
-					<span style={`color:${stringToHexColor(String(name || identifier))}`} class="i-mdi-package-variant-closed w-16 h-16" />
+					<span
+						style={`color:${stringToHexColor(String(product.name || product.identifier))}`}
+						class="i-mdi-package-variant-closed w-16 h-16"
+					/>
 				</div>
 			{/if}
 		</Card.Header>
@@ -54,8 +59,11 @@
 
 	<Card.Content class="p-2 flex-1">
 		<div class="flex items-start justify-between mb-2">
-			<a href={userNip05 ? `/products/${userNip05}/${identifier}` : `/products/${productCoordinates.coordinates}`} class="flex-1">
-				<h3 class="text-sm font-bold line-clamp-2">{name}</h3>
+			<a
+				href={product.userNip05 ? `/products/${product.userNip05}/${product.identifier}` : `/products/${productCoordinates.coordinates}`}
+				class="flex-1"
+			>
+				<h3 class="text-sm font-bold line-clamp-2">{product.name}</h3>
 			</a>
 
 			{#if isMyProduct}
@@ -83,10 +91,10 @@
 		<div class="flex flex-col gap-2 w-full">
 			<div class="flex justify-between items-baseline">
 				<div class="flex flex-col">
-					{#if price && currency && !['sat', 'sats'].includes(currency.toLowerCase())}
+					{#if product.price && product.currency && !['sat', 'sats'].includes(product.currency.toLowerCase())}
 						<span class="text-xs text-black/70">
-							{price.toLocaleString('en-US')}
-							{currency}
+							{product.price.toLocaleString('en-US')}
+							{product.currency}
 						</span>
 					{/if}
 					<span class="font-bold text-sm">
@@ -106,18 +114,18 @@
 							purchased: {qtyPurchased}
 						</Badge>
 					{:else}
-						<Badge variant={quantity && quantity > 0 ? 'outline' : 'default'} class="text-xs">
-							{quantity && quantity > 0 ? `${quantity} in stock` : 'Out of stock'}
+						<Badge variant={product.quantity && product.quantity > 0 ? 'outline' : 'default'} class="text-xs">
+							{product.quantity && product.quantity > 0 ? `${product.quantity} in stock` : 'Out of stock'}
 						</Badge>
 					{/if}
 				</div>
 			</div>
 
-			{#if !isMyProduct && userId && quantity && quantity > 0}
+			{#if !isMyProduct && product.userId && product.quantity && product.quantity > 0}
 				<Button
 					variant="outline"
 					class="w-full text-sm h-8"
-					on:click={() => handleAddToCart(userId, String(stallCoordinates.coordinates), product)}
+					on:click={() => handleAddToCart(product.userId, String(stallCoordinates.coordinates), product)}
 				>
 					<ShoppingCart class="h-4 w-4 mr-2" />
 					Add to cart

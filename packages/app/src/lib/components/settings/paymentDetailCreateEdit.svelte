@@ -19,6 +19,8 @@
 		deriveAddresses,
 		isExtendedPublicKey,
 		parsePaymentDetailsFromClipboard,
+		paymentMethodIcons,
+		paymentMethodLabels,
 	} from '$lib/utils/paymentDetails.utils'
 	import { isValidNip05 } from '$lib/utils/validation.utils'
 	import { format } from 'date-fns'
@@ -70,16 +72,6 @@
 		paymentDetail?.paymentMethod === 'on-chain' && isExtendedPublicKey(editedPaymentDetail.paymentDetails)
 			? createOnChainIndexQuery(String($ndkStore.activeUser?.pubkey), paymentDetail.id)
 			: undefined
-
-	const paymentMethodLabels: Record<PaymentDetailsMethod, string> = {
-		[PAYMENT_DETAILS_METHOD.LIGHTNING_NETWORK]: 'Lightning Address',
-		[PAYMENT_DETAILS_METHOD.ON_CHAIN]: 'Onchain Address',
-	}
-
-	const paymentMethodIcons: Record<PaymentDetailsMethod, string> = {
-		[PAYMENT_DETAILS_METHOD.LIGHTNING_NETWORK]: 'i-mingcute-lightning-line',
-		[PAYMENT_DETAILS_METHOD.ON_CHAIN]: 'i-mingcute-anchor-line',
-	}
 
 	const validationMethods: Record<PaymentDetailsMethod, (value: string) => Promise<boolean | 'needsConfirmation'>> = {
 		[PAYMENT_DETAILS_METHOD.LIGHTNING_NETWORK]: async (value) => {

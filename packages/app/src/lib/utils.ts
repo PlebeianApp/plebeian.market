@@ -329,21 +329,25 @@ export function getHexColorFingerprintFromHexPubkey(input: string): string {
 	const hexpub = input.startsWith('npub') ? decodePk(input) : input
 	return `#${hexpub.slice(0, 6)}`
 }
-
 export async function resolveQuery<T>(queryFn: () => CreateQueryResult<T, Error>, timeout: number = 1000 * 60): Promise<T> {
 	const startTime = Date.now()
 	const query = queryFn()
+
 	let currentQuery = get(query)
+	if (currentQuery.isSuccess) {
+		return currentQuery.data
+	}
 
 	while (!currentQuery.isSuccess && !currentQuery.isError) {
 		if (Date.now() - startTime > timeout) {
 			throw new Error('Query timed out')
 		}
-		await new Promise((resolve) => setTimeout(resolve, 500))
+
+		await new Promise((resolve) => setTimeout(resolve, 250))
 		currentQuery = get(query)
 	}
 
-	if (currentQuery.isFetched && !currentQuery.isError) {
+	if (currentQuery.isSuccess) {
 		return currentQuery.data
 	}
 

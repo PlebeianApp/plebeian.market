@@ -1,7 +1,6 @@
 <script lang="ts">
 	import PaymentDetailEdit from '$lib/components/settings/paymentDetailCreateEdit.svelte'
 	import { privatePaymentsQuery } from '$lib/fetch/payments.queries'
-	import ndkStore from '$lib/stores/ndk'
 
 	import type { PaymentDetailsMethod } from '@plebeian/database/constants'
 	import { PAYMENT_DETAILS_METHOD } from '@plebeian/database/constants'

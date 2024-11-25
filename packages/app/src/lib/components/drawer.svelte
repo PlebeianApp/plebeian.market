@@ -12,22 +12,11 @@
 	import ShoppingCart from './cart/shopping-cart.svelte'
 	import { Button } from './ui/button'
 
-	let productQuery: ReturnType<typeof createProductQuery> | undefined
-	let stallQuery: ReturnType<typeof createStallQuery> | undefined
+	$: stallQuery = $drawerUI.drawerType === 'stall' ? createStallQuery($drawerUI.id!) : undefined
+	$: productQuery = $drawerUI.drawerType === 'product' ? createProductQuery($drawerUI.id!) : undefined
 
 	$: isOpen = $drawerUI.drawerType !== null
 	$: isLoading = ($stallQuery?.isLoading || $productQuery?.isLoading) ?? false
-	$: if ($drawerUI.drawerType && $drawerUI.id) {
-		initializeData()
-	}
-
-	async function initializeData() {
-		if ($drawerUI.drawerType === 'product') {
-			productQuery = createProductQuery($drawerUI.id!)
-		} else if ($drawerUI.drawerType === 'stall') {
-			stallQuery = createStallQuery($drawerUI.id!)
-		}
-	}
 
 	function handleSuccess() {
 		closeDrawer()

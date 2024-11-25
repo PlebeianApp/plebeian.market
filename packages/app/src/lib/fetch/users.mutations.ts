@@ -11,6 +11,7 @@ import type { UserRoles } from '@plebeian/database/constants'
 import { USER_ROLES } from '@plebeian/database/constants'
 
 import { createRequest, queryClient } from './client'
+import { createUsersByFilterKey } from './keys'
 
 declare module './client' {
 	interface Endpoints {
@@ -35,7 +36,6 @@ export const userDataMutation = createMutation(
 		mutationKey: [],
 		mutationFn: async (profile: Partial<RichUser>) => {
 			const $ndkStore = get(ndkStore)
-
 			if ($ndkStore.activeUser?.pubkey) {
 				const user = await createRequest(`PUT /api/v1/users/${$ndkStore.activeUser.pubkey}`, {
 					auth: true,
@@ -46,9 +46,8 @@ export const userDataMutation = createMutation(
 			return null
 		},
 		onSuccess: (data: User | null) => {
-			const $ndkStore = get(ndkStore)
-			queryClient.invalidateQueries({ queryKey: ['user', $ndkStore.activeUser?.pubkey] })
-			queryClient.setQueryData(['user', $ndkStore.activeUser?.pubkey], data)
+			if (!data) return
+			queryClient.invalidateQueries({ queryKey: createUsersByFilterKey({ userId: data.id }) })
 		},
 	},
 	queryClient,
@@ -65,9 +64,15 @@ export const setUserRoleMutation = createMutation(
 			return user
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ['users', ...Object.values({ role: USER_ROLES.ADMIN })] })
-			queryClient.invalidateQueries({ queryKey: ['users', ...Object.values({ role: USER_ROLES.EDITOR })] })
-			queryClient.invalidateQueries({ queryKey: ['users', ...Object.values({ role: USER_ROLES.PLEB })] })
+			queryClient.invalidateQueries({
+				queryKey: createUsersByFilterKey({ role: USER_ROLES.ADMIN }),
+			})
+			queryClient.invalidateQueries({
+				queryKey: createUsersByFilterKey({ role: USER_ROLES.EDITOR }),
+			})
+			queryClient.invalidateQueries({
+				queryKey: createUsersByFilterKey({ role: USER_ROLES.PLEB }),
+			})
 		},
 	},
 	queryClient,
@@ -88,7 +93,7 @@ export const userDeleteAccountMutation = createMutation(
 		},
 		onSuccess: () => {
 			const $ndkStore = get(ndkStore)
-			deleteAccount($ndkStore.activeUser?.pubkey ? $ndkStore.activeUser?.pubkey : '')
+			deleteAccount($ndkStore.activeUser?.pubkey || '')
 			delete $ndkStore.signer
 			goto('/')
 		},
@@ -106,8 +111,10 @@ export const createUserFromNostrMutation = createMutation(
 			return user
 		},
 		onSuccess: (data: User | null) => {
-			console.log('User registered sucesfully', data)
-			queryClient.setQueryData(['user', data?.id], data)
+			if (data?.id) {
+				console.log('User registered successfully', data)
+				queryClient.setQueryData(createUsersByFilterKey({ userId: data.id }), data)
+			}
 		},
 	},
 	queryClient,
@@ -127,8 +134,11 @@ export const updateUserFromNostrMutation = createMutation(
 			return null
 		},
 		onSuccess: (data: User | null) => {
-			queryClient.invalidateQueries({ queryKey: ['users', data?.id] })
-			queryClient.setQueryData(['users', data?.id], data)
+			if (data?.id) {
+				const userKey = createUsersByFilterKey({ userId: data.id })
+				queryClient.invalidateQueries({ queryKey: userKey })
+				queryClient.setQueryData(userKey, data)
+			}
 		},
 	},
 	queryClient,
@@ -146,8 +156,7 @@ export const setUserBannedMutation = createMutation(
 		},
 		onSuccess: ({ id }: { id: string }) => {
 			if (id) {
-				queryClient.invalidateQueries({ queryKey: ['users', id] })
-				queryClient.invalidateQueries({ queryKey: ['users'] })
+				queryClient.invalidateQueries({ queryKey: createUsersByFilterKey({ userId: id }) })
 				goto('/')
 			}
 		},
