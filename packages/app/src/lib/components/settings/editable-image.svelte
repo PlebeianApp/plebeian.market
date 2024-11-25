@@ -143,19 +143,19 @@
 					<p class="text-destructive">{urlError}</p>
 				{/if}
 				<div class="flex flex-row gap-2">
-					<Button variant={'secondary'} on:click={handleUploadIntent} class="w-full font-bold">
+					<Button variant={'secondary'} on:click={handleUploadIntent} disabled={isLoading || !!localSrc} class="w-full font-bold">
 						<span class="i-mdi-upload w-6 h-6" /> Upload
 						{#if isLoading}
 							<Spinner />
 						{/if}
 					</Button>
-					<Button on:click={handleSave} class="w-full font-bold" disabled={!localSrc}>Save</Button>
+					<Button on:click={handleSave} class="w-full font-bold" disabled={isLoading || !localSrc}>Save</Button>
 				</div>
 				{#if marketContext}
 					<div class="flex-1 max-h-[40vh] overflow-y-auto">
 						<Collapsible.Root>
 							<Collapsible.Trigger>
-								<Button type="button" class="text-bold">use an already uploaded photo</Button>
+								<Button type="button" disabled={isLoading || !!localSrc} class="text-bold">use an already uploaded photo</Button>
 							</Collapsible.Trigger>
 							<Collapsible.Content>
 								<UserImageHistory on:imageClick={handleImageClick} />

@@ -365,7 +365,7 @@
 				>
 			</DropdownMenu.Trigger>
 			<DropdownMenu.Content class="w-56">
-				<DropdownMenu.Label>Currency</DropdownMenu.Label>
+				<DropdownMenu.Label>Choose your local currency</DropdownMenu.Label>
 				<DropdownMenu.Separator />
 				<section class="max-h-[350px] overflow-y-auto">
 					{#each CURRENCIES as option}
