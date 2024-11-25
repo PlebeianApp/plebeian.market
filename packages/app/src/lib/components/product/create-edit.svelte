@@ -94,14 +94,14 @@
 	function addCategory() {
 		const name = `category ${categories.length + 1}`
 		categories = [...categories, { key: createSlugId(name), name, checked: true }]
-		setTimeout(() => {
+
+		queueMicrotask(() => {
 			const inputs = document.querySelectorAll('input[type="text"]')
 			const lastInput = inputs[inputs.length - 1] as HTMLInputElement
 			lastInput?.focus()
 			lastInput?.select()
-		}, 0)
+		})
 	}
-
 	async function handleSubmit(sEvent: SubmitEvent, stall: Partial<RichStall> | null) {
 		if (!stall) return
 		isLoading = true
@@ -287,7 +287,7 @@
 								<DropdownMenu.Label>Stall</DropdownMenu.Label>
 								<DropdownMenu.Separator />
 								<section class=" max-h-[350px] overflow-y-auto">
-									{#each $stallsQuery.data?.stalls as item}
+									{#each $stallsQuery.data?.stalls as item (item.id)}
 										<DropdownMenu.CheckboxItem
 											checked={currentStallIdentifier === item.identifier}
 											on:click={() => {
@@ -361,7 +361,7 @@
 								<DropdownMenu.Label>Stall</DropdownMenu.Label>
 								<DropdownMenu.Separator />
 								<section class="max-h-[350px] overflow-y-auto">
-									{#each stall?.shipping?.filter((s) => !currentShippings.some((sh) => sh !== shippingMethod && sh.shipping?.id === s.id)) ?? [] as item}
+									{#each stall?.shipping?.filter((s) => !currentShippings.some((sh) => sh !== shippingMethod && sh.shipping?.id === s.id)) ?? [] as item (item.id)}
 										<DropdownMenu.CheckboxItem
 											checked={shippingMethod.shipping?.id === item.id}
 											on:click={() => {
