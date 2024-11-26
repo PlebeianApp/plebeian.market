@@ -29,9 +29,13 @@
 <div class="flex min-h-screen w-full flex-col">
 	<div class="flex flex-col">
 		<main class="text-black">
-			<div class="px-4 lg:px-12">
-				<h1>Market</h1>
+			<div class="px-4 lg:px-12 flex flex-col gap-6">
+				<div>
+					<h1>Market</h1>
+					<h3 class=" font-light">Here you can find all the stalls of this community</h3>
+				</div>
 				<div class="container">
+					<h2>Stalls</h2>
 					<div class="gap-2 flex flex-col">
 						<CatMenu />
 						<div class=" flex flex-col gap-2">

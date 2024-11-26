@@ -44,11 +44,9 @@ export async function deleteEvent(eventCoordinates?: string, reason?: string, pu
 		return null
 	}
 
-	const deletedEvent = await publishedEmptyEvent.delete(reason, false)
-	await publishEvent(deletedEvent)
-	if (deletedEvent && dTag) {
+	if (dTag) {
 		stallsSub?.update((stalls) => stalls.filter((stall) => stall.dTag !== dTag))
 	}
 
-	return deletedEvent
+	return publishedEmptyEvent
 }
