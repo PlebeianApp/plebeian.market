@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { V4VDTO } from '$lib/fetch/v4v.queries'
+	import { goto } from '$app/navigation'
 	import * as Alert from '$lib/components/ui/alert/index.js'
 	import { Button } from '$lib/components/ui/button/index.js'
 	import { Label } from '$lib/components/ui/label/index.js'
@@ -11,7 +12,7 @@
 	import { setV4VForUserMutation } from '$lib/fetch/v4v.mutations'
 	import { v4VForUserQuery } from '$lib/fetch/v4v.queries'
 	import ndkStore from '$lib/stores/ndk'
-	import { decimalToPercentage, getHexColorFingerprintFromHexPubkey, nav_back } from '$lib/utils'
+	import { decimalToPercentage, getHexColorFingerprintFromHexPubkey } from '$lib/utils'
 	import { toast } from 'svelte-sonner'
 
 	import type { PageData } from './$types'
@@ -157,7 +158,7 @@
 <div class="pb-4 space-y-6 px-2">
 	<div>
 		<div class="flex items-center gap-1">
-			<Button size="icon" variant="outline" class="border-none" on:click={() => nav_back()}>
+			<Button size="icon" variant="outline" class="border-none" on:click={() => goto('/settings')}>
 				<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
 			</Button>
 			<section>

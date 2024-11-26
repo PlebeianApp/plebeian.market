@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { DisplayProduct } from '$lib/server/products.service'
+	import { goto } from '$app/navigation'
 	import { page } from '$app/stores'
 	import CreateEditProduct from '$lib/components/product/create-edit.svelte'
 	import { Button } from '$lib/components/ui/button/index.js'
@@ -8,7 +9,7 @@
 	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
 	import { fetchUserProductData, normalizeProductsFromNostr } from '$lib/nostrSubs/utils'
 	import ndkStore from '$lib/stores/ndk'
-	import { mergeWithExisting, nav_back } from '$lib/utils'
+	import { mergeWithExisting } from '$lib/utils'
 	import { onMount } from 'svelte'
 
 	import type { PageData } from './$types'
@@ -58,7 +59,7 @@
 	{#if productsMode === 'list'}
 		<div class="flex justify-between items-center">
 			<div class=" flex items-center gap-1">
-				<Button size="icon" variant="outline" class=" border-none" on:click={() => nav_back()}>
+				<Button size="icon" variant="outline" class=" border-none" on:click={() => goto('/settings/account/')}>
 					<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
 				</Button>
 				<section>

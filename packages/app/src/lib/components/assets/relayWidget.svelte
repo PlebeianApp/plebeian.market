@@ -43,10 +43,12 @@
 	{/if}
 
 	{#if isOpen}
-		<div class={`bg-white flex flex-col fixed bottom-0 z-50 gap-2 ${mode == 'widget' && 'w-fit p-2 border-black border-2'}`}>
-			<Button size="icon" variant="ghost" on:click={() => (isOpen = !isOpen)}>
-				<span class="i-mdi-close w-5 h-5" />
-			</Button>
+		<div class={`bg-white flex flex-col ${mode == 'widget' && 'w-fit p-2 border-black border-2 fixed bottom-0 z-50 gap-2'}`}>
+			{#if mode === 'widget'}
+				<Button size="icon" variant="ghost" on:click={() => (isOpen = !isOpen)}>
+					<span class="i-mdi-close w-5 h-5" />
+				</Button>
+			{/if}
 			{#if $ndkStore.pool?.relays.size}
 				<section>
 					<span class=" font-bold">Explicit relays</span> ({$ndkStore.pool?.relays.size}):

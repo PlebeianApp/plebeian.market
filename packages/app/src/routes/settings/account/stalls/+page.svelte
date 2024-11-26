@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { RichStall } from '$lib/server/stalls.service'
+	import { goto } from '$app/navigation'
 	import { page } from '$app/stores'
 	import StallProductList from '$lib/components/product/stall-product-list.svelte'
 	import CreateEditStall from '$lib/components/stalls/create-edit.svelte'
@@ -9,7 +10,7 @@
 	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
 	import { fetchUserStallsData, normalizeStallData } from '$lib/nostrSubs/utils'
 	import ndkStore from '$lib/stores/ndk'
-	import { mergeWithExisting, nav_back } from '$lib/utils'
+	import { mergeWithExisting } from '$lib/utils'
 	import { onMount } from 'svelte'
 
 	import type { PageData } from './$types'
@@ -58,7 +59,7 @@
 	{#if stallsMode === 'list'}
 		<div class="flex justify-between items-center">
 			<div class=" flex items-center gap-1">
-				<Button id="create-edit-back-button" size="icon" variant="outline" class=" border-none" on:click={() => nav_back()}>
+				<Button id="create-edit-back-button" size="icon" variant="outline" class=" border-none" on:click={() => goto('/settings/account/')}>
 					<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
 				</Button>
 				<section>

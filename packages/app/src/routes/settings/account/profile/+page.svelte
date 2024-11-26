@@ -2,6 +2,7 @@
 	import type { NDKUserProfile } from '@nostr-dev-kit/ndk'
 	import type { FormDataWithEntries } from '$lib/interfaces'
 	import type { RichUser } from '$lib/server/users.service'
+	import { goto } from '$app/navigation'
 	import { page } from '$app/stores'
 	import SingleImage from '$lib/components/settings/editable-image.svelte'
 	import { Button } from '$lib/components/ui/button/index.js'
@@ -11,7 +12,6 @@
 	import { userDataMutation } from '$lib/fetch/users.mutations'
 	import { createUserExistsQuery } from '$lib/fetch/users.queries'
 	import ndkStore from '$lib/stores/ndk'
-	import { nav_back } from '$lib/utils'
 	import { toast } from 'svelte-sonner'
 
 	import type { PageData } from './$types'
@@ -79,7 +79,7 @@
 	<form on:submit={handleSubmit}>
 		<div class="pb-4 space-y-2">
 			<div class="flex items-center gap-1">
-				<Button size="icon" variant="outline" class="border-none" on:click={nav_back}>
+				<Button size="icon" variant="outline" class="border-none" on:click={() => goto('/settings/account')}>
 					<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
 				</Button>
 				<section>

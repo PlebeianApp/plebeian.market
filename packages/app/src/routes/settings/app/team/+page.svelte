@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { NDKUserProfile } from '@nostr-dev-kit/ndk'
+	import { goto } from '$app/navigation'
 	import { page } from '$app/stores'
 	import MiniUser from '$lib/components/cart/mini-user.svelte'
 	import { Button } from '$lib/components/ui/button'
@@ -9,7 +10,7 @@
 	import { createUserFromNostrMutation, setUserRoleMutation } from '$lib/fetch/users.mutations.js'
 	import { createUserByIdQuery, createUsersByFilterQuery } from '$lib/fetch/users.queries.js'
 	import ndkStore from '$lib/stores/ndk'
-	import { decodePk, nav_back } from '$lib/utils'
+	import { decodePk } from '$lib/utils'
 	import { toast } from 'svelte-sonner'
 
 	import type { UserRoles } from '@plebeian/database/constants'
@@ -65,7 +66,7 @@
 <div class="pb-4 space-y-2 max-w-2xl">
 	<div>
 		<div class="flex items-center gap-1">
-			<Button size="icon" variant="outline" class="border-none" on:click={() => nav_back()}>
+			<Button size="icon" variant="outline" class="border-none" on:click={() => goto('/settings/app')}>
 				<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
 			</Button>
 			<section>

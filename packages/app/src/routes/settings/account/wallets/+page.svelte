@@ -1,13 +1,13 @@
 <script lang="ts">
 	import type { DisplayWallet } from '$lib/server/wallet.service'
+	import { goto } from '$app/navigation'
 	import { page } from '$app/stores'
 	import NwcWallet from '$lib/components/settings/nwc-wallet.svelte'
 	import { Button } from '$lib/components/ui/button/index.js'
 	import { queryClient } from '$lib/fetch/client'
-	import { deleteWalletMutation } from '$lib/fetch/wallets.mutations'
 	import { userWalletQuery } from '$lib/fetch/wallets.queries'
 	import ndkStore from '$lib/stores/ndk'
-	import { EncryptedStorage, nav_back } from '$lib/utils'
+	import { EncryptedStorage } from '$lib/utils'
 	import { onMount } from 'svelte'
 
 	import type { PageData } from './$types'
@@ -63,7 +63,7 @@
 
 <div class="flex flex-col gap-4">
 	<div class="flex items-center gap-1">
-		<Button size="icon" variant="outline" class="border-none" on:click={() => nav_back()}>
+		<Button size="icon" variant="outline" class="border-none" on:click={() => goto('/settings/account')}>
 			<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
 		</Button>
 		<section>
