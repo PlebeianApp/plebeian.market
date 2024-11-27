@@ -18,9 +18,9 @@ export default defineConfig(({ mode }) => {
 			sveltekit(),
 			SvelteKitPWA({
 				strategies: 'injectManifest',
-				injectManifest: {
-					injectionPoint: undefined,
-				},
+				// injectManifest: {
+				// 	injectionPoint: undefined,
+				// },
 				manifest: {
 					name: 'Plebeian Market',
 					short_name: 'Plebeian Market',
@@ -50,7 +50,7 @@ export default defineConfig(({ mode }) => {
 						},
 					],
 				},
-				registerType: 'autoUpdate',
+				registerType: 'prompt',
 				disable: mode === 'development',
 			}),
 		],

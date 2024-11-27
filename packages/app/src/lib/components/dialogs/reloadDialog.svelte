@@ -5,10 +5,10 @@
   
     const { needRefresh, updateServiceWorker } = useRegisterSW({
       onRegistered(r) {
-		r && setInterval(() => {
-		   console.log('Checking for sw update')
-		   r.update()
-		}, 1000)
+		// r && setInterval(() => {
+		//    console.log('Checking for sw update')
+		//    r.update()
+		// }, 1000)
 			console.log(`SW Registered: ${r}`)
 		},
 		onRegisterError(error) {
