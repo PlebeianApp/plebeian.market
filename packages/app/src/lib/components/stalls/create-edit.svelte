@@ -46,7 +46,6 @@
 	import Separator from '../ui/separator/separator.svelte'
 
 	export let stall: Partial<RichStall> | null = null
-	let shippingFromOpen = false
 	const dispatch = createEventDispatcher<{ success: unknown; error: unknown }>()
 	const {
 		appSettings: { allowRegister, defaultCurrency },
@@ -94,6 +93,8 @@
 	}
 
 	$: changed = hasChanges(currentValues)
+	$: headerImageOpen = headerImage ? true : false
+	$: shippingFromOpen = geohashOfSelectedGeometry ? true : false
 
 	function addShipping(id?: string) {
 		const newMethod = id
@@ -245,7 +246,7 @@
 <form class="flex flex-col gap-4 grow" on:submit={handleSubmit}>
 	<div class="grid w-full items-center gap-1.5">
 		<Label for="userImage" class="font-bold required-mark">Header image (Recommended)</Label>
-		<Collapsible.Root>
+		<Collapsible.Root bind:open={headerImageOpen}>
 			<Collapsible.Trigger asChild let:builder>
 				<Button
 					data-tooltip="This image helps customers recognize your stall"

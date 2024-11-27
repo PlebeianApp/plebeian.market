@@ -109,7 +109,15 @@ export async function updateCachedEvent(id: string, updates: Partial<CachedEvent
 }
 
 export async function deleteCachedEvent(id: string): Promise<void> {
-	await sessions.cachedEvents.where('id').equals(id).delete()
+	try {
+		await sessions.cachedEvents.where('id').equals(id).delete()
+	} catch (error) {
+		if (error instanceof Dexie.DexieError) {
+			console.warn(error.message)
+		} else {
+			throw error
+		}
+	}
 }
 
 export function cleanupCachedEvents(maxEntries: number = 1000, maxAgeMs: number = 7 * 24 * 60 * 60 * 1000): void {
