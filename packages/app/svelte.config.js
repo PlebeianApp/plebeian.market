@@ -1,5 +1,6 @@
 import adapter from '@sveltejs/adapter-node'
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte'
+import packageJson from './package.json' with { type: 'json' }
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
@@ -7,6 +8,9 @@ const config = {
 	// for more information about preprocessors
 	preprocess: [vitePreprocess({})],
 	kit: {
+		version: {
+			name: packageJson.version
+		},
 		adapter: adapter(),
 		prerender: {
 			handleHttpError: ({ status, path, referrer, referenceType }) => {

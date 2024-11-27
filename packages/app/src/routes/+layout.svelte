@@ -41,23 +41,6 @@
 		if (data.appSettings?.isFirstTimeRunning) {
 			goto('/setup', { invalidateAll: true })
 		}
-		if (pwaInfo) {
-			const { registerSW } = await import('virtual:pwa-register')
-			registerSW({
-				immediate: true,
-				onRegistered(r) {
-					// uncomment following code if you want check for updates
-					// r && setInterval(() => {
-					//    console.log('Checking for sw update')
-					//    r.update()
-					// }, 20000 /* 20s for testing purposes */)
-					console.log(`SW Registered: ${r}`)
-				},
-				onRegisterError(error) {
-					console.log('SW registration error', error)
-				},
-			})
-		}
 		// localStorage.setItem('forbiddenPattern', (data.forbiddenWords.forbiddenPattern as RegExp).toString())
 		const userForbiddenPattern = localStorage.getItem('forbiddenPattern')
 		const instanceForbiddenPattern = data.forbiddenWords.forbiddenPattern.toString()
@@ -216,6 +199,9 @@
 				{/if}
 			</section>
 			<DialogManager />
+			{#await import('$lib/components/dialogs/reloadDialog.svelte') then { default: ReloadDialog }}
+				<ReloadDialog />
+			{/await}
 		</div>
 	{/if}
 </QueryClientProvider>
