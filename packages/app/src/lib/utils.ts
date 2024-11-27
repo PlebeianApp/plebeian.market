@@ -275,10 +275,6 @@ export async function copyToClipboard(data: BlobPart, mimeType = 'text/plain') {
 	}
 }
 
-export function nav_back() {
-	if (typeof window !== 'undefined') window.history.back()
-}
-
 export function truncateString(str: string, maxLenght: number = 18): string {
 	if (str.length > maxLenght) return str.substring(0, 12) + ':' + str.substring(str.length - 6)
 	return str

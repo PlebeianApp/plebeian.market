@@ -46,7 +46,6 @@
 	import Separator from '../ui/separator/separator.svelte'
 
 	export let stall: Partial<RichStall> | null = null
-	let shippingFromOpen = false
 	const dispatch = createEventDispatcher<{ success: unknown; error: unknown }>()
 	const {
 		appSettings: { allowRegister, defaultCurrency },
@@ -94,6 +93,8 @@
 	}
 
 	$: changed = hasChanges(currentValues)
+	$: headerImageOpen = headerImage ? true : false
+	$: shippingFromOpen = geohashOfSelectedGeometry ? true : false
 
 	function addShipping(id?: string) {
 		const newMethod = id
@@ -243,24 +244,25 @@
 </script>
 
 <form class="flex flex-col gap-4 grow" on:submit={handleSubmit}>
-	<Collapsible.Root>
-		<Collapsible.Trigger asChild let:builder>
-			<Button
-				data-tooltip="This image helps customers recognize your stall"
-				builders={[builder]}
-				variant="ghost"
-				size="sm"
-				class="w-full p-0"
-			>
-				<Label for="userImage" class="font-bold">Header image (Recommended)</Label>
-				<span class="i-ion-chevron-expand" />
-			</Button>
-		</Collapsible.Trigger>
-		<Collapsible.Content>
-			<SingleImage src={headerImage} on:save={({ detail }) => (headerImage = detail)} />
-		</Collapsible.Content>
-	</Collapsible.Root>
-
+	<div class="grid w-full items-center gap-1.5">
+		<Label for="userImage" class="font-bold required-mark">Header image (Recommended)</Label>
+		<Collapsible.Root bind:open={headerImageOpen}>
+			<Collapsible.Trigger asChild let:builder>
+				<Button
+					data-tooltip="This image helps customers recognize your stall"
+					builders={[builder]}
+					variant="ghost"
+					size="sm"
+					class="w-full p-0"
+				>
+					<span class="i-ion-chevron-expand" />
+				</Button>
+			</Collapsible.Trigger>
+			<Collapsible.Content>
+				<SingleImage src={headerImage} on:save={({ detail }) => (headerImage = detail)} />
+			</Collapsible.Content>
+		</Collapsible.Root>
+	</div>
 	<div class="grid w-full items-center gap-1.5">
 		<Label for="title" class="font-bold required-mark">Title</Label>
 		<Input
@@ -292,69 +294,69 @@
 			<p class="text-red-500 text-sm mt-1">{validationErrors['description']}</p>
 		{/if}
 	</div>
-
-	<Collapsible.Root bind:open={shippingFromOpen} class="flex flex-col gap-2">
-		<Collapsible.Trigger asChild let:builder>
-			<Button builders={[builder]} variant="ghost" size="sm" class="w-full p-0">
-				<Label for="from" class="font-bold">Shipping From (Recommended)</Label>
-				<span class="i-ion-chevron-expand" />
-			</Button>
-		</Collapsible.Trigger>
-		<Collapsible.Content class="flex flex-col gap-2">
-			<div class="flex items-center gap-2">
-				<span
-					class="i-mdi-information-outline"
-					data-tooltip="Geohash is a compact representation of a geographic coordinate system. It's used to quickly identify the location of a point on a map. The accuracy is the number of characters in the geohash and is determined by your zoom level."
-				></span>
-				{#if geohashOfSelectedGeometry}
-					<small class="text-gray-500">Geohash: {geohashOfSelectedGeometry}</small>
-				{:else}
-					<small class="text-gray-500">No location selected - click on the map to set a marker or search for a location</small>
-				{/if}
-			</div>
-
-			<Leaflet geoJSON={mapGeoJSON} on:locationUpdated={handleLocationUpdated} />
-			<Popover.Root bind:open={locationSearchOpen} let:ids>
-				<Popover.Trigger asChild let:builder>
-					<Button
-						builders={[builder]}
-						variant="outline"
-						role="combobox"
-						aria-expanded={locationSearchOpen}
-						class="w-full justify-between border-2 border-black"
-					>
-						{selectedLocation?.display_name ?? 'Select a location...'}
-						{#if isLoading}
-							<Spinner />
-						{/if}
-					</Button>
-				</Popover.Trigger>
-				<Popover.Content class="w-2/4 p-0">
-					<Command.Root>
-						<Command.Input placeholder="Search location..." bind:value={shippingFromInput} />
-						<Command.Empty>No location found.</Command.Empty>
-						<Command.Group>
-							{#each locationResults as location (location.place_id)}
-								<Command.Item
-									value={`${location.display_name}${location.place_id}`}
-									onSelect={() => {
-										handleLocationSelect(location)
-										locationSearchOpen = false
-										document.getElementById(ids.trigger)?.focus()
-									}}
-								>
-									{location.display_name}
-								</Command.Item>
-							{/each}
-						</Command.Group>
-					</Command.Root>
-				</Popover.Content>
-			</Popover.Root>
-		</Collapsible.Content>
-	</Collapsible.Root>
-
 	<div class="grid w-full items-center gap-1.5">
-		<Label for="currency" class="font-bold">Currency</Label>
+		<Label for="from" class="font-bold required-mark">Shipping From (Recommended)</Label>
+		<Collapsible.Root bind:open={shippingFromOpen} class="flex flex-col gap-2">
+			<Collapsible.Trigger asChild let:builder>
+				<Button builders={[builder]} variant="ghost" size="sm" class="w-full p-0">
+					<span class="i-ion-chevron-expand" />
+				</Button>
+			</Collapsible.Trigger>
+			<Collapsible.Content class="flex flex-col gap-2">
+				<div class="flex items-center gap-2">
+					<span
+						class="i-mdi-information-outline"
+						data-tooltip="Geohash is a compact representation of a geographic coordinate system. It's used to quickly identify the location of a point on a map. The accuracy is the number of characters in the geohash and is determined by your zoom level."
+					></span>
+					{#if geohashOfSelectedGeometry}
+						<small class="text-gray-500">Geohash: {geohashOfSelectedGeometry}</small>
+					{:else}
+						<small class="text-gray-500">No location selected - click on the map to set a marker or search for a location</small>
+					{/if}
+				</div>
+
+				<Leaflet geoJSON={mapGeoJSON} on:locationUpdated={handleLocationUpdated} />
+				<Popover.Root bind:open={locationSearchOpen} let:ids>
+					<Popover.Trigger asChild let:builder>
+						<Button
+							builders={[builder]}
+							variant="outline"
+							role="combobox"
+							aria-expanded={locationSearchOpen}
+							class="w-full justify-between border-2 border-black"
+						>
+							{selectedLocation?.display_name ?? 'Select a location...'}
+							{#if isLoading}
+								<Spinner />
+							{/if}
+						</Button>
+					</Popover.Trigger>
+					<Popover.Content class="w-2/4 p-0">
+						<Command.Root>
+							<Command.Input placeholder="Search location..." bind:value={shippingFromInput} />
+							<Command.Empty>No location found.</Command.Empty>
+							<Command.Group>
+								{#each locationResults as location (location.place_id)}
+									<Command.Item
+										value={`${location.display_name}${location.place_id}`}
+										onSelect={() => {
+											handleLocationSelect(location)
+											locationSearchOpen = false
+											document.getElementById(ids.trigger)?.focus()
+										}}
+									>
+										{location.display_name}
+									</Command.Item>
+								{/each}
+							</Command.Group>
+						</Command.Root>
+					</Popover.Content>
+				</Popover.Root>
+			</Collapsible.Content>
+		</Collapsible.Root>
+	</div>
+	<div class="grid w-full items-center gap-1.5">
+		<Label for="currency" class="font-bold">Choose your local currency</Label>
 		<DropdownMenu.Root>
 			<DropdownMenu.Trigger asChild let:builder>
 				<Button
@@ -396,9 +398,9 @@
 				{/if}
 			</div>
 			<div>
-				<Label for={`shipping-cost-${i}`} class="font-bold">Base Cost</Label>
+				<Label for={`shipping-cost-${i}`} class="font-bold">Cost <span class=" font-light">(in {currency})</span></Label>
 				<Input
-					data-tooltip="Shipping cost that each product using this method would include!"
+					data-tooltip="You can set a flat rate cost or enter 0 and define shipping costs per product individually."
 					bind:value={item.cost}
 					class="border-2 border-black"
 					min={0}
@@ -442,7 +444,7 @@
 							<Command.Input placeholder="Search country..." />
 							<Command.Empty>No country found.</Command.Empty>
 							<Command.Group>
-								{#each Object.values(COUNTRIES_ISO).toSorted((a, b) => {
+								{#each Object.values(COUNTRIES_ISO)?.toSorted((a, b) => {
 									if (item.countries === null) return 0
 									if (item.countries.includes(a.iso3) && item.countries.includes(b.iso3)) return 0
 									if (item.countries.includes(a.iso3)) return -1

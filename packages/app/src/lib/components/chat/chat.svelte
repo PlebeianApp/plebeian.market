@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { goto } from '$app/navigation'
 	import { createUserByIdQuery, createUserRelaysByIdQuery } from '$lib/fetch/users.queries'
 	import { createDMSubscriptionManager, dmKind04Sub, groupedDMs } from '$lib/nostrSubs/subs'
 	import { manageUserRelays } from '$lib/nostrSubs/userRelayManager'
@@ -8,6 +9,7 @@
 	import { SendHorizontal } from 'lucide-svelte'
 	import { onDestroy, onMount } from 'svelte'
 
+	import Button from '../ui/button/button.svelte'
 	import CAvatar from '../ui/custom-components/c-avatar.svelte'
 	import Textarea from '../ui/textarea/textarea.svelte'
 	import ChatBubble from './chat-bubble.svelte'
@@ -68,6 +70,9 @@
 
 <div class="flex flex-col h-full max-w-4xl mx-auto">
 	<div class="p-4 border-b flex items-center gap-2">
+		<Button size="icon" variant="ghost" class="border-0" on:click={() => goto('/dash/messages')}>
+			<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
+		</Button>
 		<CAvatar pubkey={selectedPubkey} profile={$userProfileQuery?.data} />
 		<div class="overflow-hidden flex-1">
 			<h3 class="text-xl font-semibold truncate">

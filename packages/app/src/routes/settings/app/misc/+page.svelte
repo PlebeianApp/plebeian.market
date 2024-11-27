@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Selected } from 'bits-ui'
-	import { invalidateAll } from '$app/navigation'
+	import { goto, invalidateAll } from '$app/navigation'
 	import { page } from '$app/stores'
 	import { processAppSettings, submitAppSettings } from '$lib/appSettings.js'
 	import { Button } from '$lib/components/ui/button'
@@ -15,7 +15,7 @@
 	import SelectTrigger from '$lib/components/ui/select/select-trigger.svelte'
 	import Separator from '$lib/components/ui/separator/separator.svelte'
 	import { availabeLogos } from '$lib/constants'
-	import { copyToClipboard, nav_back } from '$lib/utils'
+	import { copyToClipboard } from '$lib/utils'
 	import { npubEncode } from 'nostr-tools/nip19'
 	import { onMount, tick } from 'svelte'
 	import { toast } from 'svelte-sonner'
@@ -23,10 +23,8 @@
 	export let data
 	const { adminUsers, currencies, appSettings } = data
 	const linkDetails = data.menuItems.find((item) => item.value === 'app-settings')?.links.find((item) => item.href === $page.url.pathname)
-	let checked = appSettings.allowRegister
+	let checked = appSettings?.allowRegister
 	let selectedCurrency: Selected<string> = { value: 'BTC', label: 'BTC' }
-	let adminsList: string[] = adminUsers.map((user) => npubEncode(user))
-	let inputValue: string = ''
 	let logoUrl: string = ''
 	let open = false
 
@@ -43,7 +41,7 @@
 					defaultCurrency: selectedCurrency.value,
 					logoUrl: logoUrl || undefined,
 					// Only include instancePk if it exists in the original appSettings
-					...(data.appSettings.instancePk ? { instancePk: data.appSettings.instancePk } : {}),
+					...(data.appSettings?.instancePk ? { instancePk: data.appSettings.instancePk } : {}),
 				},
 				false,
 			)
@@ -78,14 +76,14 @@
 
 	onMount(() => {
 		logoUrl = appSettings?.logoUrl ?? ''
-		selectedCurrency = { value: appSettings.defaultCurrency, label: appSettings.defaultCurrency }
+		selectedCurrency = { value: appSettings?.defaultCurrency ?? 'BTC', label: appSettings?.defaultCurrency }
 	})
 </script>
 
 <div class="pb-4 space-y-2 max-w-2xl">
 	<div>
 		<div class=" flex items-center gap-1">
-			<Button size="icon" variant="outline" class=" border-none" on:click={() => nav_back()}>
+			<Button size="icon" variant="outline" class=" border-none" on:click={() => goto('/settings/app')}>
 				<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
 			</Button>
 			<section>
@@ -106,16 +104,16 @@
 							<Button
 								variant="outline"
 								class="flex gap-1 p-2 border-black border-2"
-								on:click={() => copyToClipboard(appSettings.instancePk)}
+								on:click={() => copyToClipboard(appSettings?.instancePk ?? '')}
 							>
-								<code class="truncate">{npubEncode(appSettings.instancePk)}</code>
+								<code class="truncate">{npubEncode(appSettings?.instancePk)}</code>
 								<span class=" i-tdesign-copy"></span>
 							</Button>
 						</div>
 
 						<Label class="truncate font-bold">Owner npub</Label>
 						<Input
-							value={appSettings.ownerPk ? npubEncode(appSettings.ownerPk) : ''}
+							value={appSettings?.ownerPk ? npubEncode(appSettings?.ownerPk) : ''}
 							class=" border-black border-2"
 							name="ownerPk"
 							placeholder="owner npub"
@@ -124,7 +122,7 @@
 						<div class=" flex-grow">
 							<Label class="truncate font-bold required-mark">Instance name</Label>
 							<Input
-								value={appSettings.instanceName}
+								value={appSettings?.instanceName}
 								class="border-black border-2"
 								name="instanceName"
 								placeholder="instance name"
@@ -190,7 +188,7 @@
 						</div>
 						<Label class="truncate font-bold">Contact email</Label>
 						<Input
-							value={appSettings.contactEmail}
+							value={appSettings?.contactEmail}
 							class="border-black border-2"
 							name="contactEmail"
 							placeholder="contact email"

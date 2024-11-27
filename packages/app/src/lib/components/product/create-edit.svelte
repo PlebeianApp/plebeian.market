@@ -65,7 +65,7 @@
 				})) ?? []
 	}
 
-	$: sortedImages = [...images].toSorted((a, b) => (a.imageOrder ?? 0) - (b.imageOrder ?? 0))
+	$: sortedImages = [...images]?.toSorted((a, b) => (a.imageOrder ?? 0) - (b.imageOrder ?? 0))
 
 	function updateImages(updatedImages: Partial<ProductImage>[]) {
 		images = updatedImages
@@ -92,8 +92,7 @@
 	}
 
 	function addCategory() {
-		const name = `category ${categories.length + 1}`
-		categories = [...categories, { key: createSlugId(name), name, checked: true }]
+		categories = [...categories, { key: createSlugId(`category ${categories.length + 1}`), name: '', checked: true }]
 
 		queueMicrotask(() => {
 			const inputs = document.querySelectorAll('input[type="text"]')
@@ -326,8 +325,10 @@
 							<Checkbox id="terms" bind:checked={category.checked} />
 							<Input
 								bind:value={category.name}
+								placeholder="Category name"
 								class="border-2 border-black"
 								type="text"
+								required
 								on:keydown={(e) => {
 									if (e.key === 'Enter') {
 										e.preventDefault()

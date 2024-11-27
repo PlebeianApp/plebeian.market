@@ -1,17 +1,15 @@
 <script lang="ts">
-	import { invalidateAll } from '$app/navigation'
+	import { goto, invalidateAll } from '$app/navigation'
 	import { page } from '$app/stores'
 	import { Button } from '$lib/components/ui/button'
 	import * as Collapsible from '$lib/components/ui/collapsible'
 	import { Input } from '$lib/components/ui/input'
 	import { addForbiddenWordMutation, deleteForbiddenWordMutation } from '$lib/fetch/settingsMeta.mutations.js'
-	import { nav_back } from '$lib/utils'
 	import { toast } from 'svelte-sonner'
 
 	import type { PageData } from './$types.js'
 
 	let newWord = ''
-	// TODO: Improve forbidden words dettection, if you add or remove one the stalls in `market square` still appearing with a forbidden word
 	export let data
 	const linkDetails = data.menuItems.find((item) => item.value === 'app-settings')?.links.find((item) => item.href === $page.url.pathname)
 
@@ -44,7 +42,7 @@
 <div class="pb-4 space-y-2 max-w-2xl">
 	<div>
 		<div class=" flex items-center gap-1">
-			<Button size="icon" variant="outline" class=" border-none" on:click={() => nav_back()}>
+			<Button size="icon" variant="outline" class=" border-none" on:click={() => goto('/settings/app')}>
 				<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
 			</Button>
 			<section>

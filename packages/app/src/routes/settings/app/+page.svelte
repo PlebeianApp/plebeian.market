@@ -1,7 +1,7 @@
 <script lang="ts">
+	import { goto } from '$app/navigation'
 	import Button from '$lib/components/ui/button/button.svelte'
 	import Separator from '$lib/components/ui/separator/separator.svelte'
-	import { nav_back } from '$lib/utils'
 
 	import type { PageData } from './$types'
 
@@ -12,7 +12,7 @@
 <div class="pb-4 space-y-2">
 	<div>
 		<div class=" flex items-center gap-1">
-			<Button size="icon" variant="outline" class=" border-none" on:click={() => nav_back()}>
+			<Button size="icon" variant="outline" class=" border-none" on:click={() => goto('/settings')}>
 				<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
 			</Button>
 			<section>

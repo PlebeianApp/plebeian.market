@@ -24,7 +24,7 @@
 	{#if $breakpoint !== 'lg'}
 		<div class="max-w-2xl mx-auto p-2">
 			<div class="w-full space-y-4">
-				<h4><a href="/settings">Settings</a></h4>
+				<h4><a href="/dash">Dashboard</a></h4>
 				<Menubar.Root>
 					{#each menuItems as item}
 						{#if shouldShowItem(item, $userExist?.data?.exists, $activeUserQuery.data?.role)}
@@ -57,7 +57,7 @@
 		<div class="max-w-4xl mx-auto p-4">
 			<div class="grid grid-cols-[200px_1fr] gap-2">
 				<div class="w-full">
-					<h2><a href="/settings">Settings</a></h2>
+					<h2><a href="/dash">Dashboard</a></h2>
 					<Accordion.Root bind:value>
 						{#each menuItems as item}
 							{#if shouldShowItem(item, $userExist?.data?.exists, $activeUserQuery.data?.role)}

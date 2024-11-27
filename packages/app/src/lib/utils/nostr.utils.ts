@@ -3,6 +3,7 @@ import { page } from '$app/stores'
 import { stallsSub } from '$lib/nostrSubs/subs'
 import { fetchAddressableEvent } from '$lib/nostrSubs/utils'
 import { relayReports } from '$lib/stores/relayReports'
+import { deleteCachedEvent, sessions } from '$lib/stores/session'
 import { unixTimeNow } from '$lib/utils'
 import { get } from 'svelte/store'
 
@@ -44,11 +45,10 @@ export async function deleteEvent(eventCoordinates?: string, reason?: string, pu
 		return null
 	}
 
-	const deletedEvent = await publishedEmptyEvent.delete(reason, false)
-	await publishEvent(deletedEvent)
-	if (deletedEvent && dTag) {
+	if (dTag) {
 		stallsSub?.update((stalls) => stalls.filter((stall) => stall.dTag !== dTag))
+		deleteCachedEvent(eventCoordinates)
 	}
 
-	return deletedEvent
+	return publishedEmptyEvent
 }

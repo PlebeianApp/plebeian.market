@@ -1,9 +1,10 @@
 <script lang="ts">
+	import { goto } from '$app/navigation'
 	import { page } from '$app/stores'
 	import { Button } from '$lib/components/ui/button'
 	import { Input } from '$lib/components/ui/input'
 	import { userDeleteAccountMutation } from '$lib/fetch/users.mutations'
-	import { nav_back } from '$lib/utils'
+	import ndkStore from '$lib/stores/ndk'
 
 	import type { PageData } from './$types'
 
@@ -15,7 +16,7 @@
 		?.links.find((item) => item.href === $page.url.pathname)
 
 	const handleDeleteAccount = async () => {
-		$userDeleteAccountMutation.mutate()
+		$userDeleteAccountMutation.mutate($ndkStore?.activeUser?.pubkey)
 	}
 
 	const handleChallengeInputChange = (input: string) => {
@@ -29,7 +30,7 @@
 
 <div class="pb-4 space-y-2">
 	<div class=" flex items-center gap-1">
-		<Button size="icon" variant="outline" class=" border-none" on:click={() => nav_back()}>
+		<Button size="icon" variant="outline" class=" border-none" on:click={() => goto('/settings/account')}>
 			<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
 		</Button>
 		<section>

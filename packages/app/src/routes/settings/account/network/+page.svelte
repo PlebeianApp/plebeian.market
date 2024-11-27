@@ -1,9 +1,9 @@
 <script lang="ts">
+	import { goto } from '$app/navigation'
 	import { page } from '$app/stores'
 	import RelayWidget from '$lib/components/assets/relayWidget.svelte'
 	import * as Alert from '$lib/components/ui/alert/index.js'
 	import { Button } from '$lib/components/ui/button/index.js'
-	import { nav_back } from '$lib/utils'
 
 	import type { PageData } from './$types'
 
@@ -16,7 +16,7 @@
 
 <div class="pb-4 space-y-2">
 	<div class=" flex items-center gap-1">
-		<Button size="icon" variant="outline" class=" border-none" on:click={() => nav_back()}>
+		<Button size="icon" variant="outline" class=" border-none" on:click={() => goto('/settings/account')}>
 			<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
 		</Button>
 		<section>
