@@ -4,12 +4,16 @@
     import { Card } from '$lib/components/ui/card';
   
     const { needRefresh, updateServiceWorker } = useRegisterSW({
-      onRegistered(swr) {
-        console.log(`SW registered: ${swr}`);
-      },
-      onRegisterError(error) {
-        console.log('SW registration error', error);
-      }
+      onRegistered(r) {
+		r && setInterval(() => {
+		   console.log('Checking for sw update')
+		   r.update()
+		}, 1000)
+			console.log(`SW Registered: ${r}`)
+		},
+		onRegisterError(error) {
+			console.log('SW registration error', error)
+		},
     });
   
     function close() {

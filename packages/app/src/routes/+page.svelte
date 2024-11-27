@@ -19,7 +19,7 @@
 			<main class="text-black">
 				<div class="relative w-full bg-black py-20 text-center text-white">
 					<Pattern />
-					<h1 class="relative z-10">Sell stuff for sats</h1>
+					<h1 class="relative z-10">Sell stuff for sats 1</h1>
 				</div>
 				<div class="container">
 					{#if $featuredProductsQuery.data?.products?.length}
