@@ -15,7 +15,7 @@ import {
 } from './constants'
 import { db } from './database'
 import { devUser1, devUser2, devUser3, devUser4, devUser5, FORBIDDEN_WORDS } from './fixtures'
-import { AppMeta, AppSettings, User, UserMeta } from './types'
+import type { AppMeta, AppSettings, User, UserMeta } from './types'
 
 const randomHexValue = () => {
 	return faker.string.hexadecimal({

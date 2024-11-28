@@ -3,7 +3,7 @@ import { sql } from 'drizzle-orm'
 import type { AppSettingsMetaName, DigitalProductMetaName, ProductMetaName, UserMetaName } from './constants'
 import { APP_SETTINGS_META, DIGITAL_PRODUCT_META, GENERAL_META, META_NAMES, PRODUCT_META, USER_META } from './constants'
 import { db } from './database'
-import { AppSettings } from './types'
+import type { AppSettings } from './types'
 
 const main = async () => {
 	const appSettings = {
