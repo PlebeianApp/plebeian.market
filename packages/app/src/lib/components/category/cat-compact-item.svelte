@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { RichCat } from '$lib/server/categories.service'
 
+	import { Badge } from '../ui/badge'
 	import Button from '../ui/button/button.svelte'
 
 	export let cat: RichCat
@@ -11,12 +12,14 @@
 	}
 </script>
 
-<Button class="cursor-pointer border border-gray flex justify-start items-center p-4 font-bold" variant="outline" href={getCategoryUrl()}>
-	<div class="flex items-center gap-2 w-full justify-between text-xs sm:text-base">
-		<section class=" inline-flex items-center gap-2">
-			<span class=" i-mdi-category-outline w-4 h-4 sm:w-6 sm:h-6" />
-			<span>{cat.name}</span>
-		</section>
-		<span>{cat.productCount}</span>
-	</div>
-</Button>
+<Badge
+	variant="outline"
+	class="cursor-pointer bg-white hover:shadow-md rounded-none hover:border-primary border border-black duration-200 flex flex-row justify-between"
+	href={getCategoryUrl()}
+>
+	<section class=" inline-flex items-center gap-2">
+		<span class=" i-mdi-category-outline w-3 h-3 sm:w-4 sm:h-4" />
+		<span class="text-xs sm:text-sm">{cat.name}</span>
+	</section>
+	<span>{cat.productCount}</span>
+</Badge>
