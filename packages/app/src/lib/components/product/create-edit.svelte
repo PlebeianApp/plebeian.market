@@ -15,7 +15,7 @@
 	import { createProductMutation, deleteProductMutation, editProductMutation } from '$lib/fetch/products.mutations'
 	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
 	import ndkStore from '$lib/stores/ndk'
-	import { parseCoordinatesString } from '$lib/utils'
+	import { handleInvalidForm, parseCoordinatesString } from '$lib/utils'
 	import { deleteEvent } from '$lib/utils/nostr.utils'
 	import { prepareProductData } from '$lib/utils/product.utils'
 	import { validateForm } from '$lib/utils/zod.utils'
@@ -102,6 +102,7 @@
 		})
 	}
 	async function handleSubmit(sEvent: SubmitEvent, stall: Partial<RichStall> | null) {
+		console.log('handleSubmit', stall)
 		if (!stall) return
 		isLoading = true
 
@@ -115,7 +116,6 @@
 				}))
 
 			const productData = prepareProductData(formData, stall, sortedImages, shippingData, product!)
-
 			validationErrors = validateForm(productData, get(forbiddenPatternStore).createProductEventSchema)
 
 			if (Object.keys(validationErrors).length > 0) {
@@ -159,6 +159,7 @@
 		}
 		updateImages(product?.images ?? [])
 	})
+
 	const activeTab =
 		'w-full font-bold border-b-2 border-black text-black data-[state=active]:border-b-primary data-[state=active]:text-primary'
 
@@ -181,7 +182,11 @@
 {:else if !$stallsQuery.data?.stalls.length}
 	<div>Creating products needs at least one defined <a class="underline" href="/settings/account/stalls">stall</a></div>
 {:else}
-	<form on:submit|preventDefault={(sEvent) => handleSubmit(sEvent, stall)} class="flex flex-col gap-4 grow h-full">
+	<form
+		on:submit|preventDefault={(sEvent) => handleSubmit(sEvent, stall)}
+		on:invalid|capture={handleInvalidForm}
+		class="flex flex-col gap-4 grow h-full"
+	>
 		<Tabs.Root value="basic" class="p-4">
 			<Tabs.List class="w-full justify-around bg-transparent">
 				<Tabs.Trigger value="basic" class={activeTab}>Basic</Tabs.Trigger>

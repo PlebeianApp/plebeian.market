@@ -29,7 +29,7 @@
 </script>
 
 <Card.Root
-	class="relative flex flex-col border-2 border-black hover:border-primary transition-colors duration-200 text-black overflow-hidden"
+	class="relative flex flex-col border-2 border-black hover:border-primary transition-colors hover:shadow-lg duration-200 text-black overflow-hidden"
 >
 	<a
 		href={product.userNip05 ? `/products/${product.userNip05}/${product.identifier}` : `/products/${productCoordinates.coordinates}`}

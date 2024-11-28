@@ -12,8 +12,8 @@
 	import ShoppingCart from './cart/shopping-cart.svelte'
 	import { Button } from './ui/button'
 
-	$: stallQuery = $drawerUI.drawerType === 'stall' ? createStallQuery($drawerUI.id!) : undefined
-	$: productQuery = $drawerUI.drawerType === 'product' ? createProductQuery($drawerUI.id!) : undefined
+	$: stallQuery = $drawerUI.drawerType === 'stall' && $drawerUI.id ? createStallQuery($drawerUI.id!) : undefined
+	$: productQuery = $drawerUI.drawerType === 'product' && $drawerUI.id ? createProductQuery($drawerUI.id!) : undefined
 
 	$: isOpen = $drawerUI.drawerType !== null
 	$: isLoading = ($stallQuery?.isLoading || $productQuery?.isLoading) ?? false
