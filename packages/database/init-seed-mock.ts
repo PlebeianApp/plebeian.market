@@ -3,6 +3,7 @@ import { createId } from '@paralleldrive/cuid2'
 import { sql } from 'drizzle-orm'
 
 import type { AppSettingsMetaName, DigitalProductMetaName, ProductMetaName, UserMetaName } from './constants'
+import type { AppMeta, AppSettings, User, UserMeta } from './types'
 import {
 	APP_SETTINGS_META,
 	DIGITAL_PRODUCT_META,
@@ -15,7 +16,6 @@ import {
 } from './constants'
 import { db } from './database'
 import { devUser1, devUser2, devUser3, devUser4, devUser5, FORBIDDEN_WORDS } from './fixtures'
-import { AppMeta, AppSettings, User, UserMeta } from './types'
 
 const randomHexValue = () => {
 	return faker.string.hexadecimal({

@@ -4,10 +4,7 @@ import type { AppSettings } from '@plebeian/database'
 
 import type { PageServerLoad } from './$types'
 
-export const load: PageServerLoad = async ({setHeaders}) => {
-	// setHeaders({
-	// 	'Cache-Control': 'no-store'
-	// })
+export const load: PageServerLoad = async () => {
 	const appSettings = (await getAppSettings()) as AppSettings
 	return { appSettings }
 }
