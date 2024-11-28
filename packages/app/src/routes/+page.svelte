@@ -34,10 +34,8 @@
 							</div>
 						</div>
 					{/if}
-					<div class="bg-secondary py-5 lg:px-12">
-						<div>
-							<CatMenu />
-						</div>
+					<div class="py-5 lg:px-12">
+						<CatMenu />
 					</div>
 					{#if $productQuery.data?.products?.length}
 						<div class=" px-4 py-20 lg:px-12">

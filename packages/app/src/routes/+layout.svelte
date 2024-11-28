@@ -19,6 +19,7 @@
 	import SellStuffAdvert from '$lib/components/sell-stuff-advert.svelte'
 	import DialogManager from '$lib/components/ui/dialogManager.svelte'
 	import { queryClient } from '$lib/fetch/client'
+	import { createCurrencyConversionKey } from '$lib/fetch/keys'
 	import { processQueuedInsertions } from '$lib/nostrSubs/data-aggregator'
 	import { dialogs } from '$lib/stores/dialog'
 	import ndkStore from '$lib/stores/ndk'
@@ -32,7 +33,7 @@
 	export let data: LayoutData
 
 	for (const [currency, price] of data.prices) {
-		queryClient.setQueryData(['currency-conversion', currency], price)
+		queryClient.setQueryData(createCurrencyConversionKey(currency), price)
 	}
 
 	$: isLoggedIn = $ndkStore && $ndkStore.activeUser
