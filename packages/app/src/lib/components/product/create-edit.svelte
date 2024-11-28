@@ -227,7 +227,7 @@
 
 				<div class="flex gap-1.5">
 					<div class="grid w-full items-center gap-1.5">
-						<Label for="price" class="font-bold required-mark">Price</Label>
+						<Label for="price" class="font-bold required-mark">Price<small class="font-light">({stall?.currency})</small></Label>
 						<Input
 							data-tooltip="The cost of your product"
 							class={`border-2 border-black ${validationErrors['price'] ? 'ring-2 ring-red-500' : ''}`}

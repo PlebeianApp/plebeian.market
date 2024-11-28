@@ -42,7 +42,6 @@
 					{#if $productQuery.data?.products?.length}
 						<div class=" px-4 py-20 lg:px-12">
 							<h2>Products</h2>
-
 							<div class=" flex flex-col items-center">
 								<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
 									{#each $productQuery.data?.products as item (item.id)}
