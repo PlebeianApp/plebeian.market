@@ -12,7 +12,7 @@
 	import { createProductsByFilterQuery } from '$lib/fetch/products.queries'
 	import { createStallQuery } from '$lib/fetch/stalls.queries'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
-	import { openDrawerForStall } from '$lib/stores/drawer-ui'
+	import { openDrawerForNewProductForStall, openDrawerForStall } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
 	import { stringToHexColor, truncateString, truncateText } from '$lib/utils'
 
@@ -46,13 +46,13 @@
 </script>
 
 <main class="px-4 lg:px-12">
-	<div class="flex flex-col gap-14">
+	<div class="flex flex-col gap-12">
 		{#if $stallQuery.data?.stall}
 			{@const { image, name, description, currency, createDate, shipping } = $stallQuery.data.stall}
 			<div class="flex flex-col gap-2">
 				{#if image}
 					<div class="border-black border-2 w-full h-auto max-h-[45vh] overflow-hidden flex items-center justify-center">
-						<img src={image} alt="stall-cover" />
+						<img src={image} alt="stall-cover" class="w-full h-full object-cover" />
 					</div>
 				{:else}
 					<div
@@ -122,7 +122,10 @@
 			</div>
 
 			{#if isMyStall}
-				<Button class="mt-4 w-fit" on:click={() => openDrawerForStall(stall.id)}>Edit stall</Button>
+				<div class="flex flex-row gap-2">
+					<Button class="mt-4 w-fit" on:click={() => openDrawerForStall(stall.id)}>Edit stall</Button>
+					<Button class="mt-4 w-fit" on:click={() => openDrawerForNewProductForStall(stall.id)}>Add product</Button>
+				</div>
 			{/if}
 		{:else}
 			<section class=" flex flex-col gap-2">
