@@ -5,10 +5,10 @@
   
     const { needRefresh, updateServiceWorker } = useRegisterSW({
       onRegistered(r) {
-		// r && setInterval(() => {
-		//    console.log('Checking for sw update')
-		//    r.update()
-		// }, 1000)
+        r && setInterval(() => {
+          console.log('Checking for sw update')
+          r.update()
+        }, 15000)
 			console.log(`SW Registered: ${r}`)
 		},
 		onRegisterError(error) {
@@ -26,7 +26,7 @@
   {#if toast}
     <Card class="fixed bottom-4 right-4 p-3 z-10 text-left" role="alert">
         <div class="mb-2">
-            <span>New content available, click on reload button to update.</span>
+            <span>New version available, click on reload button to update.</span>
         </div>
         {#if $needRefresh}
             <Button variant="outline" on:click={() => updateServiceWorker(true)}>

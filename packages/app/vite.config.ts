@@ -17,10 +17,6 @@ export default defineConfig(({ mode }) => {
 			tsconfigPaths(),
 			sveltekit(),
 			SvelteKitPWA({
-				strategies: 'injectManifest',
-				// injectManifest: {
-				// 	injectionPoint: undefined,
-				// },
 				manifest: {
 					name: 'Plebeian Market',
 					short_name: 'Plebeian Market',
