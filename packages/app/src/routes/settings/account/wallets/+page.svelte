@@ -5,6 +5,7 @@
 	import NwcWallet from '$lib/components/settings/nwc-wallet.svelte'
 	import { Button } from '$lib/components/ui/button/index.js'
 	import { queryClient } from '$lib/fetch/client'
+	import { createUserWalletDetailsKey } from '$lib/fetch/keys'
 	import { userWalletQuery } from '$lib/fetch/wallets.queries'
 	import ndkStore from '$lib/stores/ndk'
 	import { EncryptedStorage } from '$lib/utils'
@@ -27,7 +28,7 @@
 
 	function handleWalletAdded() {
 		showEmptyWallet = false
-		queryClient.invalidateQueries({ queryKey: ['walletDetails'] })
+		queryClient.invalidateQueries({ queryKey: createUserWalletDetailsKey('') })
 		loadLocalWallets()
 		showEmptyWallet = false
 	}
@@ -37,7 +38,7 @@
 		if (deletedWalletId.startsWith('local-')) {
 			localWallets = localWallets.filter((wallet) => wallet.id !== deletedWalletId)
 		} else {
-			queryClient.invalidateQueries({ queryKey: ['walletDetails'] })
+			queryClient.invalidateQueries({ queryKey: createUserWalletDetailsKey('') })
 		}
 	}
 
