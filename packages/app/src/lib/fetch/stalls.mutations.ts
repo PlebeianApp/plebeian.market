@@ -115,7 +115,7 @@ export const deleteStallMutation = createMutation(
 			}
 			return null
 		},
-		onSuccess: (stallId: string | null) => {
+		onSuccess: () => {
 			const $ndkStore = get(ndkStore)
 			if ($ndkStore.activeUser?.pubkey) {
 				queryClient.invalidateQueries({ queryKey: createStallsByFilterKey({ userId: $ndkStore.activeUser.pubkey }) })
@@ -143,7 +143,6 @@ export const setStallBannedMutation = createMutation(
 		},
 		onSuccess: ({ id }: { id: string }) => {
 			if (id) {
-				queryClient.invalidateQueries({ queryKey: createStallsByFilterKey({ stallId: id }) })
 				queryClient.invalidateQueries({ queryKey: createStallsByFilterKey({}) })
 				goto('/')
 			}

@@ -32,6 +32,7 @@
 	$: isMe = $ndkStore.activeUser?.pubkey == id
 	$: userProfileQuery = createUserByIdQuery(id as string)
 	$: stallsQuery = createStallsByFilterQuery({ userId: id })
+	$: console.log('userId', id)
 	$: productsQuery = createProductsByFilterQuery({ userId: id })
 	$: stallsMixture = mergeWithExisting($stallsQuery?.data?.stalls ?? [], nostrStalls, 'id')
 	$: productsMixture = stallsMixture.length
@@ -111,7 +112,9 @@
 						<div class="flex flex-row gap-2">
 							{#if isMe}
 								<DropdownMenu.Root>
-									<DropdownMenu.Trigger><Button>Create...</Button></DropdownMenu.Trigger>
+									<DropdownMenu.Trigger
+										><Button><span class=" i-tdesign-add-circle w-4 h-4 mx-2" /> <span>Create</span></Button></DropdownMenu.Trigger
+									>
 									<DropdownMenu.Content>
 										<DropdownMenu.Group>
 											<DropdownMenu.Item on:click={openDrawerForNewStall}>Create stall</DropdownMenu.Item>

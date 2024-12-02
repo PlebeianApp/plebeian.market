@@ -135,7 +135,7 @@
 			</section>
 		{/if}
 	</div>
-	{#if $productsQuery.data}
+	{#if $productsQuery.data?.products.length}
 		{@const { products } = $productsQuery.data}
 		<h2>Products</h2>
 
@@ -154,6 +154,10 @@
 					<ProductItem product={item} />
 				{/each}
 			{/if}
+		</div>
+	{:else if $productsQuery.isSuccess && !$productsQuery.data}
+		<div class=" py-6">
+			<h3>No products found</h3>
 		</div>
 	{:else}
 		<div class="flex gap-4 mt-6">

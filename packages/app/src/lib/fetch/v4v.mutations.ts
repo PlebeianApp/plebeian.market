@@ -42,7 +42,7 @@ export const setV4VForUserMutation = createMutation(
 
 			return 0
 		},
-		onSuccess: (amount: number) => {
+		onSuccess: () => {
 			const $ndkStore = get(ndkStore)
 			if (!$ndkStore.activeUser?.pubkey) return
 			queryClient.invalidateQueries({ queryKey: createV4VForUserKey($ndkStore.activeUser?.pubkey) })
