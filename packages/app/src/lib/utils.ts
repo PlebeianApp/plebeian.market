@@ -589,3 +589,26 @@ export function getInvoiceStatusColor(status: string): string {
 export const shouldShowItem = (item: MenuItem, userExist?: boolean, userRole?: UserRoles) => {
 	return item.public || userExist || userRole === 'admin'
 }
+
+export function handleInvalidForm(event: Event) {
+	event.preventDefault()
+
+	const form = event.currentTarget as HTMLFormElement
+	const invalidElements = form.querySelectorAll(':invalid')
+
+	const errorMessages = Array.from(invalidElements)
+		.map((element) => {
+			const input = element as HTMLInputElement
+			const label =
+				document.querySelector(`label[for="${input.id}"]`)?.textContent?.trim() || input.getAttribute('aria-label') || input.name
+			return `• ${label}: Required field`
+		})
+		.join('\n')
+
+	errorMessages.split('\n').forEach((error) => {
+		toast.error('Please fill in all required fields:', {
+			description: error,
+			style: 'white-space: pre-line;',
+		})
+	})
+}

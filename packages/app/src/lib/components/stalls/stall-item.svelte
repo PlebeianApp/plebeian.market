@@ -56,7 +56,7 @@
 
 {#await processStallData()}
 	<Card.Root
-		class="relative flex flex-col border-2 border-black hover:border-primary transition-colors duration-200 text-black overflow-hidden min-h-96"
+		class="relative flex flex-col border-2 border-black hover:border-primary transition-colors hover:shadow-lg duration-200 text-black overflow-hidden min-h-96"
 	>
 		<a href={stallUrl} class="flex flex-col flex-1">
 			<Card.Header class="p-0 flex-shrink-0">

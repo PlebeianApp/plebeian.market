@@ -23,7 +23,7 @@
 				</div>
 				<div class="container">
 					{#if $featuredProductsQuery.data?.products?.length}
-						<div class=" bg-primary px-4 py-20 lg:px-12">
+						<div class="bg-primary px-4 py-20 lg:px-12">
 							<div>
 								<h2>Featured Collections</h2>
 								<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
@@ -35,9 +35,7 @@
 						</div>
 					{/if}
 					<div class="py-5 lg:px-12">
-						<div>
-							<CatMenu />
-						</div>
+						<CatMenu />
 					</div>
 					{#if $productQuery.data?.products?.length}
 						<div class=" px-4 py-20 lg:px-12">

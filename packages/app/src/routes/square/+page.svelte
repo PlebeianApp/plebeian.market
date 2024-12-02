@@ -27,11 +27,11 @@
 	<div class="flex flex-col">
 		<main class="text-black">
 			<div class="px-4 lg:px-12 flex flex-col gap-6">
-				<div>
-					<h1>Square</h1>
-					<h3 class=" font-light">Here you can find all the stalls published on nostr</h3>
-				</div>
 				<div class="container">
+					<div class="py-8">
+						<h1 class=" leading-4">Square</h1>
+						<h3 class=" font-light">Here you can find all the stalls published on nostr</h3>
+					</div>
 					<h2>Stalls</h2>
 					<div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
 						{#if $stallsSub?.length}

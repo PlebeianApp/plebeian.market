@@ -35,7 +35,6 @@
 					<h3 class=" font-light">Here you can find all the stalls of this community</h3>
 				</div>
 				<div class="container">
-					<h2>Stalls</h2>
 					<div class="gap-2 flex flex-col">
 						<CatMenu />
 						<div class=" flex flex-col gap-2">

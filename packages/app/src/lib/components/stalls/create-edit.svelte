@@ -26,6 +26,7 @@
 		createChangeTracker,
 		debounce,
 		getGeohashAccuracyText,
+		handleInvalidForm,
 		searchLocation,
 		shouldRegister,
 		unixTimeNow,
@@ -243,7 +244,7 @@
 	}
 </script>
 
-<form class="flex flex-col gap-4 grow" on:submit={handleSubmit}>
+<form class="flex flex-col gap-4 grow" on:submit={handleSubmit} on:invalid|capture={handleInvalidForm}>
 	<div class="grid w-full items-center gap-1.5">
 		<Label for="userImage" class="font-bold required-mark">Header image (Recommended)</Label>
 		<Collapsible.Root bind:open={headerImageOpen}>
