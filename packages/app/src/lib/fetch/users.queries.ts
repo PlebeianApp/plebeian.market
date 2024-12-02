@@ -27,13 +27,12 @@ declare module './client' {
 
 export const activeUserQuery = createQuery(
 	derived(ndkStore, ($ndkStore) => ({
-		queryKey: $ndkStore.activeUser?.pubkey ? createUsersByFilterKey({ userId: $ndkStore.activeUser?.pubkey }) : ['user'],
+		queryKey: createUsersByFilterKey({ userId: $ndkStore.activeUser?.pubkey }),
 		queryFn: async () => {
 			if ($ndkStore.activeUser?.pubkey) {
 				const user = (await createRequest(`GET /api/v1/users/${$ndkStore.activeUser.pubkey}`, {
 					auth: true,
 				})) as RichUser
-				invalidateAll()
 				return user
 			}
 

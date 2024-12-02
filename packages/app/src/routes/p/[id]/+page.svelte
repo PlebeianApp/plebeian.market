@@ -32,6 +32,7 @@
 	$: isMe = $ndkStore.activeUser?.pubkey == id
 	$: userProfileQuery = createUserByIdQuery(id as string)
 	$: stallsQuery = createStallsByFilterQuery({ userId: id })
+	$: console.log('userId', id)
 	$: productsQuery = createProductsByFilterQuery({ userId: id })
 	$: stallsMixture = mergeWithExisting($stallsQuery?.data?.stalls ?? [], nostrStalls, 'id')
 	$: productsMixture = stallsMixture.length

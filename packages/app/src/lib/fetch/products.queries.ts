@@ -21,16 +21,14 @@ import {
 	createProductKey,
 } from './keys'
 
+export interface ProductQueryData {
+	total: number
+	products: DisplayProduct[]
+}
+
 declare module './client' {
 	interface Endpoints {
-		'GET /api/v1/products': Operation<
-			'/api/v1/products',
-			'GET',
-			never,
-			never,
-			{ total: number; products: Partial<DisplayProduct>[] },
-			ProductsFilter
-		>
+		'GET /api/v1/products': Operation<'/api/v1/products', 'GET', never, never, ProductQueryData, ProductsFilter>
 		[k: `GET /api/v1/products/${string}`]: Operation<string, 'GET', never, never, DisplayProduct, never>
 		[k: `GET /api/v1/products/${string}?exists`]: Operation<string, 'GET', never, never, ExistsResult, never>
 	}
@@ -115,7 +113,7 @@ export const createCurrencyConversionQuery = (fromCurrency: string, amount: numb
 	)
 
 export const createProductsByFilterQuery = (filter: Partial<ProductsFilter>) =>
-	createQuery<{ total: number; products: Partial<DisplayProduct>[] } | null>(
+	createQuery<ProductQueryData | null>(
 		{
 			queryKey: createProductByFilterKey(filter),
 			queryFn: async () => {
