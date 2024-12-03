@@ -65,12 +65,12 @@
 				})) ?? []
 	}
 
-	$: sortedImages = [...images]?.toSorted((a, b) => (a.imageOrder ?? 0) - (b.imageOrder ?? 0))
+	$: sortedImages = [...images]?.sort((a, b) => (a.imageOrder ?? 0) - (b.imageOrder ?? 0))
 
 	function updateImages(updatedImages: Partial<ProductImage>[]) {
 		images = updatedImages
 			.map((image, index) => ({ ...image, imageOrder: image.imageOrder ?? index }))
-			.sort((a, b) => (a.imageOrder ?? 0) - (b.imageOrder ?? 0))
+			?.sort((a, b) => (a.imageOrder ?? 0) - (b.imageOrder ?? 0))
 	}
 
 	function handleNewImageAdded(e: CustomEvent<string>) {
@@ -88,7 +88,7 @@
 				...image,
 				imageOrder: image.imageUrl === mainImage.imageUrl ? 0 : index + 1,
 			}))
-			.sort((a, b) => (a.imageOrder ?? 0) - (b.imageOrder ?? 0))
+			?.sort((a, b) => (a.imageOrder ?? 0) - (b.imageOrder ?? 0))
 	}
 
 	function addCategory() {

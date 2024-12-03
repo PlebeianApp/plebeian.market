@@ -71,7 +71,7 @@
 				<div class="flex flex-col gap-1">
 					{#key $productsQuery.data.identifier}
 						{#if $productsQuery.data?.images?.length}
-							{@const sortedImages = $productsQuery.data.images.slice()?.toSorted((a, b) => a.imageOrder - b.imageOrder)}
+							{@const sortedImages = $productsQuery.data.images.slice()?.sort((a, b) => a.imageOrder - b.imageOrder)}
 							<Carousel.Root bind:api>
 								<Carousel.Content>
 									{#each sortedImages as item}
@@ -160,7 +160,7 @@
 						{:else}
 							<Button disabled>Out of stock</Button>
 						{/if}
-						<AdminActions type="product" id={productRes.id} />
+						<AdminActions type="product" id={productRes.id} isFeatured={$productsQuery.data.isFeatured} />
 					</div>
 					<span class="my-8 font-bold"
 						>Sold by <a

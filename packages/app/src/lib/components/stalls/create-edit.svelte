@@ -445,7 +445,7 @@
 							<Command.Input placeholder="Search country..." />
 							<Command.Empty>No country found.</Command.Empty>
 							<Command.Group>
-								{#each Object.values(COUNTRIES_ISO)?.toSorted((a, b) => {
+								{#each Object.values(COUNTRIES_ISO).sort((a, b) => {
 									if (item.countries === null) return 0
 									if (item.countries.includes(a.iso3) && item.countries.includes(b.iso3)) return 0
 									if (item.countries.includes(a.iso3)) return -1
