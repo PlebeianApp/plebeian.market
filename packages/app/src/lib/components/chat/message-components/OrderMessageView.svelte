@@ -24,7 +24,7 @@
 		}
 	}
 
-	$: orderUrl = `order/${$ndkStore.activeUser?.pubkey == message.buyerUserId ? 'purchases' : 'sales'}/${message.id}`
+	$: orderUrl = `/dash/order/${$ndkStore.activeUser?.pubkey == message.buyerUserId ? 'purchases' : 'sales'}/${message.id}`
 </script>
 
 <div class="bg-accent/80 rounded-md p-3">
