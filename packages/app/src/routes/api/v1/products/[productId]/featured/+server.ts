@@ -15,6 +15,6 @@ export const POST = async ({ params, request }) => {
 		const resultProductId = await setProductMetaFeatured(productId, featured)
 		return json({ id: resultProductId })
 	} catch (err) {
-		throw error(500, `Failed to update product featured status: ${err.message}`)
+		throw error(500, `Failed to update product featured status: ${err}`)
 	}
 }
