@@ -4,7 +4,7 @@ import { createQuery } from '@tanstack/svelte-query'
 import { invoicesFilterSchema } from '$lib/schema'
 
 import { createRequest, queryClient } from './client'
-import { createInvoiceKey, createInvoicesByFilterKey } from './keys'
+import { invoiceKeys } from './query-key-factory'
 
 declare module './client' {
 	interface Endpoints {
@@ -16,7 +16,7 @@ declare module './client' {
 export const createInvoiceQuery = (invoiceId: string) =>
 	createQuery(
 		{
-			queryKey: createInvoiceKey(invoiceId),
+			queryKey: invoiceKeys.detail(invoiceId),
 			queryFn: async () => {
 				return await createRequest(`GET /api/v1/invoices/${invoiceId}`, {
 					auth: true,
@@ -29,7 +29,7 @@ export const createInvoiceQuery = (invoiceId: string) =>
 export const createInvoicesByFilterQuery = (filter: Partial<InvoicesFilter>) =>
 	createQuery(
 		{
-			queryKey: createInvoicesByFilterKey(filter),
+			queryKey: invoiceKeys.filtered(filter),
 			queryFn: async () => {
 				return await createRequest('GET /api/v1/invoices', {
 					params: invoicesFilterSchema.parse(filter),

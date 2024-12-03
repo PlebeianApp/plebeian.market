@@ -4,7 +4,7 @@ import { get } from 'svelte/store'
 
 import type { V4VDTO } from './v4v.queries'
 import { createRequest, queryClient } from './client'
-import { createV4VForUserKey } from './keys'
+import { paymentKeys } from './query-key-factory'
 
 interface V4VPostParams {
 	userId: string
@@ -26,7 +26,6 @@ declare module './client' {
 
 export const setV4VForUserMutation = createMutation(
 	{
-		mutationKey: [],
 		mutationFn: async (v4vFilter: V4VDTO[]) => {
 			const $ndkStore = get(ndkStore)
 			if ($ndkStore.activeUser?.pubkey) {
@@ -42,10 +41,10 @@ export const setV4VForUserMutation = createMutation(
 
 			return 0
 		},
-		onSuccess: (amount: number) => {
+		onSuccess: () => {
 			const $ndkStore = get(ndkStore)
 			if (!$ndkStore.activeUser?.pubkey) return
-			queryClient.invalidateQueries({ queryKey: createV4VForUserKey($ndkStore.activeUser?.pubkey) })
+			queryClient.invalidateQueries({ queryKey: paymentKeys.v4v($ndkStore.activeUser?.pubkey) })
 		},
 	},
 	queryClient,

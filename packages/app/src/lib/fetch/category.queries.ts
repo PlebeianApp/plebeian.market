@@ -4,7 +4,7 @@ import { createQuery } from '@tanstack/svelte-query'
 import { catsFilterSchema } from '$lib/schema'
 
 import { createRequest, queryClient } from './client'
-import { createCategoriesByFilterKey } from './keys'
+import { categoryKeys } from './query-key-factory'
 
 declare module './client' {
 	interface Endpoints {
@@ -15,7 +15,7 @@ declare module './client' {
 export const createCategoriesByFilterQuery = (filter: Partial<CatsFilter>) =>
 	createQuery(
 		{
-			queryKey: createCategoriesByFilterKey(filter),
+			queryKey: categoryKeys.filtered(filter),
 			queryFn: async () => {
 				const response = await createRequest('GET /api/v1/category', {
 					params: catsFilterSchema.parse(filter),

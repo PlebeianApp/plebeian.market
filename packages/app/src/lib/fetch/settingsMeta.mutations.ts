@@ -1,7 +1,8 @@
 import { createMutation } from '@tanstack/svelte-query'
 
+import type { ForbiddenWordsQuery } from './settingsMeta.queries'
 import { createRequest, queryClient } from './client'
-import { createSettingsMetaKey } from './keys'
+import { settingsKeys } from './query-key-factory'
 
 declare module './client' {
 	interface Endpoints {
@@ -12,15 +13,16 @@ declare module './client' {
 
 export const addForbiddenWordMutation = createMutation(
 	{
-		mutationFn: async (word: string) => {
-			const response = await createRequest('POST /api/v1/settings-meta', {
+		mutationFn: async (word: string) =>
+			createRequest('POST /api/v1/settings-meta', {
 				auth: true,
 				body: { word },
-			})
-			return response
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: createSettingsMetaKey('word_blacklist') })
+			}),
+		onSuccess: (data, addedWord) => {
+			if (!data.success) return
+
+			const queryKey = settingsKeys.meta('word_blacklist')
+			queryClient.setQueryData(queryKey, (prevList?: string[]) => (prevList ? [...prevList, addedWord] : [addedWord]))
 		},
 	},
 	queryClient,
@@ -28,15 +30,17 @@ export const addForbiddenWordMutation = createMutation(
 
 export const deleteForbiddenWordMutation = createMutation(
 	{
-		mutationFn: async (wordId: string) => {
-			const response = await createRequest('DELETE /api/v1/settings-meta', {
+		mutationFn: async (wordId: string) =>
+			createRequest('DELETE /api/v1/settings-meta', {
 				auth: true,
 				body: { wordId },
-			})
-			return response
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: createSettingsMetaKey('word_blacklist') })
+			}),
+		onSuccess: (data, deletedWordId) => {
+			if (!data.success) return
+
+			queryClient.setQueryData(settingsKeys.meta('word_blacklist'), (prevData?: ForbiddenWordsQuery) => ({
+				forbiddenWords: prevData?.forbiddenWords.filter((word) => word.id !== deletedWordId) ?? [],
+			}))
 		},
 	},
 	queryClient,

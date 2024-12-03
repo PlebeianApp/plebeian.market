@@ -9,6 +9,7 @@ import {
 	DIGITAL_PRODUCT_META,
 	GENERAL_META,
 	META_NAMES,
+	PM_NPUB,
 	PRODUCT_META,
 	USER_META,
 	USER_ROLES,
@@ -111,7 +112,7 @@ const main = async () => {
 			if (name == APP_SETTINGS_META.WORD_BLACKLIST.value) {
 				const appMeta: AppMeta[] = []
 				FORBIDDEN_WORDS.forEach((value) => {
-					const userMeta = {
+					const forbbidenWordMeta = {
 						id: createId(),
 						appId: appSettings.instancePk,
 						metaName: name,
@@ -122,7 +123,7 @@ const main = async () => {
 						createdAt: faker.date.recent(),
 						updatedAt: faker.date.future(),
 					} as AppMeta
-					appMeta.push(userMeta)
+					appMeta.push(forbbidenWordMeta)
 				})
 				return appMeta
 			}
@@ -137,8 +138,8 @@ const main = async () => {
 				const { name } = metaType
 				let valueText: string | null = null
 				const valueBoolean: boolean | null = null
-				const valueNumeric: number | null = null
-				const key: string | null = null
+				let valueNumeric: number | null = null
+				let key: string | null = null
 
 				if (name == USER_META.TRUST_LVL.value) {
 					valueText = faker.helpers.arrayElement(Object.values(USER_TRUST_LEVEL))
@@ -148,6 +149,9 @@ const main = async () => {
 					} else {
 						valueText = faker.helpers.arrayElement(Object.values(USER_ROLES))
 					}
+				} else if (name == USER_META.V4V_SHARE.value) {
+					key = PM_NPUB
+					valueNumeric = 0.1
 				}
 
 				const userMeta = {
@@ -164,6 +168,7 @@ const main = async () => {
 
 				return userMeta
 			})
+			.filter((userMeta) => userMeta.valueText !== null || userMeta.valueNumeric !== null)
 	})
 
 	db.run(sql`PRAGMA foreign_keys = OFF;`)

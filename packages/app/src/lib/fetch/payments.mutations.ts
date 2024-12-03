@@ -8,7 +8,7 @@ import { get } from 'svelte/store'
 import { PAYMENT_DETAILS_METHOD } from '@plebeian/database/constants'
 
 import { createRequest, queryClient } from './client'
-import { createPrivatePaymentsKey } from './keys'
+import { paymentKeys } from './query-key-factory'
 import { persistOnChainIndexWalletMutation } from './wallets.mutations'
 
 export type PostStall = {
@@ -36,7 +36,6 @@ declare module './client' {
 
 export const persistPaymentMethodMutation = createMutation(
 	{
-		mutationKey: [],
 		mutationFn: async ({ paymentDetails, paymentMethod, stallId, isDefault }: PostStall) => {
 			const $ndkStore = get(ndkStore)
 			if ($ndkStore.activeUser?.pubkey) {
@@ -63,7 +62,7 @@ export const persistPaymentMethodMutation = createMutation(
 		onSuccess: () => {
 			const $ndkStore = get(ndkStore)
 			if (!$ndkStore.activeUser?.pubkey) return
-			queryClient.invalidateQueries({ queryKey: createPrivatePaymentsKey($ndkStore.activeUser?.pubkey) })
+			queryClient.invalidateQueries({ queryKey: paymentKeys.private($ndkStore.activeUser?.pubkey) })
 		},
 	},
 	queryClient,
@@ -92,7 +91,7 @@ export const updatePaymentMethodMutation = createMutation(
 		onSuccess: () => {
 			const $ndkStore = get(ndkStore)
 			if (!$ndkStore.activeUser?.pubkey) return
-			queryClient.invalidateQueries({ queryKey: createPrivatePaymentsKey($ndkStore.activeUser?.pubkey) })
+			queryClient.invalidateQueries({ queryKey: paymentKeys.private($ndkStore.activeUser?.pubkey) })
 		},
 	},
 	queryClient,
@@ -114,7 +113,7 @@ export const deletePaymentMethodMutation = createMutation(
 		onSuccess: () => {
 			const $ndkStore = get(ndkStore)
 			if (!$ndkStore.activeUser?.pubkey) return
-			queryClient.invalidateQueries({ queryKey: createPrivatePaymentsKey($ndkStore.activeUser?.pubkey) })
+			queryClient.invalidateQueries({ queryKey: paymentKeys.private($ndkStore.activeUser?.pubkey) })
 		},
 	},
 	queryClient,
@@ -136,7 +135,7 @@ export const setDefaultPaymentMethodForStallMutation = createMutation(
 		onSuccess: () => {
 			const $ndkStore = get(ndkStore)
 			if (!$ndkStore.activeUser?.pubkey) return
-			queryClient.invalidateQueries({ queryKey: createPrivatePaymentsKey($ndkStore.activeUser?.pubkey) })
+			queryClient.invalidateQueries({ queryKey: paymentKeys.private($ndkStore.activeUser?.pubkey) })
 		},
 	},
 	queryClient,

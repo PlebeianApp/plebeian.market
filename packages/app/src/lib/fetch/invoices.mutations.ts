@@ -6,7 +6,7 @@ import { get } from 'svelte/store'
 import type { Invoice, InvoiceStatus } from '@plebeian/database'
 
 import { createRequest, queryClient } from './client'
-import { createInvoiceKey, createOrderKey } from './keys'
+import { invoiceKeys, orderKeys } from './query-key-factory'
 
 declare module './client' {
 	interface Endpoints {
@@ -24,7 +24,6 @@ declare module './client' {
 
 export const createInvoiceMutation = createMutation(
 	{
-		mutationKey: [],
 		mutationFn: async (invoiceData: Omit<Invoice, 'id' | 'createdAt' | 'updatedAt'>) => {
 			const $ndkStore = get(ndkStore)
 			if ($ndkStore.activeUser?.pubkey) {
@@ -37,8 +36,8 @@ export const createInvoiceMutation = createMutation(
 		},
 		onSuccess: (data: DisplayInvoice | null) => {
 			if (data) {
-				queryClient.invalidateQueries({ queryKey: createInvoiceKey('') })
-				queryClient.invalidateQueries({ queryKey: createOrderKey('') })
+				queryClient.invalidateQueries({ queryKey: invoiceKeys.all })
+				queryClient.invalidateQueries({ queryKey: orderKeys.all })
 			}
 		},
 	},
@@ -47,7 +46,6 @@ export const createInvoiceMutation = createMutation(
 
 export const updateInvoiceStatusMutation = createMutation(
 	{
-		mutationKey: [],
 		mutationFn: async ({
 			invoiceId,
 			status,
@@ -70,7 +68,7 @@ export const updateInvoiceStatusMutation = createMutation(
 		},
 		onSuccess: (data: DisplayInvoice | null) => {
 			if (data) {
-				queryClient.invalidateQueries({ queryKey: createInvoiceKey(data.id) })
+				queryClient.invalidateQueries({ queryKey: invoiceKeys.detail(data.id) })
 			}
 		},
 	},

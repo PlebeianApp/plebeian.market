@@ -14,7 +14,7 @@ import type { UserRoles } from '@plebeian/database'
 
 import { userEventSchema } from '../schema/nostr-events'
 import { createRequest, queryClient } from './fetch/client'
-import { createUserExistsKey } from './fetch/keys'
+import { userKeys } from './fetch/query-key-factory'
 import { createUserFromNostrMutation } from './fetch/users.mutations'
 import { createUserExistsQuery } from './fetch/users.queries'
 import { dmKind04Sub } from './nostrSubs/subs'
@@ -137,7 +137,7 @@ export const loginDb = async (user: NDKUser) => {
 			})
 
 			if (userMutation) {
-				await queryClient.setQueryData(createUserExistsKey(user.pubkey), { exists: true, banned: false })
+				await queryClient.setQueryData(userKeys.exists(user.pubkey), { exists: true, banned: false })
 			}
 			return
 		}

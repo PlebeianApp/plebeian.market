@@ -5,6 +5,7 @@ import { get } from 'svelte/store'
 import type { ProductImage } from '@plebeian/database'
 
 import { createRequest, queryClient } from './client'
+import { productKeys } from './query-key-factory'
 
 export type RemoveProductImageArgs = {
 	productId: string
@@ -32,18 +33,22 @@ declare module './client' {
 
 export const editProductImageMutation = createMutation(
 	{
-		mutationKey: [],
 		mutationFn: async ({ productId, imageUrl, imageOrder, newImageUrl }: UpdateProductImageArgs) => {
 			const $ndkStore = get(ndkStore)
+			if (!$ndkStore.activeUser?.pubkey) return null
 
-			if ($ndkStore.activeUser?.pubkey) {
-				const user = await createRequest(`PUT /api/v1/product-images`, {
-					auth: true,
-					body: { productId, imageUrl, imageOrder, newImageUrl },
+			return createRequest(`PUT /api/v1/product-images`, {
+				auth: true,
+				body: { productId, imageUrl, imageOrder, newImageUrl },
+			})
+		},
+		onSuccess: (data) => {
+			const $ndkStore = get(ndkStore)
+			if (data && $ndkStore.activeUser?.pubkey) {
+				queryClient.invalidateQueries({
+					queryKey: productKeys.images.byUser($ndkStore.activeUser.pubkey),
 				})
-				return user
 			}
-			return null
 		},
 	},
 	queryClient,
