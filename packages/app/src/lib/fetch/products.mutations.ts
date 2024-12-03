@@ -199,9 +199,27 @@ export const createProductsFromNostrMutation = createMutation(
 
 export const setProductFeaturedMutation = createMutation(
 	{
-		mutationFn: async ({ productId, featured }: { productId: string; featured: boolean }) => {
+		mutationFn: async (productId: string) => {
 			const response = await createRequest(`POST /api/v1/products/${productId}/featured`, {
-				body: { featured },
+				body: { featured: true },
+				auth: true,
+			})
+			return response
+		},
+		onSuccess: ({ id }: { id: string }) => {
+			if (id) {
+				queryClient.invalidateQueries({ queryKey: createProductKey(id) })
+			}
+		},
+	},
+	queryClient,
+)
+
+export const setProductUnfeaturedMutation = createMutation(
+	{
+		mutationFn: async (productId: string) => {
+			const response = await createRequest(`POST /api/v1/products/${productId}/featured`, {
+				body: { featured: false },
 				auth: true,
 			})
 			return response
