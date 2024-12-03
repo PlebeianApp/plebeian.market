@@ -160,7 +160,7 @@
 						{:else}
 							<Button disabled>Out of stock</Button>
 						{/if}
-						<AdminActions type="product" id={productRes.id} />
+						<AdminActions type="product" id={productRes.id} isFeatured={$productsQuery.data.isFeatured} />
 					</div>
 					<span class="my-8 font-bold"
 						>Sold by <a

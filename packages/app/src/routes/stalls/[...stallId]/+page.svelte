@@ -118,7 +118,7 @@
 					<span>currency: {currency}</span>
 					<span>created: {createDate}</span>
 				</div>
-				<AdminActions type="stall" id={stall.id} />
+				<AdminActions type="stall" id={stall.id} isFeatured={$stallQuery.data.stall.isFeatured} />
 			</div>
 
 			{#if isMyStall}

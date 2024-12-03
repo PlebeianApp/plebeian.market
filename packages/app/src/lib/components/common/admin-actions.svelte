@@ -1,8 +1,18 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button'
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
-	import { deleteProductMutation, setProductBannedMutation, setProductFeaturedMutation } from '$lib/fetch/products.mutations'
-	import { deleteStallMutation, setStallBannedMutation, setStallFeaturedMutation } from '$lib/fetch/stalls.mutations'
+	import {
+		deleteProductMutation,
+		setProductBannedMutation,
+		setProductFeaturedMutation,
+		setProductUnfeaturedMutation,
+	} from '$lib/fetch/products.mutations'
+	import {
+		deleteStallMutation,
+		setStallBannedMutation,
+		setStallFeaturedMutation,
+		setStallUnfeaturedMutation,
+	} from '$lib/fetch/stalls.mutations'
 	import { setUserBannedMutation, userDeleteAccountMutation } from '$lib/fetch/users.mutations'
 	import { currentUserRole } from '$lib/ndkLogin'
 	import { toast } from 'svelte-sonner'
@@ -54,10 +64,10 @@
 	const handleFeature = async () => {
 		switch (type) {
 			case 'stall':
-				await $setStallFeaturedMutation.mutateAsync({ stallId: id, featured: true })
+				await $setStallFeaturedMutation.mutateAsync(id)
 				break
 			case 'product':
-				await $setProductFeaturedMutation.mutateAsync({ productId: id, featured: true })
+				await $setProductFeaturedMutation.mutateAsync(id)
 				break
 		}
 		toast.success(`${type} featured successfully`)
@@ -66,10 +76,10 @@
 	const handleUnfeature = async () => {
 		switch (type) {
 			case 'stall':
-				await $setStallFeaturedMutation.mutateAsync({ stallId: id, featured: false })
+				await $setStallUnfeaturedMutation.mutateAsync(id)
 				break
 			case 'product':
-				await $setProductFeaturedMutation.mutateAsync({ productId: id, featured: false })
+				await $setProductUnfeaturedMutation.mutateAsync(id)
 				break
 		}
 		toast.success(`${type} unfeatured successfully`)

@@ -85,15 +85,32 @@ export const updateStallFromNostrEvent = createMutation(
 
 export const setStallFeaturedMutation = createMutation(
 	{
-		mutationFn: async ({ stallId, featured }: { stallId: string; featured: boolean }) => {
+		mutationFn: async (stallId: string) => {
 			const response = await createRequest(`POST /api/v1/stalls/${stallId}/featured`, {
-				body: { featured },
+				body: { featured: true },
 				auth: true,
 			})
 			return response
 		},
 		onSuccess: ({ id }: { id: string }) => {
-			console.log('setStallFeaturedMutation', id)
+			if (id) {
+				queryClient.invalidateQueries({ queryKey: createStallsByFilterKey({ stallId: id }) })
+			}
+		},
+	},
+	queryClient,
+)
+
+export const setStallUnfeaturedMutation = createMutation(
+	{
+		mutationFn: async (stallId: string) => {
+			const response = await createRequest(`POST /api/v1/stalls/${stallId}/featured`, {
+				body: { featured: false },
+				auth: true,
+			})
+			return response
+		},
+		onSuccess: ({ id }: { id: string }) => {
 			if (id) {
 				queryClient.invalidateQueries({ queryKey: createStallsByFilterKey({ stallId: id }) })
 			}
