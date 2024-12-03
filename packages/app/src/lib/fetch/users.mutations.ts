@@ -11,7 +11,7 @@ import type { UserRoles } from '@plebeian/database/constants'
 import { USER_ROLES } from '@plebeian/database/constants'
 
 import { createRequest, queryClient } from './client'
-import { createUsersByFilterKey } from './keys'
+import { userKeys } from './query-key-factory'
 
 declare module './client' {
 	interface Endpoints {
@@ -47,7 +47,7 @@ export const userDataMutation = createMutation(
 		},
 		onSuccess: (data: User | null) => {
 			if (!data) return
-			queryClient.setQueryData(createUsersByFilterKey({ userId: data.id }), (prevData?: RichUser) =>
+			queryClient.setQueryData(userKeys.filtered({ userId: data.id }), (prevData?: RichUser) =>
 				prevData ? { ...prevData, ...data } : data,
 			)
 		},
@@ -65,14 +65,10 @@ export const setUserRoleMutation = createMutation(
 			return user
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: createUsersByFilterKey({ role: USER_ROLES.ADMIN }),
-			})
-			queryClient.invalidateQueries({
-				queryKey: createUsersByFilterKey({ role: USER_ROLES.EDITOR }),
-			})
-			queryClient.invalidateQueries({
-				queryKey: createUsersByFilterKey({ role: USER_ROLES.PLEB }),
+			;[USER_ROLES.ADMIN, USER_ROLES.EDITOR, USER_ROLES.PLEB].forEach((role) => {
+				queryClient.invalidateQueries({
+					queryKey: userKeys.filtered({ role }),
+				})
 			})
 		},
 	},
@@ -114,7 +110,7 @@ export const createUserFromNostrMutation = createMutation(
 		onSuccess: (data: User | null) => {
 			if (data?.id) {
 				console.log('User registered successfully', data)
-				queryClient.setQueryData(createUsersByFilterKey({ userId: data.id }), data)
+				queryClient.setQueryData(userKeys.filtered({ userId: data.id }), data)
 			}
 		},
 	},
@@ -136,7 +132,7 @@ export const updateUserFromNostrMutation = createMutation(
 		},
 		onSuccess: (data: User | null) => {
 			if (data?.id) {
-				queryClient.setQueryData(createUsersByFilterKey({ userId: data.id }), data)
+				queryClient.setQueryData(userKeys.filtered({ userId: data.id }), data)
 			}
 		},
 	},
@@ -153,7 +149,7 @@ export const setUserBannedMutation = createMutation(
 			}),
 		onSuccess: (data: User | null) => {
 			if (!data) return
-			queryClient.setQueryData(createUsersByFilterKey({ userId: data.id }), (prevData?: RichUser | User) =>
+			queryClient.setQueryData(userKeys.filtered({ userId: data.id }), (prevData?: RichUser | User) =>
 				prevData ? { ...prevData, banned: data.banned } : data,
 			)
 
