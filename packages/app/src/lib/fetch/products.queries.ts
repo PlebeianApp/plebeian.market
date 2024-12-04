@@ -8,7 +8,8 @@ import { numSatsInBtc } from '$lib/constants'
 import { aggregatorAddProducts } from '$lib/nostrSubs/data-aggregator'
 import { fetchUserProductData, normalizeProductsFromNostr } from '$lib/nostrSubs/utils'
 import { productsFilterSchema } from '$lib/schema'
-import { btcToCurrency, parseCoordinatesString, resolveQuery } from '$lib/utils'
+import { parseCoordinatesString, resolveQuery } from '$lib/utils'
+import { ofetch } from 'ofetch'
 
 import { CURRENCIES } from '@plebeian/database/constants'
 
@@ -69,6 +70,19 @@ export const createProductQuery = (productId: string) =>
 type Currency = (typeof CURRENCIES)[number]
 type CurrencyQuery = Record<Currency, CreateQueryResult<number>>
 
+const btcExchangeRateQuery = createQuery(
+	{
+		queryKey: createCurrencyConversionKey('BTC'),
+		queryFn: async () => {
+			const { BTC } = await ofetch<{
+				BTC: Record<Currency, number>
+			}>(`https://api.yadio.io/exrates/BTC`)
+			return BTC
+		},
+	},
+	queryClient,
+)
+
 export const currencyQueries: CurrencyQuery = {} as CurrencyQuery
 
 for (const c of CURRENCIES) {
@@ -77,11 +91,9 @@ for (const c of CURRENCIES) {
 			queryKey: createCurrencyConversionKey(c),
 			staleTime: 1000 * 60 * 60,
 			queryFn: async () => {
-				const price = await btcToCurrency(c)
-				if (price == null) {
-					throw new Error(`failed fetching currency: ${c}`)
-				}
-				return price
+				const prices = await resolveQuery(() => btcExchangeRateQuery, 5000)
+				if (!prices) throw new Error('failed fetching BTC exchange rate')
+				return prices[c]
 			},
 			retryDelay: 1000,
 		},
