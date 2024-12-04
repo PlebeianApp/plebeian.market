@@ -66,10 +66,12 @@ export const updateInvoiceStatusMutation = createMutation(
 			}
 			return null
 		},
-		onSuccess: (data: DisplayInvoice | null) => {
-			if (data) {
-				queryClient.invalidateQueries({ queryKey: invoiceKeys.detail(data.id) })
-			}
+		onSuccess: (data: DisplayInvoice | null, variables) => {
+			if (!data) return
+			queryClient.setQueryData(invoiceKeys.detail(data.id), (prev: DisplayInvoice | undefined) => ({
+				...prev,
+				...data,
+			}))
 		},
 	},
 	queryClient,

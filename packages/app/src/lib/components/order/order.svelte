@@ -180,7 +180,6 @@
 		await $updateInvoiceStatusMutation.mutateAsync({
 			invoiceId,
 			observations: ce.detail,
-			status: undefined,
 		})
 		toast.success('Observations updated')
 	}

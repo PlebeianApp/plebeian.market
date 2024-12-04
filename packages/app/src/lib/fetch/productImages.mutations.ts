@@ -42,13 +42,23 @@ export const editProductImageMutation = createMutation(
 				body: { productId, imageUrl, imageOrder, newImageUrl },
 			})
 		},
-		onSuccess: (data) => {
+		onSuccess: (data: ProductImage | null) => {
 			const $ndkStore = get(ndkStore)
-			if (data && $ndkStore.activeUser?.pubkey) {
-				queryClient.invalidateQueries({
-					queryKey: productKeys.images.byUser($ndkStore.activeUser.pubkey),
-				})
-			}
+			if (!data || !$ndkStore.activeUser?.pubkey) return
+
+			queryClient.setQueryData(productKeys.images.byUser($ndkStore.activeUser.pubkey), (prevImages?: ProductImage[]) => {
+				if (!prevImages) return [data]
+
+				return prevImages.map((img) =>
+					img.productId === data.productId && img.imageUrl === data.imageUrl
+						? {
+								...img,
+								url: data.imageUrl,
+								order: data.imageOrder,
+							}
+						: img,
+				)
+			})
 		},
 	},
 	queryClient,
