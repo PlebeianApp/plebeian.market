@@ -24,7 +24,6 @@ const createToken = async (url: string, method: HttpMethod): Promise<`Nostr ${st
 	const methodTag: NDKTag = ['method', method]
 	authEvent.kind = KindHttpAuth
 	authEvent.tags = [uTag, methodTag]
-	await authEvent.toNostrEvent()
 	await authEvent.sign()
 	const strEvent = JSON.stringify(authEvent.rawEvent())
 	const strEventB64 = btoa(strEvent)
@@ -56,9 +55,10 @@ export async function createRequest<K extends keyof Endpoints, RequestOperation 
 ) {
 	const [method, url] = endpoint.split(' ') as [RequestOperation['method'], RequestOperation['url']]
 	const headers = new Headers(options.headers)
+	const currentUserPubkey = get(ndkStore)?.activeUser?.pubkey
 
 	if (options.auth) {
-		const tokenKey = `TOKEN ${endpoint}`
+		const tokenKey = `TOKEN:${currentUserPubkey?.slice(0, 6)} ${endpoint}`
 		const authToken = sessionStorage.getItem(tokenKey) ?? (await createToken(url, method))
 		sessionStorage.setItem(tokenKey, authToken)
 		headers.append('Authorization', authToken)
