@@ -2,18 +2,6 @@ import type { CatsFilter, InvoicesFilter, OrdersFilter, ProductsFilter, StallsFi
 
 import type { AppSettingsMetaName } from '@plebeian/database'
 
-//   export const productKeys = {
-// 	all: ['products'] as const,
-// 	lists: () => [...productKeys.all, 'list'] as const,
-// 	detail: (id: string) => [...productKeys.all, id] as const,
-// 	filtered: (filter: Partial<ProductsFilter>) => [...productKeys.lists(), ...Object.values(filter)] as const,
-// 	exists: (id: string) => [...productKeys.all, 'exists', id] as const,
-// 	images: {
-// 	  all: ['product-images'] as const,
-// 	  byUser: (pubkey: string) => [...productKeys.images.all, pubkey] as const,
-// 	}
-//   } as const
-
 export const productKeys = {
 	all: ['products'] as const,
 	lists: () => [...productKeys.all] as const,
@@ -31,28 +19,6 @@ export const productKeys = {
 		byUser: (userId: string) => [...productKeys.images.lists(), { userId }] as const,
 	},
 } as const
-
-//   export const currencyKeys = {
-// 	all: ['currency-conversion'] as const,
-// 	byCurrency: (currency: string) => [...currencyKeys.all, currency] as const,
-// 	byAmount: (currency: string, amount: number) => [...currencyKeys.byCurrency(currency), amount] as const,
-//   } as const
-
-//   export const userKeys = {
-// 	all: ['user'] as const,
-// 	lists: () => ['users'] as const,
-// 	detail: (pubkey: string) => [...userKeys.all, pubkey] as const,
-// 	filtered: (filter: Partial<UsersFilter>) => [...userKeys.lists(), ...Object.values(filter)] as const,
-// 	exists: (pubkey: string) => ['exists', ...userKeys.detail(pubkey)] as const,
-// 	role: (pubkey: string) => ['role', ...userKeys.detail(pubkey)] as const,
-// 	relays: (pubkey: string) => ['relays', ...userKeys.detail(pubkey)] as const,
-// 	wallet: {
-// 	  all: ['wallet-details'] as const,
-// 	  details: (pubkey: string) => [...userKeys.wallet.all, pubkey] as const,
-// 	  balance: (pubkey: string, id: string) => ['wallet-balance', pubkey, id] as const,
-// 	  onChain: (userId: string, paymentDetailId: string) => [...userKeys.wallet.all, 'on-chain', userId, paymentDetailId] as const,
-// 	}
-//   } as const
 
 export const walletKeys = {
 	all: ['wallet-details'] as const,

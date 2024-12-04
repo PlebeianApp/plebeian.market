@@ -35,6 +35,7 @@ export const createInvoicesByFilterQuery = (filter: Partial<InvoicesFilter>) =>
 					params: invoicesFilterSchema.parse(filter),
 				})
 			},
+			retry: 1,
 		},
 		queryClient,
 	)

@@ -29,7 +29,6 @@ export const createOrderMutation = createMutation(
 
 export const updateOrderMutation = createMutation(
 	{
-		mutationKey: [],
 		mutationFn: async ([orderId, orderFilter]: [string, Partial<OrderFilter>]) => {
 			return createRequest(`PUT /api/v1/orders/${orderId}`, {
 				auth: true,
@@ -42,7 +41,6 @@ export const updateOrderMutation = createMutation(
 
 export const updateOrderStatusMutation = createMutation(
 	{
-		mutationKey: [],
 		mutationFn: async ({ orderId, status }: { orderId: string; status: OrderStatus }) => {
 			const $ndkStore = get(ndkStore)
 
