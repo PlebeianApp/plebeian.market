@@ -72,7 +72,7 @@ type CurrencyQuery = Record<Currency, CreateQueryResult<number>>
 
 const btcExchangeRateQuery = createQuery(
 	{
-		queryKey: createCurrencyConversionKey('BTC'),
+		queryKey: createCurrencyConversionKey('BTC-original'),
 		queryFn: async () => {
 			const { BTC } = await ofetch<{
 				BTC: Record<Currency, number>
