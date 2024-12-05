@@ -95,12 +95,20 @@
 							productsMode = 'edit'
 							currentProduct = product
 						}}
-						class="cursor-pointer border border-gray flex justify-start items-center p-4 font-bold"
+						class="cursor-pointer border-black border flex justify-start items-center p-2 font-bold"
 						variant="outline"
+						size="lg"
 					>
-						<div class="flex items-center gap-2">
-							<span class="i-tdesign-store w-6 h-6" />
-							<span>{product.name}</span>
+						<div class=" inline-flex items-center justify-between gap-2 w-full">
+							<div class="flex items-center gap-2">
+								<span class="i-mdi-package-variant-closed w-6 h-6" />
+								<span>{product.name}</span>
+							</div>
+							<div>
+								<Button class="cursor-pointer border-0 bg-transparent font-bold" variant="outline" size="icon">
+									<span class="i-mdi-pencil-outline w-6 h-6" />
+								</Button>
+							</div>
 						</div>
 					</Button>
 				{/each}

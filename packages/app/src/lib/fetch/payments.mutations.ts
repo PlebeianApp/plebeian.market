@@ -8,7 +8,7 @@ import { get } from 'svelte/store'
 import { PAYMENT_DETAILS_METHOD } from '@plebeian/database/constants'
 
 import { createRequest, queryClient } from './client'
-import { createPrivatePaymentsKey } from './keys'
+import { paymentKeys } from './query-key-factory'
 import { persistOnChainIndexWalletMutation } from './wallets.mutations'
 
 export type PostStall = {
@@ -36,7 +36,6 @@ declare module './client' {
 
 export const persistPaymentMethodMutation = createMutation(
 	{
-		mutationKey: [],
 		mutationFn: async ({ paymentDetails, paymentMethod, stallId, isDefault }: PostStall) => {
 			const $ndkStore = get(ndkStore)
 			if ($ndkStore.activeUser?.pubkey) {
@@ -60,17 +59,28 @@ export const persistPaymentMethodMutation = createMutation(
 			toast.error(`Payment not created`)
 			return null
 		},
-		onSuccess: () => {
-			const $ndkStore = get(ndkStore)
-			if (!$ndkStore.activeUser?.pubkey) return
-			queryClient.invalidateQueries({ queryKey: createPrivatePaymentsKey($ndkStore.activeUser?.pubkey) })
+		onSuccess: (data: RichPaymentDetail | null) => {
+			if (!data) return
+
+			queryClient.setQueryData(paymentKeys.private(data.userId), (prevData?: RichPaymentDetail[]) => {
+				if (!prevData) return [data]
+
+				if (data.isDefault) {
+					prevData = prevData.map((pd) => ({
+						...pd,
+						isDefault: false,
+					}))
+				}
+
+				return [...prevData, data]
+			})
 		},
 	},
 	queryClient,
 )
+
 export const updatePaymentMethodMutation = createMutation(
 	{
-		mutationKey: [],
 		mutationFn: async ({ paymentDetails, paymentMethod, stallId, paymentDetailId, isDefault }: PostStall & { paymentDetailId: string }) => {
 			const $ndkStore = get(ndkStore)
 			if ($ndkStore.activeUser?.pubkey) {
@@ -89,10 +99,15 @@ export const updatePaymentMethodMutation = createMutation(
 			toast.error(`Payment not updated`)
 			return null
 		},
-		onSuccess: () => {
+		onSuccess: (data: RichPaymentDetail | null) => {
+			if (!data) return
 			const $ndkStore = get(ndkStore)
 			if (!$ndkStore.activeUser?.pubkey) return
-			queryClient.invalidateQueries({ queryKey: createPrivatePaymentsKey($ndkStore.activeUser?.pubkey) })
+
+			queryClient.setQueryData(paymentKeys.private($ndkStore.activeUser.pubkey), (prevData?: RichPaymentDetail[]) => {
+				if (!prevData) return [data]
+				return prevData.map((pd) => (pd.id === data.id ? { ...pd, ...data } : data.isDefault ? { ...pd, isDefault: false } : pd))
+			})
 		},
 	},
 	queryClient,
@@ -107,14 +122,17 @@ export const deletePaymentMethodMutation = createMutation(
 				const pd = await createRequest(`DELETE /api/v1/payments/?paymentDetailId=${paymentDetailId}&userId=${userId}`, {
 					auth: true,
 				})
-				return pd
+				return { paymentDetailId, userId: $ndkStore.activeUser.pubkey }
 			}
 			return null
 		},
-		onSuccess: () => {
-			const $ndkStore = get(ndkStore)
-			if (!$ndkStore.activeUser?.pubkey) return
-			queryClient.invalidateQueries({ queryKey: createPrivatePaymentsKey($ndkStore.activeUser?.pubkey) })
+		onSuccess: (data: { paymentDetailId: string; userId: string } | null) => {
+			if (!data) return
+
+			queryClient.setQueryData(
+				paymentKeys.private(data.userId),
+				(prevData?: RichPaymentDetail[]) => prevData?.filter((pd) => pd.id !== data.paymentDetailId) ?? [],
+			)
 		},
 	},
 	queryClient,
@@ -129,14 +147,21 @@ export const setDefaultPaymentMethodForStallMutation = createMutation(
 				const pd = await createRequest(`POST /api/v1/payments/${stallId}/?paymentDetailId=${paymentDetailId}`, {
 					auth: true,
 				})
-				return pd
+				return { ...pd, userId: $ndkStore.activeUser.pubkey }
 			}
 			return null
 		},
-		onSuccess: () => {
-			const $ndkStore = get(ndkStore)
-			if (!$ndkStore.activeUser?.pubkey) return
-			queryClient.invalidateQueries({ queryKey: createPrivatePaymentsKey($ndkStore.activeUser?.pubkey) })
+		onSuccess: (data: RichPaymentDetail | null) => {
+			if (!data) return
+
+			queryClient.setQueryData(paymentKeys.private(data.userId), (prevData?: RichPaymentDetail[]) => {
+				if (!prevData) return [data]
+				return prevData.map((pd) => ({
+					...pd,
+					isDefault: pd.id === data.id,
+					stallId: pd.id === data.id ? data.stallId : pd.stallId,
+				}))
+			})
 		},
 	},
 	queryClient,

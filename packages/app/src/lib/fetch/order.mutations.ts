@@ -6,7 +6,7 @@ import { get } from 'svelte/store'
 import type { Order, OrderStatus } from '@plebeian/database'
 
 import { createRequest, queryClient } from './client'
-import { createOrderKey, createProductByFilterKey } from './keys'
+import { orderKeys, productKeys } from './query-key-factory'
 
 declare module './client' {
 	interface Endpoints {
@@ -17,7 +17,6 @@ declare module './client' {
 
 export const createOrderMutation = createMutation(
 	{
-		mutationKey: [],
 		mutationFn: async (orderFilter: OrderFilter) => {
 			return createRequest(`POST /api/v1/orders`, {
 				auth: true,
@@ -30,7 +29,6 @@ export const createOrderMutation = createMutation(
 
 export const updateOrderMutation = createMutation(
 	{
-		mutationKey: [],
 		mutationFn: async ([orderId, orderFilter]: [string, Partial<OrderFilter>]) => {
 			return createRequest(`PUT /api/v1/orders/${orderId}`, {
 				auth: true,
@@ -43,7 +41,6 @@ export const updateOrderMutation = createMutation(
 
 export const updateOrderStatusMutation = createMutation(
 	{
-		mutationKey: [],
 		mutationFn: async ({ orderId, status }: { orderId: string; status: OrderStatus }) => {
 			const $ndkStore = get(ndkStore)
 
@@ -57,8 +54,8 @@ export const updateOrderStatusMutation = createMutation(
 			return null
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: createOrderKey('') })
-			queryClient.invalidateQueries({ queryKey: createProductByFilterKey({}) })
+			queryClient.invalidateQueries({ queryKey: orderKeys.all })
+			queryClient.invalidateQueries({ queryKey: productKeys.all })
 		},
 	},
 	queryClient,

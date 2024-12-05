@@ -14,24 +14,16 @@ import { ofetch } from 'ofetch'
 import { CURRENCIES } from '@plebeian/database/constants'
 
 import { createRequest, queryClient } from './client'
-import {
-	createCurrencyAmountConversionKey,
-	createCurrencyConversionKey,
-	createProductByFilterKey,
-	createProductExistsKey,
-	createProductKey,
-} from './keys'
+import { productKeys } from './query-key-factory'
+
+export interface ProductQueryData {
+	total: number
+	products: DisplayProduct[]
+}
 
 declare module './client' {
 	interface Endpoints {
-		'GET /api/v1/products': Operation<
-			'/api/v1/products',
-			'GET',
-			never,
-			never,
-			{ total: number; products: Partial<DisplayProduct>[] },
-			ProductsFilter
-		>
+		'GET /api/v1/products': Operation<'/api/v1/products', 'GET', never, never, ProductQueryData, ProductsFilter>
 		[k: `GET /api/v1/products/${string}`]: Operation<string, 'GET', never, never, DisplayProduct, never>
 		[k: `GET /api/v1/products/${string}?exists`]: Operation<string, 'GET', never, never, ExistsResult, never>
 	}
@@ -40,7 +32,7 @@ declare module './client' {
 export const createProductQuery = (productId: string) =>
 	createQuery<DisplayProduct | null>(
 		{
-			queryKey: createProductKey(productId),
+			queryKey: productKeys.detail(productId),
 			queryFn: async () => {
 				try {
 					const response = await createRequest(`GET /api/v1/products/${productId}`, {
@@ -67,18 +59,27 @@ export const createProductQuery = (productId: string) =>
 		queryClient,
 	)
 
+const CURRENCY_CACHE_CONFIG = {
+	STALE_TIME: 1000 * 60 * 5,
+	RETRY_DELAY: 1000,
+	RETRY_COUNT: 2,
+	RESOLVE_TIMEOUT: 5000,
+} as const
+
 type Currency = (typeof CURRENCIES)[number]
 type CurrencyQuery = Record<Currency, CreateQueryResult<number>>
 
 const btcExchangeRateQuery = createQuery(
 	{
-		queryKey: createCurrencyConversionKey('BTC-original'),
+		queryKey: productKeys.currency.base('BTC-original'),
 		queryFn: async () => {
+			console.log('Fetching BTC exchange rate')
 			const { BTC } = await ofetch<{
 				BTC: Record<Currency, number>
 			}>(`https://api.yadio.io/exrates/BTC`)
 			return BTC
 		},
+		staleTime: CURRENCY_CACHE_CONFIG.STALE_TIME,
 	},
 	queryClient,
 )
@@ -88,14 +89,14 @@ export const currencyQueries: CurrencyQuery = {} as CurrencyQuery
 for (const c of CURRENCIES) {
 	currencyQueries[c] = createQuery(
 		{
-			queryKey: createCurrencyConversionKey(c),
-			staleTime: 1000 * 60 * 60,
+			queryKey: productKeys.currency.base(c),
+			staleTime: CURRENCY_CACHE_CONFIG.STALE_TIME,
 			queryFn: async () => {
-				const prices = await resolveQuery(() => btcExchangeRateQuery, 5000)
+				const prices = await resolveQuery(() => btcExchangeRateQuery, CURRENCY_CACHE_CONFIG.RESOLVE_TIMEOUT)
 				if (!prices) throw new Error('failed fetching BTC exchange rate')
 				return prices[c]
 			},
-			retryDelay: 1000,
+			retryDelay: CURRENCY_CACHE_CONFIG.RETRY_DELAY,
 		},
 		queryClient,
 	)
@@ -104,7 +105,7 @@ for (const c of CURRENCIES) {
 export const createCurrencyConversionQuery = (fromCurrency: string, amount: number) =>
 	createQuery<number | null>(
 		{
-			queryKey: createCurrencyAmountConversionKey(fromCurrency, amount),
+			queryKey: productKeys.currency.amount(fromCurrency, amount),
 			queryFn: async () => {
 				if (!fromCurrency || !amount) return null
 				if (['sats', 'sat'].includes(fromCurrency.toLowerCase())) {
@@ -112,7 +113,7 @@ export const createCurrencyConversionQuery = (fromCurrency: string, amount: numb
 				}
 
 				try {
-					const price = await resolveQuery(() => currencyQueries[fromCurrency as Currency], 5000)
+					const price = await resolveQuery(() => currencyQueries[fromCurrency as Currency], CURRENCY_CACHE_CONFIG.RESOLVE_TIMEOUT)
 					return price ? (amount / price) * numSatsInBtc : null
 				} catch (error) {
 					console.error(`Currency conversion failed for ${fromCurrency}:`, error)
@@ -120,16 +121,15 @@ export const createCurrencyConversionQuery = (fromCurrency: string, amount: numb
 				}
 			},
 			enabled: Boolean(fromCurrency && amount > 0),
-			staleTime: 1000 * 60 * 60,
-			retry: 2,
+			staleTime: CURRENCY_CACHE_CONFIG.STALE_TIME,
+			retry: CURRENCY_CACHE_CONFIG.RETRY_COUNT,
 		},
 		queryClient,
 	)
-
 export const createProductsByFilterQuery = (filter: Partial<ProductsFilter>) =>
-	createQuery<{ total: number; products: Partial<DisplayProduct>[] } | null>(
+	createQuery<ProductQueryData | null>(
 		{
-			queryKey: createProductByFilterKey(filter),
+			queryKey: productKeys.filtered(filter),
 			queryFn: async () => {
 				try {
 					const response = await createRequest('GET /api/v1/products', {
@@ -180,7 +180,7 @@ export const createProductsByFilterQuery = (filter: Partial<ProductsFilter>) =>
 export const createProductExistsQuery = (id: string) =>
 	createQuery<ExistsResult>(
 		{
-			queryKey: createProductExistsKey(id),
+			queryKey: productKeys.exists(id),
 			queryFn: async () => {
 				const stallExists = await createRequest(`GET /api/v1/products/${id}?exists`, {})
 				return stallExists

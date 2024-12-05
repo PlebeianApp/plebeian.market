@@ -4,7 +4,7 @@ import ndkStore from '$lib/stores/ndk'
 import { derived } from 'svelte/store'
 
 import { createRequest, queryClient } from './client'
-import { createPaymentsForStall, createPaymentsForUserKey, createPrivatePaymentsKey } from './keys'
+import { paymentKeys } from './query-key-factory'
 
 declare module './client' {
 	interface Endpoints {
@@ -16,7 +16,7 @@ declare module './client' {
 
 export const privatePaymentsQuery = createQuery(
 	derived(ndkStore, ($ndkStore) => ({
-		queryKey: $ndkStore.activeUser?.pubkey ? createPrivatePaymentsKey($ndkStore.activeUser?.pubkey) : [''],
+		queryKey: $ndkStore.activeUser?.pubkey ? paymentKeys.private($ndkStore.activeUser?.pubkey) : [''],
 		queryFn: async () => {
 			if ($ndkStore.activeUser?.pubkey) {
 				const user = await createRequest(`GET /api/v1/payments/?userId=${$ndkStore.activeUser.pubkey}&private`, {
@@ -35,7 +35,7 @@ export const privatePaymentsQuery = createQuery(
 export const createPaymentsForUserQuery = (userId: string) =>
 	createQuery<RichPaymentDetail[]>(
 		{
-			queryKey: createPaymentsForUserKey(userId),
+			queryKey: paymentKeys.byUser(userId),
 			queryFn: async () => {
 				const paymentDetails = await createRequest(`GET /api/v1/payments/?userId=${userId}`, {
 					auth: false,
@@ -49,7 +49,7 @@ export const createPaymentsForUserQuery = (userId: string) =>
 export const paymentsForStallQuery = (stallId: string) =>
 	createQuery<RichPaymentDetail[]>(
 		{
-			queryKey: createPaymentsForStall(stallId),
+			queryKey: paymentKeys.byStall(stallId),
 			queryFn: async () => {
 				const paymentDetails = await createRequest(`GET /api/v1/payments/${stallId}`, {
 					auth: true,

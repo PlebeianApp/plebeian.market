@@ -59,6 +59,12 @@
 	const handleConfirmOrder = async (order: DisplayOrder): Promise<void> => {
 		try {
 			const allInvoicesPaid = $invoices.data?.every((i) => i.invoiceStatus === 'paid') ?? false
+			const orderMutation = await $updateOrderStatusMutation.mutateAsync({
+				orderId: order.id,
+				status: 'confirmed',
+			})
+			console.log('observing order mutation', orderMutation)
+			if (!orderMutation) return
 			// TODO: Optimize product update and order update, too many api calls
 			await Promise.all(
 				order.orderItems.map(async (orderItem) => {
@@ -86,11 +92,6 @@
 					}
 				}),
 			)
-
-			await $updateOrderStatusMutation.mutateAsync({
-				orderId: order.id,
-				status: 'confirmed',
-			})
 			order = {
 				...order,
 				status: 'confirmed',
@@ -128,15 +129,20 @@
 	}
 
 	const handleCancelOrder = async (order: DisplayOrder): Promise<void> => {
-		await $updateOrderStatusMutation.mutateAsync({ orderId: order.id, status: 'cancelled' })
-		order = {
-			...order,
-			status: 'cancelled',
+		try {
+			await $updateOrderStatusMutation.mutateAsync({ orderId: order.id, status: 'cancelled' })
+			order = {
+				...order,
+				status: 'cancelled',
+			}
+			const orderUpdateMessage = createOrderStatusUpdateMessage(order)
+			const recipientId = $ndkStore.activeUser?.pubkey === order.sellerUserId ? order.buyerUserId : order.sellerUserId
+			await sendDM(orderUpdateMessage, recipientId)
+			toast.success('Order cancelled')
+		} catch (error) {
+			console.error('Error cancelling order:', error)
+			toast.error(error instanceof Error ? error.message : 'Failed to cancel order')
 		}
-		const orderUpdateMessage = createOrderStatusUpdateMessage(order)
-		const recipientId = $ndkStore.activeUser?.pubkey === order.sellerUserId ? order.buyerUserId : order.sellerUserId
-		await sendDM(orderUpdateMessage, recipientId)
-		toast.success('Order cancelled')
 	}
 
 	const handleRetryPayment = async (customEvent: CustomEvent<string>): Promise<void> => {
@@ -174,7 +180,6 @@
 		await $updateInvoiceStatusMutation.mutateAsync({
 			invoiceId,
 			observations: ce.detail,
-			status: undefined,
 		})
 		toast.success('Observations updated')
 	}

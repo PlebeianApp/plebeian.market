@@ -29,8 +29,12 @@ export class URLProcessor {
 		let userId = await getUserIdByNip05(lowerNip05)
 
 		if (!userId) {
-			const userNostrRes = await get(ndkStore).getUserFromNip05(lowerNip05, false)
-			userId = userNostrRes?.pubkey ?? ''
+			try {
+				const userNostrRes = await get(ndkStore).getUserFromNip05(lowerNip05, false)
+				userId = userNostrRes?.pubkey ?? ''
+			} catch (err) {
+				throw error(404, `Invalid NIP05 address: ${nip05}`)
+			}
 		}
 
 		if (!userId) {

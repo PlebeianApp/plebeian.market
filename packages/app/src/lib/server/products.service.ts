@@ -1,4 +1,5 @@
 import type { NostrEvent } from '@nostr-dev-kit/ndk'
+import type { ProductQueryData } from '$lib/fetch/products.queries'
 import type { ProductsFilter } from '$lib/schema'
 import { error } from '@sveltejs/kit'
 import { KindProducts, KindStalls, standardDisplayDateFormat } from '$lib/constants'
@@ -624,7 +625,7 @@ const preparedProductsByCatName = db
 	.offset(sql.placeholder('offset'))
 	.prepare()
 
-export const getProductsByCatName = async (filter: ProductsFilter): Promise<{ total: number; products: DisplayProduct[] }> => {
+export const getProductsByCatName = async (filter: ProductsFilter): Promise<ProductQueryData> => {
 	if (!filter.category) {
 		throw new Error('Category Name must be provided')
 	}
