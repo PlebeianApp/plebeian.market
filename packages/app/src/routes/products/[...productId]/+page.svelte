@@ -24,24 +24,23 @@
 	let current = 0
 
 	export let data: PageData
-	$: ({ productRes, user } = data)
 	let isMyProduct = false
 	let qtyToCart = 1
 
 	const activeTab =
 		'w-full font-bold border-b-2 border-black text-black data-[state=active]:border-b-primary data-[state=active]:text-primary'
 
-	$: productsQuery = createProductQuery(productRes.id)
+	$: productsQuery = createProductQuery(data.productRes.id)
 
 	$: if ($productsQuery.data) {
 		qtyToCart = $productsQuery.data.quantity > 0 ? 1 : 0
 	}
 
-	$: userProfileQuery = user.id ? createUserByIdQuery(user.id) : null
-	$: stallCoordinates = parseCoordinatesString(`${KindStalls}:${user.id}:${$productsQuery.data?.stall_id}`).coordinates
+	$: userProfileQuery = data.user.id ? createUserByIdQuery(data.user.id) : undefined
+	$: stallCoordinates = parseCoordinatesString(`${KindStalls}:${data.user.id}:${$productsQuery.data?.stall_id}`).coordinates
 	$: priceQuery = createCurrencyConversionQuery($productsQuery.data?.currency as string, $productsQuery.data?.price as number)
 
-	$: otherProducts = user.id ? createProductsByFilterQuery({ userId: user.id, pageSize: 3 }) : null
+	$: otherProducts = data.user.id ? createProductsByFilterQuery({ userId: data.user.id, pageSize: 3 }) : undefined
 
 	$: if (api) {
 		count = api.scrollSnapList().length
@@ -65,7 +64,7 @@
 </script>
 
 <div class="px-4 lg:px-12">
-	{#if $productsQuery.data && user.id}
+	{#if $productsQuery.data && data.user.id}
 		<div class="container sm:p-0 p-4">
 			<div class="grid grid-cols-1 gap-6 md:grid-cols-2 mb-4">
 				<div class="flex flex-col gap-1">
@@ -108,7 +107,7 @@
 				</div>
 				<div class="flex flex-col gap-2">
 					{#if isMyProduct}
-						<Button class="w-1/4" on:click={() => openDrawerForProduct(productRes.id)}>Edit product</Button>
+						<Button class="w-1/4" on:click={() => openDrawerForProduct(data.productRes.id)}>Edit product</Button>
 					{/if}
 					<h1 class=" text-3xl">{$productsQuery.data.name}</h1>
 					<h2 class=" inline-flex items-center text-2xl">
@@ -160,11 +159,11 @@
 						{:else}
 							<Button disabled>Out of stock</Button>
 						{/if}
-						<AdminActions type="product" id={productRes.id} isFeatured={$productsQuery.data.isFeatured} />
+						<AdminActions type="product" id={data.productRes.id} isFeatured={$productsQuery.data.isFeatured} />
 					</div>
 					<span class="my-8 font-bold"
 						>Sold by <a
-							href={`/p/${$userProfileQuery?.data?.nip05 ? $userProfileQuery.data?.nip05 : $userProfileQuery?.data?.id ? $userProfileQuery.data?.id : user.id}`}
+							href={`/p/${$userProfileQuery?.data?.nip05 ? $userProfileQuery.data?.nip05 : $userProfileQuery?.data?.id ? $userProfileQuery.data?.id : data.user.id}`}
 							><span class="underline"
 								>{$userProfileQuery?.data?.name ? $userProfileQuery.data?.name : $userProfileQuery?.data?.displayName}<span /></span
 							></a
