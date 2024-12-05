@@ -59,6 +59,13 @@ export const createProductQuery = (productId: string) =>
 		queryClient,
 	)
 
+const CURRENCY_CACHE_CONFIG = {
+	STALE_TIME: 1000 * 60 * 5,
+	RETRY_DELAY: 1000,
+	RETRY_COUNT: 2,
+	RESOLVE_TIMEOUT: 5000,
+} as const
+
 type Currency = (typeof CURRENCIES)[number]
 type CurrencyQuery = Record<Currency, CreateQueryResult<number>>
 
@@ -66,11 +73,13 @@ const btcExchangeRateQuery = createQuery(
 	{
 		queryKey: productKeys.currency.base('BTC-original'),
 		queryFn: async () => {
+			console.log('Fetching BTC exchange rate')
 			const { BTC } = await ofetch<{
 				BTC: Record<Currency, number>
 			}>(`https://api.yadio.io/exrates/BTC`)
 			return BTC
 		},
+		staleTime: CURRENCY_CACHE_CONFIG.STALE_TIME,
 	},
 	queryClient,
 )
@@ -81,13 +90,13 @@ for (const c of CURRENCIES) {
 	currencyQueries[c] = createQuery(
 		{
 			queryKey: productKeys.currency.base(c),
-			staleTime: 1000 * 60 * 60,
+			staleTime: CURRENCY_CACHE_CONFIG.STALE_TIME,
 			queryFn: async () => {
-				const prices = await resolveQuery(() => btcExchangeRateQuery, 5000)
+				const prices = await resolveQuery(() => btcExchangeRateQuery, CURRENCY_CACHE_CONFIG.RESOLVE_TIMEOUT)
 				if (!prices) throw new Error('failed fetching BTC exchange rate')
 				return prices[c]
 			},
-			retryDelay: 1000,
+			retryDelay: CURRENCY_CACHE_CONFIG.RETRY_DELAY,
 		},
 		queryClient,
 	)
@@ -104,7 +113,7 @@ export const createCurrencyConversionQuery = (fromCurrency: string, amount: numb
 				}
 
 				try {
-					const price = await resolveQuery(() => currencyQueries[fromCurrency as Currency], 5000)
+					const price = await resolveQuery(() => currencyQueries[fromCurrency as Currency], CURRENCY_CACHE_CONFIG.RESOLVE_TIMEOUT)
 					return price ? (amount / price) * numSatsInBtc : null
 				} catch (error) {
 					console.error(`Currency conversion failed for ${fromCurrency}:`, error)
@@ -112,12 +121,11 @@ export const createCurrencyConversionQuery = (fromCurrency: string, amount: numb
 				}
 			},
 			enabled: Boolean(fromCurrency && amount > 0),
-			staleTime: 1000 * 60 * 60,
-			retry: 2,
+			staleTime: CURRENCY_CACHE_CONFIG.STALE_TIME,
+			retry: CURRENCY_CACHE_CONFIG.RETRY_COUNT,
 		},
 		queryClient,
 	)
-
 export const createProductsByFilterQuery = (filter: Partial<ProductsFilter>) =>
 	createQuery<ProductQueryData | null>(
 		{
