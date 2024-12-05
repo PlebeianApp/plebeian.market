@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { CartProduct, CartStall, CartUser } from '$lib/stores/cart'
+	import { Label } from '$lib/components/ui/label/index.js'
 	import { v4VForUserQuery } from '$lib/fetch/v4v.queries'
 	import { cart } from '$lib/stores/cart'
 	import { formatSats, parseCoordinatesString } from '$lib/utils'
@@ -94,24 +95,27 @@
 				><strong>Total in sats:</strong>
 				{formatSats(userTotal.totalInSats)} sats</small
 			>
-			<!-- TODO: improve this visualization -->
 			{#if v4vTotalPercentage}
-				<Separator />
-				<div class="flex flex-col justify-end">
-					<small>
-						{formatSats(userTotal.subtotalInSats * (1 - (v4vTotalPercentage ?? 0)))} sats ({(1 - (v4vTotalPercentage ?? 0)) * 100}% of
-						subtotal)</small
-					>
-					<small> + {formatSats(userTotal.shippingInSats)} sats shipping</small>
-					<span class="underline"
-						>Merchant share: {formatSats(userTotal.subtotalInSats * (1 - v4vTotalPercentage) + userTotal.shippingInSats)} sats</span
-					>
-				</div>
-				<div class="flex items-center">
-					<small class="text-muted-foreground font-semibold"
-						>V4V 🤙 share ({(v4vTotalPercentage * 100).toFixed(2)}%):
-						{formatSats(userTotal.subtotalInSats * v4vTotalPercentage)} sats
-					</small>
+				<div class="">
+					<Label class="font-bold">Payment Breakdown</Label>
+					<div class="relative w-full h-2 bg-gray-200 rounded-lg overflow-hidden">
+						<div
+							class="absolute inset-y-0 left-0 bg-primary flex items-center justify-center text-xs text-primary-foreground"
+							style="width: {(1 - v4vTotalPercentage) * 100}%;"
+							data-tooltip="Merchant: {formatSats(userTotal.subtotalInSats * (1 - v4vTotalPercentage))} sats ({(
+								(1 - v4vTotalPercentage) *
+								100
+							).toFixed(2)}%)"
+						/>
+
+						<div
+							class="absolute inset-y-0 right-0 bg-blue-500 flex items-center justify-center text-xs text-white"
+							style="width: {v4vTotalPercentage * 100}%;"
+							data-tooltip="Community Share: {formatSats(userTotal.subtotalInSats * v4vTotalPercentage)} sats ({(
+								v4vTotalPercentage * 100
+							).toFixed(2)}%)"
+						/>
+					</div>
 				</div>
 			{/if}
 		</div>

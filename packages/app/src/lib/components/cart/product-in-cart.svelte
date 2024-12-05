@@ -40,8 +40,10 @@
 </script>
 
 <div class="flex flex-row h-18 justify-between my-4 gap-2">
-	{#if product.images && product.images.length > 0 && product.images[0].imageUrl}
-		<img class="contain h-[80px] aspect-square object-cover" src={product.images[0].imageUrl} alt={product.name} />
+	{#if product.images && product.images.length > 0}
+		{@const mainImage = product.images.find((img) => img.imageOrder === 0) || product.images[0]}
+
+		<img class="contain h-[80px] aspect-square object-cover" src={mainImage.imageUrl} alt={product.name} />
 	{:else}
 		<div class="h-[80px] aspect-square flex items-center justify-center">
 			<span style={`color:${stringToHexColor(String(product.name || product.id))}`} class="i-mdi-package-variant-closed w-10 h-10"></span>
