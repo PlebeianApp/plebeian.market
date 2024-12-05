@@ -2,6 +2,7 @@
 	import type { RichPaymentDetail } from '$lib/server/paymentDetails.service'
 	import { Button } from '$lib/components/ui/button'
 	import { formatSats } from '$lib/utils'
+	import { handleNWCPayment } from '$lib/utils/zap.utils'
 	import { createEventDispatcher } from 'svelte'
 
 	import type { PaymentProcessorMap } from './paymentProcessor'
@@ -11,6 +12,7 @@
 	export let paymentDetail: RichPaymentDetail
 	export let amountSats: number
 	export let paymentType: 'merchant' | string
+	let componentInstance: LightningPaymentProcessor | OnChainPaymentProcessor
 
 	const dispatch = createEventDispatcher()
 	// TODO: add method validation as we are doing in the paymentDetails input.
@@ -42,11 +44,19 @@
 	function handleSkipPayment() {
 		dispatch('paymentCancelled', { paymentRequest: '', preimage: null, amountSats, paymentType })
 	}
+
+	export function triggerNWCPayment() {
+		if (componentInstance && 'handleNWCPay' in componentInstance) {
+			return componentInstance.handleNWCPay()
+		}
+		return Promise.resolve()
+	}
 </script>
 
 {#if currentProcessor && currentProcessor.component}
 	<svelte:component
 		this={currentProcessor.component}
+		bind:this={componentInstance}
 		{paymentDetail}
 		amountSats={formatSats(amountSats, false)}
 		{paymentType}
