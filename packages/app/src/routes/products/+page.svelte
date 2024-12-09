@@ -10,7 +10,7 @@
 	import { reactiveDebounce } from '$lib/utils'
 	import { writable } from 'svelte/store'
 
-	const pageSize = 10
+	const pageSize = 12
 	let page = 1
 	let sort: Selected<'asc' | 'desc'> = {
 		label: 'Latest',
