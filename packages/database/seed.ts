@@ -528,7 +528,7 @@ const main = async () => {
 		eventId: flatProductData[i].id,
 		eventKind: KindProducts,
 		tagName: 't',
-		tagValue: v,
+		tagValue: v.toLowerCase(),
 	}))
 
 	const stallEventTagsData: NewEventTag[] = userStalls.flat(1).map((stall) => ({
