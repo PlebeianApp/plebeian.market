@@ -14,6 +14,7 @@
 	import { cn, formatSats, resolveQuery } from '$lib/utils'
 	import { createPaymentRequestMessage, sendDM } from '$lib/utils/dm.utils'
 	import { paymentMethodIcons } from '$lib/utils/paymentDetails.utils'
+	import { createInvoiceObject, handleNWCPayment } from '$lib/utils/zap.utils'
 	import { createEventDispatcher, onMount, tick } from 'svelte'
 	import { toast } from 'svelte-sonner'
 
@@ -23,6 +24,7 @@
 	import type { CheckoutPaymentEvent } from './types'
 	import MiniStall from '../cart/mini-stall.svelte'
 	import ProductInCart from '../cart/product-in-cart.svelte'
+	import LightningPaymentProcessor from '../paymentProcessors/LightningPaymentProcessor.svelte'
 	import PaymentProcessor from '../paymentProcessors/paymentProcessor.svelte'
 	import Separator from '../ui/separator/separator.svelte'
 	import MiniV4v from '../v4v/mini-v4v.svelte'
@@ -30,6 +32,7 @@
 	export let order: OrderFilter
 	export let stall: CartStall
 	export let products: Record<string, CartProduct>
+	let paymentProcessors: PaymentProcessor[] = []
 
 	const dispatch = createEventDispatcher<{ valid: boolean }>()
 	type ShareWithInvoice = V4VDTO & {
@@ -48,6 +51,7 @@
 	let orderTotal: Awaited<ReturnType<typeof cart.calculateStallTotal>>
 	let v4vShares: ShareWithInvoice[] = []
 	let v4vTotalPercentage: number | null = null
+	let somePaymentsAllowNWC = false
 
 	const paymentDetails = createPaymentsForUserQuery(order.sellerUserId)
 	const v4vQuery = v4VForUserQuery(order.sellerUserId)
@@ -101,6 +105,9 @@
 			$v4vQuery.data!.map(async (v4v) => {
 				const user = $ndkStore.getUser({ npub: v4v.target })
 				const userProfile = await resolveQuery(() => createUserByIdQuery(user.pubkey))
+
+				somePaymentsAllowNWC = somePaymentsAllowNWC || Boolean(userProfile?.lud16)
+
 				return {
 					...v4v,
 					paymentDetail: {
@@ -214,6 +221,14 @@
 	function handleSelection(paymentDetail: (typeof relevantPaymentDetails)[number]) {
 		selectedPaymentDetail = paymentDetail
 	}
+
+	async function handlePayAllNWCInvoices() {
+		for (const processor of paymentProcessors) {
+			if (processor) {
+				await processor.triggerNWCPayment()
+			}
+		}
+	}
 </script>
 
 <div class="flex flex-row gap-8">
@@ -317,6 +332,7 @@
 						<Carousel.Item>
 							<div class="p-1">
 								<PaymentProcessor
+									bind:this={paymentProcessors[0]}
 									paymentDetail={selectedPaymentDetail}
 									amountSats={orderTotal.subtotalInSats * (1 - (v4vTotalPercentage ?? 0)) + orderTotal.shippingInSats}
 									paymentType="merchant"
@@ -326,10 +342,11 @@
 								/>
 							</div>
 						</Carousel.Item>
-						{#each v4vShares as share (share.target)}
+						{#each v4vShares as share, index (share.target)}
 							<Carousel.Item>
 								<div class="p-1">
 									<PaymentProcessor
+										bind:this={paymentProcessors[index + 1]}
 										paymentDetail={share.paymentDetail}
 										amountSats={orderTotal.subtotalInSats * share.amount}
 										paymentType={share.target}
@@ -347,6 +364,7 @@
 			{/if}
 		{:else if selectedPaymentDetail && orderTotal}
 			<PaymentProcessor
+				bind:this={paymentProcessors[0]}
 				paymentDetail={selectedPaymentDetail}
 				amountSats={orderTotal.totalInSats}
 				paymentType="merchant"
@@ -354,6 +372,11 @@
 				on:paymentExpired={handlePaymentEvent}
 				on:paymentCancelled={handlePaymentEvent}
 			/>
+		{/if}
+		{#if somePaymentsAllowNWC}
+			<Button.Root class="w-1/2" on:click={() => handlePayAllNWCInvoices()}>
+				<span>Pay all NWC invoices</span> <span class="i-mdi-purse w-6 h-6 ml-2" /></Button.Root
+			>
 		{/if}
 	</div>
 </div>

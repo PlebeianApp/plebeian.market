@@ -238,7 +238,7 @@
 		isLoading = false
 	}
 
-	async function handleNWCPay() {
+	export async function handleNWCPay() {
 		if (!invoice) return
 
 		isLoading = true
