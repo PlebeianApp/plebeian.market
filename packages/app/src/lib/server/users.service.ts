@@ -310,6 +310,11 @@ export const getUserRole = async (userId: string): Promise<UserRoles> => {
 		.from(userMeta)
 		.where(and(eq(userMeta.userId, userId), eq(userMeta.metaName, USER_META.ROLE.value)))
 		.execute()
+
+	if (!role) {
+		return 'pleb'
+	}
+
 	return role?.valueText as UserRoles
 }
 
