@@ -117,8 +117,6 @@ export const getOrdersByUserId = async (
 
 	const orderColumn = role === 'buyer' ? orders.buyerUserId : orders.sellerUserId
 
-	console.log('filter', filter)
-
 	const ordersResult = await db
 		.select()
 		.from(orders)
