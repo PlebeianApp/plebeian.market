@@ -49,7 +49,14 @@
 		table.column({
 			accessor: 'createdAt',
 			header: orderMode === 'purchase' ? 'Purchased At' : 'Sold At',
-			cell: ({ value }) => new Date(value).toLocaleDateString(),
+			cell: ({ value }) =>
+				new Date(value).toLocaleDateString('en-UK', {
+					year: 'numeric',
+					month: 'short',
+					day: 'numeric',
+					hour: '2-digit',
+					minute: '2-digit',
+				}),
 		}),
 	])
 

@@ -1,8 +1,6 @@
 import { error, json } from '@sveltejs/kit'
-import { authorize, authorizeUserless } from '$lib/auth'
-import { createOrder, getOrderById, getOrdersByUserId, updateOrderStatus } from '$lib/server/orders.service'
-
-import type { Order } from '@plebeian/database'
+import { authorizeUserless } from '$lib/auth'
+import { getOrderById, updateOrderStatus } from '$lib/server/orders.service'
 
 export const PUT = async ({ params, request }) => {
 	const { orderId } = params
@@ -17,7 +15,6 @@ export const PUT = async ({ params, request }) => {
 	}
 }
 
-// GET /api/v1/orders/:orderId
 export const GET = async ({ params, request }) => {
 	const { orderId } = params
 

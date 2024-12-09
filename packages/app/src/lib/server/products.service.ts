@@ -420,15 +420,19 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 					await db
 						.insert(eventTags)
 						.values(
-							productEvent.tags.map((tag) => ({
-								tagName: tag[0],
-								tagValue: tag[1],
-								secondTagValue: tag[2],
-								thirdTagValue: tag[3],
-								userId: productEvent.pubkey,
-								eventId: eventCoordinates.coordinates,
-								eventKind: productEvent.kind!,
-							})),
+							productEvent.tags.map((tag) => {
+								const tagName = tag[0]
+								const tagValue = tagName === 't' ? tag[1].toLowerCase() : tag[1]
+								return {
+									tagName: tagName,
+									tagValue: tagValue,
+									secondTagValue: tag[2],
+									thirdTagValue: tag[3],
+									userId: productEvent.pubkey,
+									eventId: eventCoordinates.coordinates,
+									eventKind: productEvent.kind!,
+								}
+							}),
 						)
 						.onConflictDoNothing({
 							target: [eventTags.tagName, eventTags.tagValue, eventTags.eventId],
@@ -571,15 +575,19 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 					await tx
 						.insert(eventTags)
 						.values(
-							productEvent.tags.map((tag) => ({
-								tagName: tag[0],
-								tagValue: tag[1],
-								secondTagValue: tag[2],
-								thirdTagValue: tag[3],
-								userId: productEvent.pubkey,
-								eventId: eventCoordinates?.coordinates as string,
-								eventKind: productEvent.kind!,
-							})),
+							productEvent.tags.map((tag) => {
+								const tagName = tag[0]
+								const tagValue = tagName === 't' ? tag[1].toLowerCase() : tag[1]
+								return {
+									tagName: tagName,
+									tagValue: tagValue,
+									secondTagValue: tag[2],
+									thirdTagValue: tag[3],
+									userId: productEvent.pubkey,
+									eventId: eventCoordinates?.coordinates as string,
+									eventKind: productEvent.kind!,
+								}
+							}),
 						)
 						.onConflictDoNothing({ target: [eventTags.tagName, eventTags.tagValue, eventTags.eventId] })
 				}
@@ -632,7 +640,7 @@ export const getProductsByCatName = async (filter: ProductsFilter): Promise<Prod
 
 	const productRes = await preparedProductsByCatName.execute({
 		userId: filter.userId,
-		category: filter.category,
+		category: filter.category.toLowerCase(),
 		limit: filter.pageSize,
 		offset: (filter.page - 1) * filter.pageSize,
 	})
