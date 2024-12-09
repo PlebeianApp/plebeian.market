@@ -34,7 +34,11 @@ export const createOrderQuery = (orderId: string) =>
 		queryClient,
 	)
 
-export const createOrdersByUserAndRoleQuery = (userId: string, role: 'buyer' | 'seller') =>
+export const createOrdersByUserAndRoleQuery = (
+	userId: string,
+	role: 'buyer' | 'seller',
+	filter: Partial<OrdersFilter> = ordersFilterSchema.parse({}),
+) =>
 	createQuery<{ total: number; orders: DisplayOrder[] }>(
 		{
 			queryKey: orderKeys.byUserAndRole(userId, role),
@@ -44,6 +48,7 @@ export const createOrdersByUserAndRoleQuery = (userId: string, role: 'buyer' | '
 					params: {
 						userId,
 						role,
+						...filter,
 					},
 				})
 			},
