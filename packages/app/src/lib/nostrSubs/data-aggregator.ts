@@ -52,7 +52,6 @@ async function processBatch(userIds: string[], allowRegister: boolean) {
 	for (const userId of batchUserIds) {
 		const userExists = await checkIfUserExists(userId)
 		const shouldRegisterUser = await shouldRegister(allowRegister, userExists, userId)
-
 		if (shouldRegisterUser) {
 			let user = Array.from(userQueue).find((u) => u.id === userId)
 			if (!user) user = (await resolveQuery(() => createUserByIdQuery(userId))) ?? undefined
@@ -137,7 +136,7 @@ export async function checkIfOldProfile(userId: string, updatedAt?: number) {
 	const elapsedTime = getElapsedTimeInDays(updatedAt)
 	if (elapsedTime > 5) {
 		const { userProfile: newUserProfile } = await fetchUserData(userId)
-		if (newUserProfile) {
+		if (newUserProfile && updatedAt > Number(newUserProfile.created_at)) {
 			await handleUserNostrData(newUserProfile, userId)
 		}
 	}

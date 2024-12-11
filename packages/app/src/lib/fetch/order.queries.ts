@@ -4,7 +4,7 @@ import { createQuery } from '@tanstack/svelte-query'
 import { ordersFilterSchema } from '$lib/schema'
 
 import { createRequest, queryClient } from './client'
-import { createOrderKey, createOrdersByFilterKey, createOrdersByUserAndRoleKey } from './keys'
+import { orderKeys } from './query-key-factory'
 
 declare module './client' {
 	interface Endpoints {
@@ -24,7 +24,7 @@ declare module './client' {
 export const createOrderQuery = (orderId: string) =>
 	createQuery<DisplayOrder>(
 		{
-			queryKey: createOrderKey(orderId),
+			queryKey: orderKeys.detail(orderId),
 			queryFn: async () => {
 				return await createRequest(`GET /api/v1/orders/${orderId}`, {
 					auth: true,
@@ -34,16 +34,21 @@ export const createOrderQuery = (orderId: string) =>
 		queryClient,
 	)
 
-export const createOrdersByUserAndRoleQuery = (userId: string, role: 'buyer' | 'seller') =>
+export const createOrdersByUserAndRoleQuery = (
+	userId: string,
+	role: 'buyer' | 'seller',
+	filter: Partial<OrdersFilter> = ordersFilterSchema.parse({}),
+) =>
 	createQuery<{ total: number; orders: DisplayOrder[] }>(
 		{
-			queryKey: createOrdersByUserAndRoleKey(userId, role),
+			queryKey: orderKeys.byUserAndRole(userId, role),
 			queryFn: async () => {
 				return await createRequest('GET /api/v1/orders', {
 					auth: true,
 					params: {
 						userId,
 						role,
+						...filter,
 					},
 				})
 			},
@@ -55,7 +60,7 @@ export const createOrdersByUserAndRoleQuery = (userId: string, role: 'buyer' | '
 export const createOrdersByFilterQuery = (filter: Partial<OrdersFilter> = ordersFilterSchema.parse({})) =>
 	createQuery<{ total: number; orders: DisplayOrder[] }>(
 		{
-			queryKey: createOrdersByFilterKey(filter),
+			queryKey: orderKeys.filtered(filter),
 			queryFn: async () => {
 				return await createRequest('GET /api/v1/orders', {
 					auth: true,

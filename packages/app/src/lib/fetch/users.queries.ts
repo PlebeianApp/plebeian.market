@@ -4,7 +4,6 @@ import type { UsersFilter } from '$lib/schema'
 import type { RichUser } from '$lib/server/users.service'
 import { createQuery } from '@tanstack/svelte-query'
 import { browser } from '$app/environment'
-import { invalidateAll } from '$app/navigation'
 import { aggregatorAddUser, checkIfOldProfile } from '$lib/nostrSubs/data-aggregator'
 import { fetchUserData, fetchUserRelays } from '$lib/nostrSubs/utils'
 import { usersFilterSchema } from '$lib/schema'
@@ -14,7 +13,7 @@ import { derived } from 'svelte/store'
 import type { UserRoles } from '@plebeian/database'
 
 import { createRequest, queryClient } from './client'
-import { createUserExistsKey, createUserRelaysKey, createUserRoleKey, createUsersByFilterKey } from './keys'
+import { userKeys } from './query-key-factory'
 
 declare module './client' {
 	interface Endpoints {
@@ -27,13 +26,12 @@ declare module './client' {
 
 export const activeUserQuery = createQuery(
 	derived(ndkStore, ($ndkStore) => ({
-		queryKey: $ndkStore.activeUser?.pubkey ? createUsersByFilterKey({ userId: $ndkStore.activeUser?.pubkey }) : ['user'],
+		queryKey: userKeys.filtered({ userId: $ndkStore.activeUser?.pubkey }),
 		queryFn: async () => {
 			if ($ndkStore.activeUser?.pubkey) {
 				const user = (await createRequest(`GET /api/v1/users/${$ndkStore.activeUser.pubkey}`, {
 					auth: true,
 				})) as RichUser
-				invalidateAll()
 				return user
 			}
 
@@ -47,7 +45,7 @@ export const activeUserQuery = createQuery(
 export const createUserRoleByIdQuery = (id: string) =>
 	createQuery<UserRoles>(
 		{
-			queryKey: createUserRoleKey(id),
+			queryKey: userKeys.role(id),
 			queryFn: async () => {
 				const role = await createRequest(`GET /api/v1/users/${id}/role`, {
 					auth: true,
@@ -61,7 +59,7 @@ export const createUserRoleByIdQuery = (id: string) =>
 export const createUserByIdQuery = (id: string, nostrOnly = false, skipAggregator = false) =>
 	createQuery<NDKUserProfile | null>(
 		{
-			queryKey: createUsersByFilterKey({ userId: id }),
+			queryKey: userKeys.filtered({ userId: id }),
 			queryFn: async () => {
 				try {
 					if (!nostrOnly) {
@@ -96,7 +94,7 @@ export const createUserByIdQuery = (id: string, nostrOnly = false, skipAggregato
 export const createUserRelaysByIdQuery = (id: string) =>
 	createQuery(
 		{
-			queryKey: createUserRelaysKey(id),
+			queryKey: userKeys.relays(id),
 			queryFn: async () => {
 				const { userRelays } = await fetchUserRelays(id)
 				if (userRelays) {
@@ -111,7 +109,7 @@ export const createUserRelaysByIdQuery = (id: string) =>
 export const createUserExistsQuery = (id: string) =>
 	createQuery<ExistsResult>(
 		{
-			queryKey: createUserExistsKey(id),
+			queryKey: userKeys.exists(id),
 			queryFn: async () => {
 				const user = await createRequest(`GET /api/v1/users/${id}?exists`, {})
 				return user
@@ -124,7 +122,7 @@ export const createUserExistsQuery = (id: string) =>
 export const createUsersByFilterQuery = (filter: Partial<UsersFilter>) =>
 	createQuery<string[]>(
 		{
-			queryKey: createUsersByFilterKey(filter),
+			queryKey: userKeys.filtered(filter),
 			queryFn: async () => {
 				const users = await createRequest(`GET /api/v1/users`, {
 					params: usersFilterSchema.parse(filter),

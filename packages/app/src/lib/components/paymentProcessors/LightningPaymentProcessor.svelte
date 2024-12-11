@@ -19,6 +19,7 @@
 		setupExpiryCountdown,
 		setupZapSubscription,
 	} from '$lib/utils/zap.utils'
+	import { generateSecretKey, getPublicKey } from 'nostr-tools'
 	import { afterUpdate, createEventDispatcher, onDestroy } from 'svelte'
 	import { toast } from 'svelte-sonner'
 
@@ -93,6 +94,10 @@
 	}
 
 	async function generateZapInvoice(ln: LightningAddress) {
+		if (ln.nostrPubkey == undefined) {
+			const epehemeralKey = generateSecretKey()
+			ln.nostrPubkey = getPublicKey(epehemeralKey)
+		}
 		const zapArgs = { satoshi: formatSats(amountSats, false), relays: RELAYS }
 		return await ln.zapInvoice(zapArgs, { nostr: new GenericKeySigner() })
 	}

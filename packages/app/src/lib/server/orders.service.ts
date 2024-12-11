@@ -3,7 +3,7 @@ import { error } from '@sveltejs/kit'
 import { ordersFilterSchema } from '$lib/schema'
 
 import type { Order, OrderStatus } from '@plebeian/database'
-import { and, db, eq, orderItems, orders, sql } from '@plebeian/database'
+import { and, asc, db, desc, eq, orderItems, orders, sql } from '@plebeian/database'
 
 export type DisplayOrder = Pick<
 	Order,
@@ -105,10 +105,24 @@ export const getOrderById = async (orderId: string): Promise<DisplayOrder> => {
 	return order
 }
 
-export const getOrdersByUserId = async (userId: string, role: 'buyer' | 'seller'): Promise<{ total: number; orders: DisplayOrder[] }> => {
+export const getOrdersByUserId = async (
+	userId: string,
+	role: 'buyer' | 'seller',
+	filter: OrdersFilter = ordersFilterSchema.parse({}),
+): Promise<{ total: number; orders: DisplayOrder[] }> => {
+	const orderBy = {
+		createdAt: orders.createdAt,
+		updatedAt: orders.updatedAt,
+	}[filter.orderBy]
+
 	const orderColumn = role === 'buyer' ? orders.buyerUserId : orders.sellerUserId
 
-	const ordersResult = await db.select().from(orders).where(eq(orderColumn, userId)).execute()
+	const ordersResult = await db
+		.select()
+		.from(orders)
+		.where(eq(orderColumn, userId))
+		.orderBy(filter.order === 'asc' ? asc(orderBy) : desc(orderBy))
+		.execute()
 
 	const ordersWithItems = await Promise.all(
 		ordersResult.map(async (order) => {

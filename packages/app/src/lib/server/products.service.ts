@@ -1,4 +1,5 @@
 import type { NostrEvent } from '@nostr-dev-kit/ndk'
+import type { ProductQueryData } from '$lib/fetch/products.queries'
 import type { ProductsFilter } from '$lib/schema'
 import { error } from '@sveltejs/kit'
 import { KindProducts, KindStalls, standardDisplayDateFormat } from '$lib/constants'
@@ -419,15 +420,19 @@ export const createProducts = async (productEvents: NostrEvent[]) => {
 					await db
 						.insert(eventTags)
 						.values(
-							productEvent.tags.map((tag) => ({
-								tagName: tag[0],
-								tagValue: tag[1],
-								secondTagValue: tag[2],
-								thirdTagValue: tag[3],
-								userId: productEvent.pubkey,
-								eventId: eventCoordinates.coordinates,
-								eventKind: productEvent.kind!,
-							})),
+							productEvent.tags.map((tag) => {
+								const tagName = tag[0]
+								const tagValue = tagName === 't' ? tag[1].toLowerCase() : tag[1]
+								return {
+									tagName: tagName,
+									tagValue: tagValue,
+									secondTagValue: tag[2],
+									thirdTagValue: tag[3],
+									userId: productEvent.pubkey,
+									eventId: eventCoordinates.coordinates,
+									eventKind: productEvent.kind!,
+								}
+							}),
 						)
 						.onConflictDoNothing({
 							target: [eventTags.tagName, eventTags.tagValue, eventTags.eventId],
@@ -570,15 +575,19 @@ export const updateProduct = async (productId: string, productEvent: NostrEvent)
 					await tx
 						.insert(eventTags)
 						.values(
-							productEvent.tags.map((tag) => ({
-								tagName: tag[0],
-								tagValue: tag[1],
-								secondTagValue: tag[2],
-								thirdTagValue: tag[3],
-								userId: productEvent.pubkey,
-								eventId: eventCoordinates?.coordinates as string,
-								eventKind: productEvent.kind!,
-							})),
+							productEvent.tags.map((tag) => {
+								const tagName = tag[0]
+								const tagValue = tagName === 't' ? tag[1].toLowerCase() : tag[1]
+								return {
+									tagName: tagName,
+									tagValue: tagValue,
+									secondTagValue: tag[2],
+									thirdTagValue: tag[3],
+									userId: productEvent.pubkey,
+									eventId: eventCoordinates?.coordinates as string,
+									eventKind: productEvent.kind!,
+								}
+							}),
 						)
 						.onConflictDoNothing({ target: [eventTags.tagName, eventTags.tagValue, eventTags.eventId] })
 				}
@@ -624,14 +633,14 @@ const preparedProductsByCatName = db
 	.offset(sql.placeholder('offset'))
 	.prepare()
 
-export const getProductsByCatName = async (filter: ProductsFilter): Promise<{ total: number; products: DisplayProduct[] }> => {
+export const getProductsByCatName = async (filter: ProductsFilter): Promise<ProductQueryData> => {
 	if (!filter.category) {
 		throw new Error('Category Name must be provided')
 	}
 
 	const productRes = await preparedProductsByCatName.execute({
 		userId: filter.userId,
-		category: filter.category,
+		category: filter.category.toLowerCase(),
 		limit: filter.pageSize,
 		offset: (filter.page - 1) * filter.pageSize,
 	})

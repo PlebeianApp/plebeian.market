@@ -7,7 +7,7 @@ import { derived } from 'svelte/store'
 import type { UserMeta } from '@plebeian/database'
 
 import { createRequest, queryClient } from './client'
-import { createOnChainWalletDetailsKey, createUserWalletDetailsKey, createWalletBalanceKey } from './keys'
+import { walletKeys } from './query-key-factory'
 
 declare module './client' {
 	interface Endpoints {
@@ -18,7 +18,7 @@ declare module './client' {
 
 export const userWalletQuery = createQuery(
 	derived(ndkStore, ($ndkStore) => ({
-		queryKey: $ndkStore.activeUser?.pubkey ? createUserWalletDetailsKey($ndkStore.activeUser?.pubkey) : [''],
+		queryKey: $ndkStore.activeUser?.pubkey ? walletKeys.details($ndkStore.activeUser?.pubkey) : [''],
 		queryFn: async () => {
 			if ($ndkStore.activeUser?.pubkey) {
 				return await createRequest(`GET /api/v1/wallets/?userId=${$ndkStore.activeUser.pubkey}`, {
@@ -35,7 +35,7 @@ export const userWalletQuery = createQuery(
 export const createWalletBalanceQuery = (nwc: NDKNwc, walletId: string) =>
 	createQuery(
 		{
-			queryKey: createWalletBalanceKey(nwc.walletService.pubkey, walletId),
+			queryKey: walletKeys.balance(nwc.walletService.pubkey, walletId),
 			queryFn: async () => {
 				console.log('Getting balance for', walletId, nwc.relaySet.relayUrls)
 				const balance = await nwc.getBalance()
@@ -49,7 +49,7 @@ export const createWalletBalanceQuery = (nwc: NDKNwc, walletId: string) =>
 export const createOnChainIndexQuery = (userId: string, paymentDetailId: string) =>
 	createQuery(
 		{
-			queryKey: createOnChainWalletDetailsKey(userId, paymentDetailId),
+			queryKey: walletKeys.onChain(userId, paymentDetailId),
 			queryFn: async () => {
 				if (userId && paymentDetailId) {
 					const response = await createRequest(`GET /api/v1/wallets/?userId=${userId}&paymentDetailId=${paymentDetailId}`, {

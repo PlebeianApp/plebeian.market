@@ -6,7 +6,7 @@ import { get } from 'svelte/store'
 import { WALLET_TYPE } from '@plebeian/database/constants'
 
 import { createRequest, queryClient } from './client'
-import { createOnChainWalletDetailsKey, createUserWalletDetailsKey } from './keys'
+import { walletKeys } from './query-key-factory'
 
 export type NWCWalletDTO = {
 	walletPubKey: string
@@ -45,7 +45,7 @@ export const persistWalletMutation = createMutation(
 		onSuccess: () => {
 			const $ndkStore = get(ndkStore)
 			if (!$ndkStore.activeUser?.pubkey) return
-			queryClient.invalidateQueries({ queryKey: createUserWalletDetailsKey($ndkStore.activeUser?.pubkey) })
+			queryClient.invalidateQueries({ queryKey: walletKeys.details($ndkStore.activeUser?.pubkey) })
 		},
 	},
 	queryClient,
@@ -69,7 +69,7 @@ export const updateWalletMutation = createMutation(
 		onSuccess: () => {
 			const $ndkStore = get(ndkStore)
 			if (!$ndkStore.activeUser?.pubkey) return
-			queryClient.invalidateQueries({ queryKey: createUserWalletDetailsKey($ndkStore.activeUser?.pubkey) })
+			queryClient.invalidateQueries({ queryKey: walletKeys.details($ndkStore.activeUser?.pubkey) })
 		},
 	},
 	queryClient,
@@ -93,7 +93,7 @@ export const deleteWalletMutation = createMutation(
 		onSuccess: () => {
 			const $ndkStore = get(ndkStore)
 			if (!$ndkStore.activeUser?.pubkey) return
-			queryClient.invalidateQueries({ queryKey: createUserWalletDetailsKey($ndkStore.activeUser?.pubkey) })
+			queryClient.invalidateQueries({ queryKey: walletKeys.details($ndkStore.activeUser?.pubkey) })
 		},
 	},
 	queryClient,
@@ -118,7 +118,7 @@ export const persistOnChainIndexWalletMutation = createMutation(
 		onSuccess: () => {
 			const $ndkStore = get(ndkStore)
 			if (!$ndkStore.activeUser?.pubkey) return
-			queryClient.invalidateQueries({ queryKey: createUserWalletDetailsKey($ndkStore.activeUser?.pubkey) })
+			queryClient.invalidateQueries({ queryKey: walletKeys.details($ndkStore.activeUser?.pubkey) })
 		},
 	},
 	queryClient,
@@ -139,7 +139,7 @@ export const updateOnChainIndexMutation = createMutation(
 		onSuccess: () => {
 			const $ndkStore = get(ndkStore)
 			if (!$ndkStore.activeUser?.pubkey) return
-			queryClient.invalidateQueries({ queryKey: createOnChainWalletDetailsKey($ndkStore.activeUser?.pubkey, '') })
+			queryClient.invalidateQueries({ queryKey: walletKeys.onChain($ndkStore.activeUser?.pubkey, '') })
 		},
 	},
 	queryClient,

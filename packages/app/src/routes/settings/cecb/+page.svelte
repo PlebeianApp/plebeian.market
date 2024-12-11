@@ -33,6 +33,7 @@
 	$: emoji = v4vTotal[0] > 0.14 ? '🤙' : v4vTotal[0] > 0.09 ? '🤙' : v4vTotal[0] > 0.04 ? '🤙' : v4vTotal[0] < 0.01 ? '💩' : '🎁'
 	$: v4vByUser = $privatePaymentsQuery?.data?.length ? v4VForUserQuery($ndkStore.activeUser?.pubkey ?? '') : undefined
 	let v4vRecipients: V4VDTO[] = []
+
 	$: {
 		if ($v4vByUser && $v4vByUser.data && !initialTotalSet) {
 			const total = $v4vByUser.data.reduce((sum, item) => sum + item.amount, 0)
@@ -228,22 +229,24 @@
 			<Label class="font-bold">Distribution of v4v share among recipients</Label>
 			<div class="relative w-full h-10 bg-gray-200 rounded-lg overflow-hidden">
 				{#each v4vRecipients as v4v, index (v4v.target)}
-					{@const color = getHexColorFingerprintFromHexPubkey(v4v.target)}
-					{@const textColor = getContrastColor(color)}
-					{@const leftPosition = v4vRecipients.slice(0, index).reduce((sum, r) => sum + r.amount, 0) * 100}
-					<Tooltip.Root>
-						<Tooltip.Trigger
-							class="absolute inset-y-0 flex items-center justify-center"
-							style="left: {leftPosition}%; width: {v4v.amount * 100}%; background-color: {color};"
-						>
-							<span class="font-semibold text-xs" style="color: {textColor}">
-								{(v4v.amount * 100).toFixed(1)}%
-							</span>
-						</Tooltip.Trigger>
-						<Tooltip.Content>
-							{v4v.target}: {(v4v.amount * 100).toFixed(2)}%
-						</Tooltip.Content>
-					</Tooltip.Root>
+					{#if v4v.target}
+						{@const color = getHexColorFingerprintFromHexPubkey(v4v.target)}
+						{@const textColor = getContrastColor(color)}
+						{@const leftPosition = v4vRecipients.slice(0, index).reduce((sum, r) => sum + r.amount, 0) * 100}
+						<Tooltip.Root>
+							<Tooltip.Trigger
+								class="absolute inset-y-0 flex items-center justify-center"
+								style="left: {leftPosition}%; width: {v4v.amount * 100}%; background-color: {color};"
+							>
+								<span class="font-semibold text-xs" style="color: {textColor}">
+									{(v4v.amount * 100).toFixed(1)}%
+								</span>
+							</Tooltip.Trigger>
+							<Tooltip.Content>
+								{v4v.target}: {(v4v.amount * 100).toFixed(2)}%
+							</Tooltip.Content>
+						</Tooltip.Root>
+					{/if}
 				{/each}
 			</div>
 		</div>

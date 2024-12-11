@@ -124,7 +124,7 @@
 			</Dialog.Header>
 			<div class="flex flex-col gap-4">
 				{#if localSrc}
-					<img src={localSrc} alt="nip 96" class="w-full max-w-[80vw] max-h-[80vh] object-contain" />
+					<img src={localSrc} alt="nip 96" class="w-full max-w-[80vw] max-h-[50vh] object-contain" />
 				{/if}
 				<div class="flex flex-row items-center">
 					<Input

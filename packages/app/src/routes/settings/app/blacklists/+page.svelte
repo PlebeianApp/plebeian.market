@@ -5,9 +5,8 @@
 	import * as Collapsible from '$lib/components/ui/collapsible'
 	import { Input } from '$lib/components/ui/input'
 	import { addForbiddenWordMutation, deleteForbiddenWordMutation } from '$lib/fetch/settingsMeta.mutations.js'
+	import { appSettingsMetaQuery } from '$lib/fetch/settingsMeta.queries.js'
 	import { toast } from 'svelte-sonner'
-
-	import type { PageData } from './$types.js'
 
 	let newWord = ''
 	export let data
@@ -15,7 +14,7 @@
 
 	let isCollapsibleOpen = false
 
-	$: blacklistedWords = ($page.data as PageData).forbiddenWords.forbiddenWords
+	$: blacklistedWordsQuery = appSettingsMetaQuery('word_blacklist')
 
 	async function handleDeleteWord(wordId: string) {
 		await $deleteForbiddenWordMutation.mutateAsync(wordId)
@@ -51,9 +50,8 @@
 			</section>
 		</div>
 	</div>
-
-	{#if blacklistedWords?.length > 0}
-		{#each blacklistedWords as word}
+	{#if $blacklistedWordsQuery?.data?.forbiddenWords}
+		{#each $blacklistedWordsQuery?.data?.forbiddenWords as word}
 			<div class="flex flex-row items-center justify-between border rounded-md p-2">
 				<span class="text-sm">{word.valueText}</span>
 				<Button type="button" size="icon" variant="outline" class=" bg-red-500" on:click={() => handleDeleteWord(word.id)}>

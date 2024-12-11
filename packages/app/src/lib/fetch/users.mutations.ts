@@ -11,7 +11,7 @@ import type { UserRoles } from '@plebeian/database/constants'
 import { USER_ROLES } from '@plebeian/database/constants'
 
 import { createRequest, queryClient } from './client'
-import { createUsersByFilterKey } from './keys'
+import { userKeys } from './query-key-factory'
 
 declare module './client' {
 	interface Endpoints {
@@ -34,20 +34,22 @@ declare module './client' {
 export const userDataMutation = createMutation(
 	{
 		mutationKey: [],
-		mutationFn: async (profile: Partial<RichUser>) => {
+		mutationFn: async (profile: Partial<User>) => {
 			const $ndkStore = get(ndkStore)
-			if ($ndkStore.activeUser?.pubkey) {
-				const user = await createRequest(`PUT /api/v1/users/${$ndkStore.activeUser.pubkey}`, {
-					auth: true,
-					body: profile,
-				})
-				return user
-			}
-			return null
+			const pubkey = $ndkStore.activeUser?.pubkey
+
+			if (!pubkey) return null
+
+			return createRequest(`PUT /api/v1/users/${pubkey}`, {
+				auth: true,
+				body: profile,
+			})
 		},
 		onSuccess: (data: User | null) => {
 			if (!data) return
-			queryClient.invalidateQueries({ queryKey: createUsersByFilterKey({ userId: data.id }) })
+			queryClient.setQueryData(userKeys.filtered({ userId: data.id }), (prevData?: RichUser) =>
+				prevData ? { ...prevData, ...data } : data,
+			)
 		},
 	},
 	queryClient,
@@ -55,7 +57,6 @@ export const userDataMutation = createMutation(
 
 export const setUserRoleMutation = createMutation(
 	{
-		mutationKey: [],
 		mutationFn: async ({ userId, role }: { userId: string; role: UserRoles }) => {
 			const user = await createRequest(`PUT /api/v1/users/${userId}/role`, {
 				auth: true,
@@ -64,14 +65,10 @@ export const setUserRoleMutation = createMutation(
 			return user
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: createUsersByFilterKey({ role: USER_ROLES.ADMIN }),
-			})
-			queryClient.invalidateQueries({
-				queryKey: createUsersByFilterKey({ role: USER_ROLES.EDITOR }),
-			})
-			queryClient.invalidateQueries({
-				queryKey: createUsersByFilterKey({ role: USER_ROLES.PLEB }),
+			;[USER_ROLES.ADMIN, USER_ROLES.EDITOR, USER_ROLES.PLEB].forEach((role) => {
+				queryClient.invalidateQueries({
+					queryKey: userKeys.filtered({ role }),
+				})
 			})
 		},
 	},
@@ -105,15 +102,22 @@ export const createUserFromNostrMutation = createMutation(
 	{
 		mutationKey: [],
 		mutationFn: async ({ profile, pubkey }: { profile: NDKUserProfile; pubkey: string }) => {
-			const user = await createRequest(`POST /api/v1/users/${pubkey}`, {
-				body: profile,
-			})
-			return user
+			try {
+				const user = await createRequest(`POST /api/v1/users/${pubkey}`, {
+					body: profile,
+				})
+				return user
+			} catch (e) {
+				const user = await createRequest(`PUT /api/v1/users/${pubkey}`, {
+					body: profile,
+				})
+				return user
+			}
 		},
 		onSuccess: (data: User | null) => {
 			if (data?.id) {
 				console.log('User registered successfully', data)
-				queryClient.setQueryData(createUsersByFilterKey({ userId: data.id }), data)
+				queryClient.setQueryData(userKeys.filtered({ userId: data.id }), data)
 			}
 		},
 	},
@@ -135,9 +139,7 @@ export const updateUserFromNostrMutation = createMutation(
 		},
 		onSuccess: (data: User | null) => {
 			if (data?.id) {
-				const userKey = createUsersByFilterKey({ userId: data.id })
-				queryClient.invalidateQueries({ queryKey: userKey })
-				queryClient.setQueryData(userKey, data)
+				queryClient.setQueryData(userKeys.filtered({ userId: data.id }), data)
 			}
 		},
 	},
@@ -147,18 +149,18 @@ export const updateUserFromNostrMutation = createMutation(
 export const setUserBannedMutation = createMutation(
 	{
 		mutationKey: [],
-		mutationFn: async ({ userId, banned }: { userId: string; banned: boolean }) => {
-			const response = await createRequest(`POST /api/v1/users/${userId}/ban`, {
+		mutationFn: async ({ userId, banned }: { userId: string; banned: boolean }) =>
+			createRequest(`POST /api/v1/users/${userId}/ban`, {
 				body: { banned },
 				auth: true,
-			})
-			return response
-		},
-		onSuccess: ({ id }: { id: string }) => {
-			if (id) {
-				queryClient.invalidateQueries({ queryKey: createUsersByFilterKey({ userId: id }) })
-				goto('/')
-			}
+			}),
+		onSuccess: (data: User | null) => {
+			if (!data) return
+			queryClient.setQueryData(userKeys.filtered({ userId: data.id }), (prevData?: RichUser | User) =>
+				prevData ? { ...prevData, banned: data.banned } : data,
+			)
+
+			goto('/')
 		},
 	},
 	queryClient,

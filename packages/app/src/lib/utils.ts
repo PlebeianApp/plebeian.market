@@ -82,16 +82,6 @@ export const flyAndScale = (node: Element, params: FlyAndScaleParams = { y: -8, 
 	}
 }
 
-export async function btcToCurrency(currency: string): Promise<number | null> {
-	try {
-		const { result } = await ofetch(`https://api.yadio.io/convert/1/btc/${currency}`)
-		return result
-	} catch (error) {
-		console.error(`Error converting BTC to ${currency}: ${error}`)
-		return null
-	}
-}
-
 export const bitcoinToSatoshis = (amountInBtc: number) => {
 	return Math.floor(amountInBtc * numSatsInBtc)
 }
