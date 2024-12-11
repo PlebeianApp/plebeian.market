@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { CartProduct } from '$lib/stores/cart'
-	import { debounce, formatPrice, stringToHexColor } from '$lib/utils'
+	import { formatPrice, stringToHexColor } from '$lib/utils'
 	import { createEventDispatcher } from 'svelte'
 	import { toast } from 'svelte-sonner'
 
@@ -12,21 +12,21 @@
 
 	const dispatch = createEventDispatcher()
 
-	const handleIncrement = debounce(() => {
+	const handleIncrement = () => {
 		if (product.amount < product.stockQuantity) {
 			dispatch('increment', { action: 'increment' })
 		}
-	}, 200)
+	}
 
-	const handleDecrement = debounce(() => {
+	const handleDecrement = () => {
 		if (product.amount > 1) {
 			dispatch('decrement', { action: 'decrement' })
 		}
-	}, 200)
+	}
 
-	const debouncedSetAmount = debounce((newAmount) => {
+	const debouncedSetAmount = (newAmount: number) => {
 		dispatch('setAmount', { action: 'setAmount', amount: newAmount })
-	}, 500)
+	}
 
 	function handleSetAmount(e: Event) {
 		const newAmount = Math.min(Math.max(1, parseInt((e.target as HTMLInputElement).value) || 1), product.stockQuantity)
