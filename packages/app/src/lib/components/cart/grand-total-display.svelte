@@ -8,7 +8,7 @@
 
 	let grandTotal: Awaited<ReturnType<typeof cart.calculateGrandTotal>> | null = null
 
-	$: $cart && cart.calculateGrandTotal().then((total) => grandTotal = total)
+	$: $cart && cart.calculateGrandTotal().then((total) => (grandTotal = total))
 </script>
 
 <div class="cart-totals mt-4 p-4 bg-gray-100 rounded-lg">
