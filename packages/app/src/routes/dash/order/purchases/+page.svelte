@@ -9,7 +9,10 @@
 	import type { LayoutData } from '../../$types'
 
 	export let data: LayoutData
-	$: orderQuery = createOrdersByUserAndRoleQuery($ndkStore.activeUser?.pubkey ?? '', 'buyer')
+	$: orderQuery = createOrdersByUserAndRoleQuery($ndkStore.activeUser?.pubkey ?? '', 'buyer', {
+		orderBy: 'createdAt',
+		order: 'desc',
+	})
 	const linkDetails = data.menuItems.find((item) => item.value === 'orders')?.links.find((item) => item.href === $page.url.pathname)
 </script>
 

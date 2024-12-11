@@ -411,11 +411,11 @@ const main = async () => {
 
 	const ordersData = shippingData.map((shippingByStall) => {
 		return shippingByStall.map((shipping) => {
-			return randomLengthArrayFromTo(3, 12).map(() => {
+			return randomLengthArrayFromTo(3, 6).map(() => {
 				return {
 					id: createId(),
-					createdAt: faker.date.recent(),
-					updatedAt: faker.date.future(),
+					createdAt: faker.date.recent({ days: 10 }),
+					updatedAt: faker.date.recent({ days: 5 }),
 					sellerUserId: faker.helpers.arrayElement(userIds).id,
 					buyerUserId: faker.helpers.arrayElement(userIds).id,
 					status: faker.helpers.arrayElement(Object.values(ORDER_STATUS)),
@@ -528,7 +528,7 @@ const main = async () => {
 		eventId: flatProductData[i].id,
 		eventKind: KindProducts,
 		tagName: 't',
-		tagValue: v,
+		tagValue: v.toLowerCase(),
 	}))
 
 	const stallEventTagsData: NewEventTag[] = userStalls.flat(1).map((stall) => ({

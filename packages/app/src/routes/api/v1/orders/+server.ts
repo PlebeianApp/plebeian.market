@@ -17,7 +17,7 @@ export const GET = async ({ url }) => {
 		if (!filter.data.role) {
 			throw error(400, 'Role is required')
 		}
-		const orders = await getOrdersByUserId(filter.data.userId, filter.data.role)
+		const orders = await getOrdersByUserId(filter.data.userId, filter.data.role, filter.data)
 		return json(orders)
 	} else {
 		const orders = await getAllOrders(filter.data)
