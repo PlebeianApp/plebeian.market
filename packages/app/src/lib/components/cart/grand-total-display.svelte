@@ -2,17 +2,13 @@
 	import { Button } from '$lib/components/ui/button'
 	import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '$lib/components/ui/collapsible'
 	import { cart } from '$lib/stores/cart'
-	import { debounce, formatSats } from '$lib/utils'
+	import { formatSats } from '$lib/utils'
 
 	export let showActions = false
 
 	let grandTotal: Awaited<ReturnType<typeof cart.calculateGrandTotal>> | null = null
 
-	$: updateGrandTotal($cart)
-
-	const updateGrandTotal = debounce(async () => {
-		grandTotal = await cart.calculateGrandTotal()
-	}, 300)
+	$: $cart && cart.calculateGrandTotal().then((total) => grandTotal = total)
 </script>
 
 <div class="cart-totals mt-4 p-4 bg-gray-100 rounded-lg">
