@@ -9,7 +9,7 @@
 	import { Input } from '$lib/components/ui/input'
 	import ndkStore, { GenericKeySigner } from '$lib/stores/ndk'
 	import { canPayWithNWC } from '$lib/stores/nwc'
-	import { copyToClipboard, formatSats, truncateText } from '$lib/utils'
+	import { copyToClipboard, formatSats } from '$lib/utils'
 	import {
 		createZapEventHandler,
 		formatTime,

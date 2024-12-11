@@ -11,10 +11,10 @@
 	import { v4VForUserQuery } from '$lib/fetch/v4v.queries'
 	import { cart } from '$lib/stores/cart'
 	import ndkStore from '$lib/stores/ndk'
+	import { canPayWithNWC } from '$lib/stores/nwc'
 	import { cn, formatSats, resolveQuery } from '$lib/utils'
 	import { createPaymentRequestMessage, sendDM } from '$lib/utils/dm.utils'
 	import { paymentMethodIcons } from '$lib/utils/paymentDetails.utils'
-	import { createInvoiceObject, handleNWCPayment } from '$lib/utils/zap.utils'
 	import { createEventDispatcher, onMount, tick } from 'svelte'
 	import { toast } from 'svelte-sonner'
 
@@ -24,7 +24,6 @@
 	import type { CheckoutPaymentEvent } from './types'
 	import MiniStall from '../cart/mini-stall.svelte'
 	import ProductInCart from '../cart/product-in-cart.svelte'
-	import LightningPaymentProcessor from '../paymentProcessors/LightningPaymentProcessor.svelte'
 	import PaymentProcessor from '../paymentProcessors/paymentProcessor.svelte'
 	import Separator from '../ui/separator/separator.svelte'
 	import MiniV4v from '../v4v/mini-v4v.svelte'
@@ -53,6 +52,7 @@
 	let v4vTotalPercentage: number | null = null
 	let somePaymentsAllowNWC = false
 
+	$: canUseNWC = orderTotal?.totalInSats && canPayWithNWC(orderTotal?.totalInSats)
 	const paymentDetails = createPaymentsForUserQuery(order.sellerUserId)
 	const v4vQuery = v4VForUserQuery(order.sellerUserId)
 
@@ -373,7 +373,7 @@
 				on:paymentCancelled={handlePaymentEvent}
 			/>
 		{/if}
-		{#if somePaymentsAllowNWC}
+		{#if somePaymentsAllowNWC && canUseNWC}
 			<Button.Root class="w-1/2" on:click={() => handlePayAllNWCInvoices()}>
 				<span>Pay all NWC invoices</span> <span class="i-mdi-purse w-6 h-6 ml-2" /></Button.Root
 			>
