@@ -50,7 +50,7 @@
 </script>
 
 <Sheet.Root bind:open={isOpen} onOutsideClick={closeDrawer}>
-	<Sheet.Content side="right" class="w-[100vw] sm:min-w-[30vw] flex flex-col border-l-black border-2 p-2">
+	<Sheet.Content side="right" class="w-[100vw] sm:min-w-[85vw] md:min-w-[55vw] xl:min-w-[35vw] flex flex-col border-l-black border-2 p-2">
 		{#if isLoading}
 			<Spinner />
 		{:else}
