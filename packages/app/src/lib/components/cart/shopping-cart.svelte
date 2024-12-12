@@ -13,17 +13,16 @@
 	}
 </script>
 
-<div class="flex flex-col flex-grow overflow-hidden">
-	<div class="flex-grow overflow-hidden">
-		<ScrollArea class="h-full pr-4">
-			<section class="flex flex-col gap-4">
-				{#each Object.values($cart.users) as user (user.pubkey)}
-					<Order {user} stalls={$cart.stalls} products={$cart.products} mode="cart" on:productUpdate={cart.handleProductUpdate} />
-				{/each}
-			</section>
-		</ScrollArea>
-	</div>
-	<div class="flex-shrink-0">
+<div class="flex flex-col h-[calc(100vh-8rem)] w-full">
+	<ScrollArea class="flex-1 w-full pr-2">
+		<section class="flex flex-col gap-4">
+			{#each Object.values($cart.users) as user (user.pubkey)}
+				<Order {user} stalls={$cart.stalls} products={$cart.products} mode="cart" on:productUpdate={cart.handleProductUpdate} />
+			{/each}
+		</section>
+	</ScrollArea>
+
+	<div class="mt-auto pt-4 w-full">
 		<GrandTotalDisplay showActions={true}>
 			<div slot="actions" class="flex justify-between mt-4">
 				<Button variant="outline" on:click={clearCart}>Clear Cart</Button>

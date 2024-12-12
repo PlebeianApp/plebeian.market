@@ -602,3 +602,10 @@ export function handleInvalidForm(event: Event) {
 		})
 	})
 }
+
+export function scrollToTop() {
+	window?.scrollTo({
+		top: 0,
+		behavior: 'smooth',
+	})
+}
