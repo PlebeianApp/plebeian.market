@@ -36,8 +36,30 @@ const createBaseLogger = (opts: {package?: string, component?: string } = {}) =>
     });
   }
 
-  const streams = isDevelopment 
-    ? [{ 
+  // const streams = isDevelopment 
+  //   ? [{ 
+  //       stream: pino.transport({
+  //         target: 'pino-pretty',
+  //         options: {
+  //           colorize: true
+  //         }
+  //       })
+  //     }]
+  //   : [{ 
+  //     stream: pino.transport({
+  //       target: 'pino-roll',
+  //       options: {
+  //         mkdir: true,
+  //         file: path.join(logPath, 'log'),
+  //         size: '10m',
+  //         frequency: 'daily',
+  //         compress: true,
+  //         dateFormat: 'yyyy-MM-dd'
+  //       }
+  //     })
+  //   }];
+
+    const streams = [{ 
         stream: pino.transport({
           target: 'pino-pretty',
           options: {
@@ -45,19 +67,6 @@ const createBaseLogger = (opts: {package?: string, component?: string } = {}) =>
           }
         })
       }]
-    : [{ 
-      stream: pino.transport({
-        target: 'pino-roll',
-        options: {
-          mkdir: true,
-          file: path.join(logPath, 'log'),
-          size: '10m',
-          frequency: 'daily',
-          compress: true,
-          dateFormat: 'yyyy-MM-dd'
-        }
-      })
-    }];
 
   return pino(
     {
