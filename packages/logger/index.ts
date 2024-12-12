@@ -46,18 +46,18 @@ const createBaseLogger = (opts: {package?: string, component?: string } = {}) =>
         })
       }]
     : [{ 
-        stream: pino.transport({
-          target: 'pino-roll',
-          options: {
-            dir: logPath,
-            mkdir: true,
-            file: path.join(logPath, 'log'),
-            size: '10m',
-            interval: '1d',
-            compress: true
-          }
-        })
-      }];
+      stream: pino.transport({
+        target: 'pino-roll',
+        options: {
+          mkdir: true,
+          file: path.join(logPath, 'log'),
+          size: '10m',
+          frequency: 'daily',
+          compress: true,
+          dateFormat: 'yyyy-MM-dd'
+        }
+      })
+    }];
 
   return pino(
     {
@@ -76,6 +76,6 @@ const createBaseLogger = (opts: {package?: string, component?: string } = {}) =>
 };
 
 export const createAppLogger = (component: string) => createBaseLogger({ package: 'app', component });
-export const createDatabaseLogger = (component: string) => createBaseLogger({ package: 'database', component });
+// export const createDatabaseLogger = (component: string) => createBaseLogger({ package: 'database', component });
 export const logger = createBaseLogger();
 export default logger;
