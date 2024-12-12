@@ -7,7 +7,7 @@
 	import * as Select from '$lib/components/ui/select'
 	import { Skeleton } from '$lib/components/ui/skeleton'
 	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
-	import { reactiveDebounce } from '$lib/utils'
+	import { reactiveDebounce, scrollToTop } from '$lib/utils'
 	import { writable } from 'svelte/store'
 
 	const pageSize = 10
@@ -24,6 +24,7 @@
 	$: debouncedSearch = reactiveDebounce(search, 600)
 	$: $search, (page = 1)
 	$: stallsQuery = createStallsByFilterQuery({ pageSize, page, order: sort.value ?? 'desc', search: $debouncedSearch })
+	$: page, scrollToTop()
 </script>
 
 <div class="flex min-h-screen w-full flex-col">
