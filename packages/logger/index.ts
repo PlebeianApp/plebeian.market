@@ -22,6 +22,20 @@ const createBaseLogger = (opts: {package?: string, component?: string } = {}) =>
   const monorepoRoot = findMonorepoRoot();
   const logPath = path.join(monorepoRoot, 'packages', 'logger', 'logs');
 
+  if (process.env.NODE_ENV === 'test') {
+    return pino({
+      level: process.env.LOG_LEVEL || 'info',
+      formatters: {
+        level: (label) => ({ level: label })
+      },
+      base: {
+        env: process.env.NODE_ENV,
+        package: opts.package || 'unknown'
+      },
+      ...opts
+    });
+  }
+
   const streams = isDevelopment 
     ? [{ 
         stream: pino.transport({
@@ -53,7 +67,8 @@ const createBaseLogger = (opts: {package?: string, component?: string } = {}) =>
       },
       base: {
         ...(opts.package ? { package: opts.package } : {}),
-        ...(opts.component ? { component: opts.component } : {})},
+        ...(opts.component ? { component: opts.component } : {})
+      },
       ...opts
     }, 
     pino.multistream(streams)
