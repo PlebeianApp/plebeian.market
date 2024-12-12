@@ -19,10 +19,9 @@ const findMonorepoRoot = () => {
 
 const createBaseLogger = (opts: {package?: string, component?: string } = {}) => {
   const isDevelopment = process.env.NODE_ENV === 'development';
-  const monorepoRoot = findMonorepoRoot();
-  const logPath = path.join(monorepoRoot, 'packages', 'logger', 'logs');
+  const isTest = process.env.NODE_ENV === 'test';
 
-  if (process.env.NODE_ENV === 'test') {
+  if (isTest || !isDevelopment) {
     return pino({
       level: process.env.LOG_LEVEL || 'info',
       formatters: {
@@ -36,38 +35,6 @@ const createBaseLogger = (opts: {package?: string, component?: string } = {}) =>
     });
   }
 
-  // const streams = isDevelopment 
-  //   ? [{ 
-  //       stream: pino.transport({
-  //         target: 'pino-pretty',
-  //         options: {
-  //           colorize: true
-  //         }
-  //       })
-  //     }]
-  //   : [{ 
-  //     stream: pino.transport({
-  //       target: 'pino-roll',
-  //       options: {
-  //         mkdir: true,
-  //         file: path.join(logPath, 'log'),
-  //         size: '10m',
-  //         frequency: 'daily',
-  //         compress: true,
-  //         dateFormat: 'yyyy-MM-dd'
-  //       }
-  //     })
-  //   }];
-
-    const streams = [{ 
-        stream: pino.transport({
-          target: 'pino-pretty',
-          options: {
-            colorize: true
-          }
-        })
-      }]
-
   return pino(
     {
       level: process.env.LOG_LEVEL || 'info',
@@ -75,12 +42,17 @@ const createBaseLogger = (opts: {package?: string, component?: string } = {}) =>
         level: (label) => ({ level: label })
       },
       base: {
-        ...(opts.package ? { package: opts.package } : {}),
-        ...(opts.component ? { component: opts.component } : {})
+        env: process.env.NODE_ENV,
+        package: opts.package || 'unknown'
+      },
+      transport: {
+        target: 'pino-pretty',
+        options: {
+          colorize: true
+        }
       },
       ...opts
-    }, 
-    pino.multistream(streams)
+    }
   );
 };
 
