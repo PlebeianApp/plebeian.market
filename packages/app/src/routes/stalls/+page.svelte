@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Selected } from 'bits-ui'
+	import { browser } from '$app/environment'
 	import CatMenu from '$lib/components/category/cat-menu.svelte'
 	import StallItem from '$lib/components/stalls/stall-item.svelte'
 	import Input from '$lib/components/ui/input/input.svelte'
@@ -24,7 +25,7 @@
 	$: debouncedSearch = reactiveDebounce(search, 600)
 	$: $search, (page = 1)
 	$: stallsQuery = createStallsByFilterQuery({ pageSize, page, order: sort.value ?? 'desc', search: $debouncedSearch })
-	$: page, scrollToTop()
+	$: if (page && browser) scrollToTop()
 </script>
 
 <div class="flex min-h-screen w-full flex-col">

@@ -6,6 +6,7 @@
 	import { createProductQuery } from '$lib/fetch/products.queries'
 	import { createStallQuery } from '$lib/fetch/stalls.queries'
 	import { closeDrawer, drawerUI } from '$lib/stores/drawer-ui'
+	import { onMount } from 'svelte'
 	import { toast } from 'svelte-sonner'
 
 	import Spinner from './assets/spinner.svelte'
@@ -21,6 +22,31 @@
 	function handleSuccess() {
 		closeDrawer()
 	}
+
+	let historyState: string | null = null
+
+	onMount(() => {
+		const handlePopState = (event: PopStateEvent) => {
+			if (isOpen) {
+				event.preventDefault()
+				closeDrawer()
+			}
+		}
+
+		window.addEventListener('popstate', handlePopState)
+
+		return () => {
+			window.removeEventListener('popstate', handlePopState)
+		}
+	})
+
+	$: if (isOpen && !historyState) {
+		historyState = 'drawer'
+		history.pushState(historyState, '', window.location.href)
+	} else if (!isOpen && historyState) {
+		history.replaceState(null, '', window.location.href)
+		historyState = null
+	}
 </script>
 
 <Sheet.Root bind:open={isOpen} onOutsideClick={closeDrawer}>
@@ -29,19 +55,21 @@
 			<Spinner />
 		{:else}
 			<ScrollArea class="h-auto">
-				<Sheet.Title class="flex flex-row justify-start items-center content-center ">
+				<Sheet.Title class="flex flex-row-reverse justify-end items-center content-center ">
 					<Button size="icon" variant="outline" class="border-none" on:click={closeDrawer}>
-						<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
+						<span class="cursor-pointer i-tdesign-close w-6 h-6" />
 					</Button>
-					{#if $drawerUI.drawerType === 'cart'}
-						Your cart
-					{:else if $drawerUI.drawerType === 'product' || $drawerUI.drawerType === 'stall'}
-						{#if $drawerUI.id}
-							<span>Edit {$drawerUI.drawerType}</span>
-						{:else}
-							<span>Create new {$drawerUI.drawerType}</span>
+					<div class=" w-full">
+						{#if $drawerUI.drawerType === 'cart'}
+							Your cart
+						{:else if $drawerUI.drawerType === 'product' || $drawerUI.drawerType === 'stall'}
+							{#if $drawerUI.id}
+								<span>Edit {$drawerUI.drawerType}</span>
+							{:else}
+								<span>Create new {$drawerUI.drawerType}</span>
+							{/if}
 						{/if}
-					{/if}
+					</div>
 				</Sheet.Title>
 				{#if $drawerUI.drawerType === 'cart'}
 					<ShoppingCart />

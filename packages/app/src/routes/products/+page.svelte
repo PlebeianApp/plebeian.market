@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Selected } from 'bits-ui'
+	import { browser } from '$app/environment'
 	import CatMenu from '$lib/components/category/cat-menu.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
 	import Button from '$lib/components/ui/button/button.svelte'
@@ -26,7 +27,7 @@
 	$: debouncedSearch = reactiveDebounce(search, 600)
 	$: $search, (page = 1)
 	$: productsQuery = createProductsByFilterQuery({ pageSize, page, order: sort.value ?? 'desc', search: $debouncedSearch })
-	$: page, scrollToTop()
+	$: if (page && browser) scrollToTop()
 </script>
 
 <div class="flex min-h-screen w-full flex-col">
