@@ -70,6 +70,7 @@
 		"@nostr-dev-kit/ndk-svelte": "^2.2.18",
 		"@nostrify/nostrify": "npm:@jsr/nostrify__nostrify@^0.25",
 		"@plebeian/database": "workspace:*",
+		"@plebeian/logger": "workspace:*",
 		"@plebeian/eslint": "workspace:*",
 		"@plebeian/prettier": "workspace:*",
 		"@scure/bip32": "^1.5.0",
