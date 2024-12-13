@@ -22,6 +22,7 @@ jobs:
         working-directory: ./packages/app
       - run: pnpm test
         env:
+          NODE_ENV: test
           APP_HOST: localhost
           APP_PORT: 5173
           INSTANCE_PASS: ${{ secrets.INSTANCE_PASS }}
