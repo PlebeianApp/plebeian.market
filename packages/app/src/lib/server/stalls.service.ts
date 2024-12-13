@@ -568,15 +568,12 @@ export const deleteStall = async (stallId: string): Promise<string> => {
 		where: eq(stalls.id, stallId),
 	})
 
-	console.log('stallResult', stallResult)
-	console.log('here')
 	if (!stallResult) {
 		error(404, 'Not found')
 	}
 
 	const deleteSuccess = await db.delete(stalls).where(eq(stalls.id, stallId)).execute()
 
-	console.log('deleteSuccess', deleteSuccess)
 	if (deleteSuccess) {
 		return stallId
 	}
