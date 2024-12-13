@@ -3,7 +3,6 @@
 	import * as Collapsible from '$lib/components/ui/collapsible'
 	import * as Slider from '$lib/components/ui/slider'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
-	import ndkStore from '$lib/stores/ndk'
 	import { checkTargetUserHasLightningAddress, decodePk, getHexColorFingerprintFromHexPubkey, resolveQuery } from '$lib/utils'
 	import { createEventDispatcher } from 'svelte'
 
@@ -11,6 +10,7 @@
 	import CAvatar from '../ui/custom-components/c-avatar.svelte'
 	import { Input } from '../ui/input'
 	import Label from '../ui/label/label.svelte'
+	import ProfileSearch from '../users/profile-search.svelte'
 
 	const dispatch = createEventDispatcher<{
 		percentageChange: { npub: string; percentage: number }
@@ -111,15 +111,32 @@
 		</div>
 
 		<div class="space-y-2">
-			<Label class="font-bold">Npub</Label>
-			<div class="flex gap-2">
-				<Input type="text" bind:value={npub} />
+			<Label class="font-bold">Recipient</Label>
+			<div class="space-y-2">
 				{#if isNewRecipient}
-					<Button type="button" on:click={handleAddRecipient} disabled={!npub || !npub.startsWith('npub')}>Add</Button>
+					<div class="flex flex-col gap-4">
+						<div class="flex flex-col items-center gap-2 text-sm text-muted-foreground">
+							<ProfileSearch
+								on:select={({ detail }) => {
+									npub = detail.npub
+									handleAddRecipient()
+								}}
+							/>
+						</div>
+						<span>or</span>
+
+						<div class="flex gap-2 items-center">
+							<Input type="text" bind:value={npub} placeholder="Paste npub..." />
+							<Button type="button" on:click={handleAddRecipient} disabled={!npub || !npub.startsWith('npub')}>Add</Button>
+						</div>
+					</div>
 				{:else}
-					<Button type="button" variant="destructive" on:click={handleRemoveRecipient}>
-						<span class="i-mdi-trash-can"></span>
-					</Button>
+					<div class="flex gap-2">
+						<Input type="text" value={npub} readonly />
+						<Button type="button" variant="destructive" on:click={handleRemoveRecipient}>
+							<span class="i-mdi-trash-can"></span>
+						</Button>
+					</div>
 				{/if}
 			</div>
 		</div>
