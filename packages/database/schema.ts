@@ -198,7 +198,7 @@ export const paymentDetails = sqliteTable('payment_details', {
 	userId: text('user_id')
 		.notNull()
 		.references(() => users.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
-	stallId: text('stall_id').references(() => stalls.id, { onUpdate: 'cascade' }),
+	stallId: text('stall_id').references(() => stalls.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
 	paymentMethod: text('payment_method', { enum: Object.values(PAYMENT_DETAILS_METHOD) as NonEmptyArray<PaymentDetailsMethod> }).notNull(),
 	paymentDetails: text('payment_details').notNull(),
 	isDefault: integer('default', { mode: 'boolean' }).notNull().default(false),
@@ -213,7 +213,7 @@ export const shipping = sqliteTable('shipping', {
 	updatedAt: integer('updated_at', { mode: 'timestamp' })
 		.notNull()
 		.default(sql`(unixepoch())`),
-	stallId: text('stall_id').references(() => stalls.id, { onUpdate: 'cascade', onDelete: 'cascade' }),
+	stallId: text('stall_id').references(() => stalls.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
 	userId: text('user_id')
 		.notNull()
 		.references(() => users.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
@@ -232,7 +232,7 @@ export const shippingZones = sqliteTable(
 			.notNull()
 			.references(() => shipping.id, { onDelete: 'cascade' }),
 		shippingUserId: text('shipping_user_id').notNull(),
-		stallId: text('stall_id').references(() => stalls.id, { onUpdate: 'cascade', onDelete: 'cascade' }),
+		stallId: text('stall_id').references(() => stalls.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
 		regionCode: text('region_code'),
 		countryCode: text('country_code'),
 	},
