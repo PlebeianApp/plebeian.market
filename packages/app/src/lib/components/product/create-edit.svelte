@@ -181,7 +181,7 @@
 	<Spinner />
 {:else if !$stallsQuery.data?.stalls.length}
 	<div>
-		Creating products needs at least one defined <Button on:click={openDrawerForNewStall} variant="link" class="p-0 border-0">stall</Button>
+		Creating products needs at least one defined <Button variant="link" on:click={openDrawerForNewStall} class="p-0">stall</Button>
 	</div>
 {:else}
 	<form
