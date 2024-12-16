@@ -30,7 +30,7 @@
 		{:else}
 			<ScrollArea class="h-auto">
 				<Sheet.Title class="flex flex-row justify-start items-center content-center ">
-					<Button size="icon" variant="outline" class="border-none" on:click={closeDrawer}>
+					<Button size="icon" variant="ghost" on:click={closeDrawer}>
 						<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
 					</Button>
 					{#if $drawerUI.drawerType === 'cart'}

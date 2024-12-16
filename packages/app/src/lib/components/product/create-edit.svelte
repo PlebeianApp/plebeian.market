@@ -11,9 +11,9 @@
 	import Label from '$lib/components/ui/label/label.svelte'
 	import * as Tabs from '$lib/components/ui/tabs/index.js'
 	import Textarea from '$lib/components/ui/textarea/textarea.svelte'
-	import { queryClient } from '$lib/fetch/client'
 	import { createProductMutation, deleteProductMutation, editProductMutation } from '$lib/fetch/products.mutations'
 	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
+	import { openDrawerForNewStall } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
 	import { handleInvalidForm, parseCoordinatesString } from '$lib/utils'
 	import { deleteEvent } from '$lib/utils/nostr.utils'
@@ -180,7 +180,9 @@
 {#if $stallsQuery.isLoading}
 	<Spinner />
 {:else if !$stallsQuery.data?.stalls.length}
-	<div>Creating products needs at least one defined <a class="underline" href="/settings/account/stalls">stall</a></div>
+	<div>
+		Creating products needs at least one defined <Button on:click={openDrawerForNewStall} variant="link" class="p-0 border-0">stall</Button>
+	</div>
 {:else}
 	<form
 		on:submit|preventDefault={(sEvent) => handleSubmit(sEvent, stall)}
@@ -361,7 +363,7 @@
 						<Label for="stall-shippings" class="font-bold required-mark">Shipping Method #{i + 1}</Label>
 						<DropdownMenu.Root>
 							<DropdownMenu.Trigger asChild let:builder>
-								<Button variant="outline" class="border-2 border-black" builders={[builder]}>
+								<Button variant="outline" builders={[builder]}>
 									{shippingMethod.shipping?.name ?? 'Choose a shipping method'}
 								</Button>
 							</DropdownMenu.Trigger>
@@ -431,9 +433,9 @@
 				</div>
 			</Tabs.Content>
 
-			<Button disabled={isLoading} type="submit" class="w-full font-bold my-4">Save</Button>
+			<Button variant="primary" disabled={isLoading} type="submit" class="w-full font-bold my-4">Save</Button>
 			{#if product?.id}
-				<Button type="button" variant="destructive" disabled={isLoading} class="w-full" on:click={handleDelete}>Delete</Button>
+				<Button variant="destructive" disabled={isLoading} class="w-full" on:click={handleDelete}>Delete</Button>
 			{/if}
 		</Tabs.Root>
 	</form>

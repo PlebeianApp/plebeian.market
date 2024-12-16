@@ -181,7 +181,7 @@
 
 					<div class="flex">
 						<QrDialog on:validQrScanned={(e) => handleQrScanToNWCUri(e)} />
-						<Button on:click={handlePasteNWCUri} size="icon" variant="ghost" class="text-destructive border-0">
+						<Button variant="ghost" on:click={handlePasteNWCUri} size="icon" class="text-destructive border-0">
 							<span class="i-mingcute-clipboard-fill text-black w-6 h-6"></span>
 						</Button>
 					</div>
@@ -205,7 +205,7 @@
 					<Label for="nwc-secret" class="font-bold">Wallet connect secret</Label>
 					<div class="flex flex-row">
 						<Input bind:value={walletSecret} type={showSecret ? 'text' : 'password'} id="nwc-secret" name="nwc-secret" />
-						<Button on:click={() => (showSecret = !showSecret)} size="icon" variant="ghost" class="text-destructive border-0">
+						<Button variant="ghost" on:click={() => (showSecret = !showSecret)} size="icon" class="text-destructive border-0">
 							{#if showSecret}
 								<span class="i-mdi-eye-outline w-4 h-4" />
 							{:else}
@@ -227,7 +227,7 @@
 						</div>
 					</div>
 					{#if nwcWallet}
-						<Button on:click={handleDelete} size="icon" variant="ghost" class="text-destructive border-0">
+						<Button variant="ghost" on:click={handleDelete} size="icon" class="text-destructive border-0">
 							<span class="i-tdesign-delete-1 w-4 h-4" />
 						</Button>
 					{/if}

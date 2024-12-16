@@ -56,10 +56,10 @@
 			</div>
 
 			<div class="flex space-x-2">
-				<Button on:click={() => setupPaymentDetail(userLightningAddress, PAYMENT_DETAILS_METHOD.LIGHTNING_NETWORK)}>
+				<Button variant="primary" on:click={() => setupPaymentDetail(userLightningAddress, PAYMENT_DETAILS_METHOD.LIGHTNING_NETWORK)}>
 					Use This Address
 				</Button>
-				<Button variant="outline" on:click={closeGuidance}>Set Up Manually</Button>
+				<Button variant="tertiary" on:click={closeGuidance}>Set Up Manually</Button>
 			</div>
 		{:else}
 			{@const npubCashAddress = `${npubEncode(String($ndkStore.activeUser?.pubkey))}@npub.cash`}
@@ -83,7 +83,7 @@
 				<div class="bg-secondary p-4 flex flex-col gap-2">
 					<h4 class="font-semibold">2. Paste from clipboard</h4>
 					<Button variant="outline" class="mt-2" on:click={handlePaste}
-						><span class="i-mingcute-clipboard-fill text-black w-6 h-6"></span> Paste</Button
+						><span class="i-mingcute-clipboard-fill w-6 h-6"></span> Paste</Button
 					>
 					<p>Paste your payment details from the clipboard and we'll auto-detect the method.</p>
 				</div>

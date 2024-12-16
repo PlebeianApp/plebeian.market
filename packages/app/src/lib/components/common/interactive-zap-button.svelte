@@ -188,18 +188,18 @@
 
 		{#if zapMethods.length && zapAmountSats > 0}
 			<div class="grid grid-cols-[auto_auto] justify-center gap-2 mt-4">
-				<Button variant="secondary" on:click={() => handleZap('qr')} disabled={spinnerShown}>
-					<span class="i-mingcute-qrcode-line text-black w-6 h-6 mr-2" />
+				<Button variant="primary" on:click={() => handleZap('qr')} disabled={spinnerShown}>
+					<span class="i-mingcute-qrcode-line w-6 h-6 mr-2" />
 					<span>Zap with QR</span>
 				</Button>
 				{#if canUseNWC}
-					<Button variant="secondary" on:click={() => handleZap('nwc')} disabled={spinnerShown}>
+					<Button variant="primary" on:click={() => handleZap('nwc')} disabled={spinnerShown}>
 						<span class="i-mdi-purse w-6 h-6 mr-2" />
 						<span>Zap with NWC</span>
 					</Button>
 				{/if}
 				{#if canUseWebln}
-					<Button variant="secondary" on:click={() => handleZap('webln')} disabled={spinnerShown}>
+					<Button variant="primary" on:click={() => handleZap('webln')} disabled={spinnerShown}>
 						<span class="i-mdi-lightning-bolt w-6 h-6 mr-2" />
 						<span>Zap with WebLN</span>
 					</Button>
@@ -221,15 +221,15 @@
 {/if}
 
 {#if isLoading}
-	<Button size="icon" variant="secondary" disabled>
+	<Button variant="outline" size="icon" disabled>
 		<Spinner />
 	</Button>
 {:else if zapMethods.length > 0}
-	<Button size="icon" variant="secondary" on:click={() => (zapDialogOpen = true)}>
+	<Button variant="primary" size="icon" on:click={() => (zapDialogOpen = true)}>
 		<span class="i-mingcute-lightning-line w-6 h-6" />
 	</Button>
 {:else}
-	<Button data-tooltip="User cannot be zapped." size="icon" variant="secondary" disabled>
+	<Button variant="primary" data-tooltip="User cannot be zapped." size="icon" disabled>
 		<span class="i-mingcute-lightning-line w-6 h-6" />
 	</Button>
 {/if}

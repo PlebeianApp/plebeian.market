@@ -44,7 +44,7 @@
 	$: formattedBalance = $walletBalanceQuery.data ? formatBalance($walletBalanceQuery.data, displayFormat) : undefined
 </script>
 
-<Button on:click={toggleFormat} variant="ghost" class="cursor-pointer">
+<Button variant="ghost" on:click={toggleFormat} class="cursor-pointer">
 	{#if $walletBalanceQuery.data === undefined}
 		{#if getBalanceFailed}
 			<span class="i-mdi-dangerous w-6 h-6 text-destructive" />

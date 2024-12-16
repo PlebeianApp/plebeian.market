@@ -12,7 +12,7 @@
 <div class="pb-4 space-y-2">
 	<div>
 		<div class=" flex items-center gap-1">
-			<Button size="icon" variant="outline" class=" border-none" on:click={() => goto('/settings')}>
+			<Button size="icon" variant="outline" on:click={() => goto('/settings')}>
 				<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
 			</Button>
 			<section>

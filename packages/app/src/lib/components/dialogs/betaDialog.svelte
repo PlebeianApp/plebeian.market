@@ -21,5 +21,5 @@
 		> describing your problem.
 	</p>
 
-	<Button on:click={handleAccept} class="w-full font-bold">I understand</Button>
+	<Button variant="primary" on:click={handleAccept} class="w-full font-bold">I understand</Button>
 </div>

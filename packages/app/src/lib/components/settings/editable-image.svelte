@@ -104,17 +104,13 @@
 		<img {src} alt="nip 96" class="w-full h-full object-cover" />
 	{:else}
 		<div class="w-full h-full min-h-[250px] flex items-center justify-center">
-			<Button on:click={() => (imageChoiceDialogOpen = true)} variant="ghost">
+			<Button variant="ghost" on:click={() => (imageChoiceDialogOpen = true)}>
 				<span class="i-mdi-upload w-9 h-9" />
 			</Button>
 		</div>
 	{/if}
 
-	<Button
-		on:click={() => (imageChoiceDialogOpen = true)}
-		variant="outline"
-		class="absolute top-1 right-1 font-bold border-current border-2"
-	>
+	<Button variant="outline" on:click={() => (imageChoiceDialogOpen = true)} class="absolute top-1 right-1 font-bold ">
 		<span class="i-mdi-pencil-outline text-current w-6 h-6" />
 	</Button>
 	<Dialog.Root bind:open={imageChoiceDialogOpen}>
@@ -143,13 +139,13 @@
 					<p class="text-destructive">{urlError}</p>
 				{/if}
 				<div class="flex flex-row gap-2">
-					<Button variant={'secondary'} on:click={handleUploadIntent} disabled={isLoading || !!localSrc} class="w-full font-bold">
+					<Button variant="tertiary" on:click={handleUploadIntent} disabled={isLoading || !!localSrc} class="w-full font-bold">
 						<span class="i-mdi-upload w-6 h-6" /> Upload
 						{#if isLoading}
 							<Spinner />
 						{/if}
 					</Button>
-					<Button on:click={handleSave} class="w-full font-bold" disabled={isLoading || !localSrc}>Save</Button>
+					<Button variant="primary" on:click={handleSave} class="w-full" disabled={isLoading || !localSrc}>Save</Button>
 				</div>
 				{#if marketContext}
 					<div class="flex-1 max-h-[40vh] overflow-y-auto">

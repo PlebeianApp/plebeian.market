@@ -115,7 +115,7 @@
 	{/if}
 	<div class="flex flex-wrap gap-2 justify-center">
 		<Button variant="ghost" on:click={() => window.open(bitcoinUri, '_blank')}>Open in wallet</Button>
-		<Button on:click={handleManualCheck}>I've already paid</Button>
+		<Button variant="primary" on:click={handleManualCheck}>I've already paid</Button>
 		<Button variant="outline" on:click={handleSkipPayment}>Skip Payment</Button>
 	</div>
 </div>

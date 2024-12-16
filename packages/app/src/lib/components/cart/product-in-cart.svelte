@@ -53,7 +53,7 @@
 		<div class="font-bold">{product.name}</div>
 		{#if mode === 'review'}
 			<div class="flex flex-row">
-				<Button class="border-2 border-black" size="icon" variant="outline" on:click={handleDecrement} disabled={product.amount <= 1}>
+				<Button variant="outline" size="icon" on:click={handleDecrement} disabled={product.amount <= 1}>
 					<span class="i-mdi-minus w-4 h-4"></span>
 				</Button>
 				<Input
@@ -73,7 +73,7 @@
 				>
 					<span class="i-mdi-plus w-4 h-4"></span>
 				</Button>
-				<Button on:click={handleRemove} size="icon" variant="ghost">
+				<Button variant="ghost" on:click={handleRemove} size="icon">
 					<span class="i-mdi-delete w-4 h-4"></span>
 				</Button>
 			</div>

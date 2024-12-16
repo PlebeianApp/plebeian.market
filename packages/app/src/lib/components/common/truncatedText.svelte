@@ -6,7 +6,7 @@
 	export let maxLength = 256
 	export let expandButtonClass = 'mt-2'
 	export let buttonSize: 'default' | 'sm' | 'lg' | 'icon' = 'icon'
-	export let buttonVariant: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link' = 'outline'
+	export let buttonVariant: 'primary' | 'destructive' | 'outline' | 'secondary' | 'tertiary' | 'ghost' | 'link' = 'outline'
 
 	let expanded = false
 

@@ -300,7 +300,7 @@
 		<Spinner />
 	{:else if invoice}
 		<QrCode data={invoice.paymentRequest} logoPath="/logo.svg" />
-		<Button variant="secondary" class="items-center gap-2 grid grid-cols-[auto_auto] max-w-full" on:click={handleCopyInvoice}>
+		<Button variant="tertiary" class="items-center gap-2 grid grid-cols-[auto_auto] max-w-full" on:click={handleCopyInvoice}>
 			<span class=" truncate">{invoice.paymentRequest}</span>
 			<span class="i-tdesign-copy" />
 		</Button>
@@ -315,14 +315,14 @@
 
 		<div class="flex flex-wrap gap-2 justify-center">
 			{#if 'webln' in window}
-				<Button on:click={handleWeblnPay} disabled={paymentStatus !== 'pending'}>Pay with WebLN</Button>
+				<Button variant="primary" on:click={handleWeblnPay} disabled={paymentStatus !== 'pending'}>Pay with WebLN</Button>
 			{/if}
 			{#if canUseNWC}
-				<Button on:click={handleNWCPay} disabled={paymentStatus !== 'pending'}>Pay with NWC</Button>
+				<Button variant="primary" on:click={handleNWCPay} disabled={paymentStatus !== 'pending'}>Pay with NWC</Button>
 			{/if}
 			<Button variant="ghost" on:click={() => window.open(url, '_blank')}>Open in wallet</Button>
 			{#if showManualVerification}
-				<Button on:click={() => (showPreimageInput = true)}>I've already paid</Button>
+				<Button variant="primary" on:click={() => (showPreimageInput = true)}>I've already paid</Button>
 			{/if}
 			<Button variant="outline" on:click={handleSkipPayment}>Skip Payment</Button>
 		</div>
@@ -331,7 +331,7 @@
 			<Collapsible.Content>
 				<div class="flex flex-col gap-2">
 					<Input placeholder="Enter preimage" bind:value={preimageInput} />
-					<Button on:click={verifyPayment} disabled={paymentStatus !== 'pending'}>Verify Payment</Button>
+					<Button variant="primary" on:click={verifyPayment} disabled={paymentStatus !== 'pending'}>Verify Payment</Button>
 				</div>
 			</Collapsible.Content>
 		</Collapsible.Root>

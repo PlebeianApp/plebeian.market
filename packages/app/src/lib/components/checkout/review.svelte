@@ -28,7 +28,7 @@
 				<div class="flex items-center justify-between space-x-4 px-4">
 					<MiniUser userId={merchant.pubkey} />
 					<Collapsible.Trigger asChild let:builder>
-						<Button builders={[builder]} variant="ghost" size="sm" class="w-9 p-0 border-0">
+						<Button builders={[builder]} variant="ghost" size="sm" class="w-9 p-0">
 							{#if builder['data-state'] === 'open'}
 								<span class="i-tdesign-chevron-up" style="width: 1rem; height: 1rem; color: black;"></span>
 							{:else}

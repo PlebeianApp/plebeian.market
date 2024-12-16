@@ -59,7 +59,7 @@
 	{#if stallsMode === 'list'}
 		<div class="flex justify-between items-center">
 			<div class=" flex items-center gap-1">
-				<Button id="create-edit-back-button" size="icon" variant="outline" class=" border-none" on:click={() => goto('/settings/account/')}>
+				<Button variant="ghost" id="create-edit-back-button" size="icon" on:click={() => goto('/settings/account/')}>
 					<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
 				</Button>
 				<section>
@@ -78,7 +78,7 @@
 			>
 		</div>
 	{:else if stallsMode === 'create' || stallsMode === 'edit'}
-		<button id="create-edit-back-button" class="w-fit" on:click={() => (stallsMode = 'list')}>
+		<button variant="primary" id="create-edit-back-button" class="w-fit" on:click={() => (stallsMode = 'list')}>
 			<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
 		</button>
 	{/if}

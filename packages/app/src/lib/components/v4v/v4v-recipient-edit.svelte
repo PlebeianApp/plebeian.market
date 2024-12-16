@@ -115,9 +115,9 @@
 			<div class="flex gap-2">
 				<Input type="text" bind:value={npub} />
 				{#if isNewRecipient}
-					<Button type="button" on:click={handleAddRecipient} disabled={!npub || !npub.startsWith('npub')}>Add</Button>
+					<Button variant="primary" type="button" on:click={handleAddRecipient} disabled={!npub || !npub.startsWith('npub')}>Add</Button>
 				{:else}
-					<Button type="button" variant="destructive" on:click={handleRemoveRecipient}>
+					<Button variant="destructive" type="button" on:click={handleRemoveRecipient}>
 						<span class="i-mdi-trash-can"></span>
 					</Button>
 				{/if}

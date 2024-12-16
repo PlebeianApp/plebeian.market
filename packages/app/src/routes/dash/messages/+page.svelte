@@ -26,7 +26,7 @@
 <div class="flex flex-col h-screen max-w-6xl mx-auto">
 	<div class="flex items-center justify-between p-4 shrink-0">
 		<div class="flex items-center gap-1">
-			<Button size="icon" variant="ghost" class="border-0" on:click={() => goto('/dash')}>
+			<Button variant="ghost" size="icon" on:click={() => goto('/dash')}>
 				<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
 			</Button>
 			<section>

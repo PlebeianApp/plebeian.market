@@ -79,7 +79,7 @@
 	<form on:submit={handleSubmit}>
 		<div class="pb-4 space-y-2">
 			<div class="flex items-center gap-1">
-				<Button size="icon" variant="outline" class="border-none" on:click={() => goto('/settings/account')}>
+				<Button size="icon" variant="ghost" on:click={() => goto('/settings/account')}>
 					<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
 				</Button>
 				<section>
@@ -134,7 +134,7 @@
 				<Input value={editingActiveUser?.lud06} type="text" id="lud06" name="lud06" placeholder={editingActiveUser?.lud06} />
 			</div>
 
-			<Button id="userDataSubmit" class="w-full font-bold" type="submit">Save</Button>
+			<Button variant="primary" id="userDataSubmit" class="w-full" type="submit">Save</Button>
 		</div>
 	</form>
 {/if}
