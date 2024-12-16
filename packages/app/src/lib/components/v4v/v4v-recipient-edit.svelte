@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { NDKUserProfile, NDKZapMethodInfo } from '@nostr-dev-kit/ndk'
+	import { NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk'
 	import * as Collapsible from '$lib/components/ui/collapsible'
 	import * as Slider from '$lib/components/ui/slider'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
@@ -34,13 +35,12 @@
 	$: if (npub && npub.startsWith('npub')) {
 		fetchUserProfile()
 	} else {
-		userProfile = null
-		recipientCanReceiveSats = []
+		resetRecipientState()
 	}
 
 	async function fetchUserProfile() {
 		if (npub && npub.startsWith('npub')) {
-			userProfile = await resolveQuery(() => createUserByIdQuery(hexPubkey))
+			userProfile = await resolveQuery(() => createUserByIdQuery(hexPubkey, true, false, NDKSubscriptionCacheUsage.CACHE_FIRST))
 			recipientCanReceiveSats = await checkTargetUserHasLightningAddress(hexPubkey)
 		}
 	}
@@ -53,7 +53,7 @@
 	}
 
 	function handleAddRecipient() {
-		if (npub && npub.startsWith('npub')) {
+		if (npub?.startsWith('npub')) {
 			dispatch('recipientAdded', { npub, percentage: percentageEdit / 100 })
 			isNewRecipient = false
 		}
@@ -61,6 +61,11 @@
 
 	function handleRemoveRecipient() {
 		npub && dispatch('recipientRemoved', { npub })
+	}
+
+	function resetRecipientState() {
+		userProfile = null
+		recipientCanReceiveSats = []
 	}
 </script>
 
@@ -115,20 +120,12 @@
 			<div class="space-y-2">
 				{#if isNewRecipient}
 					<div class="flex flex-col gap-4">
-						<div class="flex flex-col items-center gap-2 text-sm text-muted-foreground">
-							<ProfileSearch
-								on:select={({ detail }) => {
-									npub = detail.npub
-									handleAddRecipient()
-								}}
-							/>
-						</div>
-						<span>or</span>
-
-						<div class="flex gap-2 items-center">
-							<Input type="text" bind:value={npub} placeholder="Paste npub..." />
-							<Button type="button" on:click={handleAddRecipient} disabled={!npub || !npub.startsWith('npub')}>Add</Button>
-						</div>
+						<ProfileSearch
+							on:select={({ detail }) => {
+								npub = detail.npub
+								handleAddRecipient()
+							}}
+						/>
 					</div>
 				{:else}
 					<div class="flex gap-2">

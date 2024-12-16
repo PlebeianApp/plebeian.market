@@ -7,42 +7,40 @@
 	import CAvatar from '$lib/components/ui/custom-components/c-avatar.svelte'
 	import * as Popover from '$lib/components/ui/popover'
 	import ndkStore from '$lib/stores/ndk'
-	import { npubEncode } from 'nostr-tools/nip19'
+	import { isValidNpub } from '$lib/utils/validation.utils'
 	import { createEventDispatcher, onDestroy } from 'svelte'
 
 	import Spinner from '../assets/spinner.svelte'
+	import { Input } from '../ui/input'
 
 	const dispatch = createEventDispatcher<{
 		select: { npub: string }
 	}>()
 
-	export let placeholder = 'Search profiles...'
-
+	export let placeholder: string = 'Search profiles or paste npub...'
+	export let commandInput: boolean = false
 	let searchQuery = ''
 	let searchOpen = false
 	let isLoading = false
-	let eventList: NDKEvent[] = []
+	let eventList: Array<NDKEvent & { id: string }> = []
 	let debounceTimer: ReturnType<typeof setTimeout>
+	const DEBOUNCE_MS = 500
 
-	const searchRelays = new NDKRelaySet(new Set(), $ndkStore)
-	searchRelays.addRelay(new NDKRelay('wss://relay.nostr.band', undefined, $ndkStore))
-	searchRelays.addRelay(new NDKRelay('wss://search.nos.today', undefined, $ndkStore))
-	searchRelays.addRelay(new NDKRelay('wss://nos.lol', undefined, $ndkStore))
+	const SEARCH_RELAYS = ['wss://relay.nostr.band', 'wss://search.nos.today', 'wss://nos.lol']
+
+	const searchRelays = new NDKRelaySet(new Set(SEARCH_RELAYS.map((url) => new NDKRelay(url, undefined, $ndkStore))), $ndkStore)
 
 	let searchResults: NDKEventStore<ExtendedBaseType<NDKEvent>> | undefined
 
 	async function handleSearch() {
 		if (!searchQuery.trim()) {
-			console.log('here')
-			eventList = []
+			clearSearch()
 			return
 		}
 
-		isLoading = true
 		try {
-			if (searchResults) {
-				searchResults.unsubscribe()
-			}
+			isLoading = true
+			searchResults?.unsubscribe()
 
 			const ndkFilter: NDKFilter = {
 				kinds: [0],
@@ -50,7 +48,10 @@
 				limit: 20,
 			}
 
-			searchResults = $ndkStore.storeSubscribe(ndkFilter, { closeOnEose: true, relaySet: searchRelays })
+			searchResults = $ndkStore.storeSubscribe(ndkFilter, {
+				closeOnEose: true,
+				relaySet: searchRelays,
+			})
 
 			if (searchResults) {
 				searchResults.onEose(() => {
@@ -61,42 +62,56 @@
 		} catch (error) {
 			console.error('Search error:', error)
 			isLoading = false
+			eventList = []
 		}
 	}
 
 	function updateEventList() {
 		if (!$searchResults) {
-			eventList = []
+			clearSearch()
 			return
 		}
 
-		eventList = Array.from($searchResults).filter((event) => {
-			try {
-				const content = JSON.parse(event.content)
-				return (
-					content &&
-					(content.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-						content.display_name?.toLowerCase().includes(searchQuery.toLowerCase()))
-				)
-			} catch {
-				return false
-			}
-		})
+		const searchLower = searchQuery.toLowerCase()
+		eventList = Array.from($searchResults).reduce(
+			(acc, event) => {
+				try {
+					const content = JSON.parse(event.content)
+					if (!content) return acc
+
+					const name = content.name?.toLowerCase()
+					const displayName = content.display_name?.toLowerCase()
+
+					if (name?.includes(searchLower) || displayName?.includes(searchLower)) {
+						acc.push(event)
+					}
+
+					return acc
+				} catch {
+					return acc
+				}
+			},
+			[] as Array<NDKEvent & { id: string }>,
+		)
 	}
 
-	function handleSelect(event: NDKEvent) {
-		const npub = event.author.npub ?? npubEncode(event.pubkey)
+	function handleSelect(npub: string) {
 		dispatch('select', { npub })
-		searchOpen = false
-		searchQuery = ''
-		eventList = []
+		clearSearch()
+	}
+
+	function debouncedSearch() {
+		if (!searchQuery.trim()) {
+			clearSearch()
+			return
+		}
+
+		clearTimeout(debounceTimer)
+		debounceTimer = setTimeout(handleSearch, DEBOUNCE_MS)
 	}
 
 	$: if (searchQuery) {
-		clearTimeout(debounceTimer)
-		debounceTimer = setTimeout(() => {
-			handleSearch()
-		}, 500)
+		debouncedSearch()
 	}
 
 	$: if ($searchResults) {
@@ -104,34 +119,63 @@
 	}
 
 	onDestroy(() => {
-		if (searchResults) searchResults.unsubscribe()
-		clearTimeout(debounceTimer)
+		cleanup()
 	})
+
+	$: if (searchQuery.trim()) {
+		if (searchQuery.startsWith('npub')) {
+			if (isValidNpub(searchQuery)) {
+				handleSelect(searchQuery)
+			}
+		} else searchOpen = true
+	} else {
+		searchOpen = false
+		eventList = []
+	}
+	function clearSearch() {
+		searchQuery = ''
+		eventList = []
+		searchOpen = false
+	}
+
+	function cleanup() {
+		clearTimeout(debounceTimer)
+		searchResults?.unsubscribe()
+		clearSearch()
+	}
 </script>
 
-<Popover.Root bind:open={searchOpen} let:ids>
-	<Popover.Trigger asChild let:builder>
-		<Button builders={[builder]} variant="outline" role="combobox" aria-expanded={searchOpen} class="w-full justify-between">
-			{placeholder}
-			{#if isLoading}
-				<Spinner />
-			{/if}
-		</Button>
-	</Popover.Trigger>
-
+{#if !commandInput}
+	<Input type="text" bind:value={searchQuery} {placeholder} />
+{/if}
+<Popover.Root disableFocusTrap={commandInput ? false : true} openFocus={commandInput ? true : false} bind:open={searchOpen} let:ids>
+	{#if commandInput}
+		<Popover.Trigger asChild let:builder>
+			<Button builders={[builder]} variant="outline" role="combobox" aria-expanded={searchOpen} class="w-full justify-between">
+				{placeholder}
+				{#if isLoading}
+					<Spinner />
+				{/if}
+			</Button>
+		</Popover.Trigger>
+	{:else}
+		<Popover.Trigger />
+	{/if}
 	<Popover.Content class="w-[300px] p-0">
 		<Command.Root>
-			<Command.Input placeholder="Search by name or npub..." bind:value={searchQuery} />
+			{#if commandInput}
+				<Command.Input placeholder="Search by name or npub..." bind:value={searchQuery} />
+			{/if}
 			<Command.List>
 				{#if eventList.length === 0}
 					<Command.Empty>
-						{isLoading ? 'Searching...' : 'No profiles found.'}
+						{isLoading || (searchQuery.trim() && isLoading) ? 'Searching...' : 'No profiles found.'}
 					</Command.Empty>
 				{:else}
 					<Command.Group>
 						{#each eventList as event (event.id)}
 							{@const profile = profileFromEvent(event)}
-							<Command.Item value={`${profile?.name || ''}-${event.pubkey}`} onSelect={() => handleSelect(event)}>
+							<Command.Item value={`${profile?.name || ''}-${event.pubkey}`} onSelect={() => handleSelect(event.author.npub)}>
 								<div class="flex items-center gap-2">
 									<CAvatar pubkey={event.pubkey} {profile} />
 									<span class="flex flex-col">

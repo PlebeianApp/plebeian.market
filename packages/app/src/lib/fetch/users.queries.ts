@@ -1,4 +1,4 @@
-import type { NDKUserProfile } from '@nostr-dev-kit/ndk'
+import type { NDKSubscriptionCacheUsage, NDKUserProfile } from '@nostr-dev-kit/ndk'
 import type { ExistsResult } from '$lib/interfaces'
 import type { UsersFilter } from '$lib/schema'
 import type { RichUser } from '$lib/server/users.service'
@@ -56,7 +56,7 @@ export const createUserRoleByIdQuery = (id: string) =>
 		queryClient,
 	)
 
-export const createUserByIdQuery = (id: string, nostrOnly = false, skipAggregator = false) =>
+export const createUserByIdQuery = (id: string, nostrOnly = false, skipAggregator = false, subCacheUsage?: NDKSubscriptionCacheUsage) =>
 	createQuery<NDKUserProfile | null>(
 		{
 			queryKey: userKeys.filtered({ userId: id }),
@@ -74,7 +74,7 @@ export const createUserByIdQuery = (id: string, nostrOnly = false, skipAggregato
 						}
 					}
 
-					const { userProfile: userData } = await fetchUserData(id)
+					const { userProfile: userData } = await fetchUserData(id, subCacheUsage)
 
 					if (userData && !skipAggregator) {
 						aggregatorAddUser(userData, id)
