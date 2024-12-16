@@ -3,25 +3,33 @@
 @tailwind utilities;
 
 :root {
-	--background: 323 0% 100%;
-	--foreground: 323 0% 10%;
-	--card: 323 0% 100%;
-	--card-foreground: 323 0% 15%;
-	--popover: 323 0% 100%;
-	--popover-foreground: 323 95% 10%;
-	--primary: 323 100% 62.2%;
-	--primary-foreground: 0 0% 0%;
-	--secondary: 323 10% 90%;
-	--secondary-foreground: 0 0% 0%;
-	--muted: 285 10% 95%;
-	--muted-foreground: 323 0% 40%;
-	--accent: 285 10% 90%;
-	--accent-foreground: 323 0% 15%;
-	--destructive: 0 50% 50%;
-	--destructive-foreground: 323 0% 100%;
-	--border: 323 20% 82%;
-	--input: 323 20% 50%;
-	--ring: 323 100% 62.2%;
+	--background: #ffffff;
+	--foreground: #1a1a1a;
+	--card: #ffffff;
+	--card-foreground: #262626;
+	--popover: #ffffff;
+	--popover-foreground: #32011f;
+	--primary: #ff3db5;
+	--primary-foreground: #000000;
+	--primary-border: #0a0a0a;
+	--secondary: #1d1d1d;
+	--secondary-foreground: #ffffff;
+	--secondary-border: #0a0a0a;
+	--tertiary: #fafafa;
+	--tertiary-foreground: #000000;
+	--tertiary-border: #0a0a0a;
+	--focus: #ffd53d;
+	--focus-foreground: #000000;
+	--focus-border: #0a0a0a;
+	--muted: #f3f1f4;
+	--muted-foreground: #666666;
+	--accent: #e7e3e8;
+	--accent-foreground: #262626;
+	--destructive: #bf4040;
+	--destructive-foreground: #ffffff;
+	--border: #dac8d3;
+	--input: #996685;
+	--ring: #ff3eb5;
 	--radius: 0rem;
 
 	/* our own colors */
