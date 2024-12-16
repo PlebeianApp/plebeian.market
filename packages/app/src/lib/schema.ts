@@ -147,7 +147,10 @@ export type UpdateInvoiceFilter = z.infer<typeof updateInvoiceFilter>
 export const checkoutFormSchema = z.object({
 	contactName: z.string().min(1, 'Name is required'),
 	contactPhone: z.string().optional(),
-	contactEmail: z.string().email('Invalid email').optional(),
+	contactEmail: z
+		.string()
+		.optional()
+		.refine((val) => !val || /^[^@]+@[^@]+\.[^@]+$/.test(val), 'Invalid email'),
 	address: z.string().min(1, 'Address is required'),
 	zip: z.string().min(1, 'ZIP is required'),
 	city: z.string().min(1, 'City is required'),
