@@ -1,9 +1,13 @@
 <script lang="ts">
 	import CatMenu from '$lib/components/category/cat-menu.svelte'
+	import AuthDialog from '$lib/components/dialogs/authDialog.svelte'
 	import Pattern from '$lib/components/Pattern.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
 	import { Button } from '$lib/components/ui/button/index.js'
 	import { createProductsByFilterQuery } from '$lib/fetch/products.queries'
+	import { dialogs } from '$lib/stores/dialog'
+	import { openDrawerForNewProduct } from '$lib/stores/drawer-ui'
+	import ndkStore from '$lib/stores/ndk'
 
 	import type { PageData } from './$types'
 
@@ -11,6 +15,11 @@
 
 	$: productQuery = createProductsByFilterQuery({ pageSize: 8, order: 'asc' })
 	$: featuredProductsQuery = createProductsByFilterQuery({ featured: true })
+
+	function handleListItems() {
+		if (!$ndkStore.activeUser) dialogs.show(AuthDialog, {})
+		else openDrawerForNewProduct()
+	}
 </script>
 
 {#if !data.appSettings?.isFirstTimeRunning}
@@ -20,6 +29,9 @@
 				<div class="relative w-full bg-black py-20 text-center text-white">
 					<Pattern />
 					<h1 class="relative z-10">Sell stuff for sats</h1>
+					<Button variant="focus" class="relative z-10" on:click={handleListItems}
+						><span>List your items in <span class="font-bold">2 minutes</span></span></Button
+					>
 				</div>
 				<div class="container">
 					{#if $featuredProductsQuery.data?.products?.length}
