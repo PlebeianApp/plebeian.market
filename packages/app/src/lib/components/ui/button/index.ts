@@ -15,7 +15,7 @@ const buttonVariants = tv({
 			tertiary: 'bg-tertiary text-tertiary-foreground border-tertiary-border hover:bg-tertiary/80',
 			focus: 'bg-focus text-focus-foreground border-focus-border hover:bg-focus/80',
 			ghost: 'hover:bg-accent border-none hover:text-accent-foreground',
-			link: 'text-primary underline-offset-4 hover:underline',
+			link: 'text-primary border-none underline-offset-4 hover:underline',
 		},
 		size: {
 			default: 'h-10 px-4 py-2',
