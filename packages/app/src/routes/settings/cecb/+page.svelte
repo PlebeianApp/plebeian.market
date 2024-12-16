@@ -32,6 +32,7 @@
 	$: emojiClass = shouldGlow ? 'wiggle-shake-glow' : shouldShake ? 'wiggle-shake' : shouldWiggle ? 'wiggle' : ''
 	$: emoji = v4vTotal[0] > 0.14 ? '🤙' : v4vTotal[0] > 0.09 ? '🤙' : v4vTotal[0] > 0.04 ? '🤙' : v4vTotal[0] < 0.01 ? '💩' : '🎁'
 	$: v4vByUser = $privatePaymentsQuery?.data?.length ? v4VForUserQuery($ndkStore.activeUser?.pubkey ?? '') : undefined
+
 	let v4vRecipients: V4VDTO[] = []
 
 	$: {
@@ -279,14 +280,14 @@
 
 	<div class="flex gap-2">
 		<Button variant="primary" class="w-full font-bold" on:click={() => (newRecipientFormVisible = true)}>Add v4v recipient</Button>
-		<Button variant="primary" class="w-full font-bold" on:click={handleSetAllEqual}
+		<Button variant="tertiary" class="w-full font-bold" on:click={handleSetAllEqual}
 			><span class="i-mdi-equal-box w-6 h-6 mr-2" />Set all equal</Button
 		>
 	</div>
 
 	<Separator />
 
-	<Button variant="primary" class="w-full font-bold" on:click={handleSetV4VAmounts}>Save</Button>
+	<Button class="w-full font-bold" disabled={$v4vByUser?.data?.length == v4vRecipients.length} on:click={handleSetV4VAmounts}>Save</Button>
 </div>
 
 <style>

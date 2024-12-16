@@ -408,7 +408,7 @@
 							<Label for="default-payment" class="font-medium">Default</Label>
 						</section>
 						<div class="flex flex-row-reverse gap-2 mt-4">
-							<Button variant="primary" type="submit" disabled={formState !== 'idle'} class="font-bold py-2 px-4">
+							<Button type="submit" disabled={formState !== 'idle'} class="font-bold py-2 px-4">
 								{#if formState !== 'idle'}<Spinner />{/if}
 								{formState === 'validating' ? 'Validating...' : formState === 'submitting' ? 'Saving...' : isEditing ? 'Update' : 'Save'}
 							</Button>
@@ -419,7 +419,7 @@
 								</Button>
 							{/if}
 
-							<Button variant="outline" on:click={handleCancelInput} disabled={formState !== 'idle'} class="font-bold py-2 px-4">
+							<Button variant="tertiary" on:click={handleCancelInput} disabled={formState !== 'idle'} class="font-bold py-2 px-4">
 								Cancel
 							</Button>
 						</div>

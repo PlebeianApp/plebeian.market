@@ -1,9 +1,9 @@
 <script lang="ts">
 	import type { NDKUserProfile, NDKZapMethodInfo } from '@nostr-dev-kit/ndk'
+	import { NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk'
 	import * as Collapsible from '$lib/components/ui/collapsible'
 	import * as Slider from '$lib/components/ui/slider'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
-	import ndkStore from '$lib/stores/ndk'
 	import { checkTargetUserHasLightningAddress, decodePk, getHexColorFingerprintFromHexPubkey, resolveQuery } from '$lib/utils'
 	import { createEventDispatcher } from 'svelte'
 
@@ -11,6 +11,7 @@
 	import CAvatar from '../ui/custom-components/c-avatar.svelte'
 	import { Input } from '../ui/input'
 	import Label from '../ui/label/label.svelte'
+	import ProfileSearch from '../users/profile-search.svelte'
 
 	const dispatch = createEventDispatcher<{
 		percentageChange: { npub: string; percentage: number }
@@ -34,13 +35,12 @@
 	$: if (npub && npub.startsWith('npub')) {
 		fetchUserProfile()
 	} else {
-		userProfile = null
-		recipientCanReceiveSats = []
+		resetRecipientState()
 	}
 
 	async function fetchUserProfile() {
 		if (npub && npub.startsWith('npub')) {
-			userProfile = await resolveQuery(() => createUserByIdQuery(hexPubkey))
+			userProfile = await resolveQuery(() => createUserByIdQuery(hexPubkey, true, false, NDKSubscriptionCacheUsage.CACHE_FIRST))
 			recipientCanReceiveSats = await checkTargetUserHasLightningAddress(hexPubkey)
 		}
 	}
@@ -53,7 +53,7 @@
 	}
 
 	function handleAddRecipient() {
-		if (npub && npub.startsWith('npub')) {
+		if (npub?.startsWith('npub')) {
 			dispatch('recipientAdded', { npub, percentage: percentageEdit / 100 })
 			isNewRecipient = false
 		}
@@ -61,6 +61,11 @@
 
 	function handleRemoveRecipient() {
 		npub && dispatch('recipientRemoved', { npub })
+	}
+
+	function resetRecipientState() {
+		userProfile = null
+		recipientCanReceiveSats = []
 	}
 </script>
 
@@ -111,15 +116,24 @@
 		</div>
 
 		<div class="space-y-2">
-			<Label class="font-bold">Npub</Label>
-			<div class="flex gap-2">
-				<Input type="text" bind:value={npub} />
+			<Label class="font-bold">Recipient</Label>
+			<div class="space-y-2">
 				{#if isNewRecipient}
-					<Button variant="primary" type="button" on:click={handleAddRecipient} disabled={!npub || !npub.startsWith('npub')}>Add</Button>
+					<div class="flex flex-col gap-4">
+						<ProfileSearch
+							on:select={({ detail }) => {
+								npub = detail.npub
+								handleAddRecipient()
+							}}
+						/>
+					</div>
 				{:else}
-					<Button variant="destructive" type="button" on:click={handleRemoveRecipient}>
-						<span class="i-mdi-trash-can"></span>
-					</Button>
+					<div class="flex gap-2">
+						<Input type="text" value={npub} readonly />
+						<Button type="button" variant="destructive" on:click={handleRemoveRecipient}>
+							<span class="i-mdi-trash-can"></span>
+						</Button>
+					</div>
 				{/if}
 			</div>
 		</div>

@@ -67,7 +67,7 @@
 			<Tabs.Trigger value="nip07" class={activeTab}>Extension</Tabs.Trigger>
 			<Tabs.Trigger value="sk" class={activeTab}>Private Key</Tabs.Trigger>
 			<Tabs.Trigger value="create" class={activeTab}>Sign up</Tabs.Trigger>
-			<Tabs.Trigger disabled value="nip46" class={activeTab}>Advanced</Tabs.Trigger>
+			<!-- <Tabs.Trigger disabled value="nip46" class={activeTab}>Advanced</Tabs.Trigger> -->
 		</Tabs.List>
 
 		<Tabs.Content value="nip07" class="flex flex-col gap-2">

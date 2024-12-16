@@ -49,17 +49,17 @@
 		<h3 class="text-lg font-semibold">Choose Your Payment Method</h3>
 
 		{#if userLightningAddress}
-			<div class="bg-secondary p-4 rounded-md">
+			<div class=" bg-muted p-4 rounded-md">
 				<p>We've detected a Lightning address linked to your profile:</p>
 				<p class="font-bold text-primary">{userLightningAddress}</p>
 				<p>Would you like to use this as your payment method?</p>
 			</div>
 
 			<div class="flex space-x-2">
-				<Button variant="primary" on:click={() => setupPaymentDetail(userLightningAddress, PAYMENT_DETAILS_METHOD.LIGHTNING_NETWORK)}>
-					Use This Address
+				<Button on:click={() => setupPaymentDetail(userLightningAddress, PAYMENT_DETAILS_METHOD.LIGHTNING_NETWORK)}>
+					Use this address
 				</Button>
-				<Button variant="tertiary" on:click={closeGuidance}>Set Up Manually</Button>
+				<Button variant="tertiary" on:click={closeGuidance}>Set up manually</Button>
 			</div>
 		{:else}
 			{@const npubCashAddress = `${npubEncode(String($ndkStore.activeUser?.pubkey))}@npub.cash`}
