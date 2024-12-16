@@ -44,7 +44,7 @@
 			<Label for="terms" class="text-sm">I accept the terms and conditions</Label>
 		</div>
 
-		<Button variant="focus" on:click={() => (hasAcceptedTerms = true)} disabled={!checked}>Continue</Button>
+		<Button on:click={() => (hasAcceptedTerms = true)} disabled={!checked}>Continue</Button>
 	{:else}
 		<h3 class="text-lg font-semibold">Choose Your Payment Method</h3>
 
@@ -56,7 +56,7 @@
 			</div>
 
 			<div class="flex space-x-2">
-				<Button variant="focus" on:click={() => setupPaymentDetail(userLightningAddress, PAYMENT_DETAILS_METHOD.LIGHTNING_NETWORK)}>
+				<Button on:click={() => setupPaymentDetail(userLightningAddress, PAYMENT_DETAILS_METHOD.LIGHTNING_NETWORK)}>
 					Use this address
 				</Button>
 				<Button variant="tertiary" on:click={closeGuidance}>Set up manually</Button>

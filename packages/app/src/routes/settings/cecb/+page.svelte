@@ -287,12 +287,7 @@
 
 	<Separator />
 
-	<Button
-		variant="focus"
-		class="w-full font-bold"
-		disabled={$v4vByUser?.data?.length == v4vRecipients.length}
-		on:click={handleSetV4VAmounts}>Save</Button
-	>
+	<Button class="w-full font-bold" disabled={$v4vByUser?.data?.length == v4vRecipients.length} on:click={handleSetV4VAmounts}>Save</Button>
 </div>
 
 <style>
