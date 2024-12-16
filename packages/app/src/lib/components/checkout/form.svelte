@@ -81,7 +81,7 @@
 	<Label>
 		<span>{FormLabels.contactEmail}</span>
 		{#if validationErrors.contactEmail}<span class="text-red-500">{validationErrors.contactEmail}</span>{/if}
-		<Input type="email" bind:value={formData.contactEmail} />
+		<Input bind:value={formData.contactEmail} />
 	</Label>
 
 	{#if !isLocalPickup}
