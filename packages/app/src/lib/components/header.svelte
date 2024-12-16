@@ -62,7 +62,7 @@
 			</div>
 		</section>
 		<div class="flex items-center gap-4">
-			<Button class="hidden sm:flex p-2 bg-[var(--neo-yellow)] relative" href="/dash/messages">
+			<Button variant="primary" class="sm:flex p-2 relative" href="/dash/messages">
 				<span class="i-tdesign-mail text-black w-6 h-6"></span>
 				{#if hasUnreadMessages}
 					<span class="notification-dot" />
@@ -74,9 +74,12 @@
 			</div>
 
 			{#if $ndkStore.activeUser}
+				<a href={`/p/${$ndkStore.activeUser.profile?.nip05 ? $ndkStore.activeUser.profile?.nip05 : $ndkStore.activeUser.pubkey}`}>
+					<CAvatar pubkey={$ndkStore.activeUser.pubkey} profile={$ndkStore.activeUser.profile} />
+				</a>
 				<DropdownMenu.Root>
 					<DropdownMenu.Trigger id="menuButton">
-						<Button class="p-2 bg-white"><span class="i-tdesign-view-list text-black w-6 h-6"></span></Button>
+						<Button variant="tertiary" class="p-2 "><span class="i-tdesign-view-list text-black w-6 h-6"></span></Button>
 					</DropdownMenu.Trigger>
 					<DropdownMenu.Content>
 						<DropdownMenu.Group>
@@ -120,7 +123,7 @@
 									<DropdownMenu.Separator />
 
 									<DropdownMenu.Item class="flex items-center justify-between gap-2">
-										<Button class="p-2 bg-[var(--neo-yellow)] relative" href="/dash/messages">
+										<Button variant="primary" class="p-2 relative" href="/dash/messages">
 											<span class="i-tdesign-mail text-black w-6 h-6"></span>
 											{#if hasUnreadMessages}
 												<span class="notification-dot" />
@@ -132,8 +135,8 @@
 								{/if}
 								<DropdownMenu.Item>
 									<Button
-										id="headerMenuLogOut"
 										variant="destructive"
+										id="headerMenuLogOut"
 										class="inline-flex items-center gap-2 w-full"
 										on:click={() => {
 											logout()
@@ -145,12 +148,9 @@
 						</DropdownMenu.Group>
 					</DropdownMenu.Content>
 				</DropdownMenu.Root>
-				<a href={`/p/${$ndkStore.activeUser.profile?.nip05 ? $ndkStore.activeUser.profile?.nip05 : $ndkStore.activeUser.pubkey}`}>
-					<CAvatar pubkey={$ndkStore.activeUser.pubkey} profile={$ndkStore.activeUser.profile} />
-				</a>
 			{:else}
-				<Button on:click={showAuthDialog} class="flex items-center cursor-pointer gap-2 w-full">
-					<span class="i-tdesign-user-1" />Log in
+				<Button variant="primary" on:click={showAuthDialog} class="flex items-center cursor-pointer gap-2 w-full">
+					<span class="i-tdesign-user-1" />Login/Register
 				</Button>
 			{/if}
 		</div>

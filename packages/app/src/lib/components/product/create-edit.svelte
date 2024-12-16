@@ -361,7 +361,7 @@
 						<Label for="stall-shippings" class="font-bold required-mark">Shipping Method #{i + 1}</Label>
 						<DropdownMenu.Root>
 							<DropdownMenu.Trigger asChild let:builder>
-								<Button variant="outline" class="border-2 border-black" builders={[builder]}>
+								<Button variant="outline" builders={[builder]}>
 									{shippingMethod.shipping?.name ?? 'Choose a shipping method'}
 								</Button>
 							</DropdownMenu.Trigger>
@@ -431,9 +431,9 @@
 				</div>
 			</Tabs.Content>
 
-			<Button disabled={isLoading} type="submit" class="w-full font-bold my-4">Save</Button>
+			<Button variant="primary" disabled={isLoading} type="submit" class="w-full font-bold my-4">Save</Button>
 			{#if product?.id}
-				<Button type="button" variant="destructive" disabled={isLoading} class="w-full" on:click={handleDelete}>Delete</Button>
+				<Button variant="destructive" disabled={isLoading} class="w-full" on:click={handleDelete}>Delete</Button>
 			{/if}
 		</Tabs.Root>
 	</form>

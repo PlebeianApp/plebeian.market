@@ -76,5 +76,5 @@
 		</div>
 	</Collapsible>
 
-	<Button class="mt-3 w-full" on:click={() => goto(orderUrl)}>Go to order dashboard</Button>
+	<Button variant="primary" class="mt-3 w-full" on:click={() => goto(orderUrl)}>Go to order dashboard</Button>
 </div>

@@ -83,7 +83,7 @@
 <div class="pb-4 space-y-2 max-w-2xl">
 	<div>
 		<div class=" flex items-center gap-1">
-			<Button size="icon" variant="outline" class=" border-none" on:click={() => goto('/settings/app')}>
+			<Button variant="ghost" size="icon" on:click={() => goto('/settings/app')}>
 				<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
 			</Button>
 			<section>
@@ -218,7 +218,7 @@
 
 						<Separator class="max-w-2xl my-8" />
 
-						<Button type="submit" class="w-full">Submit</Button>
+						<Button variant="primary" type="submit" class="w-full">Submit</Button>
 					</form>
 				</div>
 			</div>

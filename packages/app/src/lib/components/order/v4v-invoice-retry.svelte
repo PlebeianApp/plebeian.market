@@ -44,7 +44,7 @@
 	<div>{invoice.paymentDetails}</div>
 	{#if invoice.invoiceStatus !== 'paid' && invoice.invoiceStatus !== 'refunded'}
 		{#if canBePaid}
-			<Button class="w-32" on:click={() => handleRetryPayment(invoice.paymentDetails)}>Retry</Button>
+			<Button variant="primary" class="w-32" on:click={() => handleRetryPayment(invoice.paymentDetails)}>Retry</Button>
 		{:else}
 			<Button
 				data-tooltip="This invoice cant pe paid. Wait for the merchant to mark this invoice as paid. "
@@ -54,6 +54,6 @@
 			>
 		{/if}
 	{:else}
-		<Button class="w-32" variant="secondary" disabled>Done</Button>
+		<Button variant="tertiary" class="w-32" disabled>Done</Button>
 	{/if}
 </div>

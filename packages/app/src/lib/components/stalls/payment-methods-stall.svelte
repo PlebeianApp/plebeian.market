@@ -50,14 +50,14 @@
 				</div>
 				<div class="flex flex-row gap-2 items-center">
 					{#if paymentDetail.isDefault}
-						<Button class="border-none" variant="ghost" size="icon">
+						<Button variant="ghost" class="border-none" size="icon">
 							<span
 								class="i-mdi-star
 								text-primary w-6 h-6"
 							/>
 						</Button>
 					{:else}
-						<Button class="border-none" variant="ghost" size="icon" on:click={() => handleSetDefaultPaymentMethod(paymentDetail.id)}>
+						<Button variant="ghost" class="border-none" size="icon" on:click={() => handleSetDefaultPaymentMethod(paymentDetail.id)}>
 							<span class="i-mdi-star-outline w-6 h-6 cursor-pointer" />
 						</Button>
 					{/if}

@@ -30,7 +30,7 @@
 
 <div class="pb-4 space-y-2">
 	<div class=" flex items-center gap-1">
-		<Button size="icon" variant="outline" class=" border-none" on:click={() => goto('/settings/account')}>
+		<Button variant="ghost" size="icon" on:click={() => goto('/settings/account')}>
 			<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
 		</Button>
 		<section>
@@ -45,8 +45,12 @@
 			<p class="text-sm">Please type <strong>DELETE</strong> to confirm</p>
 			<div class="flex flex-col gap-4">
 				<Input id="accountDeletionChallenge" type="text" on:input={(e) => handleChallengeInputChange(e.target?.value)} />
-				<Button id="executeDeletion" disabled={!challengeSolved} class="w-full font-bold bg-destructive" on:click={handleDeleteAccount}
-					>Delete account</Button
+				<Button
+					variant="destructive"
+					id="executeDeletion"
+					disabled={!challengeSolved}
+					class="w-full font-bold"
+					on:click={handleDeleteAccount}>Delete account</Button
 				>
 			</div>
 		</div>

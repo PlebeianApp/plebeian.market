@@ -46,7 +46,7 @@
 										<ProductItem product={item} />
 									{/each}
 								</div>
-								<Button class="mt-6 p-4 font-bold" href="/products">Explore products</Button>
+								<Button variant="primary" class="mt-6 p-4 font-bold" href="/products">Explore products</Button>
 							</div>
 						</div>
 					{:else}

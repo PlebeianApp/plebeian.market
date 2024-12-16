@@ -141,7 +141,7 @@
 								type="text"
 								readonly
 							/>
-							<Button on:click={setGeneratedSk}>Generate</Button>
+							<Button variant="tertiary" on:click={setGeneratedSk}>Generate</Button>
 						</div>
 
 						<Accordion>
@@ -165,7 +165,7 @@
 							<Label class="truncate font-bold">New nsec</Label>
 							<div class="flex flex-row gap-2">
 								<Input class="border-black border-2" value={newInstanceNsec} readonly name="instanceSk" />
-								<Button on:click={() => copyToClipboard(newInstanceNsec)}>
+								<Button variant="primary" on:click={() => copyToClipboard(newInstanceNsec)}>
 									<span class="i-mingcute-clipboard-fill text-black w-6 h-6"></span>
 								</Button>
 							</div>
@@ -304,7 +304,7 @@
 
 						<Separator class="max-w-2xl my-8" />
 
-						<Button type="submit" class="w-full">Submit</Button>
+						<Button variant="primary" type="submit" class="w-full">Submit</Button>
 					</form>
 				</div>
 			</div>

@@ -41,7 +41,7 @@
 <div class="pb-4 space-y-2 max-w-2xl">
 	<div>
 		<div class=" flex items-center gap-1">
-			<Button size="icon" variant="outline" class=" border-none" on:click={() => goto('/settings/app')}>
+			<Button variant="ghost" size="icon" on:click={() => goto('/settings/app')}>
 				<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
 			</Button>
 			<section>
@@ -54,7 +54,7 @@
 		{#each $blacklistedWordsQuery?.data?.forbiddenWords as word}
 			<div class="flex flex-row items-center justify-between border rounded-md p-2">
 				<span class="text-sm">{word.valueText}</span>
-				<Button type="button" size="icon" variant="outline" class=" bg-red-500" on:click={() => handleDeleteWord(word.id)}>
+				<Button type="button" size="icon" variant="destructive" on:click={() => handleDeleteWord(word.id)}>
 					<span class="i-mdi-trash-can" />
 				</Button>
 			</div>
@@ -73,7 +73,7 @@
 				<Input bind:value={newWord} placeholder="Enter new blacklisted word" />
 				<div class="flex justify-end space-x-2">
 					<Button variant="outline" on:click={() => (newWord = '')}>Cancel</Button>
-					<Button on:click={handleAddWord}>Save</Button>
+					<Button variant="primary" on:click={handleAddWord}>Save</Button>
 				</div>
 			</div>
 		</Collapsible.Content>

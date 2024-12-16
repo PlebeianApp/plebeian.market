@@ -33,8 +33,8 @@
 
 		<Input bind:value={editedObservations} />
 		<div class="flex gap-2">
-			<Button on:click={handleCancel}>Cancel</Button>
-			<Button on:click={handleUpdate}>Update</Button>
+			<Button variant="destructive" on:click={handleCancel}>Cancel</Button>
+			<Button variant="primary" on:click={handleUpdate}>Update</Button>
 		</div>
 	{:else}
 		<div class="flex items-center justify-between gap-2">

@@ -159,7 +159,7 @@
 <div class="pb-4 space-y-6 px-2">
 	<div>
 		<div class="flex items-center gap-1">
-			<Button size="icon" variant="outline" class="border-none" on:click={() => goto('/settings')}>
+			<Button variant="ghost" size="icon" on:click={() => goto('/settings')}>
 				<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
 			</Button>
 			<section>
@@ -278,15 +278,15 @@
 	{/if}
 
 	<div class="flex gap-2">
-		<Button class="w-full font-bold" variant={'secondary'} on:click={() => (newRecipientFormVisible = true)}>Add v4v recipient</Button>
-		<Button class="w-full font-bold" variant={'secondary'} on:click={handleSetAllEqual}
+		<Button variant="primary" class="w-full font-bold" on:click={() => (newRecipientFormVisible = true)}>Add v4v recipient</Button>
+		<Button variant="primary" class="w-full font-bold" on:click={handleSetAllEqual}
 			><span class="i-mdi-equal-box w-6 h-6 mr-2" />Set all equal</Button
 		>
 	</div>
 
 	<Separator />
 
-	<Button class="w-full font-bold" on:click={handleSetV4VAmounts}>Save</Button>
+	<Button variant="primary" class="w-full font-bold" on:click={handleSetV4VAmounts}>Save</Button>
 </div>
 
 <style>

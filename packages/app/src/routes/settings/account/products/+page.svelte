@@ -59,7 +59,7 @@
 	{#if productsMode === 'list'}
 		<div class="flex justify-between items-center">
 			<div class=" flex items-center gap-1">
-				<Button size="icon" variant="outline" class=" border-none" on:click={() => goto('/settings/account/')}>
+				<Button variant="ghost" size="icon" on:click={() => goto('/settings/account/')}>
 					<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
 				</Button>
 				<section>
@@ -105,7 +105,7 @@
 								<span>{product.name}</span>
 							</div>
 							<div>
-								<Button class="cursor-pointer border-0 bg-transparent font-bold" variant="outline" size="icon">
+								<Button variant="ghost" size="icon">
 									<span class="i-mdi-pencil-outline w-6 h-6" />
 								</Button>
 							</div>

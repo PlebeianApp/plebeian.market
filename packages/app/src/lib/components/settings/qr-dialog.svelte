@@ -61,7 +61,7 @@
 	}
 </script>
 
-<Button on:click={openDialog} size="icon" variant="ghost" class="text-destructive border-0">
+<Button on:click={openDialog} size="icon" variant="ghost" class="text-destructive">
 	<span class="i-mingcute-qrcode-line text-black w-6 h-6"></span>
 </Button>
 
@@ -75,7 +75,7 @@
 		<div id="reader" class="w-full h-"></div>
 
 		<Dialog.Footer>
-			<Button on:click={closeDialog}>Close</Button>
+			<Button variant="outline" on:click={closeDialog}>Close</Button>
 		</Dialog.Footer>
 	</Dialog.Content>
 </Dialog.Root>

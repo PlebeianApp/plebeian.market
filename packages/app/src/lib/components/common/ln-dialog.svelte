@@ -79,7 +79,7 @@
 		<div class="flex flex-col items-center gap-2">
 			{#if lnInvoice}
 				<QrCode data={lnInvoice.paymentRequest} logoPath="/logo.svg" />
-				<Button variant="secondary" class="relative overflow-auto flex flex-row gap-2 bg-transparent" on:click={handleCopyClick}>
+				<Button variant="tertiary" class="relative overflow-auto flex flex-row gap-2 bg-transparent" on:click={handleCopyClick}>
 					<code>{truncateText(lnInvoice.paymentRequest, 30)}</code>
 					<span class="i-tdesign-copy" style="width: 1rem; height: 1rem; color: black;"></span>
 				</Button>
@@ -88,6 +88,6 @@
 				</p>
 			{/if}
 		</div>
-		<Button on:click={() => (qrDialogOpen = false)} class="w-full font-bold">Cancel</Button>
+		<Button variant="destructive" on:click={() => (qrDialogOpen = false)} class="w-full font-bold">Cancel</Button>
 	</Dialog.Content>
 </Dialog.Root>
