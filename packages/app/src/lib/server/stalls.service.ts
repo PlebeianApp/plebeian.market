@@ -572,7 +572,7 @@ export const deleteStall = async (stallId: string): Promise<string> => {
 		error(404, 'Not found')
 	}
 
-	const deleteSuccess = await db.delete(stalls).where(eq(stalls.id, stallId)).returning()
+	const deleteSuccess = await db.delete(stalls).where(eq(stalls.id, stallId)).execute()
 
 	if (deleteSuccess) {
 		return stallId
