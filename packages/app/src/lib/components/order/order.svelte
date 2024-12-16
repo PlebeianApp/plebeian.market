@@ -401,7 +401,7 @@
 										<div class="flex flex-col sm:flex-row sm:justify-end gap-2">
 											<DropdownMenu.Root>
 												<DropdownMenu.Trigger>
-													<Button class="w-full sm:w-32">Retry</Button>
+													<Button variant="primary" class="w-full sm:w-32">Retry</Button>
 												</DropdownMenu.Trigger>
 												<DropdownMenu.Content>
 													<DropdownMenu.Group>

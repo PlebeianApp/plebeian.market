@@ -71,7 +71,7 @@
 
 <div class="flex flex-col h-full max-w-4xl mx-auto">
 	<div class="p-4 border-b flex items-center gap-2">
-		<Button size="icon" variant="ghost" class="border-0" on:click={() => goto('/dash/messages')}>
+		<Button variant="ghost" size="icon" on:click={() => goto('/dash/messages')}>
 			<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
 		</Button>
 		<CAvatar pubkey={selectedPubkey} profile={$userProfileQuery?.data} />

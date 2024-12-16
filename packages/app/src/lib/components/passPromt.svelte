@@ -94,7 +94,7 @@
 					value={accointInfo.cSk}
 				/>
 				<Input required class="border-black border-2 required-mark" name="password" placeholder="Password" type="password" />
-				<Button type="submit" disabled={isLoading}>Sign in</Button>
+				<Button variant="primary" type="submit" disabled={isLoading}>Sign in</Button>
 			</form>
 			<div class="flex items-center space-x-2">
 				<Checkbox id="terms" bind:checked aria-labelledby="terms-label" />

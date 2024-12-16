@@ -27,4 +27,4 @@
 	<span class="i-tdesign-copy" style="width: 1rem; height: 1rem; color: black;" />
 </Button>
 
-<Button on:click={handlePrivKeyConfirmation} class="w-full font-bold">I understand, and I saved my key</Button>
+<Button variant="primary" on:click={handlePrivKeyConfirmation} class="w-full font-bold">I understand, and I saved my key</Button>

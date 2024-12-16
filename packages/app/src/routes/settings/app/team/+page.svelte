@@ -66,7 +66,7 @@
 <div class="pb-4 space-y-2 max-w-2xl">
 	<div>
 		<div class="flex items-center gap-1">
-			<Button size="icon" variant="outline" class="border-none" on:click={() => goto('/settings/app')}>
+			<Button variant="ghost" size="icon" on:click={() => goto('/settings/app')}>
 				<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
 			</Button>
 			<section>
@@ -90,8 +90,8 @@
 				{/if}
 				<div class="flex justify-end space-x-2">
 					<Button variant="outline" on:click={resetForm}>Cancel</Button>
-					<Button on:click={() => handleAddNostrUser('admin', npub)}>Set as Admin</Button>
-					<Button on:click={() => handleAddNostrUser('editor', npub)}>Set as Editor</Button>
+					<Button variant="primary" on:click={() => handleAddNostrUser('admin', npub)}>Set as Admin</Button>
+					<Button variant="primary" on:click={() => handleAddNostrUser('editor', npub)}>Set as Editor</Button>
 				</div>
 			</div>
 		</Collapsible.Content>
@@ -105,9 +105,9 @@
 				<DropdownMenu.Root>
 					<DropdownMenu.Trigger asChild let:builder>
 						{#if $ndkStore.activeUser?.pubkey === userId}
-							<Button data-tooltip="You can not demote yourself" builders={[builder]} variant="outline" disabled>Change Role</Button>
+							<Button variant="outline" data-tooltip="You can not demote yourself" builders={[builder]} disabled>Change Role</Button>
 						{:else}
-							<Button builders={[builder]} variant="outline">
+							<Button variant="outline" builders={[builder]}>
 								Change Role
 								<span class="i-mdi-chevron-down ml-2" />
 							</Button>
@@ -129,7 +129,7 @@
 				<MiniUser {userId} />
 				<DropdownMenu.Root>
 					<DropdownMenu.Trigger asChild let:builder>
-						<Button builders={[builder]} variant="outline">
+						<Button variant="outline" builders={[builder]}>
 							Change Role
 							<span class="i-mdi-chevron-down ml-2" />
 						</Button>
@@ -150,7 +150,7 @@
 				<MiniUser {userId} />
 				<DropdownMenu.Root>
 					<DropdownMenu.Trigger asChild let:builder>
-						<Button builders={[builder]} variant="outline">
+						<Button variant="outline" builders={[builder]}>
 							Change Role
 							<span class="i-mdi-chevron-down ml-2" />
 						</Button>

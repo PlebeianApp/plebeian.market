@@ -67,6 +67,6 @@
 	</CardContent>
 	<CardFooter class="flex justify-end space-x-2">
 		<Button variant="outline" on:click={handleCancel}>Cancel</Button>
-		<Button on:click={handleConfirm}>Confirm</Button>
+		<Button variant="primary" on:click={handleConfirm}>Confirm</Button>
 	</CardFooter>
 </Card>

@@ -299,7 +299,7 @@
 		<Label for="from" class="font-bold required-mark">Shipping From (Recommended)</Label>
 		<Collapsible.Root bind:open={shippingFromOpen} class="flex flex-col gap-2">
 			<Collapsible.Trigger asChild let:builder>
-				<Button builders={[builder]} variant="ghost" size="sm" class="w-full p-0">
+				<Button variant="ghost" builders={[builder]} size="sm" class="w-full p-0">
 					<span class="i-ion-chevron-expand" />
 				</Button>
 			</Collapsible.Trigger>
@@ -483,7 +483,7 @@
 			</div>
 			<div class="h-full flex flex-col justify-end">
 				<div class="flex gap-1" data-testid={`shipping-actions-${i}`}>
-					<Button data-tooltip="Copy this method" on:click={() => addShipping(item.id)} variant="outline" class="font-bold border-0 h-full">
+					<Button variant="outline" data-tooltip="Copy this method" on:click={() => addShipping(item.id)} class="font-bold h-full">
 						<span class="i-tdesign-copy"></span>
 					</Button>
 					<Button
@@ -508,7 +508,7 @@
 		>
 		<DropdownMenu.Root>
 			<DropdownMenu.Trigger asChild let:builder>
-				<Button data-tooltip="Add a predefined shipping template" variant="outline" builders={[builder]} class="font-bold">
+				<Button variant="outline" data-tooltip="Add a predefined shipping template" builders={[builder]} class="font-bold">
 					Add from Template
 				</Button>
 			</DropdownMenu.Trigger>
@@ -533,10 +533,10 @@
 		</DropdownMenu.Root>
 	</div>
 
-	<Button id="stall-save-button" type="submit" disabled={isLoading || !changed || !shippingMethods.length} class="w-full font-bold"
+	<Button variant="primary" id="stall-save-button" type="submit" disabled={isLoading || !changed || !shippingMethods.length} class="w-full"
 		>Save</Button
 	>
 	{#if stall?.id}
-		<Button type="button" variant="destructive" disabled={isLoading} on:click={handleDelete}>Delete</Button>
+		<Button variant="destructive" type="button" disabled={isLoading} on:click={handleDelete}>Delete</Button>
 	{/if}
 </form>

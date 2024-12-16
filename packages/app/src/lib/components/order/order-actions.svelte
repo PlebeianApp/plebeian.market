@@ -31,18 +31,18 @@
 	<!-- FIXME: we are having a sqlite foreign key constraint error -->
 	{#if orderMode === 'sale'}
 		{#if orderStatus === 'pending'}
-			<Button on:click={handleConfirmOrder}>Confirm Order</Button>
-			<Button on:click={handleCancelOrder}>Cancel Order</Button>
+			<Button variant="primary" on:click={handleConfirmOrder}>Confirm Order</Button>
+			<Button variant="destructive" on:click={handleCancelOrder}>Cancel Order</Button>
 		{:else if orderStatus === 'confirmed'}
-			<Button on:click={handleMarkAsShipped}>Mark as Shipped</Button>
+			<Button variant="primary" on:click={handleMarkAsShipped}>Mark as Shipped</Button>
 		{:else}
 			No actions
 		{/if}
 	{:else if orderMode === 'purchase'}
 		{#if orderStatus === 'pending'}
-			<Button on:click={handleCancelOrder}>Cancel Order</Button>
+			<Button variant="destructive" on:click={handleCancelOrder}>Cancel Order</Button>
 		{:else if orderStatus === 'shipped'}
-			<Button on:click={handleMarkAsReceived}>Mark as Received</Button>
+			<Button variant="primary" on:click={handleMarkAsReceived}>Mark as Received</Button>
 		{:else}
 			No actions
 		{/if}

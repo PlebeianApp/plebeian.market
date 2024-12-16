@@ -64,7 +64,7 @@
 
 <div class="flex flex-col gap-4">
 	<div class="flex items-center gap-1">
-		<Button size="icon" variant="outline" class="border-none" on:click={() => goto('/settings/account')}>
+		<Button variant="ghost" size="icon" on:click={() => goto('/settings/account')}>
 			<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
 		</Button>
 		<section>
@@ -81,7 +81,7 @@
 		{#if showEmptyWallet}
 			<NwcWallet nwcWallet={undefined} on:walletAdded={handleWalletAdded} />
 		{:else}
-			<Button on:click={toggleEmptyWallet}>Add Another Wallet</Button>
+			<Button variant="primary" on:click={toggleEmptyWallet}>Add Another Wallet</Button>
 		{/if}
 	{/if}
 </div>

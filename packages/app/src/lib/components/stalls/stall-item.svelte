@@ -122,7 +122,7 @@
 							{#if isMyStall && stall.id}
 								<DropdownMenu.Root>
 									<DropdownMenu.Trigger asChild let:builder>
-										<Button builders={[builder]} variant="ghost" size="icon" class="h-8 w-8 p-0 hover:bg-black/5 -mr-1">
+										<Button variant="ghost" builders={[builder]} size="icon" class="h-8 w-8 p-0 hover:bg-black/5 -mr-1">
 											<MoreVertical class="h-5 w-5" />
 										</Button>
 									</DropdownMenu.Trigger>

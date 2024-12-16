@@ -56,7 +56,7 @@
 		{:else}
 			<ScrollArea class="h-auto">
 				<Sheet.Title class="flex flex-row-reverse justify-end items-center content-center ">
-					<Button size="icon" variant="outline" class="border-none" on:click={closeDrawer}>
+					<Button size="icon" variant="ghost" on:click={closeDrawer}>
 						<span class="cursor-pointer i-tdesign-close w-6 h-6" />
 					</Button>
 					<div class=" w-full">

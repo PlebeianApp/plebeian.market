@@ -73,7 +73,7 @@
 		<Tabs.Content value="nip07" class="flex flex-col gap-2">
 			<Button
 				on:click={() => handleLogin('NIP07', undefined, checked)}
-				variant="default"
+				variant="focus"
 				class="w-full border-black border-2 font-bold flex items-center gap-1"
 				disabled={!window.nostr}
 			>
@@ -101,7 +101,7 @@
 			>
 				<Input required class="border-black border-2" name="key" placeholder="Private key (nsec1...)" id="signInSk" type="password" />
 				<Input required class="border-black border-2" name="password" placeholder="Password" id="signInPass" type="password" />
-				<Button id="signInSubmit" type="submit">Sign in</Button>
+				<Button variant="primary" id="signInSubmit" type="submit">Sign in</Button>
 			</form>
 		</Tabs.Content>
 
@@ -112,7 +112,7 @@
 			>
 				<Input required class="border-black border-2" name="key" placeholder="Private key (nsec1...)" id="remoteSignIn" type="password" />
 				<Input required class="border-black border-2" name="password" placeholder="Password" id="remoteSignInPass" type="password" />
-				<Button id="remoteSignInSubmit" type="submit">Sign in</Button>
+				<Button variant="primary" id="remoteSignInSubmit" type="submit">Sign in</Button>
 			</form>
 		</Tabs.Content>
 
@@ -129,7 +129,7 @@
 				}}
 			>
 				<Input id="signUpPassword" required class="border-black border-2" name="password" placeholder="Password" type="password" />
-				<Button id="signUpSubmit" type="submit" class="w-full">Generate an account</Button>
+				<Button variant="primary" id="signUpSubmit" type="submit" class="w-full">Generate an account</Button>
 			</form>
 		</Tabs.Content>
 

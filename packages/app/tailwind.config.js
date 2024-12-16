@@ -1,4 +1,4 @@
-import { iconsPlugin, getIconCollections } from '@egoist/tailwindcss-icons'
+import { getIconCollections, iconsPlugin } from '@egoist/tailwindcss-icons'
 
 /** @type {import('tailwindcss').Config} */
 const config = {
@@ -7,7 +7,7 @@ const config = {
 			// Select the icon collections you want to use
 			// You can also ignore this option to automatically discover all individual icon packages you have installed
 			// If you install @iconify/json, you should explicitly specify the collections you want to use, like this:
-			collections: getIconCollections(["game-icons", "ion", "simple-icons", "mingcute", "tdesign", "mdi", "bitcoin-icons"]),
+			collections: getIconCollections(['game-icons', 'ion', 'simple-icons', 'mingcute', 'tdesign', 'mdi', 'bitcoin-icons']),
 			// If you want to use all icons from @iconify/json, you can do this:
 			// collections: getIconCollections("all"),
 			// and the more recommended way is to use `dynamicIconsPlugin`, see below.
@@ -26,38 +26,50 @@ const config = {
 		},
 		extend: {
 			colors: {
-				border: 'hsl(var(--border) / <alpha-value>)',
-				input: 'hsl(var(--input) / <alpha-value>)',
-				ring: 'hsl(var(--ring) / <alpha-value>)',
-				background: 'hsl(var(--background) / <alpha-value>)',
-				foreground: 'hsl(var(--foreground) / <alpha-value>)',
+				border: 'var(--border)',
+				input: 'var(--input)',
+				ring: 'var(--ring) )',
+				background: 'var(--background)',
+				foreground: 'var(--foreground)',
 				primary: {
-					DEFAULT: 'hsl(var(--primary) / <alpha-value>)',
-					foreground: 'hsl(var(--primary-foreground) / <alpha-value>)',
+					DEFAULT: 'var(--primary)',
+					foreground: 'var(--primary-foreground)',
+					border: 'var(--primary-border)',
 				},
 				secondary: {
-					DEFAULT: 'hsl(var(--secondary) / <alpha-value>)',
-					foreground: 'hsl(var(--secondary-foreground) / <alpha-value>)',
+					DEFAULT: 'var(--secondary)',
+					foreground: 'var(--secondary-foreground)',
+					border: 'var(--secondary-border)',
+				},
+				tertiary: {
+					DEFAULT: 'var(--tertiary)',
+					foreground: 'var(--tertiary-foreground)',
+					border: 'var(--tertiary-border)',
+				},
+				focus: {
+					DEFAULT: 'var(--focus)',
+					foreground: 'var(--focus-foreground)',
+					border: 'var(--focus-border)',
 				},
 				destructive: {
-					DEFAULT: 'hsl(var(--destructive) / <alpha-value>)',
-					foreground: 'hsl(var(--destructive-foreground) / <alpha-value>)',
+					DEFAULT: 'var(--destructive)',
+					foreground: 'var(--destructive-foreground)',
 				},
 				muted: {
-					DEFAULT: 'hsl(var(--muted) / <alpha-value>)',
-					foreground: 'hsl(var(--muted-foreground) / <alpha-value>)',
+					DEFAULT: 'var(--muted)',
+					foreground: 'var(--muted-foreground)',
 				},
 				accent: {
-					DEFAULT: 'hsl(var(--accent) / <alpha-value>)',
-					foreground: 'hsl(var(--accent-foreground) / <alpha-value>)',
+					DEFAULT: 'var(--accent)',
+					foreground: 'var(--accent-foreground)',
 				},
 				popover: {
-					DEFAULT: 'hsl(var(--popover) / <alpha-value>)',
-					foreground: 'hsl(var(--popover-foreground) / <alpha-value>)',
+					DEFAULT: 'var(--popover)',
+					foreground: 'var(--popover-foreground)',
 				},
 				card: {
-					DEFAULT: 'hsl(var(--card) / <alpha-value>)',
-					foreground: 'hsl(var(--card-foreground) / <alpha-value>)',
+					DEFAULT: 'var(--card)',
+					foreground: 'var(--card-foreground)',
 				},
 			},
 			borderRadius: {

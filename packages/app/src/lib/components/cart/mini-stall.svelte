@@ -42,7 +42,7 @@
 		{#if mode === 'edit'}
 			<DropdownMenu.Root>
 				<DropdownMenu.Trigger asChild let:builder>
-					<Button variant="secondary" class="border-2 border-black h-8" builders={[builder]}>
+					<Button variant="tertiary" class="border-2 border-black h-8" builders={[builder]}>
 						{#if $stallQuery.data?.stall?.shipping?.length && currentShippingMethodId}
 							{@const method = $stallQuery.data?.stall?.shipping?.find((m) => m.id === currentShippingMethodId)}
 							{#if method}

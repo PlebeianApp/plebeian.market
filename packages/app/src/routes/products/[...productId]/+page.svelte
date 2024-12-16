@@ -107,7 +107,7 @@
 				</div>
 				<div class="flex flex-col gap-2">
 					{#if isMyProduct}
-						<Button class="w-1/4" on:click={() => openDrawerForProduct(data.productRes.id)}>Edit product</Button>
+						<Button variant="primary" class="w-1/4" on:click={() => openDrawerForProduct(data.productRes.id)}>Edit product</Button>
 					{/if}
 					<h1 class=" text-3xl">{$productsQuery.data.name}</h1>
 					<h2 class=" inline-flex items-center text-2xl">
@@ -128,7 +128,7 @@
 					{/if}
 					<h3 class="my-8 font-bold">Stock: {$productsQuery.data.quantity}</h3>
 					<div class="flex sm:w-1/2 w-full flex-row gap-1">
-						<Button class="border-2 border-black" size="icon" variant="outline" on:click={handleDecrement} disabled={qtyToCart <= 1}>
+						<Button variant="outline" size="icon" on:click={handleDecrement} disabled={qtyToCart <= 1}>
 							<span class="i-mdi-minus w-4 h-4"></span>
 						</Button>
 						<Input
@@ -157,7 +157,7 @@
 								>{$breakpoint !== 'lg' ? 'Add' : 'Add to cart'}</Button
 							>
 						{:else}
-							<Button disabled>Out of stock</Button>
+							<Button variant="outline" disabled>Out of stock</Button>
 						{/if}
 						<AdminActions type="product" id={data.productRes.id} isFeatured={$productsQuery.data.isFeatured} />
 					</div>

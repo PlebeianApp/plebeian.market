@@ -216,11 +216,14 @@
 					class="flex flex-col gap-4"
 				>
 					{#if relevantPaymentDetails.length}
-						<Button class="w-full" disabled={!filledShippingMethods || !ableToPlaceOrder || isLoading} on:click={handleOrderAndPayment}
-							>Place Order & Pay</Button
+						<Button
+							variant="primary"
+							class="w-full"
+							disabled={!filledShippingMethods || !ableToPlaceOrder || isLoading}
+							on:click={handleOrderAndPayment}>Place Order & Pay</Button
 						>
 					{/if}
-					<Button disabled={!filledShippingMethods} variant="outline" class="w-full" on:click={handleOrderPlacement}>Place Order</Button>
+					<Button variant="primary" disabled={!filledShippingMethods} class="w-full" on:click={handleOrderPlacement}>Place Order</Button>
 				</div>
 			</div>
 		</CardContent>

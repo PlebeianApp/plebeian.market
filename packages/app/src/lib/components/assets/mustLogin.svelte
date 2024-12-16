@@ -35,7 +35,7 @@
 		></svg
 	>
 	<div>
-		<Button on:click={showAuthDialog} class="flex items-center cursor-pointer gap-2 w-full">
+		<Button variant="primary" on:click={showAuthDialog} class="flex items-center gap-2 w-full">
 			<span class="i-tdesign-user-1" />Log in
 		</Button>
 	</div>
