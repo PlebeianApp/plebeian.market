@@ -33,6 +33,7 @@
 	} from '$lib/utils'
 	import { deleteEvent, publishEvent } from '$lib/utils/nostr.utils'
 	import { validateForm } from '$lib/utils/zod.utils'
+	import { SearchIcon } from 'lucide-svelte'
 	import geohash from 'ngeohash'
 	import { createEventDispatcher, onMount } from 'svelte'
 	import { toast } from 'svelte-sonner'
@@ -242,6 +243,10 @@
 			boundingbox,
 		}
 	}
+
+	$: if (shippingFromInput.trim()) {
+		locationSearchOpen = true
+	}
 </script>
 
 <form class="flex flex-col gap-4 grow" on:submit={handleSubmit} on:invalid|capture={handleInvalidForm}>
@@ -317,24 +322,20 @@
 				</div>
 
 				<Leaflet geoJSON={mapGeoJSON} on:locationUpdated={handleLocationUpdated} />
-				<Popover.Root bind:open={locationSearchOpen} let:ids>
-					<Popover.Trigger asChild let:builder>
-						<Button
-							builders={[builder]}
-							variant="outline"
-							role="combobox"
-							aria-expanded={locationSearchOpen}
-							class="w-full justify-between border-2 border-black"
-						>
-							{selectedLocation?.display_name ?? 'Select a location...'}
-							{#if isLoading}
-								<Spinner />
-							{/if}
-						</Button>
-					</Popover.Trigger>
+				<div class=" grid grid-cols-[1fr_auto] gap-2">
+					<Input type="search" placeholder="Search location..." bind:value={shippingFromInput} />
+					<Button disabled={!shippingFromInput} on:click={() => (locationSearchOpen = !locationSearchOpen)} variant="tertiary" size="icon">
+						{#if isLoading}
+							<Spinner />
+						{:else}
+							<SearchIcon />
+						{/if}
+					</Button>
+				</div>
+				<Popover.Root disableFocusTrap={true} openFocus={false} bind:open={locationSearchOpen} let:ids>
+					<Popover.Trigger />
 					<Popover.Content class="w-2/4 p-0">
 						<Command.Root>
-							<Command.Input placeholder="Search location..." bind:value={shippingFromInput} />
 							<Command.Empty>No location found.</Command.Empty>
 							<Command.Group>
 								{#each locationResults as location (location.place_id)}

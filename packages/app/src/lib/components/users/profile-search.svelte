@@ -146,7 +146,7 @@
 </script>
 
 {#if !commandInput}
-	<Input type="text" bind:value={searchQuery} {placeholder} />
+	<Input type="search" bind:value={searchQuery} {placeholder} />
 {/if}
 <Popover.Root disableFocusTrap={commandInput ? false : true} openFocus={commandInput ? true : false} bind:open={searchOpen} let:ids>
 	{#if commandInput}
