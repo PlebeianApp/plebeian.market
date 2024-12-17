@@ -150,7 +150,7 @@
 											{/if}
 										</Button>
 									</Popover.Trigger>
-									<Popover.Content class=" p-0">
+									<Popover.Content class="p-0">
 										<Command.Root>
 											<Command.Input placeholder="Select logo or introduce image url..." bind:value={logoUrl} />
 											<Command.Group>

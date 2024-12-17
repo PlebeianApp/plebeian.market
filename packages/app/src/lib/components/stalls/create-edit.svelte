@@ -334,7 +334,7 @@
 				</div>
 				<Popover.Root disableFocusTrap={true} openFocus={false} bind:open={locationSearchOpen} let:ids>
 					<Popover.Trigger />
-					<Popover.Content class="w-2/4 p-0">
+					<Popover.Content class="w-popover p-0">
 						<Command.Root>
 							<Command.Empty>No location found.</Command.Empty>
 							<Command.Group>
@@ -441,7 +441,7 @@
 							{/if}
 						</Button>
 					</Popover.Trigger>
-					<Popover.Content class="w-[250px] max-h-[350px] overflow-y-auto p-0">
+					<Popover.Content class="w-popover max-h-[350px] overflow-y-auto p-0">
 						<Command.Root>
 							<Command.Input placeholder="Search country..." />
 							<Command.Empty>No country found.</Command.Empty>
