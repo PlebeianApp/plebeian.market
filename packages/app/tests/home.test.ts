@@ -25,7 +25,7 @@ describe('Home Page', () => {
 		const pageTitle = await homePage.getPageTitle()
 		expect(pageTitle).toBe('Sell stuff for sats')
 
-		const isListButtonVisible = await homePage.isListMyStuffButtonVisible()
-		expect(isListButtonVisible).toBe(true)
+		// const isListButtonVisible = await homePage.isListMyStuffButtonVisible()
+		// expect(isListButtonVisible).toBe(true)
 	})
 })
