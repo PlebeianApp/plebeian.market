@@ -28,8 +28,8 @@
 			<span>New version available, click on reload button to update.</span>
 		</div>
 		{#if $needRefresh}
-			<Button variant="default" on:click={() => updateServiceWorker(true)}>Reload</Button>
+			<Button variant="focus" on:click={() => updateServiceWorker(true)}>Reload</Button>
 		{/if}
-		<Button variant="outline" on:click={close}>Close</Button>
+		<Button variant="tertiary" on:click={close}>Close</Button>
 	</Card>
 {/if}
