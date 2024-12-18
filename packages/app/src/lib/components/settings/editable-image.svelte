@@ -144,6 +144,7 @@
 				value={src}
 				type="text"
 				class="border-2 border-black"
+				placeholder="Or paste image URL..."
 				id="userImageRemote"
 				name="imageRemoteInput"
 				on:input={handleInput}
