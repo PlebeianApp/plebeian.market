@@ -69,6 +69,10 @@
 		clearTimeout(inputTimeout)
 		inputTimeout = setTimeout(() => {
 			const target = event.target as HTMLInputElement
+			if (!target.value.trim()) {
+				urlError = null
+				return
+			}
 			try {
 				new URL(target.value)
 				const newUrl = target.value
@@ -77,7 +81,6 @@
 				if (inputField) {
 					inputField.value = ''
 				}
-				// target.value = ''
 			} catch {
 				urlError = 'Invalid URL format'
 			}
