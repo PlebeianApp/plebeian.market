@@ -32,6 +32,9 @@ importers:
       '@fontsource/ibm-plex-mono':
         specifier: ^5.0.13
         version: 5.0.13
+      '@formkit/auto-animate':
+        specifier: ^0.8.2
+        version: 0.8.2
       '@gandlaf21/bolt11-decode':
         specifier: ^3.1.1
         version: 3.1.1
@@ -1659,6 +1662,9 @@ packages:
 
   '@fontsource/ibm-plex-mono@5.0.13':
     resolution: {integrity: sha512-gtlMmvk//2AgDEZDFsoL5z9mgW3ZZg/9SC7pIfDwNKp5DtZpApgqd1Fua3HhPwYRIHrT76IQ1tMTzQKLEGtJGQ==}
+
+  '@formkit/auto-animate@0.8.2':
+    resolution: {integrity: sha512-SwPWfeRa5veb1hOIBMdzI+73te5puUBHmqqaF1Bu7FjvxlYSz/kJcZKSa9Cg60zL0uRNeJL2SbRxV6Jp6Q1nFQ==}
 
   '@gandlaf21/bolt11-decode@3.1.1':
     resolution: {integrity: sha512-uorLVc3FAWO6USCaBHGixwUd7B86z4IVRa/TdLicsWi3Vm7QngYDIuUkOBemut0Qh/Qtsx47EjWMXS4WHel98A==}
@@ -6797,6 +6803,8 @@ snapshots:
   '@floating-ui/utils@0.2.7': {}
 
   '@fontsource/ibm-plex-mono@5.0.13': {}
+
+  '@formkit/auto-animate@0.8.2': {}
 
   '@gandlaf21/bolt11-decode@3.1.1':
     dependencies:

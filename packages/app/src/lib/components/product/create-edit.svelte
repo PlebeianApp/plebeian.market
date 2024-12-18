@@ -81,16 +81,6 @@
 		updateImages(images.filter((image) => image.imageUrl !== e.detail))
 	}
 
-	function handleSetMainImage(e: CustomEvent<Partial<ProductImage>>) {
-		const mainImage = e.detail
-		images = images
-			.map((image, index) => ({
-				...image,
-				imageOrder: image.imageUrl === mainImage.imageUrl ? 0 : index + 1,
-			}))
-			?.sort((a, b) => (a.imageOrder ?? 0) - (b.imageOrder ?? 0))
-	}
-
 	function addCategory() {
 		categories = [...categories, { key: createSlugId(`category ${categories.length + 1}`), name: '', checked: true }]
 
@@ -102,7 +92,6 @@
 		})
 	}
 	async function handleSubmit(sEvent: SubmitEvent, stall: Partial<RichStall> | null) {
-		console.log('handleSubmit', stall)
 		if (!stall) return
 		isLoading = true
 
@@ -354,7 +343,7 @@
 						images={sortedImages}
 						on:imageAdded={(e) => handleNewImageAdded(e)}
 						on:imageRemoved={(e) => handleImageRemoved(e)}
-						on:setMainImage={(e) => handleSetMainImage(e)}
+						on:imagesReordered={(e) => updateImages(e.detail)}
 					/>
 				</Tabs.Content>
 
