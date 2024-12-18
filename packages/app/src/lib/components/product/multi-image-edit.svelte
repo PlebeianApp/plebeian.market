@@ -18,16 +18,19 @@
 		dispatch('imageRemoved', imageUrl)
 	}
 
-	const handleSwapImageForNew = async (oldImageUrl: string, event: CustomEvent<{ url: string; index: number }>) => {
+	const handleImageChange = async (event: CustomEvent<{ url: string; index: number }>, oldImageUrl?: string) => {
 		const newUrl = event.detail.url
 		const index = event.detail.index
 
-		// Create new images array preserving order
+		if (index === -1) {
+			handleImageAdd(event.detail.url)
+			return
+		}
+
 		const newImages = [...images]
 		const imageToUpdate = newImages.find((img) => img.imageUrl === oldImageUrl)
 		if (imageToUpdate) {
 			imageToUpdate.imageUrl = newUrl
-			// Order is preserved as we're just updating the URL
 			dispatch('imagesReordered', newImages)
 		}
 	}
@@ -67,7 +70,7 @@
 					src={image.imageUrl}
 					{index}
 					imagesLength={images.length}
-					on:save={(e) => handleSwapImageForNew(image.imageUrl ?? '', e)}
+					on:save={(e) => handleImageChange(e, image.imageUrl ?? '')}
 					on:promote={() => handlePromoteImage(index)}
 					on:demote={() => handleDemoteImage(index)}
 					on:delete={() => handleImageRemove(image.imageUrl ?? '')}
@@ -76,5 +79,5 @@
 		{/if}
 	{/each}
 
-	<EditableImage src={null} index={-1} imagesLength={images.length} on:save={(e) => handleImageAdd(e.detail)} />
+	<EditableImage src={null} index={-1} imagesLength={images.length} on:save={(e) => handleImageChange(e)} />
 </div>

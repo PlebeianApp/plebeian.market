@@ -92,7 +92,6 @@
 		})
 	}
 	async function handleSubmit(sEvent: SubmitEvent, stall: Partial<RichStall> | null) {
-		console.log('handleSubmit', stall)
 		if (!stall) return
 		isLoading = true
 

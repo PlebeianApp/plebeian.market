@@ -3,6 +3,7 @@
 	import ndkStore, { NostrifyNDKSigner } from '$lib/stores/ndk'
 	import { createEventDispatcher } from 'svelte'
 
+	import Spinner from '../assets/spinner.svelte'
 	import Pattern from '../Pattern.svelte'
 	import Button from '../ui/button/button.svelte'
 	import { Input } from '../ui/input'
@@ -31,7 +32,7 @@
 					signer: new NostrifyNDKSigner($ndkStore),
 				})
 				const [[_, url]] = await uploader.upload(file)
-				dispatch('save', url) // For new images, just send the URL
+				dispatch('save', { url, index }) // For new images, just send the URL
 				src = null
 				if (inputField) {
 					inputField.value = ''
@@ -42,7 +43,7 @@
 		input.click()
 	}
 
-	const handleSaveByUpload = async () => {
+	const handleEditByUpload = async () => {
 		const input = document.createElement('input')
 		input.type = 'file'
 		input.accept = 'image/*'
@@ -71,22 +72,22 @@
 			try {
 				new URL(target.value)
 				const newUrl = target.value
-				src = newUrl
-				// dispatch('save', newUrl)
-
-				// src = null
-				// inputField.value = ''
-				// urlError = null
+				urlError = null
+				dispatch('save', { url: newUrl, index })
+				target.value = ''
 			} catch {
 				urlError = 'Invalid URL format'
 			}
 		}, 300)
 	}
 
-	function handleEdit() {
-		console.log('src', src, index)
+	function handleSaveImage() {
+		if (!src) return
 		dispatch('save', { url: src, index })
-		inputEditable = false
+
+		if (inputEditable) {
+			inputEditable = false
+		}
 	}
 </script>
 
@@ -105,7 +106,7 @@
 				</div>
 				<div class="absolute bottom-2 right-2 flex gap-2">
 					{#if inputEditable}
-						<Button variant="tertiary" size="icon" on:click={handleSaveByUpload}>
+						<Button variant="tertiary" size="icon" on:click={handleEditByUpload}>
 							<span class="i-mdi-upload w-6 h-6" />
 						</Button>
 					{/if}
@@ -144,19 +145,22 @@
 			/>
 			{#if src}
 				{#if inputEditable}
-					<Button variant="primary" on:click={handleEdit}>Save</Button>
+					<Button variant="primary" on:click={handleSaveImage}>Save</Button>
 				{:else}
 					<Button variant="secondary" on:click={() => (inputEditable = true)}>Edit</Button>
 				{/if}
 			{:else}
-				<Button variant="primary" on:click={handleEdit}>Save</Button>
+				<Button variant="primary" on:click={handleSaveImage}>Save</Button>
 			{/if}
 		</div>
 		{#if urlError}
 			<p class="text-destructive">{urlError}</p>
 		{/if}
 		{#if isLoading}
-			<p>Loading...</p>
+			<div class="flex flex-row gap-2">
+				<Spinner />
+				<p>Loading...</p>
+			</div>
 		{/if}
 	</div>
 </div>
