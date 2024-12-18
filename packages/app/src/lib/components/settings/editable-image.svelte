@@ -74,7 +74,10 @@
 				const newUrl = target.value
 				urlError = null
 				dispatch('save', { url: newUrl, index })
-				target.value = ''
+				if (inputField) {
+					inputField.value = ''
+				}
+				// target.value = ''
 			} catch {
 				urlError = 'Invalid URL format'
 			}
@@ -114,14 +117,16 @@
 						<span class="i-mdi-delete w-4 h-4" />
 					</Button>
 				</div>
-				<div class="absolute left-2 bottom-2 flex flex-row gap-2">
-					<Button variant="tertiary" size="icon" disabled={index === 0} on:click={() => dispatch('promote', index)}>
-						<span class="i-mdi-chevron-up w-4 h-4" />
-					</Button>
-					<Button variant="tertiary" size="icon" disabled={index === imagesLength - 1} on:click={() => dispatch('demote', index)}>
-						<span class="i-mdi-chevron-down w-4 h-4" />
-					</Button>
-				</div>
+				{#if index !== -1}
+					<div class="absolute left-2 bottom-2 flex flex-row gap-2">
+						<Button variant="tertiary" size="icon" disabled={index === 0} on:click={() => dispatch('promote', index)}>
+							<span class="i-mdi-chevron-up w-4 h-4" />
+						</Button>
+						<Button variant="tertiary" size="icon" disabled={index === imagesLength - 1} on:click={() => dispatch('demote', index)}>
+							<span class="i-mdi-chevron-down w-4 h-4" />
+						</Button>
+					</div>
+				{/if}
 			{:else}
 				<div class="absolute inset-0 flex items-center justify-center">
 					<div class="flex flex-col items-center gap-2">
