@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from '$app/stores'
 	import { Button } from '$lib/components/ui/button'
 	import { Checkbox } from '$lib/components/ui/checkbox'
 	import * as Dialog from '$lib/components/ui/dialog'
@@ -13,10 +14,12 @@
 	import { nsecEncode } from 'nostr-tools/nip19'
 	import { toast } from 'svelte-sonner'
 
+	import type { PageData } from '../../../routes/$types'
 	import Spinner from '../assets/spinner.svelte'
 	import Pattern from '../Pattern.svelte'
 	import SaveKeyDialog from './saveKeyDialog.svelte'
 
+	$: ({ appSettings } = $page.data as PageData)
 	let checked = false
 	let nsec: ReturnType<typeof nsecEncode> | null = null
 	let loading = false
@@ -57,7 +60,7 @@
 			{#if loading}
 				<Spinner size={60} />
 			{:else}
-				<img src="/logo.svg" alt="logo" class="w-16" />
+				<img src={appSettings.logoUrl} alt="logo" class="w-16" />
 			{/if}
 		</div>
 	</Dialog.Header>

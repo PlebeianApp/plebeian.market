@@ -3,6 +3,7 @@
 	import QrCode from '@castlenine/svelte-qrcode'
 	import { Invoice, LightningAddress } from '@getalby/lightning-tools'
 	import { NDKRelay } from '@nostr-dev-kit/ndk'
+	import { page } from '$app/stores'
 	import Spinner from '$lib/components/assets/spinner.svelte'
 	import { Button } from '$lib/components/ui/button'
 	import * as Collapsible from '$lib/components/ui/collapsible'
@@ -23,8 +24,10 @@
 	import { afterUpdate, createEventDispatcher, onDestroy } from 'svelte'
 	import { toast } from 'svelte-sonner'
 
+	import type { PageData } from '../../../routes/$types'
 	import type { CheckoutPaymentEvent, PaymentStatus } from '../checkout/types'
 
+	$: ({ appSettings } = $page.data as PageData)
 	export let paymentDetail: RichPaymentDetail
 	export let amountSats: number
 	export let paymentType: string
@@ -299,7 +302,7 @@
 	{#if isLoading}
 		<Spinner />
 	{:else if invoice}
-		<QrCode data={invoice.paymentRequest} logoPath="/logo.svg" />
+		<QrCode data={invoice.paymentRequest} logoPath={appSettings.logoUrl} />
 		<Button variant="tertiary" class="items-center gap-2 grid grid-cols-[auto_auto] max-w-full" on:click={handleCopyInvoice}>
 			<span class=" truncate">{invoice.paymentRequest}</span>
 			<span class="i-tdesign-copy" />
