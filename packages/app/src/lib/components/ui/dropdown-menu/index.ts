@@ -10,6 +10,7 @@ import Separator from './dropdown-menu-separator.svelte'
 import Shortcut from './dropdown-menu-shortcut.svelte'
 import SubContent from './dropdown-menu-sub-content.svelte'
 import SubTrigger from './dropdown-menu-sub-trigger.svelte'
+import TriggerWrapper from './dropdown-menu-trigger-wrapper.svelte'
 
 const Sub = DropdownMenuPrimitive.Sub
 const Root = DropdownMenuPrimitive.Root
@@ -31,6 +32,7 @@ export {
 	SubTrigger,
 	RadioGroup,
 	CheckboxItem,
+	TriggerWrapper,
 	//
 	Root as DropdownMenu,
 	Sub as DropdownMenuSub,
@@ -46,4 +48,5 @@ export {
 	SubContent as DropdownMenuSubContent,
 	SubTrigger as DropdownMenuSubTrigger,
 	CheckboxItem as DropdownMenuCheckboxItem,
+	TriggerWrapper as DropdownMenuTriggerWrapper,
 }

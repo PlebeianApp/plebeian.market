@@ -59,7 +59,7 @@
 					<Button size="icon" variant="ghost" on:click={closeDrawer}>
 						<span class="cursor-pointer i-tdesign-close w-6 h-6" />
 					</Button>
-					<div class=" w-full">
+					<div class="w-full">
 						{#if $drawerUI.drawerType === 'cart'}
 							Your cart
 						{:else if $drawerUI.drawerType === 'product' || $drawerUI.drawerType === 'stall'}
