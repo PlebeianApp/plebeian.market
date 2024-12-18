@@ -1,18 +1,14 @@
 <script lang="ts">
+	import autoAnimate from '@formkit/auto-animate'
 	import { createEventDispatcher } from 'svelte'
 
 	import type { ProductImage } from '@plebeian/database'
 
 	import EditableImage from '../settings/editable-image.svelte'
-	import Button from '../ui/button/button.svelte'
 
 	export let images: Partial<ProductImage>[] = []
 
 	const dispatch = createEventDispatcher()
-
-	const handleSetMainImage = async (image: Partial<ProductImage>) => {
-		dispatch('setMainImage', image)
-	}
 
 	const handleImageAdd = async (imageUrl: string) => {
 		dispatch('imageAdded', imageUrl)
@@ -22,32 +18,63 @@
 		dispatch('imageRemoved', imageUrl)
 	}
 
-	const handleSwapImageForNew = async (oldImageUrl: string, newImageUrl: string) => {
-		handleImageRemove(oldImageUrl)
-		handleImageAdd(newImageUrl)
+	const handleSwapImageForNew = async (oldImageUrl: string, event: CustomEvent<{ url: string; index: number }>) => {
+		const newUrl = event.detail.url
+		const index = event.detail.index
+
+		// Create new images array preserving order
+		const newImages = [...images]
+		const imageToUpdate = newImages.find((img) => img.imageUrl === oldImageUrl)
+		if (imageToUpdate) {
+			imageToUpdate.imageUrl = newUrl
+			// Order is preserved as we're just updating the URL
+			dispatch('imagesReordered', newImages)
+		}
+	}
+
+	const handlePromoteImage = (index: number) => {
+		if (index <= 0 || index >= images.length) return
+
+		const newImages = [...images]
+		const temp = newImages[index - 1]
+		newImages[index - 1] = newImages[index]
+		newImages[index] = temp
+		newImages[index].imageOrder = index
+		newImages[index - 1].imageOrder = index - 1
+
+		dispatch('imagesReordered', newImages)
+	}
+
+	const handleDemoteImage = (index: number) => {
+		if (index < 0 || index >= images.length - 1) return
+
+		const newImages = [...images]
+		const temp = newImages[index + 1]
+		newImages[index + 1] = newImages[index]
+		newImages[index] = temp
+		newImages[index].imageOrder = index
+		newImages[index + 1].imageOrder = index + 1
+
+		dispatch('imagesReordered', newImages)
 	}
 </script>
 
-<div class="grid grid-cols-2 gap-4">
-	{#each images as image (image.imageUrl)}
+<div use:autoAnimate class="flex flex-col gap-4">
+	{#each images as image, index (image.imageUrl)}
 		{#if image.imageUrl}
 			<div class="flex flex-col">
-				<EditableImage marketContext={true} src={image.imageUrl} on:save={(e) => handleSwapImageForNew(image.imageUrl ?? '', e.detail)} />
-				<div class="border-r-2 border-b-2 border-l-2 border-black text-center">
-					<Button variant="ghost" on:click={() => handleSetMainImage(image)} size="icon">
-						{#if image.imageOrder === 0}
-							<span class="i-mdi-star text-primary w-4 h-4" />
-						{:else}
-							<span class="i-mdi-star-outline w-4 h-4 cursor-pointer" />
-						{/if}
-					</Button>
-					<Button variant="ghost" on:click={() => handleImageRemove(image.imageUrl ?? '')} size="icon" class="text-destructive"
-						><span class="i-tdesign-delete-1 w-4 h-4"></span></Button
-					>
-				</div>
+				<EditableImage
+					src={image.imageUrl}
+					{index}
+					imagesLength={images.length}
+					on:save={(e) => handleSwapImageForNew(image.imageUrl ?? '', e)}
+					on:promote={() => handlePromoteImage(index)}
+					on:demote={() => handleDemoteImage(index)}
+					on:delete={() => handleImageRemove(image.imageUrl ?? '')}
+				/>
 			</div>
 		{/if}
 	{/each}
 
-	<EditableImage marketContext={true} src={null} on:save={(e) => handleImageAdd(e.detail)} />
+	<EditableImage src={null} index={-1} imagesLength={images.length} on:save={(e) => handleImageAdd(e.detail)} />
 </div>
