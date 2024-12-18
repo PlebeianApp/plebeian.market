@@ -266,21 +266,15 @@
 						<div class="grid w-full items-center gap-1.5">
 							<Label for="product-stall" class="font-bold">Stall</Label>
 							<DropdownMenu.Root>
-								<DropdownMenu.Trigger asChild let:builder>
-									<Button
-										data-tooltip="The stall this product is part of"
-										variant="outline"
-										class="border-2 border-black"
-										builders={[builder]}
-									>
-										{#if currentStallIdentifier}
-											{@const defaultStall = $stallsQuery.data?.stalls.find((stall) => stall.identifier === currentStallIdentifier)}
-											{defaultStall ? defaultStall.name : 'Select a stall'}
-										{:else}
-											{stall?.name}
-										{/if}
-									</Button>
-								</DropdownMenu.Trigger>
+								<DropdownMenu.TriggerWrapper data-tooltip="The stall this product is part of">
+									{#if currentStallIdentifier}
+										{@const defaultStall = $stallsQuery.data?.stalls.find((stall) => stall.identifier === currentStallIdentifier)}
+										{defaultStall ? defaultStall.name : 'Select a stall'}
+									{:else}
+										{stall?.name}
+									{/if}
+								</DropdownMenu.TriggerWrapper>
+
 								<DropdownMenu.Content class="w-56">
 									<DropdownMenu.Label>Stall</DropdownMenu.Label>
 									<DropdownMenu.Separator />
@@ -352,11 +346,9 @@
 						<div class="grid w-full items-center gap-1.5">
 							<Label for="stall-shippings" class="font-bold required-mark">Shipping Method #{i + 1}</Label>
 							<DropdownMenu.Root>
-								<DropdownMenu.Trigger asChild let:builder>
-									<Button variant="outline" builders={[builder]}>
-										{shippingMethod.shipping?.name ?? 'Choose a shipping method'}
-									</Button>
-								</DropdownMenu.Trigger>
+								<DropdownMenu.TriggerWrapper let:builder>
+									{shippingMethod.shipping?.name ?? 'Choose a shipping method'}
+								</DropdownMenu.TriggerWrapper>
 								<DropdownMenu.Content class="w-56">
 									<DropdownMenu.Label>Stall</DropdownMenu.Label>
 									<DropdownMenu.Separator />

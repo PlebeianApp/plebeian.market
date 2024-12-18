@@ -89,13 +89,10 @@
 {#if userRole !== 'pleb'}
 	<div class="flex gap-2">
 		<DropdownMenu.Root>
-			<DropdownMenu.Trigger asChild let:builder>
-				<Button variant="outline" builders={[builder]}>
-					{@const capitalizedType = userRole.charAt(0).toUpperCase() + userRole.slice(1)}
-					{capitalizedType} Actions
-					<span class="i-mdi-chevron-down ml-2" />
-				</Button>
-			</DropdownMenu.Trigger>
+			<DropdownMenu.TriggerWrapper>
+				{@const capitalizedType = userRole.charAt(0).toUpperCase() + userRole.slice(1)}
+				{capitalizedType} Actions
+			</DropdownMenu.TriggerWrapper>
 			<DropdownMenu.Content>
 				<DropdownMenu.Group>
 					{#if type != 'user'}

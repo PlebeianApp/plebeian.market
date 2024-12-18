@@ -41,19 +41,17 @@
 		</div>
 		{#if mode === 'edit'}
 			<DropdownMenu.Root>
-				<DropdownMenu.Trigger asChild let:builder>
-					<Button variant="tertiary" class="border-2 border-black h-8" builders={[builder]}>
-						{#if $stallQuery.data?.stall?.shipping?.length && currentShippingMethodId}
-							{@const method = $stallQuery.data?.stall?.shipping?.find((m) => m.id === currentShippingMethodId)}
-							{#if method}
-								{getMethodDisplayName(method)}
-								<span class="ml-2">{method.cost}</span>
-							{/if}
-						{:else}
-							Select shipping method
+				<DropdownMenu.TriggerWrapper>
+					{#if $stallQuery.data?.stall?.shipping?.length && currentShippingMethodId}
+						{@const method = $stallQuery.data?.stall?.shipping?.find((m) => m.id === currentShippingMethodId)}
+						{#if method}
+							{getMethodDisplayName(method)}
+							<span class="ml-2">{method.cost}</span>
 						{/if}
-					</Button>
-				</DropdownMenu.Trigger>
+					{:else}
+						Select shipping method
+					{/if}
+				</DropdownMenu.TriggerWrapper>
 				<DropdownMenu.Content class="w-56">
 					<DropdownMenu.Label>Shipping Method</DropdownMenu.Label>
 					<DropdownMenu.Separator />

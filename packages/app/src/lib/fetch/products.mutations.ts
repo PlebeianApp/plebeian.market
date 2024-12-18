@@ -271,7 +271,7 @@ export const setProductBannedMutation = createMutation(
 	},
 	queryClient,
 )
-// TODO: continue here
+
 export const deleteProductMutation = createMutation(
 	{
 		mutationFn: async (productId: string) => {
