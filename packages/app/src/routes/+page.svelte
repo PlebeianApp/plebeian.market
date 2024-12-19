@@ -16,7 +16,7 @@
 	$: productQuery = createProductsByFilterQuery({ pageSize: 8, order: 'asc' })
 	$: featuredProductsQuery = createProductsByFilterQuery({ featured: true })
 
-	function handleListItems() {
+	function handleSelling() {
 		if (!$ndkStore.activeUser) dialogs.show(AuthDialog, {})
 		else openDrawerForNewProduct()
 	}
@@ -29,8 +29,8 @@
 				<div class="relative w-full bg-black py-20 text-center text-white">
 					<Pattern />
 					<h1 class="relative z-10">Sell stuff for sats</h1>
-					<Button variant="focus" class="relative z-10" on:click={handleListItems}
-						><span>List your items in <span class="font-bold">2 minutes</span></span></Button
+					<Button variant="focus" class="relative z-10" on:click={handleSelling}
+						><span class="flex items-center gap-2"><span class="i-game-icons-ostrich w-5 h-5"></span>Start Selling</span></Button
 					>
 				</div>
 				<div class="container">
