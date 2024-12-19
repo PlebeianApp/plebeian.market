@@ -33,7 +33,7 @@
 	} from '$lib/utils'
 	import { deleteEvent, publishEvent } from '$lib/utils/nostr.utils'
 	import { validateForm } from '$lib/utils/zod.utils'
-	import { SearchIcon } from 'lucide-svelte'
+	import { ChevronDown, SearchIcon } from 'lucide-svelte'
 	import geohash from 'ngeohash'
 	import { createEventDispatcher, onMount } from 'svelte'
 	import { toast } from 'svelte-sonner'
@@ -366,9 +366,18 @@
 		<div class="grid w-full items-center gap-1.5">
 			<Label for="currency" class="font-bold">Choose your local currency</Label>
 			<DropdownMenu.Root>
-				<DropdownMenu.TriggerWrapper>
-					{currency}
-				</DropdownMenu.TriggerWrapper>
+				<DropdownMenu.Trigger asChild let:builder>
+					<Button
+						data-tooltip="Products in this stall will use this currency. It would be converted to bitcoin in real time for your users to pay!"
+						variant="outline"
+						class="border-2 border-black justify-between"
+						iconPosition="right"
+						builders={[builder]}
+					>
+						{currency}
+						<ChevronDown slot="icon" class="h-4 w-4" />
+					</Button>
+				</DropdownMenu.Trigger>
 				<DropdownMenu.Content class="w-56">
 					<DropdownMenu.Label>Choose your local currency</DropdownMenu.Label>
 					<DropdownMenu.Separator />
@@ -426,6 +435,7 @@
 								variant="outline"
 								role="combobox"
 								aria-expanded="true"
+								iconPosition="right"
 								class="w-full max-w-full border-2 border-black justify-between truncate"
 								disabled={item.countries === null || item.name === 'Local Pickup'}
 							>
@@ -440,6 +450,7 @@
 								{:else}
 									{item.countries.slice(0, 2).join(', ')} +{item.countries.length - 2}
 								{/if}
+								<ChevronDown slot="icon" class="h-4 w-4" />
 							</Button>
 						</Popover.Trigger>
 						<Popover.Content class="w-popover max-h-[350px] overflow-y-auto p-0">

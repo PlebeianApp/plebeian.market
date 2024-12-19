@@ -19,6 +19,7 @@
 	import { deleteEvent } from '$lib/utils/nostr.utils'
 	import { prepareProductData } from '$lib/utils/product.utils'
 	import { validateForm } from '$lib/utils/zod.utils'
+	import { ChevronDown } from 'lucide-svelte'
 	import { createEventDispatcher, onMount } from 'svelte'
 	import { toast } from 'svelte-sonner'
 	import { get } from 'svelte/store'
@@ -266,15 +267,23 @@
 						<div class="grid w-full items-center gap-1.5">
 							<Label for="product-stall" class="font-bold">Stall</Label>
 							<DropdownMenu.Root>
-								<DropdownMenu.TriggerWrapper data-tooltip="The stall this product is part of">
-									{#if currentStallIdentifier}
-										{@const defaultStall = $stallsQuery.data?.stalls.find((stall) => stall.identifier === currentStallIdentifier)}
-										{defaultStall ? defaultStall.name : 'Select a stall'}
-									{:else}
-										{stall?.name}
-									{/if}
-								</DropdownMenu.TriggerWrapper>
-
+								<DropdownMenu.Trigger asChild let:builder>
+									<Button
+										data-tooltip="The stall this product is part of"
+										variant="outline"
+										class="border-2 border-black justify-between"
+										iconPosition="right"
+										builders={[builder]}
+									>
+										{#if currentStallIdentifier}
+											{@const defaultStall = $stallsQuery.data?.stalls.find((stall) => stall.identifier === currentStallIdentifier)}
+											{defaultStall ? defaultStall.name : 'Select a stall'}
+										{:else}
+											{stall?.name}
+										{/if}
+										<ChevronDown slot="icon" class="h-4 w-4" />
+									</Button>
+								</DropdownMenu.Trigger>
 								<DropdownMenu.Content class="w-56">
 									<DropdownMenu.Label>Stall</DropdownMenu.Label>
 									<DropdownMenu.Separator />
@@ -346,9 +355,12 @@
 						<div class="grid w-full items-center gap-1.5">
 							<Label for="stall-shippings" class="font-bold required-mark">Shipping Method #{i + 1}</Label>
 							<DropdownMenu.Root>
-								<DropdownMenu.TriggerWrapper let:builder>
-									{shippingMethod.shipping?.name ?? 'Choose a shipping method'}
-								</DropdownMenu.TriggerWrapper>
+								<DropdownMenu.Trigger asChild let:builder>
+									<Button variant="outline" iconPosition="right" class=" justify-between" builders={[builder]}>
+										{shippingMethod.shipping?.name ?? 'Choose a shipping method'}
+										<ChevronDown slot="icon" class="h-4 w-4" />
+									</Button>
+								</DropdownMenu.Trigger>
 								<DropdownMenu.Content class="w-56">
 									<DropdownMenu.Label>Stall</DropdownMenu.Label>
 									<DropdownMenu.Separator />

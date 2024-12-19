@@ -4,6 +4,7 @@
 	import { createStallQuery } from '$lib/fetch/stalls.queries'
 	import { cart } from '$lib/stores/cart'
 	import { truncateString } from '$lib/utils'
+	import { ChevronDown } from 'lucide-svelte'
 
 	import Spinner from '../assets/spinner.svelte'
 	import { Button } from '../ui/button'
@@ -41,17 +42,20 @@
 		</div>
 		{#if mode === 'edit'}
 			<DropdownMenu.Root>
-				<DropdownMenu.TriggerWrapper>
-					{#if $stallQuery.data?.stall?.shipping?.length && currentShippingMethodId}
-						{@const method = $stallQuery.data?.stall?.shipping?.find((m) => m.id === currentShippingMethodId)}
-						{#if method}
-							{getMethodDisplayName(method)}
-							<span class="ml-2">{method.cost}</span>
+				<DropdownMenu.Trigger asChild let:builder>
+					<Button variant="tertiary" iconPosition="right" class="border-2 border-black h-8 justify-between" builders={[builder]}>
+						{#if $stallQuery.data?.stall?.shipping?.length && currentShippingMethodId}
+							{@const method = $stallQuery.data?.stall?.shipping?.find((m) => m.id === currentShippingMethodId)}
+							{#if method}
+								{getMethodDisplayName(method)}
+								<span class="ml-2">{method.cost}</span>
+							{/if}
+						{:else}
+							Select shipping method
 						{/if}
-					{:else}
-						Select shipping method
-					{/if}
-				</DropdownMenu.TriggerWrapper>
+						<ChevronDown slot="icon" class="h-4 w-4" />
+					</Button>
+				</DropdownMenu.Trigger>
 				<DropdownMenu.Content class="w-56">
 					<DropdownMenu.Label>Shipping Method</DropdownMenu.Label>
 					<DropdownMenu.Separator />
