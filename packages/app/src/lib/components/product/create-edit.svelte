@@ -15,11 +15,12 @@
 	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
 	import { openDrawerForNewStall } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
+	import { productFormState } from '$lib/stores/product-form'
 	import { handleInvalidForm, parseCoordinatesString } from '$lib/utils'
 	import { deleteEvent } from '$lib/utils/nostr.utils'
 	import { prepareProductData } from '$lib/utils/product.utils'
 	import { validateForm } from '$lib/utils/zod.utils'
-	import { createEventDispatcher, onMount } from 'svelte'
+	import { createEventDispatcher, onDestroy, onMount } from 'svelte'
 	import { toast } from 'svelte-sonner'
 	import { get } from 'svelte/store'
 
@@ -41,13 +42,14 @@
 	let images: Partial<ProductImage>[] = []
 	let currentShippings: { shipping: Partial<RichShippingInfo> | null; extraCost: string }[] = []
 	let validationErrors: ValidationErrors = {}
+	let tab: 'basic' | 'categories' | 'images' | 'shippings' = 'basic'
 
 	$: stallsQuery = createStallsByFilterQuery({
 		userId: $ndkStore.activeUser?.pubkey,
 		pageSize: 999,
 	})
 
-	$: currentStallIdentifier = forStall?.split(':')[2] || product?.stall_id || $stallsQuery.data?.stalls[0]?.identifier
+	$: currentStallIdentifier = forStall?.split(':')[2] || product?.stall_id || $stallsQuery.data?.stalls[0]?.identifier || null
 
 	$: {
 		if ($stallsQuery.data?.stalls.length) {
@@ -122,6 +124,7 @@
 			}
 
 			dispatch('success', null)
+			$productFormState = null
 		} catch (error) {
 			toast.error(`Failed to ${product ? 'update' : 'create'} product: ${error instanceof Error ? error.message : String(error)}`)
 			dispatch('error', error)
@@ -146,8 +149,49 @@
 				}
 			})
 		}
-		updateImages(product?.images ?? [])
+
+		if ($productFormState && !product) {
+			const state = $productFormState
+			currentStallIdentifier = state.stallIdentifier ?? null
+			categories = state.categories
+			images = state.images
+			tab = state.tab ?? 'basic'
+			currentShippings = state.shippings
+
+			const form = document.querySelector('form') as HTMLFormElement
+			if (form) {
+				const titleInput = form.querySelector('[name="title"]') as HTMLInputElement
+				const descriptionInput = form.querySelector('[name="description"]') as HTMLTextAreaElement
+				const priceInput = form.querySelector('[name="price"]') as HTMLInputElement
+				const quantityInput = form.querySelector('[name="quantity"]') as HTMLInputElement
+
+				if (titleInput) titleInput.value = state.title
+				if (descriptionInput) descriptionInput.value = state.description
+				if (priceInput) priceInput.value = state.price
+				if (quantityInput) quantityInput.value = state.quantity
+			}
+		}
 	})
+
+	function saveFormState() {
+		const form = document.querySelector('form') as HTMLFormElement
+		if (form) {
+			$productFormState = {
+				title: (form.querySelector('[name="title"]') as HTMLInputElement)?.value ?? '',
+				description: (form.querySelector('[name="description"]') as HTMLTextAreaElement)?.value ?? '',
+				price: (form.querySelector('[name="price"]') as HTMLInputElement)?.value ?? '',
+				quantity: (form.querySelector('[name="quantity"]') as HTMLInputElement)?.value ?? '',
+				stallIdentifier: currentStallIdentifier ?? null,
+				categories,
+				images,
+				shippings: currentShippings,
+				tab,
+			}
+		}
+	}
+	$: {
+		currentStallIdentifier, categories, images, currentShippings, tab, saveFormState()
+	}
 
 	const activeTab =
 		'w-full font-bold border-b-2 border-black text-black data-[state=active]:border-b-primary data-[state=active]:text-primary'
@@ -176,9 +220,10 @@
 	<form
 		on:submit|preventDefault={(sEvent) => handleSubmit(sEvent, stall)}
 		on:invalid|capture={handleInvalidForm}
+		on:input={() => saveFormState()}
 		class="flex flex-col gap-4 grow h-full"
 	>
-		<Tabs.Root value="basic" class="p-4">
+		<Tabs.Root bind:value={tab} class="p-4">
 			<Tabs.List class="w-full justify-around bg-transparent">
 				<Tabs.Trigger value="basic" class={activeTab}>Basic</Tabs.Trigger>
 				<Tabs.Trigger value="categories" class={activeTab}>Categories</Tabs.Trigger>
