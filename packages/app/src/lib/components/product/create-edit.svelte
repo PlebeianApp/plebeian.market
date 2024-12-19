@@ -159,7 +159,6 @@
 			currentShippings = state.shippings
 
 			const form = document.querySelector('form') as HTMLFormElement
-			console.log('onMount', form)
 			if (form) {
 				const titleInput = form.querySelector('[name="title"]') as HTMLInputElement
 				const descriptionInput = form.querySelector('[name="description"]') as HTMLTextAreaElement
