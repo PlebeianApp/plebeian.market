@@ -23,7 +23,7 @@
 </Dialog.Header>
 
 <Button variant="secondary" class="relative overflow-auto flex flex-row gap-2 bg-transparent" on:click={() => copyToClipboard(nsec)}>
-	<code class="truncate w-3/4">{nsec}</code>
+	<code class="truncate w-3/4 text-black">{nsec}</code>
 	<span class="i-tdesign-copy" style="width: 1rem; height: 1rem; color: black;" />
 </Button>
 

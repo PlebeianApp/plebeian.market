@@ -17,6 +17,7 @@
 	import Pattern from '../Pattern.svelte'
 	import SaveKeyDialog from './saveKeyDialog.svelte'
 
+	let tab: 'login' | 'signup' = 'login'
 	let checked = false
 	let nsec: ReturnType<typeof nsecEncode> | null = null
 	let loading = false
@@ -62,23 +63,16 @@
 		</div>
 	</Dialog.Header>
 
-	<Tabs.Root value="nip07" class="p-4">
-		<Tabs.List class="w-full justify-around bg-transparent">
-			<Tabs.Trigger value="nip07" class={activeTab}>Extension</Tabs.Trigger>
-			<Tabs.Trigger value="sk" class={activeTab}>Private Key</Tabs.Trigger>
-			<Tabs.Trigger value="create" class={activeTab}>Sign up</Tabs.Trigger>
-			<!-- <Tabs.Trigger disabled value="nip46" class={activeTab}>Advanced</Tabs.Trigger> -->
-		</Tabs.List>
-
-		<Tabs.Content value="nip07" class="flex flex-col gap-2">
+	<Tabs.Root value={tab} class="p-4">
+		<Tabs.Content value="login" class="flex flex-col gap-2">
 			<Button
 				on:click={() => handleLogin('NIP07', undefined, checked)}
 				variant="focus"
-				class="w-full border-black border-2 font-bold flex items-center gap-1"
+				class="w-full border-black border-2 flex items-center gap-1"
 				disabled={!window.nostr}
 			>
-				<span class="text-black text-md">Sign in with extension</span>
 				<span class="i-mdi-puzzle-outline text-black w-6 h-6"> </span>
+				<span class="text-lg">Extension Login</span>
 			</Button>
 			{#if !window.nostr}
 				<span>
@@ -90,34 +84,25 @@
 					<a class="underline" href="https://getalby.com/">alby</a> or similar.
 				</span>
 			{/if}
-		</Tabs.Content>
 
-		<Tabs.Content value="sk" class="flex flex-col gap-2">
-			<span> Sign in using an existing private key (nsec). </span>
-			<p class="font-bold">For enhanced security, consider using a browser extension.</p>
+			<p class="text-sm text-gray-500">
+				Sign in using an existing private key (nsec).
+				For enhanced security, consider using a browser extension.
+
+			</p>
 			<form
 				class="flex flex-col gap-2"
 				on:submit|preventDefault={(sEvent) => handleLogin('NSEC', new FormData(sEvent.currentTarget, sEvent.submitter), checked)}
 			>
 				<Input required class="border-black border-2" name="key" placeholder="Private key (nsec1...)" id="signInSk" type="password" />
 				<Input required class="border-black border-2" name="password" placeholder="Password" id="signInPass" type="password" />
-				<Button variant="primary" id="signInSubmit" type="submit">Sign in</Button>
+				<Button variant="primary" id="signInSubmit" type="submit">Log in</Button>
 			</form>
 		</Tabs.Content>
 
-		<Tabs.Content value="nip46" class="flex flex-col gap-2">
-			<form
-				class="flex flex-col gap-2"
-				on:submit|preventDefault={(sEvent) => handleLogin('NSEC', new FormData(sEvent.currentTarget, sEvent.submitter), checked)}
-			>
-				<Input required class="border-black border-2" name="key" placeholder="Private key (nsec1...)" id="remoteSignIn" type="password" />
-				<Input required class="border-black border-2" name="password" placeholder="Password" id="remoteSignInPass" type="password" />
-				<Button variant="primary" id="remoteSignInSubmit" type="submit">Sign in</Button>
-			</form>
-		</Tabs.Content>
 
-		<Tabs.Content value="create" class="flex flex-col gap-2">
-			<span>
+		<Tabs.Content value="signup" class="flex flex-col gap-2">
+			<span class="text-sm text-gray-500">
 				After signing up, we'll generate a unique Nostr keypair, which serves as your username and password. Your private key will be
 				displayed - please save it securely to ensure account recovery.
 				<a href="https://nostr.how/en/get-started" class="underline">Learn more</a>.
@@ -133,8 +118,7 @@
 			</form>
 		</Tabs.Content>
 
-		<div class="flex flex-col gap-2 items-center">
-			<Separator />
+		<div class="flex flex-col gap-2 items-center mt-4">
 			<div class="flex items-center gap-2">
 				<Checkbox id="terms" bind:checked aria-labelledby="terms-label" />
 				<Label
@@ -145,13 +129,8 @@
 					Remember me
 				</Label>
 			</div>
-			<p class="text-center">
-				Don't have an account?
-				<Tabs.Trigger value="create" class="underline cursor-pointer p-0">Sign up</Tabs.Trigger>
-			</p>
-			<p class="text-center">
-				<a href="https://nostr.how/en/get-started" class="underline">Learn more about nostr</a>
-			</p>
+
+			<Button class="underline text-lg" variant="link" on:click={() => tab = tab === 'signup' ? 'login' : 'signup'}>{tab === 'signup' ? 'Sign in' : 'Sign up'}</Button>
 		</div>
 	</Tabs.Root>
 </Dialog.Content>
