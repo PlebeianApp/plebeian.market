@@ -86,9 +86,7 @@
 			{/if}
 
 			<p class="text-sm text-gray-500">
-				Sign in using an existing private key (nsec).
-				For enhanced security, consider using a browser extension.
-
+				Log in using an existing private key (nsec). For enhanced security, consider using a browser extension.
 			</p>
 			<form
 				class="flex flex-col gap-2"
@@ -99,7 +97,6 @@
 				<Button variant="primary" id="signInSubmit" type="submit">Log in</Button>
 			</form>
 		</Tabs.Content>
-
 
 		<Tabs.Content value="signup" class="flex flex-col gap-2">
 			<span class="text-sm text-gray-500">
@@ -130,7 +127,9 @@
 				</Label>
 			</div>
 
-			<Button class="underline text-lg" variant="link" on:click={() => tab = tab === 'signup' ? 'login' : 'signup'}>{tab === 'signup' ? 'Sign in' : 'Sign up'}</Button>
+			<Button class="underline text-lg" variant="link" on:click={() => (tab = tab === 'signup' ? 'login' : 'signup')}
+				>{tab === 'signup' ? 'Log in' : 'Sign up'}</Button
+			>
 		</div>
 	</Tabs.Root>
 </Dialog.Content>
