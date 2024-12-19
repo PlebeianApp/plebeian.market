@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { browser } from '$app/environment'
+	import { page } from '$app/stores'
 	import { Button } from '$lib/components/ui/button/index.js'
 	import * as Dialog from '$lib/components/ui/dialog/index.js'
 	import { Input } from '$lib/components/ui/input/index.js'
@@ -13,14 +14,17 @@
 	import { onMount } from 'svelte'
 	import { toast } from 'svelte-sonner'
 
+	import type { PageData } from '../../routes/$types'
 	import Spinner from './assets/spinner.svelte'
 	import Pattern from './Pattern.svelte'
 	import Checkbox from './ui/checkbox/checkbox.svelte'
 	import CAvatar from './ui/custom-components/c-avatar.svelte'
 	import Label from './ui/label/label.svelte'
 
+	$: ({ appSettings } = $page.data as PageData)
 	export let dialogOpen = false
 	export let accointInfo: NsecAccount
+
 	let isLoading = false
 
 	let checked: boolean
@@ -56,7 +60,7 @@
 				{#if isLoading}
 					<Spinner size={60} />
 				{:else}
-					<img src="/logo.svg" alt="logo" class="w-16" />
+					<img src={appSettings.logoUrl} alt="logo" class="w-16" />
 				{/if}
 			</div>
 		</Dialog.Header>

@@ -157,7 +157,7 @@
 	}
 </script>
 
-<div class="pb-4 space-y-6 px-2">
+<div class="pb-4 space-y-6 px-2 w-full">
 	<div>
 		<div class="flex items-center gap-1">
 			<Button variant="ghost" size="icon" on:click={() => goto('/settings')}>
@@ -252,7 +252,6 @@
 			</div>
 		</div>
 	</div>
-
 	{#if $v4vByUser?.data}
 		{#each v4vRecipients as v4v (v4v.target)}
 			<div class={hoveredRecipient === v4v.target ? 'highlight-edit' : ''}>
@@ -277,7 +276,6 @@
 			on:recipientRemoved={handleRecipientRemoved}
 		/>
 	{/if}
-
 	<div class="flex gap-2">
 		<Button variant="primary" class="w-full font-bold" on:click={() => (newRecipientFormVisible = true)}>Add v4v recipient</Button>
 		<Button variant="tertiary" class="w-full font-bold" on:click={handleSetAllEqual}

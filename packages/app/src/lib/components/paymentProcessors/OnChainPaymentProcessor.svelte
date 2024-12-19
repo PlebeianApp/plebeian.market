@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { RichPaymentDetail } from '$lib/server/paymentDetails.service'
 	import QrCode from '@castlenine/svelte-qrcode'
+	import { page } from '$app/stores'
 	import Spinner from '$lib/components/assets/spinner.svelte'
 	import { Button } from '$lib/components/ui/button'
 	import { createMempoolAddressTransactionsQuery } from '$lib/fetch/mempool.queries'
@@ -11,8 +12,10 @@
 	import { createEventDispatcher, onDestroy, onMount } from 'svelte'
 	import { toast } from 'svelte-sonner'
 
+	import type { PageData } from '../../../routes/$types'
 	import type { CheckoutPaymentEvent } from '../checkout/types'
 
+	$: ({ appSettings } = $page.data as PageData)
 	export let paymentDetail: RichPaymentDetail
 	export let amountSats: number
 	export let paymentType: string
@@ -97,7 +100,7 @@
 <div class="flex flex-col items-center gap-4">
 	<h3 class="font-bold">On-chain Payment</h3>
 
-	<QrCode data={bitcoinUri} logoPath="/logo.svg" />
+	<QrCode data={bitcoinUri} logoPath={appSettings.logoUrl} />
 
 	<Button variant="secondary" class="items-center gap-2 grid grid-cols-[auto_auto] max-w-full" on:click={() => copyToClipboard(bitcoinUri)}>
 		<span class="truncate">{paymentDetail.paymentDetails}</span>

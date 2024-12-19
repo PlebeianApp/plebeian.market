@@ -213,7 +213,7 @@
 									<Popover.Content class=" p-0">
 										<Command.Root>
 											<Command.Input placeholder="Select logo or introduce image url..." bind:value={logoUrl} />
-											<Command.Empty>No framework found.</Command.Empty>
+											<Command.Empty>No logo found.</Command.Empty>
 											<Command.Group>
 												{#each availabeLogos as logo}
 													<Command.Item

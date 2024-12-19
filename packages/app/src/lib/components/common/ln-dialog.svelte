@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { NDKSubscription } from '@nostr-dev-kit/ndk'
 	import QrCode from '@castlenine/svelte-qrcode'
+	import { page } from '$app/stores'
 	import * as Dialog from '$lib/components/ui/dialog/index.js'
 	import { copyToClipboard, truncateText } from '$lib/utils'
 	import { createInvoiceObject, formatTime, handleZapEvent, setupExpiryCountdown, setupZapSubscription } from '$lib/utils/zap.utils'
@@ -8,8 +9,10 @@
 	import { createEventDispatcher, onDestroy } from 'svelte'
 	import { toast } from 'svelte-sonner'
 
+	import type { PageData } from '../../../routes/$types'
 	import Button from '../ui/button/button.svelte'
 
+	$: ({ appSettings } = $page.data as PageData)
 	export let qrDialogOpen = false
 	export let zapAmountSats = 0
 	export let bolt11String: string
@@ -78,7 +81,7 @@
 		</Dialog.Header>
 		<div class="flex flex-col items-center gap-2">
 			{#if lnInvoice}
-				<QrCode data={lnInvoice.paymentRequest} logoPath="/logo.svg" />
+				<QrCode data={lnInvoice.paymentRequest} logoPath={appSettings.logoUrl} />
 				<Button variant="tertiary" class="relative overflow-auto flex flex-row gap-2 bg-transparent" on:click={handleCopyClick}>
 					<code>{truncateText(lnInvoice.paymentRequest, 30)}</code>
 					<span class="i-tdesign-copy" style="width: 1rem; height: 1rem; color: black;"></span>

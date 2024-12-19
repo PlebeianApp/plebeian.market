@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { pushState, replaceState } from '$app/navigation'
 	import CreateEditProduct from '$lib/components/product/create-edit.svelte'
 	import CreateEditStall from '$lib/components/stalls/create-edit.svelte'
 	import { ScrollArea } from '$lib/components/ui/scroll-area/index.js'
@@ -41,11 +42,13 @@
 	})
 
 	$: if (isOpen && !historyState) {
-		historyState = 'drawer'
-		history.pushState(historyState, '', window.location.href)
-	} else if (!isOpen && historyState) {
-		history.replaceState(null, '', window.location.href)
-		historyState = null
+		if (isOpen && !historyState) {
+			historyState = 'drawer'
+			pushState('', { historyState })
+		} else if (!isOpen && historyState) {
+			replaceState('', { historyState: null })
+			historyState = null
+		}
 	}
 </script>
 
@@ -59,7 +62,7 @@
 					<Button size="icon" variant="ghost" on:click={closeDrawer}>
 						<span class="cursor-pointer i-tdesign-close w-6 h-6" />
 					</Button>
-					<div class=" w-full">
+					<div class="w-full">
 						{#if $drawerUI.drawerType === 'cart'}
 							Your cart
 						{:else if $drawerUI.drawerType === 'product' || $drawerUI.drawerType === 'stall'}
