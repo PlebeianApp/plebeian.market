@@ -26,7 +26,7 @@
 		const input = document.createElement('input')
 		input.type = 'file'
 		input.accept = 'image/*'
-		input.multiple = true
+		input.multiple = !forSingle
 		input.onchange = async (e) => {
 			isLoading = true
 			const files = Array.from((e.target as HTMLInputElement).files || [])
@@ -45,7 +45,9 @@
 					})
 					.filter(Boolean)
 
-				urls.forEach((url: string) => {
+				// In single mode, only use the first image
+				const urlsToProcess = forSingle ? urls.slice(0, 1) : urls
+				urlsToProcess.forEach((url: string) => {
 					dispatch('save', { url, index: -1 })
 				})
 
@@ -76,13 +78,15 @@
 		const files = Array.from(e.dataTransfer?.files || [])
 		const imageFiles = files.filter((file) => file.type.startsWith('image/') && !file.type.includes('svg'))
 
-		if (imageFiles.length) {
+		const filesToProcess = forSingle ? imageFiles.slice(0, 1) : imageFiles
+
+		if (filesToProcess.length) {
 			isLoading = true
 			const uploader = new NostrBuildUploader({
 				signer: new NostrifyNDKSigner($ndkStore),
 			})
 
-			Promise.all(imageFiles.map((file) => uploader.upload(file)))
+			Promise.all(filesToProcess.map((file) => uploader.upload(file)))
 				.then((results) => {
 					const urls = results
 						.map((fileData: [[string, string], [string, string]]) => {
