@@ -11,6 +11,7 @@
 	export let src: string | null = null
 	export let index: number
 	export let imagesLength: number
+	export let forSingle: boolean = false
 
 	const dispatch = createEventDispatcher()
 
@@ -19,20 +20,35 @@
 	let inputTimeout: ReturnType<typeof setTimeout>
 	let inputField: HTMLInputElement
 	let inputEditable = false
+	let isDragging = false
 
 	const handleUploadIntent = async () => {
 		const input = document.createElement('input')
 		input.type = 'file'
 		input.accept = 'image/*'
+		input.multiple = true
 		input.onchange = async (e) => {
 			isLoading = true
-			const file = (e.target as HTMLInputElement).files?.[0]
-			if (file) {
+			const files = Array.from((e.target as HTMLInputElement).files || [])
+			if (files.length) {
 				const uploader = new NostrBuildUploader({
 					signer: new NostrifyNDKSigner($ndkStore),
 				})
-				const [[_, url]] = await uploader.upload(file)
-				dispatch('save', { url, index }) // For new images, just send the URL
+
+				const results = await Promise.all(files.map((file) => uploader.upload(file)))
+
+				const urls = results
+					.map((fileData: [[string, string], [string, string]]) => {
+						const urlEntry = fileData.find((entry: [string, string]) => entry[0] === 'url')
+						if (!urlEntry) return null
+						return urlEntry[1]
+					})
+					.filter(Boolean)
+
+				urls.forEach((url: string) => {
+					dispatch('save', { url, index: -1 })
+				})
+
 				src = null
 				if (inputField) {
 					inputField.value = ''
@@ -41,6 +57,54 @@
 			isLoading = false
 		}
 		input.click()
+	}
+
+	function handleDragEnter(e: DragEvent) {
+		e.preventDefault()
+		isDragging = true
+	}
+
+	function handleDragLeave(e: DragEvent) {
+		e.preventDefault()
+		isDragging = false
+	}
+
+	function handleDrop(e: DragEvent) {
+		e.preventDefault()
+		isDragging = false
+
+		const files = Array.from(e.dataTransfer?.files || [])
+		const imageFiles = files.filter((file) => file.type.startsWith('image/') && !file.type.includes('svg'))
+
+		if (imageFiles.length) {
+			isLoading = true
+			const uploader = new NostrBuildUploader({
+				signer: new NostrifyNDKSigner($ndkStore),
+			})
+
+			Promise.all(imageFiles.map((file) => uploader.upload(file)))
+				.then((results) => {
+					const urls = results
+						.map((fileData: [[string, string], [string, string]]) => {
+							const urlEntry = fileData.find((entry: [string, string]) => entry[0] === 'url')
+							if (!urlEntry) return null
+							return urlEntry[1]
+						})
+						.filter(Boolean)
+
+					urls.forEach((url: string) => {
+						dispatch('save', { url, index: -1 })
+					})
+
+					src = null
+					if (inputField) {
+						inputField.value = ''
+					}
+				})
+				.finally(() => {
+					isLoading = false
+				})
+		}
 	}
 
 	const handleEditByUpload = async () => {
@@ -103,7 +167,7 @@
 			class="border-t-2 border-l-2 border-r-2 border-black relative w-full aspect-[3/1] overflow-hidden
 			{src
 				? 'bg-black'
-				: 'bg-[#F5F5F5] bg-[linear-gradient(45deg,#E0E0E0_25%,transparent_25%,transparent_75%,#E0E0E0_75%,#E0E0E0),linear-gradient(45deg,#E0E0E0_25%,transparent_25%,transparent_75%,#E0E0E0_75%,#E0E0E0)] bg-[length:20px_20px] bg-[position:0_0,10px_10px]'}"
+				: 'bg-[#F5F5F5] bg-[linear-gradient(45deg,#E0E0E0_25%,transparent_25%,transparent_75%,#E0E0E0_75%,#E0E0E0),linear-gradient(45deg,#E0E0E0_25%,transparent_25%,transparent_75%,#E0E0E0_75%,#E0E0E0)] bg-[length:50px_50px] bg-[position:0_0,25px_25px]'}"
 		>
 			{#if src}
 				<Pattern />
@@ -131,14 +195,20 @@
 					</div>
 				{/if}
 			{:else}
-				<div class="absolute inset-0 flex items-center justify-center">
-					<div class="flex flex-col items-center gap-2">
-						<Button variant="outline" size="icon" on:click={handleUploadIntent}>
-							<span class="i-mdi-upload w-6 h-6" />
-						</Button>
-						<strong>Upload more images</strong>
-					</div>
-				</div>
+				<button
+					type="button"
+					class="absolute inset-0 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-black/5 {isDragging
+						? 'bg-black/10'
+						: ''}"
+					on:click={handleUploadIntent}
+					on:dragenter={handleDragEnter}
+					on:dragover|preventDefault
+					on:dragleave={handleDragLeave}
+					on:drop={handleDrop}
+				>
+					<span class="i-mdi-upload w-6 h-6" />
+					<strong>{isDragging ? 'Drop images here' : 'Upload at least one image'}</strong>
+				</button>
 			{/if}
 		</div>
 		<div class="w-full flex items-center justify-center">
