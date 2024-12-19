@@ -15,14 +15,14 @@
 	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
 	import { openDrawerForNewStall } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
+	import { productFormState } from '$lib/stores/product-form'
 	import { handleInvalidForm, parseCoordinatesString } from '$lib/utils'
 	import { deleteEvent } from '$lib/utils/nostr.utils'
 	import { prepareProductData } from '$lib/utils/product.utils'
 	import { validateForm } from '$lib/utils/zod.utils'
-	import { createEventDispatcher, onMount, onDestroy } from 'svelte'
+	import { createEventDispatcher, onDestroy, onMount } from 'svelte'
 	import { toast } from 'svelte-sonner'
 	import { get } from 'svelte/store'
-	import { productFormState } from '$lib/stores/product-form'
 
 	import type { ProductImage } from '@plebeian/database'
 	import { createSlugId } from '@plebeian/database/utils'
@@ -149,7 +149,7 @@
 				}
 			})
 		}
-		
+
 		if ($productFormState && !product) {
 			const state = $productFormState
 			currentStallIdentifier = state.stallIdentifier ?? null
@@ -157,7 +157,7 @@
 			images = state.images
 			tab = state.tab ?? 'basic'
 			currentShippings = state.shippings
-			
+
 			const form = document.querySelector('form') as HTMLFormElement
 			console.log('onMount', form)
 			if (form) {
@@ -165,7 +165,7 @@
 				const descriptionInput = form.querySelector('[name="description"]') as HTMLTextAreaElement
 				const priceInput = form.querySelector('[name="price"]') as HTMLInputElement
 				const quantityInput = form.querySelector('[name="quantity"]') as HTMLInputElement
-				
+
 				if (titleInput) titleInput.value = state.title
 				if (descriptionInput) descriptionInput.value = state.description
 				if (priceInput) priceInput.value = state.price
@@ -191,12 +191,7 @@
 		}
 	}
 	$: {
-		currentStallIdentifier,
-		categories,
-		images,
-		currentShippings,
-		tab,
-		saveFormState()
+		currentStallIdentifier, categories, images, currentShippings, tab, saveFormState()
 	}
 
 	const activeTab =
