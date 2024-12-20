@@ -146,7 +146,7 @@
 </script>
 
 {#if !commandInput}
-	<Input type="text" bind:value={searchQuery} {placeholder} />
+	<Input type="search" bind:value={searchQuery} {placeholder} />
 {/if}
 <Popover.Root disableFocusTrap={commandInput ? false : true} openFocus={commandInput ? true : false} bind:open={searchOpen} let:ids>
 	{#if commandInput}
@@ -161,7 +161,7 @@
 	{:else}
 		<Popover.Trigger />
 	{/if}
-	<Popover.Content class="w-[300px] p-0">
+	<Popover.Content class="max-h-[350px] overflow-y-auto p-0">
 		<Command.Root>
 			{#if commandInput}
 				<Command.Input placeholder="Search by name or npub..." bind:value={searchQuery} />

@@ -12,9 +12,9 @@ export function prepareProductData(
 	existingProduct?: Partial<DisplayProduct>,
 ) {
 	const productData = {
-		id: existingProduct?.id ?? createSlugId(String(formData.get('title'))),
+		id: existingProduct?.id ?? createSlugId(String(formData.get('name'))),
 		stall_id: stall.identifier,
-		name: String(formData.get('title')),
+		name: String(formData.get('name')),
 		description: String(formData.get('description')),
 		images: images.map((img) => img.imageUrl).filter(Boolean) as string[],
 		price: Number(formData.get('price')),

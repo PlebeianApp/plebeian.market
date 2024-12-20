@@ -69,7 +69,11 @@
 	}
 </script>
 
-<Collapsible.Root class="border-black border p-4" style={`border-left: 0.5rem solid ${hexColorFromPubkey}`} bind:open={collapsibleOpen}>
+<Collapsible.Root
+	class="border-black border p-4 w-full"
+	style={`border-left: 0.5rem solid ${hexColorFromPubkey}`}
+	bind:open={collapsibleOpen}
+>
 	<div class="flex flex-row justify-between items-center">
 		<Collapsible.Trigger class="flex-grow flex items-center justify-between gap-2">
 			{#if npub}
