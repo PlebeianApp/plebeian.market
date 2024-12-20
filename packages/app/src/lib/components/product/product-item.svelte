@@ -37,11 +37,11 @@
 	>
 		<Card.Header class="p-0">
 			{#if product.images?.length && !imageLoadError}
-				{@const mainImage = product.images.find((img) => img.imageOrder === 0) || product.images[0]}
+				{@const mainImage = product.images?.sort((a, b) => a.imageOrder - b.imageOrder)}
 				<div class="relative w-full h-72">
 					<img
 						class="object-cover w-full h-full"
-						src={mainImage.imageUrl}
+						src={mainImage[0].imageUrl}
 						alt={product.name || 'Product image'}
 						on:error={() => (imageLoadError = true)}
 					/>

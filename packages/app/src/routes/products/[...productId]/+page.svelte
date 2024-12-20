@@ -70,7 +70,7 @@
 				<div class="flex flex-col gap-1">
 					{#key $productsQuery.data.identifier}
 						{#if $productsQuery.data?.images?.length}
-							{@const sortedImages = $productsQuery.data.images.slice()?.sort((a, b) => a.imageOrder - b.imageOrder)}
+							{@const sortedImages = $productsQuery.data.images?.sort((a, b) => a.imageOrder - b.imageOrder)}
 							<Carousel.Root bind:api>
 								<Carousel.Content>
 									{#each sortedImages as item}
