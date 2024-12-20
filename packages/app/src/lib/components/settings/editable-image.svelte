@@ -18,7 +18,6 @@
 	let isLoading = false
 	let urlError: string | null = null
 	let inputTimeout: ReturnType<typeof setTimeout>
-	let inputField: HTMLInputElement
 	let inputEditable = false
 	let isDragging = false
 
@@ -45,16 +44,12 @@
 					})
 					.filter(Boolean)
 
-				// In single mode, only use the first image
 				const urlsToProcess = forSingle ? urls.slice(0, 1) : urls
 				urlsToProcess.forEach((url: string) => {
 					dispatch('save', { url, index: -1 })
 				})
 
 				src = null
-				if (inputField) {
-					inputField.value = ''
-				}
 			}
 			isLoading = false
 		}
@@ -101,9 +96,6 @@
 					})
 
 					src = null
-					if (inputField) {
-						inputField.value = ''
-					}
 				})
 				.finally(() => {
 					isLoading = false
@@ -124,9 +116,7 @@
 				})
 				const [[_, url]] = await uploader.upload(file)
 				dispatch('save', { url, index })
-				if (inputField) {
-					inputField.value = ''
-				}
+				src = null
 			}
 			isLoading = false
 		}
@@ -146,9 +136,7 @@
 				const newUrl = target.value
 				urlError = null
 				dispatch('save', { url: newUrl, index })
-				if (inputField) {
-					inputField.value = ''
-				}
+				src = null
 			} catch {
 				urlError = 'Invalid URL format'
 			}
@@ -211,14 +199,14 @@
 					on:drop={handleDrop}
 				>
 					<span class="i-mdi-upload w-6 h-6" />
-					<strong>{isDragging ? 'Drop images here' : 'Upload at least one image'}</strong>
+					<strong>{isDragging ? 'Drop images here' : 'Upload images'}</strong>
 				</button>
 			{/if}
 		</div>
 		<div class="w-full flex items-center justify-center">
 			<Input
 				disabled={!inputEditable && Boolean(src)}
-				value={src}
+				bind:value={src}
 				type="text"
 				class="border-2 border-black"
 				placeholder="Or paste image URL..."
