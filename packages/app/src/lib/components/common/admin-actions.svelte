@@ -15,6 +15,7 @@
 	} from '$lib/fetch/stalls.mutations'
 	import { setUserBannedMutation, userDeleteAccountMutation } from '$lib/fetch/users.mutations'
 	import { currentUserRole } from '$lib/ndkLogin'
+	import { ChevronDown } from 'lucide-svelte'
 	import { toast } from 'svelte-sonner'
 
 	export let type: 'user' | 'stall' | 'product'
@@ -90,10 +91,10 @@
 	<div class="flex gap-2">
 		<DropdownMenu.Root>
 			<DropdownMenu.Trigger asChild let:builder>
-				<Button variant="outline" builders={[builder]}>
+				<Button variant="outline" iconPosition="right" class="justify-between" builders={[builder]}>
 					{@const capitalizedType = userRole.charAt(0).toUpperCase() + userRole.slice(1)}
 					{capitalizedType} Actions
-					<span class="i-mdi-chevron-down ml-2" />
+					<ChevronDown slot="icon" class="h-4 w-4" />
 				</Button>
 			</DropdownMenu.Trigger>
 			<DropdownMenu.Content>

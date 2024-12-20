@@ -26,7 +26,6 @@
 	const { id } = data
 	let nostrStalls: Partial<RichStall>[] = []
 	let toDisplayProducts: Partial<DisplayProduct>[] = []
-	let following = false
 	let showFullAbout = false
 
 	$: isMe = $ndkStore.activeUser?.pubkey == id
@@ -54,22 +53,6 @@
 
 		toDisplayProducts = productsData?.size ? (await normalizeProductsFromNostr(productsData, id))?.toDisplayProducts ?? [] : []
 	})
-	// const handleFollow = () => {
-	// 	const user = $ndkStore.getUser({ pubkey: id })
-	// 	// await user.follow();
-	// 	following = true
-	// }
-
-	const handleUnfollow = () => {
-		const user = $ndkStore.getUser({ pubkey: id })
-		// await user.unfollow();
-		following = false
-	}
-
-	// const handleThreeDots = () => {
-	// 	const user = $ndkStore.getUser({ pubkey: id })
-	// 	// await user.zap();
-	// }
 
 	const handleSendMessage = () => {
 		goto(`/dash/messages/${$page.params.id}`)
@@ -123,16 +106,10 @@
 									</DropdownMenu.Content>
 								</DropdownMenu.Root>
 							{/if}
-							<!-- <Button size="icon" variant="secondary" on:click={handleThreeDots}>
-								<span class="i-mdi-dots-horizontal w-6 h-6" />
-							</Button> -->
 							<InteractiveZapButton userIdToZap={id} profile={$userProfileQuery.data} />
-							<Button size="icon" variant="secondary" on:click={handleSendMessage}>
+							<Button size="icon" variant="tertiary" on:click={handleSendMessage}>
 								<span class="i-mdi-message-bubble w-6 h-6" />
 							</Button>
-							<!-- <Button class="w-1/2 lg:w-auto" on:click={following ? handleUnfollow : handleFollow}>
-								{following ? 'Unfollow' : 'Follow'}
-							</Button> -->
 						</div>
 					</div>
 				</div>
