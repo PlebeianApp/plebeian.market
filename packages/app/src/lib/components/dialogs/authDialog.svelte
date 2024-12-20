@@ -5,7 +5,6 @@
 	import * as Dialog from '$lib/components/ui/dialog'
 	import { Input } from '$lib/components/ui/input'
 	import { Label } from '$lib/components/ui/label'
-	import { Separator } from '$lib/components/ui/separator'
 	import * as Tabs from '$lib/components/ui/tabs'
 	import { login } from '$lib/ndkLogin'
 	import { dialogs } from '$lib/stores/dialog'
@@ -20,7 +19,7 @@
 	import SaveKeyDialog from './saveKeyDialog.svelte'
 
 	$: ({ appSettings } = $page.data as PageData)
-	let tab: 'login' | 'signup' = 'login'
+	let tab: 'login-nip07' | 'signup' | 'login-nsec' = 'login-nip07'
 	let checked = false
 	let nsec: ReturnType<typeof nsecEncode> | null = null
 	let loading = false
@@ -67,7 +66,11 @@
 	</Dialog.Header>
 
 	<Tabs.Root value={tab} class="p-4">
-		<Tabs.Content value="login" class="flex flex-col gap-2">
+		<Tabs.List class="w-full justify-around bg-transparent">
+			<Tabs.Trigger value="login-nip07" class={activeTab}>Extension</Tabs.Trigger>
+			<Tabs.Trigger value="login-nsec" class={activeTab}>Private Key</Tabs.Trigger>
+		</Tabs.List>
+		<Tabs.Content value="login-nip07" class="flex flex-col gap-2">
 			<Button
 				on:click={() => handleLogin('NIP07', undefined, checked)}
 				variant="focus"
@@ -78,16 +81,23 @@
 				<span class="text-lg">Extension Login</span>
 			</Button>
 			{#if !window.nostr}
-				<span>
-					It appears that you don't have an extension installed. You may want to consider using one of the recommended methods.
-					<a class="underline" href="https://chrome.google.com/webstore/detail/nos2x/kpgefcfmnafjgpblomihpgmejjdanjjp">nos2x</a>,
-					<a class="underline" href="https://chromewebstore.google.com/detail/nostr-connect/ampjiinddmggbhpebhaegmjkbbeofoaj"
-						>nostrconnect</a
+				<p class="text-sm text-gray-500">
+					Don’t have one? We recommend using <a
+						class="underline"
+						target="_blank"
+						href="https://chrome.google.com/webstore/detail/nos2x/kpgefcfmnafjgpblomihpgmejjdanjjp">nos2x</a
+					>
+					to get started, other alternatives are
+					<a
+						class="underline"
+						target="_blank"
+						href="https://chromewebstore.google.com/detail/nostr-connect/ampjiinddmggbhpebhaegmjkbbeofoaj">nostrconnect</a
 					>,
-					<a class="underline" href="https://getalby.com/">alby</a> or similar.
-				</span>
+					<a class="underline" target="_blank" href="https://getalby.com/">alby</a> or similar.
+				</p>
 			{/if}
-
+		</Tabs.Content>
+		<Tabs.Content value="login-nsec" class="flex flex-col gap-2">
 			<p class="text-sm text-gray-500">
 				Log in using an existing private key (nsec). For enhanced security, consider using a browser extension.
 			</p>
@@ -100,12 +110,11 @@
 				<Button variant="primary" id="signInSubmit" type="submit">Log in</Button>
 			</form>
 		</Tabs.Content>
-
 		<Tabs.Content value="signup" class="flex flex-col gap-2">
 			<span class="text-sm text-gray-500">
 				After signing up, we'll generate a unique Nostr keypair, which serves as your username and password. Your private key will be
 				displayed - please save it securely to ensure account recovery.
-				<a href="https://nostr.how/en/get-started" class="underline">Learn more</a>.
+				<a href="https://nostr.how/en/get-started" target="_blank" class="underline">Learn more</a>.
 			</span>
 			<form
 				class="flex flex-col gap-2"
@@ -118,7 +127,7 @@
 			</form>
 		</Tabs.Content>
 
-		<div class="flex flex-col gap-2 items-center mt-4">
+		<div class="flex flex-col gap-4 items-center mt-4">
 			<div class="flex items-center gap-2">
 				<Checkbox id="terms" bind:checked aria-labelledby="terms-label" />
 				<Label
@@ -129,10 +138,12 @@
 					Remember me
 				</Label>
 			</div>
-
-			<Button class="underline text-lg" variant="link" on:click={() => (tab = tab === 'signup' ? 'login' : 'signup')}
-				>{tab === 'signup' ? 'Log in' : 'Sign up'}</Button
-			>
+			<div class=" bg-muted w-full flex flex-col justify-center text-center gap-1 p-2">
+				<span class="text-sm text-gray-500">{tab !== 'signup' ? 'Don’t have a nostr account?' : 'Already have a nostr account?'}</span>
+				<Button class="underline text-lg" variant="link" on:click={() => (tab = tab === 'signup' ? 'login-nip07' : 'signup')}
+					>{tab === 'signup' ? 'Log in' : 'Sign up'}</Button
+				>
+			</div>
 		</div>
 	</Tabs.Root>
 </Dialog.Content>
