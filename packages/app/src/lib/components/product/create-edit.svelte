@@ -43,13 +43,17 @@
 	let currentShippings: { shipping: Partial<RichShippingInfo> | null; extraCost: string }[] = []
 	let validationErrors: ValidationErrors = {}
 	let tab: 'basic' | 'categories' | 'images' | 'shippings' = 'basic'
+	let name = $productFormState?.name || product?.name || ''
+	let description = $productFormState?.description || product?.description || ''
+	let price = $productFormState?.price || product?.price?.toString() || ''
+	let quantity = $productFormState?.quantity || product?.quantity?.toString() || ''
 
 	$: stallsQuery = createStallsByFilterQuery({
 		userId: $ndkStore.activeUser?.pubkey,
 		pageSize: 999,
 	})
 
-	$: currentStallIdentifier = forStall?.split(':')[2] || product?.stall_id || $stallsQuery.data?.stalls[0]?.identifier || null
+	$: currentStallIdentifier = forStall?.split(':')[2] || product?.stall_id || $stallsQuery.data?.stalls[0]?.identifier || undefined
 
 	$: {
 		if ($stallsQuery.data?.stalls.length) {
@@ -67,13 +71,14 @@
 				})) ?? []
 	}
 
-	$: sortedImages = [...images]?.sort((a, b) => (a.imageOrder ?? 0) - (b.imageOrder ?? 0))
-
 	function updateImages(updatedImages: Partial<ProductImage>[]) {
-		images = updatedImages
-			.map((image, index) => ({ ...image, imageOrder: image.imageOrder ?? index }))
-			?.sort((a, b) => (a.imageOrder ?? 0) - (b.imageOrder ?? 0))
+		images = updatedImages.map((image, index) => ({
+			...image,
+			imageOrder: 'imageOrder' in image ? image.imageOrder : index,
+		}))
 	}
+
+	$: sortedImages = [...images].sort((a, b) => (a.imageOrder ?? 0) - (b.imageOrder ?? 0))
 
 	function handleNewImageAdded(e: CustomEvent<string>) {
 		updateImages([...images, { imageUrl: e.detail, imageOrder: images.length }])
@@ -108,7 +113,7 @@
 
 			const productData = prepareProductData(formData, stall, sortedImages, shippingData, product!)
 			validationErrors = validateForm(productData, get(forbiddenPatternStore).createProductEventSchema)
-
+			console.log('product data', productData)
 			if (Object.keys(validationErrors).length > 0) {
 				toast.error('Please correct the errors in the form')
 				isLoading = false
@@ -122,9 +127,10 @@
 			} else {
 				await $createProductMutation.mutateAsync({ product: { ...productData }, categories: categoriesData })
 			}
-
+			setTimeout(() => {
+				productFormState.set(null)
+			}, 0)
 			dispatch('success', null)
-			$productFormState = null
 		} catch (error) {
 			toast.error(`Failed to ${product ? 'update' : 'create'} product: ${error instanceof Error ? error.message : String(error)}`)
 			dispatch('error', error)
@@ -133,6 +139,7 @@
 	}
 
 	onMount(() => {
+		console.log('in on mount', $productFormState)
 		if (product?.categories?.length) {
 			categories = product.categories.map((categoryName) => ({
 				key: createSlugId(categoryName),
@@ -140,57 +147,31 @@
 				checked: true,
 			}))
 		}
+
 		if (product?.shipping && stall?.shipping) {
-			currentShippings = product.shipping.map((sh) => {
-				const stallShipping = stall?.shipping?.find((s) => s.id == sh.shippingId)
-				return {
-					shipping: stallShipping ?? null,
-					extraCost: sh.cost ?? '',
-				}
-			})
+			currentShippings = product.shipping.map((sh) => ({
+				shipping: stall?.shipping?.find((s) => s.id == sh.shippingId) ?? null,
+				extraCost: sh.cost ?? '',
+			}))
 		}
-
-		if ($productFormState && !product) {
-			const state = $productFormState
-			currentStallIdentifier = state.stallIdentifier ?? null
-			categories = state.categories
-			images = state.images
-			tab = state.tab ?? 'basic'
-			currentShippings = state.shippings
-
-			const form = document.querySelector('form') as HTMLFormElement
-			if (form) {
-				const titleInput = form.querySelector('[name="title"]') as HTMLInputElement
-				const descriptionInput = form.querySelector('[name="description"]') as HTMLTextAreaElement
-				const priceInput = form.querySelector('[name="price"]') as HTMLInputElement
-				const quantityInput = form.querySelector('[name="quantity"]') as HTMLInputElement
-
-				if (titleInput) titleInput.value = state.title
-				if (descriptionInput) descriptionInput.value = state.description
-				if (priceInput) priceInput.value = state.price
-				if (quantityInput) quantityInput.value = state.quantity
-			}
-		}
+		initializeFormState()
 	})
 
-	function saveFormState() {
-		const form = document.querySelector('form') as HTMLFormElement
-		if (form) {
-			$productFormState = {
-				title: (form.querySelector('[name="title"]') as HTMLInputElement)?.value ?? '',
-				description: (form.querySelector('[name="description"]') as HTMLTextAreaElement)?.value ?? '',
-				price: (form.querySelector('[name="price"]') as HTMLInputElement)?.value ?? '',
-				quantity: (form.querySelector('[name="quantity"]') as HTMLInputElement)?.value ?? '',
-				stallIdentifier: currentStallIdentifier ?? null,
-				categories,
-				images,
-				shippings: currentShippings,
-				tab,
-			}
+	$: if (!isLoading) {
+		$productFormState = {
+			name,
+			description,
+			price,
+			quantity,
+			stallIdentifier: currentStallIdentifier,
+			categories: [...categories],
+			images: [...images],
+			shippings: currentShippings.map((shipping) => ({
+				shipping: shipping.shipping ? { ...shipping.shipping } : null,
+				extraCost: shipping.extraCost,
+			})),
+			tab,
 		}
-	}
-	$: {
-		currentStallIdentifier, categories, images, currentShippings, tab, saveFormState()
 	}
 
 	const activeTab =
@@ -208,6 +189,26 @@
 		dispatch('success', null)
 		isLoading = false
 	}
+
+	function initializeFormState() {
+		if (!$productFormState || product) return
+
+		const state = $productFormState
+		Object.assign(
+			{
+				name,
+				description,
+				price,
+				quantity,
+				currentStallIdentifier,
+				categories,
+				images,
+				currentShippings,
+				tab,
+			},
+			state,
+		)
+	}
 </script>
 
 {#if $stallsQuery.isLoading}
@@ -220,7 +221,6 @@
 	<form
 		on:submit|preventDefault={(sEvent) => handleSubmit(sEvent, stall)}
 		on:invalid|capture={handleInvalidForm}
-		on:input={() => saveFormState()}
 		class="flex flex-col gap-4 grow h-full"
 	>
 		<Tabs.Root bind:value={tab} class="p-4">
@@ -236,11 +236,11 @@
 					<Label for="title" class="font-bold required-mark">Title</Label>
 					<Input
 						data-tooltip="Your product's name"
-						value={product?.name ?? ''}
+						bind:value={name}
 						required
 						class={`border-2 border-black ${validationErrors['name'] ? 'ring-2 ring-red-500' : ''}`}
 						type="text"
-						name="title"
+						name="name"
 						placeholder="e.g. Fancy Wears"
 					/>
 					{#if validationErrors['name']}
@@ -254,7 +254,7 @@
 					<Label for="description" class="font-bold">Description (Recommended)</Label>
 					<Textarea
 						data-tooltip="More information on your product"
-						value={product?.description ?? ''}
+						bind:value={description}
 						class={`border-2 border-black ${validationErrors['description'] ? 'ring-2 ring-red-500' : ''}`}
 						placeholder="Description"
 						name="description"
@@ -271,6 +271,7 @@
 						<Label for="price" class="font-bold required-mark">Price<small class="font-light">({stall?.currency})</small></Label>
 						<Input
 							data-tooltip="The cost of your product"
+							bind:value={price}
 							class={`border-2 border-black ${validationErrors['price'] ? 'ring-2 ring-red-500' : ''}`}
 							min={0}
 							type="text"
@@ -278,7 +279,6 @@
 							name="price"
 							placeholder="e.g. 30"
 							required
-							value={product?.price ?? ''}
 						/>
 						{#if validationErrors['price']}
 							<p class="text-red-500 text-sm mt-1">
@@ -291,7 +291,7 @@
 						<Label title="quantity" for="quantity" class="font-bold required-mark">Quantity</Label>
 						<Input
 							data-tooltip="The available stock for this product"
-							value={product?.quantity ?? ''}
+							bind:value={quantity}
 							required
 							class={`border-2 border-black ${validationErrors['quantity'] ? 'ring-2 ring-red-500' : ''}`}
 							type="number"

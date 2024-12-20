@@ -4,13 +4,13 @@ import { writable } from 'svelte/store'
 
 import type { ProductImage } from '@plebeian/database'
 
-type ProductFormState = {
+export type ProductFormState = {
 	tab?: 'basic' | 'categories' | 'images' | 'shippings'
-	title: string
+	name: string
 	description: string
 	price: string
 	quantity: string
-	stallIdentifier: string | null
+	stallIdentifier: string | undefined
 	categories: Category[]
 	images: Partial<ProductImage>[]
 	shippings: { shipping: Partial<RichShippingInfo> | null; extraCost: string }[]
