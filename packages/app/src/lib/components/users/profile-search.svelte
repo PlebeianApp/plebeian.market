@@ -161,7 +161,7 @@
 	{:else}
 		<Popover.Trigger />
 	{/if}
-	<Popover.Content class=" max-h-[350px] overflow-y-auto p-0">
+	<Popover.Content class="max-h-[350px] overflow-y-auto p-0">
 		<Command.Root>
 			{#if commandInput}
 				<Command.Input placeholder="Search by name or npub..." bind:value={searchQuery} />

@@ -91,7 +91,7 @@
 	<div class="flex gap-2">
 		<DropdownMenu.Root>
 			<DropdownMenu.Trigger asChild let:builder>
-				<Button variant="outline" iconPosition="right" class=" justify-between" builders={[builder]}>
+				<Button variant="outline" iconPosition="right" class="justify-between" builders={[builder]}>
 					{@const capitalizedType = userRole.charAt(0).toUpperCase() + userRole.slice(1)}
 					{capitalizedType} Actions
 					<ChevronDown slot="icon" class="h-4 w-4" />

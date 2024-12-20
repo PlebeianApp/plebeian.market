@@ -41,14 +41,10 @@
 		}
 	})
 
-	$: if (isOpen && !historyState) {
-		if (isOpen && !historyState) {
-			historyState = 'drawer'
-			pushState('', { historyState })
-		} else if (!isOpen && historyState) {
-			replaceState('', { historyState: null })
-			historyState = null
-		}
+	$: if (isOpen !== !!historyState) {
+		historyState = isOpen ? 'drawer' : null
+		const method = isOpen ? pushState : replaceState
+		method('', { historyState })
 	}
 </script>
 

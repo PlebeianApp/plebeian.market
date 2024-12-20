@@ -252,13 +252,13 @@
 <form class="flex flex-col justify-between gap-2 h-[calc(100vh-8rem)]" on:submit={handleSubmit} on:invalid|capture={handleInvalidForm}>
 	<div class="grid w-full items-center gap-4">
 		<div>
-			<Label for="userImage" class="font-bold required-mark">Header image (Recommended)</Label>
+			<Label for="userImage" class="font-bold">Header image (Recommended)</Label>
 			<Collapsible.Root bind:open={headerImageOpen}>
 				<Collapsible.Trigger asChild let:builder>
 					<Button
 						data-tooltip="This image helps customers recognize your stall"
 						builders={[builder]}
-						variant="ghost"
+						variant="tertiary"
 						size="sm"
 						class="w-full p-0"
 					>
@@ -302,10 +302,10 @@
 			{/if}
 		</div>
 		<div class="grid w-full items-center gap-1.5">
-			<Label for="from" class="font-bold required-mark">Shipping From (Recommended)</Label>
+			<Label for="from" class="font-bold">Shipping From (Recommended)</Label>
 			<Collapsible.Root bind:open={shippingFromOpen} class="flex flex-col gap-2">
 				<Collapsible.Trigger asChild let:builder>
-					<Button variant="ghost" builders={[builder]} size="sm" class="w-full p-0">
+					<Button variant="tertiary" builders={[builder]} size="sm" class="w-full p-0">
 						<span class="i-ion-chevron-expand" />
 					</Button>
 				</Collapsible.Trigger>
@@ -546,7 +546,7 @@
 			</DropdownMenu.Root>
 		</div>
 	</div>
-	<div>
+	<div class=" flex flex-col gap-2">
 		<Button
 			variant="primary"
 			id="stall-save-button"
@@ -555,7 +555,7 @@
 			class="w-full">Save</Button
 		>
 		{#if stall?.id}
-			<Button variant="destructive" type="button" disabled={isLoading} on:click={handleDelete}>Delete</Button>
+			<Button variant="destructive" type="button" class="w-full" disabled={isLoading} on:click={handleDelete}>Delete</Button>
 		{/if}
 	</div>
 </form>
