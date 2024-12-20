@@ -125,6 +125,12 @@
 						{/key}
 					</div>
 				</div>
+			{:else}
+				<div class="container bg-muted p-16 flex flex-col items-center justify-center h-[12vh] max-w-fit">
+					<div class="flex flex-row gap-2 items-center">
+						Once you’ve <Button variant="link" class="p-0" on:click={openDrawerForNewStall}>added a stall</Button> they will be displayed here
+					</div>
+				</div>
 			{/if}
 
 			{#if productsMixture.length}
@@ -134,6 +140,13 @@
 						{#each productsMixture as item (item.id)}
 							<ProductItem product={item} />
 						{/each}
+					</div>
+				</div>
+			{:else if stallsMixture.length}
+				<div class="container bg-muted p-16 flex flex-col items-center justify-center h-[12vh] max-w-fit">
+					<div class="flex flex-row gap-2 items-center">
+						Once you’ve <Button variant="link" class="p-0" on:click={openDrawerForNewProduct}>added a product</Button> they will be displayed
+						here
 					</div>
 				</div>
 			{/if}

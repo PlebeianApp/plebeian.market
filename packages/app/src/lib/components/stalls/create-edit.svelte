@@ -266,7 +266,13 @@
 					</Button>
 				</Collapsible.Trigger>
 				<Collapsible.Content>
-					<SingleImage src={headerImage} index={-1} imagesLength={1} on:save={({ detail }) => (headerImage = detail.url)} />
+					<SingleImage
+						forSingle={true}
+						src={headerImage}
+						index={-1}
+						imagesLength={1}
+						on:save={({ detail }) => (headerImage = detail.url)}
+					/>
 				</Collapsible.Content>
 			</Collapsible.Root>
 		</div>
