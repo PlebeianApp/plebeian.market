@@ -113,7 +113,6 @@
 
 			const productData = prepareProductData(formData, stall, sortedImages, shippingData, product!)
 			validationErrors = validateForm(productData, get(forbiddenPatternStore).createProductEventSchema)
-			console.log('product data', productData)
 			if (Object.keys(validationErrors).length > 0) {
 				toast.error('Please correct the errors in the form')
 				isLoading = false
@@ -139,7 +138,6 @@
 	}
 
 	onMount(() => {
-		console.log('in on mount', $productFormState)
 		if (product?.categories?.length) {
 			categories = product.categories.map((categoryName) => ({
 				key: createSlugId(categoryName),
