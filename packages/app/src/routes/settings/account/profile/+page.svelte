@@ -90,12 +90,22 @@
 
 			<div class="grid w-full items-center gap-1.5">
 				<Label for="userImage" class="font-bold">Banner image</Label>
-				<SingleImage src={editingActiveUser?.banner ?? null} on:save={handleSaveImage('banner')} />
+				<SingleImage
+					src={editingActiveUser?.banner ?? null}
+					index={-1}
+					imagesLength={1}
+					on:save={({ detail }) => (editingActiveUser.banner = detail.url)}
+				/>
 			</div>
 
-			<div class="grid items-center gap-1.5 w-28">
+			<div class="grid items-center gap-1.5 w-48 aspect-square">
 				<Label for="userImage" class="font-bold">Profile image</Label>
-				<SingleImage src={editingActiveUser?.image ?? null} on:save={handleSaveImage('image')} />
+				<SingleImage
+					src={editingActiveUser?.image ?? null}
+					index={-1}
+					imagesLength={1}
+					on:save={({ detail }) => (editingActiveUser.image = detail.url)}
+				/>
 			</div>
 
 			<div class="grid w-full items-center gap-1.5">
