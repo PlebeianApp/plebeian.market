@@ -2,12 +2,9 @@
 	import { Button } from '$lib/components/ui/button'
 	import * as Dialog from '$lib/components/ui/dialog'
 	import { dialogs } from '$lib/stores/dialog'
+	import { copyToClipboard } from '$lib/utils'
 
 	export let nsec: string
-
-	function copyToClipboard(text: string) {
-		navigator.clipboard.writeText(text)
-	}
 
 	function handlePrivKeyConfirmation() {
 		dialogs.hide()
