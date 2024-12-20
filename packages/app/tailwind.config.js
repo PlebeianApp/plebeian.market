@@ -90,6 +90,9 @@ const config = {
 				'xl': '1280px',
 				'2xl': '1536px',
 			  },
+			  width: {
+				'popover': 'calc(100% - 2vw)',
+			  }
 		},
 	},
 }

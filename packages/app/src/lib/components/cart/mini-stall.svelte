@@ -4,6 +4,7 @@
 	import { createStallQuery } from '$lib/fetch/stalls.queries'
 	import { cart } from '$lib/stores/cart'
 	import { truncateString } from '$lib/utils'
+	import { ChevronDown } from 'lucide-svelte'
 
 	import Spinner from '../assets/spinner.svelte'
 	import { Button } from '../ui/button'
@@ -42,7 +43,7 @@
 		{#if mode === 'edit'}
 			<DropdownMenu.Root>
 				<DropdownMenu.Trigger asChild let:builder>
-					<Button variant="tertiary" class="border-2 border-black h-8" builders={[builder]}>
+					<Button variant="tertiary" iconPosition="right" class="border-2 border-black h-8 justify-between" builders={[builder]}>
 						{#if $stallQuery.data?.stall?.shipping?.length && currentShippingMethodId}
 							{@const method = $stallQuery.data?.stall?.shipping?.find((m) => m.id === currentShippingMethodId)}
 							{#if method}
@@ -52,6 +53,7 @@
 						{:else}
 							Select shipping method
 						{/if}
+						<ChevronDown slot="icon" class="h-4 w-4" />
 					</Button>
 				</DropdownMenu.Trigger>
 				<DropdownMenu.Content class="w-56">
