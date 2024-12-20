@@ -290,7 +290,6 @@ export const deleteProductMutation = createMutation(
 			queryClient.invalidateQueries({
 				queryKey: stallKeys.filtered({ userId: $ndkStore.activeUser?.pubkey }),
 			})
-			goto('/')
 		},
 	},
 	queryClient,

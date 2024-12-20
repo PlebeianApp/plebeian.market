@@ -15,12 +15,13 @@
 	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
 	import { openDrawerForNewStall } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
+	import { productFormState } from '$lib/stores/product-form'
 	import { handleInvalidForm, parseCoordinatesString } from '$lib/utils'
 	import { deleteEvent } from '$lib/utils/nostr.utils'
 	import { prepareProductData } from '$lib/utils/product.utils'
 	import { validateForm } from '$lib/utils/zod.utils'
 	import { ChevronDown } from 'lucide-svelte'
-	import { createEventDispatcher, onMount } from 'svelte'
+	import { createEventDispatcher, onDestroy, onMount } from 'svelte'
 	import { toast } from 'svelte-sonner'
 	import { get } from 'svelte/store'
 
@@ -42,13 +43,18 @@
 	let images: Partial<ProductImage>[] = []
 	let currentShippings: { shipping: Partial<RichShippingInfo> | null; extraCost: string }[] = []
 	let validationErrors: ValidationErrors = {}
+	let tab: 'basic' | 'categories' | 'images' | 'shippings' = 'basic'
+	let name = $productFormState?.name || product?.name || ''
+	let description = $productFormState?.description || product?.description || ''
+	let price = $productFormState?.price || product?.price?.toString() || ''
+	let quantity = $productFormState?.quantity || product?.quantity?.toString() || ''
 
 	$: stallsQuery = createStallsByFilterQuery({
 		userId: $ndkStore.activeUser?.pubkey,
 		pageSize: 999,
 	})
 
-	$: currentStallIdentifier = forStall?.split(':')[2] || product?.stall_id || $stallsQuery.data?.stalls[0]?.identifier
+	$: currentStallIdentifier = forStall?.split(':')[2] || product?.stall_id || $stallsQuery.data?.stalls[0]?.identifier || undefined
 
 	$: {
 		if ($stallsQuery.data?.stalls.length) {
@@ -66,13 +72,14 @@
 				})) ?? []
 	}
 
-	$: sortedImages = [...images]?.sort((a, b) => (a.imageOrder ?? 0) - (b.imageOrder ?? 0))
-
 	function updateImages(updatedImages: Partial<ProductImage>[]) {
-		images = updatedImages
-			.map((image, index) => ({ ...image, imageOrder: image.imageOrder ?? index }))
-			?.sort((a, b) => (a.imageOrder ?? 0) - (b.imageOrder ?? 0))
+		images = updatedImages.map((image, index) => ({
+			...image,
+			imageOrder: 'imageOrder' in image ? image.imageOrder : index,
+		}))
 	}
+
+	$: sortedImages = [...images].sort((a, b) => (a.imageOrder ?? 0) - (b.imageOrder ?? 0))
 
 	function handleNewImageAdded(e: CustomEvent<string>) {
 		updateImages([...images, { imageUrl: e.detail, imageOrder: images.length }])
@@ -107,7 +114,6 @@
 
 			const productData = prepareProductData(formData, stall, sortedImages, shippingData, product!)
 			validationErrors = validateForm(productData, get(forbiddenPatternStore).createProductEventSchema)
-
 			if (Object.keys(validationErrors).length > 0) {
 				toast.error('Please correct the errors in the form')
 				isLoading = false
@@ -121,7 +127,9 @@
 			} else {
 				await $createProductMutation.mutateAsync({ product: { ...productData }, categories: categoriesData })
 			}
-
+			setTimeout(() => {
+				productFormState.set(null)
+			}, 0)
 			dispatch('success', null)
 		} catch (error) {
 			toast.error(`Failed to ${product ? 'update' : 'create'} product: ${error instanceof Error ? error.message : String(error)}`)
@@ -138,17 +146,32 @@
 				checked: true,
 			}))
 		}
+
 		if (product?.shipping && stall?.shipping) {
-			currentShippings = product.shipping.map((sh) => {
-				const stallShipping = stall?.shipping?.find((s) => s.id == sh.shippingId)
-				return {
-					shipping: stallShipping ?? null,
-					extraCost: sh.cost ?? '',
-				}
-			})
+			currentShippings = product.shipping.map((sh) => ({
+				shipping: stall?.shipping?.find((s) => s.id == sh.shippingId) ?? null,
+				extraCost: sh.cost ?? '',
+			}))
 		}
-		updateImages(product?.images ?? [])
+		initializeFormState()
 	})
+
+	$: if (!isLoading) {
+		$productFormState = {
+			name,
+			description,
+			price,
+			quantity,
+			stallIdentifier: currentStallIdentifier,
+			categories: [...categories],
+			images: [...images],
+			shippings: currentShippings.map((shipping) => ({
+				shipping: shipping.shipping ? { ...shipping.shipping } : null,
+				extraCost: shipping.extraCost,
+			})),
+			tab,
+		}
+	}
 
 	const activeTab =
 		'w-full font-bold border-b-2 border-black text-black data-[state=active]:border-b-primary data-[state=active]:text-primary'
@@ -165,6 +188,26 @@
 		dispatch('success', null)
 		isLoading = false
 	}
+
+	function initializeFormState() {
+		if (!$productFormState || product) return
+
+		const state = $productFormState
+		Object.assign(
+			{
+				name,
+				description,
+				price,
+				quantity,
+				currentStallIdentifier,
+				categories,
+				images,
+				currentShippings,
+				tab,
+			},
+			state,
+		)
+	}
 </script>
 
 {#if $stallsQuery.isLoading}
@@ -180,7 +223,7 @@
 		class="flex flex-col justify-between gap-2 h-[calc(100vh-8rem)]"
 	>
 		<div>
-			<Tabs.Root value="basic" class="p-4">
+			<Tabs.Root bind:value={tab} class="p-4">
 				<Tabs.List class="w-full justify-around bg-transparent">
 					<Tabs.Trigger value="basic" class={activeTab}>Basic</Tabs.Trigger>
 					<Tabs.Trigger value="categories" class={activeTab}>Categories</Tabs.Trigger>
@@ -193,11 +236,11 @@
 						<Label for="title" class="font-bold required-mark">Title</Label>
 						<Input
 							data-tooltip="Your product's name"
-							value={product?.name ?? ''}
+							bind:value={name}
 							required
 							class={`border-2 border-black ${validationErrors['name'] ? 'ring-2 ring-red-500' : ''}`}
 							type="text"
-							name="title"
+							name="name"
 							placeholder="e.g. Fancy Wears"
 						/>
 						{#if validationErrors['name']}
@@ -211,7 +254,7 @@
 						<Label for="description" class="font-bold">Description (Recommended)</Label>
 						<Textarea
 							data-tooltip="More information on your product"
-							value={product?.description ?? ''}
+							bind:value={description}
 							class={`border-2 border-black ${validationErrors['description'] ? 'ring-2 ring-red-500' : ''}`}
 							placeholder="Description"
 							name="description"
@@ -228,6 +271,7 @@
 							<Label for="price" class="font-bold required-mark">Price<small class="font-light">({stall?.currency})</small></Label>
 							<Input
 								data-tooltip="The cost of your product"
+								bind:value={price}
 								class={`border-2 border-black ${validationErrors['price'] ? 'ring-2 ring-red-500' : ''}`}
 								min={0}
 								type="text"
@@ -235,7 +279,6 @@
 								name="price"
 								placeholder="e.g. 30"
 								required
-								value={product?.price ?? ''}
 							/>
 							{#if validationErrors['price']}
 								<p class="text-red-500 text-sm mt-1">
@@ -248,7 +291,7 @@
 							<Label title="quantity" for="quantity" class="font-bold required-mark">Quantity</Label>
 							<Input
 								data-tooltip="The available stock for this product"
-								value={product?.quantity ?? ''}
+								bind:value={quantity}
 								required
 								class={`border-2 border-black ${validationErrors['quantity'] ? 'ring-2 ring-red-500' : ''}`}
 								type="number"
