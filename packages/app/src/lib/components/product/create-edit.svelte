@@ -44,7 +44,7 @@
 	let currentShippings: { shipping: Partial<RichShippingInfo> | null; extraCost: string }[] = []
 	let validationErrors: ValidationErrors = {}
 	const tabs = ['basic', 'categories', 'images', 'shipping'] as const
-	let tab: (typeof tabs)[number] = tabs[0] 
+	let tab: (typeof tabs)[number] = tabs[0]
 	let name = $productFormState?.name || product?.name || ''
 	let description = $productFormState?.description || product?.description || ''
 	let price = $productFormState?.price || product?.price?.toString() || ''
@@ -474,9 +474,9 @@
 		</div>
 		<div>
 			<div class="flex gap-2 my-4">
-				<Button 
-					variant="outline" 
-					disabled={isLoading || tab === 'basic'} 
+				<Button
+					variant="outline"
+					disabled={isLoading || tab === 'basic'}
 					class="w-full font-bold flex items-center gap-2"
 					on:click={() => {
 						const currentIndex = tabs.indexOf(tab)
@@ -491,9 +491,9 @@
 				{#if tab === tabs[tabs.length - 1]}
 					<Button variant="primary" disabled={isLoading} type="submit" class="w-full font-bold">Save</Button>
 				{:else}
-					<Button 
-						variant="primary" 
-						disabled={isLoading} 
+					<Button
+						variant="primary"
+						disabled={isLoading}
 						class="w-full font-bold"
 						on:click={() => {
 							const currentIndex = tabs.indexOf(tab)
