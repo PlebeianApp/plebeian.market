@@ -61,11 +61,17 @@
 					<div class="w-full">
 						{#if $drawerUI.drawerType === 'cart'}
 							Your cart
-						{:else if $drawerUI.drawerType === 'product' || $drawerUI.drawerType === 'stall'}
+						{:else if $drawerUI.drawerType === 'stall'}
 							{#if $drawerUI.id}
 								<span>Edit {$drawerUI.drawerType}</span>
 							{:else}
 								<span>Create new {$drawerUI.drawerType}</span>
+							{/if}
+						{:else if $drawerUI.drawerType === 'product'}
+							{#if $drawerUI.id}
+								<span>Edit {$drawerUI.drawerType}</span>
+							{:else}
+								<span>Sell A Product</span>
 							{/if}
 						{/if}
 					</div>

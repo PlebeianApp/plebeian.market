@@ -43,7 +43,8 @@
 	let images: Partial<ProductImage>[] = []
 	let currentShippings: { shipping: Partial<RichShippingInfo> | null; extraCost: string }[] = []
 	let validationErrors: ValidationErrors = {}
-	let tab: 'basic' | 'categories' | 'images' | 'shippings' = 'basic'
+	const tabs = ['basic', 'categories', 'images', 'shipping'] as const
+	let tab: (typeof tabs)[number] = tabs[0] 
 	let name = $productFormState?.name || product?.name || ''
 	let description = $productFormState?.description || product?.description || ''
 	let price = $productFormState?.price || product?.price?.toString() || ''
@@ -472,7 +473,39 @@
 			</Tabs.Root>
 		</div>
 		<div>
-			<Button variant="primary" disabled={isLoading} type="submit" class="w-full font-bold my-4">Save</Button>
+			<div class="flex gap-2 my-4">
+				<Button 
+					variant="outline" 
+					disabled={isLoading || tab === 'basic'} 
+					class="w-full font-bold flex items-center gap-2"
+					on:click={() => {
+						const currentIndex = tabs.indexOf(tab)
+						if (currentIndex > 0) {
+							tab = tabs[currentIndex - 1]
+						}
+					}}
+				>
+					<span class="i-tdesign-arrow-left w-5 h-5"></span>
+					Back
+				</Button>
+				{#if tab === tabs[tabs.length - 1]}
+					<Button variant="primary" disabled={isLoading} type="submit" class="w-full font-bold">Save</Button>
+				{:else}
+					<Button 
+						variant="primary" 
+						disabled={isLoading} 
+						class="w-full font-bold"
+						on:click={() => {
+							const currentIndex = tabs.indexOf(tab)
+							if (currentIndex < tabs.length - 1) {
+								tab = tabs[currentIndex + 1]
+							}
+						}}
+					>
+						Next
+					</Button>
+				{/if}
+			</div>
 			{#if product?.id}
 				<Button variant="destructive" disabled={isLoading} class="w-full" on:click={handleDelete}>Delete</Button>
 			{/if}
