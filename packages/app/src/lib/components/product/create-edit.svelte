@@ -476,7 +476,7 @@
 			<div class="flex gap-2 my-4">
 				<Button
 					variant="outline"
-					disabled={isLoading || tab === 'basic'}
+					disabled={isLoading || tab === tabs[0]}
 					class="w-full font-bold flex items-center gap-2"
 					on:click={() => {
 						const currentIndex = tabs.indexOf(tab)
