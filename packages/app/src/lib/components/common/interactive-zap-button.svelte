@@ -134,6 +134,20 @@
 	})
 </script>
 
+{#if isLoading}
+	<Button variant="outline" size="icon" disabled>
+		<Spinner />
+	</Button>
+{:else if zapMethods.length > 0}
+	<Button variant="primary" size="icon" on:click={() => (zapDialogOpen = true)}>
+		<span class="i-mingcute-lightning-line w-6 h-6" />
+	</Button>
+{:else}
+	<Button variant="primary" data-tooltip="User cannot be zapped." size="icon" disabled>
+		<span class="i-mingcute-lightning-line w-6 h-6" />
+	</Button>
+{/if}
+
 <Dialog.Root bind:open={zapDialogOpen}>
 	<Dialog.Content class="max-w-[425px] text-black">
 		<Dialog.Header>
@@ -146,7 +160,7 @@
 		<div class="grid grid-cols-2 gap-2 mb-4">
 			{#each DEFAULT_ZAP_AMOUNTS as { displayText, amount }}
 				<Button
-					variant={amount === zapAmountSats ? 'default' : 'outline'}
+					variant={amount === zapAmountSats ? 'primary' : 'outline'}
 					class="border-2 border-black"
 					on:click={() => (zapAmountSats = amount)}
 					disabled={spinnerShown}
@@ -218,18 +232,4 @@
 		on:zapExpired={() => (zapDialogOpen = false)}
 		on:zapCleanup={() => (spinnerShown = false)}
 	/>
-{/if}
-
-{#if isLoading}
-	<Button variant="outline" size="icon" disabled>
-		<Spinner />
-	</Button>
-{:else if zapMethods.length > 0}
-	<Button variant="primary" size="icon" on:click={() => (zapDialogOpen = true)}>
-		<span class="i-mingcute-lightning-line w-6 h-6" />
-	</Button>
-{:else}
-	<Button variant="primary" data-tooltip="User cannot be zapped." size="icon" disabled>
-		<span class="i-mingcute-lightning-line w-6 h-6" />
-	</Button>
 {/if}

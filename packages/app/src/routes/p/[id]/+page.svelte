@@ -31,7 +31,6 @@
 	$: isMe = $ndkStore.activeUser?.pubkey == id
 	$: userProfileQuery = createUserByIdQuery(id as string)
 	$: stallsQuery = createStallsByFilterQuery({ userId: id })
-	$: console.log('userId', id)
 	$: productsQuery = createProductsByFilterQuery({ userId: id })
 	$: stallsMixture = mergeWithExisting($stallsQuery?.data?.stalls ?? [], nostrStalls, 'id')
 	$: productsMixture = stallsMixture.length
@@ -94,17 +93,10 @@
 					<div class="flex flex-col">
 						<div class="flex flex-row gap-2">
 							{#if isMe}
-								<DropdownMenu.Root>
-									<DropdownMenu.Trigger
-										><Button><span class=" i-tdesign-add-circle w-4 h-4 mx-2" /> <span>Create</span></Button></DropdownMenu.Trigger
-									>
-									<DropdownMenu.Content>
-										<DropdownMenu.Group>
-											<DropdownMenu.Item on:click={openDrawerForNewStall}>Create stall</DropdownMenu.Item>
-											<DropdownMenu.Item on:click={openDrawerForNewProduct}>Create product</DropdownMenu.Item>
-										</DropdownMenu.Group>
-									</DropdownMenu.Content>
-								</DropdownMenu.Root>
+								<Button variant="outline" class="w-full bg-focus hover:bg-yellow-500 gap-2" on:click={openDrawerForNewProduct}>
+									<span class="i-mdi-plus w-5 h-5" />
+									<span>Add {productsMixture.length ? 'a' : 'Your First'} Product</span>
+								</Button>
 							{/if}
 							<InteractiveZapButton userIdToZap={id} profile={$userProfileQuery.data} />
 							<Button size="icon" variant="tertiary" on:click={handleSendMessage}>
