@@ -34,21 +34,23 @@
 		<Button
 			data-tooltip="Manage your nostr relays!"
 			size="icon"
-			variant="secondary"
+			variant="tertiary"
 			class="border border-gray"
 			on:click={() => (isOpen = !isOpen)}
 		>
-			<span class="i-mdi-connection w-5 h-5" />
+			<span class="i-mdi-connection w-6 h-6" />
 		</Button>
 	{/if}
 
 	{#if isOpen}
 		<div class={`bg-white flex flex-col ${mode == 'widget' && 'w-fit p-2 border-black border-2 fixed bottom-0 z-50 gap-2'}`}>
-			{#if mode === 'widget'}
-				<Button size="icon" variant="ghost" on:click={() => (isOpen = !isOpen)}>
-					<span class="i-mdi-close w-5 h-5" />
-				</Button>
-			{/if}
+			<div class="text-end">
+				{#if mode === 'widget'}
+					<Button size="icon" variant="ghost" on:click={() => (isOpen = !isOpen)}>
+						<span class="i-mdi-close w-6 h-6" />
+					</Button>
+				{/if}
+			</div>
 			{#if $ndkStore.pool?.relays.size}
 				<section>
 					<span class=" font-bold">Explicit relays</span> ({$ndkStore.pool?.relays.size}):
