@@ -19,6 +19,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 				msg: 'API Request',
 				method: event.request.method,
 				path: event.url.pathname,
+				ip: event.getClientAddress(),
 				headers: {
 					'user-agent': event.request.headers.get('user-agent'),
 				},
@@ -29,6 +30,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 					msg: 'Rate limit exceeded',
 					method: event.request.method,
 					path: event.url.pathname,
+					ip: event.getClientAddress(),
 					headers: {
 						'user-agent': event.request.headers.get('user-agent'),
 					},
@@ -46,6 +48,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 				method: event.request.method,
 				path: event.url.pathname,
 				status: response.status,
+				ip: event.getClientAddress(),
 				duration,
 			})
 		}
@@ -58,6 +61,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 			msg: 'Request failed',
 			method: event.request.method,
 			path: event.url.pathname,
+			ip: event.getClientAddress(),
 			error: {
 				message: err instanceof Error ? err.message : 'Unknown error',
 				status: err instanceof error ? err.status : 500,
