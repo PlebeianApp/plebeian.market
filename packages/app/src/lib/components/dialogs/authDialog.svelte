@@ -66,10 +66,12 @@
 	</Dialog.Header>
 
 	<Tabs.Root value={tab} class="p-4">
-		<Tabs.List class="w-full justify-around bg-transparent">
-			<Tabs.Trigger value="login-nip07" class={activeTab}>Extension</Tabs.Trigger>
-			<Tabs.Trigger value="login-nsec" class={activeTab}>Private Key</Tabs.Trigger>
-		</Tabs.List>
+		{#if tab !== 'signup'}
+			<Tabs.List class="w-full justify-around bg-transparent">
+				<Tabs.Trigger value="login-nip07" class={activeTab}>Extension</Tabs.Trigger>
+				<Tabs.Trigger value="login-nsec" class={activeTab}>Private Key</Tabs.Trigger>
+			</Tabs.List>
+		{/if}
 		<Tabs.Content value="login-nip07" class="flex flex-col gap-2">
 			<Button
 				on:click={() => handleLogin('NIP07', undefined, checked)}
@@ -111,7 +113,7 @@
 			</form>
 		</Tabs.Content>
 		<Tabs.Content value="signup" class="flex flex-col gap-2">
-			<span class="text-sm text-gray-500">
+			<span>
 				After signing up, we'll generate a unique Nostr keypair, which serves as your username and password. Your private key will be
 				displayed - please save it securely to ensure account recovery.
 				<a href="https://nostr.how/en/get-started" target="_blank" class="underline">Learn more</a>.
