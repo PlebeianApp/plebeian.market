@@ -224,7 +224,7 @@
 		class="flex flex-col justify-between gap-2 h-[calc(100vh-8rem)]"
 	>
 		<div>
-			<Tabs.Root bind:value={tab} class="p-4">
+			<Tabs.Root bind:value={tab}>
 				<Tabs.List class="w-full justify-around bg-transparent">
 					<Tabs.Trigger value="basic" class={activeTab}>Basic</Tabs.Trigger>
 					<Tabs.Trigger value="categories" class={activeTab}>Categories</Tabs.Trigger>
