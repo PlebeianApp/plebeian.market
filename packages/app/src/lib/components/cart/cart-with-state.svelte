@@ -8,8 +8,8 @@
 	const totalProducts = derived(cart, ($cart) => Object.values($cart.products).reduce((total, product) => total + product.amount, 0))
 </script>
 
-<Button variant="primary" class="p-2 sm:flex relative" on:click={openDrawerForCart}>
-	<span class="i-tdesign-cart text-black w-6 h-6"></span>
+<Button variant="secondary" class="p-2 sm:flex relative rounded-md" on:click={openDrawerForCart}>
+	<span class="i-tdesign-cart text-white w-6 h-6"></span>
 	{#if $totalProducts > 0}
 		<span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
 			{$totalProducts}
