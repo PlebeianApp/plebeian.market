@@ -50,12 +50,20 @@
 	let price = $productFormState?.price || product?.price?.toString() || ''
 	let quantity = $productFormState?.quantity || product?.quantity?.toString() || ''
 
+	$: requiredFields = {
+		basic: Boolean(name && price && quantity),
+		shipping: currentShippings.length > 0 && currentShippings.every((s) => s.shipping !== null)
+	} as Record<string, boolean>
+
+	$: nextDisabled = isLoading || !requiredFields[tab]
+
 	$: stallsQuery = createStallsByFilterQuery({
 		userId: $ndkStore.activeUser?.pubkey,
 		pageSize: 999,
 	})
+	$: console.log($stallsQuery)
 
-	$: currentStallIdentifier = forStall?.split(':')[2] || product?.stall_id || $stallsQuery.data?.stalls[0]?.identifier || undefined
+	$: currentStallIdentifier = forStall?.split(':')[2] || product?.stall_id || $stallsQuery?.data?.stalls[0]?.identifier || undefined
 
 	$: {
 		if ($stallsQuery.data?.stalls.length) {
@@ -493,7 +501,7 @@
 				{:else}
 					<Button
 						variant="primary"
-						disabled={isLoading}
+						disabled={nextDisabled}
 						class="w-full font-bold"
 						on:click={() => {
 							const currentIndex = tabs.indexOf(tab)
