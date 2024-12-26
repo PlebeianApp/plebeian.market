@@ -11,16 +11,16 @@
 	import ndkStore from '$lib/stores/ndk'
 	import { balanceOfWorkingNWCs } from '$lib/stores/nwc'
 	import { getAccount } from '$lib/stores/session'
+	import { getHexColorFingerprintFromHexPubkey } from '$lib/utils'
 	import { onMount } from 'svelte'
 
 	import type { PageData } from '../../routes/$types'
 	import CartWithState from './cart/cart-with-state.svelte'
 	import AuthDialog from './dialogs/authDialog.svelte'
-	import CAvatar from './ui/custom-components/c-avatar.svelte'
-	import Avatar from './ui/avatar/avatar.svelte'
-	import AvatarImage from './ui/avatar/avatar-image.svelte'
 	import AvatarFallback from './ui/avatar/avatar-fallback.svelte'
-	import { getHexColorFingerprintFromHexPubkey } from '$lib/utils'
+	import AvatarImage from './ui/avatar/avatar-image.svelte'
+	import Avatar from './ui/avatar/avatar.svelte'
+	import CAvatar from './ui/custom-components/c-avatar.svelte'
 
 	$: ({ appSettings } = $page.data as PageData)
 
@@ -69,8 +69,14 @@
 			{#if $ndkStore.activeUser}
 				<a href={`/p/${$ndkStore.activeUser.profile?.nip05 ? $ndkStore.activeUser.profile?.nip05 : $ndkStore.activeUser.pubkey}`}>
 					<Avatar class="rounded-md border-secondary border-2">
-						<AvatarImage class="rounded-md" src={$ndkStore.activeUser.profile?.image} alt={$ndkStore.activeUser.profile?.name || $ndkStore.activeUser.pubkey} />
-						<AvatarFallback style={`background-color: ${getHexColorFingerprintFromHexPubkey($ndkStore.activeUser.pubkey)}`}><span class="i-tdesign-user-1 w-8 h-8" /></AvatarFallback>
+						<AvatarImage
+							class="rounded-md"
+							src={$ndkStore.activeUser.profile?.image}
+							alt={$ndkStore.activeUser.profile?.name || $ndkStore.activeUser.pubkey}
+						/>
+						<AvatarFallback style={`background-color: ${getHexColorFingerprintFromHexPubkey($ndkStore.activeUser.pubkey)}`}
+							><span class="i-tdesign-user-1 w-8 h-8" /></AvatarFallback
+						>
 					</Avatar>
 				</a>
 			{/if}
