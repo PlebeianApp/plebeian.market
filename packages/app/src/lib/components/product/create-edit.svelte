@@ -25,7 +25,7 @@
 	import { toast } from 'svelte-sonner'
 	import { get } from 'svelte/store'
 
-	import type { ProductImage } from '@plebeian/database'
+	import { shipping, type ProductImage } from '@plebeian/database'
 	import { createSlugId } from '@plebeian/database/utils'
 
 	import { forbiddenPatternStore } from '../../../schema/nostr-events'
@@ -52,7 +52,11 @@
 
 	$: requiredFields = {
 		basic: Boolean(name && price && quantity),
-		shipping: currentShippings.length > 0 && currentShippings.every((s) => s.shipping !== null)
+		categories: true,
+		images: true,
+		shipping: true
+		// shipping: currentShippings.some((s) => s.shipping !== null)
+
 	} as Record<string, boolean>
 
 	$: nextDisabled = isLoading || !requiredFields[tab]
@@ -497,7 +501,7 @@
 					Back
 				</Button>
 				{#if tab === tabs[tabs.length - 1]}
-					<Button variant="primary" disabled={isLoading} type="submit" class="w-full font-bold">Save</Button>
+					<Button variant="primary" disabled={isLoading || nextDisabled} type="submit" class="w-full font-bold">Save</Button>
 				{:else}
 					<Button
 						variant="primary"
