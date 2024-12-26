@@ -5,7 +5,7 @@ import { writable } from 'svelte/store'
 import type { ProductImage } from '@plebeian/database'
 
 export type ProductFormState = {
-	tab?: 'basic' | 'categories' | 'images' | 'shippings'
+	tab?: 'basic' | 'categories' | 'images' | 'shipping'
 	name: string
 	description: string
 	price: string
