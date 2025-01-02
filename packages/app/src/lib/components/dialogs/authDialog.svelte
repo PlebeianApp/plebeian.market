@@ -114,10 +114,10 @@
 		</Tabs.Content>
 		<Tabs.Content value="signup" class="flex flex-col gap-2">
 			<span>
-				After signing up, we'll generate a unique Nostr keypair, which serves as your username and password. Your private key will be
-				displayed - please save it securely to ensure account recovery.
+				Signing up creates a Nostr key pair. Save the private key securely for account recovery.
 				<a href="https://nostr.how/en/get-started" target="_blank" class="underline">Learn more</a>.
 			</span>
+			<span> Your password protects your key pair. </span>
 			<form
 				class="flex flex-col gap-2"
 				on:submit|preventDefault={async (sEvent) => {
