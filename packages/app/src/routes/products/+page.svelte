@@ -96,8 +96,8 @@
 								</Pagination.Item>
 							</Pagination.Content>
 						</Pagination.Root>
-					{:else}
-						No results for your query :)
+					{:else if !$productsQuery.isLoading && $productsQuery.data?.products.length === 0}
+						<p class="text-center">No results for your query :)</p>
 					{/if}
 				</div>
 			</div>
