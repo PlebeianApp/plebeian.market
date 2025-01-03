@@ -21,7 +21,7 @@
 	import { prepareProductData } from '$lib/utils/product.utils'
 	import { validateForm } from '$lib/utils/zod.utils'
 	import { ChevronDown } from 'lucide-svelte'
-	import { createEventDispatcher, onDestroy, onMount } from 'svelte'
+	import { createEventDispatcher, onMount } from 'svelte'
 	import { toast } from 'svelte-sonner'
 	import { get } from 'svelte/store'
 
@@ -43,7 +43,7 @@
 	let images: Partial<ProductImage>[] = []
 	let currentShippings: { shipping: Partial<RichShippingInfo> | null; extraCost: string }[] = []
 	let validationErrors: ValidationErrors = {}
-	const tabs = ['basic', 'categories', 'images', 'shipping'] as const
+	const tabs = ['basic', 'categories', 'images', 'shippings'] as const
 	let tab: (typeof tabs)[number] = tabs[0]
 	let name = $productFormState?.name || product?.name || ''
 	let description = $productFormState?.description || product?.description || ''
@@ -174,6 +174,20 @@
 		}
 	}
 
+	function goToNextTab() {
+		const currentIndex = tabs.indexOf(tab)
+		if (currentIndex < tabs.length - 1) {
+			tab = tabs[currentIndex + 1]
+		}
+	}
+
+	function goToPreviousTab() {
+		const currentIndex = tabs.indexOf(tab)
+		if (currentIndex > 0) {
+			tab = tabs[currentIndex - 1]
+		}
+	}
+
 	const activeTab =
 		'w-full font-bold border-b-2 border-black text-black data-[state=active]:border-b-primary data-[state=active]:text-primary'
 
@@ -229,7 +243,7 @@
 					<Tabs.Trigger value="basic" class={activeTab}>Basic</Tabs.Trigger>
 					<Tabs.Trigger value="categories" class={activeTab}>Categories</Tabs.Trigger>
 					<Tabs.Trigger data-tooltip="Images help customers recognize your product" value="images" class={activeTab}>Images</Tabs.Trigger>
-					<Tabs.Trigger value="shipping" class={activeTab}>Shipping</Tabs.Trigger>
+					<Tabs.Trigger value="shippings" class={activeTab}>Shipping</Tabs.Trigger>
 				</Tabs.List>
 
 				<Tabs.Content value="basic" class="flex flex-col gap-2">
@@ -394,7 +408,7 @@
 					/>
 				</Tabs.Content>
 
-				<Tabs.Content value="shipping" class="flex flex-col gap-2 p-2">
+				<Tabs.Content value="shippings" class="flex flex-col gap-2 p-2">
 					{#each currentShippings as shippingMethod, i (shippingMethod.shipping?.id)}
 						<div class="grid w-full items-center gap-1.5">
 							<Label for="stall-shippings" class="font-bold required-mark">Shipping Method #{i + 1}</Label>
@@ -478,12 +492,7 @@
 					variant="outline"
 					disabled={isLoading || tab === tabs[0]}
 					class="w-full font-bold flex items-center gap-2"
-					on:click={() => {
-						const currentIndex = tabs.indexOf(tab)
-						if (currentIndex > 0) {
-							tab = tabs[currentIndex - 1]
-						}
-					}}
+					on:click={goToPreviousTab}
 				>
 					<span class="i-tdesign-arrow-left w-5 h-5"></span>
 					Back
@@ -491,19 +500,7 @@
 				{#if tab === tabs[tabs.length - 1]}
 					<Button variant="primary" disabled={isLoading} type="submit" class="w-full font-bold">Save</Button>
 				{:else}
-					<Button
-						variant="primary"
-						disabled={isLoading}
-						class="w-full font-bold"
-						on:click={() => {
-							const currentIndex = tabs.indexOf(tab)
-							if (currentIndex < tabs.length - 1) {
-								tab = tabs[currentIndex + 1]
-							}
-						}}
-					>
-						Next
-					</Button>
+					<Button variant="primary" disabled={isLoading} class="w-full font-bold" on:click={goToNextTab}>Next</Button>
 				{/if}
 			</div>
 			{#if product?.id}
