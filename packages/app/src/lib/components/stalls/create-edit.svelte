@@ -530,6 +530,7 @@
 				{/each}
 				<div class="flex gap-2 justify-end">
 					<Button
+						id="add-shipping-method"
 						data-tooltip="Provide different shipping options for your customers!"
 						on:click={() => addShipping()}
 						variant="outline"
@@ -568,6 +569,7 @@
 	<div>
 		<div class="flex gap-2 my-4">
 			<Button
+				id="prev-tab-button"
 				variant="outline"
 				disabled={isLoading || currentTab === tabs[0]}
 				class="w-full font-bold flex items-center gap-2"
@@ -578,9 +580,11 @@
 			</Button>
 
 			{#if currentTab === tabs[tabs.length - 1]}
-				<Button variant="primary" disabled={isLoading || !changed} type="submit" class="w-full font-bold">Save</Button>
+				<Button id="save-stall-button" variant="primary" disabled={isLoading || !changed} type="submit" class="w-full font-bold"
+					>Save</Button
+				>
 			{:else}
-				<Button variant="primary" disabled={isLoading} class="w-full font-bold" on:click={goToNextTab}>Next</Button>
+				<Button id="next-tab-button" variant="primary" disabled={isLoading} class="w-full font-bold" on:click={goToNextTab}>Next</Button>
 			{/if}
 		</div>
 
