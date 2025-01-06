@@ -617,8 +617,20 @@ export const deleteProduct = async (productId: string): Promise<string> => {
 	}
 
 	try {
-		await db.delete(products).where(eq(products.id, productId)).execute()
-		return productId
+		const result = await db.transaction(async (tx) => {
+			const deletedProduct = await tx.delete(products).where(eq(products.id, productId)).returning()
+
+			if (!deletedProduct.length) {
+				tx.rollback()
+				error(500, 'Failed to delete product')
+			}
+
+			await tx.delete(eventTags).where(eq(eventTags.eventId, productId))
+
+			return productId
+		})
+
+		return result
 	} catch (e) {
 		error(500, `Failed to delete product: ${e}`)
 	}

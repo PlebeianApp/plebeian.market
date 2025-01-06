@@ -572,13 +572,24 @@ export const deleteStall = async (stallId: string): Promise<string> => {
 		error(404, 'Not found')
 	}
 
-	const deleteSuccess = await db.delete(stalls).where(eq(stalls.id, stallId)).execute()
+	try {
+		const result = await db.transaction(async (tx) => {
+			const deletedStall = await tx.delete(stalls).where(eq(stalls.id, stallId)).returning()
 
-	if (deleteSuccess) {
-		return stallId
+			if (!deletedStall.length) {
+				tx.rollback()
+				error(500, 'Failed to delete stall')
+			}
+
+			await tx.delete(eventTags).where(eq(eventTags.eventId, stallId))
+
+			return stallId
+		})
+
+		return result
+	} catch (e) {
+		error(500, 'Failed to delete stall')
 	}
-
-	error(500, 'Failed to delete stall')
 }
 
 export const stallExists = async (stallId: string): Promise<ExistsResult> => {
