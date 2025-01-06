@@ -290,27 +290,16 @@ export const eventTags = sqliteTable(
 )
 
 // Products
-export const products = sqliteTable(
-	'products',
-	{
-		...standardColumns,
-		...standardProductColumns,
-		...bannableItemColumns,
-		productType: text('product_type', { enum: Object.values(PRODUCT_TYPES) as NonEmptyArray<ProductTypes> })
-			.notNull()
-			.default('simple'),
-		parentId: text('parent_id').references((): AnySQLiteColumn => products.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
-		price: numeric('price').notNull(),
-	},
-	(table) => ({
-		stallCurrencyFk: foreignKey({
-			columns: [table.stallId, table.currency],
-			foreignColumns: [stalls.id, stalls.currency],
-		})
-			.onDelete('cascade')
-			.onUpdate('cascade'),
-	}),
-)
+export const products = sqliteTable('products', {
+	...standardColumns,
+	...standardProductColumns,
+	...bannableItemColumns,
+	productType: text('product_type', { enum: Object.values(PRODUCT_TYPES) as NonEmptyArray<ProductTypes> })
+		.notNull()
+		.default('simple'),
+	parentId: text('parent_id').references((): AnySQLiteColumn => products.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
+	price: numeric('price').notNull(),
+})
 
 export const productToEventsRelations = relations(products, ({ many }) => ({
 	categories: many(eventTags),
