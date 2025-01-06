@@ -68,16 +68,13 @@
 		<div class="flex items-center gap-4">
 			{#if $ndkStore.activeUser}
 				<a href={`/p/${$ndkStore.activeUser.profile?.nip05 ? $ndkStore.activeUser.profile?.nip05 : $ndkStore.activeUser.pubkey}`}>
-					<Avatar class="rounded-md border-secondary border-2">
-						<AvatarImage
-							class="rounded-md"
-							src={$ndkStore.activeUser.profile?.image}
-							alt={$ndkStore.activeUser.profile?.name || $ndkStore.activeUser.pubkey}
-						/>
-						<AvatarFallback style={`background-color: ${getHexColorFingerprintFromHexPubkey($ndkStore.activeUser.pubkey)}`}
-							><span class="i-tdesign-user-1 w-8 h-8" /></AvatarFallback
-						>
-					</Avatar>
+					<CAvatar
+						pubkey={$ndkStore.activeUser.pubkey}
+						profile={$ndkStore.activeUser.profile}
+						avatarClass="rounded-md border-secondary border-2"
+						imageClass="rounded-md"
+						fallbackClass="rounded-md"
+					/>
 				</a>
 			{/if}
 			<Button variant="secondary" class="sm:flex p-2 relative rounded-md" href="/dash/messages">
