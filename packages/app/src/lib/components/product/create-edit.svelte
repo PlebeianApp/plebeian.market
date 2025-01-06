@@ -218,14 +218,6 @@
 		dispatch('success', null)
 		isLoading = false
 	}
-
-	function handleNavigation(direction: 'next' | 'previous') {
-		if (direction === 'next' && $productFormStore.tab !== PRODUCT_FORM_TABS[PRODUCT_FORM_TABS.length - 1]) {
-			productFormStore.nextTab()
-		} else if (direction === 'previous' && $productFormStore.tab !== PRODUCT_FORM_TABS[0]) {
-			productFormStore.previousTab()
-		}
-	}
 </script>
 
 {#if $stallsQuery.isLoading}
@@ -495,7 +487,7 @@
 					variant="outline"
 					disabled={isLoading}
 					class="w-full font-bold flex items-center gap-2"
-					on:click={() => handleNavigation('previous')}
+					on:click={() => productFormStore.previousTab()}
 				>
 					<span class="i-tdesign-arrow-left w-5 h-5"></span>
 					Back
@@ -503,7 +495,7 @@
 				{#if $productFormStore.tab === PRODUCT_FORM_TABS[PRODUCT_FORM_TABS.length - 1]}
 					<Button variant="primary" disabled={isLoading} type="submit" class="w-full font-bold">Save</Button>
 				{:else}
-					<Button variant="primary" disabled={isLoading} class="w-full font-bold" on:click={() => handleNavigation('next')}>Next</Button>
+					<Button variant="primary" disabled={isLoading} class="w-full font-bold" on:click={() => productFormStore.nextTab()}>Next</Button>
 				{/if}
 			</div>
 			{#if product?.id}
