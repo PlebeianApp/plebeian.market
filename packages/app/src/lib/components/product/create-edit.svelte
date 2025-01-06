@@ -15,13 +15,13 @@
 	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
 	import { openDrawerForNewStall } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
-	import { productFormState } from '$lib/stores/product-form'
+	import { PRODUCT_FORM_TABS, productFormStore } from '$lib/stores/product-form'
 	import { handleInvalidForm, parseCoordinatesString } from '$lib/utils'
 	import { deleteEvent } from '$lib/utils/nostr.utils'
 	import { prepareProductData } from '$lib/utils/product.utils'
 	import { validateForm } from '$lib/utils/zod.utils'
 	import { ChevronDown } from 'lucide-svelte'
-	import { createEventDispatcher, onMount } from 'svelte'
+	import { createEventDispatcher, onMount, tick } from 'svelte'
 	import { toast } from 'svelte-sonner'
 	import { get } from 'svelte/store'
 
@@ -43,12 +43,10 @@
 	let images: Partial<ProductImage>[] = []
 	let currentShippings: { shipping: Partial<RichShippingInfo> | null; extraCost: string }[] = []
 	let validationErrors: ValidationErrors = {}
-	const tabs = ['basic', 'categories', 'images', 'shippings'] as const
-	let tab: (typeof tabs)[number] = tabs[0]
-	let name = $productFormState?.name || product?.name || ''
-	let description = $productFormState?.description || product?.description || ''
-	let price = $productFormState?.price || product?.price?.toString() || ''
-	let quantity = $productFormState?.quantity || product?.quantity?.toString() || ''
+	let name = ''
+	let description = ''
+	let price = ''
+	let quantity = ''
 
 	$: stallsQuery = createStallsByFilterQuery({
 		userId: $ndkStore.activeUser?.pubkey,
@@ -58,19 +56,40 @@
 	$: currentStallIdentifier = forStall?.split(':')[2] || product?.stall_id || $stallsQuery.data?.stalls[0]?.identifier || undefined
 
 	$: {
-		if ($stallsQuery.data?.stalls.length) {
-			stall = $stallsQuery.data.stalls.find((s) => s.identifier === currentStallIdentifier) || $stallsQuery.data.stalls[0]
+		if ($productFormStore && !product && !isLoading) {
+			const updates = {
+				categories: $productFormStore.categories?.length && !categories.length,
+				images: $productFormStore.images?.length && !images.length,
+				shippings: $productFormStore.shippings?.length && !currentShippings.length,
+			}
+
+			if (updates.categories) {
+				categories = $productFormStore.categories.map((category) => ({ ...category }))
+			}
+			if (updates.images) {
+				images = $productFormStore.images.map((image) => ({ ...image }))
+			}
+			if (updates.shippings) {
+				currentShippings = $productFormStore.shippings.map((shipping) => ({
+					shipping: shipping.shipping ? { ...shipping.shipping } : null,
+					extraCost: shipping.extraCost,
+				}))
+			}
 		}
 	}
 
 	$: {
-		currentShippings =
-			stall?.shipping
-				?.filter((s) => product?.shipping?.some((sh) => s.id == sh.shippingId?.split(':')[0] || s.id == sh.shippingId))
-				.map((s) => ({
-					shipping: s,
-					extraCost: product?.shipping?.find((sh) => s.id == sh.shippingId?.split(':')[0] || s.id == sh.shippingId)?.cost ?? '',
-				})) ?? []
+		if ($stallsQuery.data?.stalls.length) {
+			stall = $stallsQuery.data.stalls.find((s) => s.identifier === currentStallIdentifier) || $stallsQuery.data.stalls[0]
+
+			currentShippings =
+				stall?.shipping
+					?.filter((s) => product?.shipping?.some((sh) => s.id == sh.shippingId?.split(':')[0] || s.id == sh.shippingId))
+					.map((s) => ({
+						shipping: s,
+						extraCost: product?.shipping?.find((sh) => s.id == sh.shippingId?.split(':')[0] || s.id == sh.shippingId)?.cost ?? '',
+					})) ?? []
+		}
 	}
 
 	function updateImages(updatedImages: Partial<ProductImage>[]) {
@@ -129,7 +148,7 @@
 				await $createProductMutation.mutateAsync({ product: { ...productData }, categories: categoriesData })
 			}
 			setTimeout(() => {
-				productFormState.set(null)
+				productFormStore.reset()
 			}, 0)
 			dispatch('success', null)
 		} catch (error) {
@@ -140,51 +159,47 @@
 	}
 
 	onMount(() => {
-		if (product?.categories?.length) {
-			categories = product.categories.map((categoryName) => ({
-				key: createSlugId(categoryName),
-				name: categoryName,
-				checked: true,
-			}))
-		}
+		if ($productFormStore) {
+			name = $productFormStore.name || ''
+			description = $productFormStore.description || ''
+			price = $productFormStore.price?.toString() || ''
+			quantity = $productFormStore.quantity?.toString() || ''
 
-		if (product?.shipping && stall?.shipping) {
-			currentShippings = product.shipping.map((sh) => ({
-				shipping: stall?.shipping?.find((s) => s.id == sh.shippingId) ?? null,
-				extraCost: sh.cost ?? '',
-			}))
+			if ($productFormStore.categories?.length) {
+				categories = $productFormStore.categories.map((category) => ({
+					key: category.key,
+					name: category.name,
+					checked: true,
+				}))
+			}
+
+			if ($productFormStore.shippings && stall?.shipping) {
+				currentShippings = $productFormStore.shippings.map((sh) => ({
+					shipping: stall?.shipping?.find((s) => s.id == sh.shipping?.id) ?? null,
+					extraCost: sh.extraCost ?? '',
+				}))
+			}
 		}
-		initializeFormState()
 	})
 
-	$: if (!isLoading) {
-		$productFormState = {
-			name,
-			description,
-			price,
-			quantity,
-			stallIdentifier: currentStallIdentifier,
-			categories: [...categories],
-			images: [...images],
-			shippings: currentShippings.map((shipping) => ({
-				shipping: shipping.shipping ? { ...shipping.shipping } : null,
-				extraCost: shipping.extraCost,
-			})),
-			tab,
-		}
-	}
-
-	function goToNextTab() {
-		const currentIndex = tabs.indexOf(tab)
-		if (currentIndex < tabs.length - 1) {
-			tab = tabs[currentIndex + 1]
-		}
-	}
-
-	function goToPreviousTab() {
-		const currentIndex = tabs.indexOf(tab)
-		if (currentIndex > 0) {
-			tab = tabs[currentIndex - 1]
+	$: {
+		if (!isLoading) {
+			tick().then(() => {
+				productFormStore.update((state) => ({
+					...state,
+					name,
+					description,
+					price,
+					quantity,
+					stallIdentifier: currentStallIdentifier,
+					categories: categories.map((category) => ({ ...category })),
+					images: images.map((image) => ({ ...image })),
+					shippings: currentShippings.map((shipping) => ({
+						shipping: shipping.shipping ? { ...shipping.shipping } : null,
+						extraCost: shipping.extraCost,
+					})),
+				}))
+			})
 		}
 	}
 
@@ -203,26 +218,6 @@
 		dispatch('success', null)
 		isLoading = false
 	}
-
-	function initializeFormState() {
-		if (!$productFormState || product) return
-
-		const state = $productFormState
-		Object.assign(
-			{
-				name,
-				description,
-				price,
-				quantity,
-				currentStallIdentifier,
-				categories,
-				images,
-				currentShippings,
-				tab,
-			},
-			state,
-		)
-	}
 </script>
 
 {#if $stallsQuery.isLoading}
@@ -238,15 +233,15 @@
 		class="flex flex-col justify-between gap-2 h-[calc(100vh-8rem)]"
 	>
 		<div>
-			<Tabs.Root bind:value={tab}>
+			<Tabs.Root bind:value={$productFormStore.tab}>
 				<Tabs.List class="w-full justify-around bg-transparent">
-					<Tabs.Trigger value="basic" class={activeTab}>Basic</Tabs.Trigger>
+					<Tabs.Trigger value="details" class={activeTab}>Details</Tabs.Trigger>
 					<Tabs.Trigger value="categories" class={activeTab}>Categories</Tabs.Trigger>
 					<Tabs.Trigger data-tooltip="Images help customers recognize your product" value="images" class={activeTab}>Images</Tabs.Trigger>
-					<Tabs.Trigger value="shippings" class={activeTab}>Shipping</Tabs.Trigger>
+					<Tabs.Trigger value="shippings" class={activeTab}>Shippings</Tabs.Trigger>
 				</Tabs.List>
 
-				<Tabs.Content value="basic" class="flex flex-col gap-2">
+				<Tabs.Content value="details" class="flex flex-col gap-2">
 					<div class="grid w-full items-center gap-1.5">
 						<Label for="title" class="font-bold required-mark">Title</Label>
 						<Input
@@ -490,17 +485,17 @@
 			<div class="flex gap-2 my-4">
 				<Button
 					variant="outline"
-					disabled={isLoading || tab === tabs[0]}
+					disabled={isLoading}
 					class="w-full font-bold flex items-center gap-2"
-					on:click={goToPreviousTab}
+					on:click={() => productFormStore.previousTab()}
 				>
 					<span class="i-tdesign-arrow-left w-5 h-5"></span>
 					Back
 				</Button>
-				{#if tab === tabs[tabs.length - 1]}
+				{#if $productFormStore.tab === PRODUCT_FORM_TABS[PRODUCT_FORM_TABS.length - 1]}
 					<Button variant="primary" disabled={isLoading} type="submit" class="w-full font-bold">Save</Button>
 				{:else}
-					<Button variant="primary" disabled={isLoading} class="w-full font-bold" on:click={goToNextTab}>Next</Button>
+					<Button variant="primary" disabled={isLoading} class="w-full font-bold" on:click={() => productFormStore.nextTab()}>Next</Button>
 				{/if}
 			</div>
 			{#if product?.id}

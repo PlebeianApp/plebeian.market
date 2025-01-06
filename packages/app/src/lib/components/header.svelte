@@ -11,11 +11,15 @@
 	import ndkStore from '$lib/stores/ndk'
 	import { balanceOfWorkingNWCs } from '$lib/stores/nwc'
 	import { getAccount } from '$lib/stores/session'
+	import { getHexColorFingerprintFromHexPubkey } from '$lib/utils'
 	import { onMount } from 'svelte'
 
 	import type { PageData } from '../../routes/$types'
 	import CartWithState from './cart/cart-with-state.svelte'
 	import AuthDialog from './dialogs/authDialog.svelte'
+	import AvatarFallback from './ui/avatar/avatar-fallback.svelte'
+	import AvatarImage from './ui/avatar/avatar-image.svelte'
+	import Avatar from './ui/avatar/avatar.svelte'
 	import CAvatar from './ui/custom-components/c-avatar.svelte'
 
 	$: ({ appSettings } = $page.data as PageData)
@@ -47,13 +51,13 @@
 
 <PassPromt dialogOpen={showPassPromt} accointInfo={nsecAccInfo} />
 
-<header class="sticky top-0 z-30 bg-black px-4 py-4 text-white lg:px-12">
+<header class="sticky top-0 z-30 bg-black px-0 py-4 text-white md:px-4 lg:px-12">
 	<div class="container flex h-full w-full items-center justify-between">
 		<section class=" inline-flex items-center">
 			<a href="/">
 				<div class="flex items-center">
 					<img src={appSettings?.logoUrl} alt="logo" class="w-16 px-2" />
-					<span class="font-semibold text-md sm:text-2xl">{appSettings?.instanceName}</span>
+					<span class="font-semibold hidden md:block md:text-2xl">{appSettings?.instanceName}</span>
 				</div>
 			</a>
 			<div class="hidden sm:flex mx-8 gap-8">
@@ -62,8 +66,19 @@
 			</div>
 		</section>
 		<div class="flex items-center gap-4">
-			<Button variant="primary" class="sm:flex p-2 relative" href="/dash/messages">
-				<span class="i-tdesign-mail text-black w-6 h-6"></span>
+			{#if $ndkStore.activeUser}
+				<a href={`/p/${$ndkStore.activeUser.profile?.nip05 ? $ndkStore.activeUser.profile?.nip05 : $ndkStore.activeUser.pubkey}`}>
+					<CAvatar
+						pubkey={$ndkStore.activeUser.pubkey}
+						profile={$ndkStore.activeUser.profile}
+						avatarClass="rounded-md border-secondary border-2"
+						imageClass="rounded-md"
+						fallbackClass="rounded-md"
+					/>
+				</a>
+			{/if}
+			<Button variant="secondary" class="sm:flex p-2 relative rounded-md" href="/dash/messages">
+				<span class="i-tdesign-mail text-white w-6 h-6"></span>
 				{#if hasUnreadMessages}
 					<span class="notification-dot" />
 				{/if}
@@ -74,12 +89,9 @@
 			</div>
 
 			{#if $ndkStore.activeUser}
-				<a href={`/p/${$ndkStore.activeUser.profile?.nip05 ? $ndkStore.activeUser.profile?.nip05 : $ndkStore.activeUser.pubkey}`}>
-					<CAvatar pubkey={$ndkStore.activeUser.pubkey} profile={$ndkStore.activeUser.profile} />
-				</a>
 				<DropdownMenu.Root>
 					<DropdownMenu.Trigger id="menuButton">
-						<Button variant="tertiary" class="p-2 "><span class="i-tdesign-view-list text-black w-6 h-6"></span></Button>
+						<Button variant="secondary" class="p-2 rounded-md"><span class="i-tdesign-view-list text-white w-6 h-6"></span></Button>
 					</DropdownMenu.Trigger>
 					<DropdownMenu.Content>
 						<DropdownMenu.Group>

@@ -7,22 +7,31 @@
 
 	export let pubkey: string
 	export let profile: NDKUserProfile | undefined | null
-	export let linked: boolean = false
+	export let linked = false
+	export let containerClass = ''
+	export let avatarClass = ''
+	export let imageClass = ''
+	export let fallbackClass = ''
 
-	const truncatedPubkey = truncateString(pubkey)
-	const hexColorFromPubkey = getHexColorFingerprintFromHexPubkey(pubkey)
+	$: truncatedPubkey = truncateString(pubkey)
+	$: hexColorFromPubkey = getHexColorFingerprintFromHexPubkey(pubkey)
+	$: displayName = profile?.name || truncatedPubkey
 </script>
 
 {#if linked}
-	<a href={`/p/${pubkey}`} class="hover:bg-accent rounded-none">
-		<Avatar>
-			<AvatarImage src={profile?.image} alt={profile?.name || truncatedPubkey} />
-			<AvatarFallback style={`background-color: ${hexColorFromPubkey}`}><span class="i-tdesign-user-1 w-8 h-8" /></AvatarFallback>
+	<a href={`/p/${pubkey}`} class="hover:bg-accent rounded-none {containerClass}">
+		<Avatar class={avatarClass}>
+			<AvatarImage src={profile?.image} alt={displayName} class={imageClass} />
+			<AvatarFallback style={`background-color: ${hexColorFromPubkey}`} class={fallbackClass}>
+				<span class="i-tdesign-user-1 w-8 h-8" />
+			</AvatarFallback>
 		</Avatar>
 	</a>
 {:else}
-	<Avatar>
-		<AvatarImage src={profile?.image} alt={profile?.name || truncatedPubkey} />
-		<AvatarFallback style={`background-color: ${hexColorFromPubkey}`}><span class="i-tdesign-user-1 w-8 h-8" /></AvatarFallback>
+	<Avatar class={avatarClass}>
+		<AvatarImage src={profile?.image} alt={displayName} class={imageClass} />
+		<AvatarFallback style={`background-color: ${hexColorFromPubkey}`} class={fallbackClass}>
+			<span class="i-tdesign-user-1 w-8 h-8" />
+		</AvatarFallback>
 	</Avatar>
 {/if}

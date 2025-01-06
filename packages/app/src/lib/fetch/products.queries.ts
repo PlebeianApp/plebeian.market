@@ -107,7 +107,7 @@ export const createCurrencyConversionQuery = (fromCurrency: string, amount: numb
 		{
 			queryKey: productKeys.currency.amount(fromCurrency, amount),
 			queryFn: async () => {
-				if (!fromCurrency || !amount) return null
+				if (!fromCurrency || !amount || amount <= 0.0001) return null
 				if (['sats', 'sat'].includes(fromCurrency.toLowerCase())) {
 					return amount
 				}
