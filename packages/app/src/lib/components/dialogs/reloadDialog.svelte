@@ -1,20 +1,38 @@
 <script lang="ts">
+	import { browser } from '$app/environment'
 	import { Button } from '$lib/components/ui/button'
 	import { Card } from '$lib/components/ui/card'
+	import { onDestroy } from 'svelte'
 	import { useRegisterSW } from 'virtual:pwa-register/svelte'
+
+	const UPDATE_INTERVAL = 60 * 60 * 1000
+	let updateInterval: ReturnType<typeof setInterval>
 
 	const { needRefresh, updateServiceWorker } = useRegisterSW({
 		onRegistered(r) {
-			r &&
-				setInterval(() => {
+			if (!r || !browser) return
+
+			const checkUpdate = async () => {
+				try {
+					if (!navigator.onLine) return
 					console.log('Checking for sw update')
-					r.update()
-				}, 15000)
-			console.log(`SW Registered: ${r}`)
+					await r.update()
+				} catch (error) {
+					console.error('SW update check failed:', error)
+				}
+			}
+
+			checkUpdate()
+
+			updateInterval = setInterval(checkUpdate, UPDATE_INTERVAL)
 		},
 		onRegisterError(error) {
-			console.log('SW registration error', error)
+			console.error('SW registration error', error)
 		},
+	})
+
+	onDestroy(() => {
+		if (updateInterval) clearInterval(updateInterval)
 	})
 
 	function close() {
@@ -27,9 +45,9 @@
 		<div class="mb-2">
 			<span>New version available, click on reload button to update.</span>
 		</div>
-		{#if $needRefresh}
+		<div class="flex gap-2">
 			<Button variant="focus" on:click={() => updateServiceWorker(true)}>Reload</Button>
-		{/if}
-		<Button variant="tertiary" on:click={close}>Close</Button>
+			<Button variant="tertiary" on:click={close}>Close</Button>
+		</div>
 	</Card>
 {/if}
