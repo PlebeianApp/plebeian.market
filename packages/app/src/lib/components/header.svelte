@@ -169,13 +169,13 @@
 						</Collapsible.Root>
 					</div>
 				{:else}
-					<Button variant="secondary" class="sm:flex p-2 relative rounded-md" href="/dash">
+					<Button variant="secondary" class="sm:flex p-2 relative rounded-md" href="/dash" id="dash-button">
 						<span class=" i-tdesign-dashboard text-white w-6 h-6"></span>
 					</Button>
-					<Button variant="secondary" class="sm:flex p-2 relative rounded-md" href="/settings">
+					<Button variant="secondary" class="sm:flex p-2 relative rounded-md" href="/settings" id="settings-button">
 						<span class="i-tdesign-setting-1 text-white w-6 h-6"></span>
 					</Button>
-					<Button variant="secondary" class="sm:flex p-2 relative rounded-md" href="/dash/messages">
+					<Button variant="secondary" class="sm:flex p-2 relative rounded-md" href="/dash/messages" id="msg-button">
 						<span class="i-tdesign-mail text-white w-6 h-6"></span>
 						{#if hasUnreadMessages}
 							<span class="notification-dot" />
@@ -193,7 +193,7 @@
 					</Button>
 				{/if}
 			{:else}
-				<Button variant="secondary" class="sm:flex p-2 relative rounded-md" on:click={showAuthDialog}>
+				<Button variant="secondary" class="sm:flex p-2 relative rounded-md" on:click={showAuthDialog} id="logging-button">
 					<span class="i-tdesign-user-1 text-white w-6 h-6"></span>
 				</Button>
 			{/if}
