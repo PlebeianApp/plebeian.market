@@ -53,12 +53,12 @@
 		'w-full font-bold border-b-2 border-black text-black data-[state=active]:border-b-primary data-[state=active]:text-primary'
 </script>
 
-<Dialog.Content class="gap-0 p-0 text-black">
-	<Dialog.Header class="relative w-full bg-black text-center text-white py-8 flex items-center">
+<Dialog.Content class="gap-0 p-0 text-black max-w-96">
+	<Dialog.Header class="relative w-full bg-black text-center py-8 flex items-center">
 		<Pattern />
 		<div class="flex flex-row gap-2 items-center">
 			{#if loading}
-				<Spinner size={60} />
+				<Spinner size={60} color="white" />
 			{:else}
 				<img src={appSettings.logoUrl} alt="logo" class="w-16" />
 			{/if}
@@ -76,10 +76,10 @@
 			<Button
 				on:click={() => handleLogin('NIP07', undefined, checked)}
 				variant="focus"
-				class="w-full border-black border-2 flex items-center gap-1"
+				class="w-full flex items-center gap-1"
 				disabled={!window.nostr}
 			>
-				<span class="i-mdi-puzzle-outline text-black w-6 h-6"> </span>
+				<span class="i-mdi-puzzle-outline w-6 h-6"> </span>
 				<span class="text-lg">Extension Login</span>
 			</Button>
 			{#if !window.nostr}

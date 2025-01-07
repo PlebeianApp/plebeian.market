@@ -19,7 +19,7 @@
 </script>
 
 {#if linked}
-	<a href={`/p/${pubkey}`} class="hover:bg-accent rounded-none {containerClass}">
+	<a href={`/p/${pubkey}`} class="hover:bg-accent {containerClass}">
 		<Avatar class={avatarClass}>
 			<AvatarImage src={profile?.image} alt={displayName} class={imageClass} />
 			<AvatarFallback style={`background-color: ${hexColorFromPubkey}`} class={fallbackClass}>
