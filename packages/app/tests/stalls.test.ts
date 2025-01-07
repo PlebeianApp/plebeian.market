@@ -45,11 +45,8 @@ describe('stalls', async () => {
 
 			// Navigate to settings
 			try {
-				await page.waitForSelector('#menuButton', { timeout: 5000 })
-				await page.click('#menuButton')
-
-				await page.waitForSelector('a[href="/settings"]', { timeout: 2000 })
-				await page.click('a[href="/settings"]')
+				await page.waitForSelector('#settings-button', { timeout: 5000 })
+				await page.click('#settings-button')
 			} catch (error) {
 				console.error('Failed to navigate to settings:', error)
 				throw error

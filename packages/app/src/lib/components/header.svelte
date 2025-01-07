@@ -3,7 +3,7 @@
 	import { page } from '$app/stores'
 	import PassPromt from '$lib/components/passPromt.svelte'
 	import { Button } from '$lib/components/ui/button/index.js'
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
+	import * as Collapsible from '$lib/components/ui/collapsible'
 	import { login, logout } from '$lib/ndkLogin'
 	import { breakpoint } from '$lib/stores/breakpoint'
 	import { unreadCounts } from '$lib/stores/chat-notifications'
@@ -11,15 +11,11 @@
 	import ndkStore from '$lib/stores/ndk'
 	import { balanceOfWorkingNWCs } from '$lib/stores/nwc'
 	import { getAccount } from '$lib/stores/session'
-	import { getHexColorFingerprintFromHexPubkey } from '$lib/utils'
 	import { onMount } from 'svelte'
 
 	import type { PageData } from '../../routes/$types'
 	import CartWithState from './cart/cart-with-state.svelte'
 	import AuthDialog from './dialogs/authDialog.svelte'
-	import AvatarFallback from './ui/avatar/avatar-fallback.svelte'
-	import AvatarImage from './ui/avatar/avatar-image.svelte'
-	import Avatar from './ui/avatar/avatar.svelte'
 	import CAvatar from './ui/custom-components/c-avatar.svelte'
 
 	$: ({ appSettings } = $page.data as PageData)
@@ -47,6 +43,24 @@
 	function showAuthDialog() {
 		dialogs.show(AuthDialog, {})
 	}
+	let open = false
+
+	function clickOutside(node: HTMLElement) {
+		const handleClick = (event: MouseEvent) => {
+			if (!node.contains(event.target as Node)) {
+				open = false
+			}
+		}
+		document.addEventListener('click', handleClick, true)
+		return {
+			destroy() {
+				document.removeEventListener('click', handleClick, true)
+			},
+		}
+	}
+
+	const navMenuButtonStyle = 'gap-4 py-8 px-6 justify-start'
+	const navMenuLabels = 'font-bold'
 </script>
 
 <PassPromt dialogOpen={showPassPromt} accointInfo={nsecAccInfo} />
@@ -77,92 +91,110 @@
 					/>
 				</a>
 			{/if}
-			<Button variant="primary" class="sm:flex p-2 relative" href="/dash/messages">
-				<span class="i-tdesign-mail w-6 h-6"></span>
-				{#if hasUnreadMessages}
-					<span class="notification-dot" />
-				{/if}
-			</Button>
-
-			<div class="hidden sm:flex gap-2">
+			<div class="flex gap-2">
 				<CartWithState />
 			</div>
-
 			{#if $ndkStore.activeUser}
-				<DropdownMenu.Root>
-					<DropdownMenu.Trigger id="menuButton">
-						<Button variant="primary" class="p-2 "><span class="i-tdesign-view-list w-6 h-6"></span></Button>
-					</DropdownMenu.Trigger>
-					<DropdownMenu.Content>
-						<DropdownMenu.Group>
-							<DropdownMenu.Label>My account</DropdownMenu.Label>
-							<DropdownMenu.Label>
-								{#if $balanceOfWorkingNWCs}
-									<div class="flex flex-col">
-										<section class=" inline-flex items-center">
-											<span class=" i-bitcoin-icons-satoshi-v1-outline w-6 h-6" />{$balanceOfWorkingNWCs} sats
-										</section>
-									</div>
-								{/if}
-							</DropdownMenu.Label>
-							{#if $ndkStore.activeUser}
-								<DropdownMenu.Separator />
-								<DropdownMenu.Item>
-									<a
-										href={`/p/${$ndkStore.activeUser.profile?.nip05 ? $ndkStore.activeUser.profile?.nip05 : $ndkStore.activeUser.pubkey}`}
-										class="inline-flex items-center gap-2 w-full"><span class="i-tdesign-user-1" />Profile</a
-									>
-								</DropdownMenu.Item>
-								<DropdownMenu.Item>
-									<a id="headerMenuSettings" href="/settings" class="inline-flex items-center gap-2 w-full"
-										><span class="i-tdesign-user-setting" />Settings</a
-									>
-								</DropdownMenu.Item>
-								<DropdownMenu.Item>
-									<a id="headerMenuDashboard" href="/dash" class="inline-flex items-center gap-2 w-full"
-										><span class=" i-tdesign-dashboard" />Dashboard</a
-									>
-								</DropdownMenu.Item>
-								{#if $breakpoint !== 'lg'}
-									<DropdownMenu.Separator />
+				{#if $breakpoint === 'sm'}
+					<div use:clickOutside>
+						<Collapsible.Root bind:open>
+							<Collapsible.Trigger asChild let:builder>
+								<Button builders={[builder]} variant="secondary" class="p-2 rounded-md">
+									{#if open}
+										<span class=" i-tdesign-close w-6 h-6" />
+									{:else}
+										<span class="i-tdesign-view-list w-6 h-6" />
+									{/if}
+								</Button>
+							</Collapsible.Trigger>
 
-									<DropdownMenu.Item>
-										<a class="hover:underline font-semibold" href="/stalls/">Market</a>
-									</DropdownMenu.Item>
-									<DropdownMenu.Item>
-										<a class="hover:underline font-semibold" href="/square">Square</a>
-									</DropdownMenu.Item>
-									<DropdownMenu.Separator />
+							<Collapsible.Content class="absolute left-0 right-0 bg-primary-foreground mt-5">
+								<div>
+									{#if $ndkStore.activeUser}
+										<!-- Balance Section -->
+										{#if $balanceOfWorkingNWCs}
+											<div class="flex items-center gap-2">
+												<span class="i-bitcoin-icons-satoshi-v1-outline w-6 h-6" />
+												<span>{$balanceOfWorkingNWCs} sats</span>
+											</div>
+										{/if}
 
-									<DropdownMenu.Item class="flex items-center justify-between gap-2">
-										<Button variant="primary" class="p-2 relative" href="/dash/messages">
-											<span class="i-tdesign-mail text-black w-6 h-6"></span>
-											{#if hasUnreadMessages}
-												<span class="notification-dot" />
-											{/if}
-										</Button>
+										<!-- Navigation Links -->
+										<nav class="flex flex-col">
+											<Button variant="none" href="/dash/messages" class={navMenuButtonStyle} on:click={() => (open = false)}>
+												{#if hasUnreadMessages}
+													<span class="i-tdesign-mail w-6 h-6 text-primary" />
+													<span class={`${navMenuLabels} text-primary`}>Messages</span>
+												{:else}
+													<span class="i-tdesign-mail w-6 h-6" />
+													<span class={navMenuLabels}>Messages</span>
+												{/if}
+											</Button>
 
-										<CartWithState />
-									</DropdownMenu.Item>
-								{/if}
-								<DropdownMenu.Item>
-									<Button
-										variant="destructive"
-										id="headerMenuLogOut"
-										class="inline-flex items-center gap-2 w-full"
-										on:click={() => {
-											logout()
-											loginComplete = false
-										}}><span class="i-tdesign-user-arrow-right"></span>Log out</Button
-									>
-								</DropdownMenu.Item>
-							{/if}
-						</DropdownMenu.Group>
-					</DropdownMenu.Content>
-				</DropdownMenu.Root>
+											<Button variant="none" href="/settings" class={navMenuButtonStyle} on:click={() => (open = false)}>
+												<span class="i-tdesign-setting-1 w-6 h-6" />
+												<span class={navMenuLabels}>Settings</span>
+											</Button>
+
+											<Button variant="none" href="/dash" class={navMenuButtonStyle} on:click={() => (open = false)}>
+												<span class="i-tdesign-dashboard w-6 h-6" />
+												<span class={navMenuLabels}>Dashboard</span>
+											</Button>
+
+											<Button variant="none" href="/stalls" class={navMenuButtonStyle} on:click={() => (open = false)}>
+												<span class="i-tdesign-shop w-6 h-6" />
+												<span class={navMenuLabels}>Market</span>
+											</Button>
+
+											<Button variant="none" href="/square" class={navMenuButtonStyle} on:click={() => (open = false)}>
+												<span class="i-tdesign-compass w-6 h-6" />
+												<span class={navMenuLabels}>Square</span>
+											</Button>
+
+											<Button
+												variant="none"
+												class={`${navMenuButtonStyle} bg-foreground`}
+												on:click={() => {
+													logout()
+													open = false
+												}}
+											>
+												<span class="i-tdesign-user-arrow-right text-primary w-6 h-6" />
+												<span class={`${navMenuLabels} text-primary`}>Log out</span>
+											</Button>
+										</nav>
+									{/if}
+								</div>
+							</Collapsible.Content>
+						</Collapsible.Root>
+					</div>
+				{:else}
+					<Button variant="primary" class="sm:flex p-2 relative rounded-md" href="/dash" id="dash-button">
+						<span class=" i-tdesign-dashboard w-6 h-6"></span>
+					</Button>
+					<Button variant="primary" class="sm:flex p-2 relative rounded-md" href="/settings" id="settings-button">
+						<span class="i-tdesign-setting-1 w-6 h-6"></span>
+					</Button>
+					<Button variant="primary" class="sm:flex p-2 relative rounded-md" href="/dash/messages" id="msg-button">
+						<span class="i-tdesign-mail w-6 h-6"></span>
+						{#if hasUnreadMessages}
+							<span class="notification-dot" />
+						{/if}
+					</Button>
+					<Button
+						variant="primary"
+						class="sm:flex p-2 relative rounded-md"
+						on:click={() => {
+							logout()
+							open = false
+						}}
+					>
+						<span class="i-tdesign-user-arrow-right w-6 h-6" />
+					</Button>
+				{/if}
 			{:else}
-				<Button variant="primary" on:click={showAuthDialog} class="flex items-center cursor-pointer gap-2 w-full">
-					<span class="i-tdesign-user-1" />Login/Register
+				<Button variant="primary" class="sm:flex p-2 relative rounded-md" on:click={showAuthDialog} id="login-button">
+					<span class="i-tdesign-user-1 w-6 h-6"></span>
 				</Button>
 			{/if}
 		</div>

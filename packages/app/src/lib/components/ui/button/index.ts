@@ -20,6 +20,7 @@ const buttonVariants = tv({
 			outline: 'border border-input bg-background hover:bg-accent hover:text-accent-foreground',
 			ghost: 'hover:bg-accent border-none hover:text-accent-foreground',
 			link: 'text-primary border-none underline-offset-4 hover:underline',
+			none: 'border-0 p-0 text-base justify-start',
 		},
 		size: {
 			default: 'h-10 px-4 py-2',
