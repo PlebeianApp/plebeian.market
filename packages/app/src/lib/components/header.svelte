@@ -181,6 +181,16 @@
 							<span class="notification-dot" />
 						{/if}
 					</Button>
+					<Button
+						variant="secondary"
+						class="sm:flex p-2 relative rounded-md"
+						on:click={() => {
+							logout()
+							open = false
+						}}
+					>
+						<span class="i-tdesign-user-arrow-right w-6 h-6" />
+					</Button>
 				{/if}
 			{:else}
 				<Button variant="secondary" class="sm:flex p-2 relative rounded-md" on:click={showAuthDialog}>
