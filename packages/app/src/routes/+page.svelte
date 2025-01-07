@@ -35,7 +35,7 @@
 				</div>
 				<div class="container">
 					{#if $featuredProductsQuery.data?.products?.length}
-						<div class="bg-primary px-4 py-20 lg:px-12">
+						<div class="bg-secondary px-4 py-20 lg:px-12">
 							<div>
 								<h2>Featured Collections</h2>
 								<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">

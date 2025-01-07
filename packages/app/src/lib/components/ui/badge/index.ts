@@ -4,18 +4,24 @@ import { tv } from 'tailwind-variants'
 export { default as Badge } from './badge.svelte'
 
 export const badgeVariants = tv({
-	base: 'inline-flex select-none items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
+	base: 'inline-flex select-none items-center rounded-full border text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
 	variants: {
 		variant: {
-			default: 'border-transparent bg-primary text-primary-foreground hover:bg-primary/80',
-			secondary: 'border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80',
+			primary: 'bg-primary border-primary hover:border-primary-border-hover text-primary-foreground-hover active:bg-primary-border-hover',
+			secondary: 'bg-light-gray text-off-black border-none',
 			destructive: 'border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80',
 			outline: 'text-foreground',
 		},
+		size: {
+			default: 'px-4 py-2',
+			sm: 'px-2.5 py-0.5',
+		},
 	},
 	defaultVariants: {
-		variant: 'default',
+		variant: 'primary',
+		size: 'default',
 	},
 })
 
 export type Variant = VariantProps<typeof badgeVariants>['variant']
+export type Size = VariantProps<typeof badgeVariants>['size']
