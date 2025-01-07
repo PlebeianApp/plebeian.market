@@ -77,8 +77,8 @@
 					/>
 				</a>
 			{/if}
-			<Button variant="secondary" class="sm:flex p-2 relative rounded-md" href="/dash/messages">
-				<span class="i-tdesign-mail text-white w-6 h-6"></span>
+			<Button variant="primary" class="sm:flex p-2 relative" href="/dash/messages">
+				<span class="i-tdesign-mail w-6 h-6"></span>
 				{#if hasUnreadMessages}
 					<span class="notification-dot" />
 				{/if}
@@ -91,7 +91,7 @@
 			{#if $ndkStore.activeUser}
 				<DropdownMenu.Root>
 					<DropdownMenu.Trigger id="menuButton">
-						<Button variant="secondary" class="p-2 rounded-md"><span class="i-tdesign-view-list text-white w-6 h-6"></span></Button>
+						<Button variant="primary" class="p-2 "><span class="i-tdesign-view-list w-6 h-6"></span></Button>
 					</DropdownMenu.Trigger>
 					<DropdownMenu.Content>
 						<DropdownMenu.Group>

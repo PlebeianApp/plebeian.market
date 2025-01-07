@@ -114,7 +114,7 @@
 							purchased: {qtyPurchased}
 						</Badge>
 					{:else}
-						<Badge variant={product.quantity && product.quantity > 0 ? 'outline' : 'default'} class="text-xs">
+						<Badge variant={product.quantity && product.quantity > 0 ? 'secondary' : 'primary'} size="sm" class="text-xs">
 							{product.quantity && product.quantity > 0 ? `${product.quantity} in stock` : 'Out of stock'}
 						</Badge>
 					{/if}
@@ -123,7 +123,7 @@
 
 			{#if !isMyProduct && product.userId && product.quantity && product.quantity > 0}
 				<Button
-					variant="outline"
+					variant="primary"
 					class="w-full text-sm h-8"
 					on:click={() => handleAddToCart(product.userId, String(stallCoordinates.coordinates), product)}
 				>
