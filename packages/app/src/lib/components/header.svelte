@@ -193,7 +193,7 @@
 					</Button>
 				{/if}
 			{:else}
-				<Button variant="primary" class="sm:flex p-2 relative rounded-md" on:click={showAuthDialog} id="logging-button">
+				<Button variant="primary" class="sm:flex p-2 relative rounded-md" on:click={showAuthDialog} id="login-button">
 					<span class="i-tdesign-user-1 w-6 h-6"></span>
 				</Button>
 			{/if}
