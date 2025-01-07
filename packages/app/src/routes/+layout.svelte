@@ -138,22 +138,10 @@
 	}
 </script>
 
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
-<link
-	href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap"
-	rel="stylesheet"
-/>
 <Toaster richColors />
 
 <svelte:head>
 	{@html webManifestLink}
-	<link rel="preconnect" href="https://fonts.googleapis.com" />
-	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
-	<link
-		href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap"
-		rel="stylesheet"
-	/>
 	<link rel="icon" href="/favicon.ico" sizes="48x48" />
 	<link rel="icon" href="/logo.svg" sizes="any" type="image/svg+xml" />
 	<link rel="apple-touch-icon" href="/apple-touch-icon-180x180.png" />
@@ -214,6 +202,13 @@
 
 <style>
 	:global(body) {
-		font-family: 'IBM Plex Mono', monospace;
+		font-family: theme('fontFamily.sans');
+	}
+
+	:global(h2) {
+		font-family: theme('fontFamily.heading');
+		font-synthesis: none;
+		font-size: 2.4rem;
+		letter-spacing: 0.2rem;
 	}
 </style>
