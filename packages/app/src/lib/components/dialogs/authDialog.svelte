@@ -76,10 +76,10 @@
 			<Button
 				on:click={() => handleLogin('NIP07', undefined, checked)}
 				variant="focus"
-				class="w-full border-black border-2 flex items-center gap-1"
+				class="w-full flex items-center gap-1"
 				disabled={!window.nostr}
 			>
-				<span class="i-mdi-puzzle-outline text-black w-6 h-6"> </span>
+				<span class="i-mdi-puzzle-outline w-6 h-6"> </span>
 				<span class="text-lg">Extension Login</span>
 			</Button>
 			{#if !window.nostr}

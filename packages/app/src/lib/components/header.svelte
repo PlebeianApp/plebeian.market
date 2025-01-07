@@ -65,7 +65,7 @@
 
 <PassPromt dialogOpen={showPassPromt} accointInfo={nsecAccInfo} />
 
-<header class="sticky top-0 z-30 bg-primary-foreground px-0 py-4 text-white md:px-4 lg:px-12">
+<header class="sticky top-0 z-30 bg-black px-0 py-4 text-white md:px-4 lg:px-12">
 	<div class="container flex h-full w-full items-center justify-between">
 		<section class=" inline-flex items-center">
 			<a href="/">
@@ -101,9 +101,9 @@
 							<Collapsible.Trigger asChild let:builder>
 								<Button builders={[builder]} variant="secondary" class="p-2 rounded-md">
 									{#if open}
-										<span class=" i-tdesign-close text-white w-6 h-6" />
+										<span class=" i-tdesign-close w-6 h-6" />
 									{:else}
-										<span class="i-tdesign-view-list text-white w-6 h-6" />
+										<span class="i-tdesign-view-list w-6 h-6" />
 									{/if}
 								</Button>
 							</Collapsible.Trigger>
@@ -113,7 +113,7 @@
 									{#if $ndkStore.activeUser}
 										<!-- Balance Section -->
 										{#if $balanceOfWorkingNWCs}
-											<div class="flex items-center gap-2 text-white">
+											<div class="flex items-center gap-2">
 												<span class="i-bitcoin-icons-satoshi-v1-outline w-6 h-6" />
 												<span>{$balanceOfWorkingNWCs} sats</span>
 											</div>
@@ -169,20 +169,20 @@
 						</Collapsible.Root>
 					</div>
 				{:else}
-					<Button variant="secondary" class="sm:flex p-2 relative rounded-md" href="/dash" id="dash-button">
-						<span class=" i-tdesign-dashboard text-white w-6 h-6"></span>
+					<Button variant="primary" class="sm:flex p-2 relative rounded-md" href="/dash" id="dash-button">
+						<span class=" i-tdesign-dashboard w-6 h-6"></span>
 					</Button>
-					<Button variant="secondary" class="sm:flex p-2 relative rounded-md" href="/settings" id="settings-button">
-						<span class="i-tdesign-setting-1 text-white w-6 h-6"></span>
+					<Button variant="primary" class="sm:flex p-2 relative rounded-md" href="/settings" id="settings-button">
+						<span class="i-tdesign-setting-1 w-6 h-6"></span>
 					</Button>
-					<Button variant="secondary" class="sm:flex p-2 relative rounded-md" href="/dash/messages" id="msg-button">
-						<span class="i-tdesign-mail text-white w-6 h-6"></span>
+					<Button variant="primary" class="sm:flex p-2 relative rounded-md" href="/dash/messages" id="msg-button">
+						<span class="i-tdesign-mail w-6 h-6"></span>
 						{#if hasUnreadMessages}
 							<span class="notification-dot" />
 						{/if}
 					</Button>
 					<Button
-						variant="secondary"
+						variant="primary"
 						class="sm:flex p-2 relative rounded-md"
 						on:click={() => {
 							logout()
@@ -193,8 +193,8 @@
 					</Button>
 				{/if}
 			{:else}
-				<Button variant="secondary" class="sm:flex p-2 relative rounded-md" on:click={showAuthDialog} id="logging-button">
-					<span class="i-tdesign-user-1 text-white w-6 h-6"></span>
+				<Button variant="primary" class="sm:flex p-2 relative rounded-md" on:click={showAuthDialog} id="logging-button">
+					<span class="i-tdesign-user-1 w-6 h-6"></span>
 				</Button>
 			{/if}
 		</div>
