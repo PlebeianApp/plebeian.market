@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/stores'
+	import ItemGrid from '$lib/components/common/item-grid.svelte'
 	import Pattern from '$lib/components/Pattern.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
 	import UserCardCompact from '$lib/components/users/user-card-compact.svelte'
@@ -30,17 +31,13 @@
 					<UserCardCompact user={$userQuery.data} />
 				{/if}
 			</div>
+
 			{#if $productsQuery.data}
-				<div class=" px-4 py-20 lg:px-12">
-					<div class="container">
-						<h2 class="relative z-10 flex gap-2 items-center justify-center"><span />Products</h2>
-						<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-							{#each $productsQuery.data.products as product}
-								<ProductItem {product} />
-							{/each}
-						</div>
-					</div>
-				</div>
+				<ItemGrid title="Products">
+					{#each $productsQuery.data.products as product}
+						<ProductItem {product} />
+					{/each}
+				</ItemGrid>
 			{/if}
 		</main>
 	</div>

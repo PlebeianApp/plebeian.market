@@ -1,5 +1,6 @@
 <script lang="ts">
 	import CatMenu from '$lib/components/category/cat-menu.svelte'
+	import ItemGrid from '$lib/components/common/item-grid.svelte'
 	import AuthDialog from '$lib/components/dialogs/authDialog.svelte'
 	import Pattern from '$lib/components/Pattern.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
@@ -13,7 +14,7 @@
 
 	export let data: PageData
 
-	$: productQuery = createProductsByFilterQuery({ pageSize: 8, order: 'asc' })
+	$: productQuery = createProductsByFilterQuery({ pageSize: 10, order: 'asc' })
 	$: featuredProductsQuery = createProductsByFilterQuery({ featured: true })
 
 	function handleSelling() {
@@ -24,10 +25,7 @@
 
 {#if !data.appSettings?.isFirstTimeRunning}
 	<div class="flex min-h-screen w-full flex-col relative">
-		<div
-			class="absolute inset-0 opacity-40 -z-10"
-			style="background: url(/page-min.png); background-repeat: repeat; background-size: auto; background-position: center;"
-		/>
+		<Pattern pattern="page" class=" opacity-40 -z-10 " />
 		<div class="flex flex-col">
 			<main class="text-black">
 				<div class="relative w-full bg-black py-20 text-center text-white overflow-hidden">
@@ -36,7 +34,7 @@
 					></div>
 
 					<Pattern />
-					<div class="relative z-10 flex flex-col lg:flex-row items-center justify-center gap-2 lg:gap-4 mb-6">
+					<div class="relative z-10 flex flex-col lg:flex-row items-center justify-center gap-2 lg:gap-4 mb-6 p-2">
 						<img src="/buy-sell.svg" alt="Buy Sell Stuff for Sats" class="lg:h-[45px] w-auto" />
 						<img src="/stuff-for-sats.svg" alt="Buy Sell Stuff for Sats" class="lg:h-[45px] w-auto" />
 					</div>

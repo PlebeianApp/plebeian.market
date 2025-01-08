@@ -29,7 +29,7 @@
 		<div class="flex flex-col gap-4">
 			<Collapsible.Root bind:open={isOpen}>
 				<div class="flex items-center justify-between">
-					<h4 class="font-bold">Top categories</h4>
+					<h2 class="text-2xl font-bold">Top categories</h2>
 					<Collapsible.Trigger>
 						<div class="flex items-center gap-2">
 							<span>Search & Filter</span>

@@ -9,14 +9,15 @@ const buttonVariants = tv({
 	variants: {
 		variant: {
 			primary:
-				'bg-primary text-primary-foreground border-primary-border hover:bg-primary-hover hover:text-primary-foreground-hover hover:border-primary-border-hover',
+				'bg-primary text-primary-foreground border-primary-border hover:bg-transparent hover:text-primary-foreground-hover hover:border-primary-border-hover',
 			secondary:
-				'bg-secondary text-secondary-foreground border-secondary-border hover:bg-secondary-hover hover:text-secondary-foreground-hover hover:border-secondary-border-hover',
+				'bg-secondary text-secondary-foreground border-secondary-border hover:bg-transparent hover:text-secondary-foreground-hover hover:border-secondary-border-hover',
 			tertiary:
 				'bg-tertiary text-tertiary-foreground border-tertiary-border hover:bg-tertiary-hover hover:text-tertiary-foreground-hover hover:border-tertiary-border-hover',
 			focus:
-				'bg-focus text-focus-foreground border-focus-border hover:bg-focus-hover hover:text-focus-foreground-hover hover:border-focus-border-hover',
-			destructive: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+				'bg-focus text-focus-foreground border-focus-border hover:bg-transparent hover:text-focus-foreground-hover hover:border-focus-border-hover',
+			destructive: 'bg-destructive text-destructive-foreground hover:bg-transparent hover:text-destructive-foreground',
+
 			outline: 'border border-input bg-background hover:bg-accent hover:text-accent-foreground',
 			ghost: 'hover:bg-accent border-none hover:text-accent-foreground',
 			link: 'text-primary border-none underline-offset-4 hover:underline',
