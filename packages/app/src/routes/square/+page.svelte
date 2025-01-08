@@ -1,5 +1,7 @@
 <script lang="ts">
 	import Spinner from '$lib/components/assets/spinner.svelte'
+	import ItemGrid from '$lib/components/common/item-grid.svelte'
+	import Pattern from '$lib/components/Pattern.svelte'
 	import StallItem from '$lib/components/stalls/stall-item.svelte'
 	import { stallsSub } from '$lib/nostrSubs/subs'
 	import { onDestroy, onMount } from 'svelte'
@@ -23,29 +25,21 @@
 	})
 </script>
 
-<div class="flex min-h-screen w-full flex-col">
-	<div class="flex flex-col">
-		<main class="text-black">
-			<div class="px-4 lg:px-12 flex flex-col gap-6">
-				<div class="container">
-					<div class="py-8">
-						<h1 class=" leading-4">Square</h1>
-						<h3 class=" font-light">Here you can find all the stalls published on nostr</h3>
-					</div>
-					<h2>Stalls</h2>
-					<div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-						{#if $stallsSub?.length}
-							{#each $uniqueStallsStore as stall (stall.dTag)}
-								{#if stall}
-									<StallItem stallData={stall} />
-								{/if}
-							{/each}
-						{:else}
-							<Spinner size={65} />
-						{/if}
-					</div>
-				</div>
-			</div>
-		</main>
+<main class="flex min-h-screen w-full flex-col relative pt-8 gap-8">
+	<Pattern pattern="page" class=" opacity-40 -z-10 " />
+	<div class="px-8">
+		<h1>Square</h1>
+		<h3 class="font-light">Here you can find all the stalls published on nostr</h3>
 	</div>
-</div>
+	<ItemGrid title="Stalls" forItemType="stall">
+		{#if $stallsSub?.length}
+			{#each $uniqueStallsStore as stall (stall.dTag)}
+				{#if stall}
+					<StallItem stallData={stall} />
+				{/if}
+			{/each}
+		{:else}
+			<Spinner size={65} />
+		{/if}
+	</ItemGrid>
+</main>
