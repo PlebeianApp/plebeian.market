@@ -24,26 +24,23 @@
 	})
 </script>
 
-<div class="flex min-h-screen w-full flex-col relative">
-	<div class="flex flex-col">
-		<main class="text-black">
-			<div class="px-4 lg:px-12 flex flex-col gap-6">
-				<div class="py-8">
-					<h1 class=" leading-4">Square</h1>
-					<h3 class=" font-light">Here you can find all the stalls published on nostr</h3>
-				</div>
-				<ItemGrid title="Stalls" forItemType="stall">
-					{#if $stallsSub?.length}
-						{#each $uniqueStallsStore as stall (stall.dTag)}
-							{#if stall}
-								<StallItem stallData={stall} />
-							{/if}
-						{/each}
-					{:else}
-						<Spinner size={65} />
-					{/if}
-				</ItemGrid>
-			</div>
-		</main>
+<main
+	class="flex min-h-screen w-full flex-col relative pt-8 gap-8"
+	style="background: url(/page-min.png); background-repeat: repeat; background-size: auto; background-position: center;"
+>
+	<div class="px-8">
+		<h1>Square</h1>
+		<h3 class="font-light">Here you can find all the stalls published on nostr</h3>
 	</div>
-</div>
+	<ItemGrid title="Stalls" forItemType="stall">
+		{#if $stallsSub?.length}
+			{#each $uniqueStallsStore as stall (stall.dTag)}
+				{#if stall}
+					<StallItem stallData={stall} />
+				{/if}
+			{/each}
+		{:else}
+			<Spinner size={65} />
+		{/if}
+	</ItemGrid>
+</main>
