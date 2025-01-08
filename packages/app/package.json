@@ -13,7 +13,8 @@
 		"format": "prettier --check .",
 		"format:fix": "prettier --write .",
 		"test": "vite build && vitest",
-		"test:ui": "vite build && vitest --ui"
+		"test:ui": "vite build && vitest --ui",
+		"generate-pwa-assets": "pwa-assets-generator"
 	},
 	"devDependencies": {
 		"@egoist/tailwindcss-icons": "^1.8.0",
