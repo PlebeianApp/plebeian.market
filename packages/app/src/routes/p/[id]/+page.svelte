@@ -7,7 +7,6 @@
 	import AdminActions from '$lib/components/common/admin-actions.svelte'
 	import InteractiveZapButton from '$lib/components/common/interactive-zap-button.svelte'
 	import ItemGrid from '$lib/components/common/item-grid.svelte'
-	import DiagonalPattern from '$lib/components/DiagonalPattern.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
 	import StallItem from '$lib/components/stalls/stall-item.svelte'
 	import Button from '$lib/components/ui/button/button.svelte'
@@ -63,7 +62,6 @@
 {#if $userProfileQuery.data}
 	{@const { image, name, about, banner } = $userProfileQuery.data}
 	<div class="px-4 lg:px-12 relative">
-		<DiagonalPattern />
 		<div class="flex flex-col gap-14">
 			<div class="relative h-auto">
 				{#if banner}

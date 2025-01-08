@@ -14,7 +14,7 @@
 
 	export let data: PageData
 
-	$: productQuery = createProductsByFilterQuery({ pageSize: 8, order: 'asc' })
+	$: productQuery = createProductsByFilterQuery({ pageSize: 10, order: 'asc' })
 	$: featuredProductsQuery = createProductsByFilterQuery({ featured: true })
 
 	function handleSelling() {

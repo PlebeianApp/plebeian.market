@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/stores'
 	import ItemGrid from '$lib/components/common/item-grid.svelte'
-	import DiagonalPattern from '$lib/components/DiagonalPattern.svelte'
 	import Pattern from '$lib/components/Pattern.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
 	import UserCardCompact from '$lib/components/users/user-card-compact.svelte'
@@ -32,7 +31,6 @@
 					<UserCardCompact user={$userQuery.data} />
 				{/if}
 			</div>
-			<DiagonalPattern />
 
 			{#if $productsQuery.data}
 				<ItemGrid title="Products">

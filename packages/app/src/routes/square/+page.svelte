@@ -1,7 +1,6 @@
 <script lang="ts">
 	import Spinner from '$lib/components/assets/spinner.svelte'
 	import ItemGrid from '$lib/components/common/item-grid.svelte'
-	import DiagonalPattern from '$lib/components/DiagonalPattern.svelte'
 	import StallItem from '$lib/components/stalls/stall-item.svelte'
 	import { stallsSub } from '$lib/nostrSubs/subs'
 	import { onDestroy, onMount } from 'svelte'
@@ -26,7 +25,6 @@
 </script>
 
 <div class="flex min-h-screen w-full flex-col relative">
-	<DiagonalPattern />
 	<div class="flex flex-col">
 		<main class="text-black">
 			<div class="px-4 lg:px-12 flex flex-col gap-6">

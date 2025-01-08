@@ -3,7 +3,6 @@
 	import AdminActions from '$lib/components/common/admin-actions.svelte'
 	import ItemGrid from '$lib/components/common/item-grid.svelte'
 	import TruncatedText from '$lib/components/common/truncatedText.svelte'
-	import DiagonalPattern from '$lib/components/DiagonalPattern.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
 	import * as Accordion from '$lib/components/ui/accordion'
 	import Badge from '$lib/components/ui/badge/badge.svelte'
@@ -48,7 +47,6 @@
 </script>
 
 <main class="px-4 lg:px-12 relative">
-	<DiagonalPattern />
 	<div class="flex flex-col gap-12">
 		{#if $stallQuery.data?.stall}
 			{@const { image, name, description, currency, createDate, shipping } = $stallQuery.data.stall}
