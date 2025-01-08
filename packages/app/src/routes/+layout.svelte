@@ -128,7 +128,7 @@
 		})
 		const localUsers = await getAllAccounts()
 		if (!localUsers?.length) {
-			dialogs.show(BetaDialog)
+			dialogs.show(BetaDialog, {}, { size: 'lg' })
 		}
 	})
 

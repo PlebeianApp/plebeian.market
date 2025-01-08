@@ -5,12 +5,15 @@ type DialogComponent = ComponentType<SvelteComponent>
 type DialogCallback = () => void
 type DialogId = string
 
+type ExtractProps<T extends DialogComponent> = T extends ComponentType<infer Props> ? Omit<Props, keyof SvelteComponent> : never
+
+type DialogSize = 'sm' | 'lg' | 'xl'
+
 export type DialogOptions = {
 	onClose?: DialogCallback
 	onAction?: DialogCallback
+	size?: DialogSize
 }
-
-type ExtractProps<T extends DialogComponent> = T extends ComponentType<infer Props> ? Omit<Props, keyof SvelteComponent> : never
 
 interface DialogItem<T extends DialogComponent = DialogComponent> {
 	id: DialogId
@@ -18,6 +21,7 @@ interface DialogItem<T extends DialogComponent = DialogComponent> {
 	props: ExtractProps<T>
 	onClose?: DialogCallback
 	onAction?: DialogCallback
+	size?: DialogSize
 }
 
 interface DialogState {
@@ -72,7 +76,7 @@ function createDialogStore() {
 		show: <T extends DialogComponent>(
 			component: T,
 			props: ExtractProps<T> = {} as ExtractProps<T>,
-			{ onClose, onAction }: DialogOptions = {},
+			{ onClose, onAction, size = 'sm' }: DialogOptions = {},
 		): DialogId => {
 			const dialogItem: DialogItem<T> = {
 				id: crypto.randomUUID(),
@@ -80,6 +84,7 @@ function createDialogStore() {
 				props,
 				onClose,
 				onAction,
+				size,
 			}
 
 			store.update((state) => {

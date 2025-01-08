@@ -17,21 +17,31 @@
 	$: featuredProductsQuery = createProductsByFilterQuery({ featured: true })
 
 	function handleSelling() {
-		if (!$ndkStore.activeUser) dialogs.show(AuthDialog, {})
+		if (!$ndkStore.activeUser) dialogs.show(AuthDialog)
 		else openDrawerForNewProduct()
 	}
 </script>
 
 {#if !data.appSettings?.isFirstTimeRunning}
-	<div class="flex min-h-screen w-full flex-col">
+	<div class="flex min-h-screen w-full flex-col relative">
+		<div
+			class="absolute inset-0 opacity-40 -z-10"
+			style="background: url(/page-min.png); background-repeat: repeat; background-size: auto; background-position: center;"
+		/>
 		<div class="flex flex-col">
 			<main class="text-black">
-				<div class="relative w-full bg-black py-20 text-center text-white">
+				<div class="relative w-full bg-black py-20 text-center text-white overflow-hidden">
+					<div
+						class="absolute inset-x-0 -bottom-18 h-full bg-[radial-gradient(ellipse_at_bottom,var(--secondary)_25%,transparent_70%)] opacity-30 blur-2xl"
+					></div>
+
 					<Pattern />
 					<h1 class="relative z-10">Sell stuff for sats</h1>
-					<Button variant="focus" class="relative z-10" on:click={handleSelling}
-						><span class="flex items-center gap-2"><span class="i-game-icons-ostrich w-5 h-5"></span>Start Selling</span></Button
-					>
+					<Button variant="focus" class="relative z-10" on:click={handleSelling}>
+						<span class="flex items-center gap-2">
+							<span class="i-game-icons-ostrich w-5 h-5"></span>Start Selling
+						</span>
+					</Button>
 				</div>
 				<div class="container">
 					{#if $featuredProductsQuery.data?.products?.length}

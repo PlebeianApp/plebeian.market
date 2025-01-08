@@ -23,7 +23,7 @@
 	}
 </script>
 
-<ManagedDialog {open} onClose={handleClose} onAction={handleAction}>
+<ManagedDialog {open} onClose={handleClose} onAction={handleAction} size={currentDialog?.size || 'lg'}>
 	{#if currentDialog?.component}
 		<svelte:component this={currentDialog.component} {...dialogProps} />
 	{/if}

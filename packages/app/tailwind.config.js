@@ -107,7 +107,7 @@ const config = {
 			},
 			  width: {
 				'popover': 'calc(100% - 2vw)',
-			  }
+			  },
 		},
 	},
 }

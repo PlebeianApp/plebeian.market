@@ -22,7 +22,6 @@
 
 	let showPassPromt: boolean = false
 	let nsecAccInfo: NsecAccount
-	let loginComplete: boolean | undefined
 
 	onMount(async () => {
 		const lastAccount = localStorage.getItem('last_account')
@@ -41,7 +40,7 @@
 	$: hasUnreadMessages = Object.values($unreadCounts).some((count) => count > 0)
 
 	function showAuthDialog() {
-		dialogs.show(AuthDialog, {})
+		dialogs.show(AuthDialog)
 	}
 	let open = false
 

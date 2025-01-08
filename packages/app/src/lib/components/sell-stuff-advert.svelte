@@ -7,12 +7,12 @@
 	import Button from './ui/button/button.svelte'
 
 	function handleListItems() {
-		if (!$ndkStore.activeUser) dialogs.show(AuthDialog, {})
+		if (!$ndkStore.activeUser) dialogs.show(AuthDialog)
 		else openDrawerForNewProduct()
 	}
 </script>
 
-<div class="w-full bg-primary py-12 text-center text-white">
+<div class="w-full bg-secondary py-12 text-center">
 	<span class="mb-8 text-3xl text-black">Join in on the fun!</span>
 	<h1 class="text-black">Sell stuff for sats</h1>
 	<Button variant="focus" class="relative z-10" on:click={handleListItems}
