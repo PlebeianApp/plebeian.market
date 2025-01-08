@@ -29,7 +29,7 @@
 </script>
 
 <Card.Root
-	class="relative flex flex-col border-2 border-black hover:border-primary transition-colors hover:shadow-lg duration-200 text-black overflow-hidden"
+	class="relative rounded-md flex flex-col border-2 border-black hover:border-primary transition-colors shadow-xl hover:shadow-2xl duration-200 text-black overflow-hidden"
 >
 	<a
 		href={product.userNip05 ? `/products/${product.userNip05}/${product.identifier}` : `/products/${productCoordinates.coordinates}`}
@@ -57,7 +57,7 @@
 		</Card.Header>
 	</a>
 
-	<Card.Content class="p-2 flex-1">
+	<Card.Content class="p-1">
 		<div class="flex items-start justify-between mb-2">
 			<a
 				href={product.userNip05 ? `/products/${product.userNip05}/${product.identifier}` : `/products/${productCoordinates.coordinates}`}
@@ -87,7 +87,7 @@
 		</div>
 	</Card.Content>
 
-	<Card.Footer class="p-2 mt-auto border-t border-black/10">
+	<Card.Footer class="p-1 mt-auto border-t border-black/10">
 		<div class="flex flex-col gap-2 w-full">
 			<div class="flex justify-between items-baseline">
 				<div class="flex flex-col">
@@ -127,7 +127,6 @@
 					class="w-full text-sm h-8"
 					on:click={() => handleAddToCart(product.userId, String(stallCoordinates.coordinates), product)}
 				>
-					<ShoppingCart class="h-4 w-4 mr-2" />
 					Add to cart
 				</Button>
 			{/if}
