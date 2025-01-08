@@ -9,7 +9,7 @@
 	}
 </script>
 
-<div class=" flex flex-col gap-2">
+<div class="p-6 flex flex-col gap-2">
 	<p class=" font-bold">This is currently in beta, please dont rely on it for serious bussines.</p>
 	<Separator />
 	<p>

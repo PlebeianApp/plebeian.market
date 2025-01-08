@@ -96,6 +96,7 @@ const config = {
 			},
 			fontFamily: {
 				sans: ['"IBM Plex Mono"', 'monospace'],
+				heading: ['reglisse', 'sans-serif']
 			},
 			screens: {
 				sm: '640px',
@@ -106,7 +107,7 @@ const config = {
 			},
 			  width: {
 				'popover': 'calc(100% - 2vw)',
-			  }
+			  },
 		},
 	},
 }
