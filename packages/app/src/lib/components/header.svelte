@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { NsecAccount } from '$lib/stores/session'
+	import { browser } from '$app/environment'
 	import { page } from '$app/stores'
 	import PassPromt from '$lib/components/passPromt.svelte'
 	import { Button } from '$lib/components/ui/button/index.js'
@@ -12,6 +13,7 @@
 	import { balanceOfWorkingNWCs } from '$lib/stores/nwc'
 	import { getAccount } from '$lib/stores/session'
 	import { onMount } from 'svelte'
+	import { fade } from 'svelte/transition'
 
 	import type { PageData } from '../../routes/$types'
 	import CartWithState from './cart/cart-with-state.svelte'
@@ -22,7 +24,7 @@
 
 	let showPassPromt: boolean = false
 	let nsecAccInfo: NsecAccount
-
+	let showBackToTop = false
 	onMount(async () => {
 		const lastAccount = localStorage.getItem('last_account')
 		const autoLogin = localStorage.getItem('auto_login') ? JSON.parse(localStorage.getItem('auto_login') as string) : undefined
@@ -60,6 +62,23 @@
 
 	const navMenuButtonStyle = 'gap-4 py-8 px-6 justify-start'
 	const navMenuLabels = 'font-bold'
+
+	function handleScroll() {
+		if (!browser) return
+		showBackToTop = window.scrollY > 600
+	}
+
+	function scrollToTop() {
+		if (!browser) return
+		window.scrollTo({ top: 0, behavior: 'smooth' })
+	}
+
+	onMount(() => {
+		if (browser) {
+			window.addEventListener('scroll', handleScroll)
+			return () => window.removeEventListener('scroll', handleScroll)
+		}
+	})
 </script>
 
 <PassPromt dialogOpen={showPassPromt} accointInfo={nsecAccInfo} />
@@ -197,5 +216,12 @@
 				</Button>
 			{/if}
 		</div>
+	</div>
+	<div
+		class={`fixed bottom-6 right-6 z-50 transition-opacity duration-200 ${showBackToTop ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+	>
+		<Button variant="secondary" size="icon" class="rounded-full shadow-lg hover:opacity-90" on:click={scrollToTop}>
+			<span class="i-tdesign-chevron-up w-6 h-6" />
+		</Button>
 	</div>
 </header>
