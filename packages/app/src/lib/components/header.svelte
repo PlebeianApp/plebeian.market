@@ -117,7 +117,7 @@
 					<div use:clickOutside>
 						<Collapsible.Root bind:open>
 							<Collapsible.Trigger asChild let:builder>
-								<Button builders={[builder]} variant="secondary" class="p-2 rounded-md">
+								<Button builders={[builder]} variant="primary" class="p-2 rounded-md">
 									{#if open}
 										<span class=" i-tdesign-close w-6 h-6" />
 									{:else}
@@ -126,7 +126,7 @@
 								</Button>
 							</Collapsible.Trigger>
 
-							<Collapsible.Content class="absolute left-0 right-0 bg-primary-foreground mt-5">
+							<Collapsible.Content class="absolute left-0 right-0 bg-secondary-foreground mt-5">
 								<div>
 									{#if $ndkStore.activeUser}
 										<!-- Balance Section -->
@@ -141,8 +141,8 @@
 										<nav class="flex flex-col">
 											<Button variant="none" href="/dash/messages" class={navMenuButtonStyle} on:click={() => (open = false)}>
 												{#if hasUnreadMessages}
-													<span class="i-tdesign-mail w-6 h-6 text-primary" />
-													<span class={`${navMenuLabels} text-primary`}>Messages</span>
+													<span class="i-tdesign-mail w-6 h-6 text-secondary" />
+													<span class={`${navMenuLabels} text-secondary`}>Messages</span>
 												{:else}
 													<span class="i-tdesign-mail w-6 h-6" />
 													<span class={navMenuLabels}>Messages</span>
@@ -177,8 +177,8 @@
 													open = false
 												}}
 											>
-												<span class="i-tdesign-user-arrow-right text-primary w-6 h-6" />
-												<span class={`${navMenuLabels} text-primary`}>Log out</span>
+												<span class="i-tdesign-user-arrow-right text-secondary w-6 h-6" />
+												<span class={`${navMenuLabels} text-secondary`}>Log out</span>
 											</Button>
 										</nav>
 									{/if}

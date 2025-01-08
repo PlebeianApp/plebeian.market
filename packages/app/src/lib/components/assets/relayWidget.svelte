@@ -81,7 +81,7 @@
 					Add a relay
 					<Input name="relayUrl" bind:value={inputRelayUrl} type="url" />
 				</Label>
-				<Button type="submit"><span class="i-tdesign-add text-black w-6 h-6"></span></Button>
+				<Button type="submit" variant="tertiary"><span class="i-tdesign-add text-black w-6 h-6"></span></Button>
 			</form>
 		</div>
 	{/if}

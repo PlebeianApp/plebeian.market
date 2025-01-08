@@ -139,12 +139,12 @@
 		<Spinner />
 	</Button>
 {:else if zapMethods.length > 0}
-	<Button variant="primary" size="icon" on:click={() => (zapDialogOpen = true)}>
-		<span class="i-mingcute-lightning-line w-6 h-6" />
+	<Button variant="tertiary" size="icon" on:click={() => (zapDialogOpen = true)}>
+		<span class=" i-mingcute-lightning-fill w-6 h-6" />
 	</Button>
 {:else}
-	<Button variant="primary" data-tooltip="User cannot be zapped." size="icon" disabled>
-		<span class="i-mingcute-lightning-line w-6 h-6" />
+	<Button variant="tertiary" data-tooltip="User cannot be zapped." size="icon" disabled>
+		<span class="i-mingcute-lightning-fill w-6 h-6" />
 	</Button>
 {/if}
 
@@ -160,7 +160,7 @@
 		<div class="grid grid-cols-2 gap-2 mb-4">
 			{#each DEFAULT_ZAP_AMOUNTS as { displayText, amount }}
 				<Button
-					variant={amount === zapAmountSats ? 'primary' : 'outline'}
+					variant={amount === zapAmountSats ? 'tertiary' : 'outline'}
 					class="border-2 border-black"
 					on:click={() => (zapAmountSats = amount)}
 					disabled={spinnerShown}

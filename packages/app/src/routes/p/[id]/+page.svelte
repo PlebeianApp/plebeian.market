@@ -93,9 +93,9 @@
 					<div class="flex flex-col">
 						<div class="flex flex-row gap-2">
 							{#if isMe}
-								<Button variant="outline" class="w-full bg-focus hover:bg-yellow-500 gap-2" on:click={openDrawerForNewProduct}>
+								<Button variant="focus" class="w-full gap-2" on:click={openDrawerForNewProduct}>
 									<span class="i-mdi-plus w-5 h-5" />
-									<span>Add {productsMixture.length ? 'a' : 'Your First'} Product</span>
+									<span>Add {productsMixture.length ? 'A' : 'Your First'} Product</span>
 								</Button>
 							{/if}
 							<InteractiveZapButton userIdToZap={id} profile={$userProfileQuery.data} />
