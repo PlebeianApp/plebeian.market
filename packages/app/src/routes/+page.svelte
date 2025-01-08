@@ -36,7 +36,10 @@
 					></div>
 
 					<Pattern />
-					<h1 class="relative z-10">Sell stuff for sats</h1>
+					<div class="relative z-10 flex flex-col lg:flex-row items-center justify-center gap-2 lg:gap-4 mb-6">
+						<img src="/buy-sell.svg" alt="Buy Sell Stuff for Sats" class="lg:h-[45px] w-auto" />
+						<img src="/stuff-for-sats.svg" alt="Buy Sell Stuff for Sats" class="lg:h-[45px] w-auto" />
+					</div>
 					<Button variant="focus" class="relative z-10" on:click={handleSelling}>
 						<span class="flex items-center gap-2">
 							<span class="i-game-icons-ostrich w-5 h-5"></span>Start Selling
