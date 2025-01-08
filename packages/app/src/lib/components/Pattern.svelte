@@ -3,6 +3,6 @@
 </script>
 
 <div
-	class="absolute top-0 -z-0 h-full w-full"
+	class={`absolute top-0 -z-0 h-full w-full ${$$restProps.class ?? ''}`}
 	style={`background: url(/${pattern}-min.png); background-repeat: repeat; background-size: auto;`}
 ></div>

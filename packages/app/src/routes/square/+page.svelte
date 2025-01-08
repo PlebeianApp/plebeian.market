@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Spinner from '$lib/components/assets/spinner.svelte'
 	import ItemGrid from '$lib/components/common/item-grid.svelte'
+	import Pattern from '$lib/components/Pattern.svelte'
 	import StallItem from '$lib/components/stalls/stall-item.svelte'
 	import { stallsSub } from '$lib/nostrSubs/subs'
 	import { onDestroy, onMount } from 'svelte'
@@ -24,10 +25,8 @@
 	})
 </script>
 
-<main
-	class="flex min-h-screen w-full flex-col relative pt-8 gap-8"
-	style="background: url(/page-min.png); background-repeat: repeat; background-size: auto; background-position: center;"
->
+<main class="flex min-h-screen w-full flex-col relative pt-8 gap-8">
+	<Pattern pattern="page" class=" opacity-40 -z-10 " />
 	<div class="px-8">
 		<h1>Square</h1>
 		<h3 class="font-light">Here you can find all the stalls published on nostr</h3>

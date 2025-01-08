@@ -25,10 +25,7 @@
 
 {#if !data.appSettings?.isFirstTimeRunning}
 	<div class="flex min-h-screen w-full flex-col relative">
-		<div
-			class="absolute inset-0 opacity-40 -z-10"
-			style="background: url(/page-min.png); background-repeat: repeat; background-size: auto; background-position: center;"
-		/>
+		<Pattern pattern="page" class=" opacity-40 -z-10 " />
 		<main class="text-black">
 			<div class="relative w-full bg-black py-20 text-center text-white overflow-hidden">
 				<div
