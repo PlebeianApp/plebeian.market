@@ -6,6 +6,8 @@
 	import { page } from '$app/stores'
 	import AdminActions from '$lib/components/common/admin-actions.svelte'
 	import InteractiveZapButton from '$lib/components/common/interactive-zap-button.svelte'
+	import ItemGrid from '$lib/components/common/item-grid.svelte'
+	import DiagonalPattern from '$lib/components/DiagonalPattern.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
 	import StallItem from '$lib/components/stalls/stall-item.svelte'
 	import Button from '$lib/components/ui/button/button.svelte'
@@ -60,7 +62,8 @@
 
 {#if $userProfileQuery.data}
 	{@const { image, name, about, banner } = $userProfileQuery.data}
-	<div class="px-4 lg:px-12">
+	<div class="px-4 lg:px-12 relative">
+		<DiagonalPattern />
 		<div class="flex flex-col gap-14">
 			<div class="relative h-auto">
 				{#if banner}
@@ -107,16 +110,13 @@
 				</div>
 			</div>
 			{#if stallsMixture.length}
-				<div class="container">
-					<h2>Stalls</h2>
-					<div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-						{#key stallsMixture}
-							{#each stallsMixture as item (item.id)}
-								<StallItem stallData={item} />
-							{/each}
-						{/key}
-					</div>
-				</div>
+				<ItemGrid title="Stalls" forItemType="stall">
+					{#key stallsMixture}
+						{#each stallsMixture as item (item.id)}
+							<StallItem stallData={item} />
+						{/each}
+					{/key}
+				</ItemGrid>
 			{:else}
 				<div class="container bg-muted p-16 flex flex-col items-center justify-center h-[12vh] max-w-fit">
 					<div class="flex flex-row gap-2 items-center">
@@ -126,14 +126,13 @@
 			{/if}
 
 			{#if productsMixture.length}
-				<div class="container">
-					<h2>Products</h2>
-					<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+				<ItemGrid title="Products">
+					{#key stallsMixture}
 						{#each productsMixture as item (item.id)}
 							<ProductItem product={item} />
 						{/each}
-					</div>
-				</div>
+					{/key}
+				</ItemGrid>
 			{:else if stallsMixture.length}
 				<div class="container bg-muted p-16 flex flex-col items-center justify-center h-[12vh] max-w-fit">
 					<div class="flex flex-row gap-2 items-center">

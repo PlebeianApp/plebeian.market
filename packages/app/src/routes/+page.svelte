@@ -1,6 +1,7 @@
 <script lang="ts">
 	import CatMenu from '$lib/components/category/cat-menu.svelte'
 	import AuthDialog from '$lib/components/dialogs/authDialog.svelte'
+    import ItemGrid from '$lib/components/common/item-grid.svelte'
 	import Pattern from '$lib/components/Pattern.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
 	import { Button } from '$lib/components/ui/button/index.js'
@@ -43,33 +44,25 @@
 						</span>
 					</Button>
 				</div>
-				<div class="container">
+				<div class="gap-16 pb-12">
 					{#if $featuredProductsQuery.data?.products?.length}
-						<div class="bg-secondary px-4 py-20 lg:px-12">
-							<div>
-								<h2>Featured Collections</h2>
-								<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-									{#each $featuredProductsQuery.data?.products as item (item.id)}
-										<ProductItem product={item} />
-									{/each}
-								</div>
-							</div>
-						</div>
+						<ItemGrid title="Featured Collections">
+							{#each $featuredProductsQuery.data?.products as item (item.id)}
+								<ProductItem product={item} />
+							{/each}
+						</ItemGrid>
 					{/if}
 					<div class="py-5 lg:px-12">
 						<CatMenu />
 					</div>
 					{#if $productQuery.data?.products?.length}
-						<div class=" px-4 py-20 lg:px-12">
-							<h2>Products</h2>
-							<div class=" flex flex-col items-center">
-								<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-									{#each $productQuery.data?.products as item (item.id)}
-										<ProductItem product={item} />
-									{/each}
-								</div>
-								<Button variant="primary" class="mt-6 p-4 font-bold" href="/products">Explore products</Button>
-							</div>
+						<ItemGrid title="Products">
+							{#each $productQuery.data?.products as item (item.id)}
+								<ProductItem product={item} />
+							{/each}
+						</ItemGrid>
+						<div class="flex justify-center">
+							<Button variant="primary" class="mt-6 p-4 font-bold w-1/3" href="/products">Explore products</Button>
 						</div>
 					{:else}
 						<div class=" px-4 py-20 lg:px-12">

@@ -2,6 +2,7 @@
 	import type { Selected } from 'bits-ui'
 	import { browser } from '$app/environment'
 	import CatMenu from '$lib/components/category/cat-menu.svelte'
+	import ItemGrid from '$lib/components/common/item-grid.svelte'
 	import StallItem from '$lib/components/stalls/stall-item.svelte'
 	import Input from '$lib/components/ui/input/input.svelte'
 	import * as Pagination from '$lib/components/ui/pagination'
@@ -61,14 +62,13 @@
 										</Select.Content>
 									</Select.Root>
 								</div>
-
-								<div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+								<ItemGrid title="Stalls" forItemType="stall">
 									{#key $stallsQuery.data.stalls}
 										{#each $stallsQuery.data.stalls as item (item.id)}
 											<StallItem stallData={item} />
 										{/each}
 									{/key}
-								</div>
+								</ItemGrid>
 								<div class="py-4">
 									<Pagination.Root bind:page count={$stallsQuery.data?.total} perPage={pageSize} let:pages let:currentPage>
 										<Pagination.Content>
