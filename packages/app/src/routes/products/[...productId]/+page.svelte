@@ -33,7 +33,7 @@
 	let isExpanded = false
 
 	const activeTab =
-		'bg-secondary text-secondary-foreground h-10 px-4 py-2 border-secondary-border hover:bg-transparent hover:text-secondary-foreground-hover hover:border-secondary-border-hover'
+		'h-10 px-4 py-2 bg-light-gray text-off-black data-[state=active]:bg-secondary data-[state=active]:text-primary-foreground data-[state=disabled]:bg-light-gray data-[state=disabled]:text-off-black data-[state=disabled]:border-light-gray data-[state=disabled]:opacity-100 disabled:opacity-100'
 
 	$: productsQuery = createProductQuery(data.productRes.id)
 
@@ -76,21 +76,26 @@
 
 		<Pattern />
 
-		<div class="container flex flex-row text-white h-[50vh] gap-6 p-8 relative z-1">
+		<div class="container flex flex-row text-white h-[50vh] gap-6 pt-8 pl-8 pr-8 relative z-1 pb-24">
 			<div class="flex flex-row gap-8 w-1/2">
 				{#key $productsQuery.data.identifier}
 					{#if $productsQuery.data?.images?.length}
 						{@const sortedImages = $productsQuery.data.images?.sort((a, b) => a.imageOrder - b.imageOrder)}
-
 						<div class="flex flex-col gap-2">
 							{#each sortedImages as item, i}
 								<button
-									class={cn('w-24 object-cover aspect-square cursor-pointer p-1', i === current - 1 ? 'border border-primary' : null)}
+									class={cn(
+										'w-24 object-cover aspect-square cursor-pointer p-1 relative',
+										i === current - 1 ? 'border border-secondary' : null,
+									)}
 									on:click={() => {
 										api?.scrollTo(i)
 									}}
 								>
 									<img class="aspect-square object-cover" src={item.imageUrl} alt="" />
+									{#if i === current - 1}
+										<div class="absolute bottom-1 right-1 w-2 h-2 bg-primary rounded-full"></div>
+									{/if}
 								</button>
 							{/each}
 						</div>
@@ -115,7 +120,7 @@
 					{/if}
 				{/key}
 			</div>
-			<div class="flex flex-col gap-1">
+			<div class="flex flex-col gap-1 w-1/2">
 				{#if isMyProduct}
 					<Button variant="primary" class="w-1/4" on:click={() => openDrawerForProduct(data.productRes.id)}>Edit product</Button>
 				{/if}
@@ -196,8 +201,8 @@
 			<Tabs.Root class="w-full">
 				<Tabs.List class="w-full flex flex-row gap-3 bg-transparent justify-start relative">
 					<Tabs.Trigger value="description" class={activeTab}>Description</Tabs.Trigger>
-					<Tabs.Trigger value="comments" class={activeTab}>Comments</Tabs.Trigger>
-					<Tabs.Trigger value="reviews" class={activeTab}>Reviews</Tabs.Trigger>
+					<Tabs.Trigger value="comments" disabled class={activeTab}>Comments</Tabs.Trigger>
+					<Tabs.Trigger value="reviews" disabled class={activeTab}>Reviews</Tabs.Trigger>
 				</Tabs.List>
 				<Tabs.Content value="description" class="flex flex-col gap-2 bg-white border-t-2 border-black shadow-md rounded-md p-10">
 					{#if $productsQuery.data.description.length > 420}
