@@ -85,7 +85,7 @@
 							{#each sortedImages as item, i}
 								<button
 									class={cn(
-										'md:w-24 w-16 object-cover aspect-square cursor-pointer p-1 relative',
+										'md:w-16 w-12 object-cover aspect-square cursor-pointer p-1 relative',
 										i === current - 1 ? 'border border-secondary' : null,
 									)}
 									on:click={() => {
@@ -202,12 +202,12 @@
 
 	{#if $productsQuery.data.description}
 		{#if $breakpoint !== 'lg'}
-			<div class="flex flex-col gap-8">
-				<div class="mx-8 z-40 shadow-md">
+			<div class="flex flex-col gap-8 -mt-12">
+				<div class="mx-8 shadow-md z-10">
 					<div class="container flex flex-col items-center p-2 bg-neo-purple">
 						<h4 class="text-white font-bold">Description</h4>
 					</div>
-					<div class="container flex flex-col items-center p-8">
+					<div class="container flex flex-col items-center p-8 bg-white">
 						{#if $productsQuery.data.description.length > 420}
 							{#if !isExpanded}
 								<p transition:slide>{$productsQuery.data.description.slice(0, 420)}...</p>
@@ -228,18 +228,18 @@
 						{/if}
 					</div>
 				</div>
-				<div class="mx-8 z-40 shadow-md">
+				<!-- <div class="mx-8 shadow-md">
 					<div class="container flex flex-col items-center p-2 bg-neo-purple">
 						<h4 class="text-white font-bold">Comments</h4>
 					</div>
 					<div class="container flex flex-col items-center p-8">No comments</div>
 				</div>
-				<div class="mx-8 z-40 shadow-md">
+				<div class="mx-8 shadow-md">
 					<div class="container flex flex-col items-center p-2 bg-neo-purple">
 						<h4 class="text-white font-bold">Reviews</h4>
 					</div>
 					<div class="container flex flex-col items-center p-8">No reviews</div>
-				</div>
+				</div> -->
 			</div>
 		{:else}
 			<div class="container -mt-12 flex flex-col items-center z-30 p-8">
