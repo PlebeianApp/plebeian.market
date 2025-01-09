@@ -76,16 +76,16 @@
 
 		<Pattern />
 
-		<div class="container flex flex-row text-white h-[50vh] gap-6 pt-8 pl-8 pr-8 relative z-1 pb-24">
-			<div class="flex flex-row gap-8 w-1/2">
+		<div class="container flex flex-col md:flex-row text-white md:h-[50vh] gap-6 pt-8 pl-8 pr-8 relative z-1 pb-24">
+			<div class="flex flex-col-reverse md:flex-row gap-8 md:w-1/2 justify-center">
 				{#key $productsQuery.data.identifier}
 					{#if $productsQuery.data?.images?.length}
 						{@const sortedImages = $productsQuery.data.images?.sort((a, b) => a.imageOrder - b.imageOrder)}
-						<div class="flex flex-col gap-2">
+						<div class="flex flex-row md:flex-col justify-center gap-2">
 							{#each sortedImages as item, i}
 								<button
 									class={cn(
-										'w-24 object-cover aspect-square cursor-pointer p-1 relative',
+										'md:w-24 w-16 object-cover aspect-square cursor-pointer p-1 relative',
 										i === current - 1 ? 'border border-secondary' : null,
 									)}
 									on:click={() => {
@@ -120,31 +120,35 @@
 					{/if}
 				{/key}
 			</div>
-			<div class="flex flex-col gap-1 w-1/2">
+			<div class="flex flex-col gap-1 w-full md:w-1/2">
 				{#if isMyProduct}
 					<Button variant="primary" class="w-1/4" on:click={() => openDrawerForProduct(data.productRes.id)}>Edit product</Button>
 				{/if}
 				<h3 class="mb-4">{$productsQuery.data.name}</h3>
-				<h3 class="inline-flex items-center">
-					{#if $priceQuery?.isLoading}
-						<Spinner />
-					{:else if typeof $priceQuery?.data === 'number' && !Number.isNaN($priceQuery.data)}
-						{formatSats($priceQuery.data)}
-						sats
-					{:else}
-						<i class="text-lg">price ({$productsQuery.data?.price} {$productsQuery.data?.currency}) could not be converted</i>
-					{/if}
-				</h3>
-				{#if $productsQuery.data.price && $productsQuery.data.currency && !['sat', 'sats', 'btc'].includes($productsQuery.data.currency.toLowerCase())}
-					<h4 class="font-thin">
-						{$productsQuery.data.price.toLocaleString('en-US', { style: 'currency', currency: $productsQuery.data.currency })}
-						{$productsQuery.data.currency}
-					</h4>
-				{/if}
 
-				<Badge variant="secondary" class="w-fit my-4">
-					Stock: {$productsQuery.data.quantity}
-				</Badge>
+				<div class="flex md:flex-col flex-row gap-2 w-full">
+					<div class="flex flex-col gap-2 w-full">
+						<h3 class="inline-flex items-center">
+							{#if $priceQuery?.isLoading}
+								<Spinner />
+							{:else if typeof $priceQuery?.data === 'number' && !Number.isNaN($priceQuery.data)}
+								{formatSats($priceQuery.data)}
+								sats
+							{:else}
+								<i class="text-lg">price ({$productsQuery.data?.price} {$productsQuery.data?.currency}) could not be converted</i>
+							{/if}
+						</h3>
+						{#if $productsQuery.data.price && $productsQuery.data.currency && !['sat', 'sats', 'btc'].includes($productsQuery.data.currency.toLowerCase())}
+							<h4 class="font-thin">
+								{$productsQuery.data.price.toLocaleString('en-US', { style: 'currency', currency: $productsQuery.data.currency })}
+								{$productsQuery.data.currency}
+							</h4>
+						{/if}
+					</div>
+					<Badge variant="secondary" class="w-36 md:w-fit my-4">
+						Stock: {$productsQuery.data.quantity}
+					</Badge>
+				</div>
 
 				<div class="flex sm:w-1/2 w-full flex-row gap-1">
 					<Button variant="tertiary" size="icon" on:click={handleDecrement} disabled={qtyToCart <= 1}>
@@ -167,7 +171,7 @@
 							class="ml-2"
 							variant="secondary"
 							on:click={() => handleAddToCart(String($productsQuery.data?.userId), String(stallCoordinates), $productsQuery.data)}
-							>{$breakpoint !== 'lg' ? 'Add' : 'Add to cart'}</Button
+							>Add to cart</Button
 						>
 					{:else}
 						<Button variant="tertiary" disabled>Out of stock</Button>
@@ -194,41 +198,84 @@
 		</div>
 	</div>
 
-	<Pattern pattern="page" class=" opacity-40 -z-10 " />
+	<Pattern pattern="page" class=" opacity-40 -z-10" />
 
 	{#if $productsQuery.data.description}
-		<div class="container -mt-12 flex flex-col items-center z-30 p-8">
-			<Tabs.Root class="w-full">
-				<Tabs.List class="w-full flex flex-row gap-3 bg-transparent justify-start relative">
-					<Tabs.Trigger value="description" class={activeTab}>Description</Tabs.Trigger>
-					<Tabs.Trigger value="comments" disabled class={activeTab}>Comments</Tabs.Trigger>
-					<Tabs.Trigger value="reviews" disabled class={activeTab}>Reviews</Tabs.Trigger>
-				</Tabs.List>
-				<Tabs.Content value="description" class="flex flex-col gap-2 bg-white border-t-2 border-black shadow-md rounded-md p-10">
-					{#if $productsQuery.data.description.length > 420}
-						{#if !isExpanded}
-							<p transition:slide>{$productsQuery.data.description.slice(0, 420)}...</p>
+		{#if $breakpoint !== 'lg'}
+			<div class="flex flex-col gap-8">
+				<div class="mx-8 z-40 shadow-md">
+					<div class="container flex flex-col items-center p-2 bg-neo-purple">
+						<h4 class="text-white font-bold">Description</h4>
+					</div>
+					<div class="container flex flex-col items-center p-8">
+						{#if $productsQuery.data.description.length > 420}
+							{#if !isExpanded}
+								<p transition:slide>{$productsQuery.data.description.slice(0, 420)}...</p>
+							{:else}
+								<p transition:slide>{$productsQuery.data.description}</p>
+							{/if}
+							<Button
+								variant="ghost"
+								class="self-end"
+								on:click={() => {
+									isExpanded = !isExpanded
+								}}
+							>
+								{isExpanded ? 'Show Less' : 'Read More...'}
+							</Button>
 						{:else}
-							<p transition:slide>{$productsQuery.data.description}</p>
+							<p>{$productsQuery.data.description}</p>
 						{/if}
-						<Button
-							variant="ghost"
-							class="self-end"
-							on:click={() => {
-								isExpanded = !isExpanded
-							}}
-						>
-							{isExpanded ? 'Show Less' : 'Read More...'}
-						</Button>
-					{:else}
-						<p>{$productsQuery.data.description}</p>
-					{/if}
-				</Tabs.Content>
-				<Tabs.Content value="comments" class="flex flex-col gap-2 bg-white border-t-2 border-black shadow-md rounded-md p-10"
-				></Tabs.Content>
-				<Tabs.Content value="reviews" class="flex flex-col gap-2 bg-white border-t-2 border-black shadow-md rounded-md p-10"></Tabs.Content>
-			</Tabs.Root>
-		</div>
+					</div>
+				</div>
+				<div class="mx-8 z-40 shadow-md">
+					<div class="container flex flex-col items-center p-2 bg-neo-purple">
+						<h4 class="text-white font-bold">Comments</h4>
+					</div>
+					<div class="container flex flex-col items-center p-8">No comments</div>
+				</div>
+				<div class="mx-8 z-40 shadow-md">
+					<div class="container flex flex-col items-center p-2 bg-neo-purple">
+						<h4 class="text-white font-bold">Reviews</h4>
+					</div>
+					<div class="container flex flex-col items-center p-8">No reviews</div>
+				</div>
+			</div>
+		{:else}
+			<div class="container -mt-12 flex flex-col items-center z-30 p-8">
+				<Tabs.Root class="w-full">
+					<Tabs.List class="w-full flex flex-row gap-3 bg-transparent justify-start relative">
+						<Tabs.Trigger value="description" class={activeTab}>Description</Tabs.Trigger>
+						<Tabs.Trigger value="comments" disabled class={activeTab}>Comments</Tabs.Trigger>
+						<Tabs.Trigger value="reviews" disabled class={activeTab}>Reviews</Tabs.Trigger>
+					</Tabs.List>
+					<Tabs.Content value="description" class="flex flex-col gap-2 bg-white border-t-2 border-black shadow-md rounded-md p-10">
+						{#if $productsQuery.data.description.length > 420}
+							{#if !isExpanded}
+								<p transition:slide>{$productsQuery.data.description.slice(0, 420)}...</p>
+							{:else}
+								<p transition:slide>{$productsQuery.data.description}</p>
+							{/if}
+							<Button
+								variant="ghost"
+								class="self-end"
+								on:click={() => {
+									isExpanded = !isExpanded
+								}}
+							>
+								{isExpanded ? 'Show Less' : 'Read More...'}
+							</Button>
+						{:else}
+							<p>{$productsQuery.data.description}</p>
+						{/if}
+					</Tabs.Content>
+					<Tabs.Content value="comments" class="flex flex-col gap-2 bg-white border-t-2 border-black shadow-md rounded-md p-10"
+					></Tabs.Content>
+					<Tabs.Content value="reviews" class="flex flex-col gap-2 bg-white border-t-2 border-black shadow-md rounded-md p-10"
+					></Tabs.Content>
+				</Tabs.Root>
+			</div>
+		{/if}
 	{/if}
 
 	{#if $otherProducts?.data?.products.length}
