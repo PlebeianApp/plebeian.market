@@ -1,5 +1,6 @@
 import { faker } from '@faker-js/faker'
 import { sql } from 'drizzle-orm'
+import { text } from 'drizzle-orm/sqlite-core'
 
 import { defaulRelaysUrls, KindAuctionProduct, KindBids, KindProducts, KindStalls } from '../app/src/lib/constants'
 import {
@@ -295,9 +296,10 @@ const main = async () => {
 					stallId: stall.id,
 					userId: stall.userId,
 					productName: faker.commerce.productName(),
-					description: faker.commerce.productDescription(),
+					description: faker.commerce.productDescription() + faker.lorem.paragraph({ min: 50, max: 100 }),
 					price: faker.finance.amount(),
 					productType: PRODUCT_TYPES.SIMPLE,
+					banned: false,
 					currency: stall.currency,
 					isFeatured: i % 2 === 0,
 					isDigital: faker.datatype.boolean({ probability: 0.8 }),
