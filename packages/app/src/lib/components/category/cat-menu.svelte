@@ -18,7 +18,7 @@
 	let page = 1
 
 	$: debouncedSearch = reactiveDebounce(search, 600)
-	$: $search, (page = 1)
+	$: $debouncedSearch && page !== 1 && (page = 1)
 	$: categoriesQuery = createCategoriesByFilterQuery({ pageSize, page, search: $debouncedSearch })
 
 	$: hasNextPage = ($categoriesQuery.data?.total ?? 0) > page * pageSize
@@ -73,6 +73,7 @@
 								placeholder="Search categories..."
 								bind:value={$search}
 								class="rounded-full bg-black text-white border-secondary"
+								autoFocus={showSearch}
 							/>
 						</div>
 					{/if}

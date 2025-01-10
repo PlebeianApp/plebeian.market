@@ -9,11 +9,11 @@ import { derived, get } from 'svelte/store'
 
 import type { AppSettings } from '@plebeian/database'
 
-const ndk = browser ? get(ndkStore) : undefined
+const ndk = browser || typeof window !== 'undefined' ? get(ndkStore) : undefined
 
 let appSettings: AppSettings
 
-if (typeof window !== 'undefined') {
+if (browser || typeof window !== 'undefined') {
 	page.subscribe((page) => {
 		if (page.data) {
 			appSettings = page.data.appSettings
