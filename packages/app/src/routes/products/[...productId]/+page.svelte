@@ -76,7 +76,7 @@
 
 		<Pattern />
 
-		<div class="container flex flex-col md:flex-row text-white md:h-[50vh] gap-6 pt-8 pl-8 pr-8 relative z-1 pb-24">
+		<div class="container flex flex-col md:flex-row text-white md:h-[70vh] gap-6 pt-8 pl-8 pr-8 relative z-1 pb-24">
 			<div class="flex flex-col-reverse md:flex-row gap-8 md:w-1/2 justify-center">
 				{#key $productsQuery.data.identifier}
 					{#if $productsQuery.data?.images?.length}
@@ -120,11 +120,11 @@
 					{/if}
 				{/key}
 			</div>
-			<div class="flex flex-col gap-1 w-full md:w-1/2">
+			<div class="flex flex-col w-full md:w-1/2">
 				{#if isMyProduct}
 					<Button variant="primary" class="w-1/4" on:click={() => openDrawerForProduct(data.productRes.id)}>Edit product</Button>
 				{/if}
-				<h3 class="mb-4">{$productsQuery.data.name}</h3>
+				<h3 class="md:mb-12 mb-6">{$productsQuery.data.name}</h3>
 
 				<div class="flex md:flex-col flex-row gap-2 w-full">
 					<div class="flex flex-col gap-2 w-full">
@@ -145,7 +145,7 @@
 							</h4>
 						{/if}
 					</div>
-					<Badge variant="secondary" class="w-36 md:w-fit my-4">
+					<Badge variant="secondary" class="w-36 md:w-fit md:my-12 my-6">
 						Stock: {$productsQuery.data.quantity}
 					</Badge>
 				</div>
