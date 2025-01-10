@@ -1,6 +1,7 @@
 import type { NDKEvent, NDKFilter } from '@nostr-dev-kit/ndk'
 import type { ExtendedBaseType, NDKEventStore } from '@nostr-dev-kit/ndk-svelte'
 import { NDKKind, NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk'
+import { browser } from '$app/environment'
 import { page } from '$app/stores'
 import { KindStalls } from '$lib/constants'
 import ndkStore from '$lib/stores/ndk'
@@ -8,7 +9,7 @@ import { derived, get } from 'svelte/store'
 
 import type { AppSettings } from '@plebeian/database'
 
-const ndk = typeof window !== 'undefined' ? get(ndkStore) : undefined
+const ndk = browser ? get(ndkStore) : undefined
 
 let appSettings: AppSettings
 

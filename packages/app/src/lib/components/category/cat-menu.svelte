@@ -10,7 +10,7 @@
 	import Skeleton from '../ui/skeleton/skeleton.svelte'
 	import CatCompactItem from './cat-compact-item.svelte'
 
-	let search = writable('')
+	let search = writable<string>('')
 	let showSearch = false
 	let scrollContainer: HTMLDivElement
 
@@ -49,11 +49,11 @@
 <div class="flex flex-col gap-4 bg-black p-2 py-3">
 	{#if $categoriesQuery.isLoading && page === 1}
 		<div class="flex gap-4 overflow-x-auto">
-			{#each [...Array(6)] as _, i}
+			{#each Array(6) as _}
 				<Skeleton class="h-12 w-32 flex-shrink-0" />
 			{/each}
 		</div>
-	{:else if $categoriesQuery.data?.categories?.length}
+	{:else}
 		<div class="relative">
 			<div class="flex overflow-x-auto scrollbar-hide" bind:this={scrollContainer}>
 				<div class="flex gap-4 items-center px-1" use:autoAnimate={{ duration: 150 }}>
@@ -68,36 +68,47 @@
 
 					{#if showSearch}
 						<div class="flex-shrink-0 w-64">
-							<Input type="search" placeholder="Search categories..." bind:value={$search} class="h-12 rounded-full" />
+							<Input
+								type="search"
+								placeholder="Search categories..."
+								bind:value={$search}
+								class="rounded-full bg-black text-white border-secondary"
+							/>
 						</div>
 					{/if}
 
-					{#if hasPreviousPage}
-						<Button
-							variant="secondary"
-							size="icon"
-							on:click={previousPage}
-							class="flex-shrink-0 flex items-center justify-center rounded-full transition-colors"
-						>
-							<span class="i-mdi-chevron-left text-xl" />
-						</Button>
-					{/if}
+					{#if $categoriesQuery.data?.categories?.length}
+						{#if hasPreviousPage}
+							<Button
+								variant="secondary"
+								size="icon"
+								on:click={previousPage}
+								class="flex-shrink-0 flex items-center justify-center rounded-full transition-colors"
+							>
+								<span class="i-mdi-chevron-left text-xl" />
+							</Button>
+						{/if}
 
-					{#each $categoriesQuery.data?.categories as cat (cat.name)}
-						<div class="flex-shrink-0">
-							<CatCompactItem {cat} />
+						{#each $categoriesQuery.data.categories as cat (cat.name)}
+							<div class="flex-shrink-0">
+								<CatCompactItem {cat} />
+							</div>
+						{/each}
+
+						{#if hasNextPage}
+							<Button
+								variant="secondary"
+								size="icon"
+								on:click={nextPage}
+								class="flex-shrink-0 flex items-center justify-center rounded-full transition-colors"
+							>
+								<span class="i-mdi-chevron-right text-xl" />
+							</Button>
+						{/if}
+					{:else}
+						<div class="text-white">
+							{$search.trim() ? 'No results...' : 'No categories available'}
 						</div>
-					{/each}
-
-					{#if hasNextPage}
-						<Button
-							variant="secondary"
-							size="icon"
-							on:click={nextPage}
-							class="flex-shrink-0 flex items-center justify-center rounded-full transition-colors"
-						>
-							<span class="i-mdi-chevron-right text-xl" />
-						</Button>
 					{/if}
 				</div>
 			</div>
