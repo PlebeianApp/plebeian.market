@@ -50,7 +50,7 @@
 						{/each}
 					</ItemGrid>
 				{/if}
-				<div class="py-5 lg:px-8">
+				<div>
 					<CatMenu />
 				</div>
 				{#if $productQuery.data?.products?.length}
