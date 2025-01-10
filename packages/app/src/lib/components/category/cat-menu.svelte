@@ -1,84 +1,128 @@
 <script lang="ts">
-	import * as Collapsible from '$lib/components/ui/collapsible'
-	import * as Pagination from '$lib/components/ui/pagination'
+	import autoAnimate from '@formkit/auto-animate'
 	import { createCategoriesByFilterQuery } from '$lib/fetch/category.queries'
+	import { breakpoint } from '$lib/stores/breakpoint'
 	import { reactiveDebounce } from '$lib/utils'
 	import { writable } from 'svelte/store'
 
+	import Button from '../ui/button/button.svelte'
 	import Input from '../ui/input/input.svelte'
 	import Skeleton from '../ui/skeleton/skeleton.svelte'
 	import CatCompactItem from './cat-compact-item.svelte'
 
-	let search = writable('')
-	let isOpen = false
+	let search = writable<string>('')
+	let showSearch = false
+	let scrollContainer: HTMLDivElement
 
-	$: debouncedSearch = reactiveDebounce(search, 600)
-	$: $search, (page = 1)
-	const pageSize = 16
+	$: pageSize = $breakpoint == 'lg' ? 16 : 10
 	let page = 1
 
+	$: debouncedSearch = reactiveDebounce(search, 600)
+	$: $debouncedSearch && page !== 1 && (page = 1)
 	$: categoriesQuery = createCategoriesByFilterQuery({ pageSize, page, search: $debouncedSearch })
+
+	$: hasNextPage = ($categoriesQuery.data?.total ?? 0) > page * pageSize
+	$: hasPreviousPage = page > 1
+
+	function toggleSearch() {
+		showSearch = !showSearch
+		if (!showSearch) {
+			$search = ''
+		}
+	}
+
+	function nextPage() {
+		if (hasNextPage) {
+			page += 1
+			scrollContainer?.scrollTo({ left: 0, behavior: 'smooth' })
+		}
+	}
+
+	function previousPage() {
+		if (hasPreviousPage) {
+			page -= 1
+			scrollContainer?.scrollTo({ left: 0, behavior: 'smooth' })
+		}
+	}
 </script>
 
-<div class="flex flex-col gap-4 sm:gap-6">
-	{#if $categoriesQuery.isLoading}
-		<Skeleton class="h-12 w-full" />
-		<Skeleton class="h-12 w-full" />
-		<Skeleton class="h-12 w-full" />
-	{:else if $categoriesQuery.data?.categories?.length}
-		<div class="flex flex-col gap-4">
-			<Collapsible.Root bind:open={isOpen}>
-				<div class="flex items-center justify-between">
-					<h2 class="text-2xl font-bold">Top categories</h2>
-					<Collapsible.Trigger>
-						<div class="flex items-center gap-2">
-							<span>Search & Filter</span>
-							<span class={isOpen ? 'i-mdi-chevron-up' : 'i-mdi-chevron-down'} />
-						</div>
-					</Collapsible.Trigger>
-				</div>
-
-				<Collapsible.Content>
-					<div class="flex flex-row gap-4 pt-4">
-						<Input type="search" placeholder="Search..." bind:value={$search} />
-						{#if $categoriesQuery.data?.total > pageSize}
-							<Pagination.Root bind:page count={$categoriesQuery.data?.total} perPage={pageSize} let:pages let:currentPage>
-								<Pagination.Content>
-									<Pagination.Item>
-										<Pagination.PrevButton class="bg-white" />
-									</Pagination.Item>
-									{#each pages as page (page.key)}
-										{#if page.type === 'ellipsis'}
-											<Pagination.Item>
-												<Pagination.Ellipsis />
-											</Pagination.Item>
-										{:else}
-											<Pagination.Item>
-												<Pagination.Link {page} isActive={currentPage == page.value} class="bg-white">
-													{page.value}
-												</Pagination.Link>
-											</Pagination.Item>
-										{/if}
-									{/each}
-									<Pagination.Item>
-										<Pagination.NextButton class="bg-white" />
-									</Pagination.Item>
-								</Pagination.Content>
-							</Pagination.Root>
-						{/if}
-					</div>
-				</Collapsible.Content>
-			</Collapsible.Root>
+<div class="flex flex-col gap-4 bg-black p-2 py-3">
+	{#if $categoriesQuery.isLoading && page === 1}
+		<div class="flex gap-4 overflow-x-auto">
+			{#each Array(6) as _}
+				<Skeleton class="h-12 w-32 flex-shrink-0" />
+			{/each}
 		</div>
+	{:else}
+		<div class="relative">
+			<div class="flex overflow-x-auto scrollbar-hide" bind:this={scrollContainer}>
+				<div class="flex gap-4 items-center px-1" use:autoAnimate={{ duration: 150 }}>
+					<Button
+						variant="secondary"
+						size="icon"
+						on:click={toggleSearch}
+						class="flex-shrink-0 flex items-center justify-center rounded-full transition-colors"
+					>
+						<span class="i-mdi-magnify text-xl" />
+					</Button>
 
-		<div class="flex flex-col gap-6">
-			<div class="flex flex-col">
-				<div class="grid auto-cols-max grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-8">
-					{#each $categoriesQuery.data?.categories as cat (cat.name)}
-						<CatCompactItem {cat} />
-					{/each}
+					{#if showSearch}
+						<div class="flex-shrink-0 w-64">
+							<Input
+								type="search"
+								placeholder="Search categories..."
+								bind:value={$search}
+								class="rounded-full bg-black text-white border-secondary"
+								autoFocus={showSearch}
+							/>
+						</div>
+					{/if}
+
+					{#if $categoriesQuery.data?.categories?.length}
+						{#if hasPreviousPage}
+							<Button
+								variant="secondary"
+								size="icon"
+								on:click={previousPage}
+								class="flex-shrink-0 flex items-center justify-center rounded-full transition-colors"
+							>
+								<span class="i-mdi-chevron-left text-xl" />
+							</Button>
+						{/if}
+
+						{#each $categoriesQuery.data.categories as cat (cat.name)}
+							<div class="flex-shrink-0">
+								<CatCompactItem {cat} />
+							</div>
+						{/each}
+
+						{#if hasNextPage}
+							<Button
+								variant="secondary"
+								size="icon"
+								on:click={nextPage}
+								class="flex-shrink-0 flex items-center justify-center rounded-full transition-colors"
+							>
+								<span class="i-mdi-chevron-right text-xl" />
+							</Button>
+						{/if}
+					{:else}
+						<div class="text-white">
+							{$search.trim() ? 'No results...' : 'No categories available'}
+						</div>
+					{/if}
 				</div>
 			</div>
 		</div>
 	{/if}
 </div>
+
+<style>
+	.scrollbar-hide {
+		-ms-overflow-style: none;
+		scrollbar-width: none;
+	}
+	.scrollbar-hide::-webkit-scrollbar {
+		display: none;
+	}
+</style>
