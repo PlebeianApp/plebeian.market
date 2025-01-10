@@ -43,6 +43,9 @@
 				</Button>
 			</div>
 			<div class="gap-16 pb-12">
+				<div>
+					<CatMenu />
+				</div>
 				{#if $featuredProductsQuery.data?.products?.length}
 					<ItemGrid title="Featured Collections">
 						{#each $featuredProductsQuery.data?.products as item (item.id)}
@@ -50,9 +53,6 @@
 						{/each}
 					</ItemGrid>
 				{/if}
-				<div>
-					<CatMenu />
-				</div>
 				{#if $productQuery.data?.products?.length}
 					<ItemGrid title="Products">
 						{#each $productQuery.data?.products as item (item.id)}

@@ -83,7 +83,7 @@
 							{@const truncatedAbout = truncateText(about)}
 							{#if truncatedAbout !== about}
 								<p class="break-words">{showFullAbout ? about : truncatedAbout}</p>
-								<Button variant="outline" size="icon" on:click={() => (showFullAbout = !showFullAbout)}>
+								<Button variant="outline" class="w-fit" size="icon" on:click={() => (showFullAbout = !showFullAbout)}>
 									<span class={showFullAbout ? 'i-mdi-minus' : 'i-mdi-plus'} />
 								</Button>
 							{:else}

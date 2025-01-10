@@ -35,7 +35,10 @@ export const shippingObjectSchema = z.object({
 
 export const productShippingObjectSchema = z.object({
 	id: z.string(),
-	cost: z.preprocess((value) => (typeof value === 'number' ? value.toString() : value), z.string().optional()),
+	cost: z
+		.string()
+		.regex(/^\d*\.?\d*$/, 'Must be a valid number')
+		.optional(),
 })
 
 export const createProductEventSchema = (forbiddenPattern: RegExp) =>

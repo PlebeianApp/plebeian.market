@@ -1,4 +1,3 @@
-// src/lib/actions/external-links.ts
 type ExternalLinkOptions = {
 	target?: string
 	rel?: string
@@ -6,16 +5,36 @@ type ExternalLinkOptions = {
 	urlPattern?: RegExp
 }
 
+const DEFAULT_URL_PATTERN = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)/gi
+
+let urlCache = new WeakMap<HTMLElement, boolean>()
+
 export function externalLinks(node: HTMLElement, options: ExternalLinkOptions = {}) {
-	const {
-		target = '_blank',
-		rel = 'noopener noreferrer',
-		excludeClasses = ['no-external'],
-		urlPattern = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)/gi,
-	} = options
+	const { target = '_blank', rel = 'noopener noreferrer', excludeClasses = ['no-external'], urlPattern = DEFAULT_URL_PATTERN } = options
 
 	function isExcluded(element: HTMLElement): boolean {
-		return excludeClasses.some((cls) => element.classList.contains(cls))
+		for (let i = 0; i < excludeClasses.length; i++) {
+			if (element.classList.contains(excludeClasses[i])) return true
+		}
+		return false
+	}
+
+	function isExternalUrl(element: HTMLElement): boolean {
+		if (urlCache.has(element)) {
+			return urlCache.get(element)!
+		}
+
+		const href = element.getAttribute('href')
+		if (!href) return false
+
+		try {
+			const url = new URL(href, window.location.origin)
+			const isExternal = url.origin !== window.location.origin
+			urlCache.set(element, isExternal)
+			return isExternal
+		} catch {
+			return false
+		}
 	}
 
 	function processTextContent(text: string): DocumentFragment | null {
@@ -25,7 +44,8 @@ export function externalLinks(node: HTMLElement, options: ExternalLinkOptions = 
 		const fragment = document.createDocumentFragment()
 		let lastIndex = 0
 
-		matches.forEach((match) => {
+		for (let i = 0; i < matches.length; i++) {
+			const match = matches[i]
 			const startIndex = text.indexOf(match, lastIndex)
 
 			// Add text before the URL
@@ -43,7 +63,7 @@ export function externalLinks(node: HTMLElement, options: ExternalLinkOptions = 
 
 			fragment.appendChild(link)
 			lastIndex = startIndex + match.length
-		})
+		}
 
 		// Add remaining text
 		if (lastIndex < text.length) {
@@ -54,34 +74,22 @@ export function externalLinks(node: HTMLElement, options: ExternalLinkOptions = 
 	}
 
 	function processElement(element: HTMLElement) {
-		// Skip if element has excluded class
 		if (isExcluded(element)) return
 
-		// Process existing links
 		if (element.tagName === 'A') {
-			const href = element.getAttribute('href')
-			if (!href) return
-
-			try {
-				const url = new URL(href, window.location.origin)
-				if (url.origin !== window.location.origin) {
-					element.setAttribute('target', target)
-					element.setAttribute('rel', rel)
-					element.classList.add('external-link')
-				}
-			} catch (e) {
-				// Invalid URL, skip
-				return
+			if (isExternalUrl(element)) {
+				element.setAttribute('target', target)
+				element.setAttribute('rel', rel)
+				element.classList.add('external-link')
 			}
 			return
 		}
 
-		// Skip script and style tags
-		if (['SCRIPT', 'STYLE'].includes(element.tagName)) return
+		if (element.tagName === 'SCRIPT' || element.tagName === 'STYLE') return
 
-		// Process child nodes
-		const childNodes = Array.from(element.childNodes)
-		childNodes.forEach((child) => {
+		const childNodes = element.childNodes
+		for (let i = 0; i < childNodes.length; i++) {
+			const child = childNodes[i]
 			if (child.nodeType === Node.TEXT_NODE) {
 				const fragment = processTextContent(child.textContent || '')
 				if (fragment) {
@@ -90,34 +98,50 @@ export function externalLinks(node: HTMLElement, options: ExternalLinkOptions = 
 			} else if (child.nodeType === Node.ELEMENT_NODE) {
 				processElement(child as HTMLElement)
 			}
-		})
+		}
 	}
 
-	function update() {
-		processElement(node)
-	}
-
-	// Initial processing
-	update()
-
-	// Setup observer for dynamic content
-	const observer = new MutationObserver((mutations) => {
-		mutations.forEach((mutation) => {
-			// Handle added nodes
-			mutation.addedNodes.forEach((node) => {
-				if (node.nodeType === Node.ELEMENT_NODE) {
-					processElement(node as HTMLElement)
-				}
+	let updateScheduled = false
+	function scheduleUpdate() {
+		if (!updateScheduled) {
+			updateScheduled = true
+			requestAnimationFrame(() => {
+				processElement(node)
+				updateScheduled = false
 			})
+		}
+	}
 
-			// Handle character data changes
+	scheduleUpdate()
+
+	const observer = new MutationObserver((mutations) => {
+		let shouldUpdate = false
+
+		for (let i = 0; i < mutations.length; i++) {
+			const mutation = mutations[i]
+
+			const nodes = mutation.addedNodes
+			for (let j = 0; j < nodes.length; j++) {
+				const node = nodes[j]
+				if (node.nodeType === Node.ELEMENT_NODE) {
+					shouldUpdate = true
+					break
+				}
+			}
+
 			if (mutation.type === 'characterData' && mutation.target.nodeType === Node.TEXT_NODE) {
 				const fragment = processTextContent(mutation.target.textContent || '')
 				if (fragment) {
 					;(mutation.target as Text).replaceWith(fragment)
 				}
 			}
-		})
+
+			if (shouldUpdate) break
+		}
+
+		if (shouldUpdate) {
+			scheduleUpdate()
+		}
 	})
 
 	observer.observe(node, {
@@ -129,10 +153,12 @@ export function externalLinks(node: HTMLElement, options: ExternalLinkOptions = 
 	return {
 		update(newOptions: ExternalLinkOptions = {}) {
 			Object.assign(options, newOptions)
-			update()
+			urlCache = new WeakMap<HTMLElement, boolean>()
+			scheduleUpdate()
 		},
 		destroy() {
 			observer.disconnect()
+			urlCache = new WeakMap<HTMLElement, boolean>()
 		},
 	}
 }

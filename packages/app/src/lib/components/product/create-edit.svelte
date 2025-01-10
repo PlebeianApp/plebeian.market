@@ -159,16 +159,23 @@
 	}
 
 	onMount(() => {
+		// TODO: edit product is not working well, extra cost dissapears when you open after close
 		if ($productFormStore) {
-			name = $productFormStore.name || ''
-			description = $productFormStore.description || ''
-			price = $productFormStore.price?.toString() || ''
-			quantity = $productFormStore.quantity?.toString() || ''
+			name = $productFormStore.name || product?.name || ''
+			description = $productFormStore.description || product?.description || ''
+			price = $productFormStore.price?.toString() || product?.price?.toString() || ''
+			quantity = $productFormStore.quantity?.toString() || product?.quantity?.toString() || ''
 
 			if ($productFormStore.categories?.length) {
 				categories = $productFormStore.categories.map((category) => ({
 					key: category.key,
 					name: category.name,
+					checked: true,
+				}))
+			} else if (product?.categories?.length) {
+				categories = product.categories.map((category) => ({
+					key: createSlugId(category),
+					name: category,
 					checked: true,
 				}))
 			}
@@ -177,6 +184,47 @@
 				currentShippings = $productFormStore.shippings.map((sh) => ({
 					shipping: stall?.shipping?.find((s) => s.id == sh.shipping?.id) ?? null,
 					extraCost: sh.extraCost ?? '',
+				}))
+			} else if (product?.shipping && stall?.shipping) {
+				currentShippings = product.shipping.map((sh) => ({
+					shipping: stall?.shipping?.find((s) => s.id == sh.shippingId?.split(':')[0] || s.id == sh.shippingId) ?? null,
+					extraCost: sh.cost ?? '',
+				}))
+			}
+
+			if ($productFormStore.images?.length) {
+				images = $productFormStore.images.map((image) => ({ ...image }))
+			} else if (product?.images?.length) {
+				images = product.images.map((image, index) => ({
+					...image,
+					imageOrder: image.imageOrder ?? index,
+				}))
+			}
+		} else if (product) {
+			name = product.name || ''
+			description = product.description || ''
+			price = product.price?.toString() || ''
+			quantity = product.quantity?.toString() || ''
+
+			if (product.categories?.length) {
+				categories = product.categories.map((category) => ({
+					key: createSlugId(category),
+					name: category,
+					checked: true,
+				}))
+			}
+
+			if (product.shipping && stall?.shipping) {
+				currentShippings = product.shipping.map((sh) => ({
+					shipping: stall?.shipping?.find((s) => s.id == sh.shippingId?.split(':')[0] || s.id == sh.shippingId) ?? null,
+					extraCost: sh.cost ?? '',
+				}))
+			}
+
+			if (product.images?.length) {
+				images = product.images.map((image, index) => ({
+					...image,
+					imageOrder: image.imageOrder ?? index,
 				}))
 			}
 		}
@@ -204,7 +252,7 @@
 	}
 
 	const activeTab =
-		'w-full font-bold border-b-2 border-black text-black data-[state=active]:border-b-primary data-[state=active]:text-primary'
+		'w-full font-bold border-b-2 border-black text-black data-[state=active]:border-b-secondary data-[state=active]:text-secondary'
 
 	async function handleDelete() {
 		if (!product?.id) return
@@ -443,12 +491,16 @@
 									data-tooltip="The cost of the product, which will be added to the method's base cost"
 									value={shippingMethod.extraCost}
 									on:input={(e) => {
-										shippingMethod.extraCost = e.currentTarget.value
+										const value = e.currentTarget.value.replace(/[^0-9.]/g, '')
+										const sanitizedValue = value.replace(/(\..*)\./g, '$1')
+										shippingMethod.extraCost = sanitizedValue
 										currentShippings = [...currentShippings]
 									}}
 									required
 									class="border-2 border-black"
-									type="number"
+									type="text"
+									inputmode="decimal"
+									pattern="[0-9]*[.]?[0-9]*"
 									name="extra"
 								/>
 								{#if validationErrors[`shipping.${i}.cost`]}
@@ -485,7 +537,7 @@
 			<div class="flex gap-2 my-4">
 				<Button
 					variant="outline"
-					disabled={isLoading}
+					disabled={isLoading || $productFormStore.tab == 'details'}
 					class="w-full font-bold flex items-center gap-2"
 					on:click={() => productFormStore.previousTab()}
 				>
@@ -497,6 +549,10 @@
 				{:else}
 					<Button variant="primary" disabled={isLoading} class="w-full font-bold" on:click={() => productFormStore.nextTab()}>Next</Button>
 				{/if}
+				<!-- TODO: Keep working on manual reset -->
+				<!-- <Button variant="outline" size="icon" on:click={() => productFormStore.reset()}>
+					<span class=" i-mdi-restore w-5 h-5" />
+				</Button> -->
 			</div>
 			{#if product?.id}
 				<Button variant="destructive" disabled={isLoading} class="w-full" on:click={handleDelete}>Delete</Button>

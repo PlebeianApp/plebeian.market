@@ -119,7 +119,7 @@
 		margin-left: 0.25rem;
 	}
 	.external-link {
-		@apply text-primary hover:underline;
+		@apply text-secondary hover:underline;
 	}
 }
 

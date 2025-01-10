@@ -116,7 +116,7 @@
 	}
 
 	onMount(() => {
-		if (!appSettings.isFirstTimeRunning) {
+		if (!appSettings?.isFirstTimeRunning) {
 			goto('/', { invalidateAll: true })
 		}
 	})
@@ -165,7 +165,7 @@
 							<Label class="truncate font-bold">New nsec</Label>
 							<div class="flex flex-row gap-2">
 								<Input class="border-black border-2" value={newInstanceNsec} readonly name="instanceSk" />
-								<Button variant="primary" on:click={() => copyToClipboard(newInstanceNsec)}>
+								<Button variant="secondary" on:click={() => copyToClipboard(newInstanceNsec)}>
 									<span class="i-mingcute-clipboard-fill text-black w-6 h-6"></span>
 								</Button>
 							</div>
@@ -175,6 +175,7 @@
 						<div class="flex flex-row gap-2">
 							<Input class=" border-black border-2" name="ownerPk" placeholder="owner npub" type="text" id="ownerPkInput" />
 							<Button
+								variant="secondary"
 								on:click={async () => {
 									const user = await window.nostr?.getPublicKey()
 									const inputElement = document.getElementById('ownerPkInput')
