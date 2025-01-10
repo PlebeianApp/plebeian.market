@@ -71,138 +71,152 @@
 {#if $productsQuery.data && data.user.id}
 	<div class="relative bg-black">
 		<div
-			class="absolute inset-x-0 -bottom-18 h-full bg-[radial-gradient(ellipse_at_bottom,var(--secondary)_25%,transparent_70%)] opacity-30 blur-2xl z-0"
-		></div>
-
+			class="absolute inset-x-0 -bottom-30 h-full bg-[radial-gradient(ellipse_at_bottom,var(--secondary)_25%,transparent_70%)] opacity-30 blur-2xl z-0"
+		/>
 		<Pattern />
 
-		<div class="container flex flex-col md:flex-row text-white md:h-[50vh] gap-6 pt-8 pl-8 pr-8 relative z-1 pb-24">
-			<div class="flex flex-col-reverse md:flex-row gap-8 md:w-1/2 justify-center">
-				{#key $productsQuery.data.identifier}
-					{#if $productsQuery.data?.images?.length}
-						{@const sortedImages = $productsQuery.data.images?.sort((a, b) => a.imageOrder - b.imageOrder)}
-						<div class="flex flex-row md:flex-col justify-center gap-2">
-							{#each sortedImages as item, i}
-								<button
-									class={cn(
-										'md:w-16 w-12 object-cover aspect-square cursor-pointer p-1 relative',
-										i === current - 1 ? 'border border-secondary' : null,
-									)}
-									on:click={() => {
-										api?.scrollTo(i)
-									}}
-								>
-									<img class="aspect-square object-cover" src={item.imageUrl} alt="" />
-									{#if i === current - 1}
-										<div class="absolute bottom-1 right-1 w-2 h-2 bg-primary rounded-full"></div>
-									{/if}
-								</button>
-							{/each}
-						</div>
-						<Carousel.Root bind:api>
-							<Carousel.Content class="max-h-full">
-								{#each sortedImages as item}
-									<Carousel.Item class="flex items-center justify-center h-full aspect-square">
-										<div class="flex items-center justify-center h-full aspect-square">
-											<img class="object-contain h-full" src={item.imageUrl} alt="" />
-										</div>
-									</Carousel.Item>
-								{/each}
-							</Carousel.Content>
-						</Carousel.Root>
-					{:else}
-						<div class="h-full flex items-center justify-center border-2 border-black">
-							<span
-								style={`color:${stringToHexColor(String($productsQuery.data.name || $productsQuery.data.identifier))}`}
-								class=" i-mdi-package-variant-closed w-16 h-16"
-							></span>
-						</div>
-					{/if}
-				{/key}
-			</div>
-			<div class="flex flex-col gap-1 w-full md:w-1/2">
-				{#if isMyProduct}
-					<Button variant="primary" class="w-1/4" on:click={() => openDrawerForProduct(data.productRes.id)}>Edit product</Button>
-				{/if}
-				<h3 class="mb-4">{$productsQuery.data.name}</h3>
+		<div class="container relative z-1 min-h-[600px] py-8 px-4 sm:px-8">
+			<div class="flex flex-col md:flex-row gap-8">
+				<div class="flex-1 md:w-1/2">
+					<div class="sticky top-8">
+						<div class="flex flex-col-reverse md:flex-row gap-4">
+							{#key $productsQuery.data.identifier}
+								{#if $productsQuery.data?.images?.length}
+									{@const sortedImages = $productsQuery.data.images?.sort((a, b) => a.imageOrder - b.imageOrder)}
+									<div class="flex flex-row md:flex-col gap-2 md:max-h-[500px] overflow-y-auto p-1">
+										{#each sortedImages as item, i}
+											<button
+												class={cn(
+													'relative shrink-0 md:w-16 w-12 p-1 transition-all',
+													i === current - 1 ? 'ring-2 ring-secondary' : 'hover:ring-1 hover:ring-secondary/50',
+												)}
+												on:click={() => api?.scrollTo(i)}
+											>
+												<div class="aspect-square w-full overflow-hidden">
+													<img class="h-full w-full object-cover" src={item.imageUrl} alt="" />
+												</div>
+												{#if i === current - 1}
+													<div class="absolute bottom-1 right-1 w-2 h-2 bg-primary rounded-full" />
+												{/if}
+											</button>
+										{/each}
+									</div>
 
-				<div class="flex md:flex-col flex-row gap-2 w-full">
-					<div class="flex flex-col gap-2 w-full">
-						<h3 class="inline-flex items-center">
-							{#if $priceQuery?.isLoading}
-								<Spinner />
-							{:else if typeof $priceQuery?.data === 'number' && !Number.isNaN($priceQuery.data)}
-								{formatSats($priceQuery.data)}
-								sats
-							{:else}
-								<i class="text-lg">price ({$productsQuery.data?.price} {$productsQuery.data?.currency}) could not be converted</i>
-							{/if}
-						</h3>
-						{#if $productsQuery.data.price && $productsQuery.data.currency && !['sat', 'sats', 'btc'].includes($productsQuery.data.currency.toLowerCase())}
-							<h4 class="font-thin">
-								{$productsQuery.data.price.toLocaleString('en-US', { style: 'currency', currency: $productsQuery.data.currency })}
-								{$productsQuery.data.currency}
-							</h4>
-						{/if}
+									<div class="flex-1 md:max-w-[calc(100%-5rem)]">
+										<Carousel.Root bind:api>
+											<Carousel.Content>
+												{#each sortedImages as item}
+													<Carousel.Item>
+														<div class="aspect-square w-full rounded-lg bg-black/5">
+															<img src={item.imageUrl} alt="" class="h-full w-full object-contain" loading="lazy" />
+														</div>
+													</Carousel.Item>
+												{/each}
+											</Carousel.Content>
+										</Carousel.Root>
+									</div>
+								{:else}
+									<div class="w-full aspect-square flex items-center justify-center border-2 border-black/10 rounded-lg bg-black/5">
+										<span
+											style={`color:${stringToHexColor(String($productsQuery.data.name || $productsQuery.data.identifier))}`}
+											class="i-mdi-package-variant-closed w-16 h-16"
+										/>
+									</div>
+								{/if}
+							{/key}
+						</div>
 					</div>
-					<Badge variant="secondary" class="w-36 md:w-fit my-4">
-						Stock: {$productsQuery.data.quantity}
-					</Badge>
 				</div>
 
-				<div class="flex sm:w-1/2 w-full flex-row gap-1">
-					<Button variant="tertiary" size="icon" on:click={handleDecrement} disabled={qtyToCart <= 1}>
-						<span class="i-mdi-minus w-4 h-4"></span>
-					</Button>
-					<Input
-						class="text-off-black rounded-md w-10"
-						value={qtyToCart}
-						on:input={(e) => (qtyToCart = parseInt(e.target.value))}
-						min="1"
-						max={$productsQuery.data.quantity}
-						readonly
-					/>
-					<Button size="icon" variant="tertiary" on:click={handleIncrement} disabled={qtyToCart >= $productsQuery.data.quantity}>
-						<span class="i-mdi-plus w-4 h-4"></span>
-					</Button>
-
-					{#if $productsQuery.data.quantity && $productsQuery.data.quantity > 0}
-						<Button
-							class="ml-2"
-							variant="secondary"
-							on:click={() => handleAddToCart(String($productsQuery.data?.userId), String(stallCoordinates), $productsQuery.data)}
-							>Add to cart</Button
-						>
-					{:else}
-						<Button variant="tertiary" disabled>Out of stock</Button>
+				<div class="flex flex-col flex-1 md:w-1/2 text-white">
+					{#if isMyProduct}
+						<Button variant="primary" class="w-1/4" on:click={() => openDrawerForProduct(data.productRes.id)}>Edit product</Button>
 					{/if}
-					<AdminActions type="product" id={data.productRes.id} isFeatured={$productsQuery.data.isFeatured} />
+					<h3 class="md:mb-12 mb-6 break-words overflow-hidden">{$productsQuery.data.name}</h3>
+
+					<div class="flex md:flex-col flex-row gap-2 w-full">
+						<div class="flex flex-col gap-2 w-full">
+							<h3 class="inline-flex items-center">
+								{#if $priceQuery?.isLoading}
+									<Spinner />
+								{:else if typeof $priceQuery?.data === 'number' && !Number.isNaN($priceQuery.data)}
+									{formatSats($priceQuery.data)}
+									sats
+								{:else}
+									<i class="text-lg break-words"
+										>price ({$productsQuery.data?.price} {$productsQuery.data?.currency}) could not be converted</i
+									>
+								{/if}
+							</h3>
+							{#if $productsQuery.data.price && $productsQuery.data.currency && !['sat', 'sats', 'btc'].includes($productsQuery.data.currency.toLowerCase())}
+								<h4 class="font-thin">
+									{$productsQuery.data.price.toLocaleString('en-US', { style: 'currency', currency: $productsQuery.data.currency })}
+									{$productsQuery.data.currency}
+								</h4>
+							{/if}
+						</div>
+						<Badge variant="secondary" class="w-36 md:w-fit md:my-12 my-6">
+							Stock: {$productsQuery.data.quantity}
+						</Badge>
+					</div>
+
+					<div class="flex sm:w-1/2 w-full flex-row gap-1">
+						<Button variant="tertiary" size="icon" on:click={handleDecrement} disabled={qtyToCart <= 1}>
+							<span class="i-mdi-minus w-4 h-4"></span>
+						</Button>
+						<Input
+							class="text-off-black rounded-md w-10"
+							value={qtyToCart}
+							on:input={(e) => (qtyToCart = parseInt(e.target.value))}
+							min="1"
+							max={$productsQuery.data.quantity}
+							readonly
+						/>
+						<Button size="icon" variant="tertiary" on:click={handleIncrement} disabled={qtyToCart >= $productsQuery.data.quantity}>
+							<span class="i-mdi-plus w-4 h-4"></span>
+						</Button>
+
+						{#if $productsQuery.data.quantity && $productsQuery.data.quantity > 0}
+							<Button
+								class="ml-2"
+								variant="secondary"
+								on:click={() => handleAddToCart(String($productsQuery.data?.userId), String(stallCoordinates), $productsQuery.data)}
+								>Add to cart</Button
+							>
+						{:else}
+							<Button variant="tertiary" disabled>Out of stock</Button>
+						{/if}
+						<AdminActions type="product" id={data.productRes.id} isFeatured={$productsQuery.data.isFeatured} />
+					</div>
+
+					<span class="my-8 font-bold">
+						Sold by
+						<a
+							href={`/p/${$userProfileQuery?.data?.nip05 ? $userProfileQuery.data?.nip05 : $userProfileQuery?.data?.id ? $userProfileQuery.data?.id : data.user.id}`}
+							><span class="underline"
+								>{$userProfileQuery?.data?.name ? $userProfileQuery.data?.name : $userProfileQuery?.data?.displayName}<span /></span
+							></a
+						>
+					</span>
+
+					{#if $productsQuery.data.description}
+						<article class="my-4 overflow-hidden">
+							<h4 class="sm:text-2xl text-xl font-bold">Details</h4>
+							<p class="break-words whitespace-pre-wrap">
+								{truncateText($productsQuery.data.description)}
+							</p>
+						</article>
+					{/if}
 				</div>
-				<span class="my-8 font-bold"
-					>Sold by <a
-						href={`/p/${$userProfileQuery?.data?.nip05 ? $userProfileQuery.data?.nip05 : $userProfileQuery?.data?.id ? $userProfileQuery.data?.id : data.user.id}`}
-						><span class="underline"
-							>{$userProfileQuery?.data?.name ? $userProfileQuery.data?.name : $userProfileQuery?.data?.displayName}<span /></span
-						></a
-					>
-				</span>
-				{#if $productsQuery.data.description}
-					<article class="my-4">
-						<h4 class="sm:text-2xl text-xl font-bold">Details</h4>
-						<p>
-							{truncateText($productsQuery.data.description)}
-						</p>
-					</article>
-				{/if}
 			</div>
 		</div>
 	</div>
 
-	<Pattern pattern="page" class=" opacity-40 -z-10" />
+	<Pattern pattern="page" class="opacity-40 -z-10" />
 
 	{#if $productsQuery.data.description}
 		{#if $breakpoint !== 'lg'}
-			<div class="flex flex-col gap-8 -mt-12">
+			<div class="flex flex-col gap-8 -mt-8">
 				<div class="mx-8 shadow-md z-10">
 					<div class="container flex flex-col items-center p-2 bg-neo-purple">
 						<h4 class="text-white font-bold">Description</h4>
@@ -210,13 +224,17 @@
 					<div class="container flex flex-col items-center p-8 bg-white">
 						{#if $productsQuery.data.description.length > 420}
 							{#if !isExpanded}
-								<p transition:slide>{$productsQuery.data.description.slice(0, 420)}...</p>
+								<p class="whitespace-pre-wrap break-words w-full" transition:slide>
+									{$productsQuery.data.description.slice(0, 420)}...
+								</p>
 							{:else}
-								<p transition:slide>{$productsQuery.data.description}</p>
+								<p class="whitespace-pre-wrap break-words w-full" transition:slide>
+									{$productsQuery.data.description}
+								</p>
 							{/if}
 							<Button
 								variant="ghost"
-								class="self-end"
+								class="self-end mt-4"
 								on:click={() => {
 									isExpanded = !isExpanded
 								}}
@@ -224,22 +242,12 @@
 								{isExpanded ? 'Show Less' : 'Read More...'}
 							</Button>
 						{:else}
-							<p>{$productsQuery.data.description}</p>
+							<p class="whitespace-pre-wrap break-words w-full">
+								{$productsQuery.data.description}
+							</p>
 						{/if}
 					</div>
 				</div>
-				<!-- <div class="mx-8 shadow-md">
-					<div class="container flex flex-col items-center p-2 bg-neo-purple">
-						<h4 class="text-white font-bold">Comments</h4>
-					</div>
-					<div class="container flex flex-col items-center p-8">No comments</div>
-				</div>
-				<div class="mx-8 shadow-md">
-					<div class="container flex flex-col items-center p-2 bg-neo-purple">
-						<h4 class="text-white font-bold">Reviews</h4>
-					</div>
-					<div class="container flex flex-col items-center p-8">No reviews</div>
-				</div> -->
 			</div>
 		{:else}
 			<div class="container -mt-12 flex flex-col items-center z-30 p-8">
@@ -252,13 +260,17 @@
 					<Tabs.Content value="description" class="flex flex-col gap-2 bg-white border-t-2 border-black shadow-md rounded-md p-10">
 						{#if $productsQuery.data.description.length > 420}
 							{#if !isExpanded}
-								<p transition:slide>{$productsQuery.data.description.slice(0, 420)}...</p>
+								<p class="whitespace-pre-wrap break-words w-full" transition:slide>
+									{$productsQuery.data.description.slice(0, 420)}...
+								</p>
 							{:else}
-								<p transition:slide>{$productsQuery.data.description}</p>
+								<p class="whitespace-pre-wrap break-words w-full" transition:slide>
+									{$productsQuery.data.description}
+								</p>
 							{/if}
 							<Button
 								variant="ghost"
-								class="self-end"
+								class="self-end mt-4"
 								on:click={() => {
 									isExpanded = !isExpanded
 								}}
@@ -266,7 +278,9 @@
 								{isExpanded ? 'Show Less' : 'Read More...'}
 							</Button>
 						{:else}
-							<p>{$productsQuery.data.description}</p>
+							<p class="whitespace-pre-wrap break-words w-full">
+								{$productsQuery.data.description}
+							</p>
 						{/if}
 					</Tabs.Content>
 					<Tabs.Content value="comments" class="flex flex-col gap-2 bg-white border-t-2 border-black shadow-md rounded-md p-10"
