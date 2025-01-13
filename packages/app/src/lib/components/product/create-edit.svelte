@@ -245,6 +245,7 @@
 					<div class="grid w-full items-center gap-1.5">
 						<Label for="title" class="font-bold required-mark">Title</Label>
 						<Input
+							id="title"
 							data-tooltip="Your product's name"
 							bind:value={name}
 							required
@@ -263,16 +264,15 @@
 					<div class="grid w-full items-center gap-1.5">
 						<Label for="description" class="font-bold">Description (Recommended)</Label>
 						<Textarea
-							data-tooltip="More information on your product"
+							id="description"
+							data-tooltip="More information on your stall"
 							bind:value={description}
 							class={`border-2 border-black ${validationErrors['description'] ? 'ring-2 ring-red-500' : ''}`}
 							placeholder="Description"
 							name="description"
 						/>
 						{#if validationErrors['description']}
-							<p class="text-red-500 text-sm mt-1">
-								{validationErrors['description']}
-							</p>
+							<p class="text-red-500 text-sm mt-1">{validationErrors['description']}</p>
 						{/if}
 					</div>
 
@@ -280,6 +280,7 @@
 						<div class="grid w-full items-center gap-1.5">
 							<Label for="price" class="font-bold required-mark">Price<small class="font-light">({stall?.currency})</small></Label>
 							<Input
+								id="price"
 								data-tooltip="The cost of your product"
 								bind:value={price}
 								class={`border-2 border-black ${validationErrors['price'] ? 'ring-2 ring-red-500' : ''}`}
@@ -300,6 +301,7 @@
 						<div class="grid w-full items-center gap-1.5">
 							<Label title="quantity" for="quantity" class="font-bold required-mark">Quantity</Label>
 							<Input
+								id="quantity"
 								data-tooltip="The available stock for this product"
 								bind:value={quantity}
 								required
@@ -358,6 +360,7 @@
 						<div class="grid w-full items-center gap-1.5">
 							<Label for="product-currency" class="font-bold">Currency</Label>
 							<Input
+								id="product-currency"
 								data-tooltip="This is inherited from the stall's currency"
 								value={stall?.currency}
 								required
@@ -377,6 +380,7 @@
 							<div class="flex items-center space-x-2">
 								<Checkbox id="terms" bind:checked={category.checked} />
 								<Input
+									id="category-name"
 									bind:value={category.name}
 									placeholder="Category name"
 									class="border-2 border-black"
@@ -440,6 +444,7 @@
 									>Extra cost <small class="font-light">(in {stall?.currency})</small></Label
 								>
 								<Input
+									id="product-extracost"
 									data-tooltip="The cost of the product, which will be added to the method's base cost"
 									value={shippingMethod.extraCost}
 									on:input={(e) => {
