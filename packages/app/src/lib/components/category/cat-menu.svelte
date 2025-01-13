@@ -46,14 +46,8 @@
 	}
 </script>
 
-<div class="flex flex-col gap-4 bg-black p-2 py-3">
-	{#if $categoriesQuery.isLoading && page === 1}
-		<div class="flex gap-4 overflow-x-auto">
-			{#each Array(6) as _}
-				<Skeleton class="h-12 w-32 flex-shrink-0" />
-			{/each}
-		</div>
-	{:else}
+{#if !$categoriesQuery.isLoading && $categoriesQuery.data?.categories?.length}
+	<div class="flex flex-col gap-4 bg-black p-2 py-3">
 		<div class="relative">
 			<div class="flex overflow-x-auto scrollbar-hide" bind:this={scrollContainer}>
 				<div class="flex gap-4 items-center px-1" use:autoAnimate={{ duration: 150 }}>
@@ -114,15 +108,15 @@
 				</div>
 			</div>
 		</div>
-	{/if}
-</div>
+	</div>
 
-<style>
-	.scrollbar-hide {
-		-ms-overflow-style: none;
-		scrollbar-width: none;
-	}
-	.scrollbar-hide::-webkit-scrollbar {
-		display: none;
-	}
-</style>
+	<style>
+		.scrollbar-hide {
+			-ms-overflow-style: none;
+			scrollbar-width: none;
+		}
+		.scrollbar-hide::-webkit-scrollbar {
+			display: none;
+		}
+	</style>
+{/if}

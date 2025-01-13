@@ -6,7 +6,7 @@
 {#if forItemType === 'product'}
 	<div class="my-16 mx-8">
 		{#if title}
-			<h2 class="text-2xl font-bold">{title}</h2>
+			<h2>{title}</h2>
 		{/if}
 		<div class="grid grid-cols-1 gap-8 md:gap-16 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
 			<slot />
@@ -15,7 +15,7 @@
 {:else if forItemType === 'stall'}
 	<div class="my-16 mx-8">
 		{#if title}
-			<h2 class="text-2xl font-bold">{title}</h2>
+			<h2>{title}</h2>
 		{/if}
 		<div class="grid grid-cols-1 gap-8 md:gap-16 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
 			<slot />

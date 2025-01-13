@@ -30,6 +30,7 @@
 	$: if (page && browser) scrollToTop()
 </script>
 
+<CatMenu />
 <main class="flex w-full flex-col pt-8 gap-8">
 	<Pattern pattern="page" class=" opacity-40 -z-10 " />
 	<div class="px-8">
@@ -37,7 +38,6 @@
 		<h3 class=" font-light">Here you can find all the stalls of this community</h3>
 	</div>
 	<div class="px-8">
-		<CatMenu />
 		{#if $stallsQuery.isLoading}
 			<div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
 				{#each [...Array(6)] as _, i}

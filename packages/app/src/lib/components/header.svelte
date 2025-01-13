@@ -83,7 +83,7 @@
 
 <PassPromt dialogOpen={showPassPromt} accointInfo={nsecAccInfo} />
 
-<header class="sticky top-0 z-30 bg-black px-0 py-4 text-white md:px-4 lg:px-12">
+<header class="sticky top-0 z-30 bg-black py-4 text-white px-2 lg:px-12">
 	<div class="container flex h-full w-full items-center justify-between">
 		<section class=" inline-flex items-center">
 			<a href="/">
@@ -129,7 +129,6 @@
 							<Collapsible.Content class="absolute left-0 right-0 bg-secondary-foreground mt-5">
 								<div>
 									{#if $ndkStore.activeUser}
-										<!-- Balance Section -->
 										{#if $balanceOfWorkingNWCs}
 											<div class="flex items-center gap-2">
 												<span class="i-bitcoin-icons-satoshi-v1-outline w-6 h-6" />
@@ -137,7 +136,6 @@
 											</div>
 										{/if}
 
-										<!-- Navigation Links -->
 										<nav class="flex flex-col">
 											<Button variant="none" href="/dash/messages" class={navMenuButtonStyle} on:click={() => (open = false)}>
 												{#if hasUnreadMessages}
@@ -194,9 +192,10 @@
 						<span class="i-tdesign-setting-1 w-6 h-6"></span>
 					</Button>
 					<Button variant="primary" class="sm:flex p-2 relative rounded-md" href="/dash/messages" id="msg-button">
-						<span class="i-tdesign-mail w-6 h-6"></span>
 						{#if hasUnreadMessages}
-							<span class="notification-dot" />
+							<span class="i-tdesign-mail w-6 h-6 text-secondary" />
+						{:else}
+							<span class="i-tdesign-mail w-6 h-6" />
 						{/if}
 					</Button>
 					<Button

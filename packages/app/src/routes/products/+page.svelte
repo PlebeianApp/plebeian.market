@@ -3,7 +3,6 @@
 	import { browser } from '$app/environment'
 	import CatMenu from '$lib/components/category/cat-menu.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
-	import Button from '$lib/components/ui/button/button.svelte'
 	import Input from '$lib/components/ui/input/input.svelte'
 	import * as Pagination from '$lib/components/ui/pagination'
 	import * as Select from '$lib/components/ui/select'
@@ -30,12 +29,12 @@
 	$: if (page && browser) scrollToTop()
 </script>
 
+<CatMenu />
 <div class="flex min-h-screen w-full flex-col">
 	<div class="flex flex-col">
 		<main class="text-black">
 			<div class="px-4 py-10 lg:px-12">
 				<div class="container flex flex-col gap-6">
-					<CatMenu />
 					<h2>Products</h2>
 
 					<div class="flex gap-6">

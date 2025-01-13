@@ -50,7 +50,7 @@
 	--accent-foreground: #262626;
 	/* destructive */
 	--destructive: #bf4040;
-	--destructive-foreground: #ffffff;
+	--destructive-foreground: #1d1d1d;
 	/* border */
 	--border: #dac8d3;
 	--input: #996685;
@@ -119,7 +119,7 @@
 		margin-left: 0.25rem;
 	}
 	.external-link {
-		@apply text-primary hover:underline;
+		@apply text-secondary hover:underline;
 	}
 }
 

@@ -3,6 +3,7 @@
 	import type { DisplayProduct } from '$lib/server/products.service'
 	import type { RichShippingInfo } from '$lib/server/shipping.service'
 	import type { RichStall } from '$lib/server/stalls.service'
+	import type { ProductShippingForm } from '$lib/stores/product-form'
 	import type { ValidationErrors } from '$lib/utils/zod.utils'
 	import Button from '$lib/components/ui/button/button.svelte'
 	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte'
@@ -25,7 +26,7 @@
 	import { toast } from 'svelte-sonner'
 	import { get } from 'svelte/store'
 
-	import type { ProductImage } from '@plebeian/database'
+	import type { ProductImage, ProductShipping } from '@plebeian/database'
 	import { createSlugId } from '@plebeian/database/utils'
 
 	import { forbiddenPatternStore } from '../../../schema/nostr-events'
@@ -34,19 +35,24 @@
 	import MultiImageEdit from './multi-image-edit.svelte'
 
 	const dispatch = createEventDispatcher<{ success: unknown; error: unknown }>()
+
 	export let product: Partial<DisplayProduct> | null = null
 	export let forStall: string | null = null
-	if (forStall) forStall = parseCoordinatesString(forStall).coordinates || null
+
 	let isLoading = false
 	let stall: Partial<RichStall> | null = null
 	let categories: Category[] = []
 	let images: Partial<ProductImage>[] = []
-	let currentShippings: { shipping: Partial<RichShippingInfo> | null; extraCost: string }[] = []
+	let currentShippings: ProductShippingForm[] = []
 	let validationErrors: ValidationErrors = {}
 	let name = ''
 	let description = ''
 	let price = ''
 	let quantity = ''
+
+	if (forStall) {
+		forStall = parseCoordinatesString(forStall).coordinates || null
+	}
 
 	$: stallsQuery = createStallsByFilterQuery({
 		userId: $ndkStore.activeUser?.pubkey,
@@ -56,40 +62,101 @@
 	$: currentStallIdentifier = forStall?.split(':')[2] || product?.stall_id || $stallsQuery.data?.stalls[0]?.identifier || undefined
 
 	$: {
-		if ($productFormStore && !product && !isLoading) {
-			const updates = {
-				categories: $productFormStore.categories?.length && !categories.length,
-				images: $productFormStore.images?.length && !images.length,
-				shippings: $productFormStore.shippings?.length && !currentShippings.length,
-			}
-
-			if (updates.categories) {
-				categories = $productFormStore.categories.map((category) => ({ ...category }))
-			}
-			if (updates.images) {
-				images = $productFormStore.images.map((image) => ({ ...image }))
-			}
-			if (updates.shippings) {
-				currentShippings = $productFormStore.shippings.map((shipping) => ({
-					shipping: shipping.shipping ? { ...shipping.shipping } : null,
-					extraCost: shipping.extraCost,
-				}))
-			}
+		if ($stallsQuery.data?.stalls.length) {
+			stall = $stallsQuery.data.stalls.find((s) => s.identifier === currentStallIdentifier) || $stallsQuery.data.stalls[0]
 		}
 	}
 
-	$: {
-		if ($stallsQuery.data?.stalls.length) {
-			stall = $stallsQuery.data.stalls.find((s) => s.identifier === currentStallIdentifier) || $stallsQuery.data.stalls[0]
-
-			currentShippings =
-				stall?.shipping
-					?.filter((s) => product?.shipping?.some((sh) => s.id == sh.shippingId?.split(':')[0] || s.id == sh.shippingId))
-					.map((s) => ({
-						shipping: s,
-						extraCost: product?.shipping?.find((sh) => s.id == sh.shippingId?.split(':')[0] || s.id == sh.shippingId)?.cost ?? '',
-					})) ?? []
+	function initializeFormData(product: Partial<DisplayProduct> | null, formState: typeof $productFormStore | null) {
+		return {
+			name: formState?.name || product?.name || '',
+			description: formState?.description || product?.description || '',
+			price: formState?.price?.toString() || product?.price?.toString() || '',
+			quantity: formState?.quantity?.toString() || product?.quantity?.toString() || '',
+			categories: initializeCategories(formState?.categories, product?.categories),
+			images: initializeImages(formState?.images, product?.images),
+			shippings: initializeShippings(formState?.shippings, product?.shipping),
 		}
+	}
+
+	function initializeCategories(formCategories?: Category[], productCategories?: string[]) {
+		if (formCategories?.length) {
+			return formCategories.map((category) => ({
+				key: category.key,
+				name: category.name,
+				checked: true,
+			}))
+		}
+
+		if (productCategories?.length) {
+			return productCategories.map((category) => ({
+				key: createSlugId(category),
+				name: category,
+				checked: true,
+			}))
+		}
+
+		return []
+	}
+
+	function initializeImages(formImages?: Partial<ProductImage>[], productImages?: ProductImage[]) {
+		if (formImages?.length) {
+			return formImages.map((image) => ({ ...image }))
+		}
+
+		if (productImages?.length) {
+			return productImages.map((image, index) => ({
+				...image,
+				imageOrder: image.imageOrder ?? index,
+			}))
+		}
+
+		return []
+	}
+
+	function initializeShippings(formShippings?: ProductShippingForm[], productShippings?: ProductShipping[]): ProductShippingForm[] {
+		if (formShippings?.length) {
+			return formShippings.map((shipping) => ({
+				shipping: shipping.shipping
+					? {
+							id: shipping.shipping.id,
+							name: shipping.shipping.name,
+						}
+					: null,
+				extraCost: shipping.extraCost,
+			}))
+		}
+
+		if (productShippings?.length && stall?.shipping?.length) {
+			return stall.shipping
+				.filter(
+					(stallShipping): stallShipping is RichShippingInfo =>
+						!!stallShipping.id &&
+						!!stallShipping.name &&
+						productShippings.some((ps) => stallShipping.id === ps.shippingId?.split(':')[0] || stallShipping.id === ps.shippingId),
+				)
+				.map((stallShipping) => ({
+					shipping: {
+						id: stallShipping.id,
+						name: stallShipping.name,
+					},
+					extraCost:
+						productShippings.find((ps) => stallShipping.id === ps.shippingId?.split(':')[0] || stallShipping.id === ps.shippingId)?.cost ??
+						'0',
+				}))
+		}
+
+		return []
+	}
+
+	$: sortedImages = [...images].sort((a, b) => (a.imageOrder ?? 0) - (b.imageOrder ?? 0))
+
+	const handleNewImageAdded = (e: CustomEvent<string>) => {
+		updateImages([...images, { imageUrl: e.detail, imageOrder: images.length }])
+	}
+
+	const handleImageRemoved = (e: CustomEvent<string>) => {
+		updateImages(images.filter((image) => image.imageUrl !== e.detail))
 	}
 
 	function updateImages(updatedImages: Partial<ProductImage>[]) {
@@ -97,16 +164,6 @@
 			...image,
 			imageOrder: 'imageOrder' in image ? image.imageOrder : index,
 		}))
-	}
-
-	$: sortedImages = [...images].sort((a, b) => (a.imageOrder ?? 0) - (b.imageOrder ?? 0))
-
-	function handleNewImageAdded(e: CustomEvent<string>) {
-		updateImages([...images, { imageUrl: e.detail, imageOrder: images.length }])
-	}
-
-	function handleImageRemoved(e: CustomEvent<string>) {
-		updateImages(images.filter((image) => image.imageUrl !== e.detail))
 	}
 
 	function addCategory() {
@@ -119,6 +176,53 @@
 			lastInput?.select()
 		})
 	}
+
+	function toShippingForm(shipping: Partial<RichShippingInfo>): Pick<RichShippingInfo, 'id' | 'name'> {
+		if (!shipping.id || !shipping.name) {
+			throw new Error('Invalid shipping info: missing id or name')
+		}
+		return {
+			id: shipping.id,
+			name: shipping.name,
+		}
+	}
+
+	async function handleDelete() {
+		if (!product?.id) return
+		isLoading = true
+		try {
+			await $deleteProductMutation.mutateAsync(product.id)
+		} catch (error) {
+			console.error('Error deleting product:', error)
+		}
+		await deleteEvent(product.id)
+		dispatch('success', null)
+		isLoading = false
+	}
+
+	async function initializeForm() {
+		while ($stallsQuery.isLoading) {
+			await new Promise((resolve) => setTimeout(resolve, 50))
+		}
+
+		if ($stallsQuery.data?.stalls.length) {
+			stall = $stallsQuery.data.stalls.find((s) => s.identifier === currentStallIdentifier) || $stallsQuery.data.stalls[0]
+
+			const formData = initializeFormData(product, $productFormStore)
+			name = formData.name
+			description = formData.description
+			price = formData.price
+			quantity = formData.quantity
+			categories = formData.categories
+			images = formData.images
+			currentShippings = formData.shippings
+
+			if (forStall) {
+				currentStallIdentifier = parseCoordinatesString(forStall).coordinates || undefined
+			}
+		}
+	}
+
 	async function handleSubmit(sEvent: SubmitEvent, stall: Partial<RichStall> | null) {
 		if (!stall) return
 		isLoading = true
@@ -129,7 +233,7 @@
 				.filter((method) => method.shipping !== null && method.shipping.id !== undefined)
 				.map((method) => ({
 					id: method.shipping!.id!,
-					cost: method.extraCost,
+					cost: method.extraCost.toString(),
 				}))
 
 			const productData = prepareProductData(formData, stall, sortedImages, shippingData, product!)
@@ -159,25 +263,14 @@
 	}
 
 	onMount(() => {
-		if ($productFormStore) {
-			name = $productFormStore.name || ''
-			description = $productFormStore.description || ''
-			price = $productFormStore.price?.toString() || ''
-			quantity = $productFormStore.quantity?.toString() || ''
+		initializeForm().catch((error) => {
+			console.error('Error initializing form:', error)
+			toast.error('Error initializing form')
+		})
 
-			if ($productFormStore.categories?.length) {
-				categories = $productFormStore.categories.map((category) => ({
-					key: category.key,
-					name: category.name,
-					checked: true,
-				}))
-			}
-
-			if ($productFormStore.shippings && stall?.shipping) {
-				currentShippings = $productFormStore.shippings.map((sh) => ({
-					shipping: stall?.shipping?.find((s) => s.id == sh.shipping?.id) ?? null,
-					extraCost: sh.extraCost ?? '',
-				}))
+		return () => {
+			if (!isLoading && product) {
+				productFormStore.reset()
 			}
 		}
 	})
@@ -195,7 +288,12 @@
 					categories: categories.map((category) => ({ ...category })),
 					images: images.map((image) => ({ ...image })),
 					shippings: currentShippings.map((shipping) => ({
-						shipping: shipping.shipping ? { ...shipping.shipping } : null,
+						shipping: shipping.shipping
+							? {
+									id: shipping.shipping.id,
+									name: shipping.shipping.name,
+								}
+							: null,
 						extraCost: shipping.extraCost,
 					})),
 				}))
@@ -204,20 +302,7 @@
 	}
 
 	const activeTab =
-		'w-full font-bold border-b-2 border-black text-black data-[state=active]:border-b-primary data-[state=active]:text-primary'
-
-	async function handleDelete() {
-		if (!product?.id) return
-		isLoading = true
-		try {
-			await $deleteProductMutation.mutateAsync(product.id)
-		} catch (error) {
-			console.error('Error deleting product:', error)
-		}
-		await deleteEvent(product.id)
-		dispatch('success', null)
-		isLoading = false
-	}
+		'w-full font-bold border-b-2 border-black text-black data-[state=active]:border-b-secondary data-[state=active]:text-secondary'
 </script>
 
 {#if $stallsQuery.isLoading}
@@ -426,8 +511,10 @@
 											<DropdownMenu.CheckboxItem
 												checked={shippingMethod.shipping?.id === item.id}
 												on:click={() => {
-													shippingMethod.shipping = item
-													currentShippings = [...currentShippings]
+													if (item.id && item.name) {
+														shippingMethod.shipping = toShippingForm(item)
+														currentShippings = [...currentShippings]
+													}
 												}}
 											>
 												<div>
@@ -448,12 +535,16 @@
 									data-tooltip="The cost of the product, which will be added to the method's base cost"
 									value={shippingMethod.extraCost}
 									on:input={(e) => {
-										shippingMethod.extraCost = e.currentTarget.value
+										const value = e.currentTarget.value.replace(/[^0-9.]/g, '')
+										const sanitizedValue = value.replace(/(\..*)\./g, '$1')
+										shippingMethod.extraCost = sanitizedValue
 										currentShippings = [...currentShippings]
 									}}
 									required
 									class="border-2 border-black"
-									type="number"
+									type="text"
+									inputmode="decimal"
+									pattern="[0-9]*[.]?[0-9]*"
 									name="extra"
 								/>
 								{#if validationErrors[`shipping.${i}.cost`]}
@@ -490,7 +581,7 @@
 			<div class="flex gap-2 my-4">
 				<Button
 					variant="outline"
-					disabled={isLoading}
+					disabled={isLoading || $productFormStore.tab == 'details'}
 					class="w-full font-bold flex items-center gap-2"
 					on:click={() => productFormStore.previousTab()}
 				>
@@ -502,6 +593,10 @@
 				{:else}
 					<Button variant="primary" disabled={isLoading} class="w-full font-bold" on:click={() => productFormStore.nextTab()}>Next</Button>
 				{/if}
+				<!-- TODO: Keep working on manual reset -->
+				<!-- <Button variant="outline" size="icon" on:click={() => productFormStore.reset()}>
+					<span class=" i-mdi-restore w-5 h-5" />
+				</Button> -->
 			</div>
 			{#if product?.id}
 				<Button variant="destructive" disabled={isLoading} class="w-full" on:click={handleDelete}>Delete</Button>

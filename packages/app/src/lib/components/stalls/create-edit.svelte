@@ -272,7 +272,7 @@
 	}
 
 	const activeTab =
-		'w-full font-bold border-b-2 border-black text-black data-[state=active]:border-b-primary data-[state=active]:text-primary'
+		'w-full font-bold border-b-2 border-black text-black data-[state=active]:border-b-secondary data-[state=active]:text-secondary'
 </script>
 
 <form class="flex flex-col justify-between gap-2 h-[calc(100vh-8rem)]" on:submit={handleSubmit} on:invalid|capture={handleInvalidForm}>

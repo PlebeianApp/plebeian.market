@@ -1,4 +1,3 @@
-// lib/stores/product-form.ts
 import type { Category } from '$lib/fetch/products.mutations'
 import type { RichShippingInfo } from '$lib/server/shipping.service'
 import type { Writable } from 'svelte/store'
@@ -9,6 +8,16 @@ import type { ProductImage } from '@plebeian/database'
 export const PRODUCT_FORM_TABS = ['details', 'categories', 'images', 'shippings'] as const
 export type ProductFormTab = (typeof PRODUCT_FORM_TABS)[number]
 
+export type ProductShipping = {
+	shippingId: string
+	cost: string
+}
+
+export type ProductShippingForm = {
+	shipping: Pick<RichShippingInfo, 'id' | 'name'> | null
+	extraCost: string
+}
+
 export interface ProductFormState {
 	tab: ProductFormTab
 	name: string
@@ -18,7 +27,7 @@ export interface ProductFormState {
 	stallIdentifier?: string
 	categories: Category[]
 	images: Partial<ProductImage>[]
-	shippings: { shipping: Partial<RichShippingInfo> | null; extraCost: string }[]
+	shippings: ProductShippingForm[]
 }
 
 export const DEFAULT_FORM_STATE: ProductFormState = {
