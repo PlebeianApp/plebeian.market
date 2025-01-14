@@ -21,7 +21,7 @@
 	let inputElement: HTMLInputElement
 </script>
 
-<div use:focusTrap={autoFocus}>
+<div use:focusTrap={autoFocus} class="w-full">
 	<input
 		bind:this={inputElement}
 		class={cn(

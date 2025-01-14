@@ -10,12 +10,15 @@
 	import '../app.css'
 
 	import { QueryClientProvider } from '@tanstack/svelte-query'
+	import { browser } from '$app/environment'
 	import { afterNavigate, goto } from '$app/navigation'
+	import { page } from '$app/stores'
 	import { externalLinks } from '$lib/actions/external-links'
 	import RelayReportWidget from '$lib/components/assets/relayReportWidget.svelte'
 	import RelayWidget from '$lib/components/assets/relayWidget.svelte'
 	import BetaDialog from '$lib/components/dialogs/betaDialog.svelte'
 	import Drawer from '$lib/components/drawer.svelte'
+	import Pattern from '$lib/components/Pattern.svelte'
 	import SellStuffAdvert from '$lib/components/sell-stuff-advert.svelte'
 	import DialogManager from '$lib/components/ui/dialogManager.svelte'
 	import { queryClient } from '$lib/fetch/client'
@@ -132,6 +135,16 @@
 		}
 	})
 
+	$: if (browser)
+		document.title =
+			$page.url.pathname === '/'
+				? data.appSettings?.instanceName || 'PM'
+				: `${$page.url.pathname
+						.split('/')
+						.filter(Boolean)
+						.map((s) => s.charAt(0).toUpperCase() + s.slice(1))
+						.join(' ')} | ${data.appSettings?.instanceName || 'PM'}`
+
 	$: if (isLoggedIn) {
 		initNdkNWCs()
 		setupDMSubscription()
@@ -171,8 +184,9 @@
 	{#if data.appSettings?.isFirstTimeRunning}
 		<slot />
 	{:else}
-		<div class="min-h-screen flex flex-col font-sans">
+		<div class="min-h-screen flex flex-col font-sans relative">
 			<Header />
+			<Pattern pattern="page" class=" opacity-35 -z-10 " />
 			<section class="flex-1" use:externalLinks>
 				<slot />
 			</section>

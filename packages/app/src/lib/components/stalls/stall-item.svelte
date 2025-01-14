@@ -40,8 +40,8 @@
 	}
 
 	$: stallUrl = stall.userNip05
-		? `/stalls/${stall.userNip05.toLowerCase()}/${stall.identifier}`
-		: `/stalls/${stall.id?.replace(/^30017:/, '')}`
+		? `/community/${stall.userNip05.toLowerCase()}/${stall.identifier}`
+		: `/community/${stall.id?.replace(/^30017:/, '')}`
 
 	function handleStallAction(action: 'edit' | 'add') {
 		if (!stall.id) return

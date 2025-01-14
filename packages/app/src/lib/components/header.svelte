@@ -93,8 +93,9 @@
 				</div>
 			</a>
 			<div class="hidden sm:flex mx-8 gap-8">
-				<a class="hover:underline font-semibold" href="/stalls/">Market</a>
-				<a class="hover:underline font-semibold" href="/square">Square</a>
+				<a class="hover:underline font-semibold" href="/products/">Products</a>
+				<a class="hover:underline font-semibold" href="/community/">Community</a>
+				<a class="hover:underline font-semibold" href="/nostr">Nostr</a>
 			</div>
 		</section>
 		<div class="flex items-center gap-4">
@@ -157,14 +158,14 @@
 												<span class={navMenuLabels}>Dashboard</span>
 											</Button>
 
-											<Button variant="none" href="/stalls" class={navMenuButtonStyle} on:click={() => (open = false)}>
+											<Button variant="none" href="/community" class={navMenuButtonStyle} on:click={() => (open = false)}>
 												<span class="i-tdesign-shop w-6 h-6" />
-												<span class={navMenuLabels}>Market</span>
+												<span class={navMenuLabels}>Community</span>
 											</Button>
 
-											<Button variant="none" href="/square" class={navMenuButtonStyle} on:click={() => (open = false)}>
+											<Button variant="none" href="/nostr" class={navMenuButtonStyle} on:click={() => (open = false)}>
 												<span class="i-tdesign-compass w-6 h-6" />
-												<span class={navMenuLabels}>Square</span>
+												<span class={navMenuLabels}>Nostr</span>
 											</Button>
 
 											<Button

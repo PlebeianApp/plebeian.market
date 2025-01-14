@@ -212,8 +212,6 @@
 		</div>
 	</div>
 
-	<Pattern pattern="page" class="opacity-40 -z-10" />
-
 	{#if $productsQuery.data.description}
 		{#if $breakpoint !== 'lg'}
 			<div class="flex flex-col gap-8 -mt-8">

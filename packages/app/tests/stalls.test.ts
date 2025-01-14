@@ -20,10 +20,10 @@ describe('stalls', async () => {
 	})
 
 	test('stall items should be visible', async () => {
-		await page.goto(`http://${process.env.APP_HOST}:${process.env.APP_PORT}/stalls`)
+		await page.goto(`http://${process.env.APP_HOST}:${process.env.APP_PORT}/community`)
 		const allLinks = await page.$$('a')
 		const hrefs = await Promise.all(allLinks.map((link) => link.getAttribute('href')))
-		expect(hrefs.some((href) => href?.startsWith('/stalls/'))).toBe(true)
+		expect(hrefs.some((href) => href?.startsWith('/community/'))).toBe(true)
 	})
 
 	test('create a new stall', async () => {
