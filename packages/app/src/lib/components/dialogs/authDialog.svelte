@@ -45,7 +45,7 @@
 		formData.append('key', nsec)
 		await handleLogin('NSEC', formData, checked)
 		dialogs.clearAll()
-		dialogs.show(SaveKeyDialog, { nsec }, { size: 'lg' })
+		dialogs.show(SaveKeyDialog, { nsec })
 		loading = false
 	}
 
