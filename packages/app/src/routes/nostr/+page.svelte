@@ -1,7 +1,6 @@
 <script lang="ts">
 	import Spinner from '$lib/components/assets/spinner.svelte'
 	import ItemGrid from '$lib/components/common/item-grid.svelte'
-	import Pattern from '$lib/components/Pattern.svelte'
 	import StallItem from '$lib/components/stalls/stall-item.svelte'
 	import { stallsSub } from '$lib/nostrSubs/subs'
 	import { onDestroy, onMount } from 'svelte'
