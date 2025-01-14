@@ -39,13 +39,12 @@
 		queryClient.setQueryData(productKeys.currency.base(currency), price)
 	}
 
-	$: isLoggedIn = $ndkStore && $ndkStore.activeUser
+	$: isLoggedIn = browser && $ndkStore.activeUser
 
 	onMount(async () => {
 		if (data.appSettings?.isFirstTimeRunning) {
 			goto('/setup', { invalidateAll: true })
 		}
-		// localStorage.setItem('forbiddenPattern', (data.forbiddenWords.forbiddenPattern as RegExp).toString())
 		const userForbiddenPattern = localStorage.getItem('forbiddenPattern')
 		const instanceForbiddenPattern = data.forbiddenWords.forbiddenPattern.toString()
 		if (instanceForbiddenPattern == userForbiddenPattern) {
