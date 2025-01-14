@@ -1,7 +1,6 @@
 import { error, json } from '@sveltejs/kit'
 import { authorizeEditorOrAdmin } from '$lib/auth.js'
 import { setStallMetaFeatured } from '$lib/server/stalls.service'
-import { string } from 'zod'
 
 export const POST = async ({ params, request }) => {
 	const { stallId } = params
