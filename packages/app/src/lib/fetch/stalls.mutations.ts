@@ -79,6 +79,9 @@ export const updateStallFromNostrEvent = createMutation(
 				await queryClient.invalidateQueries({
 					queryKey: shippingKeys.byStall(data.id),
 				})
+				await queryClient.invalidateQueries({
+					queryKey: productKeys.filtered({ userId: data.userId }),
+				})
 			}
 		},
 	},

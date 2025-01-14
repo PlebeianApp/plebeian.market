@@ -9,7 +9,7 @@
 	import { openDrawerForProduct } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
 	import { formatSats, parseCoordinatesString, stringToHexColor } from '$lib/utils'
-	import { Edit, MoreVertical, ShoppingCart } from 'lucide-svelte'
+	import { Edit, MoreVertical } from 'lucide-svelte'
 
 	import Spinner from '../assets/spinner.svelte'
 	import { Badge } from '../ui/badge'
