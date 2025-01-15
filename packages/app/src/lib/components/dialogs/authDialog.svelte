@@ -15,12 +15,11 @@
 	import type { PageData } from '../../../routes/$types'
 	import Spinner from '../assets/spinner.svelte'
 	import Hero from '../common/hero.svelte'
-	import Pattern from '../Pattern.svelte'
 	import SaveKeyDialog from './saveKeyDialog.svelte'
 
 	$: ({ appSettings } = $page.data as PageData)
 	let tab: 'login-nip07' | 'signup' | 'login-nsec' = 'login-nip07'
-	let checked = false
+	let checked = true
 	let nsec: ReturnType<typeof nsecEncode> | null = null
 	let loading = false
 
