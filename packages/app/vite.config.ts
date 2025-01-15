@@ -21,7 +21,8 @@ export default defineConfig(({ mode }) => {
 					name: 'Plebeian Market',
 					short_name: 'Plebeian Market',
 					description: 'Sell stuff for sats',
-					theme_color: '#ffffff',
+					theme_color: '#1a1a1a',
+					background_color: '#1a1a1a',
 					icons: [
 						{
 							src: 'pwa-64x64.png',
