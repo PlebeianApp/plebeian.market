@@ -29,33 +29,34 @@ jobs:
 
       - run: sudo apt install sshpass rsync
       - run: pnpm install
-      - run: pnpm db:init
+      - name: Check and apply database migrations
+        run: pnpm db:init
       - run: pnpm build
-      - run: rm -rf node_modules **/node_modules .pnpm-store
+      - run: rm -rf sqlite.db node_modules **/node_modules .pnpm-store
 
       - name: Upload Assets
-        if: ${{ (github.event.comment.body == '/deploy' && github.event.issue.pull_request) || github.event_name == 'push' }}
+        if: github.event_name == 'push'
         env:
           PORT: 4173
         run: |
-          rsync --rsh="/usr/bin/sshpass -p \"${{ secrets.REMOTE_PASSWORD }}\" ssh -o StrictHostKeyChecking=no -l ${{ secrets.REMOTE_USER }}" -azq --delete --exclude='sqlite.db' . ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:plebeian.market.$PORT
+          rsync --rsh="/usr/bin/sshpass -p \"${{ secrets.REMOTE_PASSWORD }}\" ssh -o StrictHostKeyChecking=no -l ${{ secrets.REMOTE_USER }}" -azq --exclude='sqlite.db' . ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:plebeian.market.$PORT
 
-      - name: Deploy on /deploy or push to main
-        if: ${{ (github.event.comment.body == '/deploy' && github.event.issue.pull_request) || github.event_name == 'push' }}
+      - name: Deploy on push to production
+        if: github.event_name == 'push'
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.REMOTE_HOST }}
           username: ${{ secrets.REMOTE_USER }}
           password: ${{ secrets.REMOTE_PASSWORD }}
           script: |
-            export ORIGIN=https://prod.plebeian.market
             export PORT=4173
+            export ORIGIN=https://plebeian.market
             cd plebeian.market.${PORT}
             mv .env.sample .env
             pnpm i --frozen-lockfile -f
             pnpm db:migrate
             fuser -k $PORT/tcp || true
             cd packages/app
-            nohup pnpm preview --port=$PORT > preview.log 2>&1 &
+            nohup node build > preview.log 2>&1 &
             sleep 10
             head -n 20 preview.log
