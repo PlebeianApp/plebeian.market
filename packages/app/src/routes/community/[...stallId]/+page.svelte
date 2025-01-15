@@ -5,13 +5,10 @@
 	import SkeletonLoader from '$lib/components/common/skeletonLoader.svelte'
 	import TruncatedText from '$lib/components/common/truncatedText.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
-	import * as Accordion from '$lib/components/ui/accordion'
 	import Badge from '$lib/components/ui/badge/badge.svelte'
 	import { Button } from '$lib/components/ui/button'
 	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card'
 	import CAvatar from '$lib/components/ui/custom-components/c-avatar.svelte'
-	import * as Select from '$lib/components/ui/select'
-	import Skeleton from '$lib/components/ui/skeleton/skeleton.svelte'
 	import { createProductsByFilterQuery } from '$lib/fetch/products.queries'
 	import { createStallQuery } from '$lib/fetch/stalls.queries'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
@@ -28,6 +25,7 @@
 		label: 'Latest',
 		value: 'desc',
 	}
+
 	function onSortSelectedChange(v?: typeof sort) {
 		sort = v!
 	}
@@ -37,8 +35,12 @@
 	$: stallQuery = createStallQuery(stall.id)
 
 	$: productsQuery = createProductsByFilterQuery({
+		pageSize: 12,
+		page: 1,
+		order: sort.value ?? 'desc',
 		stallId: stall.id,
 	})
+
 	let isMyStall = false
 
 	$: {
