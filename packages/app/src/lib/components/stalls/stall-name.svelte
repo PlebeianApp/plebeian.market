@@ -11,7 +11,7 @@
 	{#if $stallQuery.isLoading}
 		<Skeleton class="h-4 w-[250px]" />
 	{:else if $stallQuery.data}
-		<a href={`/stalls/${stallId}`} class="flex flex-row gap-1 items-center">
+		<a href={`/community/${stallId}`} class="flex flex-row gap-1 items-center">
 			<span class="i-tdesign-store w-6 h-6" />
 			<span>{$stallQuery.data.stall?.name}</span>
 		</a>

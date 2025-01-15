@@ -1,6 +1,6 @@
 import { page } from '$app/stores'
 import { KindStalls } from '$lib/constants'
-import { derived, get } from 'svelte/store'
+import { derived } from 'svelte/store'
 import { z } from 'zod'
 
 import type { ProductTypes } from '@plebeian/database'

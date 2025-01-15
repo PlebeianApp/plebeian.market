@@ -25,7 +25,6 @@
 
 {#if !data.appSettings?.isFirstTimeRunning}
 	<div class="flex min-h-screen w-full flex-col relative">
-		<Pattern pattern="page" class=" opacity-40 -z-10 " />
 		<main class="text-black">
 			<div class="relative w-full bg-black py-20 text-center text-white overflow-hidden">
 				<div

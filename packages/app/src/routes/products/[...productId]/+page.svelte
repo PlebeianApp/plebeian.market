@@ -1,6 +1,5 @@
 <script lang="ts">
 	import type { CarouselAPI } from '$lib/components/ui/carousel/context'
-	import autoAnimate from '@formkit/auto-animate'
 	import Spinner from '$lib/components/assets/spinner.svelte'
 	import AdminActions from '$lib/components/common/admin-actions.svelte'
 	import ItemGrid from '$lib/components/common/item-grid.svelte'
@@ -9,7 +8,6 @@
 	import Badge from '$lib/components/ui/badge/badge.svelte'
 	import Button from '$lib/components/ui/button/button.svelte'
 	import * as Carousel from '$lib/components/ui/carousel'
-	import * as Collapsible from '$lib/components/ui/collapsible'
 	import Input from '$lib/components/ui/input/input.svelte'
 	import * as Tabs from '$lib/components/ui/tabs/index.js'
 	import { KindStalls } from '$lib/constants'
@@ -211,8 +209,6 @@
 			</div>
 		</div>
 	</div>
-
-	<Pattern pattern="page" class="opacity-40 -z-10" />
 
 	{#if $productsQuery.data.description}
 		{#if $breakpoint !== 'lg'}
