@@ -8,6 +8,7 @@
 	import * as Accordion from '$lib/components/ui/accordion'
 	import Badge from '$lib/components/ui/badge/badge.svelte'
 	import { Button } from '$lib/components/ui/button'
+	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card'
 	import CAvatar from '$lib/components/ui/custom-components/c-avatar.svelte'
 	import * as Select from '$lib/components/ui/select'
 	import Skeleton from '$lib/components/ui/skeleton/skeleton.svelte'
@@ -47,65 +48,77 @@
 	}
 </script>
 
-<main class="px-4 lg:px-12 relative">
+<main class="relative">
 	<div class="flex flex-col gap-12">
 		{#if $stallQuery.data?.stall}
 			{@const { image, name, description, currency, createDate, shipping } = $stallQuery.data.stall}
-			<div class="flex flex-col gap-2">
+			<div class="flex flex-col">
 				{#if image}
-					<div class="border-black border-2 w-full h-auto max-h-[45vh] overflow-hidden flex items-center justify-center">
+					<div class="w-full aspect-[3/1] md:aspect-[6.125/1] overflow-hidden flex items-center justify-center">
 						<img src={image} alt="stall-cover" class="w-full h-full object-cover" />
 					</div>
 				{:else}
 					<div
 						style={`background-color: ${stringToHexColor(stall.id)}`}
-						class={`border-black w-full border-2 h-[10vh] relative overflow-hidden`}
+						class={`border-black w-full border-2 aspect-[6.125/1] relative overflow-hidden`}
 					/>
 				{/if}
 				{#if name}
-					<h1 class="text-3xl">{truncateText(name, 50)}</h1>
-				{/if}
-				{#if description}
-					<TruncatedText text={description} />
+					<div class="flex flex-col pl-8 pt-4 bg-off-black">
+						<h2 class="text-2xl text-white">{truncateText(name, 50)}</h2>
+					</div>
 				{/if}
 			</div>
-			<div class="flex sm:flex-row flex-col gap-12">
-				<section class="w-fit">
-					{#if $userProfileQuery.data?.name || $userProfileQuery.data?.displayName}
-						<a href={`/p/${$userProfileQuery.data?.nip05 ? $userProfileQuery.data?.nip05 : user.id}`} class="flex flex-col items-center">
-							<CAvatar pubkey={String(user.id)} profile={$userProfileQuery.data} />
-							<span>{truncateText(String($userProfileQuery.data?.name || $userProfileQuery.data?.displayName), 15)}</span>
-						</a>
-					{:else if $userProfileQuery.data?.id}
-						<a href={`/p/${$userProfileQuery.data?.id}`} class="flex flex-col items-center">
-							<CAvatar pubkey={String(user.id)} profile={$userProfileQuery.data} />
-							<span>Unnamed user</span>
-						</a>
-					{:else}
-						<Skeleton class="h-24 w-24 rounded-full" />
+			<div class="flex flex-col gap-12 px-8">
+				<div class="flex flex-col md:flex-row gap-4 w-full">
+					{#if description}
+						<Card class="rounded-none border-t-2 border-b-0 border-l-0 border-r-0 border-black shadow-lg flex-1">
+							<CardHeader>
+								<CardTitle>
+									<div class="flex flex-row gap-2 items-center justify-between">
+										<div class="flex flex-row gap-2 items-center">
+											<a href={`/p/${user.id}`}>
+												<CAvatar
+													pubkey={String(user.id)}
+													profile={$userProfileQuery.data}
+													avatarClass="rounded-md w-8 h-8"
+													imageClass="rounded-md w-8 h-8"
+													fallbackClass="rounded-md w-8 h-8"
+												/>
+											</a>
+											<span>Description</span>
+										</div>
+										<span class="text-sm text-gray-500">created: {createDate}</span>
+									</div>
+								</CardTitle>
+							</CardHeader>
+							<CardContent class="flex flex-col gap-6">
+								<TruncatedText text={description} />
+								<AdminActions type="stall" id={stall.id} isFeatured={$stallQuery.data.stall.isFeatured} />
+							</CardContent>
+						</Card>
 					{/if}
-				</section>
-				<Accordion.Root class="w-full sm:max-w-sm">
-					<Accordion.Item value="item-1">
-						<Accordion.Trigger>More info</Accordion.Trigger>
-						<Accordion.Content>
-							<div class=" flex flex-col gap-2 items-start">
+					<Card class="rounded-none border-t-2 border-b-0 border-l-0 border-r-0 border-black shadow-lg flex-none w-full md:w-1/5">
+						<CardHeader>
+							<CardTitle>Shipping Zones</CardTitle>
+						</CardHeader>
+						<CardContent>
+							<div class="flex flex-col gap-2 items-start">
 								{#if shipping?.length}
-									<span class=" font-bold">Shipping zones</span>
 									<section class="gap-2">
 										{#each shipping as shipping}
-											<div class=" flex gap-2">
-												{#if shipping.name || shipping.id}
-													<span>{truncateString(shipping.name || shipping.id || '')}</span>
-												{/if}
+											{#if shipping.name || shipping.id}
+												<span>{truncateString(shipping.name || shipping.id || '')}</span>
+											{/if}
+											<div class="flex flex-row gap-2">
 												{#if shipping.regions}
 													{#each shipping.regions as region}
-														<Badge variant="secondary">{region}</Badge>
+														<Badge size="sm" class="w-fit" variant="secondary">{region}</Badge>
 													{/each}
 												{/if}
 												{#if shipping.countries}
 													{#each shipping.countries as country}
-														<Badge variant="secondary">{country}</Badge>
+														<Badge size="sm" class="w-fit" variant="secondary">{country}</Badge>
 													{/each}
 												{/if}
 											</div>
@@ -113,14 +126,17 @@
 									</section>
 								{/if}
 							</div>
-						</Accordion.Content>
-					</Accordion.Item>
-				</Accordion.Root>
-				<div class="flex flex-col">
-					<span>currency: {currency}</span>
-					<span>created: {createDate}</span>
+						</CardContent>
+					</Card>
+					<Card class="rounded-none border-t-2 border-b-0 border-l-0 border-r-0 border-black shadow-lg flex-none w-full md:w-1/5">
+						<CardHeader>
+							<CardTitle>Currency</CardTitle>
+						</CardHeader>
+						<CardContent>
+							<span>{currency}</span>
+						</CardContent>
+					</Card>
 				</div>
-				<AdminActions type="stall" id={stall.id} isFeatured={$stallQuery.data.stall.isFeatured} />
 			</div>
 
 			{#if isMyStall}
@@ -138,16 +154,7 @@
 
 	{#if $productsQuery.data?.products.length}
 		{@const { products } = $productsQuery.data}
-		<Select.Root selected={sort} onSelectedChange={onSortSelectedChange}>
-			<Select.Trigger class="w-[100px]">
-				<Select.Value placeholder="Sort" />
-			</Select.Trigger>
-			<Select.Content>
-				<Select.Item value="desc">Latest</Select.Item>
-				<Select.Item value="asc">Oldest</Select.Item>
-			</Select.Content>
-		</Select.Root>
-		<ItemGrid title="Products">
+		<ItemGrid title="Products" withSort={true} on:sortSelectedChange={(e) => onSortSelectedChange(e.detail.value)}>
 			{#if products.length}
 				{#each products as item (item.id)}
 					<ProductItem product={item} />
