@@ -30,6 +30,7 @@ const config = {
 				'light-gray': 'var(--light-gray)',
 				'off-black': 'var(--off-black)',
 				'neo-purple': 'var(--neo-purple)',
+				'lighter-black': 'var(--lighter-black)',
 				primary: {
 					DEFAULT: 'var(--primary)',
 					foreground: 'var(--primary-foreground)',

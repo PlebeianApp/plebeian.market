@@ -8,17 +8,15 @@
 	import InteractiveZapButton from '$lib/components/common/interactive-zap-button.svelte'
 	import ItemGrid from '$lib/components/common/item-grid.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
-	import StallItem from '$lib/components/stalls/stall-item.svelte'
 	import Button from '$lib/components/ui/button/button.svelte'
 	import CAvatar from '$lib/components/ui/custom-components/c-avatar.svelte'
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
 	import { createProductsByFilterQuery } from '$lib/fetch/products.queries'
 	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
 	import { fetchUserProductData, fetchUserStallsData, normalizeProductsFromNostr, normalizeStallData } from '$lib/nostrSubs/utils'
-	import { openDrawerForNewProduct, openDrawerForNewStall } from '$lib/stores/drawer-ui'
+	import { openDrawerForNewProduct } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
-	import { mergeWithExisting, truncateText } from '$lib/utils'
+	import { getHexColorFingerprintFromHexPubkey, mergeWithExisting, truncateText } from '$lib/utils'
 	import { onMount } from 'svelte'
 
 	import type { PageData } from './$types'
@@ -60,71 +58,63 @@
 </script>
 
 {#if $userProfileQuery.data}
-	{@const { image, name, about, banner } = $userProfileQuery.data}
-	<div class="px-4 lg:px-12 relative">
-		<div class="flex flex-col gap-14">
-			<div class="relative h-auto">
-				{#if banner}
-					<img src={banner} alt="profile" class="border-black border-2 object-cover w-full h-[25vh]" />
-				{:else}
-					<div style={`background-color: #${id?.substring(0, 6)}`} class="h-[10vh] border-2 border-black"></div>
+	{@const { image, name, about, banner, pubkey, bio } = $userProfileQuery.data}
+	<div class="relative">
+		<div class="flex flex-col">
+			{#if banner}
+				<div class="w-full aspect-[6.125/1] overflow-hidden flex items-center justify-center">
+					<img src={banner} alt="stall-cover" class="w-full h-full object-cover" />
+				</div>
+			{:else}
+				<div
+					style={`background-color: ${getHexColorFingerprintFromHexPubkey(id)}`}
+					class={`border-black w-full border-2 aspect-[6.125/1] relative overflow-hidden`}
+				/>
+			{/if}
+			{#if about}
+				<div class="flex flex-col px-8 py-4 bg-lighter-black text-white">
+					{#if truncateText(about) !== about}
+						<Button variant="outline" class="w-fit" size="icon" on:click={() => (showFullAbout = !showFullAbout)}>
+							<span class={showFullAbout ? 'i-mdi-minus' : 'i-mdi-plus'} />
+						</Button>
+					{:else}
+						<p class="break-words">{about}</p>
+					{/if}
+				</div>
+			{/if}
+			<div class="flex flex-row justify-between px-8 bg-off-black items-center">
+				{#if name}
+					<div class="flex flex-row pt-4 gap-4">
+						<a href={`/p/${pubkey}`}>
+							<CAvatar
+								pubkey={id}
+								profile={$userProfileQuery.data}
+								avatarClass="rounded-md w-8 h-8"
+								imageClass="rounded-md w-8 h-8"
+								fallbackClass="rounded-md w-8 h-8"
+							/>
+						</a>
+						<h2 class="text-2xl text-white">{truncateText(name ?? `Unnamed user`, 50)}</h2>
+					</div>
 				{/if}
-
-				<div class="grid lg:grid-cols-[auto_1fr_auto] grid-rows-[auto_1fr_auto] gap-4 mt-8 justify-between">
-					<div class="px-2">
-						<CAvatar pubkey={id} profile={$userProfileQuery.data} />
-					</div>
-					<div class="flex flex-col">
-						<div class="flex flex-row gap-2">
-							<h1 class="text-3xl">{name ?? `Unnamed user`}</h1>
-							<AdminActions type="user" {id} />
-						</div>
-						{#if about}
-							{@const truncatedAbout = truncateText(about)}
-							{#if truncatedAbout !== about}
-								<p class="break-words">{showFullAbout ? about : truncatedAbout}</p>
-								<Button variant="outline" class="w-fit" size="icon" on:click={() => (showFullAbout = !showFullAbout)}>
-									<span class={showFullAbout ? 'i-mdi-minus' : 'i-mdi-plus'} />
-								</Button>
-							{:else}
-								<p class="break-words">{about}</p>
-							{/if}
-						{/if}
-					</div>
-					<div class="flex flex-col">
-						<div class="flex flex-row gap-2">
-							{#if isMe}
-								<Button variant="focus" class="w-full gap-2" on:click={openDrawerForNewProduct}>
-									<span class="i-mdi-plus w-5 h-5" />
-									<span>Add {productsMixture.length ? 'A' : 'Your First'} Product</span>
-								</Button>
-							{/if}
-							<InteractiveZapButton userIdToZap={id} profile={$userProfileQuery.data} />
-							<Button size="icon" variant="tertiary" on:click={handleSendMessage}>
-								<span class="i-mdi-message-bubble w-6 h-6" />
+				<div class="flex flex-col">
+					<div class="flex flex-row gap-2">
+						<AdminActions type="user" {id} />
+						{#if isMe}
+							<Button variant="focus" class="w-full gap-2" on:click={openDrawerForNewProduct}>
+								<span class="i-mdi-plus w-5 h-5" />
+								<span>Add {productsMixture.length ? 'A' : 'Your First'} Product</span>
 							</Button>
-						</div>
+						{/if}
+						<InteractiveZapButton userIdToZap={id} profile={$userProfileQuery.data} />
+						<Button size="icon" variant="tertiary" on:click={handleSendMessage}>
+							<span class="i-mdi-message-bubble w-6 h-6" />
+						</Button>
 					</div>
 				</div>
 			</div>
-			{#if stallsMixture.length}
-				<ItemGrid title="Stalls" forItemType="stall">
-					{#key stallsMixture}
-						{#each stallsMixture as item (item.id)}
-							<StallItem stallData={item} />
-						{/each}
-					{/key}
-				</ItemGrid>
-			{:else}
-				<div class="container bg-muted p-16 flex flex-col items-center justify-center h-[12vh] max-w-fit">
-					<div class="flex flex-row gap-2 items-center">
-						Once you’ve <Button variant="link" class="p-0" on:click={openDrawerForNewStall}>added a stall</Button> they will be displayed here
-					</div>
-				</div>
-			{/if}
-
 			{#if productsMixture.length}
-				<ItemGrid title="Products">
+				<ItemGrid title="Stall & Products">
 					{#key stallsMixture}
 						{#each productsMixture as item (item.id)}
 							<ProductItem product={item} />
