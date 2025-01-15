@@ -13,7 +13,6 @@
 	import { balanceOfWorkingNWCs } from '$lib/stores/nwc'
 	import { getAccount } from '$lib/stores/session'
 	import { onMount } from 'svelte'
-	import { fade } from 'svelte/transition'
 
 	import type { PageData } from '../../routes/$types'
 	import CartWithState from './cart/cart-with-state.svelte'

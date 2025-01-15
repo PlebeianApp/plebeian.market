@@ -16,7 +16,8 @@
 
 	import type { PageData } from '../../routes/$types'
 	import Spinner from './assets/spinner.svelte'
-	import Pattern from './Pattern.svelte'
+	import Hero from './common/hero.svelte'
+	import SkeletonLoader from './common/skeletonLoader.svelte'
 	import Checkbox from './ui/checkbox/checkbox.svelte'
 	import CAvatar from './ui/custom-components/c-avatar.svelte'
 	import Label from './ui/label/label.svelte'
@@ -53,17 +54,18 @@
 </script>
 
 <Dialog.Root bind:open={dialogOpen}>
-	<Dialog.Content class="max-w-[425px] gap-0 p-0 text-black">
-		<Dialog.Header class="relative w-full bg-black text-center text-white py-8 flex items-center">
-			<Pattern />
-			<div class="flex flex-row gap-2 items-center">
-				{#if isLoading}
-					<Spinner size={60} />
-				{:else}
-					<img src={appSettings.logoUrl} alt="logo" class="w-16" />
-				{/if}
-			</div>
-		</Dialog.Header>
+	<Dialog.Content class="max-w-[425px] gap-0 p-0 text-black overflow-hidden">
+		<Hero py="0">
+			<Dialog.Header class="relative text-center text-white py-8 flex items-center">
+				<div class="flex flex-row gap-2 items-center">
+					{#if isLoading}
+						<Spinner size={60} />
+					{:else}
+						<img src={appSettings.logoUrl} alt="logo" class="w-16" />
+					{/if}
+				</div>
+			</Dialog.Header>
+		</Hero>
 		<section class="p-4 flex flex-col gap-2">
 			<span>Log with your last account</span>
 			<div class=" inline-flex w-full items-center gap-2">
@@ -71,8 +73,7 @@
 					<div class="flex items-center space-x-4">
 						<Skeleton class="h-12 w-12 rounded-full" />
 						<div class="space-y-2">
-							<Skeleton class="h-4 w-[250px]" />
-							<Skeleton class="h-4 w-[200px]" />
+							<SkeletonLoader count={2} class="h-4 w-[200px]" />
 						</div>
 					</div>
 				{:else if $userQuery?.data}

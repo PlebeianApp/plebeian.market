@@ -105,7 +105,7 @@
 											<Carousel.Content>
 												{#each sortedImages as item}
 													<Carousel.Item>
-														<div class="aspect-square w-full rounded-lg bg-black/5">
+														<div class="aspect-square w-full rounded-lg">
 															<img src={item.imageUrl} alt="" class="h-full w-full object-contain" loading="lazy" />
 														</div>
 													</Carousel.Item>
@@ -114,7 +114,7 @@
 										</Carousel.Root>
 									</div>
 								{:else}
-									<div class="w-full aspect-square flex items-center justify-center border-2 border-black/10 rounded-lg bg-black/5">
+									<div class="w-full aspect-square flex items-center justify-center rounded-lg">
 										<span
 											style={`color:${stringToHexColor(String($productsQuery.data.name || $productsQuery.data.identifier))}`}
 											class="i-mdi-package-variant-closed w-16 h-16"

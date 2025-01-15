@@ -2,6 +2,7 @@
 	import type { Selected } from 'bits-ui'
 	import AdminActions from '$lib/components/common/admin-actions.svelte'
 	import ItemGrid from '$lib/components/common/item-grid.svelte'
+	import SkeletonLoader from '$lib/components/common/skeletonLoader.svelte'
 	import TruncatedText from '$lib/components/common/truncatedText.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
 	import * as Accordion from '$lib/components/ui/accordion'
@@ -130,9 +131,7 @@
 			{/if}
 		{:else}
 			<section class=" flex flex-col gap-2">
-				{#each [...Array(6)] as _, i}
-					<Skeleton class="h-8 w-[250px]" />
-				{/each}
+				<SkeletonLoader count={6} class="h-8 w-[250px]" />
 			</section>
 		{/if}
 	</div>
@@ -161,9 +160,7 @@
 		</div>
 	{:else}
 		<div class="flex gap-4 mt-6">
-			{#each [...Array(3)] as _, i}
-				<Skeleton class=" h-80 w-full border-4 border-black text-black group" />
-			{/each}
+			<SkeletonLoader count={3} class=" h-80 w-full border-4 border-black text-black group" />
 		</div>
 	{/if}
 </main>

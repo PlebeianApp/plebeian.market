@@ -4,6 +4,7 @@
 	import { dialogs } from '$lib/stores/dialog'
 	import { copyToClipboard } from '$lib/utils'
 
+	import Hero from '../common/hero.svelte'
 	import Pattern from '../Pattern.svelte'
 
 	export let nsec: string
@@ -14,12 +15,11 @@
 </script>
 
 <div class="flex flex-col overflow-y-auto">
-	<div class="relative w-full bg-black text-center py-8 flex items-center justify-center">
-		<Pattern />
+	<Hero class="relative justify-center" py="8">
 		<div class="flex flex-row gap-2 items-center z-10 px-4">
 			<h2 class="text-secondary">Save your account key</h2>
 		</div>
-	</div>
+	</Hero>
 
 	<div class="flex flex-col gap-4 p-6">
 		<p class="text-base">

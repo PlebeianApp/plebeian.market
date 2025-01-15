@@ -14,6 +14,7 @@
 
 	import type { PageData } from '../../../routes/$types'
 	import Spinner from '../assets/spinner.svelte'
+	import Hero from '../common/hero.svelte'
 	import Pattern from '../Pattern.svelte'
 	import SaveKeyDialog from './saveKeyDialog.svelte'
 
@@ -54,8 +55,7 @@
 </script>
 
 <div class="flex flex-col w-full">
-	<div class="relative w-full bg-black text-center py-8 flex items-center justify-center">
-		<Pattern />
+	<Hero class="relative flex justify-center" py="8">
 		<div class="flex flex-row gap-2 items-center z-10">
 			{#if loading}
 				<Spinner size={60} color="white" />
@@ -63,7 +63,7 @@
 				<img src={appSettings.logoUrl} alt="logo" class="w-16" />
 			{/if}
 		</div>
-	</div>
+	</Hero>
 
 	<div class="p-6">
 		<Tabs.Root value={tab}>
