@@ -1,5 +1,6 @@
 <script lang="ts">
 	import CatMenu from '$lib/components/category/cat-menu.svelte'
+	import Hero from '$lib/components/common/hero.svelte'
 	import ItemGrid from '$lib/components/common/item-grid.svelte'
 	import AuthDialog from '$lib/components/dialogs/authDialog.svelte'
 	import Pattern from '$lib/components/Pattern.svelte'
@@ -26,11 +27,7 @@
 {#if !data.appSettings?.isFirstTimeRunning}
 	<div class="flex min-h-screen w-full flex-col relative">
 		<main class="text-black">
-			<div class="relative w-full bg-black py-20 text-center text-white overflow-hidden">
-				<div
-					class="absolute inset-x-0 -bottom-18 h-full bg-[radial-gradient(ellipse_at_bottom,var(--secondary)_25%,transparent_70%)] opacity-30 blur-2xl"
-				></div>
-				<Pattern />
+			<Hero>
 				<div class="relative z-10 flex flex-col lg:flex-row items-center justify-center gap-2 lg:gap-4 mb-6 p-2">
 					<img src="/buy-sell.svg" alt="Buy Sell Stuff for Sats" class="lg:h-[45px] w-auto" />
 					<img src="/stuff-for-sats.svg" alt="Buy Sell Stuff for Sats" class="lg:h-[45px] w-auto" />
@@ -40,7 +37,7 @@
 						<span class="i-game-icons-ostrich w-5 h-5"></span>Start Selling
 					</span>
 				</Button>
-			</div>
+			</Hero>
 			<div class="gap-16 pb-12">
 				<div>
 					<CatMenu />

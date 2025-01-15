@@ -3,6 +3,7 @@
 	import { browser } from '$app/environment'
 	import CatMenu from '$lib/components/category/cat-menu.svelte'
 	import ItemGrid from '$lib/components/common/item-grid.svelte'
+	import SkeletonLoader from '$lib/components/common/skeletonLoader.svelte'
 	import StallItem from '$lib/components/stalls/stall-item.svelte'
 	import Input from '$lib/components/ui/input/input.svelte'
 	import * as Pagination from '$lib/components/ui/pagination'
@@ -54,9 +55,7 @@
 
 				{#if $stallsQuery.isLoading}
 					<div class="grid auto-cols-max grid-cols-1 gap-6 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-						{#each [...Array(6)] as _, i}
-							<Skeleton class="h-4 w-[200px]" />
-						{/each}
+						<SkeletonLoader count={6} class="h-4 w-[200px]" />
 					</div>
 				{/if}
 

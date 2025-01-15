@@ -45,17 +45,16 @@
 			: []),
 	]
 
-	// Clear orphan orders and invoices if there is not checkoutForm data
 	if ($cart.orders || ($cart.invoices && !$checkoutFormStore)) {
 		cart.clearKeys(['orders', 'invoices'])
 	}
-	// Avoid conflicts when users leaving the checkout, updating checkoutSteps, and coming back
+
 	onDestroy(() => {
 		currentStep.set(0)
 	})
 </script>
 
-<div class="container py-6">
+<div class="container py-6 px-6">
 	<h2>Checkout</h2>
 	<Stepper steps={checkoutSteps} />
 </div>

@@ -2,6 +2,7 @@
 	import type { DisplayProduct } from '$lib/server/products.service'
 	import { goto } from '$app/navigation'
 	import { page } from '$app/stores'
+	import SkeletonLoader from '$lib/components/common/skeletonLoader.svelte'
 	import CreateEditProduct from '$lib/components/product/create-edit.svelte'
 	import { Button } from '$lib/components/ui/button/index.js'
 	import { Skeleton } from '$lib/components/ui/skeleton'
@@ -85,9 +86,7 @@
 	<div class="flex flex-col gap-2">
 		{#if productsMode === 'list'}
 			{#if $productsQuery?.isLoading}
-				<Skeleton class="h-12 w-full" />
-				<Skeleton class="h-12 w-full" />
-				<Skeleton class="h-12 w-full" />
+				<SkeletonLoader count={3} class="h-12 w-full" />
 			{:else}
 				{#each productsMixture as product}
 					<Button

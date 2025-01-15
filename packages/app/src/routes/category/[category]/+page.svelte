@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/stores'
+	import Hero from '$lib/components/common/hero.svelte'
 	import ItemGrid from '$lib/components/common/item-grid.svelte'
 	import Pattern from '$lib/components/Pattern.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
@@ -22,23 +23,22 @@
 </script>
 
 <div class="flex min-h-screen w-full flex-col">
-	<div class="flex flex-col gap-8 relative">
-		<div class="relative w-full bg-black py-20 text-center text-white">
-			<Pattern />
+	<div class="flex flex-col gap-2 relative">
+		<Hero>
 			<h2 class="relative z-10 flex gap-2 items-center justify-center"><span class=" i-mdi-category-outline w-6 h-6" />Category</h2>
 			<h1 class="relative z-10">{categoryData?.name}</h1>
-		</div>
-		{#if stalls.length}
-			<ItemGrid title="Stalls" forItemType="stall">
-				{#each stalls as stall}
-					<StallItem stallData={stall} />
-				{/each}
-			</ItemGrid>
-		{/if}
+		</Hero>
 		{#if $productsQuery.data?.products}
 			<ItemGrid title="Products">
 				{#each $productsQuery?.data.products as product}
 					<ProductItem {product} />
+				{/each}
+			</ItemGrid>
+		{/if}
+		{#if stalls.length}
+			<ItemGrid title="Stalls" forItemType="stall">
+				{#each stalls as stall}
+					<StallItem stallData={stall} />
 				{/each}
 			</ItemGrid>
 		{/if}

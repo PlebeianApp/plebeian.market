@@ -47,7 +47,7 @@
 						{#if $stallQuery.data?.stall?.shipping?.length && currentShippingMethodId}
 							{@const method = $stallQuery.data?.stall?.shipping?.find((m) => m.id === currentShippingMethodId)}
 							{#if method}
-								{getMethodDisplayName(method)}
+								<span class="truncate">{getMethodDisplayName(method)}</span>
 								<span class="ml-2">{method.cost}</span>
 							{/if}
 						{:else}

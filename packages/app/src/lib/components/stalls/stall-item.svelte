@@ -11,6 +11,7 @@
 	import { Edit, MoreVertical, Plus } from 'lucide-svelte'
 	import { npubEncode } from 'nostr-tools/nip19'
 
+	import SkeletonLoader from '../common/skeletonLoader.svelte'
 	import { Button } from '../ui/button'
 	import Skeleton from '../ui/skeleton/skeleton.svelte'
 
@@ -79,13 +80,11 @@
 				<Card.Footer class="mt-auto p-2 border-t border-black/10">
 					<div class="grid gap-1 w-full text-sm">
 						<div class="flex items-center justify-between">
-							<Skeleton class="h-4 w-full" />
-							<Skeleton class="h-4 w-full" />
+							<SkeletonLoader count={2} class="h-4 w-full" />
 						</div>
 						{#if stall.userName}
 							<div class="flex items-center justify-between">
-								<Skeleton class="h-4 w-full" />
-								<Skeleton class="h-4 w-full" />
+								<SkeletonLoader count={2} class="h-4 w-full" />
 							</div>
 						{/if}
 						<div class="flex items-center justify-end">

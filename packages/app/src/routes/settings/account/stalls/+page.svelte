@@ -2,6 +2,7 @@
 	import type { RichStall } from '$lib/server/stalls.service'
 	import { goto } from '$app/navigation'
 	import { page } from '$app/stores'
+	import SkeletonLoader from '$lib/components/common/skeletonLoader.svelte'
 	import StallProductList from '$lib/components/product/stall-product-list.svelte'
 	import CreateEditStall from '$lib/components/stalls/create-edit.svelte'
 	import { Button } from '$lib/components/ui/button/index.js'
@@ -78,16 +79,14 @@
 			>
 		</div>
 	{:else if stallsMode === 'create' || stallsMode === 'edit'}
-		<button variant="primary" id="create-edit-back-button" class="w-fit" on:click={() => (stallsMode = 'list')}>
+		<Button variant="primary" id="create-edit-back-button" class="w-fit" on:click={() => (stallsMode = 'list')}>
 			<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
-		</button>
+		</Button>
 	{/if}
 	<div class="flex flex-col gap-2">
 		{#if stallsMode === 'list'}
 			{#if $stallsQuery?.isLoading}
-				<Skeleton class="h-12 w-full" />
-				<Skeleton class="h-12 w-full" />
-				<Skeleton class="h-12 w-full" />
+				<SkeletonLoader count={3} class="h-12 w-full" />
 			{:else if stallsMixture?.length}
 				{#each stallsMixture as stall}
 					<Collapsible.Root class="border-black border p-2">

@@ -39,7 +39,7 @@
 	}
 </script>
 
-<div class="flex flex-row h-18 justify-between my-4 gap-2">
+<div class="flex flex-row h-18 justify-between my-4 gap-2 flex-wrap">
 	{#if product.images && product.images.length > 0}
 		{@const mainImage = product.images.find((img) => img.imageOrder === 0) || product.images[0]}
 
@@ -52,27 +52,29 @@
 	<div class="flex flex-col flex-grow justify-between">
 		<div class="font-bold">{product.name}</div>
 		{#if mode === 'review'}
-			<div class="flex flex-row">
-				<Button variant="outline" size="icon" on:click={handleDecrement} disabled={product.amount <= 1}>
-					<span class="i-mdi-minus w-4 h-4"></span>
-				</Button>
-				<Input
-					class="border-2 border-black w-16"
-					type="number"
-					value={product.amount}
-					on:input={handleSetAmount}
-					min="1"
-					max={product.stockQuantity}
-				/>
-				<Button
-					class="border-2 border-black"
-					size="icon"
-					variant="outline"
-					on:click={handleIncrement}
-					disabled={product.amount >= product.stockQuantity}
-				>
-					<span class="i-mdi-plus w-4 h-4"></span>
-				</Button>
+			<div class="flex flex-row justify-between">
+				<div class="flex flex-row gap-1">
+					<Button variant="outline" size="icon" on:click={handleDecrement} disabled={product.amount <= 1}>
+						<span class="i-mdi-minus w-4 h-4"></span>
+					</Button>
+					<Input
+						class="border-2 border-black w-16"
+						type="number"
+						value={product.amount}
+						on:input={handleSetAmount}
+						min="1"
+						max={product.stockQuantity}
+					/>
+					<Button
+						class="border-2 border-black"
+						size="icon"
+						variant="outline"
+						on:click={handleIncrement}
+						disabled={product.amount >= product.stockQuantity}
+					>
+						<span class="i-mdi-plus w-4 h-4"></span>
+					</Button>
+				</div>
 				<Button variant="ghost" on:click={handleRemove} size="icon">
 					<span class="i-mdi-delete w-4 h-4"></span>
 				</Button>

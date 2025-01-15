@@ -177,6 +177,9 @@
 		media="screen and (prefers-color-scheme: dark) and (device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)"
 		href="/apple-splash-landscape-dark-2048x1536.png"
 	/>
+	<meta name="theme-color" content="#1a1a1a" />
+	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+	<meta name="apple-mobile-web-app-capable" content="yes" />
 </svelte:head>
 
 <QueryClientProvider client={queryClient}>

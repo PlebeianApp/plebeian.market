@@ -105,7 +105,7 @@
 											<Carousel.Content>
 												{#each sortedImages as item}
 													<Carousel.Item>
-														<div class="aspect-square w-full rounded-lg bg-black/5">
+														<div class="aspect-square w-full rounded-lg">
 															<img src={item.imageUrl} alt="" class="h-full w-full object-contain" loading="lazy" />
 														</div>
 													</Carousel.Item>
@@ -114,7 +114,7 @@
 										</Carousel.Root>
 									</div>
 								{:else}
-									<div class="w-full aspect-square flex items-center justify-center border-2 border-black/10 rounded-lg bg-black/5">
+									<div class="w-full aspect-square flex items-center justify-center rounded-lg">
 										<span
 											style={`color:${stringToHexColor(String($productsQuery.data.name || $productsQuery.data.identifier))}`}
 											class="i-mdi-package-variant-closed w-16 h-16"
@@ -159,21 +159,22 @@
 					</div>
 
 					<div class="flex sm:w-1/2 w-full flex-row gap-1">
-						<Button variant="tertiary" size="icon" on:click={handleDecrement} disabled={qtyToCart <= 1}>
-							<span class="i-mdi-minus w-4 h-4"></span>
-						</Button>
-						<Input
-							class="text-off-black rounded-md w-10"
-							value={qtyToCart}
-							on:input={(e) => (qtyToCart = parseInt(e.target.value))}
-							min="1"
-							max={$productsQuery.data.quantity}
-							readonly
-						/>
-						<Button size="icon" variant="tertiary" on:click={handleIncrement} disabled={qtyToCart >= $productsQuery.data.quantity}>
-							<span class="i-mdi-plus w-4 h-4"></span>
-						</Button>
-
+						<div class=" flex flex-row gap-1">
+							<Button variant="tertiary" size="icon" on:click={handleDecrement} disabled={qtyToCart <= 1}>
+								<span class="i-mdi-minus w-4 h-4"></span>
+							</Button>
+							<Input
+								class="text-off-black rounded-md w-10"
+								value={qtyToCart}
+								on:input={(e) => (qtyToCart = parseInt(e.target.value))}
+								min="1"
+								max={$productsQuery.data.quantity}
+								readonly
+							/>
+							<Button size="icon" variant="tertiary" on:click={handleIncrement} disabled={qtyToCart >= $productsQuery.data.quantity}>
+								<span class="i-mdi-plus w-4 h-4"></span>
+							</Button>
+						</div>
 						{#if $productsQuery.data.quantity && $productsQuery.data.quantity > 0}
 							<Button
 								class="ml-2"
