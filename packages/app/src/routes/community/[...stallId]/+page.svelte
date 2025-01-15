@@ -85,13 +85,14 @@
 													fallbackClass="rounded-md w-8 h-8"
 												/>
 											</a>
-											<span>Description</span>
+											<span>{$userProfileQuery.data?.name || $userProfileQuery.data?.displayName || truncateText(user.id)}</span>
 										</div>
 										<span class="text-sm text-gray-500">created: {createDate}</span>
 									</div>
 								</CardTitle>
 							</CardHeader>
 							<CardContent class="flex flex-col gap-6">
+								<span class=" font-bold text-gray-500">Description</span>
 								<TruncatedText text={description} />
 								<AdminActions type="stall" id={stall.id} isFeatured={$stallQuery.data.stall.isFeatured} />
 							</CardContent>
@@ -102,14 +103,14 @@
 							<CardTitle>Shipping Zones</CardTitle>
 						</CardHeader>
 						<CardContent>
-							<div class="flex flex-col gap-2 items-start">
+							<div class="flex flex-col gap- items-start">
 								{#if shipping?.length}
-									<section class="gap-2">
+									<section class="gap-">
 										{#each shipping as shipping}
 											{#if shipping.name || shipping.id}
 												<span>{truncateString(shipping.name || shipping.id || '')}</span>
 											{/if}
-											<div class="flex flex-row gap-2">
+											<div class="flex flex-row gap-2 flex-wrap">
 												{#if shipping.regions}
 													{#each shipping.regions as region}
 														<Badge size="sm" class="w-fit" variant="secondary">{region}</Badge>
@@ -155,7 +156,7 @@
 
 	{#if $productsQuery.data?.products.length}
 		{@const { products } = $productsQuery.data}
-		<ItemGrid title="Products" withSort={true} on:sortSelectedChange={(e) => onSortSelectedChange(e.detail.value)}>
+		<ItemGrid title="Products" withSort={false} on:sortSelectedChange={(e) => onSortSelectedChange(e.detail.value)}>
 			{#if products.length}
 				{#each products as item (item.id)}
 					<ProductItem product={item} />

@@ -8,17 +8,15 @@
 	import InteractiveZapButton from '$lib/components/common/interactive-zap-button.svelte'
 	import ItemGrid from '$lib/components/common/item-grid.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
-	import StallItem from '$lib/components/stalls/stall-item.svelte'
 	import Button from '$lib/components/ui/button/button.svelte'
 	import CAvatar from '$lib/components/ui/custom-components/c-avatar.svelte'
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
 	import { createProductsByFilterQuery } from '$lib/fetch/products.queries'
 	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
 	import { fetchUserProductData, fetchUserStallsData, normalizeProductsFromNostr, normalizeStallData } from '$lib/nostrSubs/utils'
-	import { openDrawerForNewProduct, openDrawerForNewStall } from '$lib/stores/drawer-ui'
+	import { openDrawerForNewProduct } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
-	import { mergeWithExisting, stringToHexColor, truncateText } from '$lib/utils'
+	import { getHexColorFingerprintFromHexPubkey, mergeWithExisting, truncateText } from '$lib/utils'
 	import { onMount } from 'svelte'
 
 	import type { PageData } from './$types'
@@ -69,7 +67,7 @@
 				</div>
 			{:else}
 				<div
-					style={`background-color: ${stringToHexColor(id)}`}
+					style={`background-color: ${getHexColorFingerprintFromHexPubkey(id)}`}
 					class={`border-black w-full border-2 aspect-[6.125/1] relative overflow-hidden`}
 				/>
 			{/if}
@@ -89,7 +87,7 @@
 					<div class="flex flex-row pt-4 gap-4">
 						<a href={`/p/${pubkey}`}>
 							<CAvatar
-								pubkey={String(pubkey)}
+								pubkey={id}
 								profile={$userProfileQuery.data}
 								avatarClass="rounded-md w-8 h-8"
 								imageClass="rounded-md w-8 h-8"
