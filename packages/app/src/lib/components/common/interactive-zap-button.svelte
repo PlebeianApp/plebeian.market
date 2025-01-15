@@ -139,11 +139,11 @@
 		<Spinner />
 	</Button>
 {:else if zapMethods.length > 0}
-	<Button variant="tertiary" size="icon" on:click={() => (zapDialogOpen = true)}>
+	<Button variant="focus" size="icon" on:click={() => (zapDialogOpen = true)}>
 		<span class=" i-mingcute-lightning-fill w-6 h-6" />
 	</Button>
 {:else}
-	<Button variant="tertiary" data-tooltip="User cannot be zapped." size="icon" disabled>
+	<Button variant="secondary" data-tooltip="User cannot be zapped." size="icon" disabled>
 		<span class="i-mingcute-lightning-fill w-6 h-6" />
 	</Button>
 {/if}
