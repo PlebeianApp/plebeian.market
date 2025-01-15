@@ -216,7 +216,7 @@ export const setProductFeaturedMutation = createMutation(
 		},
 		onSuccess: ({ id }: { id: string }) => {
 			if (id) {
-				queryClient.invalidateQueries({ queryKey: createProductKey(id) })
+				queryClient.invalidateQueries({ queryKey: productKeys.detail(id) })
 			}
 		},
 	},
