@@ -73,14 +73,6 @@
 		if (categories.some((cat) => !cat.name.trim())) return
 		const newKey = createSlugId(`category ${categories.length + 1}`)
 		categories = [...categories, { key: newKey, name: '', checked: true }]
-
-		queueMicrotask(() => {
-			const newInput = document.getElementById(`category-name-${newKey}`) as HTMLInputElement
-			if (newInput) {
-				newInput.focus()
-				newInput.select()
-			}
-		})
 	}
 
 	onMount(async () => {
@@ -117,6 +109,7 @@
 						class="border-2 border-black w-full pr-12"
 						type="text"
 						required
+						autoFocus={true}
 						on:focus={() => (focusedKey = category.key)}
 						on:blur={() => (focusedKey = null)}
 						on:input={(e) => filterCategories(e.currentTarget.value, category.key)}
