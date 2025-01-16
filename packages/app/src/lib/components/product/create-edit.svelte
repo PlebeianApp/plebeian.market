@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { NDKSubscription } from '@nostr-dev-kit/ndk'
 	import type { Category } from '$lib/fetch/products.mutations'
 	import type { DisplayProduct } from '$lib/server/products.service'
 	import type { RichShippingInfo } from '$lib/server/shipping.service'
@@ -7,6 +8,7 @@
 	import type { ValidationErrors } from '$lib/utils/zod.utils'
 	import Button from '$lib/components/ui/button/button.svelte'
 	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte'
+	import * as Command from '$lib/components/ui/command/index.js'
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js'
 	import Input from '$lib/components/ui/input/input.svelte'
 	import Label from '$lib/components/ui/label/label.svelte'
@@ -22,7 +24,7 @@
 	import { prepareProductData } from '$lib/utils/product.utils'
 	import { validateForm } from '$lib/utils/zod.utils'
 	import { ChevronDown } from 'lucide-svelte'
-	import { createEventDispatcher, onMount, tick } from 'svelte'
+	import { createEventDispatcher, onDestroy, onMount, tick } from 'svelte'
 	import { toast } from 'svelte-sonner'
 	import { get } from 'svelte/store'
 
@@ -32,6 +34,7 @@
 	import { forbiddenPatternStore } from '../../../schema/nostr-events'
 	import Spinner from '../assets/spinner.svelte'
 	import Separator from '../ui/separator/separator.svelte'
+	import CategoryManager from './category-manager.svelte'
 	import MultiImageEdit from './multi-image-edit.svelte'
 
 	const dispatch = createEventDispatcher<{ success: unknown; error: unknown }>()
@@ -166,17 +169,6 @@
 		}))
 	}
 
-	function addCategory() {
-		categories = [...categories, { key: createSlugId(`category ${categories.length + 1}`), name: '', checked: true }]
-
-		queueMicrotask(() => {
-			const inputs = document.querySelectorAll('input[type="text"]')
-			const lastInput = inputs[inputs.length - 1] as HTMLInputElement
-			lastInput?.focus()
-			lastInput?.select()
-		})
-	}
-
 	function toShippingForm(shipping: Partial<RichShippingInfo>): Pick<RichShippingInfo, 'id' | 'name'> {
 		if (!shipping.id || !shipping.name) {
 			throw new Error('Invalid shipping info: missing id or name')
@@ -262,17 +254,8 @@
 		isLoading = false
 	}
 
-	onMount(() => {
-		initializeForm().catch((error) => {
-			console.error('Error initializing form:', error)
-			toast.error('Error initializing form')
-		})
-
-		return () => {
-			if (!isLoading && product) {
-				productFormStore.reset()
-			}
-		}
+	onMount(async () => {
+		await initializeForm()
 	})
 
 	$: {
@@ -459,28 +442,7 @@
 				</Tabs.Content>
 
 				<Tabs.Content value="categories" class="flex flex-col gap-2">
-					<Button variant="outline" class="w-24" on:click={addCategory}>New</Button>
-					<div class="flex flex-col gap-1.5">
-						{#each categories as category (category.key)}
-							<div class="flex items-center space-x-2">
-								<Checkbox id="terms" bind:checked={category.checked} />
-								<Input
-									id="category-name"
-									bind:value={category.name}
-									placeholder="Category name"
-									class="border-2 border-black"
-									type="text"
-									required
-									on:keydown={(e) => {
-										if (e.key === 'Enter') {
-											e.preventDefault()
-											addCategory()
-										}
-									}}
-								/>
-							</div>
-						{/each}
-					</div>
+					<CategoryManager bind:categories />
 				</Tabs.Content>
 
 				<Tabs.Content value="images" class="flex flex-col">
