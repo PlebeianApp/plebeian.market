@@ -16,6 +16,7 @@
 	let filteredCategories: string[] = []
 	let openPopover: { [key: string]: boolean } = {}
 	let categorySubscription: NDKSubscription | undefined
+	let focusedKey: string | null = null
 
 	function filterCategories(value: string, key: string) {
 		if (value.length >= 3) {
@@ -80,6 +81,8 @@
 						class="border-2 border-black w-full pr-12"
 						type="text"
 						required
+						on:focus={() => (focusedKey = category.key)}
+						on:blur={() => (focusedKey = null)}
 						on:input={(e) => filterCategories(e.currentTarget.value, category.key)}
 						on:keydown={(e) => {
 							if (e.key === 'Enter') {
@@ -92,9 +95,11 @@
 							}
 						}}
 					/>
-					<span class="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">
-						{category.name.length >= 3 ? filteredCategories.length : suggestedCategories.length}
-					</span>
+					{#if focusedKey === category.key}
+						<div class="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400 pointer-events-none">
+							{category.name.length >= 3 ? filteredCategories.length : suggestedCategories.length}
+						</div>
+					{/if}
 					{#if openPopover[category.key]}
 						<div class="absolute w-full z-50 mt-1">
 							<Command.Root class="rounded-lg border shadow-md">
