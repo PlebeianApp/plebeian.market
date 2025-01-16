@@ -17,6 +17,7 @@
 	let openPopover: { [key: string]: boolean } = {}
 	let categorySubscription: NDKSubscription | undefined
 	let focusedKey: string | null = null
+	let selectedIndex = -1
 
 	function filterCategories(value: string, key: string) {
 		if (value.length >= 3) {
@@ -26,8 +27,38 @@
 					!categories.some((existing) => existing.name.toLowerCase() === cat.toLowerCase()),
 			)
 			openPopover[key] = filteredCategories.length > 0
+			selectedIndex = -1
 		} else {
 			openPopover[key] = false
+		}
+	}
+
+	function handleKeydown(e: KeyboardEvent, category: Category) {
+		if (!openPopover[category.key]) return
+
+		switch (e.key) {
+			case 'ArrowDown':
+				e.preventDefault()
+				selectedIndex = (selectedIndex + 1) % filteredCategories.length
+				break
+			case 'ArrowUp':
+				e.preventDefault()
+				selectedIndex = selectedIndex <= 0 ? filteredCategories.length - 1 : selectedIndex - 1
+				break
+			case 'Enter':
+				e.preventDefault()
+				if (selectedIndex >= 0 && selectedIndex < filteredCategories.length) {
+					selectCategory(filteredCategories[selectedIndex], category)
+				} else if (filteredCategories.length > 0) {
+					selectCategory(filteredCategories[0], category)
+				} else {
+					addCategory()
+				}
+				break
+			case 'Escape':
+				e.preventDefault()
+				openPopover[category.key] = false
+				break
 		}
 	}
 
@@ -35,6 +66,7 @@
 		category.name = value
 		openPopover[category.key] = false
 		categories = [...categories]
+		addCategory()
 	}
 
 	function addCategory() {
@@ -54,6 +86,10 @@
 	onMount(async () => {
 		suggestedCategories = await fetchProductCategories()
 		categorySubscription = subscribeToProductCategories()
+
+		if (categories.length === 0) {
+			addCategory()
+		}
 	})
 
 	categoriesStore.subscribe((categoriesSet) => {
@@ -84,16 +120,7 @@
 						on:focus={() => (focusedKey = category.key)}
 						on:blur={() => (focusedKey = null)}
 						on:input={(e) => filterCategories(e.currentTarget.value, category.key)}
-						on:keydown={(e) => {
-							if (e.key === 'Enter') {
-								e.preventDefault()
-								if (openPopover[category.key] && filteredCategories.length > 0) {
-									selectCategory(filteredCategories[0], category)
-								} else {
-									addCategory()
-								}
-							}
-						}}
+						on:keydown={(e) => handleKeydown(e, category)}
 					/>
 					{#if focusedKey === category.key}
 						<div class="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400 pointer-events-none">
@@ -105,8 +132,12 @@
 							<Command.Root class="rounded-lg border shadow-md">
 								<Command.List>
 									<Command.Group>
-										{#each filteredCategories as suggestion}
-											<Command.Item value={suggestion} onSelect={() => selectCategory(suggestion, category)} class="cursor-pointer">
+										{#each filteredCategories as suggestion, i}
+											<Command.Item
+												value={suggestion}
+												onSelect={() => selectCategory(suggestion, category)}
+												class="cursor-pointer {selectedIndex === i ? 'bg-gray-100' : ''}"
+											>
 												{suggestion}
 											</Command.Item>
 										{/each}
