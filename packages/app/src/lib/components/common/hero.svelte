@@ -9,9 +9,10 @@
 	export let gradientPosition = 'bottom'
 	export let gradientStartPercentage = '20'
 	export let gradientEndPercentage = '70'
+	export let innerContainerClass = ''
 </script>
 
-<div class="relative w-full text-white" style:background-color={bgColor} {...$$restProps}>
+<div class={`flex flex-col relative w-full text-white ${$$restProps.class ?? ''}`} style:background-color={bgColor}>
 	<div
 		class="absolute inset-x-0 -bottom-18 h-full blur-2xl"
 		style:background={`radial-gradient(ellipse at ${gradientPosition}, ${gradientColor} ${gradientStartPercentage}%, transparent ${gradientEndPercentage}%)`}
@@ -22,7 +23,7 @@
 		<Pattern />
 	{/if}
 
-	<div class="relative py-{py} text-center">
+	<div class={`relative py-${py} text-center ${innerContainerClass}`}>
 		<slot />
 	</div>
 </div>

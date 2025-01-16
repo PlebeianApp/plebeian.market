@@ -3,7 +3,7 @@ import { page } from '$app/stores'
 import { stallsSub } from '$lib/nostrSubs/subs'
 import { fetchAddressableEvent } from '$lib/nostrSubs/utils'
 import { relayReports } from '$lib/stores/relayReports'
-import { deleteCachedEvent, sessions } from '$lib/stores/session'
+import { deleteCachedEvent } from '$lib/stores/session'
 import { unixTimeNow } from '$lib/utils'
 import { get } from 'svelte/store'
 
