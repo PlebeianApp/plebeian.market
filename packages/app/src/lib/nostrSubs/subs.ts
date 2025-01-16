@@ -3,7 +3,7 @@ import type { ExtendedBaseType, NDKEventStore } from '@nostr-dev-kit/ndk-svelte'
 import { NDKKind, NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk'
 import { browser } from '$app/environment'
 import { page } from '$app/stores'
-import { KindStalls } from '$lib/constants'
+import { KindProducts, KindStalls } from '$lib/constants'
 import ndkStore from '$lib/stores/ndk'
 import { derived, get } from 'svelte/store'
 
@@ -29,6 +29,11 @@ export const stallsSub: NDKEventStore<ExtendedBaseType<NDKEvent>> | undefined = 
 export const dmKind04Sub: NDKEventStore<ExtendedBaseType<NDKEvent>> | undefined = ndk?.storeSubscribe(
 	{},
 	{ closeOnEose: false, autoStart: false },
+)
+
+export const productsSub: NDKEventStore<ExtendedBaseType<NDKEvent>> | undefined = ndk?.storeSubscribe(
+	{ kinds: [KindProducts] },
+	{ closeOnEose: true, autoStart: false, cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY },
 )
 
 export const groupedDMs = derived(dmKind04Sub ?? [], ($dmKind04Sub) => {
@@ -124,3 +129,13 @@ export function createDMSubscriptionManager(dmKind04Sub: NDKEventStore<ExtendedB
 		},
 	}
 }
+
+export const categories = derived(productsSub ?? [], ($productsSub) => {
+	const categories = new Set<string>()
+
+	for (const event of $productsSub) {
+		event.tags.filter((tag) => tag[0] === 't').forEach((tag) => categories.add(tag[1].toLowerCase()))
+	}
+
+	return Array.from(categories).sort()
+})

@@ -99,31 +99,6 @@ export async function fetchUserData(
 	return { userProfile }
 }
 
-export function subscribeToProductCategories() {
-	const $ndkStore = get(ndkStore)
-	const filter = {
-		kinds: [KindProducts],
-	}
-
-	const sub = $ndkStore.subscribe(filter, {
-		closeOnEose: false,
-		groupable: false,
-	})
-
-	const categories = new Set<string>()
-
-	sub.on('event', (event: NDKEvent) => {
-		event.tags
-			.filter((tag) => tag[0] === 't')
-			.forEach((tag) => {
-				categories.add(tag[1].toLowerCase())
-				categoriesStore.set(categories)
-			})
-	})
-
-	return sub
-}
-
 export async function fetchProductCategories(): Promise<string[]> {
 	const $ndkStore = get(ndkStore)
 	const filter = {

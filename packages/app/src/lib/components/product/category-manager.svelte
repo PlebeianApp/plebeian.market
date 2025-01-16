@@ -1,27 +1,29 @@
 <script lang="ts">
-	import type { NDKSubscription } from '@nostr-dev-kit/ndk'
 	import type { Category } from '$lib/fetch/products.mutations'
 	import Button from '$lib/components/ui/button/button.svelte'
 	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte'
 	import * as Command from '$lib/components/ui/command/index.js'
 	import Input from '$lib/components/ui/input/input.svelte'
-	import { categoriesStore, fetchProductCategories, subscribeToProductCategories } from '$lib/nostrSubs/utils'
-	import { onDestroy, onMount } from 'svelte'
+	import { categories as categoriesStore, productsSub } from '$lib/nostrSubs/subs'
+	import { onMount } from 'svelte'
 
 	import { createSlugId } from '@plebeian/database/utils'
 
 	export let categories: Category[] = []
 
-	let suggestedCategories: string[] = []
 	let filteredCategories: string[] = []
 	let openPopover: { [key: string]: boolean } = {}
-	let categorySubscription: NDKSubscription | undefined
 	let focusedKey: string | null = null
 	let selectedIndex = -1
 
+	onMount(() => {
+		productsSub?.ref()
+		return () => productsSub?.unref()
+	})
+
 	function filterCategories(value: string, key: string) {
 		if (value.length >= 3) {
-			filteredCategories = suggestedCategories.filter(
+			filteredCategories = $categoriesStore.filter(
 				(cat) =>
 					cat.toLowerCase().includes(value.toLowerCase()) &&
 					!categories.some((existing) => existing.name.toLowerCase() === cat.toLowerCase()),
@@ -73,26 +75,15 @@
 		if (categories.some((cat) => !cat.name.trim())) return
 		const newKey = createSlugId(`category ${categories.length + 1}`)
 		categories = [...categories, { key: newKey, name: '', checked: true }]
+
+		queueMicrotask(() => {
+			const newInput = document.getElementById(`category-name-${newKey}`) as HTMLInputElement
+			if (newInput) {
+				newInput.focus()
+				newInput.select()
+			}
+		})
 	}
-
-	onMount(async () => {
-		suggestedCategories = await fetchProductCategories()
-		categorySubscription = subscribeToProductCategories()
-
-		if (categories.length === 0) {
-			addCategory()
-		}
-	})
-
-	categoriesStore.subscribe((categoriesSet) => {
-		suggestedCategories = Array.from(categoriesSet).sort()
-	})
-
-	onDestroy(() => {
-		if (categorySubscription) {
-			categorySubscription.stop()
-		}
-	})
 </script>
 
 <div class="flex flex-col gap-2">
@@ -109,7 +100,6 @@
 						class="border-2 border-black w-full pr-12"
 						type="text"
 						required
-						autoFocus={true}
 						on:focus={() => (focusedKey = category.key)}
 						on:blur={() => (focusedKey = null)}
 						on:input={(e) => filterCategories(e.currentTarget.value, category.key)}
@@ -117,7 +107,7 @@
 					/>
 					{#if focusedKey === category.key}
 						<div class="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400 pointer-events-none">
-							{category.name.length >= 3 ? filteredCategories.length : suggestedCategories.length}
+							{category.name.length >= 3 ? filteredCategories.length : $categoriesStore.length}
 						</div>
 					{/if}
 					{#if openPopover[category.key]}

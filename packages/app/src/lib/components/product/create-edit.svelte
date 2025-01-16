@@ -231,7 +231,15 @@
 			const productData = prepareProductData(formData, stall, sortedImages, shippingData, product!)
 			validationErrors = validateForm(productData, get(forbiddenPatternStore).createProductEventSchema)
 			if (Object.keys(validationErrors).length > 0) {
-				toast.error('Please correct the errors in the form')
+				const missing = []
+				if (!formData.get('name')) missing.push('name')
+				if (!formData.get('description')) missing.push('description')
+				if (!formData.get('price')) missing.push('price')
+				if (!formData.get('quantity')) missing.push('quantity')
+				if (!categories.length || categories.some((cat) => !cat.name.trim())) missing.push('categories')
+				if (!shippingData.length) missing.push('shipping methods')
+
+				toast.error(`Please fill in all required fields: ${missing.join(', ')}`)
 				isLoading = false
 				return
 			}
