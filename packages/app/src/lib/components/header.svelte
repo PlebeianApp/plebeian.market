@@ -73,7 +73,7 @@
 	}
 
 	$: currentPath = $page.url.pathname
-	const activeNavClass = 'text-primary font-bold'
+	const activeNavClass = 'text-secondary font-bold'
 	const activeIconClass = 'text-primary'
 	const activeButtonClass = 'bg-secondary'
 	const activeMenuItemClass = 'bg-secondary text-primary'
@@ -88,7 +88,7 @@
 
 <PassPromt dialogOpen={showPassPromt} accointInfo={nsecAccInfo} />
 
-<header class="sticky top-0 z-30 bg-black py-4 text-white px-2 lg:px-12">
+<header class="sticky top-0 z-30 bg-black py-4 text-white px-4">
 	<div class="container flex h-full w-full items-center justify-between">
 		<section class="inline-flex items-center">
 			<a href="/">
@@ -111,7 +111,7 @@
 					<CAvatar
 						pubkey={$ndkStore.activeUser.pubkey}
 						profile={$ndkStore.activeUser.profile}
-						avatarClass="rounded-md border-secondary border-2"
+						avatarClass="rounded-md border-2 {currentPath.startsWith('/p/') ? 'border-secondary' : 'border-primary'}"
 						imageClass="rounded-md"
 						fallbackClass="rounded-md"
 					/>
@@ -167,7 +167,7 @@
 												on:click={() => (open = false)}
 											>
 												<span class="i-tdesign-setting-1 w-6 h-6 {currentPath.startsWith('/settings') ? activeIconClass : ''}" />
-												<span class="{navMenuLabels} {currentPath.startsWith('/settings') ? activeNavClass : ''}">Settings</span>
+												<span class="{navMenuLabels} {currentPath.startsWith('/settings') ? activeIconClass : ''}">Settings</span>
 											</Button>
 
 											<Button
@@ -177,7 +177,7 @@
 												on:click={() => (open = false)}
 											>
 												<span class="i-tdesign-dashboard w-6 h-6 {currentPath === '/dash' ? activeIconClass : ''}" />
-												<span class="{navMenuLabels} {currentPath === '/dash' ? activeNavClass : ''}">Dashboard</span>
+												<span class="{navMenuLabels} {currentPath === '/dash' ? activeIconClass : ''}">Dashboard</span>
 											</Button>
 
 											<Button
@@ -187,7 +187,7 @@
 												on:click={() => (open = false)}
 											>
 												<span class="i-mdi-package-variant-closed w-7 h-7 {currentPath.startsWith('/products') ? activeIconClass : ''}" />
-												<span class="{navMenuLabels} {currentPath.startsWith('/products') ? activeNavClass : ''}">Products</span>
+												<span class="{navMenuLabels} {currentPath.startsWith('/products') ? activeIconClass : ''}">Products</span>
 											</Button>
 
 											<Button
@@ -197,7 +197,7 @@
 												on:click={() => (open = false)}
 											>
 												<span class="i-tdesign-shop w-6 h-6 {currentPath.startsWith('/community') ? activeIconClass : ''}" />
-												<span class="{navMenuLabels} {currentPath.startsWith('/community') ? activeNavClass : ''}">Community</span>
+												<span class="{navMenuLabels} {currentPath.startsWith('/community') ? activeIconClass : ''}">Community</span>
 											</Button>
 
 											<Button
@@ -207,7 +207,7 @@
 												on:click={() => (open = false)}
 											>
 												<span class="i-tdesign-compass w-6 h-6 {currentPath.startsWith('/nostr') ? activeIconClass : ''}" />
-												<span class="{navMenuLabels} {currentPath.startsWith('/nostr') ? activeNavClass : ''}">Nostr</span>
+												<span class="{navMenuLabels} {currentPath.startsWith('/nostr') ? activeIconClass : ''}">Nostr</span>
 											</Button>
 
 											<Button
@@ -228,7 +228,6 @@
 						</Collapsible.Root>
 					</div>
 				{:else}
-					<!-- Desktop icons -->
 					<Button
 						variant="primary"
 						class="sm:flex p-2 relative rounded-md {currentPath === '/dash' ? activeButtonClass : ''}"

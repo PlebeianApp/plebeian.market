@@ -48,30 +48,36 @@
 
 {#if !$categoriesQuery.isLoading && $categoriesQuery.data?.categories?.length}
 	<div class="flex flex-col gap-4 bg-black p-2 py-3">
-		<div class="relative">
-			<div class="flex overflow-x-auto scrollbar-hide" bind:this={scrollContainer}>
-				<div class="flex gap-4 items-center px-1" use:autoAnimate={{ duration: 150 }}>
-					<Button
-						variant="secondary"
-						size="icon"
-						on:click={toggleSearch}
-						class="flex-shrink-0 flex items-center justify-center rounded-full transition-colors"
-					>
+		<div class="grid items-center" style="grid-template-columns: auto 1fr;">
+			<div class="flex gap-4 items-center bg-black pr-4">
+				<Button
+					variant="secondary"
+					size="icon"
+					on:click={toggleSearch}
+					class="flex-shrink-0 flex items-center justify-center rounded-full transition-colors"
+				>
+					{#if !showSearch}
 						<span class="i-mdi-magnify text-xl" />
-					</Button>
-
-					{#if showSearch}
-						<div class="flex-shrink-0 w-64">
-							<Input
-								type="search"
-								placeholder="Search categories..."
-								bind:value={$search}
-								class="rounded-full bg-black text-white border-secondary"
-								autoFocus={showSearch}
-							/>
-						</div>
+					{:else}
+						<span class="i-mdi-close text-xl" />
 					{/if}
+				</Button>
 
+				{#if showSearch}
+					<div class="w-64 transition-all duration-200">
+						<Input
+							type="search"
+							placeholder="Search categories..."
+							bind:value={$search}
+							class="rounded-full bg-black text-white border-secondary"
+							autoFocus={showSearch}
+						/>
+					</div>
+				{/if}
+			</div>
+
+			<div class="overflow-x-auto scrollbar-hide" bind:this={scrollContainer}>
+				<div class="flex gap-4 items-center" use:autoAnimate={{ duration: 150 }}>
 					{#if $categoriesQuery.data?.categories?.length}
 						{#if hasPreviousPage}
 							<Button
