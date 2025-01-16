@@ -25,7 +25,7 @@ declare module './client' {
 		[k: `POST /api/v1/products/${string}/ban`]: Operation<string, 'POST', never, { banned: boolean }, { id: string }, never>
 	}
 }
-export type Category = { key: string; name: string; checked: boolean }
+export type Category = { key: string; name: string }
 const productSchema = createProductEventSchema(new RegExp(''))
 export const createProductMutation = createMutation(
 	{

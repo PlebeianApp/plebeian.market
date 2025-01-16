@@ -12,13 +12,15 @@ import ndkStore from '$lib/stores/ndk'
 import { addCachedEvent, getCachedEvent, updateCachedEvent } from '$lib/stores/session'
 import { getEventCoordinates, parseCoordinatesString } from '$lib/utils'
 import { format } from 'date-fns'
-import { get } from 'svelte/store'
+import { get, writable } from 'svelte/store'
 import { ZodError, ZodSchema } from 'zod'
 
 import type { ProductImage, ProductImagesType } from '@plebeian/database'
 
 import { forbiddenPatternStore, shippingObjectSchema } from '../../schema/nostr-events'
 import { stallsSub } from './subs'
+
+export const categoriesStore = writable<Set<string>>(new Set())
 
 export async function fetchStallData(
 	stallCoordinate: string,
@@ -95,6 +97,24 @@ export async function fetchUserData(
 	const userProfile = await ndkUser.fetchProfile({ cacheUsage: subCacheUsage ?? NDKSubscriptionCacheUsage.ONLY_RELAY })
 
 	return { userProfile }
+}
+
+export async function fetchProductCategories(): Promise<string[]> {
+	const $ndkStore = get(ndkStore)
+	const filter = {
+		kinds: [KindProducts],
+	}
+
+	const events = await $ndkStore.fetchEvents(filter, {
+		cacheUsage: NDKSubscriptionCacheUsage.PARALLEL,
+	})
+
+	const categories = new Set<string>()
+	events.forEach((event) => {
+		event.tags.filter((tag) => tag[0] === 't').forEach((tag) => categories.add(tag[1].toLowerCase()))
+	})
+
+	return Array.from(categories).sort()
 }
 
 export async function fetchUserRelays(

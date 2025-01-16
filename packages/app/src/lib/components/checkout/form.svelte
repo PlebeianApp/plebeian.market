@@ -121,5 +121,5 @@
 		{#if validationErrors.additionalInfo}<span class="text-red-500">{validationErrors.additionalInfo}</span>{/if}
 		<Textarea bind:value={formData.additionalInfo}></Textarea>
 	</Label>
-	<Button variant="primary" type="submit" class="w-full mt-6">Finish Review</Button>
+	<Button variant="primary" type="submit" class="w-full mt-6">Proceed to Payment</Button>
 </form>
