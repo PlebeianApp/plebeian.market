@@ -3,7 +3,7 @@ import type { ExtendedBaseType, NDKEventStore } from '@nostr-dev-kit/ndk-svelte'
 import { NDKKind, NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk'
 import { browser } from '$app/environment'
 import { page } from '$app/stores'
-import { KindStalls } from '$lib/constants'
+import { KindProducts, KindStalls } from '$lib/constants'
 import ndkStore from '$lib/stores/ndk'
 import { derived, get } from 'svelte/store'
 
@@ -23,12 +23,17 @@ if (browser || typeof window !== 'undefined') {
 
 export const stallsSub: NDKEventStore<ExtendedBaseType<NDKEvent>> | undefined = ndk?.storeSubscribe(
 	{ kinds: [KindStalls], limit: 100 },
-	{ closeOnEose: true, autoStart: false, cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY },
+	{ closeOnEose: true, autoStart: false, cacheUsage: NDKSubscriptionCacheUsage.PARALLEL },
 )
 
 export const dmKind04Sub: NDKEventStore<ExtendedBaseType<NDKEvent>> | undefined = ndk?.storeSubscribe(
 	{},
-	{ closeOnEose: false, autoStart: false },
+	{ closeOnEose: false, autoStart: false, cacheUsage: NDKSubscriptionCacheUsage.PARALLEL },
+)
+
+export const productsSub: NDKEventStore<ExtendedBaseType<NDKEvent>> | undefined = ndk?.storeSubscribe(
+	{ kinds: [KindProducts] },
+	{ closeOnEose: true, autoStart: false, cacheUsage: NDKSubscriptionCacheUsage.PARALLEL },
 )
 
 export const groupedDMs = derived(dmKind04Sub ?? [], ($dmKind04Sub) => {
@@ -124,3 +129,18 @@ export function createDMSubscriptionManager(dmKind04Sub: NDKEventStore<ExtendedB
 		},
 	}
 }
+
+export const categories = derived(productsSub ?? [], ($productsSub) => {
+	const categories = new Set<string>()
+
+	for (const event of $productsSub) {
+		const tags = event.tags
+		for (let i = 0; i < tags.length; i++) {
+			if (tags[i][0] === 't') {
+				categories.add(tags[i][1].toLowerCase())
+			}
+		}
+	}
+
+	return [...categories]
+})
