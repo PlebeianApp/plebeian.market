@@ -12,7 +12,7 @@
 	export let innerContainerClass = ''
 </script>
 
-<div class={`flex flex-col relative w-full text-white ${$$restProps.class ?? ''}`} style:background-color={bgColor}>
+<div class={`flex flex-col relative w-full text-white ${$$restProps.class ?? ''}`} style:background-color={bgColor} id="hero-section">
 	<div
 		class="absolute inset-x-0 -bottom-18 h-full blur-2xl"
 		style:background={`radial-gradient(ellipse at ${gradientPosition}, ${gradientColor} ${gradientStartPercentage}%, transparent ${gradientEndPercentage}%)`}
