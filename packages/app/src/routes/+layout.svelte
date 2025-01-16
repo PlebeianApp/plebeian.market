@@ -24,6 +24,7 @@
 	import { queryClient } from '$lib/fetch/client'
 	import { productKeys } from '$lib/fetch/query-key-factory'
 	import { processQueuedInsertions } from '$lib/nostrSubs/data-aggregator'
+	import { productsSub } from '$lib/nostrSubs/subs'
 	import { dialogs } from '$lib/stores/dialog'
 	import ndkStore from '$lib/stores/ndk'
 	import { initNdkNWCs } from '$lib/stores/nwc'

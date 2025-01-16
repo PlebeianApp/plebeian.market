@@ -210,7 +210,7 @@
 			currentShippings = formData.shippings
 
 			if (forStall) {
-				currentStallIdentifier = parseCoordinatesString(forStall).coordinates || undefined
+				currentStallIdentifier = parseCoordinatesString(forStall).tagD || undefined
 			}
 		}
 	}
@@ -227,24 +227,10 @@
 					id: method.shipping!.id!,
 					cost: method.extraCost.toString(),
 				}))
-
 			const productData = prepareProductData(formData, stall, sortedImages, shippingData, product!)
 			validationErrors = validateForm(productData, get(forbiddenPatternStore).createProductEventSchema)
-			if (Object.keys(validationErrors).length > 0) {
-				const missing = []
-				if (!formData.get('name')) missing.push('name')
-				if (!formData.get('description')) missing.push('description')
-				if (!formData.get('price')) missing.push('price')
-				if (!formData.get('quantity')) missing.push('quantity')
-				if (!categories.length || categories.some((cat) => !cat.name.trim())) missing.push('categories')
-				if (!shippingData.length) missing.push('shipping methods')
 
-				toast.error(`Please fill in all required fields: ${missing.join(', ')}`)
-				isLoading = false
-				return
-			}
-
-			const categoriesData = categories.filter((c) => c.checked).map((c) => c.name)
+			const categoriesData = categories.filter((c) => c.name.trim()).map((c) => c.name)
 
 			if (product) {
 				await $editProductMutation.mutateAsync({ product: { ...productData }, categories: categoriesData })
