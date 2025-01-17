@@ -94,7 +94,7 @@
 			<a href="/">
 				<div class="flex items-center">
 					<img src={appSettings?.logoUrl} alt="logo" class="w-16 px-2" />
-					<span class="font-semibold hidden md:block md:text-2xl">{appSettings?.instanceName}</span>
+					<span class="font-semibold hidden lg:block lg:text-2xl">{appSettings?.instanceName}</span>
 				</div>
 			</a>
 			<div class="hidden sm:flex mx-8 gap-8">
