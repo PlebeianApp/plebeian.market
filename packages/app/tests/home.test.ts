@@ -18,11 +18,11 @@ describe('Home Page', () => {
 		await teardownBrowser(browser)
 	})
 
-	test('h1 should be visible on the home page', async () => {
+	test('hero section should be visible on the home page', async () => {
 		await homePage.navigate()
 		await page.waitForLoadState('networkidle')
 
-		const pageTitle = await homePage.getPageTitle()
-		expect(pageTitle).toBe('Sell stuff for sats')
+		const heroSection = page.getByRole('main').locator('#hero-section')
+		expect(await heroSection.isVisible()).toBe(true)
 	})
 })

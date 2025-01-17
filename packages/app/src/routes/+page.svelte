@@ -2,14 +2,10 @@
 	import CatMenu from '$lib/components/category/cat-menu.svelte'
 	import Hero from '$lib/components/common/hero.svelte'
 	import ItemGrid from '$lib/components/common/item-grid.svelte'
-	import AuthDialog from '$lib/components/dialogs/authDialog.svelte'
-	import Pattern from '$lib/components/Pattern.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
 	import { Button } from '$lib/components/ui/button/index.js'
 	import { createProductsByFilterQuery } from '$lib/fetch/products.queries'
-	import { dialogs } from '$lib/stores/dialog'
-	import { openDrawerForNewProduct } from '$lib/stores/drawer-ui'
-	import ndkStore from '$lib/stores/ndk'
+	import { handleListItems } from '$lib/utils/product.utils'
 
 	import type { PageData } from './$types'
 
@@ -17,11 +13,6 @@
 
 	$: productQuery = createProductsByFilterQuery({ pageSize: 10, order: 'asc' })
 	$: featuredProductsQuery = createProductsByFilterQuery({ featured: true })
-
-	function handleSelling() {
-		if (!$ndkStore.activeUser) dialogs.show(AuthDialog)
-		else openDrawerForNewProduct()
-	}
 </script>
 
 {#if !data.appSettings?.isFirstTimeRunning}
@@ -32,7 +23,7 @@
 					<img src="/buy-sell.svg" alt="Buy Sell Stuff for Sats" class="lg:h-[45px] w-auto" />
 					<img src="/stuff-for-sats.svg" alt="Buy Sell Stuff for Sats" class="lg:h-[45px] w-auto" />
 				</div>
-				<Button variant="focus" class="relative z-10" on:click={handleSelling}>
+				<Button variant="focus" class="relative z-10" on:click={handleListItems}>
 					<span class="flex items-center gap-2">
 						<span class="i-game-icons-ostrich w-5 h-5"></span>Start Selling
 					</span>

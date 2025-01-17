@@ -4,7 +4,7 @@ import ndkStore from '$lib/stores/ndk'
 import { toast } from 'svelte-sonner'
 import { get, writable } from 'svelte/store'
 
-export type DraweUiType = 'stall' | 'product' | 'cart' | null
+export type DraweUiType = 'stall' | 'product' | 'cart' | 'payment' | null
 
 export type StallCoordinatesType = `${typeof KindStalls}:${string}:${string}`
 export type ProductCoordinatesType = `${typeof KindProducts}:${string}:${string}`
@@ -65,6 +65,19 @@ export const openDrawerForNewProduct = () => {
 	}
 	setDrawerState({
 		drawerType: 'product',
+		id: null,
+		forStall: null,
+	})
+}
+
+export const openDrawerForPaymentDetail = () => {
+	const currentNdkStore = get(ndkStore)
+	if (!isUserLoggedIn(currentNdkStore)) {
+		handleUserNotLoggedIn('create a payment detail')
+		return
+	}
+	setDrawerState({
+		drawerType: 'payment',
 		id: null,
 		forStall: null,
 	})

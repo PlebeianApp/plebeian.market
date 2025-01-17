@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { responsiveButtonClasses } from '$lib/stores/breakpoint'
 	import { cn } from '$lib/utils.js'
 	import { Button as ButtonPrimitive } from 'bits-ui'
 
@@ -6,7 +7,6 @@
 	import { buttonVariants } from './index.js'
 
 	type IconPosition = 'left' | 'right' | undefined
-
 	type $$Props = Props & {
 		iconPosition?: IconPosition
 	}
@@ -20,16 +20,15 @@
 	export { className as class }
 
 	const hasIcon = $$slots.icon
+
+	$: classes = cn(
+		buttonVariants({ variant, size, className }),
+		hasIcon && 'inline-flex items-center gap-2',
+		$responsiveButtonClasses?.[size || 'default'],
+	)
 </script>
 
-<ButtonPrimitive.Root
-	{builders}
-	class={cn(buttonVariants({ variant, size, className }), hasIcon && 'inline-flex items-center gap-2')}
-	type="button"
-	{...$$restProps}
-	on:click
-	on:keydown
->
+<ButtonPrimitive.Root {builders} class={classes} type="button" {...$$restProps} on:click on:keydown>
 	{#if hasIcon && iconPosition === 'right'}
 		<slot />
 		<slot name="icon" />

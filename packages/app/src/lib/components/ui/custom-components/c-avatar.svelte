@@ -4,6 +4,7 @@
 	import AvatarImage from '$lib/components/ui/avatar/avatar-image.svelte'
 	import Avatar from '$lib/components/ui/avatar/avatar.svelte'
 	import { getHexColorFingerprintFromHexPubkey, truncateString } from '$lib/utils'
+	import { npubEncode } from 'nostr-tools/nip19'
 
 	export let pubkey: string
 	export let profile: NDKUserProfile | undefined | null
@@ -19,7 +20,7 @@
 </script>
 
 {#if linked}
-	<a href={`/p/${pubkey}`} class="hover:bg-accent {containerClass}">
+	<a href={`/p/${npubEncode(pubkey)}`} class="hover:bg-accent {containerClass}">
 		<Avatar class={avatarClass}>
 			<AvatarImage src={profile?.image} alt={displayName} class={imageClass} />
 			<AvatarFallback style={`background-color: ${hexColorFromPubkey}`} class={fallbackClass}>

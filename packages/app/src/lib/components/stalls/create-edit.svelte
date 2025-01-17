@@ -112,7 +112,6 @@
 		}
 	}
 
-	$: headerImageOpen = headerImage ? true : false
 	$: shippingFromOpen = geohashOfSelectedGeometry ? true : false
 
 	function addShipping(id?: string) {

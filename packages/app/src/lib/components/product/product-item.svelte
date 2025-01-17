@@ -9,7 +9,7 @@
 	import { openDrawerForProduct } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
 	import { formatSats, parseCoordinatesString, stringToHexColor } from '$lib/utils'
-	import { Edit, MoreVertical, ShoppingCart } from 'lucide-svelte'
+	import { Edit, MoreVertical } from 'lucide-svelte'
 
 	import Spinner from '../assets/spinner.svelte'
 	import { Badge } from '../ui/badge'
@@ -38,7 +38,7 @@
 		<Card.Header class="p-0">
 			{#if product.images?.length && !imageLoadError}
 				{@const mainImage = product.images?.sort((a, b) => a.imageOrder - b.imageOrder)}
-				<div class="relative w-full h-72">
+				<div class="relative w-full aspect-square">
 					<img
 						class="object-cover w-full h-full"
 						src={mainImage[0].imageUrl}
@@ -47,7 +47,7 @@
 					/>
 				</div>
 			{:else}
-				<div class="flex items-center justify-center aspect-[10/9]">
+				<div class="flex items-center justify-center aspect-square">
 					<span
 						style={`color:${stringToHexColor(String(product.name || product.identifier))}`}
 						class="i-mdi-package-variant-closed w-16 h-16"
@@ -125,7 +125,7 @@
 				<Button
 					variant="primary"
 					class="w-full text-sm h-8"
-					on:click={() => handleAddToCart(product.userId, String(stallCoordinates.coordinates), product)}
+					on:click={() => handleAddToCart(String(product.userId), String(stallCoordinates.coordinates), product)}
 				>
 					Add to cart
 				</Button>

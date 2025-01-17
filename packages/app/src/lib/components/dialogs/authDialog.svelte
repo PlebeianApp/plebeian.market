@@ -55,7 +55,7 @@
 
 <div class="flex flex-col w-full">
 	<Hero class="relative flex justify-center" py="8">
-		<div class="flex flex-row gap-2 items-center z-10">
+		<div class="flex flex-row gap-2 justify-center z-10">
 			{#if loading}
 				<Spinner size={60} color="white" />
 			{:else}

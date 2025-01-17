@@ -5,14 +5,9 @@
 	import Button from '$lib/components/ui/button/button.svelte'
 	import { privatePaymentsQuery } from '$lib/fetch/payments.queries'
 
-	import type { PaymentDetailsMethod } from '@plebeian/database/constants'
-	import { PAYMENT_DETAILS_METHOD } from '@plebeian/database/constants'
-
 	import type { PageData } from './$types'
 
 	export let data: PageData
-
-	const paymentDetailMethods = Object.values(PAYMENT_DETAILS_METHOD) as PaymentDetailsMethod[]
 
 	const linkDetails = data.menuItems
 		.find((item) => item.value === 'account-settings')
@@ -35,10 +30,10 @@
 		<p>Loading...</p>
 	{:else if $privatePaymentsQuery.data?.length}
 		{#each $privatePaymentsQuery.data ?? [] as paymentDetail (paymentDetail.id)}
-			<PaymentDetailEdit {paymentDetail} {paymentDetailMethods} />
+			<PaymentDetailEdit {paymentDetail} />
 		{/each}
-		<PaymentDetailEdit {paymentDetailMethods} />
+		<PaymentDetailEdit />
 	{:else if !$privatePaymentsQuery.data?.length}
-		<PaymentDetailEdit {paymentDetailMethods} showGuidance={true} />
+		<PaymentDetailEdit showGuidance={true} />
 	{/if}
 </div>
