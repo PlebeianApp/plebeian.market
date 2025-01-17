@@ -133,7 +133,9 @@
 						</div>
 					{/if}
 				</div>
-				<UserAlerts stalls={stallsMixture} products={productsMixture} />
+				{#if isMe}
+					<UserAlerts stalls={stallsMixture} products={productsMixture} />
+				{/if}
 			</div>
 			<div class=" flex flex-col gap-1">
 				{#if $breakpoint == 'sm'}
