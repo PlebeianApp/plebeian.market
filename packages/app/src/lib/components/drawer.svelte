@@ -94,7 +94,7 @@
 						/>
 					{/key}
 				{:else if $drawerUI.drawerType == 'payment'}
-					<PaymentDetailCreateEdit paymentDetail={null} isOpen={true} on:success={handleSuccess} />
+					<PaymentDetailCreateEdit paymentDetail={null} isOpen={true} showGuidance={true} on:success={handleSuccess} />
 				{/if}
 			</ScrollArea>
 		{/if}
