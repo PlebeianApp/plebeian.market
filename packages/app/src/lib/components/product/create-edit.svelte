@@ -188,6 +188,7 @@
 			console.error('Error deleting product:', error)
 		}
 		await deleteEvent(product.id)
+		productFormStore.reset()
 		dispatch('success', null)
 		isLoading = false
 	}

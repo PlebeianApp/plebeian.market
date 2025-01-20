@@ -24,6 +24,7 @@
 	} from '$lib/utils/paymentDetails.utils'
 	import { isValidNip05 } from '$lib/utils/validation.utils'
 	import { format } from 'date-fns'
+	import { createEventDispatcher } from 'svelte'
 	import { toast } from 'svelte-sonner'
 
 	import type { PaymentDetailsMethod } from '@plebeian/database/constants'
@@ -35,15 +36,17 @@
 	import PaymentDetailConfirmationCard from './paymentDetailConfirmationCard.svelte'
 
 	export let paymentDetail: RichPaymentDetail | null = null
-	export let paymentDetailMethods: PaymentDetailsMethod[]
 	export let showGuidance: boolean = false
 
-	let isOpen = false
+	export let isOpen = false
 	let formState: 'idle' | 'validating' | 'confirming' | 'submitting' = 'idle'
 	let validationMessage = ''
 	let showConfirmation = false
 	let tempValidatedValue = ''
 	let confirmationType: onChainConfirmationType
+
+	const dispatch = createEventDispatcher<{ success: unknown; error: unknown }>()
+	const paymentDetailMethods = Object.values(PAYMENT_DETAILS_METHOD) as PaymentDetailsMethod[]
 
 	$: isEditing = !!paymentDetail
 	$: isDisabled = !editedPaymentDetail.stallId
@@ -149,6 +152,7 @@
 			isOpen = false
 			if (!isEditing) resetForm()
 			validationMessage = ''
+			if (!isEditing) dispatch('success', null)
 		} catch (error) {
 			validationMessage = 'An error occurred while saving'
 			console.error('Error saving payment method:', error)
@@ -237,7 +241,7 @@
 	}
 </script>
 
-<div class="border flex flex-col p-4 justify-between">
+<div class="border flex flex-col p-4 justify-between bg-white">
 	<Collapsible.Root bind:open={isOpen}>
 		<div class="flex flex-row w-full justify-between items-center gap-2">
 			<Collapsible.Trigger on:click={() => (isOpen = !isOpen)} class="flex flex-row w-full justify-between items-center gap-2">

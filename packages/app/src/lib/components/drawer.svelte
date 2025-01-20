@@ -12,6 +12,7 @@
 
 	import Spinner from './assets/spinner.svelte'
 	import ShoppingCart from './cart/shopping-cart.svelte'
+	import PaymentDetailCreateEdit from './settings/paymentDetailCreateEdit.svelte'
 	import { Button } from './ui/button'
 
 	$: stallQuery = $drawerUI.drawerType === 'stall' && $drawerUI.id ? createStallQuery($drawerUI.id!) : undefined
@@ -73,6 +74,8 @@
 							{:else}
 								<span>Sell A Product</span>
 							{/if}
+						{:else if $drawerUI.drawerType === 'payment'}
+							<span>Set a payment method</span>
 						{/if}
 					</div>
 				</Sheet.Title>
@@ -90,6 +93,8 @@
 							on:error={(e) => toast.error(`${e}`)}
 						/>
 					{/key}
+				{:else if $drawerUI.drawerType == 'payment'}
+					<PaymentDetailCreateEdit paymentDetail={null} isOpen={true} showGuidance={true} on:success={handleSuccess} />
 				{/if}
 			</ScrollArea>
 		{/if}

@@ -1,21 +1,20 @@
 <script lang="ts">
-	import AuthDialog from '$lib/components/dialogs/authDialog.svelte'
-	import { dialogs } from '$lib/stores/dialog'
-	import { openDrawerForNewProduct } from '$lib/stores/drawer-ui'
-	import ndkStore from '$lib/stores/ndk'
+	import { handleListItems } from '$lib/utils/product.utils'
 
+	import Hero from './common/hero.svelte'
 	import Button from './ui/button/button.svelte'
-
-	function handleListItems() {
-		if (!$ndkStore.activeUser) dialogs.show(AuthDialog)
-		else openDrawerForNewProduct()
-	}
 </script>
 
-<div class="w-full bg-secondary py-12 text-center">
-	<span class="mb-8 text-3xl text-black">Join in on the fun!</span>
-	<h1 class="text-black">Sell stuff for sats</h1>
-	<Button variant="focus" class="relative z-10" on:click={handleListItems}
-		><span>List your items in <span class="font-bold">2 minutes</span></span></Button
-	>
-</div>
+<Hero innerContainerClass=" flex flex-col items-center">
+	<span class="mb-8 text-3xl font-heading">Join in on the fun!</span>
+
+	<div class="relative z-10 flex flex-col lg:flex-row items-center justify-center gap-2 lg:gap-4 mb-6 p-2">
+		<img src="/buy-sell.svg" alt="Buy Sell Stuff for Sats" class="lg:h-[45px] w-auto" />
+		<img src="/stuff-for-sats.svg" alt="Buy Sell Stuff for Sats" class="lg:h-[45px] w-auto" />
+	</div>
+	<Button variant="focus" class="relative z-10 w-fit" on:click={handleListItems}>
+		<span class="flex items-center gap-2">
+			<span class="i-game-icons-ostrich w-5 h-5"></span>Start Selling
+		</span>
+	</Button>
+</Hero>

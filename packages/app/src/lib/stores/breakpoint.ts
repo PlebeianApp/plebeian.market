@@ -1,4 +1,4 @@
-import { readable } from 'svelte/store'
+import { derived, readable } from 'svelte/store'
 
 export type Breakpoint = 'sm' | 'md' | 'lg'
 
@@ -28,3 +28,12 @@ export const breakpoint = readable<Breakpoint>('lg', (set) => {
 		mediaQueries.forEach(({ mql }) => mql.removeEventListener('change', setBreakpoint))
 	}
 })
+
+const MOBILE_SIZE_CLASSES = {
+	default: 'h-11 px-4 text-base',
+	sm: 'h-11 px-3 text-base',
+	lg: 'h-12 px-6 text-lg',
+	icon: 'h-11 w-11',
+} as const
+
+export const responsiveButtonClasses = derived(breakpoint, ($breakpoint) => ($breakpoint === 'sm' ? MOBILE_SIZE_CLASSES : null))
