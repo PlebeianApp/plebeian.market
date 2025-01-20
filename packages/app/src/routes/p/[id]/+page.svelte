@@ -103,7 +103,6 @@
 					{#if $breakpoint !== 'sm'}
 						<div class="flex flex-col">
 							<div class="flex flex-row gap-2">
-								<AdminActions type="user" {id} />
 								{#if isMe}
 									{#if stallsMixture.length && productsMixture.length}
 										<Button variant="primary" class="w-full gap-2" on:click={openDrawerForNewStall}>
@@ -113,11 +112,13 @@
 											<span>Add {productsMixture.length ? 'A' : 'Your First'} Product</span>
 										</Button>
 									{/if}
+								{:else}
+									<AdminActions type="user" {id} />
+									<InteractiveZapButton userIdToZap={id} profile={$userProfileQuery.data} />
+									<Button size="icon" variant="tertiary" on:click={handleSendMessage}>
+										<span class="i-mdi-message-bubble w-6 h-6" />
+									</Button>
 								{/if}
-								<InteractiveZapButton userIdToZap={id} profile={$userProfileQuery.data} />
-								<Button size="icon" variant="tertiary" on:click={handleSendMessage}>
-									<span class="i-mdi-message-bubble w-6 h-6" />
-								</Button>
 							</div>
 						</div>
 					{:else}
