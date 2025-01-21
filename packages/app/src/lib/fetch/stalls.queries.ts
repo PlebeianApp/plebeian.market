@@ -56,33 +56,47 @@ export const createStallFromNostrQuery = (stallId: string) =>
 		queryClient,
 	)
 
-export const createStallsByFilterQuery = (filter: Partial<StallsFilter>) =>
+export const createStallsByFilterQuery = (filter: Partial<StallsFilter>, checkOnNostr = false) =>
 	createQuery<{ total: number; stalls: Partial<RichStall>[] } | null>(
 		{
 			queryKey: stallKeys.filtered(filter),
 			queryFn: async () => {
-				const response = await createRequest('GET /api/v1/stalls', {
-					params: stallsFilterSchema.parse(filter),
-				})
-				if (response.stalls.length) return response
-
+				if (!checkOnNostr) {
+					const response = await createRequest('GET /api/v1/stalls', {
+						params: stallsFilterSchema.parse(filter),
+					})
+					if (response.stalls.length) return response
+				}
 				if (filter.stallId) {
 					const { stallNostrRes: stallData } = await fetchStallData(filter.stallId)
 					const normalizedStall = stallData ? await normalizeStallData(stallData) : null
-					if (normalizedStall?.data && normalizedStall.error === null) {
-						return { total: 1, stalls: [normalizedStall.data] }
-					}
-				} else if (filter.userId) {
+
+					return normalizedStall?.data && normalizedStall.error === null ? { total: 1, stalls: [normalizedStall.data] } : null
+				}
+
+				if (filter.userId) {
 					const { stallNostrRes: stallData } = await fetchUserStallsData(filter.userId)
-					if (stallData) {
-						const normalizedStallData = (await Promise.all(Array.from(stallData).map(normalizeStallData)))
-							.filter((result): result is NormalizedData<RichStall> => result.data !== null && result.error == null)
-							.map((result) => result.data as Partial<RichStall>)
-						if (normalizedStallData.length) {
-							return { total: normalizedStallData.length, stalls: normalizedStallData }
+					if (!stallData?.size) return null
+
+					const normalizedStallData = (await Promise.all(Array.from(stallData).map(normalizeStallData)))
+						.filter((result): result is NormalizedData<RichStall> => result.data !== null && result.error === null)
+						.map((result) => result.data as Partial<RichStall>)
+
+					if (!normalizedStallData.length) return null
+
+					const validIdentifiers = new Set(normalizedStallData.map((stall) => stall.identifier))
+					for (const stall of stallData) {
+						if (validIdentifiers.has(stall.dTag)) {
+							aggregatorAddStall(stall)
 						}
 					}
+
+					return {
+						total: normalizedStallData.length,
+						stalls: normalizedStallData,
+					}
 				}
+
 				return null
 			},
 			enabled: !!browser,

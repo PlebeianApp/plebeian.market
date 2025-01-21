@@ -126,47 +126,53 @@ export const createCurrencyConversionQuery = (fromCurrency: string, amount: numb
 		},
 		queryClient,
 	)
-export const createProductsByFilterQuery = (filter: Partial<ProductsFilter>) =>
+export const createProductsByFilterQuery = (filter: Partial<ProductsFilter>, checkOnNostr = false) =>
 	createQuery<ProductQueryData | null>(
 		{
 			queryKey: productKeys.filtered(filter),
 			queryFn: async () => {
-				try {
-					const response = await createRequest('GET /api/v1/products', {
-						params: productsFilterSchema.parse(filter),
-					})
-					if (response.products.length) return response
-					throw Error
-				} catch (error) {
-					const userId = (filter.stallId && filter.stallId.split(':')[1]) || filter?.userId || null
-					if (!userId) return null
-					const { products: productsData } = await fetchUserProductData(userId)
-					if (filter.stallId) {
-						if (productsData?.size) {
-							const parsedStallIdString = parseCoordinatesString(filter.stallId)
-							const result = await normalizeProductsFromNostr(productsData, userId, parsedStallIdString.tagD)
-							if (result) {
-								const { toDisplayProducts, stallProducts } = result
-								aggregatorAddProducts(stallProducts)
+				if (!checkOnNostr) {
+					try {
+						const response = await createRequest('GET /api/v1/products', {
+							params: productsFilterSchema.parse(filter),
+						})
+						if (response.products.length) return response
+					} catch {
+						// Fail silently
+					}
+				}
 
-								return {
-									total: toDisplayProducts.length,
-									products: toDisplayProducts as DisplayProduct[],
-								}
-							}
-						}
-					} else if (filter.userId) {
-						if (productsData?.size) {
-							aggregatorAddProducts(productsData)
-							const result = await normalizeProductsFromNostr(productsData, filter.userId)
-							if (result) {
-								const { toDisplayProducts } = result
-								return {
-									total: toDisplayProducts.length,
-									products: toDisplayProducts as DisplayProduct[],
-								}
-							}
-						}
+				const userId = (filter.stallId && filter.stallId.split(':')[1]) || filter?.userId
+				if (!userId) return null
+
+				const { products: productsData } = await fetchUserProductData(userId)
+				if (!productsData?.size) return null
+
+				if (filter.stallId) {
+					const parsedStallIdString = parseCoordinatesString(filter.stallId)
+					const result = await normalizeProductsFromNostr(productsData, userId, parsedStallIdString.tagD)
+
+					if (!result) return null
+
+					const { toDisplayProducts, stallProducts } = result
+					aggregatorAddProducts(stallProducts)
+
+					return {
+						total: toDisplayProducts.length,
+						products: toDisplayProducts as DisplayProduct[],
+					}
+				}
+
+				if (filter.userId) {
+					aggregatorAddProducts(productsData)
+					const result = await normalizeProductsFromNostr(productsData, filter.userId)
+
+					if (!result) return null
+
+					const { toDisplayProducts } = result
+					return {
+						total: toDisplayProducts.length,
+						products: toDisplayProducts as DisplayProduct[],
 					}
 				}
 
