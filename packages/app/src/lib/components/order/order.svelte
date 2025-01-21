@@ -158,7 +158,6 @@
 		: []
 
 	$: productQueryResults = derived(productQueries, ($queries) => $queries.map(($q) => $q))
-
 	function handlePaymentEvent(event: CustomEvent<CheckoutPaymentEvent>, invoiceId: string) {
 		const { type } = event
 		const status = paymentEventToStatus[type]

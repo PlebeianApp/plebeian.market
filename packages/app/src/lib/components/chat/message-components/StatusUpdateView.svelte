@@ -34,7 +34,7 @@
 	}
 
 	$: {
-		ordersStore.updateOrderStatus(message)
+		ordersStore.updateStatusByMsg(message)
 	}
 </script>
 

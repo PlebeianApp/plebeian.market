@@ -2,7 +2,7 @@ import type { DisplayInvoice } from '$lib/server/invoices.service'
 import type { DisplayOrder } from '$lib/server/orders.service'
 import { get, writable } from 'svelte/store'
 
-import type { InvoiceMessage, OrderMessage, OrderStatusUpdateMessage } from '@plebeian/database'
+import type { InvoiceMessage, OrderMessage, OrderStatus, OrderStatusUpdateMessage } from '@plebeian/database'
 
 function createOrdersStore() {
 	const { subscribe, update, set } = writable<Map<string, DisplayOrder>>(new Map())
@@ -40,13 +40,26 @@ function createOrdersStore() {
 				return orders
 			})
 		},
-		updateOrderStatus: (statusUpdate: OrderStatusUpdateMessage) => {
+		updateStatusByMsg: (statusUpdate: OrderStatusUpdateMessage) => {
 			update((orders) => {
 				const order = orders.get(statusUpdate.id)
 				if (order) {
 					orders.set(statusUpdate.id, {
 						...order,
 						status: statusUpdate.status,
+						updatedAt: new Date(),
+					})
+				}
+				return orders
+			})
+		},
+		updateStatus: (orderId: string, status: OrderStatus) => {
+			update((orders) => {
+				const order = orders.get(orderId)
+				if (order) {
+					orders.set(orderId, {
+						...order,
+						status,
 						updatedAt: new Date(),
 					})
 				}
