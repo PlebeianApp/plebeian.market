@@ -35,7 +35,12 @@
 
 		<Alert.Root variant="destructive">
 			<Alert.Description>
-				PlebianMarket is not responsible for disputes between you and your customers. Please review our terms and conditions.
+				PlebianMarket is not responsible for disputes between you and your customers. Please review our <a
+					href="/terms-and-conditions"
+					class="external-link"
+				>
+					terms and conditions.</a
+				>
 			</Alert.Description>
 		</Alert.Root>
 
