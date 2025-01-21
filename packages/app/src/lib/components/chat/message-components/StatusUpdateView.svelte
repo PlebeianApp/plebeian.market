@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { ordersStore } from '$lib/stores/orders'
+
 	import type { OrderStatus, OrderStatusUpdateMessage } from '@plebeian/database/constants'
 
 	import MessageHeader from './MessageHeader.svelte'
@@ -29,6 +31,10 @@
 			default:
 				return 'text-muted-foreground'
 		}
+	}
+
+	$: {
+		ordersStore.updateOrderStatus(message)
 	}
 </script>
 

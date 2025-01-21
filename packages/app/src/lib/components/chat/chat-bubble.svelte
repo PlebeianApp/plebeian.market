@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { NDKEvent, NDKUserProfile } from '@nostr-dev-kit/ndk'
+	import type { NDKEvent } from '@nostr-dev-kit/ndk'
 	import type { ComponentType } from 'svelte'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
 	import { createDecryptedMessage } from '$lib/utils/dm.utils'

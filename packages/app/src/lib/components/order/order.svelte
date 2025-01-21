@@ -63,9 +63,7 @@
 				orderId: order.id,
 				status: 'confirmed',
 			})
-			console.log('observing order mutation', orderMutation)
 			if (!orderMutation) return
-			// TODO: Optimize product update and order update, too many api calls
 			await Promise.all(
 				order.orderItems.map(async (orderItem) => {
 					const product = $productQueryResults.find((q) => q.data?.id === orderItem.productId)?.data

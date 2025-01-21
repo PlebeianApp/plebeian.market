@@ -2,6 +2,7 @@ import type { InvoicesFilter } from '$lib/schema'
 import type { DisplayInvoice } from '$lib/server/invoices.service'
 import { createQuery } from '@tanstack/svelte-query'
 import { invoicesFilterSchema } from '$lib/schema'
+import { invoicesStore } from '$lib/stores/orders'
 
 import { createRequest, queryClient } from './client'
 import { invoiceKeys } from './query-key-factory'
@@ -31,9 +32,19 @@ export const createInvoicesByFilterQuery = (filter: Partial<InvoicesFilter>) =>
 		{
 			queryKey: invoiceKeys.filtered(filter),
 			queryFn: async () => {
-				return await createRequest('GET /api/v1/invoices', {
-					params: invoicesFilterSchema.parse(filter),
-				})
+				try {
+					return await createRequest('GET /api/v1/invoices', {
+						params: invoicesFilterSchema.parse(filter),
+					})
+				} catch (error) {
+					if (filter.orderId) {
+						const memoryInvoices = invoicesStore.getInvoicesByOrderId(filter.orderId)
+						if (memoryInvoices.length > 0) {
+							return memoryInvoices
+						}
+					}
+					throw error
+				}
 			},
 			retry: 1,
 		},

@@ -5,7 +5,7 @@ import { formatSats } from '$lib/utils'
 import { format } from 'date-fns'
 
 import type { Invoice, InvoiceStatus } from '@plebeian/database'
-import { db, eq, invoices, orders } from '@plebeian/database'
+import { db, eq, INVOICE_STATUS, invoices, orders } from '@plebeian/database'
 
 export type DisplayInvoice = Pick<
 	Invoice,
@@ -85,7 +85,7 @@ export const updateInvoiceObservations = async (invoiceId: string, additionalInf
 
 	const [updatedInvoice] = await db
 		.update(invoices)
-		.set({ additionalInfo, updatedAt: new Date() })
+		.set({ observations: additionalInfo, updatedAt: new Date() })
 		.where(eq(invoices.id, invoiceId))
 		.returning()
 
@@ -115,7 +115,7 @@ export const updateInvoiceStatus = async (invoiceId: string, newStatus: InvoiceS
 
 	const [updatedInvoice] = await db
 		.update(invoices)
-		.set({ invoiceStatus: newStatus, updatedAt: new Date() })
+		.set({ invoiceStatus: newStatus ?? INVOICE_STATUS.PENDING, updatedAt: new Date() })
 		.where(eq(invoices.id, invoiceId))
 		.returning()
 
