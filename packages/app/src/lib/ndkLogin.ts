@@ -12,11 +12,14 @@ import { get, writable } from 'svelte/store'
 
 import type { UserRoles } from '@plebeian/database'
 
+import type { ExistsResult } from './interfaces'
 import { userEventSchema } from '../schema/nostr-events'
 import { createRequest, queryClient } from './fetch/client'
+import { createProductsByFilterQuery } from './fetch/products.queries'
 import { userKeys } from './fetch/query-key-factory'
+import { createStallsByFilterQuery } from './fetch/stalls.queries'
 import { createUserFromNostrMutation } from './fetch/users.mutations'
-import { createUserExistsQuery } from './fetch/users.queries'
+import { processQueuedInsertions } from './nostrSubs/data-aggregator'
 import { dmKind04Sub } from './nostrSubs/subs'
 import { manageUserRelays } from './nostrSubs/userRelayManager'
 import { cart } from './stores/cart'
@@ -88,14 +91,15 @@ export const fetchActiveUserData = async (keyToLocalDb?: string): Promise<NDKUse
 		checkIfUserExists(user.pubkey),
 		getAppSettings(),
 		getUserRole(user.pubkey),
+		resolveQuery(() => createStallsByFilterQuery({ userId: user.pubkey }, true)),
+		resolveQuery(() => createProductsByFilterQuery({ userId: user.pubkey }, true)),
 	])
-
 	currentUserRole.set(userRole)
 
 	await loginLocalDb(user.pubkey, keyToLocalDb ? 'NSEC' : 'NIP07', keyToLocalDb)
 
 	if (await shouldRegister(allowRegister, userExists)) {
-		await loginDb(user)
+		await loginDb(user, userExists)
 	}
 
 	return user
@@ -123,9 +127,8 @@ export const loginLocalDb = async (userPk: string, loginMethod: BaseAccount['typ
 	}
 }
 
-export const loginDb = async (user: NDKUser) => {
+export const loginDb = async (user: NDKUser, userExists: ExistsResult) => {
 	try {
-		const userExists = await resolveQuery(() => createUserExistsQuery(user.pubkey))
 		const userProfile = unNullify({ id: user.pubkey, ...user.profile })
 
 		if (!userExists.exists && !userExists.banned) {
@@ -146,6 +149,8 @@ export const loginDb = async (user: NDKUser) => {
 			auth: true,
 			body: user.profile,
 		})
+
+		processQueuedInsertions(true)
 	} catch (e) {
 		throw Error(`Failed to login user to DB: ${e}`)
 	}
