@@ -69,7 +69,7 @@
 							type="search"
 							placeholder="Search categories..."
 							bind:value={$search}
-							class="rounded-full bg-black text-white border-secondary"
+							class="rounded-full bg-black text-white border-secondary focus-visible:ring-offset-0 focus-visible:ring-secondary focus-visible:border-secondary"
 							autoFocus={showSearch}
 						/>
 					</div>

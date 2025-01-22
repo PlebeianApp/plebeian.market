@@ -20,7 +20,7 @@
 </script>
 
 {#if forItemType === 'product'}
-	<div class="my-16 mx-8">
+	<div class="m-8">
 		{#if title}
 			<div class="flex flex-col md:flex-row justify-between items-center">
 				<h2>{title}</h2>

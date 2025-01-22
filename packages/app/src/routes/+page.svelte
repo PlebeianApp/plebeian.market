@@ -34,7 +34,7 @@
 					<CatMenu />
 				</div>
 				{#if $featuredProductsQuery.data?.products?.length}
-					<ItemGrid title="Featured Collections">
+					<ItemGrid title="Featured">
 						{#each $featuredProductsQuery.data?.products as item (item.id)}
 							<ProductItem product={item} />
 						{/each}

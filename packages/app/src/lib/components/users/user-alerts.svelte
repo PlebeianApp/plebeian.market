@@ -41,7 +41,7 @@
 </script>
 
 {#if currentAlert}
-	<div class="flex flex-row justify-center px-8 bg-focus items-center">
+	<div class="flex flex-row justify-center px-8 py-2 bg-focus items-center">
 		<div class="flex sm:flex-row flex-col items-center text-center justify-center p-2 gap-4 w-full">
 			{#if currentAlert.message}
 				<span>{currentAlert.message}</span>
