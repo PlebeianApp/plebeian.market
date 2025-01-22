@@ -44,7 +44,7 @@
 		}),
 		table.column({
 			accessor: 'stallId',
-			header: 'Stall',
+			header: 'Shop',
 		}),
 		table.column({
 			accessor: 'createdAt',

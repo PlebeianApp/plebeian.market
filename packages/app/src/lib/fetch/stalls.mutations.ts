@@ -35,12 +35,12 @@ export const createStallFromNostrEvent = createMutation(
 				return response
 			} catch (e) {
 				console.error(e)
-				throw error(500, `Failed to mutate stall, ${e}`)
+				throw error(500, `Failed to mutate shop, ${e}`)
 			}
 		},
 		onSuccess: (data: DisplayStall | null) => {
 			if (data) {
-				console.log('Stall inserted in db successfully', data)
+				console.log('Shop inserted in db successfully', data)
 				queryClient.invalidateQueries({
 					queryKey: stallKeys.filtered({ userId: data.userId }),
 				})
@@ -67,12 +67,12 @@ export const updateStallFromNostrEvent = createMutation(
 				return response
 			} catch (e) {
 				console.error(e)
-				throw error(500, `Failed to mutate stall, ${e}`)
+				throw error(500, `Failed to mutate shop, ${e}`)
 			}
 		},
 		onSuccess: async (data: DisplayStall | null) => {
 			if (data) {
-				console.log('Stall inserted in db successfully', data)
+				console.log('Shop inserted in db successfully', data)
 				await queryClient.invalidateQueries({
 					queryKey: stallKeys.lists(),
 				})
@@ -173,3 +173,6 @@ export const setStallBannedMutation = createMutation(
 	},
 	queryClient,
 )
+function createStallsByFilterKey(arg0: { stallId: string }): import('@tanstack/svelte-query').QueryKey | undefined {
+	throw new Error('Function not implemented.')
+}

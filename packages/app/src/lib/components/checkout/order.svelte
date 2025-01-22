@@ -212,7 +212,7 @@
 				{/if}
 
 				<div
-					data-tooltip={!filledShippingMethods ? 'Make sure you choose shipping methods for every stall ' : null}
+					data-tooltip={!filledShippingMethods ? 'Make sure you choose shipping methods for every shop ' : null}
 					class="flex flex-col gap-4"
 				>
 					{#if relevantPaymentDetails.length}

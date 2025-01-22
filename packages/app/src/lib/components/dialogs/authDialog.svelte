@@ -15,6 +15,7 @@
 	import type { PageData } from '../../../routes/$types'
 	import Spinner from '../assets/spinner.svelte'
 	import Hero from '../common/hero.svelte'
+	import { activeTab } from '../ui/tabs/constants'
 	import SaveKeyDialog from './saveKeyDialog.svelte'
 
 	$: ({ appSettings } = $page.data as PageData)
@@ -48,9 +49,6 @@
 		dialogs.show(SaveKeyDialog, { nsec })
 		loading = false
 	}
-
-	const activeTab =
-		'w-full font-bold border-b-2 border-black text-black data-[state=active]:border-b-primary data-[state=active]:text-primary'
 </script>
 
 <div class="flex flex-col w-full">
