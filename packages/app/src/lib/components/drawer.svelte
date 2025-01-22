@@ -50,35 +50,39 @@
 </script>
 
 <Sheet.Root bind:open={isOpen} onOutsideClick={closeDrawer}>
-	<Sheet.Content side="right" class="w-[100vw] sm:min-w-[85vw] md:min-w-[55vw] xl:min-w-[35vw] flex flex-col border-l-black border-2 p-2">
+	<Sheet.Content
+		side="right"
+		class="w-[100vw] sm:min-w-[85vw] md:min-w-[55vw] xl:min-w-[35vw] flex flex-col h-full border-l-black border-2"
+	>
 		{#if isLoading}
 			<Spinner />
 		{:else}
-			<ScrollArea class="h-auto">
-				<Sheet.Title class="flex flex-row-reverse justify-end items-center content-center ">
-					<Button size="icon" variant="ghost" on:click={closeDrawer}>
-						<span class="cursor-pointer i-tdesign-close w-6 h-6" />
-					</Button>
-					<div class="w-full">
-						{#if $drawerUI.drawerType === 'cart'}
-							Your cart
-						{:else if $drawerUI.drawerType === 'stall'}
-							{#if $drawerUI.id}
-								<span>Edit {$drawerUI.drawerType}</span>
-							{:else}
-								<span>Create new {$drawerUI.drawerType}</span>
-							{/if}
-						{:else if $drawerUI.drawerType === 'product'}
-							{#if $drawerUI.id}
-								<span>Edit {$drawerUI.drawerType}</span>
-							{:else}
-								<span>Sell A Product</span>
-							{/if}
-						{:else if $drawerUI.drawerType === 'payment'}
-							<span>Set a payment method</span>
+			<Sheet.Title class="flex-none p-2 border-b flex items-center justify-between">
+				<div class="flex-1 text-2xl">
+					{#if $drawerUI.drawerType === 'cart'}
+						<span>Your cart</span>
+					{:else if $drawerUI.drawerType === 'stall'}
+						{#if $drawerUI.id}
+							<span>Edit Shop</span>
+						{:else}
+							<span>Create new Shop</span>
 						{/if}
-					</div>
-				</Sheet.Title>
+					{:else if $drawerUI.drawerType === 'product'}
+						{#if $drawerUI.id}
+							<span>Edit {$drawerUI.drawerType}</span>
+						{:else}
+							<span>Sell A Product</span>
+						{/if}
+					{:else if $drawerUI.drawerType === 'payment'}
+						<span>Set a payment method</span>
+					{/if}
+				</div>
+				<Button size="icon" variant="ghost" on:click={closeDrawer}>
+					<span class="cursor-pointer i-tdesign-close w-6 h-6" />
+				</Button>
+			</Sheet.Title>
+
+			<div class="flex-1 overflow-hidden">
 				{#if $drawerUI.drawerType === 'cart'}
 					<ShoppingCart />
 				{:else if $drawerUI.drawerType === 'product'}
@@ -96,7 +100,7 @@
 				{:else if $drawerUI.drawerType == 'payment'}
 					<PaymentDetailCreateEdit paymentDetail={null} isOpen={true} showGuidance={true} on:success={handleSuccess} />
 				{/if}
-			</ScrollArea>
+			</div>
 		{/if}
 	</Sheet.Content>
 </Sheet.Root>

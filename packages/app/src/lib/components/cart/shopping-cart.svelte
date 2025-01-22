@@ -13,8 +13,8 @@
 	}
 </script>
 
-<div class="flex flex-col h-[calc(100vh-8rem)] w-full">
-	<ScrollArea class="flex-1 w-full pr-2">
+<div class="grid grid-rows-[1fr_auto] h-full gap-4">
+	<ScrollArea>
 		<section class="flex flex-col gap-4">
 			{#each Object.values($cart.users) as user (user.pubkey)}
 				<Order {user} stalls={$cart.stalls} products={$cart.products} mode="cart" on:productUpdate={cart.handleProductUpdate} />
@@ -22,7 +22,7 @@
 		</section>
 	</ScrollArea>
 
-	<div class="mt-auto pt-4 w-full">
+	<footer class="border-t bg-background pt-4">
 		<GrandTotalDisplay showActions={true}>
 			<div slot="actions" class="flex justify-between mt-4">
 				<Button variant="outline" on:click={clearCart}>Clear Cart</Button>
@@ -30,9 +30,11 @@
 					on:click={() => {
 						goto('/checkout')
 						closeDrawer()
-					}}>Proceed to Checkout</Button
+					}}
 				>
+					Proceed to Checkout
+				</Button>
 			</div>
 		</GrandTotalDisplay>
-	</div>
+	</footer>
 </div>

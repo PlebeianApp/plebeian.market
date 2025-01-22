@@ -68,9 +68,6 @@
 		}
 	}
 
-	const navMenuButtonStyle = 'gap-4 py-8 px-6 justify-start'
-	const navMenuLabels = 'font-bold'
-
 	function handleScroll() {
 		if (!browser) return
 		showBackToTop = window.scrollY > 600
@@ -82,10 +79,11 @@
 	}
 
 	$: currentPath = $page.url.pathname
+	const navMenuButtonStyle = 'gap-4 py-8 px-6 justify-start'
+	const navMenuLabels = 'font-bold'
 	const activeNavClass = 'text-secondary font-bold'
-	const activeIconClass = 'text-primary'
-	const activeButtonClass = 'bg-secondary'
 	const activeMenuItemClass = 'bg-secondary text-primary'
+	const activeNavButtonClass = 'bg-secondary text-primary hover:text-secondary'
 
 	onMount(() => {
 		if (browser) {
@@ -134,9 +132,9 @@
 					<div use:clickOutside>
 						<Collapsible.Root bind:open>
 							<Collapsible.Trigger asChild let:builder>
-								<Button builders={[builder]} variant="primary" class="p-2 rounded-md">
+								<Button builders={[builder]} variant="primary" class="p-2 rounded-md hover:[&>span]:text-secondary">
 									{#if open}
-										<span class=" i-tdesign-close w-6 h-6" />
+										<span class="i-tdesign-close w-6 h-6" />
 									{:else}
 										<span class="i-tdesign-view-list w-6 h-6" />
 									{/if}
@@ -160,13 +158,8 @@
 												class="{navMenuButtonStyle} {currentPath.startsWith('/dash/messages') ? activeMenuItemClass : ''}"
 												on:click={() => (open = false)}
 											>
-												{#if hasUnreadMessages}
-													<span class="i-tdesign-mail w-6 h-6 text-secondary" />
-													<span class="{navMenuLabels} text-secondary">Messages</span>
-												{:else}
-													<span class="i-tdesign-mail w-6 h-6 {currentPath.startsWith('/dash/messages') ? activeIconClass : ''}" />
-													<span class="{navMenuLabels} {currentPath.startsWith('/dash/messages') ? activeNavClass : ''}">Messages</span>
-												{/if}
+												<span class="i-tdesign-mail w-6 h-6 {hasUnreadMessages ? 'text-secondary' : ''}" />
+												<span class={navMenuLabels}>{hasUnreadMessages ? 'Messages' : 'Messages'}</span>
 											</Button>
 
 											<Button
@@ -175,8 +168,8 @@
 												class="{navMenuButtonStyle} {currentPath.startsWith('/settings') ? activeMenuItemClass : ''}"
 												on:click={() => (open = false)}
 											>
-												<span class="i-tdesign-setting-1 w-6 h-6 {currentPath.startsWith('/settings') ? activeIconClass : ''}" />
-												<span class="{navMenuLabels} {currentPath.startsWith('/settings') ? activeIconClass : ''}">Settings</span>
+												<span class="i-tdesign-setting-1 w-6 h-6" />
+												<span class={navMenuLabels}>Settings</span>
 											</Button>
 
 											<Button
@@ -185,8 +178,8 @@
 												class="{navMenuButtonStyle} {currentPath === '/dash' ? activeMenuItemClass : ''}"
 												on:click={() => (open = false)}
 											>
-												<span class="i-tdesign-dashboard w-6 h-6 {currentPath === '/dash' ? activeIconClass : ''}" />
-												<span class="{navMenuLabels} {currentPath === '/dash' ? activeIconClass : ''}">Dashboard</span>
+												<span class="i-tdesign-dashboard w-6 h-6" />
+												<span class={navMenuLabels}>Dashboard</span>
 											</Button>
 
 											<Button
@@ -195,8 +188,8 @@
 												class="{navMenuButtonStyle} {currentPath.startsWith('/products') ? activeMenuItemClass : ''}"
 												on:click={() => (open = false)}
 											>
-												<span class="i-mdi-package-variant-closed w-7 h-7 {currentPath.startsWith('/products') ? activeIconClass : ''}" />
-												<span class="{navMenuLabels} {currentPath.startsWith('/products') ? activeIconClass : ''}">Products</span>
+												<span class="i-mdi-package-variant-closed w-7 h-7" />
+												<span class={navMenuLabels}>Products</span>
 											</Button>
 
 											<Button
@@ -205,8 +198,8 @@
 												class="{navMenuButtonStyle} {currentPath.startsWith('/community') ? activeMenuItemClass : ''}"
 												on:click={() => (open = false)}
 											>
-												<span class="i-tdesign-shop w-6 h-6 {currentPath.startsWith('/community') ? activeIconClass : ''}" />
-												<span class="{navMenuLabels} {currentPath.startsWith('/community') ? activeIconClass : ''}">Community</span>
+												<span class="i-tdesign-shop w-6 h-6" />
+												<span class={navMenuLabels}>Community</span>
 											</Button>
 
 											<Button
@@ -215,8 +208,8 @@
 												class="{navMenuButtonStyle} {currentPath.startsWith('/nostr') ? activeMenuItemClass : ''}"
 												on:click={() => (open = false)}
 											>
-												<span class="i-tdesign-compass w-6 h-6 {currentPath.startsWith('/nostr') ? activeIconClass : ''}" />
-												<span class="{navMenuLabels} {currentPath.startsWith('/nostr') ? activeIconClass : ''}">Nostr</span>
+												<span class="i-tdesign-compass w-6 h-6" />
+												<span class={navMenuLabels}>Nostr</span>
 											</Button>
 
 											<Button
@@ -228,7 +221,7 @@
 												}}
 											>
 												<span class="i-tdesign-user-arrow-right text-secondary w-6 h-6" />
-												<span class="{navMenuLabels} text-secondary">Log out</span>
+												<span class="text-secondary {navMenuLabels}">Log out</span>
 											</Button>
 										</nav>
 									{/if}
@@ -239,38 +232,38 @@
 				{:else}
 					<Button
 						variant="primary"
-						class="sm:flex p-2 relative rounded-md {currentPath === '/dash' ? activeButtonClass : ''}"
+						class="sm:flex p-2 relative rounded-md {currentPath === '/dash' ? activeNavButtonClass : 'hover:[&>span]:text-secondary'}"
 						href="/dash"
 						id="dash-button"
 					>
-						<span class="i-tdesign-dashboard w-6 h-6 {currentPath === '/dash' ? activeIconClass : ''}" />
+						<span class="i-tdesign-dashboard w-6 h-6" />
 					</Button>
 
 					<Button
 						variant="primary"
-						class="sm:flex p-2 relative rounded-md {currentPath.startsWith('/settings') ? activeButtonClass : ''}"
+						class="sm:flex p-2 relative rounded-md {currentPath.startsWith('/settings')
+							? activeNavButtonClass
+							: 'hover:[&>span]:text-secondary'}"
 						href="/settings"
 						id="settings-button"
 					>
-						<span class="i-tdesign-setting-1 w-6 h-6 {currentPath.startsWith('/settings') ? activeIconClass : ''}" />
+						<span class="i-tdesign-setting-1 w-6 h-6" />
 					</Button>
 
 					<Button
 						variant="primary"
-						class="sm:flex p-2 relative rounded-md {currentPath.startsWith('/dash/messages') ? activeButtonClass : ''}"
+						class="sm:flex p-2 relative rounded-md {currentPath.startsWith('/dash/messages')
+							? activeNavButtonClass
+							: 'hover:[&>span]:text-secondary'}"
 						href="/dash/messages"
 						id="msg-button"
 					>
-						{#if hasUnreadMessages}
-							<span class="i-tdesign-mail w-6 h-6 {currentPath.startsWith('/dash/messages') ? 'text-primary' : 'text-secondary'}" />
-						{:else}
-							<span class="i-tdesign-mail w-6 h-6 {currentPath.startsWith('/dash/messages') ? activeIconClass : ''}" />
-						{/if}
+						<span class="i-tdesign-mail w-6 h-6 {hasUnreadMessages ? 'text-secondary' : ''}" />
 					</Button>
 
 					<Button
 						variant="primary"
-						class="sm:flex p-2 relative rounded-md"
+						class="sm:flex p-2 relative rounded-md hover:[&>span]:text-secondary"
 						on:click={() => {
 							logout()
 							open = false
@@ -280,8 +273,13 @@
 					</Button>
 				{/if}
 			{:else}
-				<Button variant="primary" class="sm:flex p-2 relative rounded-md" on:click={showAuthDialog} id="login-button">
-					<span class="i-tdesign-user-1 w-6 h-6"></span>
+				<Button
+					variant="primary"
+					class="sm:flex p-2 relative rounded-md hover:[&>span]:text-secondary"
+					on:click={showAuthDialog}
+					id="login-button"
+				>
+					<span class="i-tdesign-user-1 w-6 h-6" />
 				</Button>
 			{/if}
 		</div>
