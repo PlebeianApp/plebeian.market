@@ -46,13 +46,17 @@
 	}
 </script>
 
-<div class="flex {isCurrentUser ? 'justify-end' : 'justify-start'}">
+<div class="flex {isCurrentUser ? 'justify-end' : 'justify-start'} ">
 	<div class="flex {isCurrentUser ? 'flex-row-reverse' : 'flex-row'} items-end max-w-[95%] gap-2">
 		<CAvatar linked pubkey={message.pubkey} profile={$userProfile.data} />
 
 		{#if $decryptedContent.data}
 			{@const parsed = parseMessage($decryptedContent.data)}
-			<div class=" overflow-hidden {isCurrentUser ? 'rounded-br-none' : 'rounded-bl-none'}">
+			<div
+				class=" overflow-hidden {isCurrentUser ? 'rounded-br-none' : 'rounded-bl-none'} bg-white border-b-2 {isCurrentUser
+					? 'border-secondary'
+					: 'border-primary'} shadow-xl"
+			>
 				{#if parsed.type === 'object'}
 					{@const Component = renderObjectMessage(parsed.data)}
 					{#if Component}
