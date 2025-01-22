@@ -1,4 +1,4 @@
-import type { NDKNip07Signer, NDKPrivateKeySigner } from '@nostr-dev-kit/ndk'
+import type { NDKNip07Signer, NDKNip46Signer, NDKPrivateKeySigner } from '@nostr-dev-kit/ndk'
 import { page } from '$app/stores'
 import ndkStore, { ndk } from '$lib/stores/ndk'
 import { get } from 'svelte/store'
@@ -16,7 +16,7 @@ export const getAppSettings = async (): Promise<boolean> =>
 		check()
 	})
 
-export const setupNDKSigner = async (signer: NDKNip07Signer | NDKPrivateKeySigner) => {
+export const setupNDKSigner = async (signer: NDKNip07Signer | NDKPrivateKeySigner | NDKNip46Signer) => {
 	await signer.blockUntilReady()
 	ndk.signer = signer
 	ndkStore.set(ndk)

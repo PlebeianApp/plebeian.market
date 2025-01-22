@@ -36,6 +36,13 @@ export const productsSub: NDKEventStore<ExtendedBaseType<NDKEvent>> | undefined 
 	{ closeOnEose: true, autoStart: false, cacheUsage: NDKSubscriptionCacheUsage.PARALLEL },
 )
 
+export const createNostrConnectSub = (pubkey: string) => {
+	return ndk?.storeSubscribe(
+		{ kinds: [NDKKind.NostrConnect], '#p': [pubkey], since: Math.floor(Date.now() / 1000), limit: 1 },
+		{ cacheUsage: NDKSubscriptionCacheUsage.PARALLEL },
+	)
+}
+
 export const groupedDMs = derived(dmKind04Sub ?? [], ($dmKind04Sub) => {
 	const groups: Record<string, NDKEvent[]> = {}
 	const activeUser = get(ndkStore).activeUser

@@ -5,7 +5,7 @@
 	import { Input } from '$lib/components/ui/input'
 	import { Label } from '$lib/components/ui/label'
 	import * as Tabs from '$lib/components/ui/tabs'
-	import { login } from '$lib/ndkLogin'
+	import { login, loginWithNostrConnect } from '$lib/ndkLogin'
 	import { dialogs } from '$lib/stores/dialog'
 	import { type BaseAccount } from '$lib/stores/session'
 	import { generateSecretKey } from 'nostr-tools'
@@ -15,6 +15,7 @@
 	import type { PageData } from '../../../routes/$types'
 	import Spinner from '../assets/spinner.svelte'
 	import Hero from '../common/hero.svelte'
+	import Nip46Login from '../common/nip-46-login.svelte'
 	import SaveKeyDialog from './saveKeyDialog.svelte'
 
 	$: ({ appSettings } = $page.data as PageData)
@@ -36,6 +37,13 @@
 			toast.error('Login error!')
 		}
 		loading = false
+	}
+
+	function handleNostrConnectLogin(event: CustomEvent) {
+		const { signer, bunkerUrl, localPrivateKey } = event.detail
+		loginWithNostrConnect({ signer, bunkerUrl, localPrivateKey, autoLogin: checked })
+		toast.success('Login success!')
+		dialogs.clearAll()
 	}
 
 	async function handleSignUp(formData: FormData) {
@@ -69,6 +77,7 @@
 			{#if tab !== 'signup'}
 				<Tabs.List class="w-full justify-around bg-transparent mb-6">
 					<Tabs.Trigger value="login-nip07" class={activeTab}>Extension</Tabs.Trigger>
+					<Tabs.Trigger value="login-signer" class={activeTab}>N-Conenct</Tabs.Trigger>
 					<Tabs.Trigger value="login-nsec" class={activeTab}>Private Key</Tabs.Trigger>
 				</Tabs.List>
 			{/if}
@@ -113,6 +122,10 @@
 					<Input required class="border-black border-2" name="password" placeholder="Password" id="signInPass" type="password" />
 					<Button variant="primary" id="signInSubmit" type="submit">Log in</Button>
 				</form>
+			</Tabs.Content>
+
+			<Tabs.Content value="login-signer" class="flex flex-col gap-4">
+				<Nip46Login on:event={(e) => handleNostrConnectLogin(e)} />
 			</Tabs.Content>
 
 			<Tabs.Content value="signup" class="flex flex-col gap-4">

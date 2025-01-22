@@ -38,6 +38,8 @@ export const validUrls = Object.values(availabeLogos).map((logo) => logo.value) 
 
 export const defaulRelaysUrls: string[] = ['wss://relay.nostr.band', 'wss://nos.lol', 'wss://relay.nostr.net', 'wss://relay.damus.io']
 
+export const defaultNostrConnectRelays = ['wss://relay.nsec.app/']
+
 export const DEFAULT_ZAP_AMOUNTS = [
 	{ displayText: '😊 10 sats', amount: 10 },
 	{ displayText: '😄 21 sats', amount: 21 },
