@@ -1,6 +1,6 @@
 import type { NDKUser, NDKUserProfile } from '@nostr-dev-kit/ndk'
 import type { BaseAccount } from '$lib/stores/session'
-import { NDKNip07Signer, NDKPrivateKeySigner, NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk'
+import { NDKNip07Signer, NDKNip46Signer, NDKPrivateKeySigner, NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk'
 import { error } from '@sveltejs/kit'
 import { HEX_KEYS_REGEX, KindsRelays } from '$lib/constants'
 import ndkStore, { ndk } from '$lib/stores/ndk'
@@ -25,7 +25,18 @@ import { manageUserRelays } from './nostrSubs/userRelayManager'
 import { cart } from './stores/cart'
 import { getAppSettings, setupNDKSigner, unNullify } from './utils/login.utils'
 
+export const NOSTR_CONNECT_KEY = 'nostr_connect_url'
+export const NOSTR_LOCAL_SIGNER_KEY = 'local_signer'
+
 type LoginResult = Promise<boolean>
+
+export type NostrConnectParams = {
+	signer: NDKPrivateKeySigner
+	bunkerUrl: string
+	localPrivateKey: string
+	autoLogin?: boolean
+}
+
 export const isSuccessfulLogin = writable(false)
 export const currentUserRole = writable<UserRoles>('pleb')
 export const login = async (loginMethod: BaseAccount['type'], formData?: FormData, autoLogin?: boolean): LoginResult => {
@@ -41,6 +52,19 @@ export const login = async (loginMethod: BaseAccount['type'], formData?: FormDat
 	}
 
 	return false
+}
+
+export const loginWithNostrConnect = async (params: NostrConnectParams): LoginResult => {
+	localStorage.setItem(NOSTR_CONNECT_KEY, params.bunkerUrl)
+	localStorage.setItem(NOSTR_LOCAL_SIGNER_KEY, params.localPrivateKey)
+	try {
+		await setupNDKSigner(params.signer)
+		await fetchActiveUserData()
+		return true
+	} catch (e) {
+		console.error(e)
+		return false
+	}
 }
 
 export const loginWithExtension = async (): LoginResult => {

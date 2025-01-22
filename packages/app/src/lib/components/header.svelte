@@ -1,11 +1,12 @@
 <script lang="ts">
 	import type { NsecAccount } from '$lib/stores/session'
+	import { NDKPrivateKeySigner } from '@nostr-dev-kit/ndk'
 	import { browser } from '$app/environment'
 	import { page } from '$app/stores'
 	import PassPromt from '$lib/components/passPromt.svelte'
 	import { Button } from '$lib/components/ui/button/index.js'
 	import * as Collapsible from '$lib/components/ui/collapsible'
-	import { login, logout } from '$lib/ndkLogin'
+	import { login, loginWithNostrConnect, logout, NOSTR_CONNECT_KEY, NOSTR_LOCAL_SIGNER_KEY } from '$lib/ndkLogin'
 	import { breakpoint } from '$lib/stores/breakpoint'
 	import { unreadCounts } from '$lib/stores/chat-notifications'
 	import { dialogs } from '$lib/stores/dialog'
@@ -27,7 +28,15 @@
 	onMount(async () => {
 		const lastAccount = localStorage.getItem('last_account')
 		const autoLogin = localStorage.getItem('auto_login') ? JSON.parse(localStorage.getItem('auto_login') as string) : undefined
-		if (lastAccount && autoLogin) {
+
+		const signerPrivateKey = localStorage.getItem(NOSTR_LOCAL_SIGNER_KEY)
+		const bunkerUrl = localStorage.getItem(NOSTR_CONNECT_KEY)
+
+		if (signerPrivateKey && bunkerUrl) {
+			if (!autoLogin) return
+			const signer = new NDKPrivateKeySigner(signerPrivateKey)
+			await loginWithNostrConnect({ signer, bunkerUrl, localPrivateKey: signerPrivateKey })
+		} else if (lastAccount && autoLogin) {
 			const accountInfo = await getAccount(lastAccount)
 			if (!accountInfo) return
 			if (accountInfo.type == 'NIP07') {

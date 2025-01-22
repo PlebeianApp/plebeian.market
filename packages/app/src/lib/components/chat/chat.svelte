@@ -55,10 +55,10 @@
 		manageUserRelays($userRelays.data, 'add')
 	}
 
-	const dmManager = createDMSubscriptionManager(dmKind04Sub)
+	const dmManager = dmKind04Sub ? createDMSubscriptionManager(dmKind04Sub) : undefined
 
 	onMount(async () => {
-		dmManager.loadConversationHistory(selectedPubkey)
+		dmManager?.loadConversationHistory(selectedPubkey)
 		scrollToBottom()
 	})
 

@@ -6,7 +6,7 @@
 	import type { PageData } from './$types'
 
 	export let data: PageData
-	const [{ title, description, root, links }] = data.menuItems.filter((item) => item.value === 'orders')
+	const [{ title, description, links }] = data.menuItems.filter((item) => item.value === 'orders')
 </script>
 
 <div class="pb-4 space-y-2">

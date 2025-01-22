@@ -3,6 +3,7 @@
 	import { Button } from '$lib/components/ui/button'
 	import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '$lib/components/ui/collapsible'
 	import ndkStore from '$lib/stores/ndk'
+	import { ordersStore } from '$lib/stores/orders'
 
 	import type { OrderMessage } from '@plebeian/database/constants'
 
@@ -25,6 +26,10 @@
 	}
 
 	$: orderUrl = `/dash/order/${$ndkStore.activeUser?.pubkey == message.buyerUserId ? 'purchases' : 'sales'}/${message.id}`
+
+	$: {
+		ordersStore.addOrder(message)
+	}
 </script>
 
 <div class="bg-accent/80 rounded-md p-3">

@@ -2,6 +2,7 @@ import type { OrdersFilter } from '$lib/schema'
 import type { DisplayOrder } from '$lib/server/orders.service'
 import { createQuery } from '@tanstack/svelte-query'
 import { ordersFilterSchema } from '$lib/schema'
+import { ordersStore } from '$lib/stores/orders'
 
 import { createRequest, queryClient } from './client'
 import { orderKeys } from './query-key-factory'
@@ -26,9 +27,17 @@ export const createOrderQuery = (orderId: string) =>
 		{
 			queryKey: orderKeys.detail(orderId),
 			queryFn: async () => {
-				return await createRequest(`GET /api/v1/orders/${orderId}`, {
-					auth: true,
-				})
+				try {
+					return await createRequest(`GET /api/v1/orders/${orderId}`, {
+						auth: true,
+					})
+				} catch (error) {
+					const memoryOrder = ordersStore.getOrder(orderId)
+					if (memoryOrder) {
+						return memoryOrder
+					}
+					throw error
+				}
 			},
 		},
 		queryClient,

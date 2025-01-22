@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { invoicesStore } from '$lib/stores/orders'
+
 	import type { InvoiceMessage } from '@plebeian/database/constants'
 
 	import MessageHeader from './MessageHeader.svelte'
@@ -16,6 +18,10 @@
 			default:
 				return 'i-mdi-receipt'
 		}
+	}
+
+	$: {
+		invoicesStore.addInvoice(message)
 	}
 </script>
 
