@@ -41,10 +41,10 @@ export const createProductQuery = (productId: string) =>
 					if (response) return response
 					throw new Error(`failed fetching product: ${productId}`)
 				} catch {
-					const [_, userId, productIdentifier] = productId.split(':')
-					const { products: productsData } = await fetchUserProductData(userId, productIdentifier)
+					const coordinates = parseCoordinatesString(productId)
+					const { products: productsData } = await fetchUserProductData(coordinates.pubkey ?? '', coordinates.tagD)
 					if (productsData?.size) {
-						const result = await normalizeProductsFromNostr(productsData, userId)
+						const result = await normalizeProductsFromNostr(productsData, coordinates.pubkey ?? '')
 						if (result) {
 							const { toDisplayProducts, stallProducts } = result
 							aggregatorAddProducts(stallProducts)

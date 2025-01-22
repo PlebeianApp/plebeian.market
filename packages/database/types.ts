@@ -13,9 +13,6 @@ export type NewBid = InferInsertModel<typeof dbSchema.bids>
 export type EventTag = InferSelectModel<typeof dbSchema.eventTags>
 export type NewEventTag = InferInsertModel<typeof dbSchema.eventTags>
 
-export type Event = InferSelectModel<typeof dbSchema.events>
-export type NewEvent = InferInsertModel<typeof dbSchema.events>
-
 export type Invoice = InferSelectModel<typeof dbSchema.invoices>
 export type NewInvoice = InferInsertModel<typeof dbSchema.invoices>
 

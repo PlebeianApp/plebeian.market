@@ -12,10 +12,8 @@
 </script>
 
 <div>
-	{#if $userProfileQuery.isLoading}
-		<Skeleton class="h-4 w-[250px]" />
-	{:else if $userProfileQuery.data?.id}
-		<a href={`/p/${$userProfileQuery.data.id}`}>
+	{#if $userProfileQuery.data}
+		<a href={`/p/${$userProfileQuery.data.id || userId}`}>
 			<div class="py-1 flex flex-row items-center gap-2">
 				{#if $userProfileQuery.data.image}
 					<CAvatar pubkey={userId} profile={$userProfileQuery.data} />
@@ -29,5 +27,7 @@
 				{/if}
 			</div>
 		</a>
+	{:else if $userProfileQuery.isLoading}
+		<Skeleton class="h-4 w-[250px]" />
 	{/if}
 </div>
