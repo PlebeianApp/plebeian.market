@@ -64,22 +64,22 @@
 {#if $userProfileQuery.data}
 	{@const { name, about, banner } = $userProfileQuery.data}
 	<div class="relative">
-		<div class="flex flex-col gap-6 pb-4">
+		<div class="flex flex-col pb-4">
 			<div>
 				{#if banner}
-					<div class="w-full aspect-[6.125/1] overflow-hidden flex items-center justify-center">
+					<div class="w-full aspect-[6/1] overflow-hidden flex items-center justify-center">
 						<img src={banner} alt="stall-cover" class="w-full h-full object-cover" />
 					</div>
 				{:else}
 					<Hero
-						class={`border-black w-full border-2 aspect-[6.125/1] relative overflow-hidden`}
+						class={`border-black w-full border-2 aspect-[6/1] relative overflow-hidden`}
 						gradientColor={getHexColorFingerprintFromHexPubkey(id)}
 						gradientOpacity="0.6"
 					></Hero>
 				{/if}
 				{#if about}
-					<div class="flex flex-col px-8 py-4 bg-lighter-black text-white">
-						{#if truncateText(about) !== about}
+					<div class="flex flex-col px-8 py-4 bg-lighter-black text-white text-sm">
+						{#if truncateText(about, 50) !== about}
 							<Button variant="outline" class="w-fit" size="icon" on:click={() => (showFullAbout = !showFullAbout)}>
 								<span class={showFullAbout ? 'i-mdi-minus' : 'i-mdi-plus'} />
 							</Button>
@@ -98,7 +98,7 @@
 							fallbackClass="rounded-md w-8 h-8"
 							linked
 						/>
-						<h2 class="text-2xl text-white">{truncateText(name ?? `Unnamed user`, 50)}</h2>
+						<h2 class="text-2xl text-white">{truncateText(name ?? `Unnamed user`, 10)}</h2>
 					</div>
 					{#if $breakpoint !== 'sm'}
 						<div class="flex flex-col">
@@ -138,7 +138,7 @@
 					<UserAlerts stalls={stallsMixture} products={productsMixture} />
 				{/if}
 			</div>
-			<div class=" flex flex-col gap-1">
+			<div class=" flex flex-col gap-1 mt-3">
 				{#if $breakpoint == 'sm'}
 					<div class="flex flex-col items-center">
 						<div class="flex flex-col gap-2 w-[90%]">

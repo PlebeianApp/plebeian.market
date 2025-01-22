@@ -1,5 +1,4 @@
 <script lang="ts">
-	import type { NDKSubscription } from '@nostr-dev-kit/ndk'
 	import type { Category } from '$lib/fetch/products.mutations'
 	import type { DisplayProduct } from '$lib/server/products.service'
 	import type { RichShippingInfo } from '$lib/server/shipping.service'
@@ -7,8 +6,6 @@
 	import type { ProductShippingForm } from '$lib/stores/product-form'
 	import type { ValidationErrors } from '$lib/utils/zod.utils'
 	import Button from '$lib/components/ui/button/button.svelte'
-	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte'
-	import * as Command from '$lib/components/ui/command/index.js'
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js'
 	import Input from '$lib/components/ui/input/input.svelte'
 	import Label from '$lib/components/ui/label/label.svelte'
@@ -24,7 +21,7 @@
 	import { prepareProductData } from '$lib/utils/product.utils'
 	import { validateForm } from '$lib/utils/zod.utils'
 	import { ChevronDown } from 'lucide-svelte'
-	import { createEventDispatcher, onDestroy, onMount, tick } from 'svelte'
+	import { createEventDispatcher, onMount, tick } from 'svelte'
 	import { toast } from 'svelte-sonner'
 	import { get } from 'svelte/store'
 
@@ -33,6 +30,7 @@
 
 	import { forbiddenPatternStore } from '../../../schema/nostr-events'
 	import Spinner from '../assets/spinner.svelte'
+	import ScrollArea from '../ui/scroll-area/scroll-area.svelte'
 	import Separator from '../ui/separator/separator.svelte'
 	import { activeTab } from '../ui/tabs/constants'
 	import CategoryManager from './category-manager.svelte'
@@ -291,245 +289,247 @@
 	<form
 		on:submit|preventDefault={(sEvent) => handleSubmit(sEvent, stall)}
 		on:invalid|capture={handleInvalidForm}
-		class="flex flex-col justify-between gap-2 h-[calc(100vh-8rem)]"
+		class="flex flex-col h-full bg-white"
 	>
-		<div>
-			<Tabs.Root bind:value={$productFormStore.tab}>
-				<Tabs.List class="w-full justify-around bg-transparent">
+		<div class="flex-1 overflow-hidden flex flex-col">
+			<Tabs.Root bind:value={$productFormStore.tab} class="flex flex-col h-full">
+				<Tabs.List class="flex-none w-full justify-around bg-transparent">
 					<Tabs.Trigger value="details" class={activeTab}>Details</Tabs.Trigger>
 					<Tabs.Trigger value="categories" class={activeTab}>Categories</Tabs.Trigger>
 					<Tabs.Trigger data-tooltip="Images help customers recognize your product" value="images" class={activeTab}>Images</Tabs.Trigger>
 					<Tabs.Trigger value="shippings" class={activeTab}>Shippings</Tabs.Trigger>
 				</Tabs.List>
 
-				<Tabs.Content value="details" class="flex flex-col gap-2">
-					<div class="grid w-full items-center gap-1.5">
-						<Label for="title" class="font-bold required-mark">Title</Label>
-						<Input
-							id="title"
-							data-tooltip="Your product's name"
-							bind:value={name}
-							required
-							class={`border-2 border-black ${validationErrors['name'] ? 'ring-2 ring-red-500' : ''}`}
-							type="text"
-							name="name"
-							placeholder="e.g. Fancy Wears"
-						/>
-						{#if validationErrors['name']}
-							<p class="text-red-500 text-sm mt-1">
-								{validationErrors['name']}
-							</p>
-						{/if}
-					</div>
-
-					<div class="grid w-full items-center gap-1.5">
-						<Label for="description" class="font-bold">Description (Recommended)</Label>
-						<Textarea
-							id="description"
-							data-tooltip="More information on your shop"
-							bind:value={description}
-							class={`border-2 border-black ${validationErrors['description'] ? 'ring-2 ring-red-500' : ''}`}
-							placeholder="Description"
-							name="description"
-						/>
-						{#if validationErrors['description']}
-							<p class="text-red-500 text-sm mt-1">{validationErrors['description']}</p>
-						{/if}
-					</div>
-
-					<div class="flex gap-1.5">
+				<ScrollArea class="flex-1">
+					<Tabs.Content value="details" class="flex flex-col gap-2">
 						<div class="grid w-full items-center gap-1.5">
-							<Label for="price" class="font-bold required-mark">Price<small class="font-light">({stall?.currency})</small></Label>
+							<Label for="title" class="font-bold required-mark">Title</Label>
 							<Input
-								id="price"
-								data-tooltip="The cost of your product"
-								bind:value={price}
-								class={`border-2 border-black ${validationErrors['price'] ? 'ring-2 ring-red-500' : ''}`}
-								min={0}
-								type="text"
-								pattern="^(?!.*\\.\\.)[0-9]*([.][0-9]+)?"
-								name="price"
-								placeholder="e.g. 30"
+								id="title"
+								data-tooltip="Your product's name"
+								bind:value={name}
 								required
+								class={`border-2 border-black ${validationErrors['name'] ? 'ring-2 ring-red-500' : ''}`}
+								type="text"
+								name="name"
+								placeholder="e.g. Fancy Wears"
 							/>
-							{#if validationErrors['price']}
+							{#if validationErrors['name']}
 								<p class="text-red-500 text-sm mt-1">
-									{validationErrors['price']}
+									{validationErrors['name']}
 								</p>
 							{/if}
 						</div>
 
 						<div class="grid w-full items-center gap-1.5">
-							<Label title="quantity" for="quantity" class="font-bold required-mark">Quantity</Label>
-							<Input
-								id="quantity"
-								data-tooltip="The available stock for this product"
-								bind:value={quantity}
-								required
-								class={`border-2 border-black ${validationErrors['quantity'] ? 'ring-2 ring-red-500' : ''}`}
-								type="number"
-								name="quantity"
-								placeholder="10"
+							<Label for="description" class="font-bold">Description (Recommended)</Label>
+							<Textarea
+								id="description"
+								data-tooltip="More information on your shop"
+								bind:value={description}
+								class={`border-2 border-black ${validationErrors['description'] ? 'ring-2 ring-red-500' : ''}`}
+								placeholder="Description"
+								name="description"
 							/>
-							{#if validationErrors['quantity']}
-								<p class="text-red-500 text-sm mt-1">
-									{validationErrors['quantity']}
-								</p>
+							{#if validationErrors['description']}
+								<p class="text-red-500 text-sm mt-1">{validationErrors['description']}</p>
 							{/if}
 						</div>
-					</div>
 
-					<div class="flex gap-1.5">
-						<div class="grid w-full items-center gap-1.5">
-							<Label for="product-stall" class="font-bold">Shop</Label>
-							<DropdownMenu.Root>
-								<DropdownMenu.Trigger asChild let:builder>
-									<Button
-										data-tooltip="The shop this product is part of"
-										variant="outline"
-										class="border-2 border-black justify-between"
-										iconPosition="right"
-										builders={[builder]}
-									>
-										{#if currentStallIdentifier}
-											{@const defaultStall = $stallsQuery.data?.stalls.find((stall) => stall.identifier === currentStallIdentifier)}
-											{defaultStall ? defaultStall.name : 'Select a shop'}
-										{:else}
-											{stall?.name}
-										{/if}
-										<ChevronDown slot="icon" class="h-4 w-4" />
-									</Button>
-								</DropdownMenu.Trigger>
-								<DropdownMenu.Content class="w-56">
-									<DropdownMenu.Label>Shop</DropdownMenu.Label>
-									<DropdownMenu.Separator />
-									<section class=" max-h-[350px] overflow-y-auto">
-										{#each $stallsQuery.data?.stalls as item (item.id)}
-											<DropdownMenu.CheckboxItem
-												checked={currentStallIdentifier === item.identifier}
-												on:click={() => {
-													currentStallIdentifier = item.identifier
-												}}
-											>
-												{item.name}
-											</DropdownMenu.CheckboxItem>
-										{/each}
-									</section>
-								</DropdownMenu.Content>
-							</DropdownMenu.Root>
-						</div>
-						<div class="grid w-full items-center gap-1.5">
-							<Label for="product-currency" class="font-bold">Currency</Label>
-							<Input
-								id="product-currency"
-								data-tooltip="This is inherited from the shop's currency"
-								value={stall?.currency}
-								required
-								class="border-2 border-black"
-								type="text"
-								name="currency"
-								disabled
-							/>
-						</div>
-					</div>
-				</Tabs.Content>
-
-				<Tabs.Content value="categories" class="flex flex-col gap-2">
-					<CategoryManager bind:categories />
-				</Tabs.Content>
-
-				<Tabs.Content value="images" class="flex flex-col">
-					<MultiImageEdit
-						images={sortedImages}
-						on:imageAdded={(e) => handleNewImageAdded(e)}
-						on:imageRemoved={(e) => handleImageRemoved(e)}
-						on:imagesReordered={(e) => updateImages(e.detail)}
-					/>
-				</Tabs.Content>
-
-				<Tabs.Content value="shippings" class="flex flex-col gap-2 p-2">
-					{#each currentShippings as shippingMethod, i (shippingMethod.shipping?.id)}
-						<div class="grid w-full items-center gap-1.5">
-							<Label for="stall-shippings" class="font-bold required-mark">Shipping Method #{i + 1}</Label>
-							<DropdownMenu.Root>
-								<DropdownMenu.Trigger asChild let:builder>
-									<Button variant="outline" iconPosition="right" class=" justify-between" builders={[builder]}>
-										{shippingMethod.shipping?.name ?? 'Choose a shipping method'}
-										<ChevronDown slot="icon" class="h-4 w-4" />
-									</Button>
-								</DropdownMenu.Trigger>
-								<DropdownMenu.Content class="w-56">
-									<DropdownMenu.Label>Shop</DropdownMenu.Label>
-									<DropdownMenu.Separator />
-									<section class="max-h-[350px] overflow-y-auto">
-										{#each stall?.shipping?.filter((s) => !currentShippings.some((sh) => sh !== shippingMethod && sh.shipping?.id === s.id)) ?? [] as item (item.id)}
-											<DropdownMenu.CheckboxItem
-												checked={shippingMethod.shipping?.id === item.id}
-												on:click={() => {
-													if (item.id && item.name) {
-														shippingMethod.shipping = toShippingForm(item)
-														currentShippings = [...currentShippings]
-													}
-												}}
-											>
-												<div>
-													<span class="font-bold">{item.name}</span>, {item.cost}{stall?.currency}
-												</div>
-											</DropdownMenu.CheckboxItem>
-										{/each}
-									</section>
-								</DropdownMenu.Content>
-							</DropdownMenu.Root>
+						<div class="flex gap-1.5">
+							<div class="grid w-full items-center gap-1.5">
+								<Label for="price" class="font-bold required-mark">Price<small class="font-light">({stall?.currency})</small></Label>
+								<Input
+									id="price"
+									data-tooltip="The cost of your product"
+									bind:value={price}
+									class={`border-2 border-black ${validationErrors['price'] ? 'ring-2 ring-red-500' : ''}`}
+									min={0}
+									type="text"
+									pattern="^(?!.*\\.\\.)[0-9]*([.][0-9]+)?"
+									name="price"
+									placeholder="e.g. 30"
+									required
+								/>
+								{#if validationErrors['price']}
+									<p class="text-red-500 text-sm mt-1">
+										{validationErrors['price']}
+									</p>
+								{/if}
+							</div>
 
 							<div class="grid w-full items-center gap-1.5">
-								<Label for="product-extracost" class="font-bold required-mark"
-									>Extra cost <small class="font-light">(in {stall?.currency})</small></Label
-								>
+								<Label title="quantity" for="quantity" class="font-bold required-mark">Quantity</Label>
 								<Input
-									id="product-extracost"
-									data-tooltip="The cost of the product, which will be added to the method's base cost"
-									value={shippingMethod.extraCost}
-									on:input={(e) => {
-										const value = e.currentTarget.value.replace(/[^0-9.]/g, '')
-										const sanitizedValue = value.replace(/(\..*)\./g, '$1')
-										shippingMethod.extraCost = sanitizedValue
-										currentShippings = [...currentShippings]
-									}}
+									id="quantity"
+									data-tooltip="The available stock for this product"
+									bind:value={quantity}
 									required
-									class="border-2 border-black"
-									type="text"
-									inputmode="decimal"
-									pattern="[0-9]*[.]?[0-9]*"
-									name="extra"
+									class={`border-2 border-black ${validationErrors['quantity'] ? 'ring-2 ring-red-500' : ''}`}
+									type="number"
+									name="quantity"
+									placeholder="10"
 								/>
-								{#if validationErrors[`shipping.${i}.cost`]}
-									<p class="text-red-500 text-sm mt-1">{validationErrors[`shipping.${i}.cost`]}</p>
+								{#if validationErrors['quantity']}
+									<p class="text-red-500 text-sm mt-1">
+										{validationErrors['quantity']}
+									</p>
 								{/if}
 							</div>
 						</div>
 
-						<Button
-							on:click={() => {
-								currentShippings = currentShippings.filter((s) => s !== shippingMethod)
-							}}
-							variant="outline"
-							class="font-bold text-red-500 border-0 h-full"><span class="i-tdesign-delete-1"></span></Button
-						>
-						<Separator />
-					{/each}
+						<div class="flex gap-1.5">
+							<div class="grid w-full items-center gap-1.5">
+								<Label for="product-stall" class="font-bold">Shop</Label>
+								<DropdownMenu.Root>
+									<DropdownMenu.Trigger asChild let:builder>
+										<Button
+											data-tooltip="The shop this product is part of"
+											variant="outline"
+											class="border-2 border-black justify-between"
+											iconPosition="right"
+											builders={[builder]}
+										>
+											{#if currentStallIdentifier}
+												{@const defaultStall = $stallsQuery.data?.stalls.find((stall) => stall.identifier === currentStallIdentifier)}
+												{defaultStall ? defaultStall.name : 'Select a shop'}
+											{:else}
+												{stall?.name}
+											{/if}
+											<ChevronDown slot="icon" class="h-4 w-4" />
+										</Button>
+									</DropdownMenu.Trigger>
+									<DropdownMenu.Content class="w-56">
+										<DropdownMenu.Label>Shop</DropdownMenu.Label>
+										<DropdownMenu.Separator />
+										<section class=" max-h-[350px] overflow-y-auto">
+											{#each $stallsQuery.data?.stalls as item (item.id)}
+												<DropdownMenu.CheckboxItem
+													checked={currentStallIdentifier === item.identifier}
+													on:click={() => {
+														currentStallIdentifier = item.identifier
+													}}
+												>
+													{item.name}
+												</DropdownMenu.CheckboxItem>
+											{/each}
+										</section>
+									</DropdownMenu.Content>
+								</DropdownMenu.Root>
+							</div>
+							<div class="grid w-full items-center gap-1.5">
+								<Label for="product-currency" class="font-bold">Currency</Label>
+								<Input
+									id="product-currency"
+									data-tooltip="This is inherited from the shop's currency"
+									value={stall?.currency}
+									required
+									class="border-2 border-black"
+									type="text"
+									name="currency"
+									disabled
+								/>
+							</div>
+						</div>
+					</Tabs.Content>
 
-					<div class="grid gap-1.5">
-						<Button
-							data-tooltip={currentShippings.length === stall?.shipping?.length
-								? 'Add few shipping methods to the stall first'
-								: 'Add shipping methods available for this product'}
-							on:click={() => (currentShippings = [...currentShippings, { shipping: null, extraCost: '0' }])}
-							disabled={currentShippings.length === stall?.shipping?.length}
-							variant="outline"
-							class={`font-bold ml-auto`}>Add Shipping Method</Button
-						>
-					</div>
-				</Tabs.Content>
+					<Tabs.Content value="categories" class="flex flex-col gap-2">
+						<CategoryManager bind:categories />
+					</Tabs.Content>
+
+					<Tabs.Content value="images" class="flex flex-col">
+						<MultiImageEdit
+							images={sortedImages}
+							on:imageAdded={(e) => handleNewImageAdded(e)}
+							on:imageRemoved={(e) => handleImageRemoved(e)}
+							on:imagesReordered={(e) => updateImages(e.detail)}
+						/>
+					</Tabs.Content>
+
+					<Tabs.Content value="shippings" class="flex flex-col gap-2 p-2">
+						{#each currentShippings as shippingMethod, i (shippingMethod.shipping?.id)}
+							<div class="grid w-full items-center gap-1.5">
+								<Label for="stall-shippings" class="font-bold required-mark">Shipping Method #{i + 1}</Label>
+								<DropdownMenu.Root>
+									<DropdownMenu.Trigger asChild let:builder>
+										<Button variant="outline" iconPosition="right" class=" justify-between" builders={[builder]}>
+											{shippingMethod.shipping?.name ?? 'Choose a shipping method'}
+											<ChevronDown slot="icon" class="h-4 w-4" />
+										</Button>
+									</DropdownMenu.Trigger>
+									<DropdownMenu.Content class="w-56">
+										<DropdownMenu.Label>Shop</DropdownMenu.Label>
+										<DropdownMenu.Separator />
+										<section class="max-h-[350px] overflow-y-auto">
+											{#each stall?.shipping?.filter((s) => !currentShippings.some((sh) => sh !== shippingMethod && sh.shipping?.id === s.id)) ?? [] as item (item.id)}
+												<DropdownMenu.CheckboxItem
+													checked={shippingMethod.shipping?.id === item.id}
+													on:click={() => {
+														if (item.id && item.name) {
+															shippingMethod.shipping = toShippingForm(item)
+															currentShippings = [...currentShippings]
+														}
+													}}
+												>
+													<div>
+														<span class="font-bold">{item.name}</span>, {item.cost}{stall?.currency}
+													</div>
+												</DropdownMenu.CheckboxItem>
+											{/each}
+										</section>
+									</DropdownMenu.Content>
+								</DropdownMenu.Root>
+
+								<div class="grid w-full items-center gap-1.5">
+									<Label for="product-extracost" class="font-bold required-mark"
+										>Extra cost <small class="font-light">(in {stall?.currency})</small></Label
+									>
+									<Input
+										id="product-extracost"
+										data-tooltip="The cost of the product, which will be added to the method's base cost"
+										value={shippingMethod.extraCost}
+										on:input={(e) => {
+											const value = e.currentTarget.value.replace(/[^0-9.]/g, '')
+											const sanitizedValue = value.replace(/(\..*)\./g, '$1')
+											shippingMethod.extraCost = sanitizedValue
+											currentShippings = [...currentShippings]
+										}}
+										required
+										class="border-2 border-black"
+										type="text"
+										inputmode="decimal"
+										pattern="[0-9]*[.]?[0-9]*"
+										name="extra"
+									/>
+									{#if validationErrors[`shipping.${i}.cost`]}
+										<p class="text-red-500 text-sm mt-1">{validationErrors[`shipping.${i}.cost`]}</p>
+									{/if}
+								</div>
+							</div>
+
+							<Button
+								on:click={() => {
+									currentShippings = currentShippings.filter((s) => s !== shippingMethod)
+								}}
+								variant="outline"
+								class="font-bold text-red-500 border-0 h-full"><span class="i-tdesign-delete-1"></span></Button
+							>
+							<Separator />
+						{/each}
+
+						<div class="grid gap-1.5">
+							<Button
+								data-tooltip={currentShippings.length === stall?.shipping?.length
+									? 'Add few shipping methods to the stall first'
+									: 'Add shipping methods available for this product'}
+								on:click={() => (currentShippings = [...currentShippings, { shipping: null, extraCost: '0' }])}
+								disabled={currentShippings.length === stall?.shipping?.length}
+								variant="outline"
+								class={`font-bold ml-auto`}>Add Shipping Method</Button
+							>
+						</div>
+					</Tabs.Content>
+				</ScrollArea>
 			</Tabs.Root>
 		</div>
 		<div>

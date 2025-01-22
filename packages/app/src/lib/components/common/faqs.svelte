@@ -4,18 +4,19 @@
 
 	import Separator from '../ui/separator/separator.svelte'
 	import { faqItems } from './faqs'
-
-	let openStates = Array(faqItems.length).fill(false)
 </script>
 
 <div class="space-y-4">
 	{#each faqItems as faq, index}
 		<div class="shadow-md">
-			<Collapsible bind:open={openStates[index]}>
+			<Collapsible>
 				<CollapsibleTrigger asChild let:builder>
 					<Button builders={[builder]} variant="ghost" size="sm" iconPosition="right" class="w-full justify-between bg-white">
 						<span class="text-base font-bold">{faq.question}</span>
-						<span class="i-ion-chevron-down h-4 w-4 transition-transform duration-200" class:rotate-180={openStates[index]} />
+						<span
+							class="i-ion-chevron-down h-4 w-4 transition-transform duration-200"
+							class:rotate-180={builder['data-state'] === 'open'}
+						/>
 					</Button>
 				</CollapsibleTrigger>
 

@@ -18,7 +18,7 @@
 <div class="flex flex-col gap-4 items-center">
 	<Tabs.Root class="w-full">
 		<Tabs.List class="w-full flex flex-row bg-transparent justify-center relative">
-			<Tabs.Trigger value="expose-nosconnect" class={activeTab}>Scan with remote signer</Tabs.Trigger>
+			<Tabs.Trigger value="expose-nosconnect" class={activeTab}>Scan with signer</Tabs.Trigger>
 			<Tabs.Trigger value="scan-bunker" class={activeTab}>Provide bunker</Tabs.Trigger>
 		</Tabs.List>
 		<Tabs.Content value="expose-nosconnect">
