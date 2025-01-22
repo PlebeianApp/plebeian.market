@@ -47,7 +47,7 @@
 						{/each}
 					</ItemGrid>
 					<div class="flex justify-center">
-						<Button variant="primary" class="mt-6 p-4 font-bold w-1/3" href="/products">Explore products</Button>
+						<Button variant="primary" class="mt-6 p-4 font-bold lg:w-1/3" href="/products">Explore products</Button>
 					</div>
 				{:else}
 					<div class=" px-4 py-20 lg:px-12">
