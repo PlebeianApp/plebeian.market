@@ -302,7 +302,9 @@
 	{#if isLoading}
 		<Spinner />
 	{:else if invoice}
-		<QrCode data={invoice.paymentRequest} logoPath={appSettings.logoUrl} />
+		<a href={url}>
+			<QrCode data={invoice.paymentRequest} logoPath={appSettings.logoUrl} />
+		</a>
 		<Button variant="tertiary" class="items-center gap-2 grid grid-cols-[auto_auto] max-w-full" on:click={handleCopyInvoice}>
 			<span class=" truncate">{invoice.paymentRequest}</span>
 			<span class="i-tdesign-copy" />
@@ -323,7 +325,7 @@
 			{#if canUseNWC}
 				<Button variant="primary" on:click={handleNWCPay} disabled={paymentStatus !== 'pending'}>Pay with NWC</Button>
 			{/if}
-			<Button variant="ghost" on:click={() => window.open(url, '_blank')}>Open in wallet</Button>
+			<Button variant="outline" on:click={() => window.open(url, '_blank')}>Open in wallet</Button>
 			{#if showManualVerification}
 				<Button variant="primary" on:click={() => (showPreimageInput = true)}>I've already paid</Button>
 			{/if}
@@ -332,6 +334,10 @@
 
 		<Collapsible.Root open={showPreimageInput}>
 			<Collapsible.Content>
+				<span
+					>If you've paid but it wasn't detected, find the payment preimage in your wallet and paste it here. Can't find it? Skip this step
+					and contact the merchant directly to proceed.</span
+				>
 				<div class="flex flex-col gap-2">
 					<Input placeholder="Enter preimage" bind:value={preimageInput} />
 					<Button variant="primary" on:click={verifyPayment} disabled={paymentStatus !== 'pending'}>Verify Payment</Button>

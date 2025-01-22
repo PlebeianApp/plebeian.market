@@ -18,7 +18,7 @@
 			condition: hasNoStalls,
 			message: undefined,
 			action: openDrawerForNewStall,
-			buttonText: 'Open A Stall',
+			buttonText: 'Open A Shop',
 			icon: 'i-tdesign-shop-1',
 		},
 		{

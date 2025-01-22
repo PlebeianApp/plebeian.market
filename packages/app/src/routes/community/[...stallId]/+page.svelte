@@ -9,6 +9,7 @@
 	import { Button } from '$lib/components/ui/button'
 	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card'
 	import CAvatar from '$lib/components/ui/custom-components/c-avatar.svelte'
+	import Separator from '$lib/components/ui/separator/separator.svelte'
 	import { createProductsByFilterQuery } from '$lib/fetch/products.queries'
 	import { createStallQuery } from '$lib/fetch/stalls.queries'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
@@ -108,23 +109,30 @@
 						<CardContent>
 							<div class="flex flex-col gap- items-start">
 								{#if shipping?.length}
-									<section class="gap-">
+									<section class="flex flex-col gap-1">
 										{#each shipping as shipping}
 											{#if shipping.name || shipping.id}
 												<span>{truncateString(shipping.name || shipping.id || '')}</span>
 											{/if}
-											<div class="flex flex-row gap-2 flex-wrap">
+											<div class="flex flex-row gap-1 flex-wrap">
 												{#if shipping.regions}
-													{#each shipping.regions as region}
+													{#each shipping.regions.slice(0, 3) as region}
 														<Badge size="sm" class="w-fit" variant="secondary">{region}</Badge>
 													{/each}
+													{#if shipping.regions.length > 3}
+														<Badge size="sm" class="w-fit" variant="secondary">+{shipping.regions.length - 3} more</Badge>
+													{/if}
 												{/if}
 												{#if shipping.countries}
-													{#each shipping.countries as country}
+													{#each shipping.countries.slice(0, 3) as country}
 														<Badge size="sm" class="w-fit" variant="secondary">{country}</Badge>
 													{/each}
+													{#if shipping.countries.length > 3}
+														<Badge size="sm" class="w-fit" variant="secondary">+{shipping.countries.length - 3} more</Badge>
+													{/if}
 												{/if}
 											</div>
+											<Separator />
 										{/each}
 									</section>
 								{/if}
@@ -165,11 +173,11 @@
 			{/if}
 		</ItemGrid>
 	{:else if $productsQuery.isSuccess && !$productsQuery.data}
-		<div class=" py-6">
+		<div class="my-16 mx-8">
 			<h3>No products found</h3>
 		</div>
 	{:else}
-		<div class="flex gap-4 mt-6">
+		<div class="flex gap-4 my-16 mx-8">
 			<SkeletonLoader count={3} class=" h-80 w-full border-4 border-black text-black group" />
 		</div>
 	{/if}

@@ -85,6 +85,6 @@
 			</DropdownMenu.Root>
 		{/if}
 	{:else}
-		<div>Stall not found</div>
+		<div>Shop not found</div>
 	{/if}
 </div>

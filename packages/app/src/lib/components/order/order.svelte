@@ -251,7 +251,7 @@
 
 					<!-- Stall Info -->
 					<div>
-						<p class="text-gray-500 mb-2 text-sm uppercase tracking-wider">Stall</p>
+						<p class="text-gray-500 mb-2 text-sm uppercase tracking-wider">Shop</p>
 						<div class="bg-white rounded p-2.5 border shadow-sm">
 							<StallName stallId={order.stallId} />
 						</div>

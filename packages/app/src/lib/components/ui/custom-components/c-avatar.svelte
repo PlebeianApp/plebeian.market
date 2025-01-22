@@ -3,8 +3,10 @@
 	import AvatarFallback from '$lib/components/ui/avatar/avatar-fallback.svelte'
 	import AvatarImage from '$lib/components/ui/avatar/avatar-image.svelte'
 	import Avatar from '$lib/components/ui/avatar/avatar.svelte'
-	import { getHexColorFingerprintFromHexPubkey, truncateString } from '$lib/utils'
+	import { createUserByIdQuery } from '$lib/fetch/users.queries'
+	import { getHexColorFingerprintFromHexPubkey, resolveQuery, truncateString } from '$lib/utils'
 	import { npubEncode } from 'nostr-tools/nip19'
+	import { onMount } from 'svelte'
 
 	export let pubkey: string
 	export let profile: NDKUserProfile | undefined | null
@@ -17,6 +19,10 @@
 	$: truncatedPubkey = truncateString(pubkey)
 	$: hexColorFromPubkey = getHexColorFingerprintFromHexPubkey(pubkey)
 	$: displayName = profile?.name || truncatedPubkey
+
+	onMount(async () => {
+		if (!profile) profile = await resolveQuery(() => createUserByIdQuery(pubkey))
+	})
 </script>
 
 {#if linked}

@@ -18,6 +18,7 @@
 		value = menuItems.find((item) => `/${$page.url.pathname.split('/').slice(1, 3).join('/')}` === item.root)?.value || ''
 	})
 	$: userExist = $ndkStore.activeUser?.pubkey ? createUserExistsQuery($ndkStore.activeUser?.pubkey) : undefined
+	$: if (!$activeUserQuery.data?.role) $activeUserQuery.refetch()
 </script>
 
 {#if $ndkStore.activeUser?.pubkey}

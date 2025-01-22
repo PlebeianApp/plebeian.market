@@ -2,7 +2,6 @@
 	import type { RichPaymentDetail } from '$lib/server/paymentDetails.service'
 	import { Button } from '$lib/components/ui/button'
 	import { formatSats } from '$lib/utils'
-	import { handleNWCPayment } from '$lib/utils/zap.utils'
 	import { createEventDispatcher } from 'svelte'
 
 	import type { PaymentProcessorMap } from './paymentProcessor'

@@ -16,6 +16,6 @@
 			<span>{$stallQuery.data.stall?.name}</span>
 		</a>
 	{:else}
-		<div>Stall not found</div>
+		<div>Shop not found</div>
 	{/if}
 </div>

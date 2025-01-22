@@ -11,10 +11,10 @@
 </Dialog.Header>
 
 <div class="py-4">
-	This instance allow registration, which mean that it will store your account, stalls, and products in its own database.
+	This instance allow registration, which mean that it will store your account, shops, and products in its own database.
 </div>
 
 <Dialog.Footer>
 	<Button variant="outline" on:click={() => dialogs.hide()}>Cancel</Button>
-	<Button variant="default" on:click={handleAction}>Confirm</Button>
+	<Button variant="primary" on:click={handleAction}>Confirm</Button>
 </Dialog.Footer>

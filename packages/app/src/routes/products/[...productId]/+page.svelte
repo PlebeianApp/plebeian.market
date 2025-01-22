@@ -9,6 +9,7 @@
 	import Button from '$lib/components/ui/button/button.svelte'
 	import * as Carousel from '$lib/components/ui/carousel'
 	import Input from '$lib/components/ui/input/input.svelte'
+	import { activeTab } from '$lib/components/ui/tabs/constants'
 	import * as Tabs from '$lib/components/ui/tabs/index.js'
 	import { KindStalls } from '$lib/constants'
 	import { createCurrencyConversionQuery, createProductQuery, createProductsByFilterQuery } from '$lib/fetch/products.queries'
@@ -30,8 +31,7 @@
 	let qtyToCart = 1
 	let isExpanded = false
 
-	const activeTab =
-		'h-10 px-4 py-2 bg-light-gray text-off-black data-[state=active]:bg-secondary data-[state=active]:text-primary-foreground data-[state=disabled]:bg-light-gray data-[state=disabled]:text-off-black data-[state=disabled]:border-light-gray data-[state=disabled]:opacity-100 disabled:opacity-100'
+	const cactiveTab = cn(activeTab, 'h-10 w-fit bg-light-gray px-4 py-2 text-off-black')
 
 	$: productsQuery = createProductQuery(data.productRes.id)
 
@@ -250,9 +250,9 @@
 			<div class="container -mt-12 flex flex-col items-center z-30 p-8">
 				<Tabs.Root class="w-full">
 					<Tabs.List class="w-full flex flex-row gap-3 bg-transparent justify-start relative">
-						<Tabs.Trigger value="description" class={activeTab}>Description</Tabs.Trigger>
-						<Tabs.Trigger value="comments" disabled class={activeTab}>Comments</Tabs.Trigger>
-						<Tabs.Trigger value="reviews" disabled class={activeTab}>Reviews</Tabs.Trigger>
+						<Tabs.Trigger value="description" class={cactiveTab}>Description</Tabs.Trigger>
+						<Tabs.Trigger value="comments" disabled class={cactiveTab}>Comments</Tabs.Trigger>
+						<Tabs.Trigger value="reviews" disabled class={cactiveTab}>Reviews</Tabs.Trigger>
 					</Tabs.List>
 					<Tabs.Content value="description" class="flex flex-col gap-2 bg-white border-t-2 border-black shadow-md rounded-md p-10">
 						{#if $productsQuery.data.description.length > 420}

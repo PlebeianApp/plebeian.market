@@ -53,8 +53,8 @@ describe('stalls', async () => {
 			}
 
 			// Navigate to stalls
-			await page.waitForSelector('text=Stalls', { timeout: 2000 })
-			await page.click('text=Stalls')
+			await page.waitForSelector('text=Shops', { timeout: 2000 })
+			await page.click('text=Shops')
 			await page.waitForSelector('text=New', { timeout: 2000 })
 			await page.click('text=New')
 

@@ -16,6 +16,7 @@
 	import Spinner from '../assets/spinner.svelte'
 	import Hero from '../common/hero.svelte'
 	import Nip46Login from '../common/nip-46-login.svelte'
+	import { activeTab } from '../ui/tabs/constants'
 	import SaveKeyDialog from './saveKeyDialog.svelte'
 
 	$: ({ appSettings } = $page.data as PageData)
@@ -56,9 +57,6 @@
 		dialogs.show(SaveKeyDialog, { nsec })
 		loading = false
 	}
-
-	const activeTab =
-		'w-full font-bold border-b-2 border-black text-black data-[state=active]:border-b-primary data-[state=active]:text-primary'
 </script>
 
 <div class="flex flex-col w-full">
@@ -77,7 +75,7 @@
 			{#if tab !== 'signup'}
 				<Tabs.List class="w-full justify-around bg-transparent mb-6">
 					<Tabs.Trigger value="login-nip07" class={activeTab}>Extension</Tabs.Trigger>
-					<Tabs.Trigger value="login-signer" class={activeTab}>N-Conenct</Tabs.Trigger>
+					<Tabs.Trigger value="login-signer" class={activeTab}>N-Connect</Tabs.Trigger>
 					<Tabs.Trigger value="login-nsec" class={activeTab}>Private Key</Tabs.Trigger>
 				</Tabs.List>
 			{/if}

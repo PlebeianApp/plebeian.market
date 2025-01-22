@@ -104,7 +104,7 @@
 				<Card.Header class="p-0 flex-shrink-0">
 					{#if stall.image}
 						<div class="relative w-full max-h-56 overflow-hidden">
-							<img src={stall.image} alt={stall.name || 'Stall image'} class="object-cover w-full h-full" />
+							<img src={stall.image} alt={stall.name || 'Shop image'} class="object-cover w-full h-full" />
 						</div>
 					{:else}
 						<div style={`background-color: ${stringToHexColor(stall.id)}`} class="h-14 w-full" />
@@ -128,7 +128,7 @@
 									<DropdownMenu.Content align="end" class="min-w-[8rem]">
 										<DropdownMenu.Item class="cursor-pointer" on:click={() => handleStallAction('edit')}>
 											<Edit class="mr-2 h-4 w-4" />
-											<span>Edit stall</span>
+											<span>Edit Shop</span>
 										</DropdownMenu.Item>
 										<DropdownMenu.Item class="cursor-pointer" on:click={() => handleStallAction('add')}>
 											<Plus class="mr-2 h-4 w-4" />

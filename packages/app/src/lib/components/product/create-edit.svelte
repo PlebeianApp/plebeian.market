@@ -34,6 +34,7 @@
 	import { forbiddenPatternStore } from '../../../schema/nostr-events'
 	import Spinner from '../assets/spinner.svelte'
 	import Separator from '../ui/separator/separator.svelte'
+	import { activeTab } from '../ui/tabs/constants'
 	import CategoryManager from './category-manager.svelte'
 	import MultiImageEdit from './multi-image-edit.svelte'
 
@@ -278,16 +279,13 @@
 			})
 		}
 	}
-
-	const activeTab =
-		'w-full font-bold border-b-2 border-black text-black data-[state=active]:border-b-secondary data-[state=active]:text-secondary'
 </script>
 
 {#if $stallsQuery.isLoading}
 	<Spinner />
 {:else if !$stallsQuery.data?.stalls.length}
 	<div>
-		Creating products needs at least one defined <Button variant="link" on:click={openDrawerForNewStall} class="p-0">stall</Button>
+		Creating products needs at least one defined <Button variant="link" on:click={openDrawerForNewStall} class="p-0">shop</Button>
 	</div>
 {:else}
 	<form
@@ -328,7 +326,7 @@
 						<Label for="description" class="font-bold">Description (Recommended)</Label>
 						<Textarea
 							id="description"
-							data-tooltip="More information on your stall"
+							data-tooltip="More information on your shop"
 							bind:value={description}
 							class={`border-2 border-black ${validationErrors['description'] ? 'ring-2 ring-red-500' : ''}`}
 							placeholder="Description"
@@ -383,11 +381,11 @@
 
 					<div class="flex gap-1.5">
 						<div class="grid w-full items-center gap-1.5">
-							<Label for="product-stall" class="font-bold">Stall</Label>
+							<Label for="product-stall" class="font-bold">Shop</Label>
 							<DropdownMenu.Root>
 								<DropdownMenu.Trigger asChild let:builder>
 									<Button
-										data-tooltip="The stall this product is part of"
+										data-tooltip="The shop this product is part of"
 										variant="outline"
 										class="border-2 border-black justify-between"
 										iconPosition="right"
@@ -395,7 +393,7 @@
 									>
 										{#if currentStallIdentifier}
 											{@const defaultStall = $stallsQuery.data?.stalls.find((stall) => stall.identifier === currentStallIdentifier)}
-											{defaultStall ? defaultStall.name : 'Select a stall'}
+											{defaultStall ? defaultStall.name : 'Select a shop'}
 										{:else}
 											{stall?.name}
 										{/if}
@@ -403,7 +401,7 @@
 									</Button>
 								</DropdownMenu.Trigger>
 								<DropdownMenu.Content class="w-56">
-									<DropdownMenu.Label>Stall</DropdownMenu.Label>
+									<DropdownMenu.Label>Shop</DropdownMenu.Label>
 									<DropdownMenu.Separator />
 									<section class=" max-h-[350px] overflow-y-auto">
 										{#each $stallsQuery.data?.stalls as item (item.id)}
@@ -424,7 +422,7 @@
 							<Label for="product-currency" class="font-bold">Currency</Label>
 							<Input
 								id="product-currency"
-								data-tooltip="This is inherited from the stall's currency"
+								data-tooltip="This is inherited from the shop's currency"
 								value={stall?.currency}
 								required
 								class="border-2 border-black"
@@ -461,7 +459,7 @@
 									</Button>
 								</DropdownMenu.Trigger>
 								<DropdownMenu.Content class="w-56">
-									<DropdownMenu.Label>Stall</DropdownMenu.Label>
+									<DropdownMenu.Label>Shop</DropdownMenu.Label>
 									<DropdownMenu.Separator />
 									<section class="max-h-[350px] overflow-y-auto">
 										{#each stall?.shipping?.filter((s) => !currentShippings.some((sh) => sh !== shippingMethod && sh.shipping?.id === s.id)) ?? [] as item (item.id)}

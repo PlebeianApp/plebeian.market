@@ -46,6 +46,7 @@
 	import Spinner from '../assets/spinner.svelte'
 	import Leaflet from '../leaflet/leaflet.svelte'
 	import Separator from '../ui/separator/separator.svelte'
+	import { activeTab } from '../ui/tabs/constants'
 
 	export let stall: Partial<RichStall> | null = null
 	const tabs = ['stall', 'header', 'location', 'shipping'] as const
@@ -235,7 +236,7 @@
 		try {
 			await $deleteStallMutation.mutateAsync(stall.id)
 		} catch (error) {
-			console.error('Error deleting stall:', error)
+			console.error('Error deleting shop:', error)
 		}
 		await deleteEvent(stall.id)
 		dispatch('success', null)
@@ -269,16 +270,13 @@
 	$: if (shippingFromInput.trim()) {
 		locationSearchOpen = true
 	}
-
-	const activeTab =
-		'w-full font-bold border-b-2 border-black text-black data-[state=active]:border-b-secondary data-[state=active]:text-secondary'
 </script>
 
 <form class="flex flex-col justify-between gap-2 h-[calc(100vh-8rem)]" on:submit={handleSubmit} on:invalid|capture={handleInvalidForm}>
 	<div>
 		<Tabs.Root bind:value={currentTab}>
 			<Tabs.List class="w-full justify-around bg-transparent">
-				<Tabs.Trigger value="stall" class={activeTab}>Stall</Tabs.Trigger>
+				<Tabs.Trigger value="stall" class={activeTab}>Shop</Tabs.Trigger>
 				<Tabs.Trigger value="header" class={activeTab}>Header</Tabs.Trigger>
 				<Tabs.Trigger value="location" class={activeTab}>Location</Tabs.Trigger>
 				<Tabs.Trigger value="shipping" class={activeTab}>Shipping</Tabs.Trigger>
@@ -306,7 +304,7 @@
 				<div class="grid w-full items-center gap-1.5">
 					<Label for="description" class="font-bold">Description (Recommended)</Label>
 					<Textarea
-						data-tooltip="More information on your stall"
+						data-tooltip="More information on your shop"
 						bind:value={description}
 						class={`border-2 border-black ${validationErrors['description'] ? 'ring-2 ring-red-500' : ''}`}
 						placeholder="Description"

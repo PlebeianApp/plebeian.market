@@ -330,7 +330,7 @@
 							</Select.Root>
 						</div>
 						<div class="w-full">
-							<Label for="payment-details" class="font-medium">Stall</Label>
+							<Label for="payment-details" class="font-medium">Shop</Label>
 							<Select.Root
 								selected={{
 									value: editedPaymentDetail.stallId,
@@ -350,7 +350,7 @@
 								name="assignStallForPaymentMethod"
 							>
 								<Select.Trigger class=" focus:border-2 focus:ring-2">
-									<Select.Value placeholder="Assign a stall" />
+									<Select.Value placeholder="Assign a shop" />
 								</Select.Trigger>
 								<Select.Content>
 									<Select.Item value={null}>

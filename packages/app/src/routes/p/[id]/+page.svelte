@@ -106,7 +106,7 @@
 								{#if isMe}
 									{#if stallsMixture.length && productsMixture.length}
 										<Button variant="primary" class="w-full gap-2" on:click={openDrawerForNewStall}>
-											<span>New Stall</span>
+											<span>New shop</span>
 										</Button>
 										<Button variant="focus" class="w-full gap-2" on:click={openDrawerForNewProduct}>
 											<span>Add {productsMixture.length ? 'A' : 'Your First'} Product</span>
@@ -156,7 +156,7 @@
 					</div>
 				{/if}
 				{#if stallsMixture.length}
-					<ItemGrid title="Stalls">
+					<ItemGrid title="Shops">
 						{#key stallsMixture}
 							{#each stallsMixture as item (item.id)}
 								<StallItem stallData={item} />

@@ -25,6 +25,7 @@
 	import MiniStall from '../cart/mini-stall.svelte'
 	import ProductInCart from '../cart/product-in-cart.svelte'
 	import PaymentProcessor from '../paymentProcessors/paymentProcessor.svelte'
+	import CAvatar from '../ui/custom-components/c-avatar.svelte'
 	import Separator from '../ui/separator/separator.svelte'
 	import MiniV4v from '../v4v/mini-v4v.svelte'
 
@@ -231,17 +232,15 @@
 	}
 </script>
 
-<div class="flex flex-row gap-8">
-	<div class="w-1/2 flex flex-col gap-4">
+<div class="grid md:grid-cols-2 gap-4 md:gap-8 max-w-full overflow-hidden">
+	<div class="flex flex-col gap-4 min-w-0">
 		<MiniStall stallCoordinate={order.stallId} mode="view" />
-		<div class="flex flex-col gap-2">
+		<div class="flex flex-col gap-2 overflow-auto">
 			{#each stall.products as productId}
 				<ProductInCart product={products[productId]} mode="payment" />
 			{/each}
 		</div>
-
 		<Separator />
-
 		{#if orderTotal}
 			<div class="flex flex-col gap-2">
 				{#each [{ label: 'Subtotal', value: orderTotal.subtotalInSats }, { label: 'Shipping', value: orderTotal.shippingInSats }, { label: 'Total', value: orderTotal.totalInSats, bold: true }] as { label, value, bold }}
@@ -251,74 +250,93 @@
 					</div>
 				{/each}
 			</div>
-
 			{#if v4vShares.length > 0}
 				<Separator />
-				<div class="flex flex-col gap-2">
+				<div class="flex flex-col gap-2 overflow-x-hidden">
 					<h3 class="font-semibold">Shares:</h3>
 					<div
-						class="flex justify-between font-bold border-black items-center border p-2 hover:bg-gray-100"
+						class="flex flex-col sm:flex-row gap-2 font-bold border-black border p-2.5 hover:bg-gray-100 overflow-hidden"
 						class:border-l-8={carouselCurrent === 1}
 						role="button"
 						tabindex="0"
 						on:click={() => api?.scrollTo(0)}
 						on:keydown={(e) => e.key === 'Enter' && api?.scrollTo(0)}
 					>
-						<span>Merchant's share:</span>
-						<div class="flex flex-col justify-end">
-							<small class="text-right">
-								{formatSats(orderTotal.subtotalInSats * (1 - (v4vTotalPercentage ?? 0)))} sats ({(1 - (v4vTotalPercentage ?? 0)) * 100}% of
-								subtotal)</small
-							>
-							<small class="text-right"> + {formatSats(orderTotal.shippingInSats)} sats shipping</small>
-							<span class="text-right"
-								>{formatSats(
-									orderTotal.subtotalInSats * (1 - v4vShares.reduce((sum, share) => sum + share.amount, 0)) + orderTotal.shippingInSats,
-								)} sats</span
-							>
+						<div class="flex items-center gap-1.5 text-gray-700">
+							<CAvatar pubkey={order.sellerUserId} profile={null} linked={false} />
+
+							<span>Merchant's share</span>
+							{#if !paymentStatuses.find((status) => status.id === 'merchant')?.status}
+								<span class="i-mdi-timer-sand w-4 h-4 animate-pulse flex-shrink-0" />
+							{/if}
 						</div>
-						{#if !paymentStatuses.find((status) => status.id === 'merchant')?.status}
-							<span class="i-mdi-timer-sand text-black w-6 h-6 animate-pulse"> </span>
-						{/if}
+
+						<div class="flex flex-wrap gap-x-3 gap-y-1 text-xs sm:ml-auto items-center">
+							<div class="flex items-center gap-1">
+								<span class="">{(1 - (v4vTotalPercentage ?? 0)) * 100}% subtotal:</span>
+								<span class=" font-medium">
+									{formatSats(orderTotal.subtotalInSats * (1 - (v4vTotalPercentage ?? 0)))}
+								</span>
+							</div>
+
+							<div class="flex items-center gap-1">
+								<span>shipping:</span>
+								<span class="font-medium text-black">
+									{formatSats(orderTotal.shippingInSats)}
+								</span>
+							</div>
+
+							<div class="flex items-center gap-1 sm:border-l sm:pl-3">
+								<span class="font-medium">
+									{formatSats(
+										orderTotal.subtotalInSats * (1 - v4vShares.reduce((sum, share) => sum + share.amount, 0)) + orderTotal.shippingInSats,
+									)} sats
+								</span>
+							</div>
+						</div>
 					</div>
+
 					{#each v4vShares as share, index}
 						{@const status = paymentStatuses.find((status) => status.id === share.target)?.status}
 						<div
 							class:border-l-8={carouselCurrent === index + 2}
-							class="border-black border hover:bg-gray-100 flex items-center justify-between p-2"
+							class="flex flex-col sm:flex-row gap-2 font-bold border-black border p-2.5 hover:bg-gray-100 overflow-hidden"
 							role="button"
 							tabindex="0"
 							on:click={() => api?.scrollTo(index + 1)}
 							on:keydown={(e) => e.key === 'Enter' && api?.scrollTo(index + 1)}
 						>
-							<MiniV4v npub={share.target} percentage={share.amount} amountSats={orderTotal.subtotalInSats * share.amount} />
-
-							{#if !status}
-								<span class="i-mdi-timer-sand text-black w-6 h-6 animate-pulse"> </span>
-							{/if}
+							<div class="min-w-0 flex-1">
+								<MiniV4v npub={share.target} percentage={share.amount} amountSats={orderTotal.subtotalInSats * share.amount}>
+									{#if !status}
+										<span class="i-mdi-timer-sand w-4 h-4 animate-pulse flex-shrink-0" />
+									{/if}
+								</MiniV4v>
+							</div>
 						</div>
 					{/each}
 				</div>
 			{/if}
 		{/if}
 	</div>
-
-	<div class="w-1/2 mt-4 flex flex-col items-center gap-4">
-		<div class="flex flex-row items-center gap-2">
+	<!---->
+	<div class="flex flex-col items-center gap-4 min-w-0">
+		<div class="flex flex-wrap justify-center gap-2 w-full px-2">
 			{#each relevantPaymentDetails as paymentDetail}
 				<Button.Root
 					variant="outline"
 					class={cn(
-						'flex items-center justify-center px-6 py-3',
+						'flex items-center justify-center px-3 md:px-4 py-2',
 						'transition-all duration-200 hover:border-primary',
+						'text-sm md:text-base',
 						selectedPaymentDetail?.paymentMethod === paymentDetail.paymentMethod
 							? 'border-2 border-primary bg-primary/5'
 							: 'border hover:bg-accent/50',
 					)}
 					on:click={() => handleSelection(paymentDetail)}
 				>
-					<div class="flex items-center gap-2">
-						<span class={paymentMethodIcons[paymentDetail.paymentMethod] + ' w-5 h-5'} />
+					<div class="flex items-center gap-1 md:gap-2">
+						<span class={paymentMethodIcons[paymentDetail.paymentMethod] + ' w-4 h-4 md:w-5 md:h-5'} />
 						{paymentDetail.paymentMethod}
 					</div>
 				</Button.Root>
@@ -327,56 +345,60 @@
 
 		{#if v4vShares.length > 0}
 			{#if selectedPaymentDetail && orderTotal}
-				<Carousel.Root class="h-full w-[80%]" bind:api>
-					<Carousel.Content>
-						<Carousel.Item>
-							<div class="p-1">
-								<PaymentProcessor
-									bind:this={paymentProcessors[0]}
-									paymentDetail={selectedPaymentDetail}
-									amountSats={orderTotal.subtotalInSats * (1 - (v4vTotalPercentage ?? 0)) + orderTotal.shippingInSats}
-									paymentType="merchant"
-									on:paymentComplete={handlePaymentEvent}
-									on:paymentExpired={handlePaymentEvent}
-									on:paymentCancelled={handlePaymentEvent}
-								/>
-							</div>
-						</Carousel.Item>
-						{#each v4vShares as share, index (share.target)}
+				<div class="w-full px-2 md:px-4">
+					<Carousel.Root class="h-full w-full" bind:api>
+						<Carousel.Content>
 							<Carousel.Item>
 								<div class="p-1">
 									<PaymentProcessor
-										bind:this={paymentProcessors[index + 1]}
-										paymentDetail={share.paymentDetail}
-										amountSats={orderTotal.subtotalInSats * share.amount}
-										paymentType={share.target}
+										bind:this={paymentProcessors[0]}
+										paymentDetail={selectedPaymentDetail}
+										amountSats={orderTotal.subtotalInSats * (1 - (v4vTotalPercentage ?? 0)) + orderTotal.shippingInSats}
+										paymentType="merchant"
 										on:paymentComplete={handlePaymentEvent}
 										on:paymentExpired={handlePaymentEvent}
 										on:paymentCancelled={handlePaymentEvent}
 									/>
 								</div>
 							</Carousel.Item>
-						{/each}
-					</Carousel.Content>
-					<Carousel.Previous />
-					<Carousel.Next />
-				</Carousel.Root>
+							{#each v4vShares as share, index (share.target)}
+								<Carousel.Item>
+									<div class="p-1">
+										<PaymentProcessor
+											bind:this={paymentProcessors[index + 1]}
+											paymentDetail={share.paymentDetail}
+											amountSats={orderTotal.subtotalInSats * share.amount}
+											paymentType={share.target}
+											on:paymentComplete={handlePaymentEvent}
+											on:paymentExpired={handlePaymentEvent}
+											on:paymentCancelled={handlePaymentEvent}
+										/>
+									</div>
+								</Carousel.Item>
+							{/each}
+						</Carousel.Content>
+						<Carousel.Previous />
+						<Carousel.Next />
+					</Carousel.Root>
+				</div>
 			{/if}
 		{:else if selectedPaymentDetail && orderTotal}
-			<PaymentProcessor
-				bind:this={paymentProcessors[0]}
-				paymentDetail={selectedPaymentDetail}
-				amountSats={orderTotal.totalInSats}
-				paymentType="merchant"
-				on:paymentComplete={handlePaymentEvent}
-				on:paymentExpired={handlePaymentEvent}
-				on:paymentCancelled={handlePaymentEvent}
-			/>
+			<div class="w-full px-2 md:px-4">
+				<PaymentProcessor
+					bind:this={paymentProcessors[0]}
+					paymentDetail={selectedPaymentDetail}
+					amountSats={orderTotal.totalInSats}
+					paymentType="merchant"
+					on:paymentComplete={handlePaymentEvent}
+					on:paymentExpired={handlePaymentEvent}
+					on:paymentCancelled={handlePaymentEvent}
+				/>
+			</div>
 		{/if}
 		{#if somePaymentsAllowNWC && canUseNWC}
-			<Button.Root class="w-1/2" on:click={() => handlePayAllNWCInvoices()}>
-				<span>Pay all NWC invoices</span> <span class="i-mdi-purse w-6 h-6 ml-2" /></Button.Root
-			>
+			<Button.Root class="w-[90%] md:w-1/2" on:click={() => handlePayAllNWCInvoices()}>
+				<span>Pay all NWC invoices</span> <span class="i-mdi-purse w-5 h-5 ml-2" />
+			</Button.Root>
 		{/if}
 	</div>
 </div>

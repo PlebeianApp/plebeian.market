@@ -23,7 +23,7 @@ export const load = async () => {
 				{ title: '💸 Payments', href: '/settings/account/payments', description: 'Manage payment methods', public: false },
 				{ title: '👝 Wallets', href: '/settings/account/wallets', description: 'Manage your connected wallets', public: false },
 				{ title: '📦 Products', href: '/settings/account/products', description: 'View and manage your products', public: true },
-				{ title: '🏮 Stalls', href: '/settings/account/stalls', description: 'Manage your stalls', public: true },
+				{ title: '🏮 Shops', href: '/settings/account/stalls', description: 'Manage your shops', public: true },
 				// {
 				// 	title: '🔔 Notifications',
 				// 	href: '/settings/account/notifications',
