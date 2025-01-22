@@ -122,6 +122,11 @@
 	.external-link {
 		@apply text-secondary hover:underline;
 	}
+	input,
+	select,
+	textarea {
+		@apply text-base !important;
+	}
 }
 
 /* Box shadow */
