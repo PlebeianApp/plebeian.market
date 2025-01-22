@@ -41,44 +41,49 @@
 	}
 </script>
 
-<div class="p-2 w-full">
-	<div class="flex flex-row w-full items-center justify-between gap-2">
+<div class="flex flex-col sm:flex-row gap-2 w-full">
+	<div class="flex items-center gap-1.5 text-gray-700">
 		{#if npub}
-			<div class="flex items-center gap-2 font-bold">
-				<CAvatar pubkey={decodePk(npub)} profile={userProfile} />
+			<div class="flex items-center gap-2 font-bold min-w-0">
+				<CAvatar pubkey={decodePk(npub)} profile={userProfile} linked={false} />
 				{#if userProfile}
-					<a href={`/p/${decodePk(npub)}`}>{userProfile.name}</a>
+					<span class="truncate">{userProfile.name}</span>
 				{/if}
 			</div>
 		{:else}
 			<div class="text-gray-400">New recipient</div>
 		{/if}
-		<div class="flex gap-6 justify-between">
-			<div class="flex gap-2">
-				{#if recipientCanReceiveSats.length === 0}
-					<div class="flex flex-row items-center text-xs border border-black p-2">No methods<span class="i-mdi-remove w-3 h-3" /></div>
-				{:else}
-					{#each recipientCanReceiveSats as method}
+		<slot />
+	</div>
+
+	<div class="flex flex-wrap gap-x-3 gap-y-1 text-xs sm:ml-auto items-center">
+		<div class="flex flex-wrap gap-1.5">
+			{#if recipientCanReceiveSats.length === 0}
+				<div class="flex items-center text-xs border border-black px-2 py-1 rounded-md">
+					No methods
+					<span class="i-mdi-remove w-3 h-3 ml-1" />
+				</div>
+			{:else}
+				{#each recipientCanReceiveSats as method}
+					<div class="flex items-center text-xs border border-black px-2 py-1 rounded-md">
+						<span class="whitespace-nowrap">{method.type}</span>
 						{#if method.canReceive}
-							<div class="flex flex-row items-center text-xs border border-black p-2">
-								{method.type} <span class="i-mdi-check w-3 h-3" />
-							</div>
+							<span class="i-mdi-check w-3 h-3 ml-1 text-green-600" />
 						{:else}
-							<div class="flex flex-row items-center text-xs border border-black p-2">
-								{method.type} <span class="i-mdi-remove w-3 h-3" />
-							</div>
+							<span class="i-mdi-remove w-3 h-3 ml-1 text-red-600" />
 						{/if}
-					{/each}
-				{/if}
-			</div>
-			<div class="flex gap-2 items-center">
-				{#if amountSats}
-					<small>{formatSats(amountSats)} sats</small>
-				{/if}
-				{#if percentage}
-					<small>({(percentage * 100).toFixed(2)}% of Subtotal)</small>
-				{/if}
-			</div>
+					</div>
+				{/each}
+			{/if}
+		</div>
+
+		<div class="flex items-center gap-1 sm:pl-3">
+			{#if percentage}
+				<span>{(percentage * 100).toFixed(2)}% subtotal:</span>
+			{/if}
+			{#if amountSats}
+				<span class="font-medium">{formatSats(amountSats)} sats</span>
+			{/if}
 		</div>
 	</div>
 </div>
