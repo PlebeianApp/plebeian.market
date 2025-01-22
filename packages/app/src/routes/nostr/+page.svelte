@@ -33,7 +33,7 @@
 					<h3 class="font-light">Here you can find all the stalls published on nostr</h3>
 				</div>
 
-				<ItemGrid title="Stalls" forItemType="stall">
+				<ItemGrid title="Shops" forItemType="stall">
 					{#if $stallsSub?.length}
 						{#each $uniqueStallsStore as stall (stall.dTag)}
 							{#if stall}

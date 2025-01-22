@@ -36,7 +36,7 @@
 			</ItemGrid>
 		{/if}
 		{#if stalls.length}
-			<ItemGrid title="Stalls" forItemType="stall">
+			<ItemGrid title="Shops" forItemType="stall">
 				{#each stalls as stall}
 					<StallItem stallData={stall} />
 				{/each}
