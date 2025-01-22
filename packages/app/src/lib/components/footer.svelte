@@ -6,11 +6,11 @@
 		<div class="container flex justify-between items-center flex-col gap-4 md:gap-0 md:flex-row">
 			<div class="flex gap-4 flex-col md:flex-row items-center">
 				<span>Plug into the bitcoin economy. Powered by Nostr.</span>
-				<!-- <div class="flex gap-4">
-					<a class="underline" href="/">About</a>
-					<a class="underline" href="/">FAQ</a>
-					<a class="underline" href="/">Contact</a>
-				</div> -->
+				<div class="flex gap-4">
+					<!-- <a class="underline" href="/">About</a> -->
+					<a class="underline" href="/faqs">FAQ</a>
+					<!-- <a class="underline" href="/">Contact</a> -->
+				</div>
 			</div>
 			<div class="text-right flex justify-between items-center gap-6">
 				<a
