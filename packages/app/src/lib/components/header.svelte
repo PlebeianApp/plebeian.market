@@ -141,7 +141,7 @@
 								</Button>
 							</Collapsible.Trigger>
 
-							<Collapsible.Content class="absolute left-0 right-0 bg-secondary-foreground mt-5">
+							<Collapsible.Content class="absolute left-0 right-0 bg-secondary-foreground mt-4">
 								<div>
 									{#if $ndkStore.activeUser}
 										{#if $balanceOfWorkingNWCs}

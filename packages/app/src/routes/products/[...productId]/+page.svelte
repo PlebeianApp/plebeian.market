@@ -76,8 +76,8 @@
 		<div class="container relative z-1 min-h-[600px] py-8 px-4 sm:px-8">
 			<div class="flex flex-col md:flex-row gap-8">
 				<div class="flex-1 md:w-1/2">
-					<div class="sticky top-8">
-						<div class="flex flex-col-reverse md:flex-row gap-4">
+					<div class="h-full">
+						<div class="flex flex-col-reverse md:flex-row gap-4 h-full max-h-[36em]">
 							{#key $productsQuery.data.identifier}
 								{#if $productsQuery.data?.images?.length}
 									{@const sortedImages = $productsQuery.data.images?.sort((a, b) => a.imageOrder - b.imageOrder)}
@@ -99,13 +99,12 @@
 											</button>
 										{/each}
 									</div>
-
-									<div class="flex-1 md:max-w-[calc(100%-5rem)]">
-										<Carousel.Root bind:api>
-											<Carousel.Content>
+									<div class="flex-1 md:max-w-[calc(100%-5rem)] h-full">
+										<Carousel.Root bind:api class="h-full">
+											<Carousel.Content class="h-full">
 												{#each sortedImages as item}
-													<Carousel.Item>
-														<div class="aspect-square w-full rounded-lg">
+													<Carousel.Item class="h-full">
+														<div class="w-full h-full rounded-lg">
 															<img src={item.imageUrl} alt="" class="h-full w-full object-contain" loading="lazy" />
 														</div>
 													</Carousel.Item>

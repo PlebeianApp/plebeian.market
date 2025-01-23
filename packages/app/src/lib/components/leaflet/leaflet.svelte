@@ -144,18 +144,10 @@
 </script>
 
 {#if browser}
-	<main>
-		<div class="border-2 border-black" bind:this={mapContainer}></div>
-	</main>
+	<div class={`border-2 border-black sm:h-[400px] ${$$restProps.class}`} bind:this={mapContainer}></div>
 {/if}
 
 <style>
-	div {
-		height: 400px;
-		width: 100%;
-		z-index: 0;
-	}
-
 	:global(.custom-marker-icon) {
 		border: none;
 	}

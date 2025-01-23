@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Selected } from 'bits-ui'
 	import AdminActions from '$lib/components/common/admin-actions.svelte'
+	import Hero from '$lib/components/common/hero.svelte'
 	import ItemGrid from '$lib/components/common/item-grid.svelte'
 	import SkeletonLoader from '$lib/components/common/skeletonLoader.svelte'
 	import TruncatedText from '$lib/components/common/truncatedText.svelte'
@@ -61,10 +62,11 @@
 						<img src={image} alt="stall-cover" class="w-full h-full object-cover" />
 					</div>
 				{:else}
-					<div
-						style={`background-color: ${stringToHexColor(stall.id)}`}
-						class={`border-black w-full border-2 aspect-[6.125/1] relative overflow-hidden`}
-					/>
+					<Hero class="w-full aspect-[6.125/1] justify-center relative overflow-hidden" gradientColor={stringToHexColor(stall.id)} py="8">
+						<div class="flex flex-row gap-2 justify-center z-10">
+							<span class="i-mdi-store text-white/90 w-12 h-12 opacity-60" />
+						</div>
+					</Hero>
 				{/if}
 				{#if name}
 					<div class="flex flex-col pl-8 pt-4 bg-off-black">
