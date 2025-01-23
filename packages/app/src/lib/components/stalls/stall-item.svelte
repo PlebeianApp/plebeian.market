@@ -11,6 +11,7 @@
 	import { Edit, MoreVertical, Plus } from 'lucide-svelte'
 	import { npubEncode } from 'nostr-tools/nip19'
 
+	import Hero from '../common/hero.svelte'
 	import SkeletonLoader from '../common/skeletonLoader.svelte'
 	import { Button } from '../ui/button'
 	import Skeleton from '../ui/skeleton/skeleton.svelte'
@@ -61,7 +62,7 @@
 	>
 		<a href={stallUrl} class="flex flex-col flex-1">
 			<Card.Header class="p-0 flex-shrink-0">
-				<Skeleton class="h-12 w-full" />
+				<Skeleton class="w-full aspect-[21/9]" />
 			</Card.Header>
 
 			<div class="flex flex-col flex-1 overflow-hidden">
@@ -103,15 +104,24 @@
 			<a href={stallUrl} class="flex flex-col flex-1">
 				<Card.Header class="p-0 flex-shrink-0">
 					{#if stall.image}
-						<div class="relative w-full max-h-56 overflow-hidden">
-							<img src={stall.image} alt={stall.name || 'Shop image'} class="object-cover w-full h-full" />
+						<div class="relative w-full aspect-[21/9] bg-gray-50">
+							<img src={stall.image} alt={stall.name || 'Shop image'} class="absolute inset-0 w-full h-full object-cover" />
 						</div>
 					{:else}
-						<div style={`background-color: ${stringToHexColor(stall.id)}`} class="h-14 w-full" />
+						<Hero
+							class="relative w-full aspect-[21/9] justify-center"
+							gradientColor={stringToHexColor(stall.id)}
+							gradientOpacity="0.5"
+							py="8"
+						>
+							<div class="flex flex-row gap-2 justify-center z-10">
+								<span class="i-mdi-store text-white/90 w-12 h-12 opacity-60" />
+							</div>
+						</Hero>
 					{/if}
 				</Card.Header>
 
-				<div class="flex flex-col flex-1 overflow-hidden">
+				<div class="flex flex-col flex-1 overflow-hidden bg-white z-10">
 					<Card.Content class="p-2 flex-1">
 						<div class="flex items-start justify-between mb-2">
 							<a href={stallUrl} class="flex-1">

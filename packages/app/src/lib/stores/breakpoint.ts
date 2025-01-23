@@ -34,6 +34,7 @@ const MOBILE_SIZE_CLASSES = {
 	sm: 'h-11 px-3 text-base',
 	lg: 'h-12 px-6 text-lg',
 	icon: 'h-11 w-11',
+	none: 'h-6 w-fit',
 } as const
 
 export const responsiveButtonClasses = derived(breakpoint, ($breakpoint) => ($breakpoint === 'sm' ? MOBILE_SIZE_CLASSES : null))

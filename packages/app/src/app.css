@@ -114,14 +114,18 @@
 	h3 {
 		@apply text-xl font-bold;
 	}
+
 	.required-mark::after {
 		content: '*';
 		color: red;
 		margin-left: 0.25rem;
 	}
+
+	a,
 	.external-link {
-		@apply text-secondary hover:underline;
+		@apply text-secondary;
 	}
+
 	input,
 	select,
 	textarea {

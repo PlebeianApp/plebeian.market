@@ -46,7 +46,6 @@
 	import Spinner from '../assets/spinner.svelte'
 	import Leaflet from '../leaflet/leaflet.svelte'
 	import ScrollArea from '../ui/scroll-area/scroll-area.svelte'
-	import Separator from '../ui/separator/separator.svelte'
 	import { activeTab } from '../ui/tabs/constants'
 
 	export let stall: Partial<RichStall> | null = null
@@ -365,11 +364,6 @@
 									<small class="text-gray-500">No location selected - click on the map to set a marker or search for a location</small>
 								{/if}
 							</div>
-
-							{#if currentTab === 'location'}
-								<Leaflet geoJSON={mapGeoJSON} on:locationUpdated={handleLocationUpdated} />
-							{/if}
-
 							<div class="grid grid-cols-[1fr_auto] gap-2">
 								<Input type="search" placeholder="Search location..." bind:value={shippingFromInput} />
 								<Button
@@ -408,6 +402,9 @@
 									</Command.Root>
 								</Popover.Content>
 							</Popover.Root>
+							{#if currentTab === 'location'}
+								<Leaflet class=" h-[200px] z-0" geoJSON={mapGeoJSON} on:locationUpdated={handleLocationUpdated} />
+							{/if}
 						</div>
 					</div>
 				</Tabs.Content>

@@ -33,6 +33,7 @@
 	import type { onChainConfirmationType } from './types'
 	import Spinner from '../assets/spinner.svelte'
 	import PaymentGuidance from '../common/paymentGuidance.svelte'
+	import ScrollArea from '../ui/scroll-area/scroll-area.svelte'
 	import PaymentDetailConfirmationCard from './paymentDetailConfirmationCard.svelte'
 
 	export let paymentDetail: RichPaymentDetail | null = null
@@ -241,195 +242,197 @@
 	}
 </script>
 
-<div class="border flex flex-col p-4 justify-between bg-white">
-	<Collapsible.Root bind:open={isOpen}>
-		<div class="flex flex-row w-full justify-between items-center gap-2">
-			<Collapsible.Trigger on:click={() => (isOpen = !isOpen)} class="flex flex-row w-full justify-between items-center gap-2">
-				{#if isEditing}
-					<div class="grid grid-flow-col grid-cols-[1fr_auto] gap-2">
-						<span class={paymentMethodIcons[editedPaymentDetail.paymentMethod] + ' w-6 h-6'} />
-						<span class="truncate">{editedPaymentDetail.paymentDetails}</span>
-					</div>
-					<div class="flex flex-row gap-2 items-center">
-						{#if editedPaymentDetail.stallId}
-							{#if editedPaymentDetail.isDefault}
-								<span class="i-mdi-star text-yellow-400 w-6 h-6" />
-							{/if}
-							<span class="font-bold">{editedPaymentDetail.stallName}</span>
-							<span class="i-tdesign-store w-6 h-6" />
-						{:else}
-							<span class="font-bold">General</span>
-							<span class="i-mingcute-earth-2-line w-6 h-6" />
-						{/if}
-					</div>
-				{:else}
-					<span class="flex items-center gap-2">
-						<span class="i-mingcute-plus-line w-6 h-6" />
-						Add new payment method
-					</span>
-				{/if}
-			</Collapsible.Trigger>
-			{#if !showGuidance && !paymentDetail}
-				<Button
-					on:click={handlePasteUnknownPaymentDetails}
-					size="icon"
-					variant="ghost"
-					data-tooltip="Paste payment details from clipboard and auto-detect."
-					class="text-destructive border-0"
-				>
-					<span class="i-mingcute-clipboard-fill text-black w-6 h-6"></span>
-				</Button>
-			{/if}
-		</div>
-
-		<Collapsible.Content class="flex flex-col gap-4 py-4">
-			{#if showConfirmation}
-				<PaymentDetailConfirmationCard
-					value={tempValidatedValue}
-					type={confirmationType}
-					on:confirm={handleConfirmation}
-					on:cancel={handleCancellation}
-				/>
-			{:else if showGuidance}
-				<PaymentGuidance
-					userLightningAddress={$ndkStore.activeUser?.profile?.lud16}
-					on:setupPaymentDetail={handleSetupPaymentDetail}
-					on:closeGuidance={handleCloseGuidance}
-					on:paste={handlePasteUnknownPaymentDetails}
-				/>
-			{:else}
-				<form on:submit|preventDefault={validateAndConfirm} class="flex flex-col gap-4">
-					<div class="flex flex-row gap-4 items-start">
-						<div class="w-full">
-							<Label for="payment-details" class="font-medium">Payment Method</Label>
-							<Select.Root
-								selected={{
-									value: editedPaymentDetail.paymentMethod,
-									label: paymentMethodLabels[editedPaymentDetail.paymentMethod],
-								}}
-								onSelectedChange={(sEvent) => {
-									if (sEvent) {
-										editedPaymentDetail.paymentMethod = sEvent.value
-									}
-								}}
-								name="paymentMethod"
-							>
-								<Select.Trigger class="focus:border-2 focus:ring-2">
-									<Select.Value placeholder="Payment method" />
-								</Select.Trigger>
-								<Select.Content>
-									{#each paymentDetailMethods as method}
-										<Select.Item value={method}>
-											<div class="flex items-center gap-2">
-												<span class={paymentMethodIcons[method] + ' w-5 h-5'} />
-												{paymentMethodLabels[method]}
-											</div>
-										</Select.Item>
-									{/each}
-								</Select.Content>
-							</Select.Root>
+<div class="border flex flex-col p-4 justify-between bg-white h-full">
+	<ScrollArea class="flex-1">
+		<Collapsible.Root bind:open={isOpen}>
+			<div class="flex flex-row w-full justify-between items-center gap-2">
+				<Collapsible.Trigger on:click={() => (isOpen = !isOpen)} class="flex flex-row w-full justify-between items-center gap-2">
+					{#if isEditing}
+						<div class="grid grid-flow-col grid-cols-[1fr_auto] gap-2">
+							<span class={paymentMethodIcons[editedPaymentDetail.paymentMethod] + ' w-6 h-6'} />
+							<span class="truncate">{editedPaymentDetail.paymentDetails}</span>
 						</div>
-						<div class="w-full">
-							<Label for="payment-details" class="font-medium">Shop</Label>
-							<Select.Root
-								selected={{
-									value: editedPaymentDetail.stallId,
-									label: editedPaymentDetail.stallName,
-								}}
-								onSelectedChange={(sEvent) => {
-									if (sEvent?.value === null) {
-										editedPaymentDetail.stallId = null
-										editedPaymentDetail.stallName = 'General'
-										editedPaymentDetail.isDefault = false
-									} else if (sEvent?.value && sEvent?.label) {
-										editedPaymentDetail.stallId = sEvent.value
-										editedPaymentDetail.stallName = sEvent.label
-										editedPaymentDetail.isDefault = false
-									}
-								}}
-								name="assignStallForPaymentMethod"
-							>
-								<Select.Trigger class=" focus:border-2 focus:ring-2">
-									<Select.Value placeholder="Assign a shop" />
-								</Select.Trigger>
-								<Select.Content>
-									<Select.Item value={null}>
-										<div class="flex items-center gap-2">
-											<span class="i-mingcute-earth-2-line w-5 h-5" />
-											General
-										</div>
-									</Select.Item>
-									{#if $stallsQuery && $stallsQuery.data}
-										{#each $stallsQuery.data.stalls as stall}
-											<Select.Item value={stall.id}>
+						<div class="flex flex-row gap-2 items-center">
+							{#if editedPaymentDetail.stallId}
+								{#if editedPaymentDetail.isDefault}
+									<span class="i-mdi-star text-yellow-400 w-6 h-6" />
+								{/if}
+								<span class="font-bold">{editedPaymentDetail.stallName}</span>
+								<span class="i-tdesign-store w-6 h-6" />
+							{:else}
+								<span class="font-bold">General</span>
+								<span class="i-mingcute-earth-2-line w-6 h-6" />
+							{/if}
+						</div>
+					{:else}
+						<span class="flex items-center gap-2">
+							<span class="i-mingcute-plus-line w-6 h-6" />
+							Add new payment method
+						</span>
+					{/if}
+				</Collapsible.Trigger>
+				{#if !showGuidance && !paymentDetail}
+					<Button
+						on:click={handlePasteUnknownPaymentDetails}
+						size="icon"
+						variant="ghost"
+						data-tooltip="Paste payment details from clipboard and auto-detect."
+						class="text-destructive border-0"
+					>
+						<span class="i-mingcute-clipboard-fill text-black w-6 h-6"></span>
+					</Button>
+				{/if}
+			</div>
+
+			<Collapsible.Content class="flex flex-col gap-4 py-4">
+				{#if showConfirmation}
+					<PaymentDetailConfirmationCard
+						value={tempValidatedValue}
+						type={confirmationType}
+						on:confirm={handleConfirmation}
+						on:cancel={handleCancellation}
+					/>
+				{:else if showGuidance}
+					<PaymentGuidance
+						userLightningAddress={$ndkStore.activeUser?.profile?.lud16}
+						on:setupPaymentDetail={handleSetupPaymentDetail}
+						on:closeGuidance={handleCloseGuidance}
+						on:paste={handlePasteUnknownPaymentDetails}
+					/>
+				{:else}
+					<form on:submit|preventDefault={validateAndConfirm} class="flex flex-col gap-4">
+						<div class="flex flex-row gap-4 items-start">
+							<div class="w-full">
+								<Label for="payment-details" class="font-medium">Payment Method</Label>
+								<Select.Root
+									selected={{
+										value: editedPaymentDetail.paymentMethod,
+										label: paymentMethodLabels[editedPaymentDetail.paymentMethod],
+									}}
+									onSelectedChange={(sEvent) => {
+										if (sEvent) {
+											editedPaymentDetail.paymentMethod = sEvent.value
+										}
+									}}
+									name="paymentMethod"
+								>
+									<Select.Trigger class="focus:border-2 focus:ring-2">
+										<Select.Value placeholder="Payment method" />
+									</Select.Trigger>
+									<Select.Content>
+										{#each paymentDetailMethods as method}
+											<Select.Item value={method}>
 												<div class="flex items-center gap-2">
-													<span class="i-tdesign-store w-5 h-5" />
-													{stall.name}
+													<span class={paymentMethodIcons[method] + ' w-5 h-5'} />
+													{paymentMethodLabels[method]}
 												</div>
 											</Select.Item>
 										{/each}
-									{/if}
-								</Select.Content>
-							</Select.Root>
-						</div>
-					</div>
-
-					<div class="flex flex-col gap-2">
-						<Label for="payment-details" class="font-medium">Payment details</Label>
-						<Input
-							id="payment-details"
-							bind:value={editedPaymentDetail.paymentDetails}
-							class="w-full border"
-							placeholder="Enter payment details"
-						/>
-						{#if $onChainWalletIndexQuery?.data && paymentDetail?.paymentDetails}
-							<Label for="payment-details" class="font-medium">Current address</Label>
-							<div class=" bg-secondary flex flex-col gap-2 p-2">
-								<small
-									>Index: {$onChainWalletIndexQuery.data.valueNumeric} - {deriveAddresses(
-										paymentDetail.paymentDetails,
-										1,
-										Number($onChainWalletIndexQuery.data.valueNumeric),
-									)}</small
-								>
-								<small>
-									Last updated:
-									{format($onChainWalletIndexQuery.data.updatedAt, standardDisplayDateFormat)}
-								</small>
+									</Select.Content>
+								</Select.Root>
 							</div>
-						{/if}
-					</div>
-
-					{#if validationMessage && formState == 'idle'}
-						<p class="text-red-500 text-sm">{validationMessage}</p>
-					{:else if formState !== 'idle'}
-						<Spinner />
-					{/if}
-
-					<div class="flex flex-col gap-2">
-						<section class=" flex items-center gap-2">
-							<Checkbox id="default-payment" bind:checked={editedPaymentDetail.isDefault} disabled={isDisabled} class="border" />
-							<Label for="default-payment" class="font-medium">Default</Label>
-						</section>
-						<div class="flex flex-row-reverse gap-2 mt-4">
-							<Button type="submit" disabled={formState !== 'idle'} class="font-bold py-2 px-4">
-								{#if formState !== 'idle'}<Spinner />{/if}
-								{formState === 'validating' ? 'Validating...' : formState === 'submitting' ? 'Saving...' : isEditing ? 'Update' : 'Save'}
-							</Button>
-
-							{#if isEditing}
-								<Button variant="destructive" on:click={handleDelete} disabled={formState !== 'idle'} class="font-bold py-2 px-4">
-									<span class="i-mdi-trash w-6 h-6 cursor-pointer" />
-								</Button>
-							{/if}
-
-							<Button variant="tertiary" on:click={handleCancelInput} disabled={formState !== 'idle'} class="font-bold py-2 px-4">
-								Cancel
-							</Button>
+							<div class="w-full">
+								<Label for="payment-details" class="font-medium">Shop</Label>
+								<Select.Root
+									selected={{
+										value: editedPaymentDetail.stallId,
+										label: editedPaymentDetail.stallName,
+									}}
+									onSelectedChange={(sEvent) => {
+										if (sEvent?.value === null) {
+											editedPaymentDetail.stallId = null
+											editedPaymentDetail.stallName = 'General'
+											editedPaymentDetail.isDefault = false
+										} else if (sEvent?.value && sEvent?.label) {
+											editedPaymentDetail.stallId = sEvent.value
+											editedPaymentDetail.stallName = sEvent.label
+											editedPaymentDetail.isDefault = false
+										}
+									}}
+									name="assignStallForPaymentMethod"
+								>
+									<Select.Trigger class=" focus:border-2 focus:ring-2">
+										<Select.Value placeholder="Assign a shop" />
+									</Select.Trigger>
+									<Select.Content>
+										<Select.Item value={null}>
+											<div class="flex items-center gap-2">
+												<span class="i-mingcute-earth-2-line w-5 h-5" />
+												General
+											</div>
+										</Select.Item>
+										{#if $stallsQuery && $stallsQuery.data}
+											{#each $stallsQuery.data.stalls as stall}
+												<Select.Item value={stall.id}>
+													<div class="flex items-center gap-2">
+														<span class="i-tdesign-store w-5 h-5" />
+														{stall.name}
+													</div>
+												</Select.Item>
+											{/each}
+										{/if}
+									</Select.Content>
+								</Select.Root>
+							</div>
 						</div>
-					</div>
-				</form>
-			{/if}
-		</Collapsible.Content>
-	</Collapsible.Root>
+
+						<div class="flex flex-col gap-2">
+							<Label for="payment-details" class="font-medium">Payment details</Label>
+							<Input
+								id="payment-details"
+								bind:value={editedPaymentDetail.paymentDetails}
+								class="w-full border"
+								placeholder="Enter payment details"
+							/>
+							{#if $onChainWalletIndexQuery?.data && paymentDetail?.paymentDetails}
+								<Label for="payment-details" class="font-medium">Current address</Label>
+								<div class=" bg-secondary flex flex-col gap-2 p-2">
+									<small
+										>Index: {$onChainWalletIndexQuery.data.valueNumeric} - {deriveAddresses(
+											paymentDetail.paymentDetails,
+											1,
+											Number($onChainWalletIndexQuery.data.valueNumeric),
+										)}</small
+									>
+									<small>
+										Last updated:
+										{format($onChainWalletIndexQuery.data.updatedAt, standardDisplayDateFormat)}
+									</small>
+								</div>
+							{/if}
+						</div>
+
+						{#if validationMessage && formState == 'idle'}
+							<p class="text-red-500 text-sm">{validationMessage}</p>
+						{:else if formState !== 'idle'}
+							<Spinner />
+						{/if}
+
+						<div class="flex flex-col gap-2">
+							<section class=" flex items-center gap-2">
+								<Checkbox id="default-payment" bind:checked={editedPaymentDetail.isDefault} disabled={isDisabled} class="border" />
+								<Label for="default-payment" class="font-medium">Default</Label>
+							</section>
+							<div class="flex flex-row-reverse gap-2 mt-4">
+								<Button type="submit" disabled={formState !== 'idle'} class="font-bold py-2 px-4">
+									{#if formState !== 'idle'}<Spinner />{/if}
+									{formState === 'validating' ? 'Validating...' : formState === 'submitting' ? 'Saving...' : isEditing ? 'Update' : 'Save'}
+								</Button>
+
+								{#if isEditing}
+									<Button variant="destructive" on:click={handleDelete} disabled={formState !== 'idle'} class="font-bold py-2 px-4">
+										<span class="i-mdi-trash w-6 h-6 cursor-pointer" />
+									</Button>
+								{/if}
+
+								<Button variant="tertiary" on:click={handleCancelInput} disabled={formState !== 'idle'} class="font-bold py-2 px-4">
+									Cancel
+								</Button>
+							</div>
+						</div>
+					</form>
+				{/if}
+			</Collapsible.Content>
+		</Collapsible.Root>
+	</ScrollArea>
 </div>

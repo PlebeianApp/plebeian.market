@@ -1,10 +1,13 @@
 <script lang="ts">
 	import type { Selected } from 'bits-ui'
 	import AdminActions from '$lib/components/common/admin-actions.svelte'
+	import Hero from '$lib/components/common/hero.svelte'
 	import ItemGrid from '$lib/components/common/item-grid.svelte'
 	import SkeletonLoader from '$lib/components/common/skeletonLoader.svelte'
 	import TruncatedText from '$lib/components/common/truncatedText.svelte'
+	import ShippingsDialog from '$lib/components/dialogs/shippingsDialog.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
+	import { badgeVariants } from '$lib/components/ui/badge'
 	import Badge from '$lib/components/ui/badge/badge.svelte'
 	import { Button } from '$lib/components/ui/button'
 	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card'
@@ -13,6 +16,7 @@
 	import { createProductsByFilterQuery } from '$lib/fetch/products.queries'
 	import { createStallQuery } from '$lib/fetch/stalls.queries'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
+	import { dialogs } from '$lib/stores/dialog'
 	import { openDrawerForNewProductForStall, openDrawerForStall } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
 	import { stringToHexColor, truncateString, truncateText } from '$lib/utils'
@@ -61,10 +65,11 @@
 						<img src={image} alt="stall-cover" class="w-full h-full object-cover" />
 					</div>
 				{:else}
-					<div
-						style={`background-color: ${stringToHexColor(stall.id)}`}
-						class={`border-black w-full border-2 aspect-[6.125/1] relative overflow-hidden`}
-					/>
+					<Hero class="w-full aspect-[6.125/1] justify-center relative overflow-hidden" gradientColor={stringToHexColor(stall.id)} py="8">
+						<div class="flex flex-row gap-2 justify-center z-10">
+							<span class="i-mdi-store text-white/90 w-12 h-12 opacity-60" />
+						</div>
+					</Hero>
 				{/if}
 				{#if name}
 					<div class="flex flex-col pl-8 pt-4 bg-off-black">
@@ -120,7 +125,18 @@
 														<Badge size="sm" class="w-fit" variant="secondary">{region}</Badge>
 													{/each}
 													{#if shipping.regions.length > 3}
-														<Badge size="sm" class="w-fit" variant="secondary">+{shipping.regions.length - 3} more</Badge>
+														<Button
+															size="none"
+															class={badgeVariants({ variant: 'secondary' })}
+															variant="outline"
+															on:click={() =>
+																dialogs.show(ShippingsDialog, {
+																	title: 'Shipping Regions',
+																	items: shipping.regions,
+																})}
+														>
+															+{shipping.regions.length - 3} more
+														</Button>
 													{/if}
 												{/if}
 												{#if shipping.countries}
@@ -128,7 +144,18 @@
 														<Badge size="sm" class="w-fit" variant="secondary">{country}</Badge>
 													{/each}
 													{#if shipping.countries.length > 3}
-														<Badge size="sm" class="w-fit" variant="secondary">+{shipping.countries.length - 3} more</Badge>
+														<Button
+															size="none"
+															class={badgeVariants({ variant: 'secondary' })}
+															variant="outline"
+															on:click={() =>
+																dialogs.show(ShippingsDialog, {
+																	title: 'Shipping Countries',
+																	items: shipping.countries,
+																})}
+														>
+															+{shipping.countries.length - 3} more
+														</Button>
 													{/if}
 												{/if}
 											</div>

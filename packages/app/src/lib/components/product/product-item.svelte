@@ -40,7 +40,7 @@
 				{@const mainImage = product.images?.sort((a, b) => a.imageOrder - b.imageOrder)}
 				<div class="relative w-full aspect-square">
 					<img
-						class="object-cover w-full h-full"
+						class="absolute inset-0 w-full h-full object-cover"
 						src={mainImage[0].imageUrl}
 						alt={product.name || 'Product image'}
 						on:error={() => (imageLoadError = true)}
