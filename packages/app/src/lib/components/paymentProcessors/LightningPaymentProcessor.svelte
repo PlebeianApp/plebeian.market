@@ -302,8 +302,10 @@
 	{#if isLoading}
 		<Spinner />
 	{:else if invoice}
-		<a href={url}>
-			<QrCode data={invoice.paymentRequest} logoPath={appSettings.logoUrl} />
+		<a href={url} class="block hover:opacity-90 transition-opacity" target="_blank" rel="noopener noreferrer">
+			{#key invoice.paymentRequest}
+				<QrCode data={invoice.paymentRequest} logoPath={appSettings.logoUrl} />
+			{/key}
 		</a>
 		<Button variant="tertiary" class="items-center gap-2 grid grid-cols-[auto_auto] max-w-full" on:click={handleCopyInvoice}>
 			<span class=" truncate">{invoice.paymentRequest}</span>

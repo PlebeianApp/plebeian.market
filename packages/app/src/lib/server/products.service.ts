@@ -686,3 +686,38 @@ export const productExists = async (productId: string): Promise<ExistsResult> =>
 		banned: result.banned,
 	}
 }
+
+export const getOneProductPerUser = async (filter: ProductsFilter = productsFilterSchema.parse({})): Promise<ProductQueryData> => {
+	const subquery = db
+		.select({
+			id: products.id,
+			userId: products.userId,
+			createdAt: products.createdAt,
+			rowNum: sql<number>`row_number() over (partition by ${products.userId} order by ${products.createdAt} desc)`.as('rowNum'),
+		})
+		.from(products)
+		.where(eq(products.banned, false))
+		.as('ranked_products')
+
+	const productsResult = await db
+		.select({
+			...getTableColumns(products),
+		})
+		.from(products)
+		.innerJoin(subquery, and(eq(products.id, subquery.id), eq(subquery.rowNum, 1)))
+		.orderBy(desc(products.createdAt))
+		.limit(filter.pageSize)
+		.offset((filter.page - 1) * filter.pageSize)
+		.execute()
+
+	const [{ count: total } = { count: 0 }] = await db
+		.select({
+			count: count(),
+		})
+		.from(products)
+		.where(eq(products.banned, false))
+
+	const displayProducts: DisplayProduct[] = await Promise.all(productsResult.map(toDisplayProduct))
+
+	return { total, products: displayProducts }
+}

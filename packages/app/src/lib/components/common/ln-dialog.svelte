@@ -81,7 +81,16 @@
 		</Dialog.Header>
 		<div class="flex flex-col items-center gap-2">
 			{#if lnInvoice}
-				<QrCode data={lnInvoice.paymentRequest} logoPath={appSettings.logoUrl} />
+				<a
+					href={`lightning://${lnInvoice.paymentRequest}`}
+					class="block hover:opacity-90 transition-opacity"
+					target="_blank"
+					rel="noopener noreferrer"
+				>
+					{#key lnInvoice.paymentRequest}
+						<QrCode data={lnInvoice.paymentRequest} logoPath={appSettings.logoUrl} />
+					{/key}
+				</a>
 				<Button variant="tertiary" class="relative overflow-auto flex flex-row gap-2 bg-transparent" on:click={handleCopyClick}>
 					<code>{truncateText(lnInvoice.paymentRequest, 30)}</code>
 					<span class="i-tdesign-copy" style="width: 1rem; height: 1rem; color: black;"></span>

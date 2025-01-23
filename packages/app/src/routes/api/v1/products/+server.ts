@@ -5,6 +5,7 @@ import {
 	createProducts,
 	getAllProducts,
 	getFeaturedProducts,
+	getOneProductPerUser,
 	getProductsByCatName,
 	getProductsByStallId,
 	getProductsByUserId,
@@ -15,6 +16,8 @@ export async function GET({ url: { searchParams } }) {
 	const filter = productsFilterSchema.safeParse(spObj)
 	if (!filter.success) {
 		error(400, `Invalid request: ${JSON.stringify(filter.error)}`)
+	} else if (filter.data.onePerUser) {
+		return json(await getOneProductPerUser(filter.data))
 	} else if (filter.data.category) {
 		return json(await getProductsByCatName(filter.data))
 	} else if (filter.data.userId) {
