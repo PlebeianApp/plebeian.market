@@ -94,7 +94,7 @@
 		}
 	})
 
-	const bitcoinUri = `bitcoin:${paymentDetail.paymentDetails}?amount=${satoshisToBtc(amountSats)}`
+	const bitcoinUri = `bitcoin://${paymentDetail.paymentDetails}?amount=${satoshisToBtc(amountSats)}`
 </script>
 
 <div class="flex flex-col items-center gap-4">

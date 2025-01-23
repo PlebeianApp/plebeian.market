@@ -81,7 +81,12 @@
 		</Dialog.Header>
 		<div class="flex flex-col items-center gap-2">
 			{#if lnInvoice}
-				<a href={lnInvoice.paymentRequest} class="block hover:opacity-90 transition-opacity" target="_blank" rel="noopener noreferrer">
+				<a
+					href={`lightning://${lnInvoice.paymentRequest}`}
+					class="block hover:opacity-90 transition-opacity"
+					target="_blank"
+					rel="noopener noreferrer"
+				>
 					{#key lnInvoice.paymentRequest}
 						<QrCode data={lnInvoice.paymentRequest} logoPath={appSettings.logoUrl} />
 					{/key}

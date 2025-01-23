@@ -712,7 +712,7 @@ export const getOneProductPerUser = async (filter: ProductsFilter = productsFilt
 
 	const [{ count: total } = { count: 0 }] = await db
 		.select({
-			count: sql<number>`count(distinct ${products.userId})`,
+			count: count(),
 		})
 		.from(products)
 		.where(eq(products.banned, false))
