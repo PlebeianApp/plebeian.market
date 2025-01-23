@@ -99,9 +99,11 @@
 
 <div class="flex flex-col items-center gap-4">
 	<h3 class="font-bold">On-chain Payment</h3>
-
-	<QrCode data={bitcoinUri} logoPath={appSettings.logoUrl} />
-
+	<a href={bitcoinUri} class="block hover:opacity-90 transition-opacity" target="_blank" rel="noopener noreferrer">
+		{#key bitcoinUri}
+			<QrCode data={bitcoinUri} logoPath={appSettings.logoUrl} />
+		{/key}
+	</a>
 	<Button variant="secondary" class="items-center gap-2 grid grid-cols-[auto_auto] max-w-full" on:click={() => copyToClipboard(bitcoinUri)}>
 		<span class="truncate">{paymentDetail.paymentDetails}</span>
 		<span class="i-tdesign-copy" />

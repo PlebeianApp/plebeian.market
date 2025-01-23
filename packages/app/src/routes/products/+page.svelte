@@ -10,6 +10,7 @@
 	import * as Select from '$lib/components/ui/select'
 	import { Skeleton } from '$lib/components/ui/skeleton'
 	import { createProductsByFilterQuery } from '$lib/fetch/products.queries'
+	import { breakpoint } from '$lib/stores/breakpoint'
 	import { reactiveDebounce, scrollToTop } from '$lib/utils'
 	import { writable } from 'svelte/store'
 
@@ -80,19 +81,27 @@
 								<Pagination.Item>
 									<Pagination.PrevButton />
 								</Pagination.Item>
-								{#each pages as page (page.key)}
-									{#if page.type === 'ellipsis'}
-										<Pagination.Item>
-											<Pagination.Ellipsis />
-										</Pagination.Item>
-									{:else}
-										<Pagination.Item>
-											<Pagination.Link {page} isActive={currentPage == page.value}>
-												{page.value}
-											</Pagination.Link>
-										</Pagination.Item>
-									{/if}
-								{/each}
+								{#if $breakpoint === 'sm'}
+									<Pagination.Item>
+										<Pagination.Link page={{ type: 'page', value: currentPage ?? 0 }} isActive={true}>
+											{currentPage}
+										</Pagination.Link>
+									</Pagination.Item>
+								{:else}
+									{#each pages as page (page.key)}
+										{#if page.type === 'ellipsis'}
+											<Pagination.Item>
+												<Pagination.Ellipsis />
+											</Pagination.Item>
+										{:else}
+											<Pagination.Item>
+												<Pagination.Link {page} isActive={currentPage == page.value}>
+													{page.value}
+												</Pagination.Link>
+											</Pagination.Item>
+										{/if}
+									{/each}
+								{/if}
 								<Pagination.Item>
 									<Pagination.NextButton />
 								</Pagination.Item>
