@@ -45,7 +45,7 @@
 		</div>
 	</div>
 {:else if forItemType === 'stall'}
-	<div class="my-16 mx-8">
+	<div class="my-16 mx-4">
 		{#if title}
 			<h2>{title}</h2>
 		{/if}

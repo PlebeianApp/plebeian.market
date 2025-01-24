@@ -34,14 +34,14 @@
 
 <div class="flex min-h-screen w-full flex-col">
 	<CatMenu />
-	<main class="text-black pt-20">
+	<main class="text-black pt-8">
 		<div class="gap-16 pb-12">
 			<div class="px-4 lg:px-12">
-				<div class="mb-6">
+				<div class="mb-6 m-4">
 					<h2>Products</h2>
 					<h3 class="font-light">Here you can find all the products of this community</h3>
 				</div>
-				<div class="flex gap-6 mb-6">
+				<div class="flex gap-6 mb-6 m-4">
 					<Input type="search" placeholder="Search..." bind:value={$search} />
 					<Select.Root selected={sort} onSelectedChange={onSortSelectedChange}>
 						<Select.Trigger class="w-[100px]">
