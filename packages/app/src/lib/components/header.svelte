@@ -96,7 +96,7 @@
 <PassPromt dialogOpen={showPassPromt} accointInfo={nsecAccInfo} />
 
 <header class="sticky top-0 z-30 bg-black py-4 text-white px-4">
-	<div class="container flex h-full w-full items-center justify-between">
+	<div class="container flex h-full max-w-full items-center justify-between">
 		<section class="inline-flex items-center">
 			<a href="/">
 				<div class="flex items-center">

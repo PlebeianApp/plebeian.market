@@ -33,6 +33,7 @@
 				<div>
 					<CatMenu />
 				</div>
+			<div class="my-8 mx-4">
 				{#if $featuredProductsQuery.data?.products?.length}
 					<ItemGrid title="Featured">
 						{#each $featuredProductsQuery.data?.products as item (item.id)}
@@ -56,6 +57,7 @@
 						</div>
 					</div>
 				{/if}
+			</div>	
 			</div>
 		</main>
 	</div>

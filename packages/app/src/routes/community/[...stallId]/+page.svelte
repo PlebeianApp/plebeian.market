@@ -178,7 +178,7 @@
 			</div>
 
 			{#if isMyStall}
-				<div class="flex flex-row gap-2">
+				<div class="flex flex-row gap-2 mx-8">
 					<Button variant="primary" class="mt-4 w-fit" on:click={() => openDrawerForStall(stall.id)}>Edit stall</Button>
 					<Button variant="primary" class="mt-4 w-fit" on:click={() => openDrawerForNewProductForStall(stall.id)}>Add product</Button>
 				</div>
@@ -192,13 +192,15 @@
 
 	{#if $productsQuery.data?.products.length}
 		{@const { products } = $productsQuery.data}
-		<ItemGrid title="Products" withSort={false} on:sortSelectedChange={(e) => onSortSelectedChange(e.detail.value)}>
-			{#if products.length}
-				{#each products as item (item.id)}
-					<ProductItem product={item} />
-				{/each}
-			{/if}
-		</ItemGrid>
+		<div class="mx-4">
+			<ItemGrid title="Products" withSort={false} on:sortSelectedChange={(e) => onSortSelectedChange(e.detail.value)}>
+				{#if products.length}
+					{#each products as item (item.id)}
+						<ProductItem product={item} />
+					{/each}
+				{/if}
+			</ItemGrid>
+		</div>
 	{:else if $productsQuery.isSuccess && !$productsQuery.data}
 		<div class="my-16 mx-8">
 			<h3>No products found</h3>

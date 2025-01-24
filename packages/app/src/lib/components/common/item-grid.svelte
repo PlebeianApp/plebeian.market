@@ -20,7 +20,7 @@
 </script>
 
 {#if forItemType === 'product'}
-	<div class="m-8">
+	<div class="my-8 mx-4">
 		{#if title}
 			<div class="flex flex-col md:flex-row justify-between items-center">
 				<h2>{title}</h2>
@@ -45,12 +45,16 @@
 		</div>
 	</div>
 {:else if forItemType === 'stall'}
-	<div class="my-16 mx-8">
-		{#if title}
-			<h2>{title}</h2>
-		{/if}
-		<div class="grid grid-cols-1 gap-8 md:gap-16 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-			<slot />
+	<div class="my-8">
+		<div class="mx-4">
+			{#if title}
+				<div class="my-8">
+					<h2>{title}</h2>
+				</div>
+			{/if}
+			<div class="grid grid-cols-1 gap-8 md:gap-16 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+				<slot />
+			</div>
 		</div>
 	</div>
 {/if}

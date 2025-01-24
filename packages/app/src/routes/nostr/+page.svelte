@@ -25,10 +25,10 @@
 </script>
 
 <div class="flex min-h-screen w-full flex-col">
-	<main class="text-black pt-20">
+	<main class="text-black pt-8">
 		<div class="gap-16 pb-12">
 			<div class="px-4 lg:px-12">
-				<div class="mb-6">
+				<div class="mb-6 m-4">
 					<h2>Nostr</h2>
 					<h3 class="font-light">Here you can find all the stalls published on nostr</h3>
 				</div>

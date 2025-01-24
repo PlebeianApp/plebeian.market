@@ -155,25 +155,27 @@
 						</div>
 					</div>
 				{/if}
-				{#if stallsMixture.length}
-					<ItemGrid title="Shops">
-						{#key stallsMixture}
-							{#each stallsMixture as item (item.id)}
-								<StallItem stallData={item} />
-							{/each}
-						{/key}
-					</ItemGrid>
-				{/if}
+				<div class="mx-4">
+					{#if stallsMixture.length}
+						<ItemGrid title="Shops">
+							{#key stallsMixture}
+								{#each stallsMixture as item (item.id)}
+									<StallItem stallData={item} />
+								{/each}
+							{/key}
+						</ItemGrid>
+					{/if}
 
-				{#if productsMixture.length}
-					<ItemGrid title="Products">
-						{#key stallsMixture}
-							{#each productsMixture as item (item.id)}
-								<ProductItem product={item} />
-							{/each}
-						{/key}
-					</ItemGrid>
-				{/if}
+					{#if productsMixture.length}
+						<ItemGrid title="Products">
+							{#key stallsMixture}
+								{#each productsMixture as item (item.id)}
+									<ProductItem product={item} />
+								{/each}
+							{/key}
+						</ItemGrid>
+					{/if}
+				</div>
 			</div>
 		</div>
 	</div>
