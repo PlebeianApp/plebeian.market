@@ -287,14 +287,15 @@
 			</div>
 		{/if}
 	{/if}
-
-	{#if $otherProducts?.data?.products.length}
-		<ItemGrid title="More from {$userProfileQuery?.data?.name}">
-			{#key $otherProducts.data.products}
-				{#each $otherProducts?.data?.products as item}
-					<ProductItem product={item} />
-				{/each}
-			{/key}
-		</ItemGrid>
-	{/if}
+	<div class="mx-4">
+		{#if $otherProducts?.data?.products.length}
+			<ItemGrid title="More from {$userProfileQuery?.data?.name}">
+				{#key $otherProducts.data.products}
+					{#each $otherProducts?.data?.products as item}
+						<ProductItem product={item} />
+					{/each}
+				{/key}
+			</ItemGrid>
+		{/if}
+	</div>
 {/if}

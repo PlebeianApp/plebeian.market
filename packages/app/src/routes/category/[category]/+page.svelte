@@ -29,7 +29,7 @@
 </Hero>
 <CatMenu />
 <div class="flex min-h-screen w-full flex-col">
-	<div class="flex flex-col gap-2 relative">
+	<div class="flex flex-col gap-2 relative mx-4">
 		{#if $productsQuery.data?.products}
 			<ItemGrid title="Products">
 				{#each $productsQuery?.data.products as product}
