@@ -33,31 +33,31 @@
 				<div>
 					<CatMenu />
 				</div>
-			<div class="my-8 mx-4">
-				{#if $featuredProductsQuery.data?.products?.length}
-					<ItemGrid title="Featured">
-						{#each $featuredProductsQuery.data?.products as item (item.id)}
-							<ProductItem product={item} />
-						{/each}
-					</ItemGrid>
-				{/if}
-				{#if $productQuery.data?.products?.length}
-					<ItemGrid title="Products">
-						{#each $productQuery.data?.products as item (item.id)}
-							<ProductItem product={item} />
-						{/each}
-					</ItemGrid>
-					<div class="flex justify-center">
-						<Button variant="primary" class="mt-6 p-4 font-bold lg:w-1/3" href="/products">Explore products</Button>
-					</div>
-				{:else}
-					<div class=" px-4 py-20 lg:px-12">
-						<div class=" flex flex-col items-center">
-							<h2>No products yet...</h2>
+				<div class="my-8 mx-4">
+					{#if $featuredProductsQuery.data?.products?.length}
+						<ItemGrid title="Featured">
+							{#each $featuredProductsQuery.data?.products as item (item.id)}
+								<ProductItem product={item} />
+							{/each}
+						</ItemGrid>
+					{/if}
+					{#if $productQuery.data?.products?.length}
+						<ItemGrid title="Products">
+							{#each $productQuery.data?.products as item (item.id)}
+								<ProductItem product={item} />
+							{/each}
+						</ItemGrid>
+						<div class="flex justify-center">
+							<Button variant="primary" class="mt-6 p-4 font-bold lg:w-1/3" href="/products">Explore products</Button>
 						</div>
-					</div>
-				{/if}
-			</div>	
+					{:else}
+						<div class=" px-4 py-20 lg:px-12">
+							<div class=" flex flex-col items-center">
+								<h2>No products yet...</h2>
+							</div>
+						</div>
+					{/if}
+				</div>
 			</div>
 		</main>
 	</div>
