@@ -324,7 +324,7 @@
 									<ChevronDown slot="icon" class="h-4 w-4" />
 								</Button>
 							</DropdownMenu.Trigger>
-							<DropdownMenu.Content class="w-full max-h-70 overflow-hidden overflow-scroll">
+							<DropdownMenu.Content class="w-full max-h-70 overflow-hidden">
 								<DropdownMenu.Label>Choose your local currency</DropdownMenu.Label>
 								<DropdownMenu.Separator />
 								<section class="max-h-[350px] overflow-y-auto">
