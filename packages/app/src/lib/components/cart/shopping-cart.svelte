@@ -22,17 +22,17 @@
 		</section>
 	</ScrollArea>
 
-	<footer class="border-t bg-background pt-4">
+	<footer class="bg-background">
 		<GrandTotalDisplay showActions={true}>
 			<div slot="actions" class="flex justify-between mt-4">
-				<Button variant="outline" on:click={clearCart}>Clear Cart</Button>
+				<Button variant="outline" on:click={clearCart}>Clear</Button>
 				<Button
 					on:click={() => {
 						goto('/checkout')
 						closeDrawer()
 					}}
 				>
-					Proceed to Checkout
+					Checkout
 				</Button>
 			</div>
 		</GrandTotalDisplay>

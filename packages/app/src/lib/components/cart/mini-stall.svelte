@@ -51,7 +51,7 @@
 								<span class="ml-2">{method.cost}</span>
 							{/if}
 						{:else}
-							Select shipping method
+							Select shipping
 						{/if}
 						<ChevronDown slot="icon" class="h-4 w-4" />
 					</Button>
