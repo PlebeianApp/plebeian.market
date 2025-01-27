@@ -39,7 +39,7 @@ export const faqItems: FaqItem[] = [
 	},
 	{
 		question: 'Returns and refunds',
-		answer: 'Returns and refunds can be negotiated with the individual sellers, you can message them on via their profile page.',
+		answer: 'Returns and refunds can be negotiated with the individual sellers, you can message them via their profile page.',
 	},
 	{
 		question: 'Customer Support',

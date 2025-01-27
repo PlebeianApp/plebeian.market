@@ -10,7 +10,7 @@
 </script>
 
 <div class="p-6 flex flex-col gap-2">
-	<p class=" font-bold">This is currently in beta, please dont rely on it for serious bussines.</p>
+	<p class=" font-bold">This is currently in beta, please dont rely on it for serious business.</p>
 	<Separator />
 	<p>
 		If you find some bugs or have suggestions, please consider open an issue on <a
