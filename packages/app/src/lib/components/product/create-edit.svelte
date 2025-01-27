@@ -457,7 +457,7 @@
 											<ChevronDown slot="icon" class="h-4 w-4" />
 										</Button>
 									</DropdownMenu.Trigger>
-									<DropdownMenu.Content class="w-56">
+									<DropdownMenu.Content class="w-full">
 										<DropdownMenu.Label>Shop</DropdownMenu.Label>
 										<DropdownMenu.Separator />
 										<section class="max-h-[350px] overflow-y-auto">
