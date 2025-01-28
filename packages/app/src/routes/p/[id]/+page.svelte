@@ -67,7 +67,7 @@
 		<div class="flex flex-col pb-4">
 			<div>
 				{#if banner}
-					<div class="w-full aspect-[3/1] overflow-hidden flex items-center justify-center">
+					<div class="w-full aspect-[5/1] overflow-hidden flex items-center justify-center">
 						<img src={banner} alt="stall-cover" class="w-full h-full object-cover" />
 					</div>
 				{:else}

@@ -11,12 +11,12 @@
 	$: $cart && cart.calculateGrandTotal().then((total) => (grandTotal = total))
 </script>
 
-<div class="cart-totals mt-4 p-4 bg-gray-100 rounded-lg">
+<div class="cart-totals p-4 bg-gray-100 rounded-lg">
 	{#if grandTotal && grandTotal.grandTotalInSats > 0}
 		<div class="flex justify-between items-center mb-4">
 			<span class="text-xl font-bold">Total:</span>
 			<div class="text-right">
-				<div class="text-2xl font-bold">
+				<div class="text-xl font-bold">
 					{formatSats(grandTotal.grandTotalInSats)} sats
 				</div>
 			</div>

@@ -30,7 +30,7 @@
 			<div class="px-4 lg:px-12">
 				<div class="mb-6 m-4">
 					<h2>Nostr</h2>
-					<h3 class="font-light">Here you can find all the stalls published on nostr</h3>
+					<h3 class="font-light">Here you can find all the shops published on nostr</h3>
 				</div>
 
 				<ItemGrid title="Shops" forItemType="stall">

@@ -51,12 +51,12 @@
 								<span class="ml-2">{method.cost}</span>
 							{/if}
 						{:else}
-							Select shipping method
+							Select shipping
 						{/if}
 						<ChevronDown slot="icon" class="h-4 w-4" />
 					</Button>
 				</DropdownMenu.Trigger>
-				<DropdownMenu.Content class="w-56">
+				<DropdownMenu.Content class="w-full">
 					<DropdownMenu.Label>Shipping Method</DropdownMenu.Label>
 					<DropdownMenu.Separator />
 					<section class="max-h-[350px] overflow-y-auto">

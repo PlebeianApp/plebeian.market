@@ -76,7 +76,7 @@
 				<Tabs.List class="w-full justify-around bg-transparent mb-6">
 					<Tabs.Trigger value="login-nip07" class={activeTab}>Extension</Tabs.Trigger>
 					<Tabs.Trigger value="login-signer" class={activeTab}>N-Connect</Tabs.Trigger>
-					<Tabs.Trigger value="login-nsec" class={activeTab}>Private Key</Tabs.Trigger>
+					<Tabs.Trigger value="login-nsec" class={activeTab}>Nsec</Tabs.Trigger>
 				</Tabs.List>
 			{/if}
 
