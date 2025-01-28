@@ -39,7 +39,7 @@ export async function teardownBrowser(browser: Browser): Promise<void> {
 export async function login(page: Page): Promise<void> {
 	await page.keyboard.press('Escape')
 	await retryClick(page, '#login-button')
-	await page.click('text=Private Key')
+	await page.click('text=Nsec')
 	await page.waitForSelector('#signInSk')
 	await page.fill('#signInSk', config.testUserPrivateKey)
 	await page.fill('#signInPass', config.testUserPassword)
