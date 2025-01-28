@@ -368,7 +368,7 @@
 									class={`border-2 border-black ${validationErrors['quantity'] ? 'ring-2 ring-red-500' : ''}`}
 									type="number"
 									name="quantity"
-									placeholder="10"
+									placeholder="e.g. 10"
 								/>
 								{#if validationErrors['quantity']}
 									<p class="text-red-500 text-sm mt-1">
