@@ -1,27 +1,41 @@
 <script lang="ts">
+	import type { CreateQueryResult } from '@tanstack/svelte-query'
+	import type { RichCat } from '$lib/server/categories.service'
 	import autoAnimate from '@formkit/auto-animate'
-	import { createCategoriesByFilterQuery } from '$lib/fetch/category.queries'
 	import { breakpoint } from '$lib/stores/breakpoint'
 	import { reactiveDebounce } from '$lib/utils'
+	import { onMount } from 'svelte'
 	import { writable } from 'svelte/store'
 
 	import Button from '../ui/button/button.svelte'
 	import Input from '../ui/input/input.svelte'
-	import Skeleton from '../ui/skeleton/skeleton.svelte'
 	import CatCompactItem from './cat-compact-item.svelte'
 
 	let search = writable<string>('')
 	let showSearch = false
 	let scrollContainer: HTMLDivElement
+	let categoriesQuery:
+		| CreateQueryResult<
+				{
+					total: number
+					categories: RichCat[]
+				},
+				Error
+		  >
+		| undefined
 
 	$: pageSize = $breakpoint == 'lg' ? 16 : 10
 	let page = 1
 
 	$: debouncedSearch = reactiveDebounce(search, 600)
 	$: $debouncedSearch && page !== 1 && (page = 1)
-	$: categoriesQuery = createCategoriesByFilterQuery({ pageSize, page, search: $debouncedSearch })
 
-	$: hasNextPage = ($categoriesQuery.data?.total ?? 0) > page * pageSize
+	onMount(async () => {
+		const { createCategoriesByFilterQuery } = await import('$lib/fetch/category.queries')
+		categoriesQuery = createCategoriesByFilterQuery({ pageSize, page, search: $debouncedSearch })
+	})
+
+	$: hasNextPage = ($categoriesQuery?.data?.total ?? 0) > page * pageSize
 	$: hasPreviousPage = page > 1
 
 	function toggleSearch() {
@@ -46,7 +60,7 @@
 	}
 </script>
 
-{#if !$categoriesQuery.isLoading && $categoriesQuery.data?.categories?.length}
+{#if !$categoriesQuery?.isLoading && $categoriesQuery?.data?.categories?.length}
 	<div class="flex flex-col gap-4 bg-black p-2 py-3">
 		<div class="grid items-center" style="grid-template-columns: auto 1fr;">
 			<div class="flex gap-4 items-center bg-black pr-4">
