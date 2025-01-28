@@ -1,4 +1,4 @@
-import type { NDKSubscriptionCacheUsage, NDKUserProfile } from '@nostr-dev-kit/ndk'
+import type { NDKSubscriptionCacheUsage, NDKUser, NDKUserProfile } from '@nostr-dev-kit/ndk'
 import type { ExistsResult } from '$lib/interfaces'
 import type { UsersFilter } from '$lib/schema'
 import type { RichUser } from '$lib/server/users.service'
@@ -129,6 +129,18 @@ export const createUsersByFilterQuery = (filter: Partial<UsersFilter>) =>
 					auth: true,
 				})
 				return users
+			},
+		},
+		queryClient,
+	)
+
+export const createUservalidateNip05Query = (user: NDKUser) =>
+	createQuery<boolean | null>(
+		{
+			queryKey: userKeys.nip05(user.pubkey),
+			queryFn: async () => {
+				if (!user.profile?.nip05) return null
+				return await user.validateNip05(user.profile?.nip05)
 			},
 		},
 		queryClient,

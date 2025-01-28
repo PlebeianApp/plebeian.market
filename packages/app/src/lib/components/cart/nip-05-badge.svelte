@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { isUserVerified } from '$lib/nostrSubs/utils'
-	import { BadgeCheck } from 'lucide-svelte'
+	import { BadgeAlert, BadgeCheck } from 'lucide-svelte'
 	import { onMount } from 'svelte'
 
 	import { Skeleton } from '../ui/skeleton'
 
 	export let userId: string
-	let userVerified = false
+	let userVerified: boolean | null = null
 	let loading = false
 
 	onMount(async () => {
@@ -17,9 +17,9 @@
 </script>
 
 {#if loading}
-	<Skeleton class="h-4 w-[250px]" />
+	<Skeleton class=" h-6 w-6" />
 {:else if userVerified}
-	<BadgeCheck fill="#ff3eb5" color="#1d1d1d" class="w-6 h-6 mt-1" />
-{:else}
-	<BadgeCheck color="#bf4040" class="w-6 h-6 mt-1" />
+	<BadgeCheck fill="var(--secondary)" color="var(--primary)" class="w-6 h-6 mt-1" />
+{:else if userVerified == false}
+	<BadgeAlert fill="var(--destructive)" color="var(--primary)" class="w-6 h-6 mt-1" />
 {/if}

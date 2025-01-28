@@ -8,9 +8,10 @@ import { KindProducts, KindsRelays, KindStalls, standardDisplayDateFormat } from
 import { createProductsFromNostrMutation } from '$lib/fetch/products.mutations'
 import { createStallFromNostrEvent } from '$lib/fetch/stalls.mutations'
 import { createUserFromNostrMutation } from '$lib/fetch/users.mutations'
+import { createUserByIdQuery, createUservalidateNip05Query } from '$lib/fetch/users.queries'
 import ndkStore from '$lib/stores/ndk'
 import { addCachedEvent, getCachedEvent, updateCachedEvent } from '$lib/stores/session'
-import { getEventCoordinates, parseCoordinatesString } from '$lib/utils'
+import { getEventCoordinates, parseCoordinatesString, resolveQuery } from '$lib/utils'
 import { format } from 'date-fns'
 import { get, writable } from 'svelte/store'
 import { ZodError, ZodSchema } from 'zod'
@@ -117,13 +118,19 @@ export async function fetchProductCategories(): Promise<string[]> {
 	return Array.from(categories).sort()
 }
 
-export async function isUserVerified(userId: string): Promise<boolean> {
-	const $ndkStore = get(ndkStore)
-	const user = $ndkStore.getUser({ pubkey: userId })
-	const profile = await user.fetchProfile()
-	if (!profile?.nip05) return false
-	const nip05 = await user.validateNip05(profile?.nip05)
-	return nip05 ?? false
+export async function isUserVerified(userId: string): Promise<boolean | null> {
+	try {
+		const $ndkStore = get(ndkStore)
+		const user = $ndkStore.getUser({ pubkey: userId })
+		const profile = await resolveQuery(() => createUserByIdQuery(userId, true, true))
+		if (!profile?.nip05) return null
+		user.profile = profile
+		const nip05 = await resolveQuery(() => createUservalidateNip05Query(user))
+		return nip05
+	} catch (e) {
+		console.log(e)
+		return null
+	}
 }
 
 export async function fetchUserRelays(

@@ -35,6 +35,7 @@ export const userKeys = {
 	exists: (pubkey: string) => ['exists', ...userKeys.detail(pubkey)] as const,
 	role: (pubkey: string) => ['role', ...userKeys.detail(pubkey)] as const,
 	relays: (pubkey: string) => ['relays', ...userKeys.detail(pubkey)] as const,
+	nip05: (pubkey: string) => ['nip05', ...userKeys.detail(pubkey)] as const,
 } as const
 
 export const orderKeys = {
