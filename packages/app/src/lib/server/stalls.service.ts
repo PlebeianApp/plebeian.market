@@ -512,6 +512,15 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
 				.where(and(eq(eventTags.eventId, stallId), eq(eventTags.tagName, 'image')))
 				.limit(1)
 
+			if (parsedStall.currency) {
+				await tx
+					.update(products)
+					.set({
+						currency: parsedStall.currency,
+					})
+					.where(eq(products.stallId, stallId))
+			}
+
 			return {
 				id: stallResult.id,
 				name: stallResult.name,
