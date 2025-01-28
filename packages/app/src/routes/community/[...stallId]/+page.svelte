@@ -55,6 +55,20 @@
 	}
 </script>
 
+<svelte:head>
+	{#if $stallQuery.data?.stall}
+		<title>{$stallQuery.data.stall.name} | Shop</title>
+		<meta property="og:title" content={$stallQuery.data.stall.name} />
+		<meta property="og:site_name" content="Plebeian market" />
+		<meta property="og:url" content={`https://plebeian.market/community/${$stallQuery.data.stall.id}`} />
+		<meta property="og:type" content="website" />
+		<meta property="og:description" content={$stallQuery.data.stall.description || 'Visit our shop!'} />
+		{#if $stallQuery.data.stall.image}
+			<meta property="og:image" content={$stallQuery.data.stall.image} />
+		{/if}
+	{/if}
+</svelte:head>
+
 <main class="relative">
 	<div class="flex flex-col gap-12">
 		{#if $stallQuery.data?.stall}
