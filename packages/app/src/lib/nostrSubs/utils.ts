@@ -117,6 +117,15 @@ export async function fetchProductCategories(): Promise<string[]> {
 	return Array.from(categories).sort()
 }
 
+export async function isUserVerified(userId: string): Promise<boolean> {
+	const $ndkStore = get(ndkStore)
+	const user = $ndkStore.getUser({ pubkey: userId })
+	const profile = await user.fetchProfile()
+	if (!profile?.nip05) return false
+	const nip05 = await user.validateNip05(profile?.nip05)
+	return nip05 ?? false
+}
+
 export async function fetchUserRelays(
 	userId: string,
 	subCacheUsage?: NDKSubscriptionCacheUsage,
