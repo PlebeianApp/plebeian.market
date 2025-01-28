@@ -4,6 +4,7 @@
 	import type { RichStall } from '$lib/server/stalls.service'
 	import { goto } from '$app/navigation'
 	import { page } from '$app/stores'
+	import Nip05Badge from '$lib/components/cart/nip-05-badge.svelte'
 	import AdminActions from '$lib/components/common/admin-actions.svelte'
 	import Hero from '$lib/components/common/hero.svelte'
 	import InteractiveZapButton from '$lib/components/common/interactive-zap-button.svelte'
@@ -61,6 +62,23 @@
 	}
 </script>
 
+<svelte:head>
+	{#if $userProfileQuery.data}
+		<title>{$userProfileQuery.data.name || $userProfileQuery.data.displayName || 'Profile'}</title>
+		<meta property="og:title" content={$userProfileQuery.data.name || $userProfileQuery.data.displayName || 'Profile'} />
+		<meta property="og:site_name" content="Plebeian market" />
+		<meta property="og:url" content={`https://plebeian.market/p/${$userProfileQuery.data?.id}`} />
+		<meta property="og:type" content="profile" />
+		<meta property="og:description" content={$userProfileQuery.data.about || 'Check out my profile and products!'} />
+		{#if $userProfileQuery.data.image}
+			<meta property="og:image" content={$userProfileQuery.data.image} />
+		{/if}
+		{#if $userProfileQuery.data.name}
+			<meta property="profile:username" content={$userProfileQuery.data.name} />
+		{/if}
+	{/if}
+</svelte:head>
+
 {#if $userProfileQuery.data}
 	{@const { name, about, banner } = $userProfileQuery.data}
 	<div class="relative">
@@ -98,7 +116,8 @@
 							fallbackClass="rounded-md w-8 h-8"
 							linked
 						/>
-						<h2 class="text-2xl text-white">{truncateText(name ?? `Unnamed user`, 10)}</h2>
+						<h2 class="text-2xl text-white">{truncateText(name ?? `Unnamed user`, $breakpoint == 'sm' ? 10 : 50)}</h2>
+						<Nip05Badge userId={id} />
 					</div>
 					{#if $breakpoint !== 'sm'}
 						<div class="flex flex-col">
