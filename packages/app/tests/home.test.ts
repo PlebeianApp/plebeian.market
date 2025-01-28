@@ -20,9 +20,21 @@ describe('Home Page', () => {
 
 	test('hero section should be visible on the home page', async () => {
 		await homePage.navigate()
+
 		await page.waitForLoadState('networkidle')
 
 		const heroSection = page.getByRole('main').locator('#hero-section')
-		expect(await heroSection.isVisible()).toBe(true)
+
+		try {
+			await heroSection.waitFor({
+				state: 'visible',
+				timeout: 5000,
+			})
+
+			expect(await heroSection.isVisible()).toBe(true)
+		} catch (error) {
+			const isPresent = (await heroSection.count()) > 0
+			throw new Error(`Hero section visibility test failed. ` + `Element exists in DOM: ${isPresent}. `)
+		}
 	})
 })
