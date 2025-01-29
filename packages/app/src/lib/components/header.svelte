@@ -105,11 +105,11 @@
 				</div>
 			</a>
 			<div class="hidden sm:flex mx-8 gap-8">
-				<a class="hover:underline font-semibold {currentPath.startsWith('/products') ? activeNavClass : ''}" href="/products/">Products</a>
-				<a class="hover:underline font-semibold {currentPath.startsWith('/community') ? activeNavClass : ''}" href="/community/"
+				<a class="hover:text-secondary font-semibold {currentPath.startsWith('/products') ? activeNavClass : ''}" href="/products/">Products</a>
+				<a class="hover:text-secondary font-semibold {currentPath.startsWith('/community') ? activeNavClass : ''}" href="/community/"
 					>Community</a
 				>
-				<a class="hover:underline font-semibold {currentPath.startsWith('/nostr') ? activeNavClass : ''}" href="/nostr">Nostr</a>
+				<a class="hover:text-secondary font-semibold {currentPath.startsWith('/nostr') ? activeNavClass : ''}" href="/nostr">Nostr</a>
 			</div>
 		</section>
 		<div class="flex items-center gap-4">
