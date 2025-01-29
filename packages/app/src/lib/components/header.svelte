@@ -105,7 +105,9 @@
 				</div>
 			</a>
 			<div class="hidden sm:flex mx-8 gap-8">
-				<a class="hover:text-secondary font-semibold {currentPath.startsWith('/products') ? activeNavClass : ''}" href="/products/">Products</a>
+				<a class="hover:text-secondary font-semibold {currentPath.startsWith('/products') ? activeNavClass : ''}" href="/products/"
+					>Products</a
+				>
 				<a class="hover:text-secondary font-semibold {currentPath.startsWith('/community') ? activeNavClass : ''}" href="/community/"
 					>Community</a
 				>
