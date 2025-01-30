@@ -5,14 +5,15 @@
 	import ProductItem from '$lib/components/product/product-item.svelte'
 	import { Button } from '$lib/components/ui/button/index.js'
 	import { createProductsByFilterQuery } from '$lib/fetch/products.queries'
+	import { breakpoint, getGridColumns } from '$lib/stores/breakpoint'
 	import { handleListItems } from '$lib/utils/product.utils'
 
 	import type { PageData } from './$types'
 
 	export let data: PageData
 
-	$: productQuery = createProductsByFilterQuery({ pageSize: 10, order: 'asc', onePerUser: true })
-	$: featuredProductsQuery = createProductsByFilterQuery({ featured: true })
+	$: productQuery = createProductsByFilterQuery({ pageSize: getGridColumns($breakpoint, 'product') * 4, order: 'asc', onePerUser: true })
+	$: featuredProductsQuery = createProductsByFilterQuery({ featured: true, pageSize: getGridColumns($breakpoint, 'product') * 4 })
 </script>
 
 {#if !data.appSettings?.isFirstTimeRunning}

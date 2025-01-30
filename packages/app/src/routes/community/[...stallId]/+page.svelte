@@ -16,6 +16,7 @@
 	import { createProductsByFilterQuery } from '$lib/fetch/products.queries'
 	import { createStallQuery } from '$lib/fetch/stalls.queries'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
+	import { breakpoint, getGridColumns } from '$lib/stores/breakpoint'
 	import { dialogs } from '$lib/stores/dialog'
 	import { openDrawerForNewProductForStall, openDrawerForStall } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
@@ -40,7 +41,7 @@
 	$: stallQuery = createStallQuery(stall.id)
 
 	$: productsQuery = createProductsByFilterQuery({
-		pageSize: 12,
+		pageSize: getGridColumns($breakpoint, 'product') * 4,
 		page: 1,
 		order: sort.value ?? 'desc',
 		stallId: stall.id,

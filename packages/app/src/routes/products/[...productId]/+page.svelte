@@ -14,7 +14,7 @@
 	import { KindStalls } from '$lib/constants'
 	import { createCurrencyConversionQuery, createProductQuery, createProductsByFilterQuery } from '$lib/fetch/products.queries'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
-	import { breakpoint } from '$lib/stores/breakpoint'
+	import { breakpoint, getGridColumns } from '$lib/stores/breakpoint'
 	import { handleAddToCart } from '$lib/stores/cart'
 	import { openDrawerForProduct } from '$lib/stores/drawer-ui'
 	import { cn, formatSats, parseCoordinatesString, stringToHexColor, truncateText } from '$lib/utils'
@@ -43,7 +43,9 @@
 	$: stallCoordinates = parseCoordinatesString(`${KindStalls}:${data.user.id}:${$productsQuery.data?.stall_id}`).coordinates
 	$: priceQuery = createCurrencyConversionQuery($productsQuery.data?.currency as string, $productsQuery.data?.price as number)
 
-	$: otherProducts = data.user.id ? createProductsByFilterQuery({ userId: data.user.id, pageSize: 3 }) : undefined
+	$: otherProducts = data.user.id
+		? createProductsByFilterQuery({ userId: data.user.id, pageSize: getGridColumns($breakpoint, 'product') * 4 })
+		: undefined
 
 	$: if (api) {
 		count = api.scrollSnapList().length

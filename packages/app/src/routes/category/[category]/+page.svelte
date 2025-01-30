@@ -8,6 +8,7 @@
 	import StallItem from '$lib/components/stalls/stall-item.svelte'
 	import { createCategoriesByFilterQuery } from '$lib/fetch/category.queries'
 	import { createProductsByFilterQuery } from '$lib/fetch/products.queries'
+	import { breakpoint, getGridColumns } from '$lib/stores/breakpoint'
 
 	import type { PageData } from './$types'
 
@@ -18,8 +19,8 @@
 	$: categoryData = $categoriesQuery.data?.categories[0]
 
 	$: productsQuery = createProductsByFilterQuery({
+		pageSize: getGridColumns($breakpoint, 'product') * 4,
 		category: $page.params.category,
-		pageSize: 15,
 	})
 </script>
 

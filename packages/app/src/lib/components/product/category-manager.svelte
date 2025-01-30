@@ -4,6 +4,7 @@
 	import * as Command from '$lib/components/ui/command/index.js'
 	import Input from '$lib/components/ui/input/input.svelte'
 	import { categories as categoriesStore, productsSub } from '$lib/nostrSubs/subs'
+	import { clickOutside } from '$lib/utils'
 	import { onMount } from 'svelte'
 
 	import { createSlugId } from '@plebeian/database/utils'
@@ -72,6 +73,10 @@
 		}
 	}
 
+	function handleClickOutside(category: Category) {
+		openPopover[category.key] = false
+	}
+
 	function selectCategory(value: string, category: Category) {
 		category.name = value
 		openPopover[category.key] = false
@@ -119,7 +124,7 @@
 						</div>
 					{/if}
 					{#if openPopover[category.key]}
-						<div class="absolute w-full z-50 mt-1">
+						<div class="absolute w-full z-50 mt-1" use:clickOutside={() => handleClickOutside(category)}>
 							<Command.Root class="rounded-lg border shadow-md">
 								<Command.List>
 									<Command.Group>

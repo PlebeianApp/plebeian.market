@@ -21,7 +21,7 @@ export function setupZapSubscription(onZapEvent: (event: NDKEvent) => void): NDK
 	const ndk = get(ndkStore)
 	const subscription = ndk.subscribe({
 		kinds: [NDKKind.Zap],
-		since: Math.round(Date.now() / 1000) - 60,
+		since: Math.floor(Date.now() / 1000),
 	})
 
 	subscription.on('event', onZapEvent)

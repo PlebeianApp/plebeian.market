@@ -18,7 +18,7 @@
 	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
 	import { fetchUserProductData, fetchUserStallsData, normalizeProductsFromNostr, normalizeStallData } from '$lib/nostrSubs/utils'
-	import { breakpoint } from '$lib/stores/breakpoint'
+	import { breakpoint, getGridColumns } from '$lib/stores/breakpoint'
 	import { openDrawerForNewProduct, openDrawerForNewStall } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
 	import { getHexColorFingerprintFromHexPubkey, mergeWithExisting, truncateText } from '$lib/utils'
@@ -34,8 +34,8 @@
 
 	$: isMe = $ndkStore.activeUser?.pubkey == id
 	$: userProfileQuery = createUserByIdQuery(id as string)
-	$: stallsQuery = createStallsByFilterQuery({ userId: id })
-	$: productsQuery = createProductsByFilterQuery({ userId: id })
+	$: stallsQuery = createStallsByFilterQuery({ userId: id, pageSize: getGridColumns($breakpoint, 'stall') * 4 })
+	$: productsQuery = createProductsByFilterQuery({ userId: id, pageSize: getGridColumns($breakpoint, 'product') * 4 })
 	$: stallsMixture = mergeWithExisting($stallsQuery?.data?.stalls ?? [], nostrStalls, 'id')
 	$: productsMixture = stallsMixture.length
 		? mergeWithExisting($productsQuery?.data?.products ?? [], toDisplayProducts, 'stall_id').filter((product) =>

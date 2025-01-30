@@ -10,7 +10,7 @@
 	import * as Select from '$lib/components/ui/select'
 	import { Skeleton } from '$lib/components/ui/skeleton'
 	import { createProductsByFilterQuery } from '$lib/fetch/products.queries'
-	import { breakpoint } from '$lib/stores/breakpoint'
+	import { breakpoint, getGridColumns } from '$lib/stores/breakpoint'
 	import { reactiveDebounce, scrollToTop } from '$lib/utils'
 	import { writable } from 'svelte/store'
 
@@ -28,7 +28,12 @@
 
 	$: debouncedSearch = reactiveDebounce(search, 600)
 	$: $search, (page = 1)
-	$: productsQuery = createProductsByFilterQuery({ pageSize, page, order: sort.value ?? 'desc', search: $debouncedSearch })
+	$: productsQuery = createProductsByFilterQuery({
+		pageSize: getGridColumns($breakpoint, 'product') * 4,
+		page,
+		order: sort.value ?? 'desc',
+		search: $debouncedSearch,
+	})
 	$: if (page && browser) scrollToTop()
 </script>
 
