@@ -29,6 +29,31 @@ export const breakpoint = readable<Breakpoint>('lg', (set) => {
 	}
 })
 
+export function getGridColumns(breakpoint: Breakpoint, forItemType: string): number {
+	if (forItemType === 'product') {
+		switch (breakpoint) {
+			case 'lg':
+				return 5
+			case 'md':
+				return 3
+			case 'sm':
+			default:
+				return 1
+		}
+	} else if (forItemType === 'stall') {
+		switch (breakpoint) {
+			case 'lg':
+				return 4
+			case 'md':
+				return 2
+			case 'sm':
+			default:
+				return 1
+		}
+	}
+	return 1
+}
+
 const MOBILE_SIZE_CLASSES = {
 	default: 'h-11 px-4 text-base',
 	sm: 'h-11 px-3 text-base',

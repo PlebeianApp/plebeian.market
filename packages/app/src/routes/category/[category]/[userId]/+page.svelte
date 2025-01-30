@@ -8,8 +8,13 @@
 	import { createCategoriesByFilterQuery } from '$lib/fetch/category.queries'
 	import { createProductsByFilterQuery } from '$lib/fetch/products.queries'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
+	import { breakpoint, getGridColumns } from '$lib/stores/breakpoint'
 
-	$: categoriesQuery = createCategoriesByFilterQuery({ category: $page.params.category, userId: $page.params.userId })
+	$: categoriesQuery = createCategoriesByFilterQuery({
+		pageSize: getGridColumns($breakpoint, 'product') * 4,
+		category: $page.params.category,
+		userId: $page.params.userId,
+	})
 	$: categoryData = $categoriesQuery.data?.categories[0]
 
 	$: productsQuery = createProductsByFilterQuery({
