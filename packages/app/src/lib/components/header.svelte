@@ -13,6 +13,7 @@
 	import ndkStore from '$lib/stores/ndk'
 	import { balanceOfWorkingNWCs } from '$lib/stores/nwc'
 	import { getAccount } from '$lib/stores/session'
+	import { clickOutside } from '$lib/utils'
 	import { onMount } from 'svelte'
 
 	import type { PageData } from '../../routes/$types'
@@ -54,18 +55,8 @@
 	}
 	let open = false
 
-	function clickOutside(node: HTMLElement) {
-		const handleClick = (event: MouseEvent) => {
-			if (!node.contains(event.target as Node)) {
-				open = false
-			}
-		}
-		document.addEventListener('click', handleClick, true)
-		return {
-			destroy() {
-				document.removeEventListener('click', handleClick, true)
-			},
-		}
+	function handleClickOutside() {
+		open = false
 	}
 
 	function handleScroll() {
@@ -129,7 +120,7 @@
 			</div>
 			{#if $ndkStore.activeUser}
 				{#if $breakpoint === 'sm'}
-					<div use:clickOutside>
+					<div use:clickOutside={() => handleClickOutside()}>
 						<Collapsible.Root bind:open>
 							<Collapsible.Trigger asChild let:builder>
 								<Button builders={[builder]} variant="primary" class="p-2 rounded-md hover:[&>span]:text-secondary">
