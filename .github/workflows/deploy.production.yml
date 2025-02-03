@@ -13,21 +13,22 @@ jobs:
     steps:
       - name: Checkout code 🏁 (for push)
         if: ${{ github.event_name == 'push' }}
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.ref }}
 
-      - run: corepack enable
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: "pnpm"
       - uses: pnpm/action-setup@v4
         name: Install pnpm
         with:
           version: 9.1.4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
 
-      - run: sudo apt install sshpass rsync
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install -y sshpass rsync
+        
       - run: pnpm install
       - name: Check and apply database migrations
         run: pnpm db:init
