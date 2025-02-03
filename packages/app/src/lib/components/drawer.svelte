@@ -2,7 +2,6 @@
 	import { pushState, replaceState } from '$app/navigation'
 	import CreateEditProduct from '$lib/components/product/create-edit.svelte'
 	import CreateEditStall from '$lib/components/stalls/create-edit.svelte'
-	import { ScrollArea } from '$lib/components/ui/scroll-area/index.js'
 	import * as Sheet from '$lib/components/ui/sheet/index.js'
 	import { createProductQuery } from '$lib/fetch/products.queries'
 	import { createStallQuery } from '$lib/fetch/stalls.queries'
