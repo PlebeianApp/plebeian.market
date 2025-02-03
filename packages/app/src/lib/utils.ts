@@ -82,21 +82,21 @@ export const flyAndScale = (node: Element, params: FlyAndScaleParams = { y: -8, 
 	}
 }
 
-export function clickOutside(element: HTMLElement, callbackFunction: () => void) {
-	function onClick(event: MouseEvent) {
-		if (!element.contains(event.target as Node)) {
-			callbackFunction()
+export function clickOutside(node: HTMLElement, callback: () => void) {
+	const handleClick = (event: MouseEvent) => {
+		if (node.isConnected && !node.contains(event.target as Node)) {
+			callback()
 		}
 	}
 
-	document.body.addEventListener('click', onClick)
+	document.addEventListener('click', handleClick, true)
 
 	return {
-		update(newCallbackFunction: () => void) {
-			callbackFunction = newCallbackFunction
+		update(newCallback: () => void) {
+			callback = newCallback
 		},
 		destroy() {
-			document.body.removeEventListener('click', onClick)
+			document.removeEventListener('click', handleClick, true)
 		},
 	}
 }
