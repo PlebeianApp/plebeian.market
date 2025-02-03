@@ -7,14 +7,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: corepack enable
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'pnpm'
       - uses: pnpm/action-setup@v4
         name: Install pnpm
         with:
           version: 9.1.4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
       - run: pnpm install
       - run: echo "${{ github.event.pull_request.title }}" | pnpm commitlint
