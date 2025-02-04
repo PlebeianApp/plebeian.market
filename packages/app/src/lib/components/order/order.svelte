@@ -73,11 +73,9 @@
 						return
 					}
 
-					const newQuantity = allInvoicesPaid ? product.quantity : product.quantity - orderItem.qty
-
 					const productEvent = await $signProductStockMutation.mutateAsync({
 						product,
-						newQuantity,
+						newQuantity: product.quantity - orderItem.qty,
 					})
 
 					if (!productEvent) {
