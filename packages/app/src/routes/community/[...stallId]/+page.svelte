@@ -129,10 +129,13 @@
 						<CardContent>
 							<div class="flex flex-col gap- items-start">
 								{#if shipping?.length}
-									<section class="flex flex-col gap-1">
+									<section class="flex flex-col gap-1 w-full">
 										{#each shipping as shipping}
 											{#if shipping.name || shipping.id}
-												<span>{truncateString(shipping.name || shipping.id || '')}</span>
+												<section class=" inline-flex gap-2 flex-wrap justify-between">
+													<span class=" font-bold">{truncateString(shipping.name || shipping.id || '')}</span>
+													<span>{shipping.cost} {$stallQuery?.data?.stall.currency}</span>
+												</section>
 											{/if}
 											<div class="flex flex-row gap-1 flex-wrap">
 												{#if shipping.regions}
