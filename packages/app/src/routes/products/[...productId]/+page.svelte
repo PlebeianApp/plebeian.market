@@ -108,7 +108,7 @@
 		/>
 		<Pattern />
 
-		<div class="container relative z-1 min-h-[600px] py-8 px-4 sm:px-8">
+		<div class="container relative z-1 min-h-[600px] pt-8 pb-16 px-4 sm:px-8">
 			<div class="flex flex-col md:flex-row gap-8">
 				<div class="flex-1 md:w-1/2">
 					<div class="h-full">
