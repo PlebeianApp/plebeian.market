@@ -152,7 +152,7 @@
 												on:click={() => (open = false)}
 											>
 												<span class="i-tdesign-mail w-6 h-6 {hasUnreadMessages ? 'text-secondary' : ''}" />
-												<span class={navMenuLabels}>{hasUnreadMessages ? 'Messages' : 'Messages'}</span>
+												<span class={navMenuLabels}>Messages</span>
 											</Button>
 
 											<Button
@@ -251,7 +251,7 @@
 						href="/dash/messages"
 						id="msg-button"
 					>
-						<span class="i-tdesign-mail w-6 h-6 {hasUnreadMessages ? 'text-secondary' : ''}" />
+						<span class="i-tdesign-mail w-6 h-6 {hasUnreadMessages && !currentPath.startsWith('/dash/messages') ? 'text-secondary' : ''}" />
 					</Button>
 
 					<Button

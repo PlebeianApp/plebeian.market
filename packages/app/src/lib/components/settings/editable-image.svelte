@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { NostrBuildUploader } from '@nostrify/nostrify/uploaders'
 	import ndkStore, { NostrifyNDKSigner } from '$lib/stores/ndk'
+	import { getMediaType } from '$lib/utils/media.utils'
 	import { createEventDispatcher } from 'svelte'
 
 	import Spinner from '../assets/spinner.svelte'
@@ -24,7 +25,7 @@
 	const handleUploadIntent = async () => {
 		const input = document.createElement('input')
 		input.type = 'file'
-		input.accept = 'image/*'
+		input.accept = 'image/*,video/*'
 		input.multiple = !forSingle
 		input.onchange = async (e) => {
 			isLoading = true
@@ -71,9 +72,11 @@
 		isDragging = false
 
 		const files = Array.from(e.dataTransfer?.files || [])
-		const imageFiles = files.filter((file) => file.type.startsWith('image/') && !file.type.includes('svg'))
+		const mediaFiles = files
+			.filter((file) => file.type.startsWith('image/') || file.type.startsWith('video/'))
+			.filter((file) => !file.type.includes('svg'))
 
-		const filesToProcess = forSingle ? imageFiles.slice(0, 1) : imageFiles
+		const filesToProcess = forSingle ? mediaFiles.slice(0, 1) : mediaFiles
 
 		if (filesToProcess.length) {
 			isLoading = true
@@ -164,7 +167,14 @@
 			{#if src}
 				<Pattern />
 				<div class="absolute inset-0 flex items-center justify-center">
-					<img {src} alt="nip 96" class="max-w-full max-h-full object-contain" />
+					{#if getMediaType(src) === 'video'}
+						<video {src} controls class="max-w-full max-h-full object-contain">
+							<track kind="captions" />
+							Your browser does not support the video tag.
+						</video>
+					{:else}
+						<img {src} alt="nip 96" class="max-w-full max-h-full object-contain" />
+					{/if}
 				</div>
 				<div class="absolute bottom-2 right-2 flex gap-2">
 					{#if inputEditable}
@@ -199,7 +209,7 @@
 					on:drop={handleDrop}
 				>
 					<span class="i-mdi-upload w-6 h-6" />
-					<strong>{isDragging ? 'Drop images here' : 'Upload images'}</strong>
+					<strong>{isDragging ? 'Drop media here' : 'Upload images or videos'}</strong>
 				</button>
 			{/if}
 		</div>
@@ -209,7 +219,7 @@
 				bind:value={src}
 				type="text"
 				class="border-2 border-black"
-				placeholder="Or paste image URL..."
+				placeholder="Or paste image/video URL..."
 				id="userImageRemote"
 				name="imageRemoteInput"
 				on:input={handleInput}

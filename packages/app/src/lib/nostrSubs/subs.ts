@@ -22,7 +22,7 @@ if (browser || typeof window !== 'undefined') {
 }
 
 export const stallsSub: NDKEventStore<ExtendedBaseType<NDKEvent>> | undefined = ndk?.storeSubscribe(
-	{ kinds: [KindStalls], limit: 100 },
+	{ kinds: [KindStalls], limit: 50 },
 	{ closeOnEose: true, autoStart: false, cacheUsage: NDKSubscriptionCacheUsage.PARALLEL },
 )
 

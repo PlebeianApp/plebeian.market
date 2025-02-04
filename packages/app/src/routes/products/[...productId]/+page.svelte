@@ -3,21 +3,27 @@
 	import Spinner from '$lib/components/assets/spinner.svelte'
 	import AdminActions from '$lib/components/common/admin-actions.svelte'
 	import ItemGrid from '$lib/components/common/item-grid.svelte'
+	import ShippingsDialog from '$lib/components/dialogs/shippingsDialog.svelte'
 	import Pattern from '$lib/components/Pattern.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
+	import { badgeVariants } from '$lib/components/ui/badge'
 	import Badge from '$lib/components/ui/badge/badge.svelte'
 	import Button from '$lib/components/ui/button/button.svelte'
 	import * as Carousel from '$lib/components/ui/carousel'
 	import Input from '$lib/components/ui/input/input.svelte'
+	import Separator from '$lib/components/ui/separator/separator.svelte'
 	import { activeTab } from '$lib/components/ui/tabs/constants'
 	import * as Tabs from '$lib/components/ui/tabs/index.js'
 	import { KindStalls } from '$lib/constants'
 	import { createCurrencyConversionQuery, createProductQuery, createProductsByFilterQuery } from '$lib/fetch/products.queries'
+	import { createStallQuery } from '$lib/fetch/stalls.queries'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
 	import { breakpoint, getGridColumns } from '$lib/stores/breakpoint'
 	import { handleAddToCart } from '$lib/stores/cart'
+	import { dialogs } from '$lib/stores/dialog'
 	import { openDrawerForProduct } from '$lib/stores/drawer-ui'
-	import { cn, formatSats, parseCoordinatesString, stringToHexColor, truncateText } from '$lib/utils'
+	import { cn, formatSats, parseCoordinatesString, stringToHexColor, truncateString, truncateText } from '$lib/utils'
+	import { getMediaType } from '$lib/utils/media.utils'
 	import { slide } from 'svelte/transition'
 
 	import type { PageData } from './$types'
@@ -41,6 +47,8 @@
 
 	$: userProfileQuery = data.user.id ? createUserByIdQuery(data.user.id) : undefined
 	$: stallCoordinates = parseCoordinatesString(`${KindStalls}:${data.user.id}:${$productsQuery.data?.stall_id}`).coordinates
+	$: stallQuery = stallCoordinates ? createStallQuery(stallCoordinates) : undefined
+
 	$: priceQuery = createCurrencyConversionQuery($productsQuery.data?.currency as string, $productsQuery.data?.price as number)
 
 	$: otherProducts = data.user.id
@@ -52,6 +60,15 @@
 		current = api.selectedScrollSnap() + 1
 		api.on('select', () => {
 			current = api.selectedScrollSnap() + 1
+			handleSlideChange()
+		})
+	}
+	let activeVideoRefs: { [key: number]: HTMLVideoElement } = {}
+	function handleSlideChange() {
+		Object.values(activeVideoRefs).forEach((video) => {
+			if (!video.paused) {
+				video.pause()
+			}
 		})
 	}
 
@@ -108,8 +125,17 @@
 												)}
 												on:click={() => api?.scrollTo(i)}
 											>
-												<div class="aspect-square w-full overflow-hidden">
-													<img class="h-full w-full object-cover" src={item.imageUrl} alt="" />
+												<div class="aspect-square w-full overflow-hidden relative">
+													{#if getMediaType(item.imageUrl) === 'video'}
+														<video src={item.imageUrl} class="h-full w-full object-cover" preload="metadata" muted>
+															<track kind="captions" src="data:text/vtt,WEBVTT" label="English" srcLang="en" default />
+														</video>
+														<div class="absolute inset-0 flex items-center justify-center bg-black/20">
+															<span class="i-mdi-play text-white w-6 h-6" />
+														</div>
+													{:else}
+														<img class="h-full w-full object-cover" src={item.imageUrl} alt="" />
+													{/if}
 												</div>
 												{#if i === current - 1}
 													<div class="absolute bottom-1 right-1 w-2 h-2 bg-primary rounded-full" />
@@ -120,10 +146,22 @@
 									<div class="flex-1 md:max-w-[calc(100%-5rem)] h-full">
 										<Carousel.Root bind:api class="h-full">
 											<Carousel.Content class="h-full">
-												{#each sortedImages as item}
+												{#each sortedImages as item, i}
 													<Carousel.Item class="h-full">
 														<div class="w-full h-full rounded-lg">
-															<img src={item.imageUrl} alt="" class="h-full w-full object-contain" loading="lazy" />
+															{#if getMediaType(item.imageUrl) === 'video'}
+																<video
+																	bind:this={activeVideoRefs[i]}
+																	src={item.imageUrl}
+																	preload="metadata"
+																	controls
+																	class="h-full w-full object-contain"
+																>
+																	<track kind="captions" />
+																</video>
+															{:else}
+																<img src={item.imageUrl} alt="" class="h-full w-full object-contain" loading="lazy" />
+															{/if}
 														</div>
 													</Carousel.Item>
 												{/each}
@@ -228,7 +266,7 @@
 		</div>
 	</div>
 
-	{#if $productsQuery.data.description}
+	{#if $productsQuery.data.description || $stallQuery?.data?.stall?.shipping}
 		{#if $breakpoint !== 'lg'}
 			<div class="flex flex-col gap-8 -mt-8">
 				<div class="mx-8 shadow-md z-10">
@@ -236,7 +274,7 @@
 						<h4 class="text-white font-bold">Description</h4>
 					</div>
 					<div class="container flex flex-col items-center p-8 bg-white">
-						{#if $productsQuery.data.description.length > 420}
+						{#if $productsQuery.data.description && $productsQuery.data.description.length > 420}
 							{#if !isExpanded}
 								<p class="whitespace-pre-wrap break-words w-full" transition:slide>
 									{$productsQuery.data.description.slice(0, 420)}...
@@ -267,12 +305,15 @@
 			<div class="container -mt-12 flex flex-col items-center z-30 p-8">
 				<Tabs.Root class="w-full">
 					<Tabs.List class="w-full flex flex-row gap-3 bg-transparent justify-start relative">
-						<Tabs.Trigger value="description" class={cactiveTab}>Description</Tabs.Trigger>
+						{#if $productsQuery.data?.description}
+							<Tabs.Trigger value="description" disabled={!$productsQuery.data?.description} class={cactiveTab}>Description</Tabs.Trigger>
+						{/if}
+						<Tabs.Trigger value="shippings" disabled={!$stallQuery?.data?.stall?.shipping} class={cactiveTab}>Shippings</Tabs.Trigger>
 						<Tabs.Trigger value="comments" disabled class={cactiveTab}>Comments</Tabs.Trigger>
 						<Tabs.Trigger value="reviews" disabled class={cactiveTab}>Reviews</Tabs.Trigger>
 					</Tabs.List>
 					<Tabs.Content value="description" class="flex flex-col gap-2 bg-white border-t-2 border-black shadow-md rounded-md p-10">
-						{#if $productsQuery.data.description.length > 420}
+						{#if $productsQuery.data?.description && $productsQuery.data?.description?.length > 420}
 							{#if !isExpanded}
 								<p class="whitespace-pre-wrap break-words w-full" transition:slide>
 									{$productsQuery.data.description.slice(0, 420)}...
@@ -295,6 +336,61 @@
 							<p class="whitespace-pre-wrap break-words w-full">
 								{$productsQuery.data.description}
 							</p>
+						{/if}
+					</Tabs.Content>
+					<Tabs.Content value="shippings" class="flex flex-col gap-2 bg-white border-t-2 border-black shadow-md rounded-md p-10">
+						{#if $stallQuery?.data?.stall?.shipping?.length}
+							<section class="flex flex-col gap-1">
+								{#each $stallQuery?.data?.stall?.shipping as shipping}
+									{#if shipping.name || shipping.id}
+										<section class=" inline-flex gap-2 justify-between">
+											<span class=" font-bold">{truncateString(shipping.name || shipping.id || '')}</span>
+											<span>{shipping.cost} {$stallQuery?.data?.stall.currency}</span>
+										</section>
+									{/if}
+									<div class="flex flex-row gap-1 flex-wrap">
+										{#if shipping.regions}
+											{#each shipping.regions.slice(0, 3) as region}
+												<Badge size="sm" class="w-fit" variant="secondary">{region}</Badge>
+											{/each}
+											{#if shipping.regions.length > 3}
+												<Button
+													size="none"
+													class={badgeVariants({ variant: 'secondary' })}
+													variant="outline"
+													on:click={() =>
+														dialogs.show(ShippingsDialog, {
+															title: 'Shipping Regions',
+															items: shipping.regions,
+														})}
+												>
+													+{shipping.regions.length - 3} more
+												</Button>
+											{/if}
+										{/if}
+										{#if shipping.countries}
+											{#each shipping.countries.slice(0, 3) as country}
+												<Badge size="sm" class="w-fit" variant="secondary">{country}</Badge>
+											{/each}
+											{#if shipping.countries.length > 3}
+												<Button
+													size="none"
+													class={badgeVariants({ variant: 'secondary' })}
+													variant="outline"
+													on:click={() =>
+														dialogs.show(ShippingsDialog, {
+															title: 'Shipping Countries',
+															items: shipping.countries,
+														})}
+												>
+													+{shipping.countries.length - 3} more
+												</Button>
+											{/if}
+										{/if}
+									</div>
+									<Separator />
+								{/each}
+							</section>
 						{/if}
 					</Tabs.Content>
 					<Tabs.Content value="comments" class="flex flex-col gap-2 bg-white border-t-2 border-black shadow-md rounded-md p-10"

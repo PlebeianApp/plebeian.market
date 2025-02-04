@@ -64,7 +64,7 @@
 	<div class="flex flex-col gap-4 bg-black p-2 py-3">
 		<div class="grid items-center" style="grid-template-columns: auto 1fr;">
 			<div class="flex gap-4 items-center bg-black pr-4">
-				<Button
+				<!-- <Button
 					variant="secondary"
 					size="icon"
 					on:click={toggleSearch}
@@ -75,7 +75,7 @@
 					{:else}
 						<span class="i-mdi-close text-xl" />
 					{/if}
-				</Button>
+				</Button> -->
 
 				{#if showSearch}
 					<div class="w-64 transition-all duration-200">

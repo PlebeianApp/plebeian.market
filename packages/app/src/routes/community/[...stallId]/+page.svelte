@@ -21,6 +21,7 @@
 	import { openDrawerForNewProductForStall, openDrawerForStall } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
 	import { stringToHexColor, truncateString, truncateText } from '$lib/utils'
+	import { getMediaType } from '$lib/utils/media.utils'
 
 	import type { PageData } from './$types'
 
@@ -77,7 +78,13 @@
 			<div class="flex flex-col">
 				{#if image}
 					<div class="w-full aspect-[3/1] md:aspect-[6.125/1] overflow-hidden flex items-center justify-center">
-						<img src={image} alt="stall-cover" class="w-full h-full object-cover" />
+						{#if getMediaType(image) === 'video'}
+							<video src={image} class="w-full h-full object-cover" preload="metadata" muted loop autoplay>
+								<track kind="captions" />
+							</video>
+						{:else}
+							<img src={image} alt="stall-cover" class="w-full h-full object-cover" />
+						{/if}
 					</div>
 				{:else}
 					<Hero class="w-full aspect-[6.125/1] justify-center relative overflow-hidden" gradientColor={stringToHexColor(stall.id)} py="8">
@@ -129,10 +136,13 @@
 						<CardContent>
 							<div class="flex flex-col gap- items-start">
 								{#if shipping?.length}
-									<section class="flex flex-col gap-1">
+									<section class="flex flex-col gap-1 w-full">
 										{#each shipping as shipping}
 											{#if shipping.name || shipping.id}
-												<span>{truncateString(shipping.name || shipping.id || '')}</span>
+												<section class=" inline-flex gap-2 flex-wrap justify-between">
+													<span class=" font-bold">{truncateString(shipping.name || shipping.id || '')}</span>
+													<span>{shipping.cost} {$stallQuery?.data?.stall.currency}</span>
+												</section>
 											{/if}
 											<div class="flex flex-row gap-1 flex-wrap">
 												{#if shipping.regions}
