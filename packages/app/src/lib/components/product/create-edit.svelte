@@ -21,7 +21,7 @@
 	import { prepareProductData } from '$lib/utils/product.utils'
 	import { validateForm } from '$lib/utils/zod.utils'
 	import { ChevronDown } from 'lucide-svelte'
-	import { createEventDispatcher, onMount, tick } from 'svelte'
+	import { createEventDispatcher, onDestroy, onMount, tick } from 'svelte'
 	import { toast } from 'svelte-sonner'
 	import { get } from 'svelte/store'
 
@@ -70,14 +70,26 @@
 	}
 
 	function initializeFormData(product: Partial<DisplayProduct> | null, formState: typeof $productFormStore | null) {
+		if (product) {
+			return {
+				name: product.name || '',
+				description: product.description || '',
+				price: product.price?.toString() || '',
+				quantity: product.quantity?.toString() || '',
+				categories: initializeCategories(undefined, product.categories),
+				images: initializeImages(undefined, product.images),
+				shippings: initializeShippings(undefined, product.shipping),
+			}
+		}
+
 		return {
-			name: formState?.name || product?.name || '',
-			description: formState?.description || product?.description || '',
-			price: formState?.price?.toString() || product?.price?.toString() || '',
-			quantity: formState?.quantity?.toString() || product?.quantity?.toString() || '',
-			categories: initializeCategories(formState?.categories, product?.categories),
-			images: initializeImages(formState?.images, product?.images),
-			shippings: initializeShippings(formState?.shippings, product?.shipping),
+			name: formState?.name || '',
+			description: formState?.description || '',
+			price: formState?.price?.toString() || '',
+			quantity: formState?.quantity?.toString() || '',
+			categories: initializeCategories(formState?.categories, undefined),
+			images: initializeImages(formState?.images, undefined),
+			shippings: initializeShippings(formState?.shippings, undefined),
 		}
 	}
 
@@ -200,14 +212,26 @@
 		if ($stallsQuery.data?.stalls.length) {
 			stall = $stallsQuery.data.stalls.find((s) => s.identifier === currentStallIdentifier) || $stallsQuery.data.stalls[0]
 
-			const formData = initializeFormData(product, $productFormStore)
-			name = formData.name
-			description = formData.description
-			price = formData.price
-			quantity = formData.quantity
-			categories = formData.categories
-			images = formData.images
-			currentShippings = formData.shippings
+			if (product) {
+				productFormStore.reset()
+				const formData = initializeFormData(product, null)
+				name = formData.name
+				description = formData.description
+				price = formData.price
+				quantity = formData.quantity
+				categories = formData.categories
+				images = formData.images
+				currentShippings = formData.shippings
+			} else {
+				const formData = initializeFormData(null, $productFormStore)
+				name = formData.name
+				description = formData.description
+				price = formData.price
+				quantity = formData.quantity
+				categories = formData.categories
+				images = formData.images
+				currentShippings = formData.shippings
+			}
 
 			if (forStall) {
 				currentStallIdentifier = parseCoordinatesString(forStall).tagD || undefined
@@ -277,6 +301,12 @@
 			})
 		}
 	}
+
+	onDestroy(() => {
+		if (product) {
+			productFormStore.reset()
+		}
+	})
 </script>
 
 {#if $stallsQuery.isLoading}
