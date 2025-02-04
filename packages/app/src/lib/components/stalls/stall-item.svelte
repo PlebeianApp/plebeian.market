@@ -8,6 +8,7 @@
 	import { openDrawerForNewProductForStall, openDrawerForStall } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
 	import { resolveQuery, stringToHexColor, truncateString, truncateText } from '$lib/utils'
+	import { getMediaType } from '$lib/utils/media.utils'
 	import { Edit, MoreVertical, Plus } from 'lucide-svelte'
 	import { npubEncode } from 'nostr-tools/nip19'
 
@@ -105,7 +106,13 @@
 				<Card.Header class="p-0 flex-shrink-0">
 					{#if stall.image}
 						<div class="relative w-full aspect-[21/9] bg-gray-50">
-							<img src={stall.image} alt={stall.name || 'Shop image'} class="absolute inset-0 w-full h-full object-cover" />
+							{#if getMediaType(stall.image) === 'video'}
+								<video src={stall.image} class="absolute inset-0 w-full h-full object-cover" controls>
+									<track kind="captions" />
+								</video>
+							{:else}
+								<img src={stall.image} alt={stall.name || 'Shop image'} class="absolute inset-0 w-full h-full object-cover" />
+							{/if}
 						</div>
 					{:else}
 						<Hero

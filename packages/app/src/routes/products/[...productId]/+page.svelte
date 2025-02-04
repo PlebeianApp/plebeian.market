@@ -23,6 +23,7 @@
 	import { dialogs } from '$lib/stores/dialog'
 	import { openDrawerForProduct } from '$lib/stores/drawer-ui'
 	import { cn, formatSats, parseCoordinatesString, stringToHexColor, truncateString, truncateText } from '$lib/utils'
+	import { getMediaType } from '$lib/utils/media.utils'
 	import { slide } from 'svelte/transition'
 
 	import type { PageData } from './$types'
@@ -59,6 +60,15 @@
 		current = api.selectedScrollSnap() + 1
 		api.on('select', () => {
 			current = api.selectedScrollSnap() + 1
+			handleSlideChange()
+		})
+	}
+	let activeVideoRefs: { [key: number]: HTMLVideoElement } = {}
+	function handleSlideChange() {
+		Object.values(activeVideoRefs).forEach((video) => {
+			if (!video.paused) {
+				video.pause()
+			}
 		})
 	}
 
@@ -115,8 +125,17 @@
 												)}
 												on:click={() => api?.scrollTo(i)}
 											>
-												<div class="aspect-square w-full overflow-hidden">
-													<img class="h-full w-full object-cover" src={item.imageUrl} alt="" />
+												<div class="aspect-square w-full overflow-hidden relative">
+													{#if getMediaType(item.imageUrl) === 'video'}
+														<video src={item.imageUrl} class="h-full w-full object-cover" preload="metadata" muted>
+															<track kind="captions" src="data:text/vtt,WEBVTT" label="English" srcLang="en" default />
+														</video>
+														<div class="absolute inset-0 flex items-center justify-center bg-black/20">
+															<span class="i-mdi-play text-white w-6 h-6" />
+														</div>
+													{:else}
+														<img class="h-full w-full object-cover" src={item.imageUrl} alt="" />
+													{/if}
 												</div>
 												{#if i === current - 1}
 													<div class="absolute bottom-1 right-1 w-2 h-2 bg-primary rounded-full" />
@@ -127,10 +146,22 @@
 									<div class="flex-1 md:max-w-[calc(100%-5rem)] h-full">
 										<Carousel.Root bind:api class="h-full">
 											<Carousel.Content class="h-full">
-												{#each sortedImages as item}
+												{#each sortedImages as item, i}
 													<Carousel.Item class="h-full">
 														<div class="w-full h-full rounded-lg">
-															<img src={item.imageUrl} alt="" class="h-full w-full object-contain" loading="lazy" />
+															{#if getMediaType(item.imageUrl) === 'video'}
+																<video
+																	bind:this={activeVideoRefs[i]}
+																	src={item.imageUrl}
+																	preload="metadata"
+																	controls
+																	class="h-full w-full object-contain"
+																>
+																	<track kind="captions" />
+																</video>
+															{:else}
+																<img src={item.imageUrl} alt="" class="h-full w-full object-contain" loading="lazy" />
+															{/if}
 														</div>
 													</Carousel.Item>
 												{/each}

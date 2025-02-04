@@ -9,6 +9,7 @@
 	import { openDrawerForProduct } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
 	import { formatSats, parseCoordinatesString, stringToHexColor } from '$lib/utils'
+	import { getMediaType } from '$lib/utils/media.utils'
 	import { Edit, MoreVertical } from 'lucide-svelte'
 
 	import Spinner from '../assets/spinner.svelte'
@@ -25,7 +26,7 @@
 
 	$: priceQuery = createCurrencyConversionQuery(String(product.currency), Number(product.price))
 	$: isMyProduct = $ndkStore.activeUser?.pubkey ? $ndkStore.activeUser.pubkey === product.userId : false
-	let imageLoadError = false
+	let mediaLoadError = false
 </script>
 
 <Card.Root
@@ -36,22 +37,27 @@
 		class="flex-shrink-0"
 	>
 		<Card.Header class="p-0">
-			{#if product.images?.length && !imageLoadError}
-				{@const mainImage = product.images?.sort((a, b) => a.imageOrder - b.imageOrder)}
+			{#if product.images?.length && !mediaLoadError}
+				{@const mainMedia = product.images?.sort((a, b) => a.imageOrder - b.imageOrder)[0]}
 				<div class="relative w-full aspect-square">
-					<img
-						class="absolute inset-0 w-full h-full object-cover"
-						src={mainImage[0].imageUrl}
-						alt={product.name || 'Product image'}
-						on:error={() => (imageLoadError = true)}
-					/>
-				</div>
-			{:else}
-				<div class="flex items-center justify-center aspect-square">
-					<span
-						style={`color:${stringToHexColor(String(product.name || product.identifier))}`}
-						class="i-mdi-package-variant-closed w-16 h-16"
-					/>
+					{#if getMediaType(mainMedia.imageUrl) === 'video'}
+						<video
+							class="absolute inset-0 w-full h-full object-cover"
+							src={mainMedia.imageUrl}
+							controls
+							muted
+							on:error={() => (mediaLoadError = true)}
+						>
+							<track kind="captions" />
+						</video>
+					{:else}
+						<img
+							class="absolute inset-0 w-full h-full object-cover"
+							src={mainMedia.imageUrl}
+							alt={product.name || 'Product image'}
+							on:error={() => (mediaLoadError = true)}
+						/>
+					{/if}
 				</div>
 			{/if}
 		</Card.Header>
