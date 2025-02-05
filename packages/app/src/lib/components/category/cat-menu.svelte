@@ -61,9 +61,9 @@
 </script>
 
 {#if !$categoriesQuery?.isLoading && $categoriesQuery?.data?.categories?.length}
-	<div class="flex flex-col gap-4 bg-black p-2 py-3">
+	<div class="flex flex-col gap-4 bg-black p-2 py-3 sticky top-20 z-10">
 		<div class="grid items-center" style="grid-template-columns: auto 1fr;">
-			<div class="flex gap-4 items-center bg-black">
+			<div class="flex gap-4 items-center bg-black pr-4">
 				<!-- <Button
 					variant="secondary"
 					size="icon"
