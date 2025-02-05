@@ -4,7 +4,7 @@ import { tv } from 'tailwind-variants'
 export { default as Badge } from './badge.svelte'
 
 export const badgeVariants = tv({
-	base: 'inline-flex select-none items-center rounded-full border text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
+	base: 'inline-flex select-none items-center rounded-full border text-xs font-semibold transition-colors focus:outline-none focus:text-primary',
 	variants: {
 		variant: {
 			primary: 'bg-primary border-primary hover:border-primary-border-hover text-primary-foreground-hover active:bg-primary-border-hover',
