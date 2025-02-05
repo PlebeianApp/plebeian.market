@@ -28,9 +28,7 @@ describe('stalls', async () => {
 
 	test('create a new stall', async () => {
 		try {
-			// Navigate to home and take screenshot
 			await page.goto(`http://${process.env.APP_HOST}:${process.env.APP_PORT}/`)
-			// Handle initial dialog
 			try {
 				const dialogButton = await page.waitForSelector('text=I understand', { timeout: 2000 })
 				if (dialogButton) {
@@ -40,10 +38,8 @@ describe('stalls', async () => {
 				console.log('No registration dialog found, continuing...')
 			}
 
-			// Login
 			await login(page)
 
-			// Navigate to settings
 			try {
 				await page.waitForSelector('#settings-button', { timeout: 5000 })
 				await page.click('#settings-button')
@@ -52,7 +48,6 @@ describe('stalls', async () => {
 				throw error
 			}
 
-			// Navigate to stalls
 			await page.waitForSelector('text=Shops', { timeout: 2000 })
 			await page.click('text=Shops')
 			await page.waitForSelector('text=New', { timeout: 2000 })
@@ -70,8 +65,8 @@ describe('stalls', async () => {
 
 			// Select currency
 			try {
-				await page.waitForSelector('button:has-text("BTC")', { timeout: 2000 })
-				await page.click('button:has-text("BTC")')
+				await page.waitForSelector('button:has-text("SATS")', { timeout: 2000 })
+				await page.click('button:has-text("SATS")')
 				await page.waitForSelector('text=USD', { timeout: 2000 })
 				await page.click('text=USD')
 			} catch (error) {

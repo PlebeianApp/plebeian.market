@@ -428,7 +428,7 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
 					...JSON.parse(stallEvent.content),
 				})
 			if (!success) throw new Error(`Failed to parse stall event`)
-			console.log('!!!!!Updating stall', parsedStall.shipping[0].countries)
+
 			const [stallResult] = await tx
 				.update(stalls)
 				.set({
@@ -486,9 +486,8 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
 
 					if (shippingResult) {
 						const zonesToInsert = getZonesToInsert(shippingResult, method.regions ?? null, method.countries ?? null)
-						console.log('!!!!!!* Zones to insert', zonesToInsert, method.regions, method.countries)
 						if (zonesToInsert.length > 0) {
-							const zoneresult = await tx.insert(shippingZones).values(zonesToInsert)
+							await tx.insert(shippingZones).values(zonesToInsert)
 						}
 					}
 				}
