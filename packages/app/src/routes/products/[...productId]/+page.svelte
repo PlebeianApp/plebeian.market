@@ -108,7 +108,7 @@
 		/>
 		<Pattern />
 
-		<div class="container relative z-1 min-h-[600px] h-full flex flex-col py-8 px-4 sm:px-8">
+		<div class="container relative z-1 min-h-[600px] h-full flex flex-col pt-8 pb-16 px-4 sm:px-8">
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-8 flex-1">
 				<div class="flex flex-col h-full">
 					<div class="grid h-full max-h-[36em]">
