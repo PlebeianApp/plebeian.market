@@ -24,7 +24,7 @@
 		  >
 		| undefined
 
-	$: pageSize = $breakpoint == 'lg' ? 16 : 10
+	$: pageSize = $breakpoint == 'lg' ? 21 : 12
 	let page = 1
 
 	$: debouncedSearch = reactiveDebounce(search, 600)
