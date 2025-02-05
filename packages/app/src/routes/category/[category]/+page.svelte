@@ -34,14 +34,14 @@
 <div class="flex min-h-screen w-full flex-col">
 	<div class="flex flex-col gap-2 relative mx-4">
 		{#if $productsQuery.data?.products}
-			<ItemGrid title="{categoryData?.name}">
+			<ItemGrid title={categoryData?.name}>
 				{#each $productsQuery?.data.products as product}
 					<ProductItem {product} />
 				{/each}
 			</ItemGrid>
 		{/if}
 		{#if stalls.length}
-			<ItemGrid title="Shops" forItemType="stall">
+			<ItemGrid title="Related Shops" forItemType="stall">
 				{#each stalls as stall}
 					<StallItem stallData={stall} />
 				{/each}
