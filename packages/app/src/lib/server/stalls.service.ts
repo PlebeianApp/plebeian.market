@@ -74,23 +74,10 @@ const createZone = (country: string | null, region: string | null, shippingResul
 })
 
 const getZonesToInsert = (shippingResult: Shipping, regions: string[] | null, countries: string[] | null) => {
-	if (regions === null || countries === null) {
-		return [createZone(countries === null ? null : null, regions === null ? null : null, shippingResult)]
-	}
+	const validRegions = regions?.length ? regions : [null]
+	const validCountries = countries?.length ? countries : [null]
 
-	const hasRegions = regions.length > 0
-	const hasCountries = countries.length > 0
-
-	if (!hasRegions && !hasCountries) return []
-
-	if (hasRegions && !hasCountries) {
-		return regions.map((region) => createZone(null, region, shippingResult))
-	}
-	if (!hasRegions && hasCountries) {
-		return countries.map((country) => createZone(country, null, shippingResult))
-	}
-
-	return regions.flatMap((region) => countries.map((country) => createZone(country, region, shippingResult)))
+	return validRegions.flatMap((region) => validCountries.map((country) => createZone(country, region, shippingResult)))
 }
 
 const resolveStalls = async (stall: Stall): Promise<RichStall> => {
@@ -441,7 +428,7 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
 					...JSON.parse(stallEvent.content),
 				})
 			if (!success) throw new Error(`Failed to parse stall event`)
-
+			console.log('!!!!!Updating stall', parsedStall.shipping[0].countries)
 			const [stallResult] = await tx
 				.update(stalls)
 				.set({
@@ -499,8 +486,9 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
 
 					if (shippingResult) {
 						const zonesToInsert = getZonesToInsert(shippingResult, method.regions ?? null, method.countries ?? null)
+						console.log('!!!!!!* Zones to insert', zonesToInsert, method.regions, method.countries)
 						if (zonesToInsert.length > 0) {
-							await tx.insert(shippingZones).values(zonesToInsert)
+							const zoneresult = await tx.insert(shippingZones).values(zonesToInsert)
 						}
 					}
 				}
