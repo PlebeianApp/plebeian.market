@@ -140,7 +140,7 @@
 				user={merchant}
 				stalls={$cart.stalls}
 				products={$cart.products}
-				mode="cart"
+				mode="checkout"
 				on:productUpdate={cart.handleProductUpdate}
 				bind:userTotal
 			/>

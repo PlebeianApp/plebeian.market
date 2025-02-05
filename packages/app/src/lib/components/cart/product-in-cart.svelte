@@ -75,7 +75,7 @@
 						<span class="i-mdi-plus w-4 h-4"></span>
 					</Button>
 				</div>
-				<Button variant="ghost" on:click={handleRemove} size="icon">
+				<Button variant="outline" on:click={handleRemove} size="icon">
 					<span class="i-mdi-delete w-4 h-4"></span>
 				</Button>
 			</div>
