@@ -44,8 +44,9 @@
 						<video
 							class="absolute inset-0 w-full h-full object-cover"
 							src={mainMedia.imageUrl}
-							controls
 							muted
+							playsinline
+							disablePictureInPicture
 							on:error={() => (mediaLoadError = true)}
 						>
 							<track kind="captions" />

@@ -107,7 +107,7 @@
 					{#if stall.image}
 						<div class="relative w-full aspect-[21/9] bg-gray-50">
 							{#if getMediaType(stall.image) === 'video'}
-								<video src={stall.image} class="absolute inset-0 w-full h-full object-cover" controls>
+								<video src={stall.image} class="absolute inset-0 w-full h-full object-cover" muted playsinline disablePictureInPicture>
 									<track kind="captions" />
 								</video>
 							{:else}
