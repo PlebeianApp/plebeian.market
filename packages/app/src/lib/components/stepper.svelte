@@ -2,6 +2,7 @@
 	import type { Step } from '$lib/components/checkout/types'
 	import { cart } from '$lib/stores/cart'
 	import { currentStep } from '$lib/stores/checkout'
+	import { scrollToTop } from '$lib/utils'
 
 	export let steps: Step[] = []
 
@@ -10,6 +11,7 @@
 	function goToNextStep(times: number = 1) {
 		if ($currentStep < steps.length - 1 && canProceed) {
 			$currentStep += times
+			scrollToTop()
 			canProceed = false
 		}
 	}

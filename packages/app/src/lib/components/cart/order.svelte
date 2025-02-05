@@ -16,7 +16,6 @@
 	export let products: Record<string, CartProduct>
 	export let mode: 'cart' | 'checkout' | 'payment' | 'success' = 'cart'
 	let v4vTotalPercentage: number | null = null
-
 	export let userTotal: Awaited<ReturnType<typeof cart.calculateUserTotal>> | null = null
 
 	const dispatch = createEventDispatcher()
@@ -69,13 +68,16 @@
 	{#each user.stalls as stallId}
 		{@const stall = stalls[stallId]}
 		<div class="stall">
-			<MiniStall stallCoordinate={parseCoordinatesString(stallId).coordinates || ''} mode={mode === 'success' ? 'view' : undefined} />
+			<MiniStall
+				stallCoordinate={parseCoordinatesString(stallId).coordinates || ''}
+				mode={mode == 'success' || mode == 'cart' ? 'view' : undefined}
+			/>
 			<!-- TODO: Improve shipping visualization for products with shipping cost 0 and extra cost -->
 			{#each stall.products as productId}
 				{@const product = products[productId]}
 				<ProductInCart
 					{product}
-					mode={mode === 'success' ? 'payment' : undefined}
+					mode={mode === 'success' || mode == 'checkout' ? 'payment' : undefined}
 					on:increment={(e) => handleProductUpdate(e, stallId, productId)}
 					on:decrement={(e) => handleProductUpdate(e, stallId, productId)}
 					on:setAmount={(e) => handleProductUpdate(e, stallId, productId)}

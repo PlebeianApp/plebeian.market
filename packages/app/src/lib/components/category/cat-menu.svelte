@@ -24,7 +24,7 @@
 		  >
 		| undefined
 
-	$: pageSize = $breakpoint == 'lg' ? 16 : 10
+	$: pageSize = $breakpoint == 'lg' ? 21 : 12
 	let page = 1
 
 	$: debouncedSearch = reactiveDebounce(search, 600)
@@ -38,12 +38,12 @@
 	$: hasNextPage = ($categoriesQuery?.data?.total ?? 0) > page * pageSize
 	$: hasPreviousPage = page > 1
 
-	function toggleSearch() {
-		showSearch = !showSearch
-		if (!showSearch) {
-			$search = ''
-		}
-	}
+	// function toggleSearch() {
+	// 	showSearch = !showSearch
+	// 	if (!showSearch) {
+	// 		$search = ''
+	// 	}
+	// }
 
 	function nextPage() {
 		if (hasNextPage) {

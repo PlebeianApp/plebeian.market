@@ -6,7 +6,7 @@
 	import { Button } from '$lib/components/ui/button'
 	import * as Collapsible from '$lib/components/ui/collapsible'
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
-	import { Input } from '$lib/components/ui/input'
+	import ProfileSearch from '$lib/components/users/profile-search.svelte'
 	import { createUserFromNostrMutation, setUserRoleMutation } from '$lib/fetch/users.mutations.js'
 	import { createUserByIdQuery, createUsersByFilterQuery } from '$lib/fetch/users.queries.js'
 	import ndkStore from '$lib/stores/ndk'
@@ -76,7 +76,7 @@
 		</div>
 	</div>
 
-	<Collapsible.Root class="border-black border p-2" bind:open={isAddUserOpen}>
+	<Collapsible.Root class="border-black border p-2 bg-white" bind:open={isAddUserOpen}>
 		<Collapsible.Trigger class="flex flex-row w-full items-center justify-between gap-2 mr-4">
 			Add User by npub
 			<span class="i-mdi-plus w-6 h-6" />
@@ -84,10 +84,15 @@
 		<Collapsible.Content>
 			<div class="mt-4 space-y-4">
 				{#if npub}
-					<MiniUser userId={decodePk(npub)} />
+					<MiniUser userId={decodePk(npub)} mode="compact" />
 				{:else}
-					<Input bind:value={npub} placeholder="Enter npub" />
+					<ProfileSearch
+						on:select={({ detail }) => {
+							npub = detail.npub
+						}}
+					/>
 				{/if}
+
 				<div class="flex justify-end space-x-2">
 					<Button variant="outline" on:click={resetForm}>Cancel</Button>
 					<Button variant="primary" on:click={() => handleAddNostrUser('admin', npub)}>Set as Admin</Button>
@@ -100,7 +105,7 @@
 	{#if $admins.data}
 		<h3 class="text-lg font-bold">Admins</h3>
 		{#each $admins.data as userId}
-			<div class="flex flex-row items-center justify-between border rounded-md p-2">
+			<div class="flex flex-row items-center justify-between border rounded-md p-2 bg-white">
 				<MiniUser {userId} />
 				<DropdownMenu.Root>
 					<DropdownMenu.Trigger asChild let:builder>
@@ -125,7 +130,7 @@
 	{#if $editors.data}
 		<h3 class="text-lg font-bold">Editors</h3>
 		{#each $editors.data as userId}
-			<div class="flex flex-row items-center justify-between border rounded-md p-2">
+			<div class="flex flex-row items-center justify-between border rounded-md p-2 bg-white">
 				<MiniUser {userId} />
 				<DropdownMenu.Root>
 					<DropdownMenu.Trigger asChild let:builder>
@@ -146,7 +151,7 @@
 	{#if $plebs.data}
 		<h3 class="text-lg font-bold">Plebs</h3>
 		{#each $plebs.data as userId}
-			<div class="flex flex-row items-center justify-between border rounded-md p-2">
+			<div class="flex flex-row items-center justify-between border rounded-md p-2 bg-white">
 				<MiniUser {userId} />
 				<DropdownMenu.Root>
 					<DropdownMenu.Trigger asChild let:builder>

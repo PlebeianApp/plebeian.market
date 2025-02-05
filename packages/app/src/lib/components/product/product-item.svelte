@@ -59,6 +59,13 @@
 						/>
 					{/if}
 				</div>
+			{:else}
+				<div class="flex items-center justify-center aspect-square">
+					<span
+						style={`color:${stringToHexColor(String(product.name || product.identifier))}`}
+						class="i-mdi-package-variant-closed w-16 h-16"
+					/>
+				</div>
 			{/if}
 		</Card.Header>
 	</a>

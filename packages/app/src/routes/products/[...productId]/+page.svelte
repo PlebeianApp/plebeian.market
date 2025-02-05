@@ -108,15 +108,15 @@
 		/>
 		<Pattern />
 
-		<div class="container relative z-1 min-h-[600px] pt-8 pb-16 px-4 sm:px-8">
-			<div class="flex flex-col md:flex-row gap-8">
-				<div class="flex-1 md:w-1/2">
-					<div class="h-full">
-						<div class="flex flex-col-reverse md:flex-row gap-4 h-full max-h-[36em]">
-							{#key $productsQuery.data.identifier}
-								{#if $productsQuery.data?.images?.length}
-									{@const sortedImages = $productsQuery.data.images?.sort((a, b) => a.imageOrder - b.imageOrder)}
-									<div class="flex flex-row md:flex-col gap-2 md:max-h-[500px] overflow-y-auto p-1">
+		<div class="container relative z-1 min-h-[600px] h-full flex flex-col pt-8 pb-16 px-4 sm:px-8">
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-8 flex-1">
+				<div class="flex flex-col h-full">
+					<div class="grid h-full max-h-[36em]">
+						{#key $productsQuery.data.identifier}
+							{#if $productsQuery.data?.images?.length}
+								{@const sortedImages = $productsQuery.data.images?.sort((a, b) => a.imageOrder - b.imageOrder)}
+								<div class="grid grid-rows-[1fr_auto] md:grid-rows-none md:grid-cols-[5rem_1fr] h-full gap-4">
+									<div class="order-2 md:order-1 flex flex-row md:flex-col gap-2 overflow-x-auto md:overflow-y-auto p-1">
 										{#each sortedImages as item, i}
 											<button
 												class={cn(
@@ -143,7 +143,8 @@
 											</button>
 										{/each}
 									</div>
-									<div class="flex-1 md:max-w-[calc(100%-5rem)] h-full">
+
+									<div class="order-1 md:order-2 h-full bg-black bg-opacity-30 rounded">
 										<Carousel.Root bind:api class="h-full">
 											<Carousel.Content class="h-full">
 												{#each sortedImages as item, i}
@@ -168,16 +169,16 @@
 											</Carousel.Content>
 										</Carousel.Root>
 									</div>
-								{:else}
-									<div class="w-full aspect-square flex items-center justify-center rounded-lg">
-										<span
-											style={`color:${stringToHexColor(String($productsQuery.data.name || $productsQuery.data.identifier))}`}
-											class="i-mdi-package-variant-closed w-16 h-16"
-										/>
-									</div>
-								{/if}
-							{/key}
-						</div>
+								</div>
+							{:else}
+								<div class="w-full aspect-square flex items-center justify-center rounded-lg">
+									<span
+										style={`color:${stringToHexColor(String($productsQuery.data.name || $productsQuery.data.identifier))}`}
+										class="i-mdi-package-variant-closed w-16 h-16"
+									/>
+								</div>
+							{/if}
+						{/key}
 					</div>
 				</div>
 
@@ -187,7 +188,7 @@
 					{/if}
 					<h3 class="md:mb-12 mb-6 break-words overflow-hidden">{$productsQuery.data.name}</h3>
 
-					<div class="flex md:flex-col flex-row gap-2 w-full">
+					<div class="flex md:flex-col flex-row gap-2 w-full md:items-start items-center">
 						<div class="flex flex-col gap-2 w-full">
 							<h3 class="inline-flex items-center">
 								{#if $priceQuery?.isLoading}
@@ -213,8 +214,8 @@
 						</Badge>
 					</div>
 
-					<div class="flex sm:w-1/2 w-full flex-row gap-1">
-						<div class=" flex flex-row gap-1">
+					<div class="flex flex-col sm:flex-row gap-2 w-full items-center">
+						<div class="flex flex-row gap-1 w-fit items-center">
 							<Button variant="tertiary" size="icon" on:click={handleDecrement} disabled={qtyToCart <= 1}>
 								<span class="i-mdi-minus w-4 h-4"></span>
 							</Button>
@@ -230,17 +231,19 @@
 								<span class="i-mdi-plus w-4 h-4"></span>
 							</Button>
 						</div>
-						{#if $productsQuery.data.quantity && $productsQuery.data.quantity > 0}
-							<Button
-								class="ml-2"
-								variant="secondary"
-								on:click={() => handleAddToCart(String($productsQuery.data?.userId), String(stallCoordinates), $productsQuery.data)}
-								>Add to cart</Button
-							>
-						{:else}
-							<Button variant="tertiary" disabled>Out of stock</Button>
-						{/if}
-						<AdminActions type="product" id={data.productRes.id} isFeatured={$productsQuery.data.isFeatured} />
+						<div class="flex flex-row gap-2 w-full">
+							{#if $productsQuery.data.quantity && $productsQuery.data.quantity > 0}
+								<Button
+									class="flex-1"
+									variant="secondary"
+									on:click={() => handleAddToCart(String($productsQuery.data?.userId), String(stallCoordinates), $productsQuery.data)}
+									>Add to cart</Button
+								>
+							{:else}
+								<Button variant="tertiary" class="flex-1" disabled>Out of stock</Button>
+							{/if}
+							<AdminActions type="product" id={data.productRes.id} isFeatured={$productsQuery.data.isFeatured} />
+						</div>
 					</div>
 
 					<span class="my-8 font-bold">
@@ -268,38 +271,98 @@
 
 	{#if $productsQuery.data.description || $stallQuery?.data?.stall?.shipping}
 		{#if $breakpoint !== 'lg'}
-			<div class="flex flex-col gap-8 -mt-8">
-				<div class="mx-8 shadow-md z-10">
-					<div class="container flex flex-col items-center p-2 bg-neo-purple">
-						<h4 class="text-white font-bold">Description</h4>
-					</div>
-					<div class="container flex flex-col items-center p-8 bg-white">
-						{#if $productsQuery.data.description && $productsQuery.data.description.length > 420}
-							{#if !isExpanded}
-								<p class="whitespace-pre-wrap break-words w-full" transition:slide>
-									{$productsQuery.data.description.slice(0, 420)}...
-								</p>
+			<div class="flex flex-col gap-8 -mt-8 bg-white">
+				{#if $productsQuery.data?.description}
+					<div class="mx-8 shadow-md z-10">
+						<div class="container flex flex-col items-center p-2 bg-secondary">
+							<h4 class="text-white font-bold">Description</h4>
+						</div>
+						<div class="container flex flex-col items-center p-8 bg-white">
+							{#if $productsQuery.data.description && $productsQuery.data.description.length > 420}
+								{#if !isExpanded}
+									<p class="whitespace-pre-wrap break-words w-full" transition:slide>
+										{$productsQuery.data.description.slice(0, 420)}...
+									</p>
+								{:else}
+									<p class="whitespace-pre-wrap break-words w-full" transition:slide>
+										{$productsQuery.data.description}
+									</p>
+								{/if}
+								<Button
+									variant="ghost"
+									class="self-end mt-4"
+									on:click={() => {
+										isExpanded = !isExpanded
+									}}
+								>
+									{isExpanded ? 'Show Less' : 'Read More...'}
+								</Button>
 							{:else}
-								<p class="whitespace-pre-wrap break-words w-full" transition:slide>
+								<p class="whitespace-pre-wrap break-words w-full">
 									{$productsQuery.data.description}
 								</p>
 							{/if}
-							<Button
-								variant="ghost"
-								class="self-end mt-4"
-								on:click={() => {
-									isExpanded = !isExpanded
-								}}
-							>
-								{isExpanded ? 'Show Less' : 'Read More...'}
-							</Button>
-						{:else}
-							<p class="whitespace-pre-wrap break-words w-full">
-								{$productsQuery.data.description}
-							</p>
-						{/if}
+						</div>
 					</div>
-				</div>
+				{/if}
+				{#if $stallQuery?.data?.stall?.shipping?.length}
+					<div class="mx-8 shadow-md z-10 bg-white">
+						<div class="container flex flex-col items-center p-2 bg-secondary">
+							<h4 class="text-white font-bold">Shippings</h4>
+						</div>
+						<section class="flex flex-col gap-1 p-4">
+							{#each $stallQuery?.data?.stall?.shipping as shipping}
+								{#if shipping.name || shipping.id}
+									<section class=" inline-flex gap-2 justify-between">
+										<span class=" font-bold">{truncateString(shipping.name || shipping.id || '')}</span>
+										<span>{shipping.cost} {$stallQuery?.data?.stall.currency}</span>
+									</section>
+								{/if}
+								<div class="flex flex-row gap-1 flex-wrap">
+									{#if shipping.regions}
+										{#each shipping.regions.slice(0, 3) as region}
+											<Badge size="sm" class="w-fit" variant="secondary">{region}</Badge>
+										{/each}
+										{#if shipping.regions.length > 3}
+											<Button
+												size="none"
+												class={badgeVariants({ variant: 'secondary' })}
+												variant="outline"
+												on:click={() =>
+													dialogs.show(ShippingsDialog, {
+														title: 'Shipping Regions',
+														items: shipping.regions,
+													})}
+											>
+												+{shipping.regions.length - 3} more
+											</Button>
+										{/if}
+									{/if}
+									{#if shipping.countries}
+										{#each shipping.countries.slice(0, 3) as country}
+											<Badge size="sm" class="w-fit" variant="secondary">{country}</Badge>
+										{/each}
+										{#if shipping.countries.length > 3}
+											<Button
+												size="none"
+												class={badgeVariants({ variant: 'secondary' })}
+												variant="outline"
+												on:click={() =>
+													dialogs.show(ShippingsDialog, {
+														title: 'Shipping Countries',
+														items: shipping.countries,
+													})}
+											>
+												+{shipping.countries.length - 3} more
+											</Button>
+										{/if}
+									{/if}
+								</div>
+								<Separator />
+							{/each}
+						</section>
+					</div>
+				{/if}
 			</div>
 		{:else}
 			<div class="container -mt-12 flex flex-col items-center z-30 p-8">

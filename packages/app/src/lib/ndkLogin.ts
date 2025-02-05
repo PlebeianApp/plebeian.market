@@ -1,6 +1,6 @@
 import type { NDKUser, NDKUserProfile } from '@nostr-dev-kit/ndk'
 import type { BaseAccount } from '$lib/stores/session'
-import { NDKNip07Signer, NDKNip46Signer, NDKPrivateKeySigner, NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk'
+import { NDKNip07Signer, NDKPrivateKeySigner, NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk'
 import { error } from '@sveltejs/kit'
 import { HEX_KEYS_REGEX, KindsRelays } from '$lib/constants'
 import ndkStore, { ndk } from '$lib/stores/ndk'

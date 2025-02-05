@@ -43,12 +43,22 @@
 		{#if mode === 'edit'}
 			<DropdownMenu.Root>
 				<DropdownMenu.Trigger asChild let:builder>
-					<Button variant="tertiary" iconPosition="right" class="border-2 border-black h-8 justify-between" builders={[builder]}>
+					<Button
+						variant="tertiary"
+						iconPosition="right"
+						class={`border-2 h-8 justify-between ${currentShippingMethodId ? 'border-black' : 'border-destructive'}`}
+						builders={[builder]}
+					>
 						{#if $stallQuery.data?.stall?.shipping?.length && currentShippingMethodId}
 							{@const method = $stallQuery.data?.stall?.shipping?.find((m) => m.id === currentShippingMethodId)}
 							{#if method}
-								<span class="truncate">{getMethodDisplayName(method)}</span>
-								<span class="ml-2">{method.cost}</span>
+								<div class=" inline-flex w-full justify-between">
+									<span class="truncate">{getMethodDisplayName(method)}</span>
+									<div>
+										<span class="ml-2">{method.cost}</span>
+										<span>{$stallQuery.data?.stall.currency}</span>
+									</div>
+								</div>
 							{/if}
 						{:else}
 							Select shipping

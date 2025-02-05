@@ -1,9 +1,11 @@
 import type { DisplayProduct } from '$lib/server/products.service'
 import type { RichStall } from '$lib/server/stalls.service'
 import AuthDialog from '$lib/components/dialogs/authDialog.svelte'
+import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
 import { dialogs } from '$lib/stores/dialog'
-import { openDrawerForNewProduct } from '$lib/stores/drawer-ui'
+import { openDrawerForNewProduct, openDrawerForNewStall } from '$lib/stores/drawer-ui'
 import ndkStore from '$lib/stores/ndk'
+import { resolveQuery } from '$lib/utils'
 import { get } from 'svelte/store'
 
 import type { ProductImage } from '@plebeian/database'
@@ -31,8 +33,11 @@ export function prepareProductData(
 	return productData
 }
 
-export function handleListItems() {
+export async function handleListItems() {
 	const $ndkStore = get(ndkStore)
-	if (!$ndkStore.activeUser) dialogs.show(AuthDialog)
-	else openDrawerForNewProduct()
+	if (!$ndkStore.activeUser) {
+		return dialogs.show(AuthDialog)
+	}
+	const userStalls = await resolveQuery(() => createStallsByFilterQuery({ userId: $ndkStore.activeUser?.pubkey }))
+	return !userStalls?.stalls.length ? openDrawerForNewStall() : openDrawerForNewProduct()
 }

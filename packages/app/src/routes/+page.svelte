@@ -5,12 +5,18 @@
 	import ProductItem from '$lib/components/product/product-item.svelte'
 	import { Button } from '$lib/components/ui/button/index.js'
 	import { createProductsByFilterQuery } from '$lib/fetch/products.queries'
+	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
 	import { breakpoint, getGridColumns } from '$lib/stores/breakpoint'
+	import ndkStore from '$lib/stores/ndk'
 	import { handleListItems } from '$lib/utils/product.utils'
 
 	import type { PageData } from './$types'
 
 	export let data: PageData
+
+	$: userStalls = $ndkStore.activeUser ? createStallsByFilterQuery({ userId: $ndkStore.activeUser.pubkey }) : undefined
+
+	$: startSellingText = userStalls === undefined ? 'Start Selling' : !$userStalls?.data?.stalls.length ? 'Open a shop' : 'Add a product'
 
 	$: productQuery = createProductsByFilterQuery({ pageSize: getGridColumns($breakpoint, 'product') * 4, order: 'asc', onePerUser: true })
 	$: featuredProductsQuery = createProductsByFilterQuery({ featured: true, pageSize: getGridColumns($breakpoint, 'product') * 4 })
@@ -26,14 +32,12 @@
 				</div>
 				<Button variant="focus" class="relative z-10" on:click={handleListItems}>
 					<span class="flex items-center gap-2">
-						<span class="i-game-icons-ostrich w-5 h-5"></span>Start Selling
+						<span class="i-game-icons-ostrich w-5 h-5"></span>{startSellingText}
 					</span>
 				</Button>
 			</Hero>
+			<CatMenu />
 			<div class="gap-16 pb-12">
-				<div>
-					<CatMenu />
-				</div>
 				<div class="my-8 mx-4">
 					{#if $featuredProductsQuery.data?.products?.length}
 						<ItemGrid title="Featured">
