@@ -30,10 +30,8 @@
 					</span>
 				</Button>
 			</Hero>
+			<CatMenu />
 			<div class="gap-16 pb-12">
-				<div>
-					<CatMenu />
-				</div>
 				<div class="my-8 mx-4">
 					{#if $featuredProductsQuery.data?.products?.length}
 						<ItemGrid title="Featured">

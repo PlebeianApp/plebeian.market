@@ -38,12 +38,12 @@
 	$: hasNextPage = ($categoriesQuery?.data?.total ?? 0) > page * pageSize
 	$: hasPreviousPage = page > 1
 
-	function toggleSearch() {
-		showSearch = !showSearch
-		if (!showSearch) {
-			$search = ''
-		}
-	}
+	// function toggleSearch() {
+	// 	showSearch = !showSearch
+	// 	if (!showSearch) {
+	// 		$search = ''
+	// 	}
+	// }
 
 	function nextPage() {
 		if (hasNextPage) {

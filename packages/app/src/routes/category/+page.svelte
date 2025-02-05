@@ -1,7 +1,6 @@
 <script lang="ts">
 	import CatCompactItem from '$lib/components/category/cat-compact-item.svelte'
 	import SkeletonLoader from '$lib/components/common/skeletonLoader.svelte'
-	import Skeleton from '$lib/components/ui/skeleton/skeleton.svelte'
 	import { createCategoriesByFilterQuery } from '$lib/fetch/category.queries'
 
 	$: categoriesQuery = createCategoriesByFilterQuery({ pageSize: 30 })
