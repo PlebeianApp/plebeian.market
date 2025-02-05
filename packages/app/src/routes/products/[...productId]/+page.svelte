@@ -108,15 +108,15 @@
 		/>
 		<Pattern />
 
-		<div class="container relative z-1 min-h-[600px] h-full flex flex-col pt-8 pb-16 px-4 sm:px-8">
-			<div class="grid grid-cols-1 md:grid-cols-2 gap-8 flex-1">
-				<div class="flex flex-col h-full">
-					<div class="grid h-full max-h-[36em]">
-						{#key $productsQuery.data.identifier}
-							{#if $productsQuery.data?.images?.length}
-								{@const sortedImages = $productsQuery.data.images?.sort((a, b) => a.imageOrder - b.imageOrder)}
-								<div class="grid grid-rows-[1fr_auto] md:grid-rows-none md:grid-cols-[5rem_1fr] h-full gap-4">
-									<div class="order-2 md:order-1 flex flex-row md:flex-col gap-2 overflow-x-auto md:overflow-y-auto p-1">
+		<div class="container relative z-1 min-h-[600px] pt-8 pb-16 px-4 sm:px-8">
+			<div class="flex flex-col md:flex-row gap-8">
+				<div class="flex-1 md:w-1/2">
+					<div class="h-full">
+						<div class="flex flex-col-reverse md:flex-row gap-4 h-full max-h-[36em]">
+							{#key $productsQuery.data.identifier}
+								{#if $productsQuery.data?.images?.length}
+									{@const sortedImages = $productsQuery.data.images?.sort((a, b) => a.imageOrder - b.imageOrder)}
+									<div class="flex flex-row md:flex-col gap-2 md:max-h-[500px] overflow-y-auto p-1">
 										{#each sortedImages as item, i}
 											<button
 												class={cn(
@@ -143,8 +143,7 @@
 											</button>
 										{/each}
 									</div>
-
-									<div class="order-1 md:order-2 h-full bg-black bg-opacity-30 rounded">
+									<div class="flex-1 md:max-w-[calc(100%-6rem)] h-full aspect-square bg-black bg-opacity-30 rounded">
 										<Carousel.Root bind:api class="h-full">
 											<Carousel.Content class="h-full">
 												{#each sortedImages as item, i}
@@ -169,16 +168,16 @@
 											</Carousel.Content>
 										</Carousel.Root>
 									</div>
-								</div>
-							{:else}
-								<div class="w-full aspect-square flex items-center justify-center rounded-lg">
-									<span
-										style={`color:${stringToHexColor(String($productsQuery.data.name || $productsQuery.data.identifier))}`}
-										class="i-mdi-package-variant-closed w-16 h-16"
-									/>
-								</div>
-							{/if}
-						{/key}
+								{:else}
+									<div class="w-full aspect-square flex items-center justify-center rounded-lg">
+										<span
+											style={`color:${stringToHexColor(String($productsQuery.data.name || $productsQuery.data.identifier))}`}
+											class="i-mdi-package-variant-closed w-16 h-16"
+										/>
+									</div>
+								{/if}
+							{/key}
+						</div>
 					</div>
 				</div>
 
