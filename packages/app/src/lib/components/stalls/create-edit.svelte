@@ -53,23 +53,23 @@
 	let currentTab: (typeof tabs)[number] = tabs[0]
 	const dispatch = createEventDispatcher<{ success: unknown; error: unknown }>()
 	const {
-		appSettings: { allowRegister, defaultCurrency },
+		appSettings: { allowRegister },
 	} = $page.data
 
 	const initialValues = {
 		name: stall?.name ?? '',
 		description: stall?.description ?? '',
-		currency: stall?.currency ?? defaultCurrency ?? CURRENCIES[0],
+		currency: stall?.currency ?? CURRENCIES[0],
 		image: stall?.image ?? '',
 		geohash: stall?.geohash ?? null,
 		shipping: stall?.shipping ?? [],
 	}
-
 	let { name, description, currency, image: headerImage, geohash: geohashOfSelectedGeometry } = initialValues
 	let shippingMethods =
 		initialValues.shipping.length > 0
 			? initialValues.shipping.map((s) => new ShippingMethod(s.id, s.name, s.cost, s.regions, s.countries))
 			: [new ShippingMethod(createId(), SHIPPING_TEMPLATES[0].name, SHIPPING_TEMPLATES[0].cost, [], SHIPPING_TEMPLATES[0].countries)]
+
 	let locationSearchOpen = false
 	let shippingFromInput = ''
 	let selectedLocation: Location | null = null
@@ -221,7 +221,6 @@
 			currency,
 			shipping: shippingMethods,
 		}
-
 		validationErrors = validateForm(formData, get(forbiddenPatternStore).createStallEventContentSchema)
 		if (Object.keys(validationErrors).length === 0) {
 			await create(event)
