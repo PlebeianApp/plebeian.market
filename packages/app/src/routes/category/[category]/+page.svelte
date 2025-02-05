@@ -24,10 +24,12 @@
 	})
 </script>
 
+<!-- Hiding hero but keeping incase of return
 <Hero>
 	<h2 class="relative z-10 flex gap-2 items-center justify-center"><span class=" i-mdi-category-outline w-6 h-6" />Category</h2>
 	<h1 class="relative z-10">{categoryData?.name}</h1>
 </Hero>
+-->
 <CatMenu />
 <div class="flex min-h-screen w-full flex-col">
 	<div class="flex flex-col gap-2 relative mx-4">
