@@ -1,26 +1,24 @@
 <script lang="ts">
 	import type { RichPaymentDetail } from '$lib/server/paymentDetails.service'
 	import QrCode from '@castlenine/svelte-qrcode'
-	import { Invoice, LightningAddress } from '@getalby/lightning-tools'
-	import { NDKRelay } from '@nostr-dev-kit/ndk'
+	import { Invoice } from '@getalby/lightning-tools'
 	import { page } from '$app/stores'
 	import Spinner from '$lib/components/assets/spinner.svelte'
 	import { Button } from '$lib/components/ui/button'
 	import * as Collapsible from '$lib/components/ui/collapsible'
 	import { Input } from '$lib/components/ui/input'
-	import ndkStore, { GenericKeySigner } from '$lib/stores/ndk'
+	import ndkStore from '$lib/stores/ndk'
 	import { canPayWithNWC } from '$lib/stores/nwc'
 	import { copyToClipboard, formatSats } from '$lib/utils'
 	import {
-		createZapEventHandler,
+		addZapRelaysToNDKPool,
 		formatTime,
+		generateLightningInvoice,
 		handleNWCPayment,
 		handleWebLNPayment,
-		LN_ADDRESS_REGEX,
 		setupExpiryCountdown,
-		setupZapSubscription,
+		startPaymentChecking,
 	} from '$lib/utils/zap.utils'
-	import { generateSecretKey, getPublicKey } from 'nostr-tools'
 	import { afterUpdate, createEventDispatcher, onDestroy } from 'svelte'
 	import { toast } from 'svelte-sonner'
 
@@ -37,15 +35,6 @@
 		paymentExpired: CheckoutPaymentEvent
 		paymentCancelled: CheckoutPaymentEvent
 	}>()
-
-	const RELAYS = [
-		'wss://relay.damus.io',
-		'wss://relay.nostr.band',
-		'wss://nos.lol',
-		'wss://relay.nostr.net',
-		'wss://relay.minibits.cash',
-		'wss://relay.coinos.io/',
-	]
 
 	let invoice: Invoice | null = null
 	let paymentStatus: PaymentStatus = 'pending'
@@ -70,39 +59,35 @@
 		if (isLoading || invoice || normalizedAmount == 0) return
 		isLoading = true
 		try {
-			if (LN_ADDRESS_REGEX.test(paymentDetail.paymentDetails)) {
-				const ln = new LightningAddress(paymentDetail.paymentDetails)
-				await ln.fetch()
-				const allowsNostr = ln.lnurlpData?.allowsNostr ?? false
-				addRelaysToNDKPool()
-				invoice = allowsNostr ? await generateZapInvoice(ln) : await ln.requestInvoice({ satoshi: normalizedAmount })
-				if (allowsNostr) {
-					ln.domain === 'getalby.com' ? startZapCheck() : startZapSubscription()
-				}
-				setupInvoiceExpiry()
+			const {
+				invoice: generatedInvoice,
+				allowsNostr,
+				lightningAddress,
+			} = await generateLightningInvoice(
+				paymentDetail.paymentDetails,
+				normalizedAmount,
+				'', // Zap msg
+				{ ndk: $ndkStore },
+			)
+
+			invoice = generatedInvoice
+			addZapRelaysToNDKPool($ndkStore)
+
+			if (allowsNostr) {
+				const cleanup = startPaymentChecking(invoice, (preimage) => handleSuccessfulPayment(preimage), {
+					isGetalby: lightningAddress.domain === 'getalby.com',
+					onManualVerificationNeeded: () => (showManualVerification = true),
+				})
+				cleanupFunctions.push(cleanup)
 			}
+
+			setupInvoiceExpiry()
 		} catch (error) {
 			console.error('Error generating invoice:', error)
 			toast.error('Failed to generate invoice')
 		} finally {
 			isLoading = false
 		}
-	}
-
-	function addRelaysToNDKPool() {
-		RELAYS.forEach((url) => {
-			const relay = new NDKRelay(url, undefined, $ndkStore)
-			$ndkStore.pool.addRelay(relay, true)
-		})
-	}
-
-	async function generateZapInvoice(ln: LightningAddress) {
-		if (ln.nostrPubkey == undefined) {
-			const epehemeralKey = generateSecretKey()
-			ln.nostrPubkey = getPublicKey(epehemeralKey)
-		}
-		const zapArgs = { satoshi: formatSats(amountSats, false), relays: RELAYS }
-		return await ln.zapInvoice(zapArgs, { nostr: new GenericKeySigner() })
 	}
 
 	function setupInvoiceExpiry() {
@@ -124,41 +109,6 @@
 		}
 	}
 
-	function startZapSubscription() {
-		if (invoice?.paymentRequest) {
-			isCheckingPayment = true
-			const zapEventHandler = createZapEventHandler(invoice, (preimage) => {
-				handleSuccessfulPayment(preimage)
-			})
-			const subscription = setupZapSubscription(zapEventHandler)
-			cleanupFunctions.push(() => subscription.stop())
-			startManualVerificationTimer()
-		}
-	}
-
-	function startZapCheck() {
-		if (invoice) {
-			isCheckingPayment = true
-			const interval = setInterval(async () => {
-				try {
-					const paid = await invoice?.isPaid()
-					if (paid && invoice?.preimage) handleSuccessfulPayment(invoice.preimage)
-				} catch (error) {
-					console.error('Error checking zap payment:', error)
-				}
-			}, 750)
-			cleanupFunctions.push(() => clearInterval(interval))
-			startManualVerificationTimer()
-		}
-	}
-
-	function startManualVerificationTimer() {
-		const timeout = setTimeout(() => {
-			showManualVerification = true
-		}, 15000)
-		cleanupFunctions.push(() => clearTimeout(timeout))
-	}
-
 	async function verifyPayment() {
 		if (!invoice || !preimageInput) {
 			toast.error('Please enter a preimage to verify the payment.')
@@ -167,7 +117,7 @@
 
 		isLoading = true
 		try {
-			const paid = await invoice.validatePreimage(preimageInput)
+			const paid = invoice.validatePreimage(preimageInput)
 			paid ? handleSuccessfulPayment(preimageInput) : toast.error('Invalid preimage. Please try again.')
 		} catch (error) {
 			console.error('Error verifying payment:', error)

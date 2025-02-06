@@ -1,32 +1,41 @@
 import type { NDKEvent, NDKSubscription } from '@nostr-dev-kit/ndk'
-import { Invoice } from '@getalby/lightning-tools'
-import { NDKKind } from '@nostr-dev-kit/ndk'
+import type NDKSvelte from '@nostr-dev-kit/ndk-svelte'
+import { Invoice, LightningAddress } from '@getalby/lightning-tools'
+import { NDKKind, NDKRelay } from '@nostr-dev-kit/ndk'
 import { queryClient } from '$lib/fetch/client'
-import ndkStore from '$lib/stores/ndk'
+import ndkStore, { GenericKeySigner } from '$lib/stores/ndk'
 import { payInvoiceWithNWC, updateBalanceOfWorkingNWCs } from '$lib/stores/nwc'
 import { differenceInSeconds, intervalToDuration } from 'date-fns'
 import { get } from 'svelte/store'
 
-export const LN_ADDRESS_REGEX =
-	/^((?:[^<>()[\]\\.,;:\s@"]+(?:\.[^<>()[\]\\.,;:\s@"]+)*)|(?:".+"))@((?:\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(?:(?:[a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-
-export const EMAIL_REGEX =
-	/^((?:[^<>()[$$\\.,;:\s@"]+(?:\.[^<>()[$$\\.,;:\s@"]+)*)|(?:".+"))@((?:$$[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$$)|(?:(?:[a-zA-Z\-_0-9]+\.)+[a-zA-Z]{2,}))$/
-
-export function createInvoiceObject(bolt11String: string): Invoice {
-	return new Invoice({ pr: bolt11String })
+type PaymentResult = {
+	success: boolean
+	preimage?: string
+	error?: string
 }
 
-export function setupZapSubscription(onZapEvent: (event: NDKEvent) => void): NDKSubscription {
-	const ndk = get(ndkStore)
-	const subscription = ndk.subscribe({
-		kinds: [NDKKind.Zap],
-		since: Math.floor(Date.now() / 1000),
-	})
-
-	subscription.on('event', onZapEvent)
-	return subscription
+type LightningInvoiceResult = {
+	invoice: Invoice
+	allowsNostr: boolean
+	lightningAddress: LightningAddress
 }
+
+type PaymentCheckingOptions = {
+	isGetalby?: boolean
+	onManualVerificationNeeded?: () => void
+}
+
+export const ZAP_RELAYS = [
+	'wss://relay.damus.io',
+	'wss://relay.nostr.band',
+	'wss://nos.lol',
+	'wss://relay.nostr.net',
+	'wss://relay.minibits.cash',
+	'wss://relay.coinos.io/',
+]
+
+export const LN_ADDRESS_REGEX = /^[^@\s]+@[^@\s]+\.[^@\s]+$/
+export const EMAIL_REGEX = /^[^@\s]+@[^@\s]+\.[^@\s]+$/
 
 export function createZapEventHandler(invoice: Invoice, onSuccess: (preimage: string) => void) {
 	return (event: NDKEvent) => {
@@ -43,20 +52,151 @@ export function handleZapEvent(event: NDKEvent, invoice: Invoice, onSuccess: () 
 	}
 }
 
-export function setupExpiryCountdown(expiryDate: Date, onTick: (secondsLeft: number) => void, onExpiry: () => void): () => void {
-	const interval = setInterval(() => {
-		const now = new Date()
-		const secondsLeft = differenceInSeconds(expiryDate, now)
+export function createInvoiceObject(bolt11String: string): Invoice {
+	return new Invoice({ pr: bolt11String })
+}
 
-		if (secondsLeft <= 0) {
-			onExpiry()
-			clearInterval(interval)
-		} else {
-			onTick(secondsLeft)
+export async function generateLightningInvoice(
+	lightningAddress: string,
+	amount: number,
+	message: string,
+	options?: {
+		ndk?: NDKSvelte
+		isAnonymous?: boolean
+	},
+): Promise<LightningInvoiceResult> {
+	if (!LN_ADDRESS_REGEX.test(lightningAddress)) {
+		throw new Error('Invalid lightning address')
+	}
+
+	const ln = new LightningAddress(lightningAddress)
+	await ln.fetch()
+
+	const allowsNostr = ln.lnurlpData?.allowsNostr ?? false
+	let invoice: Invoice
+
+	if (allowsNostr) {
+		const nostrSigner = new GenericKeySigner({
+			ndk: options?.ndk,
+			isAnonymous: options?.isAnonymous,
+		})
+
+		invoice = await ln.zapInvoice(
+			{
+				satoshi: amount,
+				relays: ZAP_RELAYS,
+				comment: message,
+			},
+			{ nostr: nostrSigner },
+		)
+	} else {
+		invoice = await ln.requestInvoice({
+			satoshi: amount,
+			comment: message,
+		})
+	}
+
+	return { invoice, allowsNostr, lightningAddress: ln }
+}
+
+export async function handleWebLNPayment(
+	invoice: Invoice,
+	onSuccess: (preimage: string) => void,
+	onError: (error: string) => void,
+): Promise<PaymentResult | undefined> {
+	if (!('webln' in window)) return undefined
+
+	try {
+		await window.webln.enable()
+		const { preimage } = await window.webln.sendPayment(invoice.paymentRequest)
+
+		if (invoice.validatePreimage(preimage)) {
+			onSuccess(preimage)
+			return { success: true, preimage }
 		}
-	}, 1000)
+		throw new Error('Payment validation failed')
+	} catch (error) {
+		const errorMessage = error instanceof Error ? error.message : 'WebLN payment failed'
+		onError(errorMessage)
+		return { success: false, error: errorMessage }
+	}
+}
 
-	return () => clearInterval(interval)
+export async function handleNWCPayment(
+	invoice: Invoice,
+	onSuccess: (preimage: string) => void,
+	onError: (error: string) => void,
+): Promise<PaymentResult> {
+	try {
+		const paidInvoice = await payInvoiceWithNWC(invoice.paymentRequest, invoice.satoshi)
+
+		if (paidInvoice.result?.preimage) {
+			onSuccess(paidInvoice.result.preimage)
+			await queryClient.resetQueries({ queryKey: ['wallet-balance'] })
+			updateBalanceOfWorkingNWCs()
+			return { success: true, preimage: paidInvoice.result.preimage }
+		}
+
+		throw new Error(paidInvoice.error?.message ?? 'Unknown error')
+	} catch (error) {
+		const errorMessage = error instanceof Error ? error.message : 'NWC payment failed'
+		onError(errorMessage)
+		return { success: false, error: errorMessage }
+	}
+}
+
+export function addZapRelaysToNDKPool(ndkInstance: NDKSvelte): void {
+	ZAP_RELAYS.forEach((url) => {
+		const relay = new NDKRelay(url, undefined, ndkInstance)
+		ndkInstance.pool.addRelay(relay, true)
+	})
+}
+
+export function setupZapSubscription(onZapEvent: (event: NDKEvent) => void): NDKSubscription {
+	const ndk = get(ndkStore)
+	const subscription = ndk.subscribe({
+		kinds: [NDKKind.Zap],
+		since: Math.floor(Date.now() / 1000),
+	})
+
+	subscription.on('event', onZapEvent)
+	return subscription
+}
+
+export function startPaymentChecking(
+	invoice: Invoice,
+	onSuccess: (preimage: string) => void,
+	options: PaymentCheckingOptions = {},
+): () => void {
+	const cleanupFunctions: Array<() => void> = []
+
+	if (options.isGetalby) {
+		const interval = setInterval(async () => {
+			try {
+				const paid = await invoice?.isPaid()
+				if (paid && invoice?.preimage) onSuccess(invoice.preimage)
+			} catch (error) {
+				console.error('Error checking payment:', error)
+			}
+		}, 750)
+		cleanupFunctions.push(() => clearInterval(interval))
+	} else {
+		const zapEventHandler = (event: NDKEvent) => {
+			const bolt11Tag = event.tagValue('bolt11')
+			if (bolt11Tag === invoice.paymentRequest) {
+				onSuccess(event.tagValue('preimage') || 'No preimage present')
+			}
+		}
+		const subscription = setupZapSubscription(zapEventHandler)
+		cleanupFunctions.push(() => subscription.stop())
+	}
+
+	if (options.onManualVerificationNeeded) {
+		const timeout = setTimeout(options.onManualVerificationNeeded, 15000)
+		cleanupFunctions.push(() => clearTimeout(timeout))
+	}
+
+	return () => cleanupFunctions.forEach((fn) => fn())
 }
 
 export function formatTime(totalSeconds: number | null): string {
@@ -67,61 +207,24 @@ export function formatTime(totalSeconds: number | null): string {
 
 	if (days && days > 0) {
 		return `${days}d ${hours}h ${minutes}m`
-	} else if (hours && hours > 0) {
+	}
+	if (hours && hours > 0) {
 		return `${hours}h ${minutes}m ${seconds}s`
-	} else {
-		return `${minutes}:${seconds?.toString().padStart(2, '0')}`
 	}
+	return `${minutes}:${seconds?.toString().padStart(2, '0')}`
 }
 
-type PaymentResult = {
-	success: boolean
-	preimage?: string
-	error?: string
-}
+export function setupExpiryCountdown(expiryDate: Date, onTick: (secondsLeft: number) => void, onExpiry: () => void): () => void {
+	const interval = setInterval(() => {
+		const secondsLeft = differenceInSeconds(expiryDate, new Date())
 
-export async function handleNWCPayment(
-	invoice: Invoice,
-	onSuccess: (preimage: string) => void,
-	onError: (error: string) => void,
-): Promise<PaymentResult> {
-	try {
-		const paidInvoice = await payInvoiceWithNWC(invoice.paymentRequest, invoice.satoshi)
-		if (!paidInvoice.error && paidInvoice.result?.preimage) {
-			onSuccess(paidInvoice.result.preimage)
-			await queryClient.resetQueries({ queryKey: ['wallet-balance'] })
-			updateBalanceOfWorkingNWCs()
-			return { success: true, preimage: paidInvoice.result.preimage }
+		if (secondsLeft <= 0) {
+			clearInterval(interval)
+			onExpiry()
 		} else {
-			throw new Error(`${paidInvoice.error}` || 'Unknown error')
+			onTick(secondsLeft)
 		}
-	} catch (error) {
-		console.error('NWC payment error:', error)
-		const errorMessage = error instanceof Error ? error.message : 'NWC payment failed'
-		onError(errorMessage)
-		return { success: false, error: errorMessage }
-	}
-}
+	}, 1000)
 
-export async function handleWebLNPayment(
-	invoice: Invoice,
-	onSuccess: (preimage: string) => void,
-	onError: (error: string) => void,
-): Promise<PaymentResult> {
-	try {
-		await window.webln.enable()
-		const response = await window.webln.sendPayment(invoice.paymentRequest)
-		const paid = await invoice.validatePreimage(response.preimage)
-		if (paid) {
-			onSuccess(response.preimage)
-			return { success: true, preimage: response.preimage }
-		} else {
-			throw new Error('Payment validation failed')
-		}
-	} catch (error) {
-		console.error('WebLN payment error:', error)
-		const errorMessage = error instanceof Error ? error.message : 'WebLN payment failed'
-		onError(errorMessage)
-		return { success: false, error: errorMessage }
-	}
+	return () => clearInterval(interval)
 }

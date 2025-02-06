@@ -1,5 +1,5 @@
 import type { NostrProvider } from '@getalby/lightning-tools'
-import type { NDKCacheAdapter, NostrEvent } from '@nostr-dev-kit/ndk'
+import type { NDKCacheAdapter, NDKSigner, NostrEvent } from '@nostr-dev-kit/ndk'
 import type { Event } from 'nostr-tools'
 import { NDKEvent, NDKPrivateKeySigner } from '@nostr-dev-kit/ndk'
 import NDKCacheAdapterDexie from '@nostr-dev-kit/ndk-cache-dexie'
@@ -58,13 +58,22 @@ export class NostrifyNDKSigner implements NostrSigner {
 
 export class GenericKeySigner implements NostrProvider {
 	private ndk: NDKSvelte
+	private signer: NDKSigner
 
-	constructor(privateKey?: string) {
-		this.ndk = new NDKSvelte()
-		this.ndk.signer = new NDKPrivateKeySigner(privateKey ?? bytesToHex(generateSecretKey()))
+	constructor(options?: { ndk?: NDKSvelte; privateKey?: string; isAnonymous?: boolean }) {
+		this.ndk = options?.ndk ?? new NDKSvelte()
+
+		if (options?.isAnonymous || !options?.ndk) {
+			// Use ephemeral key for anonymous zaps or when no NDK instance is provided
+			this.signer = new NDKPrivateKeySigner(options?.privateKey ?? bytesToHex(generateSecretKey()))
+		} else {
+			// Use the active NDK signer for authenticated zaps
+			this.signer = this.ndk.signer!
+		}
 	}
+
 	async getPublicKey(): Promise<string> {
-		const pubkey = (await this.ndk.signer?.user())?.pubkey
+		const pubkey = (await this.signer.user())?.pubkey
 		if (!pubkey) {
 			throw new Error('Unable to get public key')
 		}
@@ -73,7 +82,7 @@ export class GenericKeySigner implements NostrProvider {
 
 	async signEvent(event: Event): Promise<Event> {
 		const ndkEvent = new NDKEvent(this.ndk, event)
-		await ndkEvent.sign()
+		await ndkEvent.sign(this.signer)
 		return (await ndkEvent.toNostrEvent()) as Event
 	}
 }

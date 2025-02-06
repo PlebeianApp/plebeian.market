@@ -1,6 +1,5 @@
 <script lang="ts">
 	import type { NDKUserProfile, NDKZapMethodInfo } from '@nostr-dev-kit/ndk'
-	import { NDKPrivateKeySigner } from '@nostr-dev-kit/ndk'
 	import Spinner from '$lib/components/assets/spinner.svelte'
 	import { Button } from '$lib/components/ui/button'
 	import * as Collapsible from '$lib/components/ui/collapsible'
@@ -13,14 +12,16 @@
 	import { balanceOfWorkingNWCs, canPayWithNWC } from '$lib/stores/nwc'
 	import { checkTargetUserHasLightningAddress } from '$lib/utils'
 	import {
+		addZapRelaysToNDKPool,
 		createInvoiceObject,
+		generateLightningInvoice,
 		handleNWCPayment,
 		handleWebLNPayment,
 		handleZapEvent,
 		LN_ADDRESS_REGEX,
 		setupZapSubscription,
+		startPaymentChecking,
 	} from '$lib/utils/zap.utils'
-	import { generateSecretKey } from 'nostr-tools'
 	import { onDestroy, onMount } from 'svelte'
 	import { toast } from 'svelte-sonner'
 
@@ -41,11 +42,9 @@
 	let canUseWebln = typeof window !== 'undefined' ? 'webln' in window : false
 
 	$: zapAmountSats = 21
-	$: user = $ndkStore.getUser({ pubkey: userIdToZap })
-	$: zapAmountMSats = zapAmountSats * 1000
 	$: userCanBeZapped = profile?.lud16 && LN_ADDRESS_REGEX.test(profile?.lud16)
 	let canUseNWC = canPayWithNWC(zapAmountSats)
-
+	let cleanupFunctions: (() => void)[] = []
 	$: if ($balanceOfWorkingNWCs) {
 		canUseNWC = canPayWithNWC(zapAmountSats)
 	}
@@ -59,25 +58,53 @@
 	})
 
 	async function handleZap(invoiceInterface: 'qr' | 'nwc' | 'webln') {
-		spinnerShown = true
-		const zapRes = (await user.zap(
-			zapAmountMSats,
-			zapMessage,
-			undefined,
-			isAnonymousZap ? new NDKPrivateKeySigner(generateSecretKey()) : undefined,
-		)) as string
-		if (typeof zapRes !== 'string') {
-			toast.error('Zap failed')
-			return
-		}
-		lightningInvoiceData = zapRes
-		const handlers = {
-			qr: handleQrPayment,
-			nwc: handleNwcPayment,
-			webln: handleWeblnPayment,
-		}
+		try {
+			spinnerShown = true
+			addZapRelaysToNDKPool($ndkStore)
 
-		await handlers[invoiceInterface](zapRes)
+			cleanupFunctions.forEach((fn) => fn())
+			cleanupFunctions = []
+
+			const { invoice, allowsNostr, lightningAddress } = await generateLightningInvoice(profile.lud16!, zapAmountSats, zapMessage, {
+				ndk: $ndkStore,
+				isAnonymous: isAnonymousZap,
+			})
+
+			lightningInvoiceData = invoice.paymentRequest
+
+			if (allowsNostr) {
+				const cleanup = startPaymentChecking(
+					createInvoiceObject(lightningInvoiceData),
+					() => {
+						spinnerShown = false
+						zapDialogOpen = false
+						cleanupFunctions.forEach((fn) => fn())
+						cleanupFunctions = []
+					},
+					{
+						isGetalby: lightningAddress.domain === 'getalby.com',
+					},
+				)
+				cleanupFunctions.push(cleanup)
+			}
+
+			const handlers = {
+				qr: handleQrPayment,
+				nwc: handleNwcPayment,
+				webln: handleWeblnPayment,
+			}
+
+			await handlers[invoiceInterface](lightningInvoiceData)
+		} catch (error) {
+			console.error('Error generating zap:', error)
+			toast.error('Failed to generate zap')
+			cleanupFunctions.forEach((fn) => fn())
+			cleanupFunctions = []
+		} finally {
+			if (!['nwc', 'webln'].includes(invoiceInterface)) {
+				spinnerShown = false
+			}
+		}
 	}
 
 	function handleQrPayment() {
@@ -93,7 +120,7 @@
 
 		await handleNWCPayment(
 			invoiceObject,
-			async (preimage) => {
+			async () => {
 				toast.success('Payment success!')
 				spinnerShown = false
 				zapDialogOpen = false
@@ -111,7 +138,7 @@
 
 		await handleWebLNPayment(
 			invoiceObject,
-			(preimage) => {
+			() => {
 				toast.success('WebLN payment successful')
 				setTimeout(() => (zapDialogOpen = false), 200)
 			},
@@ -130,8 +157,17 @@
 
 	onDestroy(() => {
 		zapSubscription.stop()
+		cleanupFunctions.forEach((fn) => fn())
+		cleanupFunctions = []
 		spinnerShown = false
 	})
+
+	$: if (!zapDialogOpen && !qrDialogOpen) {
+		if (cleanupFunctions.length) {
+			cleanupFunctions.forEach((fn) => fn())
+			cleanupFunctions = []
+		}
+	}
 </script>
 
 {#if isLoading}
