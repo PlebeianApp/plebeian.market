@@ -32,6 +32,7 @@ import { HEX_KEYS_REGEX, numSatsInBtc } from './constants'
 import { createProductExistsQuery } from './fetch/products.queries'
 import { createStallExistsQuery } from './fetch/stalls.queries'
 import { createUserExistsQuery, createUserRoleByIdQuery } from './fetch/users.queries'
+import { isValidHexKey } from './utils/validation.utils'
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs))
@@ -506,7 +507,7 @@ export function nwcUriToWalletDetails(uri: string): NWCWallet | null {
 		if (url.protocol !== 'nostr+walletconnect:') throw new Error('Invalid protocol')
 
 		const walletPubKey = url.pathname.slice(2) || url.host
-		if (!HEX_KEYS_REGEX.test(walletPubKey)) throw new Error('Invalid public key' + walletPubKey)
+		if (!isValidHexKey(walletPubKey)) throw new Error('Invalid public key' + walletPubKey)
 
 		const walletRelays = url.searchParams.getAll('relay')
 		if (walletRelays.length === 0) throw new Error('Missing relay parameter')

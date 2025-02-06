@@ -10,7 +10,9 @@
 	import { EncryptedStorage, nwcUriToWalletDetails } from '$lib/utils'
 	import { createEventDispatcher, onMount } from 'svelte'
 	import { toast } from 'svelte-sonner'
+	import { z } from 'zod'
 
+	import { nwcSchema } from '../../../schema/nwc-schema'
 	import { Checkbox } from '../ui/checkbox'
 	import MiniBalance from './mini-balance.svelte'
 	import QrDialog from './qr-dialog.svelte'
@@ -30,7 +32,7 @@
 		persistNwcToDB = Boolean(nwcWallet && !nwcWallet.id.startsWith('local-'))
 		initialPersistNwcToDB = persistNwcToDB
 
-		if (nwcWallet) {
+		if (nwcWallet && 'walletPubKey' in nwcWallet.walletDetails) {
 			walletPubKey = nwcWallet.walletDetails.walletPubKey
 			walletRelays = nwcWallet.walletDetails.walletRelays
 			walletSecret = nwcWallet.walletDetails.walletSecret
@@ -38,7 +40,7 @@
 	})
 
 	$: {
-		if (nwcWallet) {
+		if (nwcWallet && 'walletPubKey' in nwcWallet.walletDetails) {
 			hasChanged =
 				walletPubKey !== nwcWallet.walletDetails.walletPubKey ||
 				walletSecret !== nwcWallet.walletDetails.walletSecret ||
@@ -48,8 +50,40 @@
 		}
 	}
 
+	let formErrors: { [key: string]: string } = {}
+
+	async function validateForm() {
+		try {
+			await nwcSchema.parseAsync({
+				walletPubKey,
+				walletRelays: walletRelays.join(', '),
+				walletSecret,
+			})
+			formErrors = {}
+			return true
+		} catch (error) {
+			if (error instanceof z.ZodError) {
+				formErrors = error.errors.reduce(
+					(acc, err) => {
+						if (err.path[0]) acc[err.path[0].toString()] = err.message
+						return acc
+					},
+					{} as Record<string, string>,
+				)
+			}
+			return false
+		}
+	}
+
 	async function onSubmit(event: SubmitEvent) {
 		event.preventDefault()
+		const isValid = await validateForm()
+
+		if (!isValid) {
+			toast.error('Please fix the form errors')
+			return
+		}
+
 		const wallet = { walletPubKey, walletRelays, walletSecret }
 
 		if (!persistNwcToDB) {
@@ -68,37 +102,52 @@
 
 	$: encryptedStorage = new EncryptedStorage($ndkStore.signer!)
 
-	async function handleLocalStorage(wallet: { walletPubKey: string; walletRelays: string[]; walletSecret: string }) {
-		const localWallets = JSON.parse((await encryptedStorage.getItem(`nwc-wallets`)) || '{}')
-		if (nwcWallet && nwcWallet.id.startsWith('local-')) {
+	type WalletData = { walletPubKey: string; walletRelays: string[]; walletSecret: string }
+
+	async function handleLocalStorage(wallet: WalletData) {
+		const localWallets = JSON.parse((await encryptedStorage.getItem('nwc-wallets')) || '{}')
+		const isExistingLocal = nwcWallet?.id?.startsWith('local-')
+
+		if (isExistingLocal && nwcWallet) {
 			localWallets[nwcWallet.id] = wallet
-			await encryptedStorage.setItem(`nwc-wallets`, JSON.stringify(localWallets))
+			await encryptedStorage.setItem('nwc-wallets', JSON.stringify(localWallets))
 			toast.success('Local wallet updated')
 			dispatch('walletAdded', { id: nwcWallet.id, wallet })
-		} else {
-			if (nwcWallet && !nwcWallet.id.startsWith('local-')) {
-				await $deleteWalletMutation.mutateAsync({ userId: $ndkStore.activeUser?.pubkey, walletId: nwcWallet.id })
-			}
-			const newId = `local-${Date.now()}`
-			localWallets[newId] = wallet
-			await encryptedStorage.setItem(`nwc-wallets`, JSON.stringify(localWallets))
-			toast.success('Wallet saved locally')
-			dispatch('walletAdded', { id: newId, wallet })
+			return
 		}
+
+		// Handle migration from DB to local
+		if (nwcWallet?.id && $ndkStore.activeUser?.pubkey) {
+			await $deleteWalletMutation.mutateAsync({
+				userId: $ndkStore.activeUser.pubkey,
+				walletId: nwcWallet.id,
+			})
+		}
+
+		const newId = `local-${Date.now()}`
+		localWallets[newId] = wallet
+		await encryptedStorage.setItem('nwc-wallets', JSON.stringify(localWallets))
+		toast.success('Wallet saved locally')
+		dispatch('walletAdded', { id: newId, wallet })
 	}
 
-	async function handleDatabase(wallet: { walletPubKey: string; walletRelays: string[]; walletSecret: string }) {
-		if (nwcWallet && nwcWallet.id.startsWith('local-')) {
-			const localWallets = JSON.parse((await encryptedStorage.getItem(`nwc-wallets`)) || '{}')
+	async function handleDatabase(wallet: WalletData) {
+		const walletDetails = { walletType: 'nwc' as const, walletDetails: wallet }
+
+		if (nwcWallet?.id?.startsWith('local-')) {
+			const localWallets = JSON.parse((await encryptedStorage.getItem('nwc-wallets')) || '{}')
 			delete localWallets[nwcWallet.id]
-			await encryptedStorage.setItem(`nwc-wallets`, JSON.stringify(localWallets))
-			await $persistWalletMutation.mutateAsync({ walletType: 'nwc', walletDetails: wallet })
+			await encryptedStorage.setItem('nwc-wallets', JSON.stringify(localWallets))
+			await $persistWalletMutation.mutateAsync(walletDetails)
 			toast.success('Wallet moved to database')
-		} else if (nwcWallet) {
-			await $updateWalletMutation.mutateAsync({ walletId: nwcWallet.id, walletDetails: { walletType: 'nwc', walletDetails: wallet } })
+		} else if (nwcWallet?.id) {
+			await $updateWalletMutation.mutateAsync({
+				walletId: nwcWallet.id,
+				walletDetails,
+			})
 			toast.success('Wallet updated')
 		} else {
-			await $persistWalletMutation.mutateAsync({ walletType: 'nwc', walletDetails: wallet })
+			await $persistWalletMutation.mutateAsync(walletDetails)
 			toast.success('Wallet saved')
 		}
 		dispatch('walletAdded')
@@ -112,8 +161,8 @@
 			await encryptedStorage.setItem(`nwc-wallets`, JSON.stringify(localWallets))
 			resetForm()
 			toast.success('NWC Wallet deleted locally')
-		} else {
-			const deleteResult = await $deleteWalletMutation.mutateAsync({ userId: $ndkStore.activeUser?.pubkey, walletId: nwcWallet.id })
+		} else if ($ndkStore.activeUser?.pubkey) {
+			const deleteResult = await $deleteWalletMutation.mutateAsync({ userId: $ndkStore.activeUser.pubkey, walletId: nwcWallet.id })
 			deleteResult && toast.success('NWC Wallet deleted')
 		}
 		dispatch('walletDeleted', nwcWallet.id)
@@ -147,11 +196,12 @@
 	}
 
 	function handleRelayChange(event: Event) {
-		const target = event.target as HTMLInputElement
-		walletRelays = target.value
-			.split(',')
-			.map((relay) => relay.trim())
-			.filter((relay) => relay !== '')
+		const value = (event.target as HTMLInputElement).value
+		walletRelays = value.split(',').reduce((acc: string[], relay) => {
+			const trimmed = relay.trim()
+			if (trimmed) acc.push(trimmed)
+			return acc
+		}, [])
 	}
 </script>
 
@@ -188,7 +238,10 @@
 				</div>
 				<div class="grid w-full items-center gap-1.5">
 					<Label for="nwc-pubkey" class="font-bold">Wallet connect pubkey</Label>
-					<Input bind:value={walletPubKey} type="text" id={`nwcPubkey=${nwcWallet?.id}`} name="nwc-pubkey" />
+					<Input bind:value={walletPubKey} type="text" id={`nwcPubkey=${nwcWallet?.id}`} name="nwc-pubkey" required />
+					{#if formErrors.walletPubKey}
+						<span class="text-red-500 text-sm">{formErrors.walletPubKey}</span>
+					{/if}
 				</div>
 
 				<div class="grid w-full items-center gap-1.5">
@@ -199,17 +252,24 @@
 						type="text"
 						id={`nwcRelay=${nwcWallet?.id}`}
 						name="nwc-relay"
+						required
 					/>
+					{#if formErrors.walletRelays}
+						<span class="text-red-500 text-sm">{formErrors.walletRelays}</span>
+					{/if}
 				</div>
 				<div class="grid w-full items-center gap-1.5">
 					<Label for="nwc-secret" class="font-bold">Wallet connect secret</Label>
 					<div class="flex flex-row">
-						<Input bind:value={walletSecret} type={showSecret ? 'text' : 'password'} id="nwc-secret" name="nwc-secret" />
+						<Input bind:value={walletSecret} type={showSecret ? 'text' : 'password'} id="nwc-secret" name="nwc-secret" required />
 						<Button variant="ghost" on:click={() => (showSecret = !showSecret)} size="icon" class="text-destructive border-0">
 							{#if showSecret}
 								<span class="i-mdi-eye-outline w-4 h-4" />
 							{:else}
 								<span class="i-mdi-eye-off-outline w-4 h-4" />
+							{/if}
+							{#if formErrors.walletSecret}
+								<span class="text-red-500 text-sm">{formErrors.walletSecret}</span>
 							{/if}
 						</Button>
 					</div>
