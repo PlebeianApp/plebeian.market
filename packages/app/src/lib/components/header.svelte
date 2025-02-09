@@ -73,7 +73,7 @@
 	const navMenuButtonStyle = 'gap-4 py-8 px-6 justify-start'
 	const navMenuLabels = 'font-bold'
 	const activeNavClass = 'text-secondary font-bold'
-	const activeMenuItemClass = 'bg-secondary text-primary'
+	const activeMenuItemClass = 'bg-primary text-secondary rounded-none'
 	const activeNavButtonClass = 'bg-secondary text-primary hover:text-secondary'
 
 	onMount(() => {
