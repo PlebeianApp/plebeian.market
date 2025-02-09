@@ -54,7 +54,7 @@
 					.map(({ data }) => data)
 			: []
 
-		toDisplayProducts = productsData?.size ? ((await normalizeProductsFromNostr(productsData, id))?.toDisplayProducts ?? []) : []
+		toDisplayProducts = productsData?.size ? (await normalizeProductsFromNostr(productsData, id))?.toDisplayProducts ?? [] : []
 	})
 
 	const handleSendMessage = () => {
@@ -90,7 +90,7 @@
 					</div>
 				{:else}
 					<Hero
-						class={`border-black w-full border-2 aspect-[3/1] relative overflow-hidden`}
+						class={`border-black w-full border-2 aspect-[5/1] relative overflow-hidden`}
 						gradientColor={getHexColorFingerprintFromHexPubkey(id)}
 						gradientOpacity="0.6"
 					></Hero>
