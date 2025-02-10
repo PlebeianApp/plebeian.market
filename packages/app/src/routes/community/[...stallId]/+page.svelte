@@ -205,7 +205,7 @@
 			{#if isMyStall}
 				<div class="flex flex-row gap-2 mx-8">
 					<Button variant="primary" class="mt-4 w-fit" on:click={() => openDrawerForStall(stall.id)}>Edit stall</Button>
-					<Button variant="primary" class="mt-4 w-fit" on:click={() => openDrawerForNewProductForStall(stall.id)}>Add product</Button>
+					<Button variant="primary" class="mt-4 w-fit" on:click={() => openDrawerForNewProductForStall(stall.id)}>Add a product</Button>
 				</div>
 			{/if}
 		{:else}

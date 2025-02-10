@@ -164,7 +164,7 @@
 							{#if isMe}
 								{#if stallsMixture.length && productsMixture.length}
 									<Button variant="focus" class=" gap-2" on:click={openDrawerForNewProduct}>
-										<span>Add A Product</span>
+										<span>Sell A Product</span>
 									</Button>
 									<Button variant="primary" class=" gap-2" on:click={openDrawerForNewStall}>
 										<span>New Stall</span>

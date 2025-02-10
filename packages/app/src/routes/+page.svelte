@@ -16,7 +16,7 @@
 
 	$: userStalls = $ndkStore.activeUser ? createStallsByFilterQuery({ userId: $ndkStore.activeUser.pubkey }) : undefined
 
-	$: startSellingText = userStalls === undefined ? 'Start Selling' : !$userStalls?.data?.stalls.length ? 'Open a shop' : 'Add a product'
+	$: startSellingText = userStalls === undefined ? 'Start Selling' : !$userStalls?.data?.stalls.length ? 'Open a shop' : 'Sell a product'
 
 	$: productQuery = createProductsByFilterQuery({ pageSize: getGridColumns($breakpoint, 'product') * 4, order: 'asc', onePerUser: true })
 	$: featuredProductsQuery = createProductsByFilterQuery({ featured: true, pageSize: getGridColumns($breakpoint, 'product') * 4 })
