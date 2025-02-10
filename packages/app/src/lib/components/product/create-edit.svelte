@@ -561,28 +561,34 @@
 		</div>
 		<div>
 			<div class="flex gap-2 my-4">
-				<Button
-					variant="outline"
-					disabled={isLoading || $productFormStore.tab == 'details'}
-					class="w-full font-bold flex items-center gap-2"
-					on:click={() => productFormStore.previousTab()}
-				>
-					<span class="i-tdesign-arrow-left w-5 h-5"></span>
-					Back
-				</Button>
-				{#if $productFormStore.tab === PRODUCT_FORM_TABS[PRODUCT_FORM_TABS.length - 1]}
-					<Button variant="primary" disabled={isLoading} type="submit" class="w-full font-bold">Save</Button>
+				{#if product?.id}
+					<Button variant="destructive" type="button" class="w-full" disabled={isLoading} on:click={handleDelete}>Delete</Button>
+					<Button
+						id="save-product-button"
+						variant="focus"
+						disabled={isLoading}
+						type="submit"
+						class="w-full font-bold focus:border-secondary">Save</Button
+					>
 				{:else}
-					<Button variant="primary" disabled={isLoading} class="w-full font-bold" on:click={() => productFormStore.nextTab()}>Next</Button>
+					<Button
+						id="prev-tab-button"
+						variant="outline"
+						disabled={isLoading || $productFormStore.tab == 'details'}
+						class="w-full font-bold flex items-center gap-2"
+						on:click={() => productFormStore.previousTab()}
+					>
+						<span class="i-tdesign-arrow-left w-5 h-5"></span>
+						Back
+					</Button>
+					{#if $productFormStore.tab === PRODUCT_FORM_TABS[PRODUCT_FORM_TABS.length - 1]}
+						<Button variant="primary" disabled={isLoading} type="submit" class="w-full font-bold">Save</Button>
+					{:else}
+						<Button variant="primary" disabled={isLoading} class="w-full font-bold" on:click={() => productFormStore.nextTab()}>Next</Button
+						>
+					{/if}
 				{/if}
-				<!-- TODO: Keep working on manual reset -->
-				<!-- <Button variant="outline" size="icon" on:click={() => productFormStore.reset()}>
-					<span class=" i-mdi-restore w-5 h-5" />
-				</Button> -->
 			</div>
-			{#if product?.id}
-				<Button variant="destructive" disabled={isLoading} class="w-full" on:click={handleDelete}>Delete</Button>
-			{/if}
 		</div>
 	</form>
 {/if}
