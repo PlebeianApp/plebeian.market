@@ -219,7 +219,7 @@
 					disabled={!inputEditable && Boolean(src)}
 					bind:value={src}
 					type="text"
-					class="border-2 border-black pr-12 h-12"
+					class="border-2 border-black pr-12 h-12 rounded-none"
 					placeholder="Or paste image/video URL..."
 					id="userImageRemote"
 					name="imageRemoteInput"
