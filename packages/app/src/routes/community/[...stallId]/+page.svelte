@@ -106,7 +106,7 @@
 							<CardHeader>
 								<CardTitle>
 									<div class="flex flex-row gap-2 items-center justify-between">
-										<div class="flex flex-row gap-2 items-center">
+										<div class="flex flex-row gap-2 items-center overflow-hidden text-ellipsis">
 											<a href={`/p/${user.id}`}>
 												<CAvatar
 													pubkey={String(user.id)}
