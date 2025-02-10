@@ -55,7 +55,7 @@ export function getGridColumns(breakpoint: Breakpoint, forItemType: string): num
 }
 
 const MOBILE_SIZE_CLASSES = {
-	default: 'h-10 px-4 text-base',
+	default: 'h-11 px-4 text-base',
 	sm: 'h-11 px-3 text-base',
 	lg: 'h-12 px-6 text-lg',
 	icon: 'h-11 w-11',
