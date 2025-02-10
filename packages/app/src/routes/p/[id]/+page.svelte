@@ -111,9 +111,9 @@
 						<CAvatar
 							pubkey={id}
 							profile={$userProfileQuery.data}
-							avatarClass="rounded-md w-8 h-8"
-							imageClass="rounded-md w-8 h-8"
-							fallbackClass="rounded-md w-8 h-8"
+							avatarClass="rounded-md w-8 h-8 border-none"
+							imageClass="rounded-md w-full h-full"
+							fallbackClass="rounded-md w-full h-full"
 							linked
 						/>
 						<h2 class="text-2xl text-white">{truncateText(name ?? `Unnamed user`, $breakpoint == 'sm' ? 10 : 50)}</h2>

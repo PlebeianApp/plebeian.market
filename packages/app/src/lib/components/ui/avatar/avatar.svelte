@@ -9,10 +9,6 @@
 	export { className as class }
 </script>
 
-<AvatarPrimitive.Root
-	{delayMs}
-	class={cn('relative flex h-11 w-11 shrink-0 border-4 overflow-hidden rounded-full', className)}
-	{...$$restProps}
->
+<AvatarPrimitive.Root {delayMs} class={cn('relative flex h-11 w-11 shrink-0 overflow-hidden rounded-full', className)} {...$$restProps}>
 	<slot />
 </AvatarPrimitive.Root>

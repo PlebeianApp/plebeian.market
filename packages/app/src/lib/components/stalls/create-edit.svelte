@@ -309,6 +309,7 @@
 							placeholder="Description"
 							name="description"
 						/>
+
 						{#if validationErrors['description']}
 							<p class="text-red-500 text-sm mt-1">{validationErrors['description']}</p>
 						{/if}
@@ -591,28 +592,39 @@
 
 	<div>
 		<div class="flex gap-2 my-4">
-			<Button
-				id="prev-tab-button"
-				variant="outline"
-				disabled={isLoading || currentTab === tabs[0]}
-				class="w-full font-bold flex items-center gap-2"
-				on:click={goToPreviousTab}
-			>
-				<span class="i-tdesign-arrow-left w-5 h-5"></span>
-				Back
-			</Button>
-
-			{#if currentTab === tabs[tabs.length - 1]}
-				<Button id="save-stall-button" variant="primary" disabled={isLoading || !changed} type="submit" class="w-full font-bold"
-					>Save</Button
+			{#if stall?.id}
+				<Button variant="destructive" type="button" class="w-full" disabled={isLoading} on:click={handleDelete}>Delete</Button>
+				<Button
+					id="save-stall-button"
+					variant="focus"
+					disabled={isLoading || !changed}
+					type="submit"
+					class="w-full font-bold focus:border-secondary">Save</Button
 				>
 			{:else}
-				<Button id="next-tab-button" variant="primary" disabled={isLoading} class="w-full font-bold" on:click={goToNextTab}>Next</Button>
+				<Button
+					id="prev-tab-button"
+					variant="outline"
+					disabled={isLoading || currentTab === tabs[0]}
+					class="w-full font-bold flex items-center gap-2"
+					on:click={goToPreviousTab}
+				>
+					<span class="i-tdesign-arrow-left w-5 h-5"></span>
+					Back
+				</Button>
+
+				{#if currentTab === tabs[tabs.length - 1]}
+					<Button
+						id="save-stall-button"
+						variant="primary"
+						disabled={isLoading || !changed}
+						type="submit"
+						class="w-full font-bold focus:border-secondary">Save</Button
+					>
+				{:else}
+					<Button id="next-tab-button" variant="primary" disabled={isLoading} class="w-full font-bold" on:click={goToNextTab}>Next</Button>
+				{/if}
 			{/if}
 		</div>
-
-		{#if stall?.id}
-			<Button variant="destructive" type="button" class="w-full" disabled={isLoading} on:click={handleDelete}>Delete</Button>
-		{/if}
 	</div>
 </form>

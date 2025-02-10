@@ -232,7 +232,7 @@
 		</div>
 	{:else}
 		<div class="flex gap-4 my-16 mx-8">
-			<SkeletonLoader count={3} class=" h-80 w-full border-4 border-black text-black group" />
+			<SkeletonLoader count={3} class=" h-80 w-full border-none border-black text-black group" />
 		</div>
 	{/if}
 </main>
