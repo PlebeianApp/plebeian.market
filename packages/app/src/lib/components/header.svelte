@@ -113,7 +113,7 @@
 						profile={$ndkStore.activeUser.profile}
 						avatarClass="rounded-md border-2 {currentPath.startsWith('/p/') ? 'border-secondary' : 'border-primary'}"
 						imageClass="rounded-md"
-						fallbackClass="rounded-md"
+						fallbackClass="rounded-none"
 					/>
 				</a>
 			{/if}
