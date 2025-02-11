@@ -327,7 +327,7 @@
 					<Tabs.Trigger value="details" class={activeTab}>Details</Tabs.Trigger>
 					<Tabs.Trigger value="categories" class={activeTab}>Categories</Tabs.Trigger>
 					<Tabs.Trigger data-tooltip="Images help customers recognize your product" value="images" class={activeTab}>Images</Tabs.Trigger>
-					<Tabs.Trigger value="shippings" class={activeTab}>Shippings</Tabs.Trigger>
+					<Tabs.Trigger value="shippings" class={activeTab}>Shipping</Tabs.Trigger>
 				</Tabs.List>
 
 				<ScrollArea class="flex-1">
@@ -366,100 +366,97 @@
 							{/if}
 						</div>
 
-						<div class="flex gap-1.5">
-							<div class="grid w-full items-center gap-1.5">
-								<Label for="price" class="font-bold required-mark">Price<small class="font-light">({stall?.currency})</small></Label>
-								<Input
-									id="price"
-									data-tooltip="The cost of your product"
-									bind:value={price}
-									class={`border-2 border-black ${validationErrors['price'] ? 'ring-2 ring-red-500' : ''}`}
-									min={0}
-									type="text"
-									pattern="^(?!.*\\.\\.)[0-9]*([.][0-9]+)?"
-									name="price"
-									placeholder="e.g. 30"
-									required
-								/>
-								{#if validationErrors['price']}
-									<p class="text-red-500 text-sm mt-1">
-										{validationErrors['price']}
-									</p>
-								{/if}
-							</div>
-
-							<div class="grid w-full items-center gap-1.5">
-								<Label title="quantity" for="quantity" class="font-bold required-mark">Quantity</Label>
-								<Input
-									id="quantity"
-									data-tooltip="The available stock for this product"
-									bind:value={quantity}
-									required
-									class={`border-2 border-black ${validationErrors['quantity'] ? 'ring-2 ring-red-500' : ''}`}
-									type="number"
-									name="quantity"
-									placeholder="e.g. 10"
-								/>
-								{#if validationErrors['quantity']}
-									<p class="text-red-500 text-sm mt-1">
-										{validationErrors['quantity']}
-									</p>
-								{/if}
-							</div>
+						<div class="grid w-full items-center gap-1.5">
+							<Label for="price" class="font-bold required-mark">Price<small class="font-light">({stall?.currency})</small></Label>
+							<Input
+								id="price"
+								data-tooltip="The cost of your product"
+								bind:value={price}
+								class={`border-2 border-black ${validationErrors['price'] ? 'ring-2 ring-red-500' : ''}`}
+								min={0}
+								type="text"
+								pattern="^(?!.*\\.\\.)[0-9]*([.][0-9]+)?"
+								name="price"
+								placeholder="e.g. 30"
+								required
+							/>
+							{#if validationErrors['price']}
+								<p class="text-red-500 text-sm mt-1">
+									{validationErrors['price']}
+								</p>
+							{/if}
 						</div>
 
-						<div class="flex gap-1.5">
-							<div class="grid w-full items-center gap-1.5">
-								<Label for="product-stall" class="font-bold">Shop</Label>
-								<DropdownMenu.Root>
-									<DropdownMenu.Trigger asChild let:builder>
-										<Button
-											data-tooltip="The shop this product is part of"
-											variant="outline"
-											class="border-2 border-black justify-between"
-											iconPosition="right"
-											builders={[builder]}
-										>
-											{#if currentStallIdentifier}
-												{@const defaultStall = $stallsQuery.data?.stalls.find((stall) => stall.identifier === currentStallIdentifier)}
-												{defaultStall ? defaultStall.name : 'Select a shop'}
-											{:else}
-												{stall?.name}
-											{/if}
-											<ChevronDown slot="icon" class="h-4 w-4" />
-										</Button>
-									</DropdownMenu.Trigger>
-									<DropdownMenu.Content class="w-56">
-										<DropdownMenu.Label>Shop</DropdownMenu.Label>
-										<DropdownMenu.Separator />
-										<section class=" max-h-[350px] overflow-y-auto">
-											{#each $stallsQuery.data?.stalls as item (item.id)}
-												<DropdownMenu.CheckboxItem
-													checked={currentStallIdentifier === item.identifier}
-													on:click={() => {
-														currentStallIdentifier = item.identifier
-													}}
-												>
-													{item.name}
-												</DropdownMenu.CheckboxItem>
-											{/each}
-										</section>
-									</DropdownMenu.Content>
-								</DropdownMenu.Root>
-							</div>
-							<div class="grid w-full items-center gap-1.5">
-								<Label for="product-currency" class="font-bold">Currency</Label>
-								<Input
-									id="product-currency"
-									data-tooltip="This is inherited from the shop's currency"
-									value={stall?.currency}
-									required
-									class="border-2 border-black"
-									type="text"
-									name="currency"
-									disabled
-								/>
-							</div>
+						<div class="grid w-full items-center gap-1.5">
+							<Label title="quantity" for="quantity" class="font-bold required-mark">Quantity</Label>
+							<Input
+								id="quantity"
+								data-tooltip="The available stock for this product"
+								bind:value={quantity}
+								required
+								class={`border-2 border-black ${validationErrors['quantity'] ? 'ring-2 ring-red-500' : ''}`}
+								type="number"
+								name="quantity"
+								placeholder="e.g. 10"
+							/>
+							{#if validationErrors['quantity']}
+								<p class="text-red-500 text-sm mt-1">
+									{validationErrors['quantity']}
+								</p>
+							{/if}
+						</div>
+
+						<div class="grid w-full items-center gap-1.5">
+							<Label for="product-stall" class="font-bold">Shop</Label>
+							<DropdownMenu.Root>
+								<DropdownMenu.Trigger asChild let:builder>
+									<Button
+										data-tooltip="The shop this product is part of"
+										variant="outline"
+										class="border-2 border-black justify-between"
+										iconPosition="right"
+										builders={[builder]}
+									>
+										{#if currentStallIdentifier}
+											{@const defaultStall = $stallsQuery.data?.stalls.find((stall) => stall.identifier === currentStallIdentifier)}
+											{defaultStall ? defaultStall.name : 'Select a shop'}
+										{:else}
+											{stall?.name}
+										{/if}
+										<ChevronDown slot="icon" class="h-4 w-4" />
+									</Button>
+								</DropdownMenu.Trigger>
+								<DropdownMenu.Content class="w-56">
+									<DropdownMenu.Label>Shop</DropdownMenu.Label>
+									<DropdownMenu.Separator />
+									<section class=" max-h-[350px] overflow-y-auto">
+										{#each $stallsQuery.data?.stalls as item (item.id)}
+											<DropdownMenu.CheckboxItem
+												checked={currentStallIdentifier === item.identifier}
+												on:click={() => {
+													currentStallIdentifier = item.identifier
+												}}
+											>
+												{item.name}
+											</DropdownMenu.CheckboxItem>
+										{/each}
+									</section>
+								</DropdownMenu.Content>
+							</DropdownMenu.Root>
+						</div>
+
+						<div class="grid w-full items-center gap-1.5">
+							<Label for="product-currency" class="font-bold">Currency</Label>
+							<Input
+								id="product-currency"
+								data-tooltip="This is inherited from the shop's currency"
+								value={stall?.currency}
+								required
+								class="border-2 border-black"
+								type="text"
+								name="currency"
+								disabled
+							/>
 						</div>
 					</Tabs.Content>
 
@@ -565,28 +562,34 @@
 		</div>
 		<div>
 			<div class="flex gap-2 my-4">
-				<Button
-					variant="outline"
-					disabled={isLoading || $productFormStore.tab == 'details'}
-					class="w-full font-bold flex items-center gap-2"
-					on:click={() => productFormStore.previousTab()}
-				>
-					<span class="i-tdesign-arrow-left w-5 h-5"></span>
-					Back
-				</Button>
-				{#if $productFormStore.tab === PRODUCT_FORM_TABS[PRODUCT_FORM_TABS.length - 1]}
-					<Button variant="primary" disabled={isLoading} type="submit" class="w-full font-bold">Save</Button>
+				{#if product?.id}
+					<Button variant="destructive" type="button" class="w-full" disabled={isLoading} on:click={handleDelete}>Delete</Button>
+					<Button
+						id="save-product-button"
+						variant="focus"
+						disabled={isLoading}
+						type="submit"
+						class="w-full font-bold focus:border-secondary">Save</Button
+					>
 				{:else}
-					<Button variant="primary" disabled={isLoading} class="w-full font-bold" on:click={() => productFormStore.nextTab()}>Next</Button>
+					<Button
+						id="prev-tab-button"
+						variant="outline"
+						disabled={isLoading || $productFormStore.tab == 'details'}
+						class="w-full font-bold flex items-center gap-2"
+						on:click={() => productFormStore.previousTab()}
+					>
+						<span class="i-tdesign-arrow-left w-5 h-5"></span>
+						Back
+					</Button>
+					{#if $productFormStore.tab === PRODUCT_FORM_TABS[PRODUCT_FORM_TABS.length - 1]}
+						<Button variant="primary" disabled={isLoading} type="submit" class="w-full font-bold">Save</Button>
+					{:else}
+						<Button variant="primary" disabled={isLoading} class="w-full font-bold" on:click={() => productFormStore.nextTab()}>Next</Button
+						>
+					{/if}
 				{/if}
-				<!-- TODO: Keep working on manual reset -->
-				<!-- <Button variant="outline" size="icon" on:click={() => productFormStore.reset()}>
-					<span class=" i-mdi-restore w-5 h-5" />
-				</Button> -->
 			</div>
-			{#if product?.id}
-				<Button variant="destructive" disabled={isLoading} class="w-full" on:click={handleDelete}>Delete</Button>
-			{/if}
 		</div>
 	</form>
 {/if}

@@ -90,7 +90,7 @@
 					</div>
 				{:else}
 					<Hero
-						class={`border-black w-full border-2 aspect-[3/1] relative overflow-hidden`}
+						class={`border-black w-full border-2 aspect-[5/1] relative overflow-hidden`}
 						gradientColor={getHexColorFingerprintFromHexPubkey(id)}
 						gradientOpacity="0.6"
 					></Hero>
@@ -111,9 +111,9 @@
 						<CAvatar
 							pubkey={id}
 							profile={$userProfileQuery.data}
-							avatarClass="rounded-md w-8 h-8"
-							imageClass="rounded-md w-8 h-8"
-							fallbackClass="rounded-md w-8 h-8"
+							avatarClass="rounded-md w-8 h-8 border-none"
+							imageClass="rounded-md w-full h-full"
+							fallbackClass="rounded-md w-full h-full"
 							linked
 						/>
 						<h2 class="text-2xl text-white">{truncateText(name ?? `Unnamed user`, $breakpoint == 'sm' ? 10 : 50)}</h2>
@@ -164,7 +164,7 @@
 							{#if isMe}
 								{#if stallsMixture.length && productsMixture.length}
 									<Button variant="focus" class=" gap-2" on:click={openDrawerForNewProduct}>
-										<span>Add A Product</span>
+										<span>Sell A Product</span>
 									</Button>
 									<Button variant="primary" class=" gap-2" on:click={openDrawerForNewStall}>
 										<span>New Stall</span>

@@ -160,7 +160,7 @@
 	<div class="flex flex-col">
 		<div
 			class="border-t-2 border-l-2 border-r-2 border-black relative w-full aspect-[3/1] overflow-hidden
-			{src
+            {src
 				? 'bg-black'
 				: 'bg-[#F5F5F5] bg-[linear-gradient(45deg,#E0E0E0_25%,transparent_25%,transparent_75%,#E0E0E0_75%,#E0E0E0),linear-gradient(45deg,#E0E0E0_25%,transparent_25%,transparent_75%,#E0E0E0_75%,#E0E0E0)] bg-[length:50px_50px] bg-[position:0_0,25px_25px]'}"
 		>
@@ -214,25 +214,27 @@
 			{/if}
 		</div>
 		<div class="w-full flex items-center justify-center">
-			<Input
-				disabled={!inputEditable && Boolean(src)}
-				bind:value={src}
-				type="text"
-				class="border-2 border-black"
-				placeholder="Or paste image/video URL..."
-				id="userImageRemote"
-				name="imageRemoteInput"
-				on:input={handleInput}
-			/>
-			{#if src}
-				{#if inputEditable}
-					<Button variant="primary" on:click={handleSaveImage}>Save</Button>
+			<div class="relative w-full">
+				<Input
+					disabled={!inputEditable && Boolean(src)}
+					bind:value={src}
+					type="text"
+					class="border-2 border-black pr-12 h-12 rounded-none"
+					placeholder="Or paste image/video URL..."
+					id="userImageRemote"
+					name="imageRemoteInput"
+					on:input={handleInput}
+				/>
+				{#if src}
+					{#if inputEditable}
+						<Button variant="primary" class="absolute right-1 top-1 bottom-1 h-10" on:click={handleSaveImage}>Save</Button>
+					{:else}
+						<Button variant="secondary" class="absolute right-1 top-1 bottom-1 h-10" on:click={() => (inputEditable = true)}>Edit</Button>
+					{/if}
 				{:else}
-					<Button variant="secondary" on:click={() => (inputEditable = true)}>Edit</Button>
+					<Button variant="primary" class="absolute right-1 top-1 bottom-1 h-10" on:click={handleSaveImage}>Save</Button>
 				{/if}
-			{:else}
-				<Button variant="primary" on:click={handleSaveImage}>Save</Button>
-			{/if}
+			</div>
 		</div>
 		{#if urlError}
 			<p class="text-destructive">{urlError}</p>

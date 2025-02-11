@@ -106,7 +106,7 @@
 							<CardHeader>
 								<CardTitle>
 									<div class="flex flex-row gap-2 items-center justify-between">
-										<div class="flex flex-row gap-2 items-center">
+										<div class="flex flex-row gap-2 items-center overflow-hidden text-ellipsis">
 											<a href={`/p/${user.id}`}>
 												<CAvatar
 													pubkey={String(user.id)}
@@ -118,7 +118,7 @@
 											</a>
 											<span>{$userProfileQuery.data?.name || $userProfileQuery.data?.displayName || truncateText(user.id)}</span>
 										</div>
-										<span class="text-sm text-gray-500">created: {createDate}</span>
+										<span class="text-sm text-gray-500 md:flex-row">created: {createDate}</span>
 									</div>
 								</CardTitle>
 							</CardHeader>
@@ -205,7 +205,7 @@
 			{#if isMyStall}
 				<div class="flex flex-row gap-2 mx-8">
 					<Button variant="primary" class="mt-4 w-fit" on:click={() => openDrawerForStall(stall.id)}>Edit stall</Button>
-					<Button variant="primary" class="mt-4 w-fit" on:click={() => openDrawerForNewProductForStall(stall.id)}>Add product</Button>
+					<Button variant="primary" class="mt-4 w-fit" on:click={() => openDrawerForNewProductForStall(stall.id)}>Add a product</Button>
 				</div>
 			{/if}
 		{:else}
@@ -232,7 +232,7 @@
 		</div>
 	{:else}
 		<div class="flex gap-4 my-16 mx-8">
-			<SkeletonLoader count={3} class=" h-80 w-full border-4 border-black text-black group" />
+			<SkeletonLoader count={3} class=" h-80 w-full border-none border-black text-black group" />
 		</div>
 	{/if}
 </main>
