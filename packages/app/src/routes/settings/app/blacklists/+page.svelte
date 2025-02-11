@@ -41,9 +41,6 @@
 <div class="pb-4 space-y-2 max-w-2xl">
 	<div>
 		<div class=" flex items-center gap-1">
-			<Button variant="ghost" size="icon" on:click={() => goto('/settings/app')}>
-				<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
-			</Button>
 			<section>
 				<h3 class="text-lg font-bold">{linkDetails?.title}</h3>
 				<p class="text-gray-600">{linkDetails?.description}</p>

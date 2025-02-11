@@ -31,8 +31,6 @@
 		$stallsQuery.data?.stalls.some((stall) => stall.identifier == product.stall_id),
 	)
 
-	// $: productsMode === 'list' ? $productsQuery?.refetch() : null
-
 	let currentProduct: Partial<DisplayProduct> | null = null
 
 	const linkDetails = data.menuItems
@@ -60,9 +58,6 @@
 	{#if productsMode === 'list'}
 		<div class="flex justify-between items-center">
 			<div class=" flex items-center gap-1">
-				<Button variant="ghost" size="icon" on:click={() => goto('/settings/account/')}>
-					<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
-				</Button>
 				<section>
 					<h3 class="text-lg font-bold">{linkDetails?.title}</h3>
 					<p class="text-gray-600">{linkDetails?.description}</p>

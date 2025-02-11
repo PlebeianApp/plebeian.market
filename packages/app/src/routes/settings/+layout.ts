@@ -1,7 +1,7 @@
 export const load = async () => {
 	const menuItems = [
 		{
-			title: '📊 App Settings',
+			title: 'App Settings',
 			description: 'Configure app settings and preferences',
 			value: 'app-settings',
 			root: '/settings/app',
@@ -14,7 +14,7 @@ export const load = async () => {
 			],
 		},
 		{
-			title: '👥 Account Settings',
+			title: 'Account Settings',
 			description: 'Manage account settings and preferences',
 			value: 'account-settings',
 			root: '/settings/account',
@@ -35,7 +35,7 @@ export const load = async () => {
 			],
 		},
 		{
-			title: '✨ Circular Economy Community Builder',
+			title: 'Circular Economy Community Builder',
 			description: 'Configure community contributions preferences',
 			value: 'cecb-settings',
 			root: '/settings/cecb',
