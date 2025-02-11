@@ -54,7 +54,7 @@
 					.map(({ data }) => data)
 			: []
 
-		toDisplayProducts = productsData?.size ? (await normalizeProductsFromNostr(productsData, id))?.toDisplayProducts ?? [] : []
+		toDisplayProducts = productsData?.size ? ((await normalizeProductsFromNostr(productsData, id))?.toDisplayProducts ?? []) : []
 	})
 
 	const handleSendMessage = () => {
