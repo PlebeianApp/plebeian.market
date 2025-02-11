@@ -24,11 +24,12 @@
 		sort = v!
 	}
 	let search = writable('')
+	$: productColumns = getGridColumns($breakpoint, 'stall')
 
 	$: debouncedSearch = reactiveDebounce(search, 600)
 	$: $search, (page = 1)
 	$: stallsQuery = createStallsByFilterQuery({
-		pageSize: getGridColumns($breakpoint, 'stall') * 4,
+		pageSize: productColumns == 1 ? productColumns * 16 : productColumns * 4,
 		page,
 		order: sort.value ?? 'desc',
 		search: $debouncedSearch,
