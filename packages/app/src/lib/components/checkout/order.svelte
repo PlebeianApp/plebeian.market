@@ -217,7 +217,7 @@
 				>
 					{#if relevantPaymentDetails.length}
 						<Button
-							variant="primary"
+							variant="focus"
 							class="w-full"
 							disabled={!filledShippingMethods || !ableToPlaceOrder || isLoading}
 							on:click={handleOrderAndPayment}>Place Order & Pay</Button
