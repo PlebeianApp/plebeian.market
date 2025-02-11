@@ -553,7 +553,8 @@
 									? 'Add few shipping methods to the stall first'
 									: 'Add shipping methods available for this product'}
 								on:click={() => (currentShippings = [...currentShippings, { shipping: null, extraCost: '0' }])}
-								disabled={currentShippings.length === stall?.shipping?.length}
+								disabled={currentShippings.length === stall?.shipping?.length ||
+									currentShippings.some((shipping) => !shipping.shipping?.id)}
 								variant="outline"
 								class={`font-bold ml-auto`}>Add Shipping Method</Button
 							>

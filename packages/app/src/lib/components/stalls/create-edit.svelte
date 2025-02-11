@@ -346,6 +346,7 @@
 						index={-1}
 						imagesLength={1}
 						on:save={({ detail }) => (headerImage = detail.url)}
+						on:delete={() => (headerImage = '')}
 					/>
 				</Tabs.Content>
 				<Tabs.Content value="location" class="flex flex-col gap-2">

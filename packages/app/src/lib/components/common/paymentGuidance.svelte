@@ -60,7 +60,7 @@
 				<p>Would you like to use this as your payment method?</p>
 			</div>
 
-			<div class="flex space-x-2">
+			<div class="flex space-x-2 flex-wrap gap-2 justify-center">
 				<Button on:click={() => setupPaymentDetail(userLightningAddress, PAYMENT_DETAILS_METHOD.LIGHTNING_NETWORK)}>
 					Use this address
 				</Button>

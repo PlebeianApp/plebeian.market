@@ -43,7 +43,7 @@
 	{/if}
 
 	{#if isOpen}
-		<div class={`bg-white flex flex-col ${mode == 'widget' && 'w-fit p-2 border-black border-2 fixed bottom-0 z-50 gap-2'}`}>
+		<div class={`bg-white flex flex-col ${mode == 'widget' && 'w-fit p-2 border-black border-2 fixed bottom-0 gap-2'}`}>
 			<div class="text-end">
 				{#if mode === 'widget'}
 					<Button size="icon" variant="ghost" on:click={() => (isOpen = !isOpen)}>

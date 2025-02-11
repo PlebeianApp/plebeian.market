@@ -197,7 +197,7 @@
 				<SellStuffAdvert />
 			{/if}
 			<Footer />
-			<section class="fixed bottom-0 flex">
+			<section class="fixed bottom-0 flex z-20">
 				<RelayWidget />
 				{#if $relayReports?.length}
 					<RelayReportWidget />
