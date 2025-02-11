@@ -356,15 +356,17 @@
 						<Label for="from" class="font-bold">Shipping From (Recommended)</Label>
 						<div class="flex flex-col gap-2">
 							<div class="flex items-center gap-2">
+								{#if geohashOfSelectedGeometry}
+									<small class="text-gray-500 text-sm">Geohash: {geohashOfSelectedGeometry}</small>
+								{:else}
+									<small class="text-gray-500 text-sm"
+										>No location selected - click on the map to set a marker or search for a location</small
+									>
+								{/if}
 								<span
-									class="i-mdi-information-outline"
+									class="i-mdi-information-outline w-8 h-8"
 									data-tooltip="Geohash is a compact representation of a geographic coordinate system..."
 								/>
-								{#if geohashOfSelectedGeometry}
-									<small class="text-gray-500">Geohash: {geohashOfSelectedGeometry}</small>
-								{:else}
-									<small class="text-gray-500">No location selected - click on the map to set a marker or search for a location</small>
-								{/if}
 							</div>
 							<div class="grid grid-cols-[1fr_auto] gap-2">
 								<Input type="search" placeholder="Search location..." bind:value={shippingFromInput} />
