@@ -341,6 +341,7 @@
 
 				<Tabs.Content value="header" class="flex flex-col gap-2">
 					<Label for="userImage" class="font-bold">Header image (Recommended)</Label>
+					<p class="text-gray-500 text-sm">An image or video of 1500x500 and under 2mb is recommended.</p>
 					<SingleImage
 						forSingle={true}
 						src={headerImage}

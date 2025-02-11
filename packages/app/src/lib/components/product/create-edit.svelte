@@ -464,7 +464,9 @@
 						<CategoryManager bind:categories />
 					</Tabs.Content>
 
-					<Tabs.Content value="images" class="flex flex-col">
+					<Tabs.Content value="images" class="flex flex-col gap-2">
+						<Label for="userImage" class="font-bold">Product images</Label>
+						<p class="text-gray-500 text-sm">We recommend using images of 1600x1600 and under 2mb.</p>
 						<MultiImageEdit
 							images={sortedImages}
 							on:imageAdded={(e) => handleNewImageAdded(e)}
