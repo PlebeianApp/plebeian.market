@@ -230,7 +230,7 @@
 								<span class="i-mdi-plus w-4 h-4"></span>
 							</Button>
 						</div>
-						<div class="flex flex-row gap-2 w-full">
+						<div class="flex flex-row gap-2 w-64">
 							{#if $productsQuery.data.quantity && $productsQuery.data.quantity > 0}
 								<Button
 									class="flex-1"
