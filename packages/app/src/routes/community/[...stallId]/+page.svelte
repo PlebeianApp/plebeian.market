@@ -105,7 +105,7 @@
 						<Card class="rounded-none border-t-2 border-b-0 border-l-0 border-r-0 border-black shadow-lg flex-1">
 							<CardHeader>
 								<CardTitle>
-									<div class="flex flex-col md:flex-row gap-2 items-start md:items-center overflow-hidden justify-betweenbetween">
+									<div class="flex flex-row gap-2 items-center justify-between">
 										<div class="flex flex-row gap-2 items-center overflow-hidden text-ellipsis">
 											<a href={`/p/${user.id}`}>
 												<CAvatar
@@ -116,9 +116,9 @@
 													fallbackClass="rounded-md w-8 h-8"
 												/>
 											</a>
-											<span>{$userProfileQuery.data?.name || $userProfileQuery.data?.displayName || truncateText(user.id)}</span>
+											<span>{$userProfileQuery.data?.name || $userProfileQuery.data?.displayName || truncateText(user.id, 20)}</span>
 										</div>
-										<span class="text-sm text-gray-500 md:flex-row md:ml-auto">created: {createDate}</span>
+										<span class="text-sm text-gray-500 md:flex-row">created: {createDate}</span>
 									</div>
 								</CardTitle>
 							</CardHeader>
