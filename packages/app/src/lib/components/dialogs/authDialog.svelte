@@ -158,7 +158,7 @@
 				</div>
 				<div class=" bg-muted w-full flex flex-col justify-center text-center gap-1 p-2">
 					<span class="text-sm text-gray-500">{tab !== 'signup' ? 'Don’t have a nostr account?' : 'Already have a nostr account?'}</span>
-					<Button class="underline text-lg" variant="link" on:click={() => (tab = tab === 'signup' ? 'login-nip07' : 'signup')}
+					<Button class="underline text-md" variant="link" on:click={() => (tab = tab === 'signup' ? 'login-nip07' : 'signup')}
 						>{tab === 'signup' ? 'Log in' : 'Sign up'}</Button
 					>
 				</div>
