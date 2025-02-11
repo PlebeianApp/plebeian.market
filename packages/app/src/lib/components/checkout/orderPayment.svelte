@@ -233,7 +233,7 @@
 </script>
 
 <div class="grid md:grid-cols-2 gap-4 md:gap-8 max-w-full overflow-hidden">
-	<div class="flex flex-col gap-4 min-w-0">
+	<div class="flex flex-col gap-4 min-w-0 rounded-lg border bg-card text-card-foreground shadow-sm flex-1 p-4">
 		<MiniStall stallCoordinate={order.stallId} mode="view" />
 		<div class="flex flex-col gap-2 overflow-auto">
 			{#each stall.products as productId}
@@ -320,7 +320,7 @@
 		{/if}
 	</div>
 	<!---->
-	<div class="flex flex-col items-center gap-4 min-w-0">
+	<div class="flex flex-col items-center gap-4 border rounded-md min-w-0 bg-card text-card-foreground shadow-sm flex-1 p-4">
 		<div class="flex flex-wrap justify-center gap-2 w-full px-2">
 			{#each relevantPaymentDetails as paymentDetail}
 				<Button.Root
@@ -377,8 +377,8 @@
 								</Carousel.Item>
 							{/each}
 						</Carousel.Content>
-						<Carousel.Previous />
-						<Carousel.Next />
+						<Carousel.Previous class="absolute left-0 top-8 transform -translate-y-1/2 z-10" />
+						<Carousel.Next class="absolute right-0 top-8 transform -translate-y-1/2 z-10" />
 					</Carousel.Root>
 				</div>
 			{/if}
