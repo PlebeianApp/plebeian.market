@@ -326,7 +326,7 @@
 				<Tabs.List class="flex-none w-full justify-around bg-transparent">
 					<Tabs.Trigger value="details" class={activeTab}>Details</Tabs.Trigger>
 					<Tabs.Trigger value="categories" class={activeTab}>Categories</Tabs.Trigger>
-					<Tabs.Trigger data-tooltip="Images help customers recognize your product" value="images" class={activeTab}>Images</Tabs.Trigger>
+					<Tabs.Trigger value="images" class={activeTab}>Images</Tabs.Trigger>
 					<Tabs.Trigger value="shippings" class={activeTab}>Shipping</Tabs.Trigger>
 				</Tabs.List>
 
@@ -465,7 +465,7 @@
 					</Tabs.Content>
 
 					<Tabs.Content value="images" class="flex flex-col gap-2">
-						<Label for="userImage" class="font-bold">Product images</Label>
+						<Label class="font-bold">Product images</Label>
 						<p class="text-gray-500 text-sm">We recommend using images of 1600x1600 and under 2mb.</p>
 						<MultiImageEdit
 							images={sortedImages}
