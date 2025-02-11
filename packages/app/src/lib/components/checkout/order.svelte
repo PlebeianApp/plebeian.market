@@ -223,7 +223,7 @@
 							on:click={handleOrderAndPayment}>Place Order & Pay</Button
 						>
 					{/if}
-					<Button variant="primary" disabled={!filledShippingMethods} class="w-full" on:click={handleOrderPlacement}>Place Order</Button>
+					<Button variant="tertiary" disabled={!filledShippingMethods} class="w-full" on:click={handleOrderPlacement}>Place Order</Button>
 				</div>
 			</div>
 		</CardContent>
