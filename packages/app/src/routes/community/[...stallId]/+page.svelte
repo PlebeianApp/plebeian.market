@@ -118,7 +118,7 @@
 											</a>
 											<span>{$userProfileQuery.data?.name || $userProfileQuery.data?.displayName || truncateText(user.id)}</span>
 										</div>
-										<span class="text-sm text-gray-500">created: {createDate}</span>
+										<span class="text-sm text-gray-500 md:flex-row">created: {createDate}</span>
 									</div>
 								</CardTitle>
 							</CardHeader>
