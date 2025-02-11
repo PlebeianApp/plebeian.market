@@ -116,7 +116,7 @@
 							{#key $productsQuery.data.identifier}
 								{#if $productsQuery.data?.images?.length}
 									{@const sortedImages = $productsQuery.data.images?.sort((a, b) => a.imageOrder - b.imageOrder)}
-									<div class="flex flex-row md:flex-col gap-2 md:max-h-[500px] overflow-y-auto p-1">
+									<div class="flex flex-row md:flex-col gap-2 md:max-h-[500px] overflow-y-auto p-1 justify-center md:justify-start">
 										{#each sortedImages as item, i}
 											<button
 												class={cn(
