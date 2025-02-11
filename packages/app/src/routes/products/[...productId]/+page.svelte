@@ -259,7 +259,7 @@
 						<article class="my-4 overflow-hidden">
 							<h4 class="sm:text-2xl text-xl font-bold">Details</h4>
 							<p class="break-words whitespace-pre-wrap">
-								{truncateText($productsQuery.data.description)}
+								{truncateText($productsQuery.data.description, 120)}
 							</p>
 						</article>
 					{/if}
