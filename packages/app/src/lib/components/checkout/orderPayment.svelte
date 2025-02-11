@@ -253,7 +253,7 @@
 			{#if v4vShares.length > 0}
 				<Separator />
 				<div class="flex flex-col gap-2 overflow-x-hidden">
-					<h3 class="font-semibold">Shares:</h3>
+					<h3 class="font-semibold">Payments:</h3>
 					<div
 						class="flex flex-col sm:flex-row gap-2 font-bold border-black border p-2.5 hover:bg-gray-100 overflow-hidden"
 						class:border-l-8={carouselCurrent === 1}
