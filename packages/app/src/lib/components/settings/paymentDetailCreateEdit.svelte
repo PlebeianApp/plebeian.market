@@ -382,7 +382,7 @@
 								id="payment-details"
 								bind:value={editedPaymentDetail.paymentDetails}
 								class="w-full border"
-								placeholder="Enter payment details"
+								placeholder="Enter payment details e.g. plebeian@getalby.com"
 							/>
 							{#if $onChainWalletIndexQuery?.data && paymentDetail?.paymentDetails}
 								<Label for="payment-details" class="font-medium">Current address</Label>
