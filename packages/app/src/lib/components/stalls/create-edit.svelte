@@ -335,6 +335,7 @@
 									{/each}
 								</section>
 							</DropdownMenu.Content>
+							<p class="text-gray-500 text-sm">Products prices are displayed to buyers in the currency you choose and Sats.</p>
 						</DropdownMenu.Root>
 					</div>
 				</Tabs.Content>
