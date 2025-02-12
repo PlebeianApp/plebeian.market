@@ -15,11 +15,11 @@
 	$: unreadCount = $unreadCounts[pubkey] || 0
 </script>
 
-<Button variant="ghost" class="w-full justify-start py-6 px-6 border-0 gap-2 hover:bg-accent relative" on:click={() => onSelect(pubkey)}>
+<Button variant="ghost" class="w-full h-full justify-start p-4 gap-2 hover:bg-accent" on:click={() => onSelect(pubkey)}>
 	<CAvatar linked {pubkey} profile={$userProfileQuery.data} />
 	<div class="flex flex-col items-start overflow-hidden flex-1">
 		<div class="flex justify-between items-center w-full">
-			<span class="font-semibold truncate">
+			<span class="font-semibold truncate pt-4 pl-2">
 				{$userProfileQuery?.data?.displayName || $userProfileQuery?.data?.name || truncateString(pubkey)}
 			</span>
 			{#if unreadCount > 0}

@@ -37,7 +37,7 @@ export const load = async () => {
 		{
 			title: 'Account',
 			description: 'Manage account settings and preferences',
-			value: 'account-settings',
+			value: 'Dashboard',
 			root: '/dash/settings/account',
 			links: [
 				{ title: '👤 Profile', href: '/dash/settings/account/profile', description: 'Edit your profile', public: true },

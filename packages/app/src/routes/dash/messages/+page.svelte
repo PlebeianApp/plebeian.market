@@ -17,14 +17,14 @@
 </script>
 
 <div class="flex flex-col h-screen max-w-6xl mx-auto">
-	<div class="flex items-center justify-between p-4 shrink-0">
+	<div class="flex items-center justify-between shrink-0">
 		{#if hasUnreadMessages}
 			<Button variant="outline" size="sm" on:click={handleMarkAllRead} class="text-sm">Mark all as read</Button>
 		{/if}
 	</div>
 
 	<div class="flex-1 overflow-hidden">
-		<div class="h-full overflow-y-auto flex flex-col gap-2">
+		<div class="h-full overflow-y-auto flex flex-col gap-2 mt-2">
 			{#each Object.entries($groupedDMs) as [pubkey, messages] (pubkey)}
 				<ConversationListItem {pubkey} lastMessagets={Number(messages[0].created_at)} onSelect={selectConversation} />
 			{/each}
