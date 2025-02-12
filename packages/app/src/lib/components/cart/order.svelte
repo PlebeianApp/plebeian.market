@@ -104,19 +104,26 @@
 						<div
 							class="absolute inset-y-0 left-0 bg-primary flex items-center justify-center text-xs text-primary-foreground"
 							style="width: {(1 - v4vTotalPercentage) * 100}%;"
-							data-tooltip="Merchant: {formatSats(userTotal.subtotalInSats * (1 - v4vTotalPercentage))} sats ({(
-								(1 - v4vTotalPercentage) *
-								100
-							).toFixed(2)}%)"
 						/>
 
 						<div
 							class="absolute inset-y-0 right-0 bg-blue-500 flex items-center justify-center text-xs text-white"
 							style="width: {v4vTotalPercentage * 100}%;"
-							data-tooltip="Community Share: {formatSats(userTotal.subtotalInSats * v4vTotalPercentage)} sats ({(
-								v4vTotalPercentage * 100
-							).toFixed(2)}%)"
 						/>
+					</div>
+					<div class="mt-2">
+						<small
+							>Merchant: {formatSats(userTotal.subtotalInSats * (1 - v4vTotalPercentage))} sats ({((1 - v4vTotalPercentage) * 100).toFixed(
+								2,
+							)}%)</small
+						>
+						<div class="mt-2">
+							<small
+								>Community Share: {formatSats(userTotal.subtotalInSats * v4vTotalPercentage)} sats ({(v4vTotalPercentage * 100).toFixed(
+									2,
+								)}%)</small
+							>
+						</div>
 					</div>
 				</div>
 			{/if}
