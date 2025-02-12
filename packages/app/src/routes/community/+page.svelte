@@ -8,7 +8,6 @@
 	import Input from '$lib/components/ui/input/input.svelte'
 	import * as Pagination from '$lib/components/ui/pagination'
 	import * as Select from '$lib/components/ui/select'
-	import { Skeleton } from '$lib/components/ui/skeleton'
 	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
 	import { breakpoint, getGridColumns } from '$lib/stores/breakpoint'
 	import { reactiveDebounce, scrollToTop } from '$lib/utils'

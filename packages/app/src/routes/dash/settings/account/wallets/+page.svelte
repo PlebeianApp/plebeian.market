@@ -1,7 +1,5 @@
 <script lang="ts">
 	import type { DisplayWallet } from '$lib/server/wallet.service'
-	import { goto } from '$app/navigation'
-	import { page } from '$app/stores'
 	import NwcWallet from '$lib/components/settings/nwc-wallet.svelte'
 	import { Button } from '$lib/components/ui/button/index.js'
 	import { queryClient } from '$lib/fetch/client'
@@ -11,14 +9,7 @@
 	import { EncryptedStorage } from '$lib/utils'
 	import { onMount } from 'svelte'
 
-	import type { PageData } from './$types'
-
-	export let data: PageData
 	let localWallets: DisplayWallet[] = []
-
-	const linkDetails = data.menuItems
-		.find((item) => item.value === 'account-settings')
-		?.links.find((item) => item.href === $page.url.pathname)
 
 	let showEmptyWallet = false
 

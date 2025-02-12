@@ -1,22 +1,15 @@
 <script lang="ts">
 	import type { RichStall } from '$lib/server/stalls.service'
-	import { goto } from '$app/navigation'
-	import { page } from '$app/stores'
 	import SkeletonLoader from '$lib/components/common/skeletonLoader.svelte'
 	import StallProductList from '$lib/components/product/stall-product-list.svelte'
 	import CreateEditStall from '$lib/components/stalls/create-edit.svelte'
 	import { Button } from '$lib/components/ui/button/index.js'
 	import * as Collapsible from '$lib/components/ui/collapsible'
-	import { Skeleton } from '$lib/components/ui/skeleton'
 	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
 	import { fetchUserStallsData, normalizeStallData } from '$lib/nostrSubs/utils'
 	import ndkStore from '$lib/stores/ndk'
 	import { mergeWithExisting } from '$lib/utils'
 	import { onMount } from 'svelte'
-
-	import type { PageData } from './$types'
-
-	export let data: PageData
 
 	let stallsMode: 'list' | 'create' | 'edit' = 'list'
 	let nostrStalls: Partial<RichStall>[] = []
@@ -30,9 +23,6 @@
 	$: stallsMode === 'list' ? $stallsQuery?.refetch() : null
 
 	let currentStall: Partial<RichStall> | null = null
-	const linkDetails = data.menuItems
-		.find((item) => item.value === 'account-settings')
-		?.links.find((item) => item.href === $page.url.pathname)
 
 	$: if (stallsMode === 'edit' && stallsMixture && currentStall) {
 		const updatedStall = stallsMixture.find((stall) => stall.identifier === currentStall?.identifier)

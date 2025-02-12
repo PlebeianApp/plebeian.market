@@ -1,19 +1,10 @@
 <script lang="ts">
-	import { goto } from '$app/navigation'
-	import { page } from '$app/stores'
 	import { Button } from '$lib/components/ui/button'
 	import { Input } from '$lib/components/ui/input'
 	import { userDeleteAccountMutation } from '$lib/fetch/users.mutations'
 	import ndkStore from '$lib/stores/ndk'
 
-	import type { PageData } from './$types'
-
 	let challengeSolved = false
-
-	export let data: PageData
-	const linkDetails = data.menuItems
-		.find((item) => item.value === 'account-settings')
-		?.links.find((item) => item.href === $page.url.pathname)
 
 	const handleDeleteAccount = async () => {
 		$userDeleteAccountMutation.mutate($ndkStore?.activeUser?.pubkey)

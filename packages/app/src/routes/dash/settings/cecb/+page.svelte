@@ -1,6 +1,5 @@
 <script lang="ts">
 	import type { V4VDTO } from '$lib/fetch/v4v.queries'
-	import { goto } from '$app/navigation'
 	import * as Alert from '$lib/components/ui/alert/index.js'
 	import { Button } from '$lib/components/ui/button/index.js'
 	import { Label } from '$lib/components/ui/label/index.js'

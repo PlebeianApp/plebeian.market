@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Selected } from 'bits-ui'
-	import { goto, invalidateAll } from '$app/navigation'
+	import { invalidateAll } from '$app/navigation'
 	import { page } from '$app/stores'
 	import { processAppSettings, submitAppSettings } from '$lib/appSettings.js'
 	import { Button } from '$lib/components/ui/button'

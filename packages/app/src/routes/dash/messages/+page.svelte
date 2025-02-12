@@ -1,16 +1,9 @@
 <script lang="ts">
 	import { goto } from '$app/navigation'
-	import { page } from '$app/stores'
 	import ConversationListItem from '$lib/components/chat/conversation-list-item.svelte'
 	import { Button } from '$lib/components/ui/button'
 	import { groupedDMs } from '$lib/nostrSubs/subs'
 	import { chatNotifications, unreadCounts } from '$lib/stores/chat-notifications'
-
-	import type { PageData } from './$types'
-
-	export let data: PageData
-
-	const linkDetails = data.menuItems.find((item) => item.value === 'messages')?.links.find((item) => item.href === $page.url.pathname)
 
 	function selectConversation(pubkey: string) {
 		goto(`/dash/messages/${pubkey}`)

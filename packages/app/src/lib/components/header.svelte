@@ -217,7 +217,9 @@
 				{:else}
 					<Button
 						variant="primary"
-						class="sm:flex p-2 relative rounded-md {currentPath === '/dash' ? activeNavButtonClass : 'hover:[&>span]:text-secondary'}"
+						class="sm:flex p-2 relative rounded-md {currentPath.includes('/dash') && !currentPath.includes('messages')
+							? activeNavButtonClass
+							: 'hover:[&>span]:text-secondary'}"
 						href="/dash"
 						id="dash-button"
 					>

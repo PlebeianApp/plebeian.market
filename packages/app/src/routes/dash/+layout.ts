@@ -3,7 +3,7 @@ import type { MenuItem } from '$lib/interfaces'
 export const load = async () => {
 	const menuItems: MenuItem[] = [
 		{
-			title: '🛍️ Orders',
+			title: 'Orders',
 			description: 'View and manage your orders',
 			value: 'orders',
 			root: '/dash/order',
@@ -35,7 +35,6 @@ export const load = async () => {
 				},
 			],
 		},
-		// Adding settings sections from settings layout
 		{
 			title: 'App Settings',
 			description: 'Configure app settings and preferences',

@@ -1,19 +1,12 @@
 <script lang="ts">
-	import { goto } from '$app/navigation'
-	import { page } from '$app/stores'
 	import OrderTable from '$lib/components/order/order-table/order-table.svelte'
-	import Button from '$lib/components/ui/button/button.svelte'
 	import { createOrdersByUserAndRoleQuery } from '$lib/fetch/order.queries'
 	import ndkStore from '$lib/stores/ndk'
 
-	import type { LayoutData } from '../../$types'
-
-	export let data: LayoutData
 	$: orderQuery = createOrdersByUserAndRoleQuery($ndkStore.activeUser?.pubkey ?? '', 'seller', {
 		orderBy: 'createdAt',
 		order: 'desc',
 	})
-	const linkDetails = data.menuItems.find((item) => item.value === 'orders')?.links.find((item) => item.href === $page.url.pathname)
 </script>
 
 {#if $orderQuery.isLoading}

@@ -2,7 +2,6 @@
 	import type { NDKUserProfile } from '@nostr-dev-kit/ndk'
 	import type { FormDataWithEntries } from '$lib/interfaces'
 	import type { RichUser } from '$lib/server/users.service'
-	import { page } from '$app/stores'
 	import SingleImage from '$lib/components/settings/editable-image.svelte'
 	import { Button } from '$lib/components/ui/button/index.js'
 	import { Input } from '$lib/components/ui/input/index.js'
@@ -14,10 +13,7 @@
 	import { userEventSchema } from '$src/schema/nostr-events'
 	import { toast } from 'svelte-sonner'
 
-	import type { PageData } from './$types'
-
-	export let data: PageData
-
+	// FIXME: delete foto doesnt work
 	$: userExist = createUserExistsQuery($ndkStore.activeUser?.pubkey ?? '')
 	$: editingActiveUser = $ndkStore.activeUser?.profile ?? ({} as RichUser)
 
@@ -63,14 +59,6 @@
 			await ndkUser.publish()
 			toast.success('User data updated')
 		}
-	}
-
-	const linkDetails = data.menuItems
-		.find((item) => item.value === 'account-settings')
-		?.links.find((item) => item.href === $page.url.pathname)
-
-	const handleSaveImage = (field: 'banner' | 'image') => (event: CustomEvent) => {
-		editingActiveUser[field] = event.detail
 	}
 </script>
 

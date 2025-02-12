@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { goto, invalidateAll } from '$app/navigation'
+	import { invalidateAll } from '$app/navigation'
 	import { page } from '$app/stores'
 	import { Button } from '$lib/components/ui/button'
 	import * as Collapsible from '$lib/components/ui/collapsible'
@@ -9,8 +9,6 @@
 	import { toast } from 'svelte-sonner'
 
 	let newWord = ''
-	export let data
-	const linkDetails = data.menuItems.find((item) => item.value === 'app-settings')?.links.find((item) => item.href === $page.url.pathname)
 
 	let isCollapsibleOpen = false
 

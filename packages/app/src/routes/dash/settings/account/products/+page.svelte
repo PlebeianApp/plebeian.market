@@ -1,11 +1,8 @@
 <script lang="ts">
 	import type { DisplayProduct } from '$lib/server/products.service'
-	import { goto } from '$app/navigation'
-	import { page } from '$app/stores'
 	import SkeletonLoader from '$lib/components/common/skeletonLoader.svelte'
 	import CreateEditProduct from '$lib/components/product/create-edit.svelte'
 	import { Button } from '$lib/components/ui/button/index.js'
-	import { Skeleton } from '$lib/components/ui/skeleton'
 	import { createProductsByFilterQuery } from '$lib/fetch/products.queries'
 	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
 	import { fetchUserProductData, normalizeProductsFromNostr } from '$lib/nostrSubs/utils'
@@ -13,9 +10,6 @@
 	import { mergeWithExisting } from '$lib/utils'
 	import { onMount } from 'svelte'
 
-	import type { PageData } from './$types'
-
-	export let data: PageData
 	let toDisplayProducts: Partial<DisplayProduct>[] = []
 	let productsMode: 'list' | 'create' | 'edit' = 'list'
 
@@ -32,10 +26,6 @@
 	)
 
 	let currentProduct: Partial<DisplayProduct> | null = null
-
-	const linkDetails = data.menuItems
-		.find((item) => item.value === 'account-settings')
-		?.links.find((item) => item.href === $page.url.pathname)
 
 	$: if (productsMode === 'edit' && productsMixture && currentProduct) {
 		const updatedProduct = productsMixture.find((product) => product.id === currentProduct?.id)

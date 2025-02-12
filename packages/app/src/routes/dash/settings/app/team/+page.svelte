@@ -1,6 +1,5 @@
 <script lang="ts">
 	import type { NDKUserProfile } from '@nostr-dev-kit/ndk'
-	import { goto } from '$app/navigation'
 	import { page } from '$app/stores'
 	import MiniUser from '$lib/components/cart/mini-user.svelte'
 	import { Button } from '$lib/components/ui/button'
