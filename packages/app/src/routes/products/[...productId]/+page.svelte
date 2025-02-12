@@ -186,7 +186,7 @@
 					{#if isMyProduct}
 						<Button variant="primary" class="w-1/4" on:click={() => openDrawerForProduct(data.productRes.id)}>Edit product</Button>
 					{/if}
-					<h3 class="md:mb-12 mb-6 break-words overflow-hidden">{$productsQuery.data.name}</h3>
+					<h3 class="md:mb-12 break-words overflow-hidden">{$productsQuery.data.name}</h3>
 
 					<div class="flex md:flex-col flex-row gap-2 w-full md:items-start items-center">
 						<div class="flex flex-col gap-2 w-full">
@@ -260,7 +260,7 @@
 
 					{#if $productsQuery.data.description}
 						<article class="my-4 overflow-hidden">
-							<h4 class="sm:text-2xl text-xl font-bold">Details</h4>
+							<h4 class="sm:text-2xl text-xl font-bold mb-2">Details</h4>
 							<p class="break-words whitespace-pre-wrap">
 								{truncateText($productsQuery.data.description, 120)}
 							</p>
