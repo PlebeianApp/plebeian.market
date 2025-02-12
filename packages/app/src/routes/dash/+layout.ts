@@ -5,7 +5,7 @@ export const load = async () => {
 		{
 			title: 'Sales',
 			description: 'View and manage your orders',
-			value: 'orders',
+			value: 'sales',
 			root: '/dash/order',
 			public: false,
 			links: [
@@ -25,7 +25,7 @@ export const load = async () => {
 		{
 			title: 'Shops',
 			description: 'View and manage your orders',
-			value: 'orders',
+			value: 'shops',
 			root: '/dash/stalls',
 			public: false,
 			links: [
@@ -37,12 +37,12 @@ export const load = async () => {
 		{
 			title: 'Account',
 			description: 'Manage account settings and preferences',
-			value: 'Dashboard',
+			value: 'account',
 			root: '/dash/settings/account',
 			links: [
 				{ title: '👤 Profile', href: '/dash/settings/account/profile', description: 'Edit your profile', public: true },
 				{
-					title: 'Messages',
+					title: '✉️ Messages',
 					href: '/dash/messages',
 					description: 'Manage your messages',
 				},

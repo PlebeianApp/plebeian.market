@@ -18,7 +18,7 @@
 <Button variant="ghost" class="w-full h-full justify-start p-4 gap-2 hover:bg-accent" on:click={() => onSelect(pubkey)}>
 	<CAvatar linked {pubkey} profile={$userProfileQuery.data} />
 	<div class="flex flex-col items-start overflow-hidden flex-1">
-		<div class="flex justify-between items-center w-full">
+		<div class="flex items-center w-full">
 			<span class="font-semibold truncate pt-4 pl-2">
 				{$userProfileQuery?.data?.displayName || $userProfileQuery?.data?.name || truncateString(pubkey)}
 			</span>
@@ -28,8 +28,10 @@
 				</Badge>
 			{/if}
 		</div>
-		<span class="text-sm text-muted-foreground truncate w-full">
-			Last message: {new Date(lastMessagets * 1000).toLocaleString()}
-		</span>
+		<div class="h-full overflow-y-auto flex flex-col gap-8 mt-2">
+			<span class="text-sm text-muted-foreground truncate ml-2">
+				Last message: {new Date(lastMessagets * 1000).toLocaleString()}
+			</span>
+		</div>
 	</div>
 </Button>
