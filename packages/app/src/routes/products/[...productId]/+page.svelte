@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { CarouselAPI } from '$lib/components/ui/carousel/context'
 	import Spinner from '$lib/components/assets/spinner.svelte'
+	import Nip05Badge from '$lib/components/cart/nip-05-badge.svelte'
 	import AdminActions from '$lib/components/common/admin-actions.svelte'
 	import ItemGrid from '$lib/components/common/item-grid.svelte'
 	import ShippingsDialog from '$lib/components/dialogs/shippingsDialog.svelte'
@@ -116,7 +117,7 @@
 							{#key $productsQuery.data.identifier}
 								{#if $productsQuery.data?.images?.length}
 									{@const sortedImages = $productsQuery.data.images?.sort((a, b) => a.imageOrder - b.imageOrder)}
-									<div class="flex flex-row md:flex-col gap-2 md:max-h-[500px] overflow-y-auto p-1 justify-center md:justify-start">
+									<div class="flex flex-row md:flex-col gap-2 md:max-h-[500px] overflow-y-auto p-1">
 										{#each sortedImages as item, i}
 											<button
 												class={cn(
@@ -245,14 +246,16 @@
 						</div>
 					</div>
 
-					<span class="my-8 font-bold">
+					<span class="my-4 font-bold flex items-center gap-2">
 						Sold by
+						<Nip05Badge userId={$userProfileQuery?.data?.id} />
 						<a
 							href={`/p/${$userProfileQuery?.data?.nip05 ? $userProfileQuery.data?.nip05 : $userProfileQuery?.data?.id ? $userProfileQuery.data?.id : data.user.id}`}
-							><span class="underline"
-								>{$userProfileQuery?.data?.name ? $userProfileQuery.data?.name : $userProfileQuery?.data?.displayName}<span /></span
-							></a
 						>
+							<span class="underline">
+								{$userProfileQuery?.data?.name ? $userProfileQuery.data?.name : $userProfileQuery?.data?.displayName}
+							</span>
+						</a>
 					</span>
 
 					{#if $productsQuery.data.description}
