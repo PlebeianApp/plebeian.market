@@ -100,7 +100,7 @@
 			{#if v4vTotalPercentage}
 				<div class="">
 					<Label class="font-bold">Payment Breakdown</Label>
-					<div class="relative w-full h-2 bg-gray-200 rounded-lg overflow-hidden">
+					<div class="relative mt-4 w-full h-2 bg-gray-200 rounded-lg overflow-hidden h-4 rounded-lg">
 						<div
 							class="absolute inset-y-0 left-0 bg-primary flex items-center justify-center text-xs text-primary-foreground"
 							style="width: {(1 - v4vTotalPercentage) * 100}%;"
