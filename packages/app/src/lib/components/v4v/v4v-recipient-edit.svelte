@@ -70,7 +70,7 @@
 </script>
 
 <Collapsible.Root
-	class="border-black border p-4 w-full"
+	class="border-black border p-4 w-full bg-white"
 	style={`border-left: 0.5rem solid ${hexColorFromPubkey}`}
 	bind:open={collapsibleOpen}
 >

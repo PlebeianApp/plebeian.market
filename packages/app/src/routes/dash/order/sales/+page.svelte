@@ -20,26 +20,8 @@
 	<div>Loading...</div>
 {:else if $orderQuery.data?.orders?.length}
 	<div>
-		<div class="flex items-center gap-1">
-			<Button size="icon" variant="ghost" on:click={() => goto('/dash')}>
-				<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
-			</Button>
-			<section>
-				<h3 class="text-lg font-bold">{linkDetails?.title}</h3>
-				<p class="text-sm text-muted-foreground">{linkDetails?.description}</p>
-			</section>
-		</div>
 		<OrderTable orders={$orderQuery.data.orders} orderMode="sale" />
 	</div>
 {:else}
-	<div class="flex items-center gap-1">
-		<Button size="icon" variant="ghost" on:click={() => goto('/dash')}>
-			<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
-		</Button>
-		<section>
-			<h3 class="text-lg font-bold">{linkDetails?.title}</h3>
-			<p class="text-sm text-muted-foreground">{linkDetails?.description}</p>
-		</section>
-	</div>
 	<div>You have no orders yet.</div>
 {/if}

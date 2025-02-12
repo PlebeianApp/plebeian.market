@@ -25,16 +25,6 @@
 
 <div class="flex flex-col h-screen max-w-6xl mx-auto">
 	<div class="flex items-center justify-between p-4 shrink-0">
-		<div class="flex items-center gap-1">
-			<Button variant="ghost" size="icon" on:click={() => goto('/dash')}>
-				<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
-			</Button>
-			<section>
-				<h3 class="text-lg font-bold">{linkDetails?.title}</h3>
-				<p class="text-sm text-muted-foreground">{linkDetails?.description}</p>
-			</section>
-		</div>
-
 		{#if hasUnreadMessages}
 			<Button variant="outline" size="sm" on:click={handleMarkAllRead} class="text-sm">Mark all as read</Button>
 		{/if}
