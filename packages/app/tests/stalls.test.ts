@@ -41,8 +41,8 @@ describe('stalls', async () => {
 			await login(page)
 
 			try {
-				await page.waitForSelector('#settings-button', { timeout: 5000 })
-				await page.click('#settings-button')
+				await page.waitForSelector('#dash-button', { timeout: 5000 })
+				await page.click('#dash-button')
 			} catch (error) {
 				console.error('Failed to navigate to settings:', error)
 				throw error

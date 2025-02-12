@@ -25,7 +25,7 @@ export function processAppSettings(data: Record<string, unknown>, isSetup: boole
 }
 
 export async function submitAppSettings(data: Partial<ExtendedAppSettings>, isSetup: boolean) {
-	const endpoint = isSetup ? '/setup' : '/settings/app/misc'
+	const endpoint = isSetup ? '/setup' : '/dash/settings/app/misc'
 	const schema = isSetup ? initialSetupDataSchema : initialSetupDataSchema.partial()
 	const parsedData = schema.safeParse(data)
 
