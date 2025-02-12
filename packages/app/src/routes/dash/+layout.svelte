@@ -39,10 +39,6 @@
 
 				{#if parentMenuItem}
 					<div class="flex flex-col gap-2">
-						<div class="flex flex-col justify-center items-center gap-1">
-							<h3 class="text-lg font-bold">{currentMenuInfo?.title}</h3>
-							<p class="text-gray-600">{currentMenuInfo?.description}</p>
-						</div>
 						<Separator />
 						<div class="w-full p-4">
 							<slot />
@@ -77,7 +73,7 @@
 			</div>
 		{:else}
 			<!-- Desktop Layout -->
-			<div class="bg-black p-4">
+			<div class="bg-primary p-4">
 				<h2 class="text-4xl m-0 text-left text-secondary"><a href="/dash">Dashboard</a></h2>
 			</div>
 			<div class="grid grid-cols-[1fr_2fr] gap-6 p-4">

@@ -28,7 +28,7 @@
 	<div class="flex flex-col gap-4">
 		{#if totalUnreadMessages > 0}
 			<div class="w-full">
-				<h2 class="text-xl font-semibold mb-3">Messages</h2>
+				<h2 class="text-3xl font-semibold mb-3">Messages</h2>
 				<div>
 					<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
 						<div class="space-y-1">
@@ -48,7 +48,7 @@
 
 		{#if activeSellerOrders.length > 0 || activeBuyerOrders.length > 0}
 			<div class="w-full">
-				<h2 class="text-xl font-semibold mb-3">Pending Orders</h2>
+				<h2 class="text-3xl font-semibold mb-3">Pending Orders</h2>
 				<div class="grid gap-4 grid-cols-1 lg:grid-cols-2">
 					{#if activeSellerOrders.length > 0}
 						<div class=" flex flex-col gap-2">

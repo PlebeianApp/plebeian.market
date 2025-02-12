@@ -61,7 +61,7 @@
 			<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
 		</button>
 	{/if}
-	<div class="flex flex-col gap-2">
+	<div class="flex flex-col gap-4">
 		{#if productsMode === 'list'}
 			{#if $productsQuery?.isLoading}
 				<SkeletonLoader count={3} class="h-12 w-full" />
@@ -72,7 +72,7 @@
 							productsMode = 'edit'
 							currentProduct = product
 						}}
-						class="cursor-pointer border-black border flex justify-start items-center p-2 font-bold"
+						class="cursor-pointer border-black border flex justify-start items-center py-6 px-4 font-bold"
 						variant="outline"
 						size="lg"
 					>

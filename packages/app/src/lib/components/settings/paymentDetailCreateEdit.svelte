@@ -242,7 +242,7 @@
 	}
 </script>
 
-<div class="border flex flex-col p-4 justify-between bg-white h-full">
+<div class="border flex flex-col p-4 justify-between bg-white h-full rounded-md">
 	<ScrollArea class="flex-1">
 		<Collapsible.Root bind:open={isOpen}>
 			<div class="flex flex-row w-full justify-between items-center gap-2">

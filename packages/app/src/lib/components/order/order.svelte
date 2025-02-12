@@ -440,7 +440,7 @@
 												/>
 											{/if}
 										{:else if invoice.invoiceStatus !== 'paid' && invoice.invoiceStatus !== 'refunded'}
-											<div class="p-2 flex justify-between items-center gap-2">
+											<div class="p-2 flex justify-between items-center w-full gap-2">
 												<CheckPaymentDetail paymentDetails={invoice.paymentDetails} />
 											</div>
 										{/if}
