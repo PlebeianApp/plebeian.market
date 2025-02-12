@@ -117,7 +117,7 @@
 							{#key $productsQuery.data.identifier}
 								{#if $productsQuery.data?.images?.length}
 									{@const sortedImages = $productsQuery.data.images?.sort((a, b) => a.imageOrder - b.imageOrder)}
-									<div class="flex flex-row md:flex-col gap-2 md:max-h-[500px] overflow-y-auto p-1">
+									<div class="flex flex-row md:flex-col gap-2 md:max-h-[500px] overflow-y-auto p-1 justify-center md:justify-start">
 										{#each sortedImages as item, i}
 											<button
 												class={cn(
@@ -214,7 +214,7 @@
 						</Badge>
 					</div>
 
-					<div class="flex flex-col sm:flex-row gap-2 w-full items-center">
+					<div class="flex sm:flex-row gap-2 w-full items-center">
 						<div class="flex flex-row gap-1 w-fit items-center">
 							<Button variant="tertiary" size="icon" on:click={handleDecrement} disabled={qtyToCart <= 1}>
 								<span class="i-mdi-minus w-4 h-4"></span>
