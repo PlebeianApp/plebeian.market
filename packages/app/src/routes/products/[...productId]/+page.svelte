@@ -377,7 +377,7 @@
 						<Tabs.Trigger value="comments" disabled class={cactiveTab}>Comments</Tabs.Trigger>
 						<Tabs.Trigger value="reviews" disabled class={cactiveTab}>Reviews</Tabs.Trigger>
 					</Tabs.List>
-					<Tabs.Content value="description" class="flex flex-col gap-2 bg-white border-t-2 border-black shadow-md rounded-md p-10">
+					<Tabs.Content value="description" class="flex flex-col gap-2 bg-white border-t-2 border-secondary shadow-md p-10 mt-4 ml-1">
 						{#if $productsQuery.data?.description && $productsQuery.data?.description?.length > 420}
 							{#if !isExpanded}
 								<p class="whitespace-pre-wrap break-words w-full" transition:slide>
@@ -403,7 +403,7 @@
 							</p>
 						{/if}
 					</Tabs.Content>
-					<Tabs.Content value="shippings" class="flex flex-col gap-2 bg-white border-t-2 border-black shadow-md rounded-md p-10">
+					<Tabs.Content value="shippings" class="flex flex-col gap-2 bg-white border-t-2 border-secondary shadow-md p-10 mt-4 ml-1">
 						{#if $stallQuery?.data?.stall?.shipping?.length}
 							<section class="flex flex-col gap-1">
 								{#each $stallQuery?.data?.stall?.shipping as shipping}
@@ -458,9 +458,9 @@
 							</section>
 						{/if}
 					</Tabs.Content>
-					<Tabs.Content value="comments" class="flex flex-col gap-2 bg-white border-t-2 border-black shadow-md rounded-md p-10"
+					<Tabs.Content value="comments" class="flex flex-col gap-2 bg-white border-t-2 border-secondary shadow-md p-10 mt-4 ml-1"
 					></Tabs.Content>
-					<Tabs.Content value="reviews" class="flex flex-col gap-2 bg-white border-t-2 border-black shadow-md rounded-md p-10"
+					<Tabs.Content value="reviews" class="flex flex-col gap-2 bg-white border-t-2 border-secondary shadow-md p-10 mt-4 ml-1"
 					></Tabs.Content>
 				</Tabs.Root>
 			</div>
