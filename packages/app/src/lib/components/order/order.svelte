@@ -187,7 +187,7 @@
 </script>
 
 <div class="mx-auto">
-	<div class="bg-white rounded-lg shadow-sm p-4 md:p-6 space-y-6">
+	<div class="bg-white rounded-md shadow-sm p-4 md:p-6 space-y-6 border">
 		<!-- Header Section -->
 		<div>
 			<div class="flex flex-col sm:flex-row sm:items-center justify-between border-b pb-4 gap-3">

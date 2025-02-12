@@ -77,10 +77,12 @@
 			</div>
 		{:else}
 			<!-- Desktop Layout -->
+			<div class="bg-black p-4 mb-4">
+				<h2 class="text-4xl m-0 text-left text-white"><a href="/dash">Dashboard</a></h2>
+			</div>
 			<div class="grid grid-cols-[1fr_2fr] gap-6 p-4">
 				<!-- Navigation Menu -->
 				<nav class="space-y-4">
-					<h2 class="mb-4"><a href="/dash"> Dashboard</a></h2>
 					<div class="border p-4 rounded bg-white">
 						{#each menuItems as item}
 							{#if shouldShowItem(item, $userExist?.data?.exists, $activeUserQuery.data?.role)}
