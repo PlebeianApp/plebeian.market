@@ -242,7 +242,7 @@
 	}
 </script>
 
-<div class="border flex flex-col p-4 justify-between bg-white h-full">
+<div class="border flex flex-col p-4 justify-between bg-white h-full rounded-md">
 	<ScrollArea class="flex-1">
 		<Collapsible.Root bind:open={isOpen}>
 			<div class="flex flex-row w-full justify-between items-center gap-2">
@@ -382,7 +382,7 @@
 								id="payment-details"
 								bind:value={editedPaymentDetail.paymentDetails}
 								class="w-full border"
-								placeholder="Enter payment details"
+								placeholder="Enter payment details e.g. plebeian@getalby.com"
 							/>
 							{#if $onChainWalletIndexQuery?.data && paymentDetail?.paymentDetails}
 								<Label for="payment-details" class="font-medium">Current address</Label>

@@ -72,14 +72,14 @@
 			<div class="space-y-2">
 				<p>You don't have a Lightning address linked to your profile. Here are your options:</p>
 
-				<div class="border-2 p-4 flex flex-col gap-2">
+				<div class="border p-4 flex flex-col gap-2 rounded-md">
 					<h4 class="font-semibold">
 						1. Create a <a href="https://coinos.io" target="_blank" rel="noreferrer" class="text-primary hover:underline">Coinos.io</a> account
 					</h4>
 					<Button class="mt-2" href="https://coinos.io" target="_blank" rel="noopener">Go to Coinos.io</Button>
 				</div>
 
-				<div class="border-2 p-4 flex flex-col gap-2">
+				<div class="border p-4 flex flex-col gap-2 rounded-md">
 					<h4 class="font-semibold">2. Paste from clipboard</h4>
 					<Button variant="outline" class="mt-2" on:click={handlePaste}
 						><span class="i-mingcute-clipboard-fill w-6 h-6"></span> Paste</Button
@@ -87,7 +87,7 @@
 					<p>Paste your payment details from the clipboard and we'll auto-detect the method.</p>
 				</div>
 
-				<div class="border-2 p-4 flex flex-col gap-2">
+				<div class="border p-4 flex flex-col gap-2 rounded-md">
 					<h4 class="font-semibold">3. Set up manually</h4>
 					<Button variant="outline" class="mt-2" on:click={closeGuidance}>Set Up Manually</Button>
 					<p>

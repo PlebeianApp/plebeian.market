@@ -14,31 +14,31 @@
 			</div>
 			<div class="text-right flex justify-between items-center gap-6">
 				<a
-					class="border-2 border-white p-1 inline-flex justify-center items-center"
+					class="border-none hover:bg-secondary p-1 inline-flex justify-center items-center"
 					href="https://njump.me/npub1market6g3zl4mxwx5ugw56hfg0f7dy7jnnw8t380788mvdyrnwuqgep7hd"
 					target="_blank"
 					rel="noopener noreferrer"><span class="i-game-icons-ostrich text-white w-6 h-6"></span></a
 				>
 				<a
 					href="https://twitter.com/PlebeianMarket"
-					class="border-2 border-white p-1 inline-flex justify-center items-center"
+					class="border-none hover:bg-secondary p-1 inline-flex justify-center items-center"
 					target="_blank"
 					rel="noopener noreferrer"><span class="i-ion-logo-x text-white w-6 h-6"></span></a
 				>
 				<a
-					class="border-2 border-white p-1 inline-flex justify-center items-center"
+					class="border-none hover:bg-secondary p-1 inline-flex justify-center items-center"
 					href="https://plebeianmarket.substack.com/"
 					target="_blank"
 					rel="noopener noreferrer"><span class="i-simple-icons-substack text-white w-6 h-6"></span></a
 				>
 				<a
-					class="border-2 border-white p-1 inline-flex justify-center items-center"
+					class="border-none hover:bg-secondary p-1 inline-flex justify-center items-center"
 					href="https://t.me/PlebeianMarket"
 					target="_blank"
 					rel="noopener noreferrer"><span class="i-mingcute-telegram-line text-white w-6 h-6"></span></a
 				>
 				<a
-					class="border-2 border-white p-1 inline-flex justify-center items-center"
+					class="border-none hover:bg-secondary p-1 inline-flex justify-center items-center"
 					href="https://github.com/PlebeianTech/plebeian.market"
 					target="_blank"
 					rel="noopener noreferrer"><span class="i-tdesign-logo-github text-white w-6 h-6"></span></a

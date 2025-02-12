@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { CarouselAPI } from '$lib/components/ui/carousel/context'
 	import Spinner from '$lib/components/assets/spinner.svelte'
+	import Nip05Badge from '$lib/components/cart/nip-05-badge.svelte'
 	import AdminActions from '$lib/components/common/admin-actions.svelte'
 	import ItemGrid from '$lib/components/common/item-grid.svelte'
 	import ShippingsDialog from '$lib/components/dialogs/shippingsDialog.svelte'
@@ -116,7 +117,7 @@
 							{#key $productsQuery.data.identifier}
 								{#if $productsQuery.data?.images?.length}
 									{@const sortedImages = $productsQuery.data.images?.sort((a, b) => a.imageOrder - b.imageOrder)}
-									<div class="flex flex-row md:flex-col gap-2 md:max-h-[500px] overflow-y-auto p-1">
+									<div class="flex flex-row md:flex-col gap-2 md:max-h-[500px] overflow-y-auto p-1 justify-center md:justify-start">
 										{#each sortedImages as item, i}
 											<button
 												class={cn(
@@ -185,7 +186,7 @@
 					{#if isMyProduct}
 						<Button variant="primary" class="w-1/4" on:click={() => openDrawerForProduct(data.productRes.id)}>Edit product</Button>
 					{/if}
-					<h3 class="md:mb-12 mb-6 break-words overflow-hidden">{$productsQuery.data.name}</h3>
+					<h3 class="md:mb-12 break-words overflow-hidden">{$productsQuery.data.name}</h3>
 
 					<div class="flex md:flex-col flex-row gap-2 w-full md:items-start items-center">
 						<div class="flex flex-col gap-2 w-full">
@@ -213,7 +214,7 @@
 						</Badge>
 					</div>
 
-					<div class="flex flex-col sm:flex-row gap-2 w-full items-center">
+					<div class="flex sm:flex-row gap-2 w-full items-center">
 						<div class="flex flex-row gap-1 w-fit items-center">
 							<Button variant="tertiary" size="icon" on:click={handleDecrement} disabled={qtyToCart <= 1}>
 								<span class="i-mdi-minus w-4 h-4"></span>
@@ -245,21 +246,23 @@
 						</div>
 					</div>
 
-					<span class="my-8 font-bold">
+					<span class="my-4 font-bold flex items-center gap-2">
 						Sold by
+						<Nip05Badge userId={$userProfileQuery?.data?.id} />
 						<a
 							href={`/p/${$userProfileQuery?.data?.nip05 ? $userProfileQuery.data?.nip05 : $userProfileQuery?.data?.id ? $userProfileQuery.data?.id : data.user.id}`}
-							><span class="underline"
-								>{$userProfileQuery?.data?.name ? $userProfileQuery.data?.name : $userProfileQuery?.data?.displayName}<span /></span
-							></a
 						>
+							<span class="underline">
+								{$userProfileQuery?.data?.name ? $userProfileQuery.data?.name : $userProfileQuery?.data?.displayName}
+							</span>
+						</a>
 					</span>
 
 					{#if $productsQuery.data.description}
 						<article class="my-4 overflow-hidden">
-							<h4 class="sm:text-2xl text-xl font-bold">Details</h4>
+							<h4 class="sm:text-2xl text-xl font-bold mb-2">Details</h4>
 							<p class="break-words whitespace-pre-wrap">
-								{truncateText($productsQuery.data.description)}
+								{truncateText($productsQuery.data.description, 120)}
 							</p>
 						</article>
 					{/if}
@@ -276,7 +279,7 @@
 						<div class="container flex flex-col items-center p-2 bg-secondary">
 							<h4 class="text-white font-bold">Description</h4>
 						</div>
-						<div class="container flex flex-col items-center p-8 bg-white">
+						<div class="container flex flex-col items-center p-6 bg-white">
 							{#if $productsQuery.data.description && $productsQuery.data.description.length > 420}
 								{#if !isExpanded}
 									<p class="whitespace-pre-wrap break-words w-full" transition:slide>
@@ -374,7 +377,7 @@
 						<Tabs.Trigger value="comments" disabled class={cactiveTab}>Comments</Tabs.Trigger>
 						<Tabs.Trigger value="reviews" disabled class={cactiveTab}>Reviews</Tabs.Trigger>
 					</Tabs.List>
-					<Tabs.Content value="description" class="flex flex-col gap-2 bg-white border-t-2 border-black shadow-md rounded-md p-10">
+					<Tabs.Content value="description" class="flex flex-col gap-2 bg-white border-t-2 border-secondary shadow-md p-6 mt-4 ml-1">
 						{#if $productsQuery.data?.description && $productsQuery.data?.description?.length > 420}
 							{#if !isExpanded}
 								<p class="whitespace-pre-wrap break-words w-full" transition:slide>
@@ -400,7 +403,7 @@
 							</p>
 						{/if}
 					</Tabs.Content>
-					<Tabs.Content value="shippings" class="flex flex-col gap-2 bg-white border-t-2 border-black shadow-md rounded-md p-10">
+					<Tabs.Content value="shippings" class="flex flex-col gap-2 bg-white border-t-2 border-secondary shadow-md p-6 mt-4 ml-1">
 						{#if $stallQuery?.data?.stall?.shipping?.length}
 							<section class="flex flex-col gap-1">
 								{#each $stallQuery?.data?.stall?.shipping as shipping}
@@ -455,9 +458,9 @@
 							</section>
 						{/if}
 					</Tabs.Content>
-					<Tabs.Content value="comments" class="flex flex-col gap-2 bg-white border-t-2 border-black shadow-md rounded-md p-10"
+					<Tabs.Content value="comments" class="flex flex-col gap-2 bg-white border-t-2 border-secondary shadow-md p-6 mt-4 ml-1"
 					></Tabs.Content>
-					<Tabs.Content value="reviews" class="flex flex-col gap-2 bg-white border-t-2 border-black shadow-md rounded-md p-10"
+					<Tabs.Content value="reviews" class="flex flex-col gap-2 bg-white border-t-2 border-secondary shadow-md p-6 mt-4 ml-1"
 					></Tabs.Content>
 				</Tabs.Root>
 			</div>

@@ -49,10 +49,7 @@
 </script>
 
 <Sheet.Root bind:open={isOpen} onOutsideClick={closeDrawer}>
-	<Sheet.Content
-		side="right"
-		class="w-[100vw] sm:min-w-[85vw] md:min-w-[55vw] xl:min-w-[35vw] flex flex-col h-full border-l-black border-2 p-2"
-	>
+	<Sheet.Content side="right" class="w-[100vw] sm:min-w-[85vw] md:min-w-[55vw] xl:min-w-[35vw] flex flex-col h-full p-2 border-none">
 		{#if isLoading}
 			<Spinner />
 		{:else}

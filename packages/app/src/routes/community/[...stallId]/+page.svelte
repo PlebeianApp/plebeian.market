@@ -116,7 +116,7 @@
 													fallbackClass="rounded-md w-8 h-8"
 												/>
 											</a>
-											<span>{$userProfileQuery.data?.name || $userProfileQuery.data?.displayName || truncateText(user.id)}</span>
+											<span>{$userProfileQuery.data?.name || $userProfileQuery.data?.displayName || truncateText(user.id, 20)}</span>
 										</div>
 										<span class="text-sm text-gray-500 md:flex-row">created: {createDate}</span>
 									</div>
