@@ -77,8 +77,8 @@
 			</div>
 		{:else}
 			<!-- Desktop Layout -->
-			<div class="bg-black p-4 mb-4">
-				<h2 class="text-4xl m-0 text-left text-white"><a href="/dash">Dashboard</a></h2>
+			<div class="bg-black p-4">
+				<h2 class="text-4xl m-0 text-left text-secondary"><a href="/dash">Dashboard</a></h2>
 			</div>
 			<div class="grid grid-cols-[1fr_2fr] gap-6 p-4">
 				<!-- Navigation Menu -->
@@ -108,24 +108,7 @@
 				</nav>
 
 				<!-- Content Area -->
-				<div class="w-full">
-					{#if parentMenuItem}
-						<div class=" flex flex-col gap-2">
-							<div class="relative flex items-center p-1 rounded px-1 bg-black">
-								<a href="/dash" class="absolute left-2 p-2 h-fit text-white">
-									<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
-								</a>
-								<h2 class="text-4xl m-0 w-full text-center text-white">{parentMenuItem.value}</h2>
-							</div>
-							<div class="flex flex-col gap-2">
-								<div class="flex flex-col justify-center items-center gap-1">
-									<h3 class="text-lg font-bold">{currentMenuInfo?.title}</h3>
-									<p class="text-gray-600">{currentMenuInfo?.description}</p>
-								</div>
-								<Separator />
-							</div>
-						</div>
-					{/if}
+				<div class="w-full border p-4 rounded bg-white">
 					<slot />
 				</div>
 			</div>

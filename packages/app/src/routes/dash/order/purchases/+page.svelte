@@ -16,5 +16,5 @@
 		<OrderTable orders={$orderQuery.data.orders} orderMode="purchase" />
 	</div>
 {:else}
-	<div>You have no orders yet.</div>
+	<div class="p-6">You have no orders yet.</div>
 {/if}
