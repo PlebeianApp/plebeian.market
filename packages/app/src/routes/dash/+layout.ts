@@ -15,7 +15,7 @@ export const load = async () => {
 					description: 'Manage your sales',
 				},
 				{
-					title: '💪 Circular Economy Builder',
+					title: '💪 Circular Economy',
 					href: '/dash/settings/cecb',
 					description: 'Configure community contributions preferences',
 					public: false,
