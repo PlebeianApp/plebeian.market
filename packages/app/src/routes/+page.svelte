@@ -9,10 +9,12 @@
 	import { breakpoint, getGridColumns } from '$lib/stores/breakpoint'
 	import ndkStore from '$lib/stores/ndk'
 	import { handleListItems } from '$lib/utils/product.utils'
+	import { MetaTags } from 'svelte-meta-tags'
 
 	import type { PageData } from './$types'
 
 	export let data: PageData
+	const { pageMetaTags } = data
 
 	$: userStalls = $ndkStore.activeUser?.pubkey ? createStallsByFilterQuery({ userId: $ndkStore.activeUser.pubkey }) : undefined
 	$: if ($userStalls != undefined && $userStalls?.data == null) $userStalls?.refetch()
@@ -20,6 +22,8 @@
 	$: productQuery = createProductsByFilterQuery({ pageSize: getGridColumns($breakpoint, 'product') * 4, order: 'asc', onePerUser: true })
 	$: featuredProductsQuery = createProductsByFilterQuery({ featured: true, pageSize: getGridColumns($breakpoint, 'product') * 4 })
 </script>
+
+<MetaTags {...pageMetaTags} />
 
 {#if !data.appSettings?.isFirstTimeRunning}
 	<div class="flex min-h-screen w-full flex-col relative">
