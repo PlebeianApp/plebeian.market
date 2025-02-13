@@ -24,7 +24,7 @@ export const load: PageServerLoad = async ({ params, url }) => {
 
 		const productId = URLProcessor.buildCoordinateId(urlComponents)
 
-		const product = await fetchAddressableEvent(`${KindProducts}:${urlComponents.userId}:${urlComponents.identifier}`)
+		const product = await fetchAddressableEvent(productId)
 
 		if (!product) {
 			return {
@@ -41,7 +41,7 @@ export const load: PageServerLoad = async ({ params, url }) => {
 		const imageUrl = currentUrl.origin + '/social-image.jpg'
 
 		const pageMetaTags = Object.freeze({
-			title: content.name,
+			title: `${content.name} ${urlComponents.userId.includes('@') ?? '- ' + urlComponents.userId}`,
 			description: content.description,
 			openGraph: {
 				title: content.name,

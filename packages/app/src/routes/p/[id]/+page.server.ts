@@ -1,5 +1,7 @@
 import type { MetaTagsProps } from 'svelte-meta-tags'
+import { withTimeout } from '$lib/nostrSubs/load-utils'
 import { fetchUserData } from '$lib/nostrSubs/utils'
+import { getUserByNip05 } from '$lib/server/users.service'
 import { ndk } from '$lib/stores/ndk'
 import { URLProcessor } from '$lib/utils/url.utils'
 import WebSocket from 'ws'
@@ -17,8 +19,18 @@ export const load: PageServerLoad = async ({
 	let userPubkey = params.id
 
 	if (params.id.includes('@')) {
-		const nip05User = await ndk.getUserFromNip05(params.id)
-		userPubkey = nip05User?.pubkey || params.id
+		try {
+			const userFromDb = await getUserByNip05(params.id)
+			if (userFromDb) {
+				userPubkey = userFromDb.id
+			} else {
+				const nip05User = await withTimeout(ndk.getUserFromNip05(params.id), 5000)
+				userPubkey = nip05User?.pubkey || params.id
+			}
+		} catch (error) {
+			console.error('Error fetching user information:', error)
+			userPubkey = params.id
+		}
 	}
 
 	if (!userPubkey) {

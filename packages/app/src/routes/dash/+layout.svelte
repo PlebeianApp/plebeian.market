@@ -115,7 +115,7 @@
 													<a
 														href={link.href}
 														id={`${link.title.replace(/^[^a-zA-Z]+/, '').toLocaleLowerCase()}-button`}
-														class="block p-2 hover:bg-gray-100 rounded"
+														class="block p-2 hover:bg-gray-100 rounded {currentPath === link.href ? 'bg-gray-300' : ''}"
 													>
 														{link.title}
 													</a>
