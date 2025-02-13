@@ -16,7 +16,7 @@
 	$: hasUnreadMessages = Object.values($unreadCounts).some((count) => count > 0)
 </script>
 
-<div class="flex flex-col h-screen max-w-6xl mx-auto">
+<div class="flex flex-col min-h-screen max-w-6xl mx-auto">
 	<div class="flex items-center justify-between shrink-0">
 		{#if hasUnreadMessages}
 			<Button variant="outline" size="sm" on:click={handleMarkAllRead} class="text-sm">Mark all as read</Button>
@@ -26,7 +26,9 @@
 	<div class="flex-1 overflow-hidden">
 		<div class="h-full flex flex-col gap-4 mt-2">
 			{#each Object.entries($groupedDMs) as [pubkey, messages] (pubkey)}
-				<ConversationListItem {pubkey} lastMessagets={Number(messages[0].created_at)} onSelect={selectConversation} />
+				<div class="border bg-white">
+					<ConversationListItem {pubkey} lastMessagets={Number(messages[0].created_at)} onSelect={selectConversation} />
+				</div>
 			{/each}
 		</div>
 	</div>
