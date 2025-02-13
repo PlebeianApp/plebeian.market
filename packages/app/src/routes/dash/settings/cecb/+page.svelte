@@ -266,7 +266,7 @@
 		/>
 	{/if}
 	<div class="flex gap-2">
-		<Button variant="primary" class="w-full font-bold" on:click={() => (newRecipientFormVisible = true)}>Add v4v recipient</Button>
+		<Button variant="primary" class="w-full font-bold" on:click={() => (newRecipientFormVisible = true)}>Add recipient</Button>
 		<Button variant="tertiary" class="w-full font-bold" on:click={handleSetAllEqual}
 			><span class="i-mdi-equal-box w-6 h-6 mr-2" />Equal All</Button
 		>
