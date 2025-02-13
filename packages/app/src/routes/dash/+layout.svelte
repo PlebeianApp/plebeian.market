@@ -31,7 +31,10 @@
 			<div class="w-full">
 				<div class="flex items-center py-4 px-1 bg-black">
 					{#if currentMenuInfo}
-						<a href="/dash" class="absolute left-2 m-0 p-2 leading-none text-white">
+						<a
+							href={currentPath == currentMenuInfo.href ? `/dash` : currentMenuInfo.href}
+							class="absolute left-2 m-0 p-2 leading-none text-white"
+						>
 							<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
 						</a>
 
@@ -72,7 +75,11 @@
 											{#each item.links as link}
 												{#if link.public || ($userExist?.data?.exists && !$userExist?.data?.banned)}
 													<li>
-														<a href={link.href} class="block p-2 hover:bg-gray-100 rounded">
+														<a
+															href={link.href}
+															id={`${link.title.replace(/^[^a-zA-Z]+/, '').toLocaleLowerCase()}-button`}
+															class="block p-2 hover:bg-gray-100 rounded"
+														>
 															{link.title}
 														</a>
 													</li>
@@ -105,7 +112,11 @@
 										{#each item.links as link}
 											{#if link.public || ($userExist?.data?.exists && !$userExist?.data?.banned)}
 												<li>
-													<a href={link.href} class="block p-2 hover:bg-gray-100 rounded">
+													<a
+														href={link.href}
+														id={`${link.title.replace(/^[^a-zA-Z]+/, '').toLocaleLowerCase()}-button`}
+														class="block p-2 hover:bg-gray-100 rounded"
+													>
 														{link.title}
 													</a>
 												</li>

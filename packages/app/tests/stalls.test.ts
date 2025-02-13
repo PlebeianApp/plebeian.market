@@ -47,9 +47,9 @@ describe('stalls', async () => {
 				console.error('Failed to navigate to settings:', error)
 				throw error
 			}
-
-			await page.waitForSelector('text=Shops', { timeout: 2000 })
-			await page.click('text=Shops')
+			console.log('here')
+			await page.waitForSelector('#shops-button', { timeout: 2000 })
+			await page.click('#shops-button')
 			await page.waitForSelector('text=New', { timeout: 2000 })
 			await page.click('text=New')
 
