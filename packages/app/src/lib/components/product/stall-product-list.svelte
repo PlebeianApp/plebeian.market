@@ -19,7 +19,7 @@
 		<Spinner />
 	{:else if $productsByStall?.data?.products.length}
 		{#each $productsByStall?.data?.products as product}
-			<a class="flex flex-row justify-between my-4 gap-2" href={`/products/${product.id}`}>
+			<a class="flex flex-col md:flex-row justify-between my-4 gap-2" href={`/products/${product.id}`}>
 				{#if product?.images?.length}
 					{@const mainImage = product.images?.sort((a, b) => a.imageOrder - b.imageOrder)}
 					<img class="contain h-[60px] aspect-square object-cover" src={mainImage[0].imageUrl} alt="" />
