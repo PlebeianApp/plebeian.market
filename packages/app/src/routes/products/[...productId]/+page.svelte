@@ -25,9 +25,10 @@
 	import { openDrawerForProduct } from '$lib/stores/drawer-ui'
 	import { cn, formatSats, parseCoordinatesString, stringToHexColor, truncateString, truncateText } from '$lib/utils'
 	import { getMediaType } from '$lib/utils/media.utils'
+	import { Share } from 'lucide-svelte'
 	import { MetaTags } from 'svelte-meta-tags'
 	import { slide } from 'svelte/transition'
-	import { Share } from 'lucide-svelte'
+
 	import type { PageData } from './$types'
 
 	let api: CarouselAPI

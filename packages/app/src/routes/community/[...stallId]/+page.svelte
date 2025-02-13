@@ -22,8 +22,8 @@
 	import ndkStore from '$lib/stores/ndk'
 	import { stringToHexColor, truncateString, truncateText } from '$lib/utils'
 	import { getMediaType } from '$lib/utils/media.utils'
-	import { MetaTags } from 'svelte-meta-tags'
 	import { Share } from 'lucide-svelte'
+	import { MetaTags } from 'svelte-meta-tags'
 	import { toast } from 'svelte-sonner'
 
 	import type { PageData } from './$types'

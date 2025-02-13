@@ -1,4 +1,7 @@
 <script lang="ts">
+	import type { NormalizedData } from '$lib/nostrSubs/utils'
+	import type { DisplayProduct } from '$lib/server/products.service'
+	import type { RichStall } from '$lib/server/stalls.service'
 	import { goto } from '$app/navigation'
 	import { page } from '$app/stores'
 	import Nip05Badge from '$lib/components/cart/nip-05-badge.svelte'
@@ -14,19 +17,16 @@
 	import { createProductsByFilterQuery } from '$lib/fetch/products.queries'
 	import { createStallsByFilterQuery } from '$lib/fetch/stalls.queries'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
-	import type { NormalizedData } from '$lib/nostrSubs/utils'
 	import { fetchUserProductData, fetchUserStallsData, normalizeProductsFromNostr, normalizeStallData } from '$lib/nostrSubs/utils'
-	import type { DisplayProduct } from '$lib/server/products.service'
-	import type { RichStall } from '$lib/server/stalls.service'
 	import { breakpoint, getGridColumns } from '$lib/stores/breakpoint'
 	import { openDrawerForNewProduct, openDrawerForNewStall } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
 	import { getHexColorFingerprintFromHexPubkey, mergeWithExisting, truncateText } from '$lib/utils'
 	import extend from 'just-extend'
+	import { Share } from 'lucide-svelte'
 	import { onMount } from 'svelte'
 	import { MetaTags } from 'svelte-meta-tags'
 
-	import { Share } from 'lucide-svelte'
 	import type { PageData } from './$types'
 
 	export let data: PageData
