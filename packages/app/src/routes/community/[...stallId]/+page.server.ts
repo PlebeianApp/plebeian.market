@@ -32,7 +32,7 @@ export const load: PageServerLoad = async ({ params, url }) => {
 			getStallInfo(stallId, urlComponents.identifier),
 		])
 
-		const stall = await fetchAddressableEvent(`${KindStalls}:${urlComponents.userId}:${urlComponents.identifier}`)
+		const stall = await fetchAddressableEvent(stallId)
 
 		if (!stall) {
 			return { stall: stallInfo, user: userInfo, pageMetaTags: null }
@@ -44,7 +44,7 @@ export const load: PageServerLoad = async ({ params, url }) => {
 		const imageUrl = currentUrl.origin + '/social-image.jpg'
 
 		const pageMetaTags = Object.freeze({
-			title: content.name,
+			title: `${content.name} ${urlComponents.userId.includes('@') ?? '- ' + urlComponents.userId}`,
 			description: content.description,
 			openGraph: {
 				title: content.name,

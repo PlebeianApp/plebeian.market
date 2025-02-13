@@ -24,3 +24,16 @@ export function decodeNpub(npub: string): string | null {
 		return null
 	}
 }
+
+export const withTimeout = <T>(promise: Promise<T>, time: number): Promise<T> => {
+	return new Promise((resolve, reject) => {
+		const timer = setTimeout(() => {
+			reject(new Error('Timeout exceeded'))
+		}, time)
+
+		promise
+			.then(resolve)
+			.catch(reject)
+			.finally(() => clearTimeout(timer))
+	})
+}
