@@ -12,9 +12,14 @@
 	export let data: PageData
 	$: ({ menuItems } = data)
 
+	function findRoute(path: string) {
+		return menuItems.flatMap((item) => item.links).find((link) => path === link.href || path.startsWith(link.href + '/'))?.href
+	}
+
 	$: currentPath = $page.url.pathname
-	$: currentMenuInfo = menuItems.flatMap((item) => item.links).find((link) => currentPath === link.href)
-	$: parentMenuItem = menuItems.find((item) => item.links.some((link) => currentPath === link.href))
+	$: matchedPath = findRoute(currentPath)
+	$: currentMenuInfo = menuItems.flatMap((item) => item.links).find((link) => matchedPath === link.href)
+	$: parentMenuItem = menuItems.find((item) => item.links.some((link) => matchedPath === link.href))
 	$: userExist = $ndkStore.activeUser?.pubkey ? createUserExistsQuery($ndkStore.activeUser?.pubkey) : undefined
 	$: if (!$activeUserQuery.data?.role) $activeUserQuery.refetch()
 	$: isMobile = $breakpoint == 'sm'
@@ -24,12 +29,22 @@
 	<div class="mx-auto">
 		{#if isMobile}
 			<div class="w-full">
-				<div class="relative flex items-center py-4 px-1 bg-black">
-					{#if parentMenuItem}
-						<a href="/dash" class="absolute left-2 p-2 h-fit text-white">
+				<div class="flex items-center py-4 px-1 bg-black">
+					{#if currentMenuInfo}
+						<a href="/dash" class="absolute left-2 m-0 p-2 leading-none text-white">
 							<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
 						</a>
-						<h2 class="text-4xl m-0 w-full text-center text-secondary">{parentMenuItem.value}</h2>
+
+						<div class="inline-flex items-center justify-center w-full px-8">
+							<div class="flex flex-wrap gap-1 items-center justify-center max-w-[80vw] overflow-hidden">
+								<span class="text-white text-md truncate">
+									<a href="/dash">{parentMenuItem?.value}</a>
+								</span>
+								<h2 class="text-xl m-0 text-secondary truncate">
+									/{currentMenuInfo.title.replace(/^[^a-zA-Z]+/, '')}
+								</h2>
+							</div>
+						</div>
 					{:else}
 						<h2 class="text-4xl m-0 w-full text-center text-secondary">
 							<a href="/dash">Dashboard</a>
@@ -76,9 +91,9 @@
 			<div class="bg-primary p-4">
 				<h2 class="text-4xl m-0 text-left text-secondary"><a href="/dash">Dashboard</a></h2>
 			</div>
-			<div class="grid grid-cols-[1fr_2fr] gap-6 p-4">
+			<div class="grid grid-cols-[auto_2fr] gap-6 p-4">
 				<!-- Navigation Menu -->
-				<nav class="space-y-4">
+				<nav class="space-y-4 max-w-xl">
 					<div class="border p-4 rounded bg-white">
 						{#each menuItems as item}
 							{#if shouldShowItem(item, $userExist?.data?.exists, $activeUserQuery.data?.role)}
@@ -104,8 +119,27 @@
 				</nav>
 
 				<!-- Content Area -->
-				<div class="w-full border p-4 rounded bg-white">
-					<slot />
+				<div class="w-full flex flex-col max-w-xl md:max-w-2xl lg:max-w-3xl gap-2 border p-4 rounded bg-white">
+					{#if currentMenuInfo}
+						<div class="flex items-center p-3 rounded px-1 bg-black">
+							<div class="inline-flex gap-4 items-end w-full px-2">
+								<a href={currentPath == currentMenuInfo.href ? `/dash` : currentMenuInfo.href} class=" m-0 leading-none text-white">
+									<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
+								</a>
+								<div class="flex flex-wrap gap-1 items-center justify-center max-w-[80vw] overflow-hidden">
+									<span class="text-white text-md truncate">
+										<a href="/dash">{parentMenuItem?.value}</a>
+									</span>
+									<h2 class="text-2xl m-0 text-secondary truncate">
+										/{currentMenuInfo.title}
+									</h2>
+								</div>
+							</div>
+						</div>
+					{/if}
+					<div class="">
+						<slot />
+					</div>
 				</div>
 			</div>
 		{/if}

@@ -42,7 +42,7 @@ export const load = async () => {
 			links: [
 				{ title: '👤 Profile', href: '/dash/settings/account/profile', description: 'Edit your profile', public: true },
 				{
-					title: '✉️ Messages',
+					title: '📨 Messages',
 					href: '/dash/messages',
 					description: 'Manage your messages',
 				},
@@ -73,7 +73,7 @@ export const load = async () => {
 			root: '/dash/settings/app',
 			links: [
 				{
-					title: '⚙️ App Miscellanea',
+					title: '🔧 App Miscellanea',
 					href: '/dash/settings/app/misc',
 					description: 'Manage app identity and other settings',
 					public: false,
