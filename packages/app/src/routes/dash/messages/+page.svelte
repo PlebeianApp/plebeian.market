@@ -24,7 +24,7 @@
 	</div>
 
 	<div class="flex-1 overflow-hidden">
-		<div class="h-full overflow-y-auto flex flex-col gap-8 mt-2">
+		<div class="h-full flex flex-col gap-4 mt-2">
 			{#each Object.entries($groupedDMs) as [pubkey, messages] (pubkey)}
 				<ConversationListItem {pubkey} lastMessagets={Number(messages[0].created_at)} onSelect={selectConversation} />
 			{/each}

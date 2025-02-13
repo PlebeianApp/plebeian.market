@@ -28,9 +28,9 @@
 				</Badge>
 			{/if}
 		</div>
-		<div class="h-full overflow-y-auto flex flex-col gap-8 mt-2">
+		<div class="h-full overflow-y-auto flex flex-col gap-4 mt-2">
 			<span class="text-sm text-muted-foreground truncate ml-2">
-				Last message: {new Date(lastMessagets * 1000).toLocaleString()}
+				Last: {new Date(lastMessagets * 1000).toLocaleString()}
 			</span>
 		</div>
 	</div>
