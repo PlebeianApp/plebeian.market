@@ -20,9 +20,11 @@
 	import { dialogs } from '$lib/stores/dialog'
 	import { openDrawerForNewProductForStall, openDrawerForStall } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
-	import { stringToHexColor, truncateString, truncateText } from '$lib/utils'
+	import { shareContent, stringToHexColor, truncateString, truncateText } from '$lib/utils'
 	import { getMediaType } from '$lib/utils/media.utils'
+	import { Share } from 'lucide-svelte'
 	import { MetaTags } from 'svelte-meta-tags'
+	import { toast } from 'svelte-sonner'
 
 	import type { PageData } from './$types'
 
@@ -56,6 +58,17 @@
 			isMyStall = $ndkStore.activeUser?.pubkey == user.id
 		}
 	}
+
+	function handleShareStall() {
+		const shareUrl = `${window.location.origin}/community/${stall.id}`
+		const shareData = {
+			title: $stallQuery.data?.stall?.name || 'Check out this stall',
+			text: `Check out my shop ${$stallQuery.data?.stall?.name} on #plebeianmarket ${shareUrl} @${$stallQuery.data?.stall?.name}`,
+			url: shareUrl,
+		}
+
+		shareContent(shareData)
+	}
 </script>
 
 <MetaTags {...pageMetaTags} />
@@ -83,8 +96,13 @@
 					</Hero>
 				{/if}
 				{#if name}
-					<div class="flex flex-col pl-8 pt-4 bg-off-black">
-						<h2 class="text-2xl text-white">{truncateText(name, 50)}</h2>
+					<div class="flex flex-row justify-between px-6 pt-2 bg-off-black">
+						<div class="flex flex-col gap-2 items-center">
+							<h2 class="text-2xl text-white">{truncateText(name, 50)}</h2>
+						</div>
+						<Button size="icon" variant="primary" on:click={() => handleShareStall()}>
+							<Share slot="icon" class="h-4 w-4" />
+						</Button>
 					</div>
 				{/if}
 			</div>

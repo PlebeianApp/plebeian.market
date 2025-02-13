@@ -23,8 +23,9 @@
 	import { handleAddToCart } from '$lib/stores/cart'
 	import { dialogs } from '$lib/stores/dialog'
 	import { openDrawerForProduct } from '$lib/stores/drawer-ui'
-	import { cn, formatSats, parseCoordinatesString, stringToHexColor, truncateString, truncateText } from '$lib/utils'
+	import { cn, formatSats, parseCoordinatesString, shareContent, stringToHexColor, truncateString, truncateText } from '$lib/utils'
 	import { getMediaType } from '$lib/utils/media.utils'
+	import { Share } from 'lucide-svelte'
 	import { MetaTags } from 'svelte-meta-tags'
 	import { slide } from 'svelte/transition'
 
@@ -86,6 +87,17 @@
 		if (qtyToCart > 1) {
 			qtyToCart--
 		}
+	}
+
+	function handleShareProduct() {
+		const shareUrl = `${window.location.origin}/p/${$productsQuery.data?.id}`
+		const shareData = {
+			title: $productsQuery.data?.name || 'Check out this product',
+			text: `${$productsQuery.data?.name} on #plebeianmarket ${shareUrl} @${$productsQuery.data?.name}`,
+			url: shareUrl,
+		}
+
+		shareContent(shareData)
 	}
 </script>
 
@@ -175,7 +187,12 @@
 					{#if isMyProduct}
 						<Button variant="primary" class="w-1/4" on:click={() => openDrawerForProduct(data.productRes.id)}>Edit product</Button>
 					{/if}
-					<h3 class="md:mb-12 break-words overflow-hidden">{$productsQuery.data.name}</h3>
+					<div class="md:mb-12 flex flex-row gap-2 items-center">
+						<h3 class="break-words overflow-hidden">{$productsQuery.data.name}</h3>
+						<Button size="icon" variant="primary" on:click={handleShareProduct}>
+							<Share slot="icon" class="h-4 w-4" />
+						</Button>
+					</div>
 
 					<div class="flex md:flex-col flex-row gap-2 w-full md:items-start items-center">
 						<div class="flex flex-col gap-2 w-full">

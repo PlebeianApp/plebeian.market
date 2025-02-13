@@ -285,6 +285,17 @@ export async function copyToClipboard(data: BlobPart, mimeType = 'text/plain') {
 	}
 }
 
+export function shareContent(shareData: { title: string; text: string; url: string }) {
+	if (navigator.share) {
+		navigator.share(shareData).catch((err) => {
+			console.error('Error sharing:', err)
+			alert('Failed to share content. Please try again.')
+		})
+	} else {
+		alert('Sharing is not supported in your browser. Please copy the link manually.')
+	}
+}
+
 export function truncateString(str: string, maxLenght: number = 18): string {
 	if (str.length > maxLenght) return str.substring(0, 12) + ':' + str.substring(str.length - 6)
 	return str

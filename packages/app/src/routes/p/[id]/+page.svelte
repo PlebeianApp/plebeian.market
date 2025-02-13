@@ -21,8 +21,9 @@
 	import { breakpoint, getGridColumns } from '$lib/stores/breakpoint'
 	import { openDrawerForNewProduct, openDrawerForNewStall } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
-	import { getHexColorFingerprintFromHexPubkey, mergeWithExisting, truncateText } from '$lib/utils'
+	import { getHexColorFingerprintFromHexPubkey, mergeWithExisting, shareContent, truncateText } from '$lib/utils'
 	import extend from 'just-extend'
+	import { Share } from 'lucide-svelte'
 	import { onMount } from 'svelte'
 	import { MetaTags } from 'svelte-meta-tags'
 
@@ -63,6 +64,17 @@
 
 	const handleSendMessage = () => {
 		goto(`/dash/messages/${$page.params.id}`)
+	}
+
+	function handleShareUser() {
+		const shareUrl = `${window.location.origin}/p/${id}`
+		const shareData = {
+			title: $userProfileQuery.data?.name || 'Check out this user',
+			text: `Check out my profile on #plebeianmarket ${shareUrl} @${$userProfileQuery.data?.name}`,
+			url: shareUrl,
+		}
+
+		shareContent(shareData)
 	}
 </script>
 
@@ -122,8 +134,11 @@
 									{/if}
 								{:else}
 									<AdminActions type="user" {id} />
+									<Button size="icon" variant="primary" on:click={handleShareUser}>
+										<Share slot="icon" class="h-4 w-4" />
+									</Button>
 									<InteractiveZapButton userIdToZap={id} profile={$userProfileQuery.data} />
-									<Button size="icon" variant="tertiary" on:click={handleSendMessage}>
+									<Button size="icon" variant="primary" on:click={handleSendMessage}>
 										<span class="i-mdi-message-bubble w-6 h-6" />
 									</Button>
 								{/if}

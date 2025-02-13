@@ -1,5 +1,6 @@
 import type { MetaTagsProps } from 'svelte-meta-tags'
 import { fetchUserData } from '$lib/nostrSubs/utils'
+import { ndk } from '$lib/stores/ndk'
 import { URLProcessor } from '$lib/utils/url.utils'
 import WebSocket from 'ws'
 
@@ -11,9 +12,20 @@ export const load: PageServerLoad = async ({
 	params,
 }): Promise<{
 	id: string
-	pageMetaTags: MetaTagsProps
+	pageMetaTags: MetaTagsProps | null
 }> => {
-	const profile = await fetchUserData(params.id).then((user) => user.userProfile)
+	let userPubkey = params.id
+
+	if (params.id.includes('@')) {
+		const nip05User = await ndk.getUserFromNip05(params.id)
+		userPubkey = nip05User?.pubkey || params.id
+	}
+
+	if (!userPubkey) {
+		return { id: params.id, pageMetaTags: null }
+	}
+
+	const profile = await fetchUserData(userPubkey).then((user) => user.userProfile)
 
 	const pageMetaTags = Object.freeze({
 		title: profile?.name || profile?.displayName || 'Profile',
