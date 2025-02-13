@@ -70,6 +70,7 @@
 
 {#if $userProfileQuery.data}
 	{@const { name, about, banner } = $userProfileQuery.data}
+	<!-- {JSON.stringify(metaTags)} -->
 	<div class="relative">
 		<div class="flex flex-col pb-4">
 			<div>
