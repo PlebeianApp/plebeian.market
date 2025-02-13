@@ -6,6 +6,9 @@ import { URLProcessor } from '$lib/utils/url.utils'
 
 import type { PageServerLoad } from './$types'
 
+import WebSocket from 'ws'
+;(global as any).WebSocket = WebSocket
+
 export interface ProductCheck {
 	id: string
 	identifier?: string
