@@ -41,15 +41,15 @@ describe('stalls', async () => {
 			await login(page)
 
 			try {
-				await page.waitForSelector('#settings-button', { timeout: 5000 })
-				await page.click('#settings-button')
+				await page.waitForSelector('#dash-button', { timeout: 5000 })
+				await page.click('#dash-button')
 			} catch (error) {
 				console.error('Failed to navigate to settings:', error)
 				throw error
 			}
-
-			await page.waitForSelector('text=Shops', { timeout: 2000 })
-			await page.click('text=Shops')
+			console.log('here')
+			await page.waitForSelector('#shops-button', { timeout: 2000 })
+			await page.click('#shops-button')
 			await page.waitForSelector('text=New', { timeout: 2000 })
 			await page.click('text=New')
 

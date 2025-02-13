@@ -20,6 +20,7 @@
 	import CartWithState from './cart/cart-with-state.svelte'
 	import AuthDialog from './dialogs/authDialog.svelte'
 	import CAvatar from './ui/custom-components/c-avatar.svelte'
+	import Separator from './ui/separator/separator.svelte'
 
 	$: ({ appSettings } = $page.data as PageData)
 
@@ -138,10 +139,11 @@
 								<div>
 									{#if $ndkStore.activeUser}
 										{#if $balanceOfWorkingNWCs}
-											<div class="flex items-center gap-2">
+											<div class="flex items-center justify-center gap-2 p-2">
 												<span class="i-bitcoin-icons-satoshi-v1-outline w-6 h-6" />
 												<span>{$balanceOfWorkingNWCs} sats</span>
 											</div>
+											<Separator class=" bg-foreground" />
 										{/if}
 
 										<nav class="flex flex-col">
@@ -153,16 +155,6 @@
 											>
 												<span class="i-tdesign-mail w-6 h-6 {hasUnreadMessages ? 'text-secondary' : ''}" />
 												<span class={navMenuLabels}>Messages</span>
-											</Button>
-
-											<Button
-												variant="none"
-												href="/settings"
-												class="{navMenuButtonStyle} {currentPath.startsWith('/settings') ? activeMenuItemClass : ''}"
-												on:click={() => (open = false)}
-											>
-												<span class="i-tdesign-setting-1 w-6 h-6" />
-												<span class={navMenuLabels}>Settings</span>
 											</Button>
 
 											<Button
@@ -225,22 +217,13 @@
 				{:else}
 					<Button
 						variant="primary"
-						class="sm:flex p-2 relative rounded-md {currentPath === '/dash' ? activeNavButtonClass : 'hover:[&>span]:text-secondary'}"
+						class="sm:flex p-2 relative rounded-md {currentPath.includes('/dash') && !currentPath.includes('messages')
+							? activeNavButtonClass
+							: 'hover:[&>span]:text-secondary'}"
 						href="/dash"
 						id="dash-button"
 					>
 						<span class="i-tdesign-dashboard w-6 h-6" />
-					</Button>
-
-					<Button
-						variant="primary"
-						class="sm:flex p-2 relative rounded-md {currentPath.startsWith('/settings')
-							? activeNavButtonClass
-							: 'hover:[&>span]:text-secondary'}"
-						href="/settings"
-						id="settings-button"
-					>
-						<span class="i-tdesign-setting-1 w-6 h-6" />
 					</Button>
 
 					<Button

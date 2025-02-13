@@ -15,21 +15,23 @@
 	$: unreadCount = $unreadCounts[pubkey] || 0
 </script>
 
-<Button variant="ghost" class="w-full justify-start py-6 px-6 border-0 gap-2 hover:bg-accent relative" on:click={() => onSelect(pubkey)}>
+<Button variant="ghost" class="w-full h-full justify-start p-4 py-8 sm:py-4 gap-2 hover:bg-accent" on:click={() => onSelect(pubkey)}>
 	<CAvatar linked {pubkey} profile={$userProfileQuery.data} />
 	<div class="flex flex-col items-start overflow-hidden flex-1">
-		<div class="flex justify-between items-center w-full">
+		<div class="flex items-center w-full">
 			<span class="font-semibold truncate">
 				{$userProfileQuery?.data?.displayName || $userProfileQuery?.data?.name || truncateString(pubkey)}
 			</span>
 			{#if unreadCount > 0}
-				<Badge variant="destructive" class="ml-2">
+				<Badge variant="destructive" class="ml-2 px-1 py-0" size="sm">
 					{unreadCount}
 				</Badge>
 			{/if}
 		</div>
-		<span class="text-sm text-muted-foreground truncate w-full">
-			Last message: {new Date(lastMessagets * 1000).toLocaleString()}
-		</span>
+		<div class="h-full overflow-y-auto flex flex-col">
+			<div class="text-sm text-muted-foreground truncate ml-2">
+				Last: {new Date(lastMessagets * 1000).toLocaleString()}
+			</div>
+		</div>
 	</div>
 </Button>
