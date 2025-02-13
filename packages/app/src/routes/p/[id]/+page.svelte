@@ -21,7 +21,7 @@
 	import { breakpoint, getGridColumns } from '$lib/stores/breakpoint'
 	import { openDrawerForNewProduct, openDrawerForNewStall } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
-	import { getHexColorFingerprintFromHexPubkey, mergeWithExisting, truncateText } from '$lib/utils'
+	import { getHexColorFingerprintFromHexPubkey, mergeWithExisting, shareContent, truncateText } from '$lib/utils'
 	import extend from 'just-extend'
 	import { Share } from 'lucide-svelte'
 	import { onMount } from 'svelte'
@@ -74,9 +74,7 @@
 			url: shareUrl,
 		}
 
-		navigator.share(shareData).catch((err) => {
-			console.error('Error sharing:', err)
-		})
+		shareContent(shareData)
 	}
 </script>
 

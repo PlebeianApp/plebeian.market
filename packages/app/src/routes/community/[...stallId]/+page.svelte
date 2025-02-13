@@ -20,7 +20,7 @@
 	import { dialogs } from '$lib/stores/dialog'
 	import { openDrawerForNewProductForStall, openDrawerForStall } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
-	import { stringToHexColor, truncateString, truncateText } from '$lib/utils'
+	import { shareContent, stringToHexColor, truncateString, truncateText } from '$lib/utils'
 	import { getMediaType } from '$lib/utils/media.utils'
 	import { Share } from 'lucide-svelte'
 	import { MetaTags } from 'svelte-meta-tags'
@@ -67,9 +67,7 @@
 			url: shareUrl,
 		}
 
-		navigator.share(shareData).catch((err) => {
-			console.error('Error sharing:', err)
-		})
+		shareContent(shareData)
 	}
 </script>
 

@@ -23,7 +23,7 @@
 	import { handleAddToCart } from '$lib/stores/cart'
 	import { dialogs } from '$lib/stores/dialog'
 	import { openDrawerForProduct } from '$lib/stores/drawer-ui'
-	import { cn, formatSats, parseCoordinatesString, stringToHexColor, truncateString, truncateText } from '$lib/utils'
+	import { cn, formatSats, parseCoordinatesString, shareContent, stringToHexColor, truncateString, truncateText } from '$lib/utils'
 	import { getMediaType } from '$lib/utils/media.utils'
 	import { Share } from 'lucide-svelte'
 	import { MetaTags } from 'svelte-meta-tags'
@@ -97,9 +97,7 @@
 			url: shareUrl,
 		}
 
-		navigator.share(shareData).catch((err) => {
-			console.error('Error sharing:', err)
-		})
+		shareContent(shareData)
 	}
 </script>
 
