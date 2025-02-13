@@ -25,6 +25,7 @@
 	import { openDrawerForProduct } from '$lib/stores/drawer-ui'
 	import { cn, formatSats, parseCoordinatesString, stringToHexColor, truncateString, truncateText } from '$lib/utils'
 	import { getMediaType } from '$lib/utils/media.utils'
+	import { MetaTags } from 'svelte-meta-tags'
 	import { slide } from 'svelte/transition'
 
 	import type { PageData } from './$types'
@@ -34,6 +35,8 @@
 	let current = 0
 
 	export let data: PageData
+	const { pageMetaTags } = data
+
 	let isMyProduct = false
 	let qtyToCart = 1
 	let isExpanded = false
@@ -86,21 +89,7 @@
 	}
 </script>
 
-<svelte:head>
-	{#if $productsQuery.data}
-		<title>{$productsQuery.data.name} | Product</title>
-		<meta property="og:title" content={$productsQuery.data.name} />
-		<meta property="og:site_name" content="Plebeian market" />
-		<meta property="og:url" content={`https://plebeian.market/products/${$productsQuery.data.userId}/${$productsQuery.data.identifier}`} />
-		<meta property="og:type" content="product" />
-		<meta property="og:description" content={$productsQuery.data.description || 'No description available'} />
-		{#if $productsQuery.data.images?.[0]?.imageUrl}
-			<meta property="og:image" content={$productsQuery.data.images[0].imageUrl} />
-		{/if}
-		<meta property="product:price:amount" content={$productsQuery.data.price.toString()} />
-		<meta property="product:price:currency" content={$productsQuery.data.currency} />
-	{/if}
-</svelte:head>
+<MetaTags {...pageMetaTags} />
 
 {#if $productsQuery.data && data.user.id}
 	<div class="relative bg-black">

@@ -22,12 +22,16 @@
 	import { openDrawerForNewProduct, openDrawerForNewStall } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
 	import { getHexColorFingerprintFromHexPubkey, mergeWithExisting, truncateText } from '$lib/utils'
+	import extend from 'just-extend'
 	import { onMount } from 'svelte'
+	import { MetaTags } from 'svelte-meta-tags'
 
 	import type { PageData } from './$types'
 
 	export let data: PageData
-	const { id } = data
+
+	const { id, pageMetaTags } = data
+
 	let nostrStalls: Partial<RichStall>[] = []
 	let toDisplayProducts: Partial<DisplayProduct>[] = []
 	let showFullAbout = false
@@ -62,25 +66,11 @@
 	}
 </script>
 
-<svelte:head>
-	{#if $userProfileQuery.data}
-		<title>{$userProfileQuery.data.name || $userProfileQuery.data.displayName || 'Profile'}</title>
-		<meta property="og:title" content={$userProfileQuery.data.name || $userProfileQuery.data.displayName || 'Profile'} />
-		<meta property="og:site_name" content="Plebeian market" />
-		<meta property="og:url" content={`https://plebeian.market/p/${$userProfileQuery.data?.id}`} />
-		<meta property="og:type" content="profile" />
-		<meta property="og:description" content={$userProfileQuery.data.about || 'Check out my profile and products!'} />
-		{#if $userProfileQuery.data.image}
-			<meta property="og:image" content={$userProfileQuery.data.image} />
-		{/if}
-		{#if $userProfileQuery.data.name}
-			<meta property="profile:username" content={$userProfileQuery.data.name} />
-		{/if}
-	{/if}
-</svelte:head>
+<MetaTags {...pageMetaTags} />
 
 {#if $userProfileQuery.data}
 	{@const { name, about, banner } = $userProfileQuery.data}
+	<!-- {JSON.stringify(metaTags)} -->
 	<div class="relative">
 		<div class="flex flex-col pb-4">
 			<div>

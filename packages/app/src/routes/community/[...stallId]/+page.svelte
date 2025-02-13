@@ -22,11 +22,12 @@
 	import ndkStore from '$lib/stores/ndk'
 	import { stringToHexColor, truncateString, truncateText } from '$lib/utils'
 	import { getMediaType } from '$lib/utils/media.utils'
+	import { MetaTags } from 'svelte-meta-tags'
 
 	import type { PageData } from './$types'
 
 	export let data: PageData
-	const { stall, user } = data
+	const { stall, user, pageMetaTags } = data
 
 	let sort: Selected<'asc' | 'desc'> = {
 		label: 'Latest',
@@ -57,19 +58,7 @@
 	}
 </script>
 
-<svelte:head>
-	{#if $stallQuery.data?.stall}
-		<title>{$stallQuery.data.stall.name} | Shop</title>
-		<meta property="og:title" content={$stallQuery.data.stall.name} />
-		<meta property="og:site_name" content="Plebeian market" />
-		<meta property="og:url" content={`https://plebeian.market/community/${$stallQuery.data.stall.id}`} />
-		<meta property="og:type" content="website" />
-		<meta property="og:description" content={$stallQuery.data.stall.description || 'Visit our shop!'} />
-		{#if $stallQuery.data.stall.image}
-			<meta property="og:image" content={$stallQuery.data.stall.image} />
-		{/if}
-	{/if}
-</svelte:head>
+<MetaTags {...pageMetaTags} />
 
 <main class="relative">
 	<div class="flex flex-col gap-12">
