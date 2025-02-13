@@ -29,9 +29,9 @@
 						<a href="/dash" class="absolute left-2 p-2 h-fit text-white">
 							<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
 						</a>
-						<h2 class="text-4xl m-0 w-full text-center text-white">{parentMenuItem.value}</h2>
+						<h2 class="text-4xl m-0 w-full text-center text-secondary">{parentMenuItem.value}</h2>
 					{:else}
-						<h2 class="text-4xl m-0 w-full text-center text-white">
+						<h2 class="text-4xl m-0 w-full text-center text-secondary">
 							<a href="/dash">Dashboard</a>
 						</h2>
 					{/if}
