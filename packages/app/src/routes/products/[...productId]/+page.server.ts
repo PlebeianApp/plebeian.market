@@ -3,11 +3,11 @@ import { error } from '@sveltejs/kit'
 import { KindProducts } from '$lib/constants'
 import { fetchAddressableEvent } from '$lib/nostrSubs/utils'
 import { URLProcessor } from '$lib/utils/url.utils'
+import WebSocket from 'ws'
 
 import type { PageServerLoad } from './$types'
 
-import WebSocket from 'ws'
-;(global as any).WebSocket = WebSocket
+;(global as unknown as { WebSocket: typeof WebSocket }).WebSocket = WebSocket
 
 export interface ProductCheck {
 	id: string

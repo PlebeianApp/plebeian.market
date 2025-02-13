@@ -1,11 +1,11 @@
 import type { MetaTagsProps } from 'svelte-meta-tags'
 import { fetchUserData } from '$lib/nostrSubs/utils'
 import { URLProcessor } from '$lib/utils/url.utils'
+import WebSocket from 'ws'
 
 import type { PageServerLoad } from './$types'
 
-import WebSocket from 'ws'
-;(global as any).WebSocket = WebSocket
+;(global as unknown as { WebSocket: typeof WebSocket }).WebSocket = WebSocket
 
 export const load: PageServerLoad = async ({
 	params,
