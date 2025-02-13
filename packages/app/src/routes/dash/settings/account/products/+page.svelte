@@ -77,9 +77,9 @@
 						size="lg"
 					>
 						<div class=" inline-flex items-center justify-between gap-2 w-full">
-							<div class="flex items-center gap-2">
+							<div class="flex items-center gap-2 truncate">
 								<span class="i-mdi-package-variant-closed w-6 h-6" />
-								<span>{product.name}</span>
+								<span class="truncate">{product.name}</span>
 							</div>
 							<div>
 								<Button variant="ghost" size="icon">
