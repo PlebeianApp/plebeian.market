@@ -70,7 +70,7 @@
 				<SkeletonLoader count={3} class="h-12 w-full" />
 			{:else if stallsMixture?.length}
 				{#each stallsMixture as stall}
-					<Collapsible.Root class="border-black border p-2">
+					<Collapsible.Root class="border-black border px-4 py-2 rounded-md">
 						<div class="flex flex-row">
 							<Collapsible.Trigger class="flex flex-row w-full items-center justify-between gap-2">
 								<div class="flex items-center gap-2 font-bold">
