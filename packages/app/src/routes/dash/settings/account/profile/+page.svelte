@@ -121,7 +121,7 @@
 				<Input value={editingActiveUser?.lud06} type="text" id="lud06" name="lud06" placeholder={editingActiveUser?.lud06} />
 			</div>
 
-			<Button variant="focus" id="userDataSubmit" class="w-full" type="submit">Save</Button>
+			<Button variant="primary" id="userDataSubmit" class="w-full" type="submit">Save</Button>
 		</div>
 	</form>
 {/if}
