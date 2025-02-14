@@ -587,7 +587,8 @@
 					{#if $productFormStore.tab === PRODUCT_FORM_TABS[PRODUCT_FORM_TABS.length - 1]}
 						<Button variant="primary" disabled={isLoading} type="submit" class="w-full font-bold">Save</Button>
 					{:else}
-						<Button variant="focus" disabled={isLoading} class="w-full font-bold" on:click={() => productFormStore.nextTab()}>Next</Button>
+						<Button variant="primary" disabled={isLoading} class="w-full font-bold" on:click={() => productFormStore.nextTab()}>Next</Button
+						>
 					{/if}
 				{/if}
 			</div>
