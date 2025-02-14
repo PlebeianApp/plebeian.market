@@ -55,8 +55,8 @@
 					stallsMode = 'create'
 					currentStall = null
 				}}
-				variant="outline"
-				class="border-2 border-black font-bold px-6">New</Button
+				variant="primary"
+				class="border-2 border-black font-bold px-6 w-full">New</Button
 			>
 		</div>
 	{:else if stallsMode === 'create' || stallsMode === 'edit'}
