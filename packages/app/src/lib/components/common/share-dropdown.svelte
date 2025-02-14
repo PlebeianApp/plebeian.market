@@ -1,9 +1,8 @@
 <script lang="ts">
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
 	import { Button } from '$lib/components/ui/button'
-	import { Share } from 'lucide-svelte'
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
 	import { copyToClipboard } from '$lib/utils'
-	import { Twitter, Facebook, Link, Mail } from 'lucide-svelte'
+	import { Facebook, Link, Mail, Share, Twitter } from 'lucide-svelte'
 
 	export let title: string = ''
 	export let text: string = ''

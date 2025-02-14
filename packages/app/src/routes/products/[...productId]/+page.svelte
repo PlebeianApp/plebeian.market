@@ -4,6 +4,8 @@
 	import Nip05Badge from '$lib/components/cart/nip-05-badge.svelte'
 	import AdminActions from '$lib/components/common/admin-actions.svelte'
 	import ItemGrid from '$lib/components/common/item-grid.svelte'
+	import ShareDropdown from '$lib/components/common/share-dropdown.svelte'
+	import SharingButton from '$lib/components/common/sharing-button.svelte'
 	import ShippingsDialog from '$lib/components/dialogs/shippingsDialog.svelte'
 	import Pattern from '$lib/components/Pattern.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
@@ -27,10 +29,8 @@
 	import { getMediaType } from '$lib/utils/media.utils'
 	import { Share } from 'lucide-svelte'
 	import { MetaTags } from 'svelte-meta-tags'
-	import { slide } from 'svelte/transition'
 	import { toast } from 'svelte-sonner'
-	import ShareDropdown from '$lib/components/common/share-dropdown.svelte'
-	import SharingButton from '$lib/components/common/sharing-button.svelte'
+	import { slide } from 'svelte/transition'
 
 	import type { PageData } from './$types'
 

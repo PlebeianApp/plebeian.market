@@ -3,6 +3,8 @@
 	import AdminActions from '$lib/components/common/admin-actions.svelte'
 	import Hero from '$lib/components/common/hero.svelte'
 	import ItemGrid from '$lib/components/common/item-grid.svelte'
+	import ShareDropdown from '$lib/components/common/share-dropdown.svelte'
+	import SharingButton from '$lib/components/common/sharing-button.svelte'
 	import SkeletonLoader from '$lib/components/common/skeletonLoader.svelte'
 	import TruncatedText from '$lib/components/common/truncatedText.svelte'
 	import ShippingsDialog from '$lib/components/dialogs/shippingsDialog.svelte'
@@ -25,8 +27,6 @@
 	import { Share } from 'lucide-svelte'
 	import { MetaTags } from 'svelte-meta-tags'
 	import { toast } from 'svelte-sonner'
-	import ShareDropdown from '$lib/components/common/share-dropdown.svelte'
-	import SharingButton from '$lib/components/common/sharing-button.svelte'
 
 	import type { PageData } from './$types'
 

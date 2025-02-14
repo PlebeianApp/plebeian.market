@@ -9,6 +9,8 @@
 	import Hero from '$lib/components/common/hero.svelte'
 	import InteractiveZapButton from '$lib/components/common/interactive-zap-button.svelte'
 	import ItemGrid from '$lib/components/common/item-grid.svelte'
+	import ShareDropdown from '$lib/components/common/share-dropdown.svelte'
+	import SharingButton from '$lib/components/common/sharing-button.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
 	import StallItem from '$lib/components/stalls/stall-item.svelte'
 	import Button from '$lib/components/ui/button/button.svelte'
@@ -26,8 +28,6 @@
 	import { Share } from 'lucide-svelte'
 	import { onMount } from 'svelte'
 	import { MetaTags } from 'svelte-meta-tags'
-	import ShareDropdown from '$lib/components/common/share-dropdown.svelte'
-	import SharingButton from '$lib/components/common/sharing-button.svelte'
 
 	import type { PageData } from './$types'
 

@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button'
-	import { Share } from 'lucide-svelte'
 	import { breakpoint } from '$lib/stores/breakpoint'
 	import { shareContent } from '$lib/utils'
+	import { Share } from 'lucide-svelte'
+
 	import ShareDropdown from './share-dropdown.svelte'
 
 	export let title: string = ''
