@@ -25,6 +25,8 @@
 	import { Share } from 'lucide-svelte'
 	import { MetaTags } from 'svelte-meta-tags'
 	import { toast } from 'svelte-sonner'
+	import ShareDropdown from '$lib/components/common/share-dropdown.svelte'
+	import SharingButton from '$lib/components/common/sharing-button.svelte'
 
 	import type { PageData } from './$types'
 
@@ -44,13 +46,6 @@
 
 	$: stallQuery = createStallQuery(stall.id)
 
-	$: productsQuery = createProductsByFilterQuery({
-		pageSize: getGridColumns($breakpoint, 'product') * 4,
-		page: 1,
-		order: sort.value ?? 'desc',
-		stallId: stall.id,
-	})
-
 	let isMyStall = false
 
 	$: {
@@ -59,16 +54,12 @@
 		}
 	}
 
-	function handleShareStall() {
-		const shareUrl = `${window.location.origin}/community/${stall.id}`
-		const shareData = {
-			title: $stallQuery.data?.stall?.name || 'Check out this stall',
-			text: `Check out my shop ${$stallQuery.data?.stall?.name} on #plebeianmarket ${shareUrl} @${$stallQuery.data?.stall?.name}`,
-			url: shareUrl,
-		}
-
-		shareContent(shareData)
-	}
+	$: productsQuery = createProductsByFilterQuery({
+		pageSize: getGridColumns($breakpoint, 'product') * 4,
+		page: 1,
+		order: sort.value ?? 'desc',
+		stallId: stall.id,
+	})
 </script>
 
 <MetaTags {...pageMetaTags} />
@@ -100,9 +91,11 @@
 						<div class="flex flex-col gap-2 items-center">
 							<h2 class="text-2xl text-white">{truncateText(name, 50)}</h2>
 						</div>
-						<Button size="icon" variant="primary" on:click={() => handleShareStall()}>
-							<Share slot="icon" class="h-4 w-4" />
-						</Button>
+						<SharingButton
+							title={$stallQuery.data?.stall?.name || 'Check out this stall'}
+							text={`Check out my shop ${$stallQuery.data?.stall?.name} on #plebeianmarket: ${$stallQuery.data?.stall?.description}`}
+							url={`${window.location.origin}/community/${stall.id}`}
+						/>
 					</div>
 				{/if}
 			</div>

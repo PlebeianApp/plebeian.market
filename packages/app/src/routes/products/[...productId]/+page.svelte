@@ -28,6 +28,9 @@
 	import { Share } from 'lucide-svelte'
 	import { MetaTags } from 'svelte-meta-tags'
 	import { slide } from 'svelte/transition'
+	import { toast } from 'svelte-sonner'
+	import ShareDropdown from '$lib/components/common/share-dropdown.svelte'
+	import SharingButton from '$lib/components/common/sharing-button.svelte'
 
 	import type { PageData } from './$types'
 
@@ -87,17 +90,6 @@
 		if (qtyToCart > 1) {
 			qtyToCart--
 		}
-	}
-
-	function handleShareProduct() {
-		const shareUrl = `${window.location.origin}/p/${$productsQuery.data?.id}`
-		const shareData = {
-			title: $productsQuery.data?.name || 'Check out this product',
-			text: `${$productsQuery.data?.name} on #plebeianmarket ${shareUrl} @${$productsQuery.data?.name}`,
-			url: shareUrl,
-		}
-
-		shareContent(shareData)
 	}
 </script>
 
@@ -189,9 +181,11 @@
 					{/if}
 					<div class="md:mb-12 flex flex-row gap-2 items-center">
 						<h3 class="break-words overflow-hidden">{$productsQuery.data.name}</h3>
-						<Button size="icon" variant="primary" on:click={handleShareProduct}>
-							<Share slot="icon" class="h-4 w-4" />
-						</Button>
+						<SharingButton
+							title={$productsQuery.data?.name || 'Check out this product'}
+							text={`${$productsQuery.data?.name} on #plebeianmarket: ${$productsQuery.data?.description}`}
+							url={`${window.location.origin}/products/${$productsQuery.data?.id}`}
+						/>
 					</div>
 
 					<div class="flex md:flex-col flex-row gap-2 w-full md:items-start items-center">
