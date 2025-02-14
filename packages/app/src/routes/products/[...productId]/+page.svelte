@@ -184,7 +184,7 @@
 						<SharingButton
 							title={$productsQuery.data?.name || 'Check out this product'}
 							text={`${$productsQuery.data?.name} on #plebeianmarket: ${$productsQuery.data?.description}`}
-							url={`${window.location.origin}/products/${$productsQuery.data?.id}`}
+							url={window.location.href}
 						/>
 					</div>
 

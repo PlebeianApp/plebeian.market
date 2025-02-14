@@ -3,7 +3,6 @@
 	import AdminActions from '$lib/components/common/admin-actions.svelte'
 	import Hero from '$lib/components/common/hero.svelte'
 	import ItemGrid from '$lib/components/common/item-grid.svelte'
-	import ShareDropdown from '$lib/components/common/share-dropdown.svelte'
 	import SharingButton from '$lib/components/common/sharing-button.svelte'
 	import SkeletonLoader from '$lib/components/common/skeletonLoader.svelte'
 	import TruncatedText from '$lib/components/common/truncatedText.svelte'
@@ -94,7 +93,7 @@
 						<SharingButton
 							title={$stallQuery.data?.stall?.name || 'Check out this stall'}
 							text={`Check out my shop ${$stallQuery.data?.stall?.name} on #plebeianmarket: ${$stallQuery.data?.stall?.description}`}
-							url={`${window.location.origin}/community/${stall.id}`}
+							url={window.location.href}
 						/>
 					</div>
 				{/if}

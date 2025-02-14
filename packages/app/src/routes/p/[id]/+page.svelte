@@ -128,7 +128,7 @@
 									<SharingButton
 										title={$userProfileQuery.data?.name || 'Check out this user'}
 										text={`Check out my profile on #plebeianmarket ${$userProfileQuery.data?.name}`}
-										url={`${window.location.origin}/p/${id}`}
+										url={window.location.href}
 									/>
 									<InteractiveZapButton userIdToZap={id} profile={$userProfileQuery.data} />
 									<Button size="icon" variant="primary" on:click={handleSendMessage}>
