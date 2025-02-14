@@ -1,6 +1,5 @@
 <script lang="ts">
 	import type { NDKUserProfile } from '@nostr-dev-kit/ndk'
-	import { page } from '$app/stores'
 	import MiniUser from '$lib/components/cart/mini-user.svelte'
 	import { Button } from '$lib/components/ui/button'
 	import * as Collapsible from '$lib/components/ui/collapsible'
@@ -13,11 +12,6 @@
 	import { toast } from 'svelte-sonner'
 
 	import type { UserRoles } from '@plebeian/database/constants'
-
-	import type { PageData } from '../$types.js'
-
-	export let data: PageData
-	const linkDetails = data.menuItems.find((item) => item.value === 'app-settings')?.links.find((item) => item.href === $page.url.pathname)
 
 	const admins = createUsersByFilterQuery({ role: 'admin' })
 	const editors = createUsersByFilterQuery({ role: 'editor' })
@@ -91,7 +85,7 @@
 
 	{#if $admins.data}
 		<h3 class="text-lg font-bold">Admins</h3>
-		{#each $admins.data as userId}
+		{#each $admins.data as userId (userId)}
 			<div class="flex flex-row items-center justify-between border rounded-md p-2 bg-white">
 				<MiniUser {userId} />
 				<DropdownMenu.Root>
@@ -116,7 +110,7 @@
 
 	{#if $editors.data}
 		<h3 class="text-lg font-bold">Editors</h3>
-		{#each $editors.data as userId}
+		{#each $editors.data as userId (userId)}
 			<div class="flex flex-row items-center justify-between border rounded-md p-2 bg-white">
 				<MiniUser {userId} />
 				<DropdownMenu.Root>
@@ -137,7 +131,7 @@
 
 	{#if $plebs.data}
 		<h3 class="text-lg font-bold">Plebs</h3>
-		{#each $plebs.data as userId}
+		{#each $plebs.data as userId (userId)}
 			<div class="flex flex-row items-center justify-between border rounded-md p-2 bg-white">
 				<MiniUser {userId} />
 				<DropdownMenu.Root>

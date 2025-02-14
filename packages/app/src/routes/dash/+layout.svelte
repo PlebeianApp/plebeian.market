@@ -21,11 +21,12 @@
 	$: currentMenuInfo = menuItems.flatMap((item) => item.links).find((link) => matchedPath === link.href)
 	$: parentMenuItem = menuItems.find((item) => item.links.some((link) => matchedPath === link.href))
 	$: userExist = $ndkStore.activeUser?.pubkey ? createUserExistsQuery($ndkStore.activeUser?.pubkey) : undefined
+	$: userLoaded = userExist != undefined && $activeUserQuery.data?.role != undefined
 	$: if (!$activeUserQuery.data?.role) $activeUserQuery.refetch()
 	$: isMobile = $breakpoint == 'sm'
 </script>
 
-{#if $ndkStore.activeUser?.pubkey}
+{#if $ndkStore.activeUser?.pubkey && userLoaded}
 	<div class="mx-auto">
 		{#if isMobile}
 			<div class="w-full">
@@ -73,17 +74,15 @@
 										</div>
 										<ul class="space-y-2">
 											{#each item.links as link}
-												{#if link.public || ($userExist?.data?.exists && !$userExist?.data?.banned)}
-													<li>
-														<a
-															href={link.href}
-															id={`${link.title.replace(/^[^a-zA-Z]+/, '').toLocaleLowerCase()}-button`}
-															class="block p-2 hover:bg-gray-100 rounded"
-														>
-															{link.title}
-														</a>
-													</li>
-												{/if}
+												<li>
+													<a
+														href={link.href}
+														id={`${link.title.replace(/^[^a-zA-Z]+/, '').toLocaleLowerCase()}-button`}
+														class="block p-2 hover:bg-gray-100 rounded"
+													>
+														{link.title}
+													</a>
+												</li>
 											{/each}
 										</ul>
 									</div>
@@ -110,17 +109,15 @@
 									</div>
 									<ul class="space-y-2">
 										{#each item.links as link}
-											{#if link.public || ($userExist?.data?.exists && !$userExist?.data?.banned)}
-												<li>
-													<a
-														href={link.href}
-														id={`${link.title.replace(/^[^a-zA-Z]+/, '').toLocaleLowerCase()}-button`}
-														class="block p-2 hover:bg-gray-100 rounded {currentPath === link.href ? 'bg-gray-300' : ''}"
-													>
-														{link.title}
-													</a>
-												</li>
-											{/if}
+											<li>
+												<a
+													href={link.href}
+													id={`${link.title.replace(/^[^a-zA-Z]+/, '').toLocaleLowerCase()}-button`}
+													class="block p-2 hover:bg-gray-100 rounded {currentPath === link.href ? 'bg-gray-300' : ''}"
+												>
+													{link.title}
+												</a>
+											</li>
 										{/each}
 									</ul>
 								</div>

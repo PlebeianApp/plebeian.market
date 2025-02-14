@@ -1,3 +1,5 @@
+import type { UserRoles } from '@plebeian/database'
+
 export interface EventCoordinates {
 	coordinates: string
 	kind: number
@@ -19,8 +21,7 @@ export interface MenuItem {
 	links: Array<{
 		title: string
 		href: string
-		description: string
-		public?: boolean
+		description?: string
+		roles?: Array<UserRoles>
 	}>
-	public?: boolean
 }
