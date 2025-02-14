@@ -52,8 +52,8 @@
 					productsMode = 'create'
 					currentProduct = null
 				}}
-				variant="outline"
-				class="border-2 border-black font-bold px-6">New</Button
+				variant="primary"
+				class="border-2 border-black font-bold px-6 w-full">New</Button
 			>
 		</div>
 	{:else if productsMode === 'create' || productsMode === 'edit'}
@@ -77,9 +77,9 @@
 						size="lg"
 					>
 						<div class=" inline-flex items-center justify-between gap-2 w-full">
-							<div class="flex items-center gap-2">
+							<div class="flex items-center gap-2 truncate">
 								<span class="i-mdi-package-variant-closed w-6 h-6" />
-								<span>{product.name}</span>
+								<span class="truncate">{product.name}</span>
 							</div>
 							<div>
 								<Button variant="ghost" size="icon">
