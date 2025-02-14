@@ -9,6 +9,8 @@
 	import Hero from '$lib/components/common/hero.svelte'
 	import InteractiveZapButton from '$lib/components/common/interactive-zap-button.svelte'
 	import ItemGrid from '$lib/components/common/item-grid.svelte'
+	import ShareDropdown from '$lib/components/common/share-dropdown.svelte'
+	import SharingButton from '$lib/components/common/sharing-button.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
 	import StallItem from '$lib/components/stalls/stall-item.svelte'
 	import Button from '$lib/components/ui/button/button.svelte'
@@ -48,6 +50,10 @@
 			)
 		: []
 
+	const handleSendMessage = () => {
+		goto(`/dash/messages/${$page.params.id}`)
+	}
+
 	onMount(async () => {
 		if (!id) return
 		const [{ stallNostrRes }, { products: productsData }] = await Promise.all([fetchUserStallsData(id), fetchUserProductData(id)])
@@ -61,21 +67,6 @@
 
 		toDisplayProducts = productsData?.size ? ((await normalizeProductsFromNostr(productsData, id))?.toDisplayProducts ?? []) : []
 	})
-
-	const handleSendMessage = () => {
-		goto(`/dash/messages/${$page.params.id}`)
-	}
-
-	function handleShareUser() {
-		const shareUrl = `${window.location.origin}/p/${id}`
-		const shareData = {
-			title: $userProfileQuery.data?.name || 'Check out this user',
-			text: `Check out my profile on #plebeianmarket ${shareUrl} @${$userProfileQuery.data?.name}`,
-			url: shareUrl,
-		}
-
-		shareContent(shareData)
-	}
 </script>
 
 <MetaTags {...pageMetaTags} />
@@ -134,9 +125,11 @@
 									{/if}
 								{:else}
 									<AdminActions type="user" {id} />
-									<Button size="icon" variant="primary" on:click={handleShareUser}>
-										<Share slot="icon" class="h-4 w-4" />
-									</Button>
+									<SharingButton
+										title={$userProfileQuery.data?.name || 'Check out this user'}
+										text={`Check out my profile on #plebeianmarket ${$userProfileQuery.data?.name}`}
+										url={window.location.href}
+									/>
 									<InteractiveZapButton userIdToZap={id} profile={$userProfileQuery.data} />
 									<Button size="icon" variant="primary" on:click={handleSendMessage}>
 										<span class="i-mdi-message-bubble w-6 h-6" />

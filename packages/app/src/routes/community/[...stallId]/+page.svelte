@@ -3,6 +3,7 @@
 	import AdminActions from '$lib/components/common/admin-actions.svelte'
 	import Hero from '$lib/components/common/hero.svelte'
 	import ItemGrid from '$lib/components/common/item-grid.svelte'
+	import SharingButton from '$lib/components/common/sharing-button.svelte'
 	import SkeletonLoader from '$lib/components/common/skeletonLoader.svelte'
 	import TruncatedText from '$lib/components/common/truncatedText.svelte'
 	import ShippingsDialog from '$lib/components/dialogs/shippingsDialog.svelte'
@@ -44,13 +45,6 @@
 
 	$: stallQuery = createStallQuery(stall.id)
 
-	$: productsQuery = createProductsByFilterQuery({
-		pageSize: getGridColumns($breakpoint, 'product') * 4,
-		page: 1,
-		order: sort.value ?? 'desc',
-		stallId: stall.id,
-	})
-
 	let isMyStall = false
 
 	$: {
@@ -59,16 +53,12 @@
 		}
 	}
 
-	function handleShareStall() {
-		const shareUrl = `${window.location.origin}/community/${stall.id}`
-		const shareData = {
-			title: $stallQuery.data?.stall?.name || 'Check out this stall',
-			text: `Check out my shop ${$stallQuery.data?.stall?.name} on #plebeianmarket ${shareUrl} @${$stallQuery.data?.stall?.name}`,
-			url: shareUrl,
-		}
-
-		shareContent(shareData)
-	}
+	$: productsQuery = createProductsByFilterQuery({
+		pageSize: getGridColumns($breakpoint, 'product') * 4,
+		page: 1,
+		order: sort.value ?? 'desc',
+		stallId: stall.id,
+	})
 </script>
 
 <MetaTags {...pageMetaTags} />
@@ -100,9 +90,11 @@
 						<div class="flex flex-col gap-2 items-center">
 							<h2 class="text-2xl text-white">{truncateText(name, 50)}</h2>
 						</div>
-						<Button size="icon" variant="primary" on:click={() => handleShareStall()}>
-							<Share slot="icon" class="h-4 w-4" />
-						</Button>
+						<SharingButton
+							title={$stallQuery.data?.stall?.name || 'Check out this stall'}
+							text={`Check out my shop ${$stallQuery.data?.stall?.name} on #plebeianmarket: ${$stallQuery.data?.stall?.description}`}
+							url={window.location.href}
+						/>
 					</div>
 				{/if}
 			</div>
