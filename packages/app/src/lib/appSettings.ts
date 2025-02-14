@@ -2,7 +2,8 @@ import type { ExtendedAppSettings } from '$lib/server/setup.service'
 import { initialSetupDataSchema } from '$lib/schema'
 import { createNcryptSec } from '$lib/utils'
 import { npubEncode } from 'nostr-tools/nip19'
-import { ofetch } from 'ofetch'
+
+import { createRequest } from './fetch/client'
 
 export function processAppSettings(data: Record<string, unknown>, isSetup: boolean, instancePass?: string): Partial<ExtendedAppSettings> {
 	const processedData: Partial<ExtendedAppSettings> = {
@@ -25,7 +26,7 @@ export function processAppSettings(data: Record<string, unknown>, isSetup: boole
 }
 
 export async function submitAppSettings(data: Partial<ExtendedAppSettings>, isSetup: boolean) {
-	const endpoint = isSetup ? '/setup' : '/dash/settings/app/misc'
+	const endpoint = isSetup ? 'POST /setup' : 'PUT /dash/settings/app/misc'
 	const schema = isSetup ? initialSetupDataSchema : initialSetupDataSchema.partial()
 	const parsedData = schema.safeParse(data)
 
@@ -33,8 +34,8 @@ export async function submitAppSettings(data: Partial<ExtendedAppSettings>, isSe
 		throw parsedData.error
 	}
 
-	return await ofetch(endpoint, {
-		method: isSetup ? 'POST' : 'PUT',
+	return await createRequest(endpoint, {
+		auth: true,
 		body: parsedData.data,
 	})
 }

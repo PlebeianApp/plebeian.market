@@ -40,7 +40,14 @@ export type Operation<U extends string, M extends HttpMethod, H extends Record<s
 }
 
 export interface Endpoints {
-	'PUT /settings/app/misc': Operation<'/settings/app/misc', 'PUT', never, Record<string, unknown>, UpdateAppSettingsReturnType, never>
+	'PUT /dash/settings/app/misc': Operation<
+		'/dash/settings/app/misc',
+		'PUT',
+		never,
+		Record<string, unknown>,
+		UpdateAppSettingsReturnType,
+		never
+	>
 }
 
 export async function createRequest<K extends keyof Endpoints, RequestOperation extends Endpoints[K]>(

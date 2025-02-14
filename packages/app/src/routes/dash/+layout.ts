@@ -7,31 +7,26 @@ export const load = async () => {
 			description: 'View and manage your orders',
 			value: 'sales',
 			root: '/dash/order',
-			public: false,
 			links: [
 				{
 					title: '💰 Sales',
 					href: '/dash/order/sales',
-					description: 'Manage your sales',
 				},
 				{
 					title: '💪 Circular Economy Builder',
 					href: '/dash/settings/cecb',
-					description: 'Configure community contributions preferences',
-					public: false,
 				},
 			],
 		},
 		{
 			title: 'Shops',
-			description: 'View and manage your orders',
+			description: 'View and manage your shops',
 			value: 'shops',
 			root: '/dash/stalls',
-			public: false,
 			links: [
-				{ title: '📦 Products', href: '/dash/settings/account/products', description: 'View and manage your products', public: true },
-				{ title: '🏮 Shops', href: '/dash/settings/account/stalls', description: 'Manage your shops', public: true },
-				{ title: '💸 Payments', href: '/dash/settings/account/payments', description: 'Manage payment methods', public: false },
+				{ title: '📦 Products', href: '/dash/settings/account/products' },
+				{ title: '🏮 Shops', href: '/dash/settings/account/stalls' },
+				{ title: '💸 Payments', href: '/dash/settings/account/payments', roles: ['pleb'] },
 			],
 		},
 		{
@@ -40,29 +35,23 @@ export const load = async () => {
 			value: 'account',
 			root: '/dash/settings/account',
 			links: [
-				{ title: '👤 Profile', href: '/dash/settings/account/profile', description: 'Edit your profile', public: true },
+				{ title: '👤 Profile', href: '/dash/settings/account/profile' },
 				{
 					title: '📨 Messages',
 					href: '/dash/messages',
-					description: 'Manage your messages',
 				},
-				{ title: '👝 Wallets', href: '/dash/settings/account/wallets', description: 'Manage your connected wallets', public: false },
+				{ title: '👝 Wallets', href: '/dash/settings/account/wallets', roles: ['admin', 'pleb'] },
 				{
 					title: '🛍️ Purchases',
 					href: '/dash/order/purchases',
-					description: 'View your purchases',
 				},
 				{
 					title: '🔌 Network',
 					href: '/dash/settings/account/network',
-					description: 'Manage network settings and connections',
-					public: true,
 				},
 				{
 					title: '❌ Delete account',
 					href: '/dash/settings/account/delete',
-					description: 'Permanently delete your account',
-					public: false,
 				},
 			],
 		},
@@ -75,16 +64,15 @@ export const load = async () => {
 				{
 					title: '🔧 App Miscellanea',
 					href: '/dash/settings/app/misc',
-					description: 'Manage app identity and other settings',
-					public: false,
+					roles: ['admin'],
 				},
-				{ title: '👥 Team', href: '/dash/settings/app/team', description: 'Manage team members and their roles', public: false },
-				{ title: '🚫 Blacklists', href: '/dash/settings/app/blacklists', description: 'Manage blocked users and content', public: false },
+				{ title: '👥 Team', href: '/dash/settings/app/team', roles: ['admin'] },
+				{ title: '🚫 Blacklists', href: '/dash/settings/app/blacklists', roles: ['admin'] },
 			],
 		},
 	]
 
 	return {
-		menuItems: menuItems,
+		menuItems,
 	}
 }

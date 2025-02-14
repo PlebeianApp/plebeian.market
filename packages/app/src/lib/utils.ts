@@ -607,8 +607,13 @@ export function getInvoiceStatusColor(status: string): string {
 	}
 }
 
-export const shouldShowItem = (item: MenuItem, userExist?: boolean, userRole?: UserRoles) => {
-	return item.public || userExist || userRole === 'admin'
+export const shouldShowItem = (item: MenuItem, userExists?: boolean, userRole?: UserRoles) => {
+	return item.links.some((link) => {
+		if (!link.roles || link.roles.length === 0) {
+			return true
+		}
+		return userExists && userRole && link.roles.includes(userRole)
+	})
 }
 
 export function handleInvalidForm(event: Event) {

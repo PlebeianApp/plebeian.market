@@ -1,7 +1,6 @@
 <script lang="ts">
 	import type { Selected } from 'bits-ui'
 	import { invalidateAll } from '$app/navigation'
-	import { page } from '$app/stores'
 	import { processAppSettings, submitAppSettings } from '$lib/appSettings.js'
 	import { Button } from '$lib/components/ui/button'
 	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte'
@@ -22,8 +21,6 @@
 
 	export let data
 	const { currencies, appSettings } = data
-	const linkDetails = data.menuItems.find((item) => item.value === 'app-settings')?.links.find((item) => item.href === $page.url.pathname)
-	$: console.log(linkDetails)
 	let checked = appSettings?.allowRegister
 	let selectedCurrency: Selected<string> = { value: 'BTC', label: 'BTC' }
 	let logoUrl: string = ''
@@ -50,16 +47,11 @@
 			toast.success('App settings successfully updated!')
 			invalidateAll()
 		} catch (e) {
-			console.error('Failed to submit form', e)
+			console.error('Failed to submit form')
 			if (e instanceof Error && e.message) {
-				try {
-					const errors = JSON.parse(e.message)
-					if (Array.isArray(errors)) {
-						errors.forEach((error) => toast.error(error.message))
-					} else {
-						toast.error(e.message)
-					}
-				} catch {
+				if (e.message.includes('403')) {
+					toast.error('Unauthorised')
+				} else {
 					toast.error(e.message)
 				}
 			} else {
