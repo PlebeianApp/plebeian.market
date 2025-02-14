@@ -57,7 +57,6 @@
 
 				{#if parentMenuItem}
 					<div class="flex flex-col gap-2">
-						<Separator />
 						<div class="w-full p-4">
 							<slot />
 						</div>
