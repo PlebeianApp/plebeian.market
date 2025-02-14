@@ -128,7 +128,7 @@
 					{/if}
 				</Card.Header>
 
-				<div class="flex flex-col flex-1 overflow-hidden bg-white z-1">
+				<div class="flex flex-col flex-1 overflow-hidden bg-white">
 					<Card.Content class="p-2 flex-1">
 						<div class="flex items-start justify-between mb-2">
 							<a href={stallUrl} class="flex-1">
