@@ -205,7 +205,7 @@
 	}
 </script>
 
-<Collapsible.Root class="border-black border p-4" open={!nwcWallet?.walletDetails}>
+<Collapsible.Root class="border-black border p-4 rounded-md" open={!nwcWallet?.walletDetails}>
 	<div class="flex flex-row">
 		<Collapsible.Trigger class="flex flex-row w-full items-center justify-between gap-2 mr-4">
 			<div class="flex items-center gap-2 font-bold">

@@ -129,7 +129,7 @@
 				</nav>
 
 				<!-- Content Area -->
-				<div class="w-full flex flex-col max-w-xl md:max-w-2xl lg:max-w-3xl gap-2 border p-4 rounded bg-white">
+				<div class="w-full flex flex-col max-w-xl md:max-w-2xl lg:max-w-4xl gap-2 border p-4 rounded bg-white">
 					{#if currentMenuInfo}
 						<div class="flex items-center p-3 rounded px-1 bg-black">
 							<div class="inline-flex gap-4 items-end w-full px-2">
