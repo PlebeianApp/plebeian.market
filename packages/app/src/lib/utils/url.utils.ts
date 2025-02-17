@@ -1,3 +1,4 @@
+import { toASCII } from 'punycode'
 import { error } from '@sveltejs/kit'
 import { getUserIdByNip05 } from '$lib/server/users.service'
 import ndkStore from '$lib/stores/ndk'
@@ -26,29 +27,51 @@ const DEFAULT_OPTIONS: Partial<URLProcessorOptions> = {
 export class URLProcessor {
 	private static async processNip05(nip05: string): Promise<string> {
 		const lowerNip05 = nip05.toLowerCase()
-		let userId = await getUserIdByNip05(lowerNip05)
+		const [name, domain] = lowerNip05.split('@')
 
-		if (!userId) {
+		let punycodeDomain = domain
+
+		if (!/^[a-z0-9.-]+$/.test(domain)) {
 			try {
-				const userNostrRes = await get(ndkStore).getUserFromNip05(lowerNip05, false)
-				userId = userNostrRes?.pubkey ?? ''
+				punycodeDomain = toASCII(domain)
+				console.log(`Punycode domain: ${punycodeDomain}`)
 			} catch (err) {
-				throw error(404, `Invalid NIP05 address: ${nip05}`)
+				console.warn(`Punycode conversion failed for domain: ${domain}. Using original domain. Error: ${err.message || err}`)
+				punycodeDomain = domain
 			}
 		}
 
-		if (!userId) {
-			throw error(404, `Invalid NIP05 address: ${nip05}`)
+		const punycodeNip05 = `${name}@${punycodeDomain}`
+
+		try {
+			let userId = await getUserIdByNip05(lowerNip05)
+
+			if (!userId) {
+				try {
+					const userNostrRes = await get(ndkStore).getUserFromNip05(punycodeNip05, false)
+					userId = userNostrRes?.pubkey ?? ''
+				} catch (err) {
+					console.error('Error fetching user from Nostr:', err)
+					throw error(404, `Invalid NIP05 address: ${nip05}. Error fetching from Nostr.`)
+				}
+			}
+
+			if (!userId) {
+				throw error(404, `NIP05 address not found: ${nip05}`)
+			}
+
+			return userId
+		} catch (err) {
+			console.error('Error processing NIP05:', err)
+			throw error(400, `Invalid NIP05 address: ${nip05}. Error: ${err.message || err}`)
 		}
-
-		return userId
 	}
-
 	private static processNpub(npub: string): string {
 		try {
 			return decodePk(npub)
-		} catch {
-			throw error(400, `Invalid Npub: ${npub}`)
+		} catch (err) {
+			console.error('Error decoding Npub:', err)
+			throw error(400, `Invalid Npub: ${npub}. Error: ${err.message || err}`)
 		}
 	}
 
@@ -84,6 +107,8 @@ export class URLProcessor {
 	static async processUserIdentifier(userIdentifier: string, options?: URLProcessorOptions): Promise<string> {
 		const { allowedFormats = DEFAULT_OPTIONS.allowedFormats } = options ?? {}
 
+		console.log(`Processing user identifier: ${userIdentifier}, Allowed Formats: ${allowedFormats}`)
+
 		if (allowedFormats?.includes('nip05') && isValidNip05(userIdentifier)) {
 			return this.processNip05(userIdentifier)
 		}
@@ -96,7 +121,7 @@ export class URLProcessor {
 			return this.validateHexKey(userIdentifier)
 		}
 
-		throw error(400, 'Invalid user identifier format')
+		throw error(400, `Invalid user identifier format: ${userIdentifier}`)
 	}
 
 	static buildCoordinateId({ kind, userId, identifier }: URLComponents): string {
@@ -107,7 +132,10 @@ export class URLProcessor {
 	static async parseURL(urlPath: string, options?: URLProcessorOptions): Promise<URLComponents> {
 		if (!urlPath) throw error(400, 'URL path is required')
 
-		const parts = urlPath.split('/').filter(Boolean)
+		const decodedUrlPath = decodeURIComponent(urlPath)
+		console.log(`Original URL Path: ${urlPath}, Decoded URL Path: ${decodedUrlPath}`)
+
+		const parts = decodedUrlPath.split('/').filter(Boolean)
 		if (parts.length === 0 || parts.length > 2) throw error(400, 'Invalid URL format')
 
 		if (parts.length === 1 && parts[0].includes(':')) {

@@ -137,6 +137,9 @@ importers:
       paneforge:
         specifier: ^0.0.4
         version: 0.0.4(svelte@4.2.19)
+      punycode:
+        specifier: ^2.3.1
+        version: 2.3.1
       svelte-file-dropzone:
         specifier: ^2.0.9
         version: 2.0.9(svelte@4.2.19)
