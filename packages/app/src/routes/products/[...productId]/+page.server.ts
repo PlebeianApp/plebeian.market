@@ -56,6 +56,15 @@ export const load: PageServerLoad = async ({ params, url }) => {
 					},
 				],
 			},
+			twitter: {
+				cardType: 'summary_large_image' as const,
+				site: `https://plebeian.market/products/${params.productId}`,
+				handle: `https://plebeian.market/products/${params.productId}`,
+				title: content.name ?? '',
+				description: content.description ?? '',
+				image: content.images?.[0] ?? imageUrl,
+				imageAlt: content.name ?? '',
+			},
 		}) satisfies MetaTagsProps
 
 		return {
