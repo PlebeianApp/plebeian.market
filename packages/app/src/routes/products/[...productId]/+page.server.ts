@@ -21,11 +21,9 @@ export const load: PageServerLoad = async ({ params, url }) => {
 			requireIdentifier: true,
 			kind: KindProducts,
 		})
-
 		const productId = URLProcessor.buildCoordinateId(urlComponents)
 
 		const product = await fetchAddressableEvent(productId)
-
 		if (!product) {
 			return {
 				productRes: {
