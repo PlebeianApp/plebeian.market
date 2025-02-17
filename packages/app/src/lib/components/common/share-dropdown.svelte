@@ -2,7 +2,7 @@
 	import { Button } from '$lib/components/ui/button'
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
 	import { copyToClipboard } from '$lib/utils'
-	import { Facebook, Link, Mail, Share, Twitter } from 'lucide-svelte'
+	import { Facebook, Link, Mail, Share } from 'lucide-svelte'
 
 	export let title: string = ''
 	export let text: string = ''
@@ -32,7 +32,7 @@
 	</DropdownMenu.Trigger>
 	<DropdownMenu.Content class="w-48">
 		<DropdownMenu.Item class="cursor-pointer" on:click={shareToTwitter}>
-			<Twitter class="h-4 w-4 mr-2" />
+			<img src="/X_logo_2023.svg" alt="X logo" class="h-4 w-4 mr-2" />
 			Twitter
 		</DropdownMenu.Item>
 		<DropdownMenu.Item class="cursor-pointer" on:click={shareToFacebook}>

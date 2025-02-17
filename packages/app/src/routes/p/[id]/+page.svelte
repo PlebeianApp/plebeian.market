@@ -2,6 +2,7 @@
 	import type { NormalizedData } from '$lib/nostrSubs/utils'
 	import type { DisplayProduct } from '$lib/server/products.service'
 	import type { RichStall } from '$lib/server/stalls.service'
+	import autoAnimate from '@formkit/auto-animate'
 	import { goto } from '$app/navigation'
 	import { page } from '$app/stores'
 	import Nip05Badge from '$lib/components/cart/nip-05-badge.svelte'
@@ -9,7 +10,6 @@
 	import Hero from '$lib/components/common/hero.svelte'
 	import InteractiveZapButton from '$lib/components/common/interactive-zap-button.svelte'
 	import ItemGrid from '$lib/components/common/item-grid.svelte'
-	import ShareDropdown from '$lib/components/common/share-dropdown.svelte'
 	import SharingButton from '$lib/components/common/sharing-button.svelte'
 	import ProductItem from '$lib/components/product/product-item.svelte'
 	import StallItem from '$lib/components/stalls/stall-item.svelte'
@@ -23,9 +23,8 @@
 	import { breakpoint, getGridColumns } from '$lib/stores/breakpoint'
 	import { openDrawerForNewProduct, openDrawerForNewStall } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
-	import { getHexColorFingerprintFromHexPubkey, mergeWithExisting, shareContent, truncateText } from '$lib/utils'
-	import extend from 'just-extend'
-	import { Share } from 'lucide-svelte'
+	import { getHexColorFingerprintFromHexPubkey, mergeWithExisting, truncateText } from '$lib/utils'
+	import { Minus, Plus } from 'lucide-svelte'
 	import { onMount } from 'svelte'
 	import { MetaTags } from 'svelte-meta-tags'
 
@@ -88,10 +87,20 @@
 					></Hero>
 				{/if}
 				{#if about}
-					<div class="flex flex-col px-8 py-4 bg-lighter-black text-white text-sm">
-						{#if truncateText(about, 50) !== about}
-							<Button variant="outline" class="w-fit" size="icon" on:click={() => (showFullAbout = !showFullAbout)}>
-								<span class={showFullAbout ? 'i-mdi-minus' : 'i-mdi-plus'} />
+					{@const aboutTruncated = truncateText(about, 70)}
+					<div class="flex flex-row items-center px-8 py-4 bg-lighter-black text-white text-sm" use:autoAnimate>
+						{#if aboutTruncated !== about}
+							{#if showFullAbout}
+								<p class="break-words">{about}</p>
+							{:else}
+								<p class="break-words">{aboutTruncated}</p>
+							{/if}
+							<Button variant="primary" class="w-fit" size="icon" on:click={() => (showFullAbout = !showFullAbout)}>
+								{#if showFullAbout}
+									<Minus />
+								{:else}
+									<Plus />
+								{/if}
 							</Button>
 						{:else}
 							<p class="break-words">{about}</p>
