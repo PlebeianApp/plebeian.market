@@ -1,7 +1,5 @@
-import { HEX_KEYS_REGEX } from '$lib/constants'
+import { EMAIL_REGEX, HEX_KEYS_REGEX } from '$lib/constants'
 import { decode } from 'nostr-tools/nip19'
-
-import { EMAIL_REGEX } from './zap.utils'
 
 export function isValidNip05(input: string): boolean {
 	return EMAIL_REGEX.test(input)

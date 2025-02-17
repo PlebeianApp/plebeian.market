@@ -35,7 +35,6 @@ export const ZAP_RELAYS = [
 ]
 
 export const LN_ADDRESS_REGEX = /^[^@\s]+@[^@\s]+\.[^@\s]+$/
-export const EMAIL_REGEX = /^[^@\s]+@[^@\s]+\.[^@\s]+$/
 
 export function createZapEventHandler(invoice: Invoice, onSuccess: (preimage: string) => void) {
 	return (event: NDKEvent) => {

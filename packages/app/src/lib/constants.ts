@@ -161,3 +161,5 @@ export const SHIPPING_TEMPLATES = [
 		countries: ['ESP', 'PRT', 'ITA', 'GRC', 'MLT', 'CYP', 'HRV', 'SVN'],
 	},
 ]
+
+export const EMAIL_REGEX = /^[^@\s]+@[^@\s]+\.[^@\s]+$/
