@@ -18,14 +18,13 @@
 
 	export let data: PageData
 
-	// FIXME: Save is disabled if you dont edit the v4v recepients
 	const { appSettings } = data
 	let v4vTotal = [0]
+	let initialV4vTotal = 0
 	let initialTotalSet = false
 	let hoveredRecipient: string | null = null
 	let newRecipientFormVisible = false
 
-	const details = data.menuItems.find((item) => item.value === 'cecb-settings')
 	$: emojiSize = 16 + v4vTotal[0] * 100
 	$: shouldWiggle = v4vTotal[0] > 0.04
 	$: shouldShake = v4vTotal[0] > 0.09
@@ -40,6 +39,7 @@
 		if ($v4vByUser && $v4vByUser.data && !initialTotalSet) {
 			const total = $v4vByUser.data.reduce((sum, item) => sum + item.amount, 0)
 			v4vTotal = [total]
+			initialV4vTotal = total
 			initialTotalSet = true
 			v4vRecipients = $v4vByUser.data.map((item) => ({
 				target: item.target,
@@ -143,6 +143,8 @@
 		try {
 			await $setV4VForUserMutation.mutateAsync(adjustedRecipients)
 			toast.success('V4V values successfully updated')
+			initialV4vTotal = v4vTotal[0]
+			await $v4vByUser?.refetch()
 		} catch (error) {
 			console.error('Error updating V4V values:', error)
 			toast.error('Failed to update V4V values')
@@ -156,6 +158,21 @@
 		const yiq = (r * 299 + g * 587 + b * 114) / 1000
 		return yiq >= 128 ? 'black' : 'white'
 	}
+
+	$: hasChanges = (() => {
+		if (!$v4vByUser?.data) return false
+
+		if (v4vTotal[0] !== initialV4vTotal) return true
+
+		if ($v4vByUser.data.length !== v4vRecipients.length) return true
+
+		const currentAmounts = new Map(v4vRecipients.map((r) => [r.target, r.amount]))
+
+		return $v4vByUser.data.some((initial) => {
+			const currentAmount = currentAmounts.get(initial.target)
+			return !currentAmount || Math.abs(currentAmount - initial.amount / initialV4vTotal) > 0.000001
+		})
+	})()
 </script>
 
 <div class="pb-4 space-y-6 px-2 w-full">
@@ -274,7 +291,7 @@
 
 	<Separator />
 
-	<Button class="w-full font-bold" disabled={$v4vByUser?.data?.length == v4vRecipients.length} on:click={handleSetV4VAmounts}>Save</Button>
+	<Button class="w-full font-bold" disabled={!hasChanges} on:click={handleSetV4VAmounts}>Save</Button>
 </div>
 
 <style>
