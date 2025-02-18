@@ -15,10 +15,9 @@
 	export let avatarClass = ''
 	export let imageClass = ''
 	export let fallbackClass = ''
-
 	$: truncatedPubkey = truncateString(pubkey)
 	$: hexColorFromPubkey = getHexColorFingerprintFromHexPubkey(pubkey)
-	$: displayName = profile?.name || truncatedPubkey
+	$: displayName = profile?.name || profile?.displayName || truncatedPubkey
 
 	onMount(async () => {
 		if (!profile) profile = await resolveQuery(() => createUserByIdQuery(pubkey))

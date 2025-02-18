@@ -107,8 +107,6 @@ export class URLProcessor {
 	static async processUserIdentifier(userIdentifier: string, options?: URLProcessorOptions): Promise<string> {
 		const { allowedFormats = DEFAULT_OPTIONS.allowedFormats } = options ?? {}
 
-		console.log(`Processing user identifier: ${userIdentifier}, Allowed Formats: ${allowedFormats}`)
-
 		if (allowedFormats?.includes('nip05') && isValidNip05(userIdentifier)) {
 			return this.processNip05(userIdentifier)
 		}
@@ -131,9 +129,7 @@ export class URLProcessor {
 
 	static async parseURL(urlPath: string, options?: URLProcessorOptions): Promise<URLComponents> {
 		if (!urlPath) throw error(400, 'URL path is required')
-
 		const decodedUrlPath = decodeURIComponent(urlPath)
-		console.log(`Original URL Path: ${urlPath}, Decoded URL Path: ${decodedUrlPath}`)
 
 		const parts = decodedUrlPath.split('/').filter(Boolean)
 		if (parts.length === 0 || parts.length > 2) throw error(400, 'Invalid URL format')
