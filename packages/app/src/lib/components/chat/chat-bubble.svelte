@@ -48,7 +48,7 @@
 
 <div class="flex {isCurrentUser ? 'justify-end' : 'justify-start'} ">
 	<div class="flex {isCurrentUser ? 'flex-row-reverse' : 'flex-row'} items-end max-w-[95%] gap-2">
-		<CAvatar linked pubkey={message.pubkey} profile={$userProfile.data} />
+		<CAvatar linked pubkey={message.pubkey} profile={$userProfile.data ?? null} />
 
 		{#if $decryptedContent.data}
 			{@const parsed = parseMessage($decryptedContent.data)}

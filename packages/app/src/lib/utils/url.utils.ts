@@ -24,9 +24,23 @@ const DEFAULT_OPTIONS: Partial<URLProcessorOptions> = {
 	allowedFormats: ['nip05', 'npub', 'hex'],
 }
 
+interface CacheEntry {
+	userId: string
+	timestamp: number
+}
+
 export class URLProcessor {
+	private static nip05Cache: Map<string, CacheEntry> = new Map()
+	private static CACHE_TTL = 60 * 60 * 1000
+
 	private static async processNip05(nip05: string): Promise<string> {
 		const lowerNip05 = nip05.toLowerCase()
+
+		const cachedEntry = this.nip05Cache.get(lowerNip05)
+		if (cachedEntry && Date.now() - cachedEntry.timestamp < this.CACHE_TTL) {
+			return cachedEntry.userId
+		}
+
 		const [name, domain] = lowerNip05.split('@')
 
 		let punycodeDomain = domain
@@ -36,7 +50,7 @@ export class URLProcessor {
 				punycodeDomain = toASCII(domain)
 				console.log(`Punycode domain: ${punycodeDomain}`)
 			} catch (err) {
-				console.warn(`Punycode conversion failed for domain: ${domain}. Using original domain. Error: ${err.message || err}`)
+				console.warn(`Punycode conversion failed for domain: ${domain}. Using original domain. Error: ${err}`)
 				punycodeDomain = domain
 			}
 		}
@@ -60,10 +74,12 @@ export class URLProcessor {
 				throw error(404, `NIP05 address not found: ${nip05}`)
 			}
 
+			this.nip05Cache.set(lowerNip05, { userId, timestamp: Date.now() })
+
 			return userId
 		} catch (err) {
 			console.error('Error processing NIP05:', err)
-			throw error(400, `Invalid NIP05 address: ${nip05}. Error: ${err.message || err}`)
+			throw error(400, `Invalid NIP05 address: ${nip05}. Error: ${err}`)
 		}
 	}
 	private static processNpub(npub: string): string {
@@ -71,7 +87,7 @@ export class URLProcessor {
 			return decodePk(npub)
 		} catch (err) {
 			console.error('Error decoding Npub:', err)
-			throw error(400, `Invalid Npub: ${npub}. Error: ${err.message || err}`)
+			throw error(400, `Invalid Npub: ${npub}. Error: ${err}`)
 		}
 	}
 
@@ -107,8 +123,6 @@ export class URLProcessor {
 	static async processUserIdentifier(userIdentifier: string, options?: URLProcessorOptions): Promise<string> {
 		const { allowedFormats = DEFAULT_OPTIONS.allowedFormats } = options ?? {}
 
-		console.log(`Processing user identifier: ${userIdentifier}, Allowed Formats: ${allowedFormats}`)
-
 		if (allowedFormats?.includes('nip05') && isValidNip05(userIdentifier)) {
 			return this.processNip05(userIdentifier)
 		}
@@ -131,9 +145,7 @@ export class URLProcessor {
 
 	static async parseURL(urlPath: string, options?: URLProcessorOptions): Promise<URLComponents> {
 		if (!urlPath) throw error(400, 'URL path is required')
-
 		const decodedUrlPath = decodeURIComponent(urlPath)
-		console.log(`Original URL Path: ${urlPath}, Decoded URL Path: ${decodedUrlPath}`)
 
 		const parts = decodedUrlPath.split('/').filter(Boolean)
 		if (parts.length === 0 || parts.length > 2) throw error(400, 'Invalid URL format')

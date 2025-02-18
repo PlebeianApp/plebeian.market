@@ -2,7 +2,7 @@
 	import type { CartUser } from '$lib/stores/cart'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
 	import { cart } from '$lib/stores/cart'
-	import { truncateString } from '$lib/utils'
+	import { getProfileName } from '$lib/utils/userProfile.utils'
 	import { createEventDispatcher } from 'svelte'
 
 	import OrderPayment from './orderPayment.svelte'
@@ -29,7 +29,7 @@
 <div class="w-full mx-auto flex flex-col gap-4">
 	{#if $merchantProfile.data}
 		<h2 class="text-2xl font-bold text-center">
-			Payment for {$merchantProfile.data.name || $merchantProfile.data.displayName || truncateString(merchant.pubkey)}
+			Payment for {getProfileName($merchantProfile.data, merchant.pubkey)}
 		</h2>
 	{/if}
 	{#if relevantOrders.length > 1}

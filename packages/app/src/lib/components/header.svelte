@@ -111,7 +111,7 @@
 				<a href={`/p/${$ndkStore.activeUser.profile?.nip05 ? $ndkStore.activeUser.profile?.nip05 : $ndkStore.activeUser.pubkey}`}>
 					<CAvatar
 						pubkey={$ndkStore.activeUser.pubkey}
-						profile={$ndkStore.activeUser.profile}
+						profile={$ndkStore.activeUser.profile ?? null}
 						avatarClass="rounded-md border-2 {currentPath.startsWith('/p/') ? 'border-secondary' : 'border-primary'}"
 						imageClass="rounded-md"
 						fallbackClass="rounded-none"
