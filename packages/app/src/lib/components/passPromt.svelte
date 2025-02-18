@@ -9,6 +9,7 @@
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
 	import { login } from '$lib/ndkLogin'
 	import { type BaseAccount, type NsecAccount } from '$lib/stores/session'
+	import { getProfileName } from '$lib/utils/userProfile.utils'
 	import { format } from 'date-fns'
 	import { npubEncode } from 'nostr-tools/nip19'
 	import { onMount } from 'svelte'
@@ -79,7 +80,7 @@
 				{:else if $userQuery?.data}
 					<CAvatar pubkey={accointInfo.hexPubKey} profile={$userQuery.data} />
 					<section class="flex flex-col">
-						<span class="font-bold">{$userQuery.data?.name ?? $userQuery.data?.displayName ?? ''}</span>
+						<span class="font-bold">{getProfileName($userQuery.data, accointInfo.hexPubKey)}</span>
 						<span>{npubEncode(accointInfo.hexPubKey).substring(0, 16)}...</span>
 					</section>
 				{/if}

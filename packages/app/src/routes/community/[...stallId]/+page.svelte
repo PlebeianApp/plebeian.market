@@ -23,6 +23,7 @@
 	import ndkStore from '$lib/stores/ndk'
 	import { stringToHexColor, truncateString, truncateText } from '$lib/utils'
 	import { getMediaType } from '$lib/utils/media.utils'
+	import { getProfileName } from '$lib/utils/userProfile.utils'
 	import { MetaTags } from 'svelte-meta-tags'
 
 	import type { PageData } from './$types'
@@ -105,13 +106,13 @@
 									<div class="flex flex-row gap-2 items-center overflow-hidden text-ellipsis">
 										<CAvatar
 											pubkey={String(user.id)}
-											profile={$userProfileQuery.data}
+											profile={$userProfileQuery.data ?? null}
 											avatarClass="rounded-md w-8 h-8"
 											imageClass="rounded-md w-8 h-8"
 											fallbackClass="rounded-md w-8 h-8"
 											linked
 										/>
-										<span>{$userProfileQuery.data?.name || $userProfileQuery.data?.displayName || truncateText(user.id, 20)}</span>
+										<span>{getProfileName($userProfileQuery.data ?? null, user.id)}</span>
 									</div>
 									<span class="text-sm text-muted-foreground md:flex-row">created: {createDate}</span>
 								</div>

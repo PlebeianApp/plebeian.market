@@ -4,8 +4,8 @@
 	import { createDMSubscriptionManager, dmKind04Sub, groupedDMs } from '$lib/nostrSubs/subs'
 	import { manageUserRelays } from '$lib/nostrSubs/userRelayManager'
 	import { chatNotifications } from '$lib/stores/chat-notifications'
-	import { truncateString } from '$lib/utils'
 	import { sendDM } from '$lib/utils/dm.utils'
+	import { getProfileName } from '$lib/utils/userProfile.utils'
 	import { SendHorizontal } from 'lucide-svelte'
 	import { onDestroy, onMount } from 'svelte'
 
@@ -74,10 +74,10 @@
 		<Button variant="ghost" size="icon" on:click={() => goto('/dash/messages')}>
 			<span class="cursor-pointer i-tdesign-arrow-left w-6 h-6" />
 		</Button>
-		<CAvatar pubkey={selectedPubkey} profile={$userProfileQuery?.data} />
+		<CAvatar pubkey={selectedPubkey} profile={$userProfileQuery?.data ?? null} />
 		<div class="overflow-hidden flex-1">
 			<h3 class="text-xl font-semibold truncate">
-				{$userProfileQuery?.data?.name || $userProfileQuery?.data?.displayName || truncateString(selectedPubkey)}
+				{getProfileName($userProfileQuery.data ?? null, selectedPubkey)}
 			</h3>
 		</div>
 	</div>

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
 	import { truncateString } from '$lib/utils'
+	import { getProfileName } from '$lib/utils/userProfile.utils'
 	import { npubEncode } from 'nostr-tools/nip19'
 
 	import CAvatar from '../ui/custom-components/c-avatar.svelte'
@@ -27,7 +28,7 @@
 					{#if $userProfileQuery.data.name || $userProfileQuery.data.displayName || userId}
 						<div class=" flex flex-col">
 							<span class="text-sm font-bold">
-								{truncateString($userProfileQuery.data.name || $userProfileQuery.data.displayName || userNpub)}
+								{getProfileName($userProfileQuery.data, userId)}
 							</span>
 							{#if showNpub}
 								<span class="text-xs text-muted-foreground">
