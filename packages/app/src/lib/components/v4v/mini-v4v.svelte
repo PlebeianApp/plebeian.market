@@ -1,10 +1,10 @@
 <script lang="ts">
 	import type { NDKUserProfile, NDKZapMethodInfo } from '@nostr-dev-kit/ndk'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
-	import { decodeNpub } from '$lib/nostrSubs/load-utils'
 	import ndkStore from '$lib/stores/ndk'
 	import { checkTargetUserHasLightningAddress, formatSats, resolveQuery } from '$lib/utils'
 	import { getProfileName } from '$lib/utils/userProfile.utils'
+	import { decode } from 'nostr-tools/nip19'
 	import { createEventDispatcher } from 'svelte'
 
 	import CAvatar from '../ui/custom-components/c-avatar.svelte'
@@ -46,7 +46,7 @@
 <div class="flex flex-col sm:flex-row gap-2 w-full">
 	<div class="flex items-center gap-1.5 text-gray-700">
 		{#if npub}
-			{@const pubkey = decodeNpub(npub) ?? ''}
+			{@const pubkey = decode(npub).data ?? ''}
 			<div class="flex items-center gap-2 font-bold min-w-0">
 				<CAvatar {pubkey} profile={userProfile} linked={false} />
 				{#if userProfile}
