@@ -26,11 +26,11 @@
 	import { openDrawerForProduct } from '$lib/stores/drawer-ui'
 	import { cn, formatSats, parseCoordinatesString, stringToHexColor, truncateString, truncateText } from '$lib/utils'
 	import { getMediaType } from '$lib/utils/media.utils'
+	import { ArrowLeft } from 'lucide-svelte'
 	import { MetaTags } from 'svelte-meta-tags'
 	import { slide } from 'svelte/transition'
 
 	import type { PageData } from './$types'
-	import { ArrowLeft } from 'lucide-svelte'
 
 	let api: CarouselAPI
 	let count = 0

@@ -24,10 +24,10 @@
 	import { stringToHexColor, truncateString, truncateText } from '$lib/utils'
 	import { getMediaType } from '$lib/utils/media.utils'
 	import { getProfileName } from '$lib/utils/userProfile.utils'
+	import { ArrowLeft } from 'lucide-svelte'
 	import { MetaTags } from 'svelte-meta-tags'
 
 	import type { PageData } from './$types'
-	import { ArrowLeft } from 'lucide-svelte'
 
 	export let data: PageData
 	const { stall, user, pageMetaTags } = data

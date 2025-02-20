@@ -24,7 +24,7 @@
 	import { openDrawerForNewProduct, openDrawerForNewStall } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
 	import { getHexColorFingerprintFromHexPubkey, mergeWithExisting, truncateText } from '$lib/utils'
-	import { Minus, Plus, ArrowLeft } from 'lucide-svelte'
+	import { ArrowLeft, Minus, Plus } from 'lucide-svelte'
 	import { onMount } from 'svelte'
 	import { MetaTags } from 'svelte-meta-tags'
 
