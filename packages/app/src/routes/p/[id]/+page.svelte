@@ -24,7 +24,7 @@
 	import { openDrawerForNewProduct, openDrawerForNewStall } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
 	import { getHexColorFingerprintFromHexPubkey, mergeWithExisting, truncateText } from '$lib/utils'
-	import { Minus, Plus } from 'lucide-svelte'
+	import { Minus, Plus, ArrowLeft } from 'lucide-svelte'
 	import { onMount } from 'svelte'
 	import { MetaTags } from 'svelte-meta-tags'
 
@@ -66,6 +66,10 @@
 
 		toDisplayProducts = productsData?.size ? ((await normalizeProductsFromNostr(productsData, id))?.toDisplayProducts ?? []) : []
 	})
+
+	const handleBack = () => {
+		history.back()
+	}
 </script>
 
 <MetaTags {...pageMetaTags} />
@@ -73,6 +77,10 @@
 {#if $userProfileQuery.data}
 	{@const { name, about, banner } = $userProfileQuery.data}
 	<div class="relative">
+		<Button variant="ghost" class="absolute top-4 left-4 z-10 flex items-center gap-2 text-white" on:click={handleBack}>
+			<ArrowLeft class="w-4 h-4" />
+			<span>Back</span>
+		</Button>
 		<div class="flex flex-col pb-4">
 			<div>
 				{#if banner}

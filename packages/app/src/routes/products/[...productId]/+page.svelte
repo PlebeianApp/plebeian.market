@@ -30,6 +30,7 @@
 	import { slide } from 'svelte/transition'
 
 	import type { PageData } from './$types'
+	import { ArrowLeft } from 'lucide-svelte'
 
 	let api: CarouselAPI
 	let count = 0
@@ -88,12 +89,20 @@
 			qtyToCart--
 		}
 	}
+
+	const handleBack = () => {
+		history.back()
+	}
 </script>
 
 <MetaTags {...pageMetaTags} />
 
 {#if $productsQuery.data && data.user.id}
 	<div class="relative bg-black">
+		<Button variant="ghost" class="absolute top-4 left-4 z-10 flex items-center gap-2 text-white" on:click={handleBack}>
+			<ArrowLeft class="w-4 h-4" />
+			<span>Back</span>
+		</Button>
 		<div
 			class="absolute inset-x-0 -bottom-30 h-full bg-[radial-gradient(ellipse_at_bottom,var(--secondary)_25%,transparent_70%)] opacity-30 blur-2xl z-0"
 		/>
