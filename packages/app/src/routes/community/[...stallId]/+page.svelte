@@ -21,9 +21,10 @@
 	import { dialogs } from '$lib/stores/dialog'
 	import { openDrawerForNewProductForStall, openDrawerForStall } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
-	import { stringToHexColor, truncateString, truncateText } from '$lib/utils'
+	import { handleBack, stringToHexColor, truncateString, truncateText } from '$lib/utils'
 	import { getMediaType } from '$lib/utils/media.utils'
 	import { getProfileName } from '$lib/utils/userProfile.utils'
+	import { ArrowLeft } from 'lucide-svelte'
 	import { MetaTags } from 'svelte-meta-tags'
 
 	import type { PageData } from './$types'
@@ -63,6 +64,10 @@
 <MetaTags {...pageMetaTags} />
 
 <main class="relative">
+	<Button variant="ghost" class="absolute top-4 left-4 z-10 flex items-center gap-2 text-white" on:click={handleBack}>
+		<ArrowLeft class="w-4 h-4" />
+		<span>Back</span>
+	</Button>
 	<div class="flex flex-col gap-12">
 		{#if $stallQuery.data?.stall}
 			{@const { image, name, description, currency, createDate, shipping } = $stallQuery.data.stall}

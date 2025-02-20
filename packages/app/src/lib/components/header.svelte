@@ -93,17 +93,13 @@
 			<a href="/">
 				<div class="flex items-center">
 					<img src={appSettings?.logoUrl} alt="logo" class="w-16 px-2" />
-					<span class="font-semibold hidden lg:block lg:text-2xl">{appSettings?.instanceName}</span>
+					<span class="hidden lg:block lg:text-2xl">{appSettings?.instanceName}</span>
 				</div>
 			</a>
 			<div class="hidden sm:flex mx-8 gap-8">
-				<a class="hover:text-secondary font-semibold {currentPath.startsWith('/products') ? activeNavClass : ''}" href="/products/"
-					>Products</a
-				>
-				<a class="hover:text-secondary font-semibold {currentPath.startsWith('/community') ? activeNavClass : ''}" href="/community/"
-					>Community</a
-				>
-				<a class="hover:text-secondary font-semibold {currentPath.startsWith('/nostr') ? activeNavClass : ''}" href="/nostr">Nostr</a>
+				<a class="hover:text-secondary {currentPath.startsWith('/products') ? activeNavClass : ''}" href="/products/">Products</a>
+				<a class="hover:text-secondary {currentPath.startsWith('/community') ? activeNavClass : ''}" href="/community/">Community</a>
+				<a class="hover:text-secondary {currentPath.startsWith('/nostr') ? activeNavClass : ''}" href="/nostr">Nostr</a>
 			</div>
 		</section>
 		<div class="flex items-center gap-4">

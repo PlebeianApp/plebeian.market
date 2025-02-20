@@ -77,7 +77,7 @@
 				href={product.userNip05 ? `/products/${product.userNip05}/${product.identifier}` : `/products/${productCoordinates.coordinates}`}
 				class="flex-1"
 			>
-				<h3 class="text-sm font-bold line-clamp-2">{product.name}</h3>
+				<p class="text-sm font-medium line-clamp-2">{product.name}</p>
 			</a>
 
 			{#if isMyProduct}
@@ -111,7 +111,7 @@
 							{product.currency}
 						</span>
 					{/if}
-					<span class="font-bold text-sm">
+					<span class="font-normal text-sm">
 						{#if $priceQuery?.isLoading}
 							<Spinner />
 						{:else if typeof $priceQuery?.data === 'number' && !Number.isNaN($priceQuery.data)}
@@ -124,7 +124,7 @@
 
 				<div>
 					{#if qtyPurchased}
-						<Badge variant="outline" class="text-xs">
+						<Badge variant="outline" class="text-xs font-normal">
 							purchased: {qtyPurchased}
 						</Badge>
 					{:else}

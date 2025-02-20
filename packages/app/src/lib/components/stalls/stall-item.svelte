@@ -132,7 +132,7 @@
 					<Card.Content class="p-2 flex-1">
 						<div class="flex items-start justify-between mb-2">
 							<a href={stallUrl} class="flex-1">
-								<h3 class=" text-base font-bold line-clamp-2">{stall.name}</h3>
+								<p class="font-medium text-base line-clamp-2">{stall.name}</p>
 							</a>
 
 							{#if isMyStall && stall.id}

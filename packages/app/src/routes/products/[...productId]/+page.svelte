@@ -24,8 +24,9 @@
 	import { handleAddToCart } from '$lib/stores/cart'
 	import { dialogs } from '$lib/stores/dialog'
 	import { openDrawerForProduct } from '$lib/stores/drawer-ui'
-	import { cn, formatSats, parseCoordinatesString, stringToHexColor, truncateString, truncateText } from '$lib/utils'
+	import { cn, formatSats, handleBack, parseCoordinatesString, stringToHexColor, truncateString, truncateText } from '$lib/utils'
 	import { getMediaType } from '$lib/utils/media.utils'
+	import { ArrowLeft } from 'lucide-svelte'
 	import { MetaTags } from 'svelte-meta-tags'
 	import { slide } from 'svelte/transition'
 
@@ -94,6 +95,10 @@
 
 {#if $productsQuery.data && data.user.id}
 	<div class="relative bg-black">
+		<Button variant="ghost" class="absolute top-4 left-4 z-10 flex items-center gap-2 text-white" on:click={handleBack}>
+			<ArrowLeft class="w-4 h-4" />
+			<span>Back</span>
+		</Button>
 		<div
 			class="absolute inset-x-0 -bottom-30 h-full bg-[radial-gradient(ellipse_at_bottom,var(--secondary)_25%,transparent_70%)] opacity-30 blur-2xl z-0"
 		/>
