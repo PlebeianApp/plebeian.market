@@ -23,7 +23,7 @@
 	import { breakpoint, getGridColumns } from '$lib/stores/breakpoint'
 	import { openDrawerForNewProduct, openDrawerForNewStall } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
-	import { getHexColorFingerprintFromHexPubkey, mergeWithExisting, truncateText } from '$lib/utils'
+	import { getHexColorFingerprintFromHexPubkey, handleBack, mergeWithExisting, truncateText } from '$lib/utils'
 	import { ArrowLeft, Minus, Plus } from 'lucide-svelte'
 	import { onMount } from 'svelte'
 	import { MetaTags } from 'svelte-meta-tags'
@@ -66,10 +66,6 @@
 
 		toDisplayProducts = productsData?.size ? ((await normalizeProductsFromNostr(productsData, id))?.toDisplayProducts ?? []) : []
 	})
-
-	const handleBack = () => {
-		history.back()
-	}
 </script>
 
 <MetaTags {...pageMetaTags} />

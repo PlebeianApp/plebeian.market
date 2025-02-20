@@ -24,7 +24,7 @@
 	import { handleAddToCart } from '$lib/stores/cart'
 	import { dialogs } from '$lib/stores/dialog'
 	import { openDrawerForProduct } from '$lib/stores/drawer-ui'
-	import { cn, formatSats, parseCoordinatesString, stringToHexColor, truncateString, truncateText } from '$lib/utils'
+	import { cn, formatSats, handleBack, parseCoordinatesString, stringToHexColor, truncateString, truncateText } from '$lib/utils'
 	import { getMediaType } from '$lib/utils/media.utils'
 	import { ArrowLeft } from 'lucide-svelte'
 	import { MetaTags } from 'svelte-meta-tags'
@@ -88,10 +88,6 @@
 		if (qtyToCart > 1) {
 			qtyToCart--
 		}
-	}
-
-	const handleBack = () => {
-		history.back()
 	}
 </script>
 

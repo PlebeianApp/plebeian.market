@@ -285,6 +285,10 @@ export async function copyToClipboard(data: BlobPart, mimeType = 'text/plain') {
 	}
 }
 
+export function handleBack() {
+	history.back()
+}
+
 export function shareContent(shareData: { title: string; text: string; url: string }) {
 	if (navigator.share) {
 		navigator.share(shareData).catch((err) => {

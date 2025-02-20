@@ -21,7 +21,7 @@
 	import { dialogs } from '$lib/stores/dialog'
 	import { openDrawerForNewProductForStall, openDrawerForStall } from '$lib/stores/drawer-ui'
 	import ndkStore from '$lib/stores/ndk'
-	import { stringToHexColor, truncateString, truncateText } from '$lib/utils'
+	import { handleBack, stringToHexColor, truncateString, truncateText } from '$lib/utils'
 	import { getMediaType } from '$lib/utils/media.utils'
 	import { getProfileName } from '$lib/utils/userProfile.utils'
 	import { ArrowLeft } from 'lucide-svelte'
@@ -59,10 +59,6 @@
 		order: sort.value ?? 'desc',
 		stallId: stall.id,
 	})
-
-	const handleBack = () => {
-		history.back()
-	}
 </script>
 
 <MetaTags {...pageMetaTags} />
