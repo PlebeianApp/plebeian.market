@@ -1,3 +1,4 @@
+import { toASCII } from 'punycode'
 import type { NDKSubscriptionCacheUsage, NDKUser, NDKUserProfile } from '@nostr-dev-kit/ndk'
 import type { ExistsResult } from '$lib/interfaces'
 import type { UsersFilter } from '$lib/schema'
@@ -140,7 +141,23 @@ export const createUservalidateNip05Query = (user: NDKUser) =>
 			queryKey: userKeys.nip05(user.pubkey),
 			queryFn: async () => {
 				if (!user.profile?.nip05) return null
-				return await user.validateNip05(user.profile?.nip05)
+				const [name, domain] = user.profile.nip05.split('@')
+
+				let punycodeDomain = domain
+
+				if (!/^[a-z0-9.-]+$/.test(domain)) {
+					try {
+						punycodeDomain = toASCII(domain)
+						console.log(`Punycode domain: ${punycodeDomain}`)
+					} catch (err) {
+						console.warn(`Punycode conversion failed for domain: ${domain}. Using original domain. Error: ${err}`)
+						punycodeDomain = domain
+					}
+				}
+				const parsedNip05 = `${name}@${punycodeDomain}`
+				const userNip05 = user.profile?.nip05 == parsedNip05 ? user.profile?.nip05 : parsedNip05
+
+				return await user.validateNip05(userNip05)
 			},
 		},
 		queryClient,

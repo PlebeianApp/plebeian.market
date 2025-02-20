@@ -3,7 +3,7 @@
 	import { Button } from '$lib/components/ui/button'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
 	import { unreadCounts } from '$lib/stores/chat-notifications'
-	import { truncateString } from '$lib/utils'
+	import { getProfileName } from '$lib/utils/userProfile.utils'
 
 	import CAvatar from '../ui/custom-components/c-avatar.svelte'
 
@@ -16,11 +16,11 @@
 </script>
 
 <Button variant="ghost" class="w-full h-full justify-start p-4 py-8 sm:py-4 gap-2 hover:bg-accent" on:click={() => onSelect(pubkey)}>
-	<CAvatar linked {pubkey} profile={$userProfileQuery.data} />
+	<CAvatar linked {pubkey} profile={$userProfileQuery.data ?? null} />
 	<div class="flex flex-col items-start overflow-hidden flex-1">
 		<div class="flex items-center w-full">
 			<span class="font-semibold truncate">
-				{$userProfileQuery?.data?.displayName || $userProfileQuery?.data?.name || truncateString(pubkey)}
+				{getProfileName($userProfileQuery.data ?? null, pubkey)}
 			</span>
 			{#if unreadCount > 0}
 				<Badge variant="destructive" class="ml-2 px-1 py-0" size="sm">

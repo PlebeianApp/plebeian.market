@@ -2,7 +2,9 @@
 	import type { NDKUserProfile, NDKZapMethodInfo } from '@nostr-dev-kit/ndk'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
 	import ndkStore from '$lib/stores/ndk'
-	import { checkTargetUserHasLightningAddress, decodePk, formatSats, resolveQuery } from '$lib/utils'
+	import { checkTargetUserHasLightningAddress, formatSats, resolveQuery } from '$lib/utils'
+	import { getProfileName } from '$lib/utils/userProfile.utils'
+	import { decode } from 'nostr-tools/nip19'
 	import { createEventDispatcher } from 'svelte'
 
 	import CAvatar from '../ui/custom-components/c-avatar.svelte'
@@ -44,10 +46,11 @@
 <div class="flex flex-col sm:flex-row gap-2 w-full">
 	<div class="flex items-center gap-1.5 text-gray-700">
 		{#if npub}
+			{@const pubkey = decode(npub).data ?? ''}
 			<div class="flex items-center gap-2 font-bold min-w-0">
-				<CAvatar pubkey={decodePk(npub)} profile={userProfile} linked={false} />
+				<CAvatar {pubkey} profile={userProfile} linked={false} />
 				{#if userProfile}
-					<span class="truncate">{userProfile.name}</span>
+					<span class="truncate">{getProfileName(userProfile, pubkey)}</span>
 				{/if}
 			</div>
 		{:else}

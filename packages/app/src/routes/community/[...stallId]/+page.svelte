@@ -23,6 +23,7 @@
 	import ndkStore from '$lib/stores/ndk'
 	import { stringToHexColor, truncateString, truncateText } from '$lib/utils'
 	import { getMediaType } from '$lib/utils/media.utils'
+	import { getProfileName } from '$lib/utils/userProfile.utils'
 	import { MetaTags } from 'svelte-meta-tags'
 
 	import type { PageData } from './$types'
@@ -98,34 +99,35 @@
 			</div>
 			<div class="flex flex-col gap-12 px-8">
 				<div class="flex flex-col md:flex-row gap-4 w-full">
-					{#if description}
-						<Card class="rounded-none border-t-2 border-b-0 border-l-0 border-r-0 border-black shadow-lg flex-1">
-							<CardHeader>
-								<CardTitle>
-									<div class="flex flex-row gap-2 items-center justify-between">
-										<div class="flex flex-row gap-2 items-center overflow-hidden text-ellipsis">
-											<a href={`/p/${user.id}`}>
-												<CAvatar
-													pubkey={String(user.id)}
-													profile={$userProfileQuery.data}
-													avatarClass="rounded-md w-8 h-8"
-													imageClass="rounded-md w-8 h-8"
-													fallbackClass="rounded-md w-8 h-8"
-												/>
-											</a>
-											<span>{$userProfileQuery.data?.name || $userProfileQuery.data?.displayName || truncateText(user.id, 20)}</span>
-										</div>
-										<span class="text-sm text-gray-500 md:flex-row">created: {createDate}</span>
+					<Card class="rounded-none border-t-2 border-b-0 border-l-0 border-r-0 border-black shadow-lg flex-1">
+						<CardHeader>
+							<CardTitle>
+								<div class="flex flex-row gap-2 items-center justify-between">
+									<div class="flex flex-row gap-2 items-center overflow-hidden text-ellipsis">
+										<CAvatar
+											pubkey={String(user.id)}
+											profile={$userProfileQuery.data ?? null}
+											avatarClass="rounded-md w-8 h-8"
+											imageClass="rounded-md w-8 h-8"
+											fallbackClass="rounded-md w-8 h-8"
+											linked
+										/>
+										<span>{getProfileName($userProfileQuery.data ?? null, user.id)}</span>
 									</div>
-								</CardTitle>
-							</CardHeader>
-							<CardContent class="flex flex-col gap-6">
+									<span class="text-sm text-muted-foreground md:flex-row">created: {createDate}</span>
+								</div>
+							</CardTitle>
+						</CardHeader>
+						<CardContent class="flex flex-col gap-6">
+							{#if description}
 								<span class=" font-bold text-gray-500">Description</span>
 								<TruncatedText text={description} />
-								<AdminActions type="stall" id={stall.id} isFeatured={$stallQuery.data.stall.isFeatured} />
-							</CardContent>
-						</Card>
-					{/if}
+							{:else}
+								<span class=" text-muted-foreground">No description provided</span>
+							{/if}
+							<AdminActions type="stall" id={stall.id} isFeatured={$stallQuery.data.stall.isFeatured} />
+						</CardContent>
+					</Card>
 					<Card class="rounded-none border-t-2 border-b-0 border-l-0 border-r-0 border-black shadow-lg flex-none w-full md:w-1/5">
 						<CardHeader>
 							<CardTitle>Shipping Zones</CardTitle>

@@ -5,6 +5,7 @@
 	import * as Slider from '$lib/components/ui/slider'
 	import { createUserByIdQuery } from '$lib/fetch/users.queries'
 	import { checkTargetUserHasLightningAddress, decodePk, getHexColorFingerprintFromHexPubkey, resolveQuery } from '$lib/utils'
+	import { getProfileName } from '$lib/utils/userProfile.utils'
 	import { createEventDispatcher } from 'svelte'
 
 	import { Button } from '../ui/button'
@@ -80,7 +81,7 @@
 				<div class="flex items-center gap-2 font-bold">
 					<CAvatar pubkey={hexPubkey} profile={userProfile} />
 					{#if userProfile}
-						<div>{userProfile.name}</div>
+						<div>{getProfileName(userProfile, hexPubkey)}</div>
 					{/if}
 				</div>
 			{:else}

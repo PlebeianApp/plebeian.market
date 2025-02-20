@@ -245,7 +245,7 @@
 
 					<span class="my-4 font-bold flex items-center gap-2">
 						Sold by
-						<Nip05Badge userId={$userProfileQuery?.data?.id} />
+						<Nip05Badge userId={data.user.id} />
 						<a
 							href={`/p/${$userProfileQuery?.data?.nip05 ? $userProfileQuery.data?.nip05 : $userProfileQuery?.data?.id ? $userProfileQuery.data?.id : data.user.id}`}
 						>
