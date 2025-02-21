@@ -19,6 +19,9 @@
 
 	const ordersStore = writable(orders)
 
+	// Update ordersStore when orders prop changes
+	$: ordersStore.set(orders)
+
 	const table = createTable(ordersStore, {
 		sort: addSortBy({ disableMultiSort: true }),
 		page: addPagination({ pageSize: 10, initialPageIndex: currentPage }),
