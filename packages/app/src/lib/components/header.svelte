@@ -19,6 +19,7 @@
 	import type { PageData } from '../../routes/$types'
 	import CartWithState from './cart/cart-with-state.svelte'
 	import AuthDialog from './dialogs/authDialog.svelte'
+	import ProductSearch from './header/product-search.svelte'
 	import CAvatar from './ui/custom-components/c-avatar.svelte'
 	import Separator from './ui/separator/separator.svelte'
 
@@ -103,7 +104,10 @@
 				<!--				<a class="hover:text-secondary {currentPath.startsWith('/roadmap') ? activeNavClass : ''}" href="/roadmap">Roadmap</a>-->
 			</div>
 		</section>
-		<div class="flex items-center gap-4">
+		<div class="flex items-center gap-2 lg:gap-4">
+			<div class="hidden lg:block flex-1">
+				<ProductSearch />
+			</div>
 			{#if $ndkStore.activeUser}
 				<a href={`/p/${$ndkStore.activeUser.profile?.nip05 ? $ndkStore.activeUser.profile?.nip05 : $ndkStore.activeUser.pubkey}`}>
 					<CAvatar
@@ -263,5 +267,8 @@
 		<Button variant="secondary" size="icon" class="rounded-full shadow-lg hover:opacity-90" on:click={scrollToTop}>
 			<span class="i-tdesign-chevron-up w-6 h-6" />
 		</Button>
+	</div>
+	<div class="lg:hidden flex-1 pt-4">
+		<ProductSearch />
 	</div>
 </header>
