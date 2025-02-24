@@ -100,6 +100,7 @@
 				<a class="hover:text-secondary {currentPath.startsWith('/products') ? activeNavClass : ''}" href="/products/">Products</a>
 				<a class="hover:text-secondary {currentPath.startsWith('/community') ? activeNavClass : ''}" href="/community/">Community</a>
 				<a class="hover:text-secondary {currentPath.startsWith('/nostr') ? activeNavClass : ''}" href="/nostr">Nostr</a>
+				<a class="hover:text-secondary {currentPath.startsWith('/roadmap') ? activeNavClass : ''}" href="/roadmap">Roadmap</a>
 			</div>
 		</section>
 		<div class="flex items-center gap-4">
