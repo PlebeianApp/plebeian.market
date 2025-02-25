@@ -160,7 +160,7 @@ export function setupZapSubscription(onZapEvent: (event: NDKEvent) => void): NDK
 	const ndk = get(ndkStore)
 	const subscription = ndk.subscribe({
 		kinds: [NDKKind.Zap],
-		since: Math.floor(Date.now() / 1000),
+		since: Math.floor(Date.now() / 1000) - 60 * 5, // Set since to 5 minutes back
 	})
 
 	subscription.on('event', onZapEvent)
