@@ -70,7 +70,6 @@ export async function generateLightningInvoice(
 
 	const ln = new LightningAddress(lightningAddress)
 	await ln.fetch()
-
 	const allowsNostr = ln.lnurlpData?.allowsNostr ?? false
 	let invoice: Invoice
 
@@ -79,6 +78,11 @@ export async function generateLightningInvoice(
 			ndk: options?.ndk,
 			isAnonymous: options?.isAnonymous,
 		})
+
+		const pubkey = await nostrSigner.getPublicKey()
+		if (!ln.nostrPubkey && pubkey) {
+			ln.nostrPubkey = pubkey
+		}
 
 		invoice = await ln.zapInvoice(
 			{
@@ -89,6 +93,7 @@ export async function generateLightningInvoice(
 			{ nostr: nostrSigner },
 		)
 	} else {
+		console.log('Using regular invoice because nostr not allowed')
 		invoice = await ln.requestInvoice({
 			satoshi: amount,
 			comment: message,
