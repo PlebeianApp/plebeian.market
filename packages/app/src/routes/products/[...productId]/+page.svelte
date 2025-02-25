@@ -104,84 +104,81 @@
 		/>
 		<Pattern />
 
-		<div class="container relative z-1 min-h-[600px] pt-8 pb-16 px-4 sm:px-8">
-			<div class="flex flex-col md:flex-row gap-8">
-				<div class="flex-1 md:w-1/2">
-					<div class="h-full">
-						<div class="flex flex-col-reverse md:flex-row gap-4 h-full max-h-[36em]">
-							{#key $productsQuery.data.identifier}
-								{#if $productsQuery.data?.images?.length}
-									{@const sortedImages = $productsQuery.data.images?.sort((a, b) => a.imageOrder - b.imageOrder)}
-									<div class="flex flex-row md:flex-col gap-2 md:max-h-[500px] overflow-y-auto p-1 justify-center md:justify-start">
+		<div class="container relative z-1 min-h-[600px] pt-8 pb-16 px-4 sm:px-8 lg:px-24">
+			<div class="flex flex-col lg:flex-row gap-8">
+				<div class="flex xl:flex-row flex-col-reverse gap-4 h-full xl:max-h-[36em] xl:w-1/2">
+					{#key $productsQuery.data.identifier}
+						{#if $productsQuery.data?.images?.length}
+							{@const sortedImages = $productsQuery.data.images?.sort((a, b) => a.imageOrder - b.imageOrder)}
+							<div class="flex-1 lg:max-w-[calc(100%-6rem)] h-full aspect-square bg-black bg-opacity-30 rounded order-1 xl:order-2">
+								<Carousel.Root bind:api class="h-full">
+									<Carousel.Content class="h-full">
 										{#each sortedImages as item, i}
-											<button
-												class={cn(
-													'relative shrink-0 md:w-16 w-12 p-1 transition-all',
-													i === current - 1 ? 'ring-2 ring-secondary' : 'hover:ring-1 hover:ring-secondary/50',
-												)}
-												on:click={() => api?.scrollTo(i)}
-											>
-												<div class="aspect-square w-full overflow-hidden relative">
+											<Carousel.Item class="h-full">
+												<div class="w-full h-full rounded-lg bg-black flex items-center justify-center">
 													{#if getMediaType(item.imageUrl) === 'video'}
-														<video src={item.imageUrl} class="h-full w-full object-cover" preload="metadata" muted>
-															<track kind="captions" src="data:text/vtt,WEBVTT" label="English" srcLang="en" default />
+														<video
+															bind:this={activeVideoRefs[i]}
+															src={item.imageUrl}
+															preload="metadata"
+															controls
+															class="h-full w-full object-contain"
+														>
+															<track kind="captions" />
 														</video>
-														<div class="absolute inset-0 flex items-center justify-center bg-black/20">
-															<span class="i-mdi-play text-white w-6 h-6" />
-														</div>
 													{:else}
-														<img class="h-full w-full object-cover" src={item.imageUrl} alt="" />
+														<img src={item.imageUrl} alt="" class="h-full w-full object-contain" loading="lazy" />
 													{/if}
 												</div>
-												{#if i === current - 1}
-													<div class="absolute bottom-1 right-1 w-2 h-2 bg-primary rounded-full" />
-												{/if}
-											</button>
+											</Carousel.Item>
 										{/each}
-									</div>
-									<div class="flex-1 md:max-w-[calc(100%-6rem)] h-full aspect-square bg-black bg-opacity-30 rounded">
-										<Carousel.Root bind:api class="h-full">
-											<Carousel.Content class="h-full">
-												{#each sortedImages as item, i}
-													<Carousel.Item class="h-full">
-														<div class="w-full h-full rounded-lg">
-															{#if getMediaType(item.imageUrl) === 'video'}
-																<video
-																	bind:this={activeVideoRefs[i]}
-																	src={item.imageUrl}
-																	preload="metadata"
-																	controls
-																	class="h-full w-full object-contain"
-																>
-																	<track kind="captions" />
-																</video>
-															{:else}
-																<img src={item.imageUrl} alt="" class="h-full w-full object-contain" loading="lazy" />
-															{/if}
-														</div>
-													</Carousel.Item>
-												{/each}
-											</Carousel.Content>
-										</Carousel.Root>
-									</div>
-								{:else}
-									<div class="w-full aspect-square flex items-center justify-center rounded-lg">
-										<span
-											style={`color:${stringToHexColor(String($productsQuery.data.name || $productsQuery.data.identifier))}`}
-											class="i-mdi-package-variant-closed w-16 h-16"
-										/>
-									</div>
-								{/if}
-							{/key}
-						</div>
-					</div>
+									</Carousel.Content>
+								</Carousel.Root>
+							</div>
+
+							<div class="flex flex-row gap-2 flex-wrap justify-center xl:flex-col xl:justify-start">
+								{#each sortedImages as item, i}
+									<button
+										class={cn(
+											'relative shrink-0 sm:w-14 xl:w-16 w-12 p-1 transition-all',
+											i === current - 1 ? 'ring-2 ring-secondary' : 'hover:ring-1 hover:ring-secondary/50',
+										)}
+										on:click={() => api?.scrollTo(i)}
+									>
+										<div class="aspect-square w-full overflow-hidden relative bg-black">
+											{#if getMediaType(item.imageUrl) === 'video'}
+												<video src={item.imageUrl} class="h-full w-full object-cover" preload="metadata" muted>
+													<track kind="captions" src="data:text/vtt,WEBVTT" label="English" srcLang="en" default />
+												</video>
+												<div class="absolute inset-0 flex items-center justify-center bg-black/20">
+													<span class="i-mdi-play text-white w-6 h-6" />
+												</div>
+											{:else}
+												<img class="h-full w-full object-cover" src={item.imageUrl} alt="" />
+											{/if}
+										</div>
+										{#if i === current - 1}
+											<div class="absolute bottom-1 right-1 w-2 h-2 bg-primary rounded-full" />
+										{/if}
+									</button>
+								{/each}
+							</div>
+						{:else}
+							<div class="w-full aspect-square flex items-center justify-center rounded-lg">
+								<span
+									style={`color:${stringToHexColor(String($productsQuery.data.name || $productsQuery.data.identifier))}`}
+									class="i-mdi-package-variant-closed w-16 h-16"
+								/>
+							</div>
+						{/if}
+					{/key}
 				</div>
 
-				<div class="flex flex-col flex-1 md:w-1/2 text-white">
+				<div class="flex flex-col flex-1 lg:w-1/2 text-white mt-4 lg:mt-0">
 					{#if isMyProduct}
 						<Button variant="primary" class="w-1/4" on:click={() => openDrawerForProduct(data.productRes.id)}>Edit product</Button>
 					{/if}
-					<div class="md:mb-12 flex flex-row gap-2 items-center">
+					<div class="lg:mb-12 flex flex-row gap-2 items-center">
 						<h3 class="break-words overflow-hidden">{$productsQuery.data.name}</h3>
 						<SharingButton
 							title={$productsQuery.data?.name || 'Check out this product'}
@@ -190,7 +187,7 @@
 						/>
 					</div>
 
-					<div class="flex md:flex-col flex-row gap-2 w-full md:items-start items-center">
+					<div class="flex lg:flex-col flex-row gap-2 lg:items-start items-center">
 						<div class="flex flex-col gap-2 w-full">
 							<h3 class="inline-flex items-center">
 								{#if $priceQuery?.isLoading}
@@ -211,29 +208,22 @@
 								</h4>
 							{/if}
 						</div>
-						<Badge variant="secondary" class="w-36 md:w-fit md:my-12 my-6">
+						<Badge variant="secondary" class="w-36 lg:w-fit lg:my-12 my-6">
 							Stock: {$productsQuery.data.quantity}
 						</Badge>
 					</div>
 
-					<div class="flex sm:flex-row gap-2 w-full items-center">
-						<div class="flex flex-row gap-1 w-fit items-center">
+					<div class="flex flex-row gap-2 w-full items-center mb-4">
+						<div class="flex flex-row gap-1 items-center">
 							<Button variant="tertiary" size="icon" on:click={handleDecrement} disabled={qtyToCart <= 1}>
 								<span class="i-mdi-minus w-4 h-4"></span>
 							</Button>
-							<Input
-								class="text-off-black rounded-md w-10"
-								value={qtyToCart}
-								on:input={(e) => (qtyToCart = parseInt(e.target.value))}
-								min="1"
-								max={$productsQuery.data.quantity}
-								readonly
-							/>
+							<Input class="text-off-black rounded-md w-10" value={qtyToCart} min="1" max={$productsQuery.data.quantity} readonly />
 							<Button size="icon" variant="tertiary" on:click={handleIncrement} disabled={qtyToCart >= $productsQuery.data.quantity}>
 								<span class="i-mdi-plus w-4 h-4"></span>
 							</Button>
 						</div>
-						<div class="flex flex-row gap-2 w-64">
+						<div class="flex flex-row gap-2 w-full sm:max-w-[200px]">
 							{#if $productsQuery.data.quantity && $productsQuery.data.quantity > 0}
 								<Button
 									class="flex-1"
@@ -244,9 +234,9 @@
 							{:else}
 								<Button variant="tertiary" class="flex-1" disabled>Out of stock</Button>
 							{/if}
-							<AdminActions type="product" id={data.productRes.id} isFeatured={$productsQuery.data.isFeatured} />
 						</div>
 					</div>
+					<AdminActions type="product" id={data.productRes.id} isFeatured={$productsQuery.data.isFeatured} />
 
 					<span class="my-4 font-bold flex items-center gap-2">
 						Sold by
@@ -275,7 +265,7 @@
 
 	{#if $productsQuery.data.description || $stallQuery?.data?.stall?.shipping}
 		{#if $breakpoint !== 'lg'}
-			<div class="flex flex-col gap-8 -mt-8 bg-white">
+			<div class="flex flex-col gap-8 -mt-8 bg-white lg:px-24">
 				{#if $productsQuery.data?.description}
 					<div class="mx-8 shadow-md z-10">
 						<div class="container flex flex-col items-center p-2 bg-secondary">
