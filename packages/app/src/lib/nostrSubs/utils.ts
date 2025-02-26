@@ -2,7 +2,7 @@ import type { NDKEvent, NDKUserProfile } from '@nostr-dev-kit/ndk'
 import type { DisplayProduct } from '$lib/server/products.service'
 import type { RichShippingInfo } from '$lib/server/shipping.service'
 import type { RichStall } from '$lib/server/stalls.service'
-import { NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk'
+import { NDKKind, NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk'
 import { invalidateAll } from '$app/navigation'
 import { KindProducts, KindsRelays, KindStalls, standardDisplayDateFormat } from '$lib/constants'
 import { createProductsFromNostrMutation } from '$lib/fetch/products.mutations'
@@ -44,6 +44,22 @@ export async function fetchStallData(
 		: await $ndkStore.fetchEvent(stallFilter, { cacheUsage: subCacheUsage ?? NDKSubscriptionCacheUsage.PARALLEL })
 
 	return { stallNostrRes }
+}
+
+export async function fetchRoadmapData(pubkey: string): Promise<NDKEvent[]> {
+	const $ndkStore = get(ndkStore)
+
+	const roadmapEvents = await $ndkStore.fetchEvents(
+		{ authors: [pubkey], kinds: [NDKKind.Article], '#t': ['plebeian-roadmap'] },
+		{ cacheUsage: NDKSubscriptionCacheUsage.PARALLEL },
+	)
+
+	return Array.from(roadmapEvents)
+}
+
+export async function fetchRoadmapEvent(roadmapId: string): Promise<NDKEvent | null> {
+	const $ndkStore = get(ndkStore)
+	return await $ndkStore.fetchEvent({ ids: [roadmapId] }, { cacheUsage: NDKSubscriptionCacheUsage.PARALLEL })
 }
 
 export async function fetchAddressableEvent(coordinates: string, subCacheUsage?: NDKSubscriptionCacheUsage): Promise<NDKEvent | null> {
