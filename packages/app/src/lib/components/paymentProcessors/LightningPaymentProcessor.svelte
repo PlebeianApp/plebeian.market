@@ -271,13 +271,13 @@
 		{/if}
 
 		<div class="grid grid-cols-1 md:grid-cols-2 gap-2 justify-center w-full">
+			{#if canUseNWC}
+				<Button variant="focus" on:click={handleNWCPay} disabled={paymentStatus !== 'pending'} class="w-full md:w-auto">Pay with NWC</Button
+				>
+			{/if}
 			{#if 'webln' in window}
 				<Button variant="primary" on:click={handleWeblnPay} disabled={paymentStatus !== 'pending'} class="w-full md:w-auto"
 					>Pay with WebLN</Button
-				>
-			{/if}
-			{#if canUseNWC}
-				<Button variant="focus" on:click={handleNWCPay} disabled={paymentStatus !== 'pending'} class="w-full md:w-auto">Pay with NWC</Button
 				>
 			{/if}
 			<Button variant="outline" on:click={() => window.open(url, '_blank')} class="w-full md:w-auto">Open in wallet</Button>
