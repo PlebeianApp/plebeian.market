@@ -92,9 +92,9 @@
 			{#each Object.entries(userTotal.currencyTotals) as [currency, amounts]}
 				<small>{currency} Total: {(amounts.total + amounts.shipping).toLocaleString()} </small>
 			{/each}
-			<small>Shipping in sats: {formatSats(userTotal.shippingInSats)} sats</small>
+			<small>Shipping: {formatSats(userTotal.shippingInSats)} sats</small>
 			<small class="underline"
-				><strong>Total in sats:</strong>
+				><strong>Total:</strong>
 				{formatSats(userTotal.totalInSats)} sats</small
 			>
 			{#if v4vTotalPercentage}
