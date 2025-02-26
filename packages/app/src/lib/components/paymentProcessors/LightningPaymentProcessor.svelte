@@ -277,13 +277,13 @@
 				>
 			{/if}
 			{#if canUseNWC}
-				<Button variant="primary" on:click={handleNWCPay} disabled={paymentStatus !== 'pending'} class="w-full md:w-auto"
+				<Button variant="secondary" on:click={handleNWCPay} disabled={paymentStatus !== 'pending'} class="w-full md:w-auto"
 					>Pay with NWC</Button
 				>
 			{/if}
 			<Button variant="outline" on:click={() => window.open(url, '_blank')} class="w-full md:w-auto">Open in wallet</Button>
 			{#if showManualVerification}
-				<Button variant="primary" on:click={() => (showPreimageInput = true)} class="w-full md:w-auto">I've already paid</Button>
+				<Button variant="outline" on:click={() => (showPreimageInput = true)} class="w-full md:w-auto">I've already paid</Button>
 			{/if}
 			<Button variant="outline" on:click={handleSkipPayment} class="w-full md:w-auto">Skip Payment</Button>
 		</div>

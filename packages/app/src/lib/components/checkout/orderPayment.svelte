@@ -396,7 +396,7 @@
 			</div>
 		{/if}
 		{#if somePaymentsAllowNWC && canUseNWC}
-			<Button.Root class="w-[90%] md:w-1/2" on:click={() => handlePayAllNWCInvoices()}>
+			<Button.Root class="w-[90%] md:w-1/2" variant="focus" on:click={() => handlePayAllNWCInvoices()}>
 				<span>Pay all NWC invoices</span> <span class="i-mdi-purse w-5 h-5 ml-2" />
 			</Button.Root>
 		{/if}
