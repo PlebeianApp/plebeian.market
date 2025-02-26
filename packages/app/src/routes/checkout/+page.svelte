@@ -45,12 +45,13 @@
 			: []),
 	]
 
-	if ($cart.orders || ($cart.invoices && !$checkoutFormStore)) {
-		cart.clearKeys(['orders', 'invoices'])
-	}
-
 	onDestroy(() => {
-		currentStep.set(0)
+		!$checkoutFormStore && currentStep.set(0)
+		if ($cart.invoices && !$checkoutFormStore) {
+			cart.clearKeys(['orders', 'invoices'])
+		} else {
+			cart.clearKeys(['invoices'])
+		}
 	})
 </script>
 
