@@ -321,34 +321,33 @@
 	</div>
 	<!---->
 	<div class="flex flex-col items-center gap-4 border rounded-md min-w-0 bg-card text-card-foreground shadow-sm flex-1 p-4">
-		<div class="flex flex-wrap justify-center gap-2 w-full px-2">
-			{#each relevantPaymentDetails as paymentDetail}
-				<Button.Root
-					variant="outline"
-					class={cn(
-						'flex items-center justify-center px-3 md:px-4 py-2',
-						'transition-all duration-200 hover:border-primary',
-						'text-sm md:text-base',
-						selectedPaymentDetail?.paymentMethod === paymentDetail.paymentMethod
-							? 'border-2 border-primary bg-primary/5'
-							: 'border hover:bg-accent/50',
-					)}
-					on:click={() => handleSelection(paymentDetail)}
-				>
-					<div class="flex items-center gap-1 md:gap-2">
-						<span class={paymentMethodIcons[paymentDetail.paymentMethod] + ' w-4 h-4 md:w-5 md:h-5'} />
-						{paymentDetail.paymentMethod}
-					</div>
-				</Button.Root>
-			{/each}
-		</div>
-
 		{#if v4vShares.length > 0}
 			{#if selectedPaymentDetail && orderTotal}
 				<div class="w-full px-2 md:px-4">
 					<Carousel.Root class="h-full w-full" bind:api>
 						<Carousel.Content>
 							<Carousel.Item>
+								<div class="flex flex-wrap justify-center gap-2 w-full px-2">
+									{#each relevantPaymentDetails as paymentDetail}
+										<Button.Root
+											variant="outline"
+											class={cn(
+												'flex items-center justify-center px-3 md:px-4 py-2',
+												'transition-all duration-200 hover:border-primary',
+												'text-sm md:text-base',
+												selectedPaymentDetail?.id === paymentDetail.id
+													? 'border-2 border-secondary bg-primary/5'
+													: 'border hover:bg-accent/50',
+											)}
+											on:click={() => handleSelection(paymentDetail)}
+										>
+											<div class="flex items-center gap-1 md:gap-2">
+												<span class={paymentMethodIcons[paymentDetail.paymentMethod] + ' w-4 h-4 md:w-5 md:h-5'} />
+												{paymentDetail.paymentMethod}
+											</div>
+										</Button.Root>
+									{/each}
+								</div>
 								<div class="p-1">
 									<PaymentProcessor
 										bind:this={paymentProcessors[0]}
@@ -396,7 +395,7 @@
 			</div>
 		{/if}
 		{#if somePaymentsAllowNWC && canUseNWC}
-			<Button.Root class="w-[90%] md:w-1/2" on:click={() => handlePayAllNWCInvoices()}>
+			<Button.Root class="w-[90%] md:w-1/2" variant="focus" on:click={() => handlePayAllNWCInvoices()}>
 				<span>Pay all NWC invoices</span> <span class="i-mdi-purse w-5 h-5 ml-2" />
 			</Button.Root>
 		{/if}
