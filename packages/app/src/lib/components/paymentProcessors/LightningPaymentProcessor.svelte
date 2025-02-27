@@ -36,6 +36,7 @@
 		paymentCancelled: CheckoutPaymentEvent
 	}>()
 
+	const invoiceCache = new Map<string, Invoice>()
 	let invoice: Invoice | null = null
 	let paymentStatus: PaymentStatus = 'pending'
 	let preimageInput = ''
@@ -52,12 +53,31 @@
 
 	let prevPaymentDetail: RichPaymentDetail | null = null
 	let prevAmountSats: number | null = null
-
 	const cleanupFunctions: (() => void)[] = []
+
+	function getCacheKey() {
+		return `${paymentDetail.id}-${amountSats}-${paymentType}`
+	}
+
+	$: {
+		if (normalizedAmount > 0 && !isLoading && !invoice) {
+			generateInvoice()
+		}
+	}
 
 	async function generateInvoice() {
 		if (isLoading || invoice || normalizedAmount == 0) return
+		const cacheKey = getCacheKey()
+		const cachedInvoice = invoiceCache.get(cacheKey)
+
+		if (cachedInvoice) {
+			invoice = cachedInvoice
+			setupInvoiceExpiry()
+			return
+		}
+
 		isLoading = true
+
 		try {
 			const {
 				invoice: generatedInvoice,
@@ -71,6 +91,8 @@
 			)
 
 			invoice = generatedInvoice
+			invoiceCache.set(cacheKey, invoice)
+
 			addZapRelaysToNDKPool($ndkStore)
 
 			if (allowsNostr) {
@@ -114,7 +136,6 @@
 			toast.error('Please enter a preimage to verify the payment.')
 			return
 		}
-
 		isLoading = true
 		try {
 			const paid = invoice.validatePreimage(preimageInput)
@@ -130,6 +151,7 @@
 	function handleSuccessfulPayment(preimage: string) {
 		paymentStatus = 'success'
 		toast.success('Payment successful')
+		invoiceCache.delete(getCacheKey())
 		dispatch('paymentComplete', {
 			paymentRequest: invoice!.paymentRequest,
 			proof: preimage,
@@ -143,6 +165,7 @@
 		cleanupFunctions.forEach((fn) => fn())
 		remainingTime = 'Expired'
 		toast.error('Invoice expired')
+		invoiceCache.delete(getCacheKey())
 		dispatch('paymentExpired', {
 			paymentRequest: invoice!.paymentRequest,
 			proof: null,
@@ -154,6 +177,7 @@
 	function handleSkipPayment() {
 		paymentStatus = 'cancelled'
 		cleanupFunctions.forEach((fn) => fn())
+		invoiceCache.delete(getCacheKey())
 		dispatch('paymentCancelled', {
 			paymentRequest: invoice!.paymentRequest,
 			proof: null,
@@ -165,6 +189,7 @@
 	function handleSkipInvalidPayment() {
 		paymentStatus = 'cancelled'
 		cleanupFunctions.forEach((fn) => fn())
+		invoiceCache.delete(getCacheKey())
 		dispatch('paymentCancelled', {
 			paymentRequest: null,
 			proof: null,
@@ -175,9 +200,7 @@
 
 	async function handleWeblnPay() {
 		if (!invoice || !('webln' in window)) return
-
 		isLoading = true
-
 		await handleWebLNPayment(
 			invoice,
 			(preimage) => {
@@ -187,15 +210,12 @@
 				toast.error(`WebLN payment failed: ${error}`)
 			},
 		)
-
 		isLoading = false
 	}
 
 	export async function handleNWCPay() {
 		if (!invoice) return
-
 		isLoading = true
-
 		await handleNWCPayment(
 			invoice,
 			async (preimage) => {
@@ -205,7 +225,6 @@
 				toast.error(`NWC payment failed: ${error}`)
 			},
 		)
-
 		isLoading = false
 	}
 
@@ -236,7 +255,6 @@
 	afterUpdate(() => {
 		if (shouldUpdateInvoice() && normalizedAmount > 0) {
 			reset()
-			generateInvoice()
 			prevPaymentDetail = { ...paymentDetail }
 			prevAmountSats = normalizedAmount
 		}
