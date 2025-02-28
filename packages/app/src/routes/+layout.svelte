@@ -150,7 +150,7 @@
 	}
 </script>
 
-<Toaster richColors />
+<Toaster richColors position="bottom-left" />
 
 <svelte:head>
 	{@html webManifestLink}
