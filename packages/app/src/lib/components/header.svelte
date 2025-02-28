@@ -101,7 +101,7 @@
 				<a class="hover:text-secondary {currentPath.startsWith('/products') ? activeNavClass : ''}" href="/products/">Products</a>
 				<a class="hover:text-secondary {currentPath.startsWith('/community') ? activeNavClass : ''}" href="/community/">Community</a>
 				<a class="hover:text-secondary {currentPath.startsWith('/nostr') ? activeNavClass : ''}" href="/nostr">Nostr</a>
-				<!--				<a class="hover:text-secondary {currentPath.startsWith('/roadmap') ? activeNavClass : ''}" href="/roadmap">Roadmap</a>-->
+				<!-- <a class="hover:text-secondary {currentPath.startsWith('/roadmap') ? activeNavClass : ''}" href="/roadmap">Roadmap</a>-->
 			</div>
 		</section>
 		<div class="flex items-center gap-2 lg:gap-4">
@@ -122,9 +122,20 @@
 			<div class="flex gap-2">
 				<CartWithState />
 			</div>
-			{#if $ndkStore.activeUser}
-				{#if $breakpoint === 'sm'}
-					<div use:clickOutside={() => handleClickOutside()}>
+
+			{#if $breakpoint === 'sm'}
+				<div class="flex items-center gap-2">
+					{#if !$ndkStore.activeUser}
+						<Button
+							variant="primary"
+							class="sm:hidden p-2 relative rounded-md hover:[&>span]:text-secondary"
+							on:click={showAuthDialog}
+							id="login-button"
+						>
+							<span class="i-tdesign-user-1 w-6 h-6" />
+						</Button>
+					{/if}
+					<div use:clickOutside={() => handleClickOutside()} class="z-10">
 						<Collapsible.Root bind:open>
 							<Collapsible.Trigger asChild let:builder>
 								<Button builders={[builder]} variant="primary" class="p-2 rounded-md hover:[&>span]:text-secondary">
@@ -138,16 +149,15 @@
 
 							<Collapsible.Content class="absolute left-0 right-0 bg-secondary-foreground mt-4">
 								<div>
-									{#if $ndkStore.activeUser}
-										{#if $balanceOfWorkingNWCs}
-											<div class="flex items-center justify-center gap-2 p-2">
-												<span class="i-bitcoin-icons-satoshi-v1-outline w-6 h-6" />
-												<span>{$balanceOfWorkingNWCs} sats</span>
-											</div>
-											<Separator class=" bg-foreground" />
-										{/if}
-
-										<nav class="flex flex-col">
+									<nav class="flex flex-col">
+										{#if $ndkStore.activeUser}
+											{#if $balanceOfWorkingNWCs}
+												<div class="flex items-center justify-center gap-2 p-2">
+													<span class="i-bitcoin-icons-satoshi-v1-outline w-6 h-6" />
+													<span>{$balanceOfWorkingNWCs} sats</span>
+												</div>
+												<Separator class=" bg-foreground" />
+											{/if}
 											<Button
 												variant="none"
 												href="/dash/messages"
@@ -167,37 +177,39 @@
 												<span class="i-tdesign-dashboard w-6 h-6" />
 												<span class={navMenuLabels}>Dashboard</span>
 											</Button>
+										{/if}
 
-											<Button
-												variant="none"
-												href="/products"
-												class="{navMenuButtonStyle} {currentPath.startsWith('/products') ? activeMenuItemClass : ''}"
-												on:click={() => (open = false)}
-											>
-												<span class="i-mdi-package-variant-closed w-7 h-7" />
-												<span class={navMenuLabels}>Products</span>
-											</Button>
+										<Button
+											variant="none"
+											href="/products"
+											class="{navMenuButtonStyle} {currentPath.startsWith('/products') ? activeMenuItemClass : ''}"
+											on:click={() => (open = false)}
+										>
+											<span class="i-mdi-package-variant-closed w-7 h-7" />
+											<span class={navMenuLabels}>Products</span>
+										</Button>
 
-											<Button
-												variant="none"
-												href="/community"
-												class="{navMenuButtonStyle} {currentPath.startsWith('/community') ? activeMenuItemClass : ''}"
-												on:click={() => (open = false)}
-											>
-												<span class="i-tdesign-shop w-6 h-6" />
-												<span class={navMenuLabels}>Community</span>
-											</Button>
+										<Button
+											variant="none"
+											href="/community"
+											class="{navMenuButtonStyle} {currentPath.startsWith('/community') ? activeMenuItemClass : ''}"
+											on:click={() => (open = false)}
+										>
+											<span class="i-tdesign-shop w-6 h-6" />
+											<span class={navMenuLabels}>Community</span>
+										</Button>
 
-											<Button
-												variant="none"
-												href="/nostr"
-												class="{navMenuButtonStyle} {currentPath.startsWith('/nostr') ? activeMenuItemClass : ''}"
-												on:click={() => (open = false)}
-											>
-												<span class="i-tdesign-compass w-6 h-6" />
-												<span class={navMenuLabels}>Nostr</span>
-											</Button>
+										<Button
+											variant="none"
+											href="/nostr"
+											class="{navMenuButtonStyle} {currentPath.startsWith('/nostr') ? activeMenuItemClass : ''}"
+											on:click={() => (open = false)}
+										>
+											<span class="i-tdesign-compass w-6 h-6" />
+											<span class={navMenuLabels}>Nostr</span>
+										</Button>
 
+										{#if $ndkStore.activeUser}
 											<Button
 												variant="none"
 												class="{navMenuButtonStyle} bg-foreground"
@@ -209,46 +221,46 @@
 												<span class="i-tdesign-user-arrow-right text-secondary w-6 h-6" />
 												<span class="text-secondary {navMenuLabels}">Log out</span>
 											</Button>
-										</nav>
-									{/if}
+										{/if}
+									</nav>
 								</div>
 							</Collapsible.Content>
 						</Collapsible.Root>
 					</div>
-				{:else}
-					<Button
-						variant="primary"
-						class="sm:flex p-2 relative rounded-md {currentPath.includes('/dash') && !currentPath.includes('messages')
-							? activeNavButtonClass
-							: 'hover:[&>span]:text-secondary'}"
-						href="/dash"
-						id="dash-button"
-					>
-						<span class="i-tdesign-dashboard w-6 h-6" />
-					</Button>
+				</div>
+			{:else if $ndkStore.activeUser}
+				<Button
+					variant="primary"
+					class="sm:flex p-2 relative rounded-md {currentPath.includes('/dash') && !currentPath.includes('messages')
+						? activeNavButtonClass
+						: 'hover:[&>span]:text-secondary'}"
+					href="/dash"
+					id="dash-button"
+				>
+					<span class="i-tdesign-dashboard w-6 h-6" />
+				</Button>
 
-					<Button
-						variant="primary"
-						class="sm:flex p-2 relative rounded-md {currentPath.startsWith('/dash/messages')
-							? activeNavButtonClass
-							: 'hover:[&>span]:text-secondary'}"
-						href="/dash/messages"
-						id="msg-button"
-					>
-						<span class="i-tdesign-mail w-6 h-6 {hasUnreadMessages && !currentPath.startsWith('/dash/messages') ? 'text-secondary' : ''}" />
-					</Button>
+				<Button
+					variant="primary"
+					class="sm:flex p-2 relative rounded-md {currentPath.startsWith('/dash/messages')
+						? activeNavButtonClass
+						: 'hover:[&>span]:text-secondary'}"
+					href="/dash/messages"
+					id="msg-button"
+				>
+					<span class="i-tdesign-mail w-6 h-6 {hasUnreadMessages && !currentPath.startsWith('/dash/messages') ? 'text-secondary' : ''}" />
+				</Button>
 
-					<Button
-						variant="primary"
-						class="sm:flex p-2 relative rounded-md hover:[&>span]:text-secondary"
-						on:click={() => {
-							logout()
-							open = false
-						}}
-					>
-						<span class="i-tdesign-user-arrow-right w-6 h-6" />
-					</Button>
-				{/if}
+				<Button
+					variant="primary"
+					class="sm:flex p-2 relative rounded-md hover:[&>span]:text-secondary"
+					on:click={() => {
+						logout()
+						open = false
+					}}
+				>
+					<span class="i-tdesign-user-arrow-right w-6 h-6" />
+				</Button>
 			{:else}
 				<Button
 					variant="primary"
