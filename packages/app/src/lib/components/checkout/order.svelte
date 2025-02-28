@@ -215,14 +215,15 @@
 					data-tooltip={!filledShippingMethods ? 'Make sure you choose shipping methods for every shop ' : null}
 					class="flex flex-col gap-4"
 				>
-					{#if relevantPaymentDetails.length}
-						<Button
-							variant="secondary"
-							class="w-full"
-							disabled={!filledShippingMethods || !ableToPlaceOrder || isLoading}
-							on:click={handleOrderAndPayment}>Order & Go to Payment</Button
-						>
-					{/if}
+					<Button
+						variant="secondary"
+						class="w-full"
+						disabled={!filledShippingMethods || !ableToPlaceOrder || isLoading || !relevantPaymentDetails.length}
+						data-tooltip={!relevantPaymentDetails.length
+							? 'Seller has not set up a payment method, you can place the order and negotiate payment details with them'
+							: null}
+						on:click={handleOrderAndPayment}>Order & Go to Payment</Button
+					>
 					<Button variant="tertiary" disabled={!filledShippingMethods} class="w-full" on:click={handleOrderPlacement}>Place Order</Button>
 				</div>
 			</div>
