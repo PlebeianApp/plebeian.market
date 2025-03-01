@@ -150,7 +150,7 @@
 	}
 </script>
 
-<Toaster richColors position="top-center" />
+<Toaster richColors position="top-center" closeButton />
 
 <svelte:head>
 	{@html webManifestLink}
