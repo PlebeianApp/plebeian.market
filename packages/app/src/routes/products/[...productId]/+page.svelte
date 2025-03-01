@@ -251,7 +251,7 @@
 					</span>
 
 					{#if $productsQuery.data.description}
-						<article class="my-4 overflow-hidden">
+						<article class="my-4 overflow-hidden hidden 2xl:block">
 							<h4 class="sm:text-2xl text-xl font-bold mb-2">Details</h4>
 							<p class="break-words whitespace-pre-wrap">
 								{truncateText($productsQuery.data.description, 120)}
