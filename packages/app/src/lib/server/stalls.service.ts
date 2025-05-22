@@ -363,10 +363,12 @@ export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall 
 			// Insert shipping methods and zones
 			if (data.shipping?.length) {
 				for (const method of data.shipping) {
+					const cleanBaseId = method.id.split(':')[0];
+
 					const [shippingResult] = await tx
 						.insert(shipping)
 						.values({
-							id: createShippingCoordinates(method.id, insertStall.identifier),
+							id: createShippingCoordinates(cleanBaseId, insertStall.identifier),
 							name: method.name as string,
 							cost: String(method.cost),
 							userId: insertStall.userId,
@@ -413,7 +415,10 @@ export const createStall = async (stallEvent: NostrEvent): Promise<DisplayStall 
 		})
 	} catch (e) {
 		console.error(`Failed to create stall: ${e}`)
-		return error(e.status, `Failed to create stall: ${e}`)
+		if (e instanceof Error) {
+			return error(500, `Failed to create stall: ${e.message}`);
+		}
+		return error(500, `Failed to create stall: ${String(e)}`)
 	}
 }
 
@@ -473,10 +478,13 @@ export const updateStall = async (stallId: string, stallEvent: NostrEvent): Prom
 				await tx.delete(shipping).where(eq(shipping.stallId, stallId))
 
 				for (const method of parsedStall.shipping) {
+					// Ensure we use a clean base ID (without any colons)
+					const cleanBaseId = method.id.split(':')[0];
+
 					const [shippingResult] = await tx
 						.insert(shipping)
 						.values({
-							id: createShippingCoordinates(method.id, stallResult.identifier),
+							id: createShippingCoordinates(cleanBaseId, stallResult.identifier),
 							stallId,
 							userId: stallResult.userId,
 							name: method.name,
