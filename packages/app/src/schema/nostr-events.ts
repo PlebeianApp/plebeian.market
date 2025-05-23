@@ -26,7 +26,7 @@ export const forbiddenPatternStore = derived(page, ($page) => {
 })
 
 export const shippingObjectSchema = z.object({
-	id: z.string().regex(/^[a-zA-Z0-9]+$/, { message: "Shipping ID must be alphanumeric and contain no special characters or colons." }),
+	id: z.string().regex(/^[a-zA-Z0-9]+$/, { message: 'Shipping ID must be alphanumeric and contain no special characters or colons.' }),
 	name: z.string().optional(),
 	cost: z.preprocess((value) => (typeof value === 'number' ? value.toString() : value), z.string().optional()),
 	regions: z.array(z.string()).optional().nullable(),
@@ -34,7 +34,9 @@ export const shippingObjectSchema = z.object({
 })
 
 export const productShippingObjectSchema = z.object({
-	id: z.string().regex(/^[a-zA-Z0-9:]+$/, { message: "Shipping ID can only contain alphanumeric characters and colons (for coordinates)." }),
+	id: z
+		.string()
+		.regex(/^[a-zA-Z0-9:]+$/, { message: 'Shipping ID can only contain alphanumeric characters and colons (for coordinates).' }),
 	cost: z
 		.string()
 		.regex(/^\d*\.?\d*$/, 'Must be a valid number')
