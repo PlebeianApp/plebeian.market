@@ -132,3 +132,12 @@ dist
 sqlite.*
 /plebeian.iml
 .aider*
+
+# Tor hidden service data
+/hidden_service_data/
+
+# SvelteKit build output for the app
+/packages/app/build/
+
+# Docker build context
+.dockerignore

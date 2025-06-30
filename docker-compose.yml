@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: plebeian_app
+    restart: unless-stopped
+    networks:
+      - tor_network
+    ports:
+      - "3000:3000" # Optional: for local access to the app directly
+
+  tor:
+    image: docker.io/library/tor:latest # Using the official Tor image
+    container_name: plebeian_tor
+    restart: unless-stopped
+    depends_on:
+      - app
+    networks:
+      - tor_network
+    volumes:
+      - ./tor/torrc:/etc/tor/torrc:ro
+      - ./hidden_service_data:/var/lib/tor/hidden_service/
+    command: tor -f /etc/tor/torrc # Explicitly tell tor to use our config
+
+networks:
+  tor_network:
+    driver: bridge
