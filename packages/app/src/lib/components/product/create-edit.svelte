@@ -147,16 +147,14 @@
 					(stallShipping): stallShipping is RichShippingInfo =>
 						!!stallShipping.id &&
 						!!stallShipping.name &&
-						productShippings.some((ps) => stallShipping.id === ps.shippingId?.split(':')[0] || stallShipping.id === ps.shippingId),
+						productShippings.some((ps) => ps.shippingId && stallShipping.id === ps.shippingId),
 				)
 				.map((stallShipping) => ({
 					shipping: {
 						id: stallShipping.id,
 						name: stallShipping.name,
 					},
-					extraCost:
-						productShippings.find((ps) => stallShipping.id === ps.shippingId?.split(':')[0] || stallShipping.id === ps.shippingId)?.cost ??
-						'0',
+					extraCost: productShippings.find((ps) => ps.shippingId && stallShipping.id === ps.shippingId)?.cost ?? '0',
 				}))
 		}
 
