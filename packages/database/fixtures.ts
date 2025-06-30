@@ -79,5 +79,4 @@ export const FORBIDDEN_WORDS = new Set([
 	'placeholder',
 	'lorem',
 	'admin',
-	'password',
 ])
