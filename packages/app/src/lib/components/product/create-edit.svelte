@@ -249,7 +249,7 @@
 				.filter((method) => method.shipping !== null && method.shipping.id !== undefined)
 				.map((method) => ({
 					id: method.shipping!.id!,
-					cost: method.extraCost.toString(),
+					cost: parseFloat(method.extraCost) || 0,
 				}))
 			const productData = prepareProductData(formData, stall, sortedImages, shippingData, product!)
 			validationErrors = validateForm(productData, get(forbiddenPatternStore).createProductEventSchema)
