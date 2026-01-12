@@ -13,6 +13,9 @@ describe('stalls', async () => {
 	beforeAll(async () => {
 		browser = await chromium.launch(opts)
 		page = await browser.newPage()
+		await page.addInitScript(() => {
+			window.localStorage.setItem('migrationAlertDismissedTime', Date.now().toString())
+		})
 	})
 
 	afterAll(async () => {
