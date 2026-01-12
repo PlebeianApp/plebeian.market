@@ -30,6 +30,9 @@
 	import { relayReports } from '$lib/stores/relayReports'
 	import { cleanupCachedEvents, getAllAccounts, sessions } from '$lib/stores/session'
 	import { setupDMSubscription } from '$lib/utils/dm.utils'
+	import { Alert, AlertDescription, AlertTitle } from '$lib/components/ui/alert'
+	import { Button } from '$lib/components/ui/button'
+	import { Info, X } from 'lucide-svelte'
 
 	import type { LayoutData } from './$types'
 
@@ -54,6 +57,35 @@
 			localStorage.setItem('forbiddenPattern', instanceForbiddenPattern)
 		}
 	})
+
+	let alertStatus: 'active' | 'dismissed' = 'active'
+	let isMobileExpanded = false
+
+	onMount(() => {
+		const dismissedTime = localStorage.getItem('migrationAlertDismissedTime')
+		if (dismissedTime) {
+			const timeSinceDismissals = Date.now() - parseInt(dismissedTime)
+			// 24 hours in milliseconds
+			if (timeSinceDismissals < 24 * 60 * 60 * 1000) {
+				alertStatus = 'dismissed'
+			} else {
+				// Timer expired, show it again
+				alertStatus = 'active'
+				localStorage.removeItem('migrationAlertDismissedTime')
+			}
+		}
+	})
+
+	function dismissAlert() {
+		alertStatus = 'dismissed'
+		localStorage.setItem('migrationAlertDismissedTime', Date.now().toString())
+		isMobileExpanded = false
+	}
+
+	function openAlert() {
+		alertStatus = 'active'
+		isMobileExpanded = true
+	}
 
 	$: webManifestLink = pwaInfo ? pwaInfo.webManifest.linkTag : ''
 
@@ -187,6 +219,67 @@
 		<slot />
 	{:else}
 		<div class="min-h-screen flex flex-col font-sans relative">
+			<!-- FAB Button (Show if dismissed OR if active but collapsed on mobile) -->
+			{#if alertStatus === 'dismissed' || (alertStatus === 'active' && !isMobileExpanded)}
+				<button
+					class="fixed right-2 top-20 z-50 flex items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform active:scale-95 {alertStatus ===
+					'active'
+						? 'h-12 w-12 md:hidden'
+						: 'h-10 w-10 '}"
+					on:click={openAlert}
+				>
+					<Info class="{alertStatus === 'active' ? 'h-6 w-6' : 'h-5 w-5'} text-orange-400" />
+				</button>
+			{/if}
+
+			<!-- Alert Content -->
+			{#if alertStatus === 'active'}
+				<div class={isMobileExpanded ? 'contents' : 'hidden md:contents'}>
+					<Alert
+						class="fixed left-4 right-4 top-20 z-50 w-auto md:left-auto md:max-w-lg border-4 border-orange-400 bg-background shadow-lg"
+					>
+						<div class="flex gap-4 mr-8">
+							<Info class="h-6 w-6 !text-orange-400 shrink-0" />
+							<div>
+								<AlertTitle>Migration Notice</AlertTitle>
+								<AlertDescription>
+									<p>plebeian.market is migrating from NIP-15 to a different product spec (NIP-99).</p>
+									<ul class="mt-2 list-disc space-y-1 pl-4 text-sm">
+										<li>
+											An instance of the new version is ready at <a
+												href="https://staging.plebeian.market"
+												class="underline hover:text-primary">staging.plebeian.market</a
+											>, is fully functional and can be used.
+										</li>
+										<li>
+											This legacy instance will be switched off at the beginning of the next week.
+										</li>
+										<li>
+											We prepared a <a
+												href="https://staging.plebeian.market/dashboard/products/migration-tool"
+												class="underline hover:text-primary">migration tool</a
+											> to bring NIP-15 products to the new NIP-99 spec.
+										</li>
+										<li>
+											While the migration can be done at any time in the future, the NIP-15
+											products will not be visible on plebeian.market at the start of the next
+											week.
+										</li>
+									</ul>
+								</AlertDescription>
+							</div>
+						</div>
+						<Button
+							variant="ghost"
+							size="icon"
+							class="absolute right-2 top-2 shrink-0 text-muted-foreground"
+							on:click={dismissAlert}
+						>
+							<X class="h-4 w-4" />
+						</Button>
+					</Alert>
+				</div>
+			{/if}
 			<Header />
 			<Pattern pattern="page" class=" opacity-35 -z-10 " />
 			<section class="flex-1" use:externalLinks>
