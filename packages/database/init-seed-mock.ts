@@ -1,218 +1,239 @@
-import { faker } from '@faker-js/faker'
-import { createId } from '@paralleldrive/cuid2'
-import { sql } from 'drizzle-orm'
+import { faker } from "@faker-js/faker";
+import { createId } from "@paralleldrive/cuid2";
+import { sql } from "drizzle-orm";
 
-import type { AppSettingsMetaName, DigitalProductMetaName, ProductMetaName, UserMetaName } from './constants'
-import type { AppMeta, AppSettings, User, UserMeta } from './types'
+import type {
+  AppSettingsMetaName,
+  DigitalProductMetaName,
+  ProductMetaName,
+  UserMetaName,
+} from "./constants";
+import type { AppMeta, AppSettings, User, UserMeta } from "./types";
 import {
-	APP_SETTINGS_META,
-	DIGITAL_PRODUCT_META,
-	GENERAL_META,
-	META_NAMES,
-	PM_NPUB,
-	PRODUCT_META,
-	USER_META,
-	USER_ROLES,
-	USER_TRUST_LEVEL,
-} from './constants'
-import { db } from './database'
-import { devUser1, devUser2, devUser3, devUser4, devUser5, FORBIDDEN_WORDS } from './fixtures'
+  APP_SETTINGS_META,
+  DIGITAL_PRODUCT_META,
+  GENERAL_META,
+  META_NAMES,
+  PM_NPUB,
+  PRODUCT_META,
+  USER_META,
+  USER_ROLES,
+  USER_TRUST_LEVEL,
+} from "./constants";
+import { db } from "./database";
+import {
+  devUser1,
+  devUser2,
+  devUser3,
+  devUser4,
+  devUser5,
+  FORBIDDEN_WORDS,
+} from "./fixtures";
 
 const randomHexValue = () => {
-	return faker.string.hexadecimal({
-		length: 64,
-		prefix: '',
-		casing: 'lower',
-	})
-}
+  return faker.string.hexadecimal({
+    length: 64,
+    prefix: "",
+    casing: "lower",
+  });
+};
 
 const main = async () => {
-	const appSettings = {
-		instancePk: '0000000000000000000000000000000000000000000000000000000000000000',
-		instanceSk: '0000000000000000000000000000000000000000000000000000000000000000',
-		instanceName: 'PM (beta)',
-		isFirstTimeRunning: false,
-	} as AppSettings
+  const appSettings = {
+    instancePk:
+      "0000000000000000000000000000000000000000000000000000000000000000",
+    instanceSk:
+      "0000000000000000000000000000000000000000000000000000000000000000",
+    instanceName: "PM (beta)",
+    isFirstTimeRunning: false,
+  } as AppSettings;
 
-	const userIds = [devUser1, devUser2, devUser3, devUser4, devUser5].map((user) => ({ id: user.pk }))
+  const userIds = [devUser1, devUser2, devUser3, devUser4, devUser5].map(
+    (user) => ({ id: user.pk }),
+  );
 
-	const fullUsers = userIds.map(
-		(user) =>
-			({
-				...user,
-				createdAt: faker.date.recent(),
-				updatedAt: faker.date.future(),
-				name: faker.person.firstName(),
-				displayName: faker.person.middleName(),
-				about: faker.person.bio(),
-				image: faker.image.avatar(),
-				banner: faker.image.urlLoremFlickr({ width: 800, height: 400 }),
-				nip05: faker.internet.email().toLowerCase(),
-				lud06: randomHexValue(),
-				lud16: randomHexValue(),
-				website: faker.internet.url(),
-				zapService: faker.internet.url(),
-				lastLogin: faker.date.future(),
-			}) as User,
-	)
+  const fullUsers = userIds.map(
+    (user) =>
+      ({
+        ...user,
+        createdAt: faker.date.recent(),
+        updatedAt: faker.date.future(),
+        name: faker.person.firstName(),
+        displayName: faker.person.middleName(),
+        about: faker.person.bio(),
+        image: faker.image.avatar(),
+        banner: faker.image.urlLoremFlickr({ width: 800, height: 400 }),
+        nip05: faker.internet.email().toLowerCase(),
+        lud06: randomHexValue(),
+        lud16: randomHexValue(),
+        website: faker.internet.url(),
+        zapService: faker.internet.url(),
+        lastLogin: faker.date.future(),
+      }) as User,
+  );
 
-	const metaTypeData = Object.values(META_NAMES).map((metaName) => {
-		let scope: string
+  const metaTypeData = Object.values(META_NAMES).map((metaName) => {
+    let scope: string;
 
-		if (
-			Object.values(PRODUCT_META)
-				.map((meta) => meta.value)
-				.includes(metaName as ProductMetaName['value']) ||
-			Object.values(DIGITAL_PRODUCT_META)
-				.map((meta) => meta.value)
-				.includes(metaName as DigitalProductMetaName['value'])
-		) {
-			scope = 'products'
-		} else if (
-			Object.values(APP_SETTINGS_META)
-				.map((meta) => meta.value)
-				.includes(metaName as AppSettingsMetaName['value'])
-		) {
-			scope = 'app_settings'
-		} else if (
-			Object.values(USER_META)
-				.map((meta) => meta.value)
-				.includes(metaName as UserMetaName['value'])
-		) {
-			scope = 'users'
-		} else {
-			scope = 'products'
-		}
+    if (
+      Object.values(PRODUCT_META)
+        .map((meta) => meta.value)
+        .includes(metaName as ProductMetaName["value"]) ||
+      Object.values(DIGITAL_PRODUCT_META)
+        .map((meta) => meta.value)
+        .includes(metaName as DigitalProductMetaName["value"])
+    ) {
+      scope = "products";
+    } else if (
+      Object.values(APP_SETTINGS_META)
+        .map((meta) => meta.value)
+        .includes(metaName as AppSettingsMetaName["value"])
+    ) {
+      scope = "app_settings";
+    } else if (
+      Object.values(USER_META)
+        .map((meta) => meta.value)
+        .includes(metaName as UserMetaName["value"])
+    ) {
+      scope = "users";
+    } else {
+      scope = "products";
+    }
 
-		const metaTypes = [
-			...Object.entries(PRODUCT_META),
-			...Object.entries(DIGITAL_PRODUCT_META),
-			...Object.entries(APP_SETTINGS_META),
-			...Object.entries(USER_META),
-			...Object.entries(GENERAL_META),
-		].map(([_, { value, dataType }]) => ({ value, dataType }))
-		const findMetaType = metaTypes.find((meta) => meta.value === metaName)
-		const dataType = findMetaType?.dataType ?? 'text'
+    const metaTypes = [
+      ...Object.entries(PRODUCT_META),
+      ...Object.entries(DIGITAL_PRODUCT_META),
+      ...Object.entries(APP_SETTINGS_META),
+      ...Object.entries(USER_META),
+      ...Object.entries(GENERAL_META),
+    ].map(([_, { value, dataType }]) => ({ value, dataType }));
+    const findMetaType = metaTypes.find((meta) => meta.value === metaName);
+    const dataType = findMetaType?.dataType ?? "text";
 
-		const metaType = {
-			name: metaName,
-			scope: scope,
-			dataType,
-		}
+    const metaType = {
+      name: metaName,
+      scope: scope,
+      dataType,
+    };
 
-		return metaType
-	})
+    return metaType;
+  });
 
-	const appMetaData = metaTypeData
-		.flat(2)
-		.filter((metaType) => metaType.scope === 'app_settings')
-		.map((metaType) => {
-			const { name } = metaType
+  const appMetaData = metaTypeData
+    .flat(2)
+    .filter((metaType) => metaType.scope === "app_settings")
+    .map((metaType) => {
+      const { name } = metaType;
 
-			if (name == APP_SETTINGS_META.WORD_BLACKLIST.value) {
-				const appMeta: AppMeta[] = []
-				FORBIDDEN_WORDS.forEach((value) => {
-					const forbbidenWordMeta = {
-						id: createId(),
-						appId: appSettings.instancePk,
-						metaName: name,
-						valueText: value,
-						valueBoolean: null,
-						valueNumeric: null,
-						key: null,
-						createdAt: faker.date.recent(),
-						updatedAt: faker.date.future(),
-					} as AppMeta
-					appMeta.push(forbbidenWordMeta)
-				})
-				return appMeta
-			}
-		})
-		.filter(Boolean)
+      if (name == APP_SETTINGS_META.WORD_BLACKLIST.value) {
+        const appMeta: AppMeta[] = [];
+        FORBIDDEN_WORDS.forEach((value) => {
+          const forbbidenWordMeta = {
+            id: createId(),
+            appId: appSettings.instancePk,
+            metaName: name,
+            valueText: value,
+            valueBoolean: null,
+            valueNumeric: null,
+            key: null,
+            createdAt: faker.date.recent(),
+            updatedAt: faker.date.future(),
+          } as AppMeta;
+          appMeta.push(forbbidenWordMeta);
+        });
+        return appMeta;
+      }
+    })
+    .filter(Boolean);
 
-	const userMetaData = userIds.flatMap((userId) => {
-		return metaTypeData
-			.flat(2)
-			.filter((metaType) => metaType.scope === 'users')
-			.map((metaType) => {
-				const { name } = metaType
-				let valueText: string | null = null
-				const valueBoolean: boolean | null = null
-				let valueNumeric: number | null = null
-				let key: string | null = null
+  const userMetaData = userIds.flatMap((userId) => {
+    return metaTypeData
+      .flat(2)
+      .filter((metaType) => metaType.scope === "users")
+      .map((metaType) => {
+        const { name } = metaType;
+        let valueText: string | null = null;
+        const valueBoolean: boolean | null = null;
+        let valueNumeric: number | null = null;
+        let key: string | null = null;
 
-				if (name == USER_META.TRUST_LVL.value) {
-					valueText = faker.helpers.arrayElement(Object.values(USER_TRUST_LEVEL))
-				} else if (name == USER_META.ROLE.value) {
-					if (userId.id === devUser1.pk) {
-						valueText = USER_ROLES.ADMIN
-					} else {
-						valueText = faker.helpers.arrayElement(Object.values(USER_ROLES))
-					}
-				} else if (name == USER_META.V4V_SHARE.value) {
-					key = PM_NPUB
-					valueNumeric = 0.1
-				}
+        if (name == USER_META.TRUST_LVL.value) {
+          valueText = faker.helpers.arrayElement(
+            Object.values(USER_TRUST_LEVEL),
+          );
+        } else if (name == USER_META.ROLE.value) {
+          if (userId.id === devUser1.pk) {
+            valueText = USER_ROLES.ADMIN;
+          } else {
+            valueText = faker.helpers.arrayElement(Object.values(USER_ROLES));
+          }
+        } else if (name == USER_META.V4V_SHARE.value) {
+          key = PM_NPUB;
+          valueNumeric = 0.1;
+        }
 
-				const userMeta = {
-					id: createId(),
-					userId: userId.id,
-					metaName: name,
-					valueText: valueText,
-					valueBoolean: valueBoolean,
-					valueNumeric: valueNumeric,
-					key: key,
-					createdAt: faker.date.recent(),
-					updatedAt: faker.date.future(),
-				} as UserMeta
+        const userMeta = {
+          id: createId(),
+          userId: userId.id,
+          metaName: name,
+          valueText: valueText,
+          valueBoolean: valueBoolean,
+          valueNumeric: valueNumeric,
+          key: key,
+          createdAt: faker.date.recent(),
+          updatedAt: faker.date.future(),
+        } as UserMeta;
 
-				return userMeta
-			})
-			.filter((userMeta) => userMeta.valueText !== null || userMeta.valueNumeric !== null)
-	})
+        return userMeta;
+      })
+      .filter(
+        (userMeta) =>
+          userMeta.valueText !== null || userMeta.valueNumeric !== null,
+      );
+  });
 
-	db.run(sql`PRAGMA foreign_keys = OFF;`)
+  db.run(sql`PRAGMA foreign_keys = OFF;`);
 
-	console.log('Reset start')
-	const dbSchema = db._.fullSchema
-	await Promise.all([
-		db.delete(dbSchema.appSettings),
-		db.delete(dbSchema.stalls),
-		db.delete(dbSchema.products),
-		db.delete(dbSchema.eventTags),
-		db.delete(dbSchema.productImages),
-		db.delete(dbSchema.auctions),
-		db.delete(dbSchema.metaTypes),
-		db.delete(dbSchema.productMeta),
-		db.delete(dbSchema.bids),
-		db.delete(dbSchema.orders),
-		db.delete(dbSchema.orderItems),
-		db.delete(dbSchema.productShipping),
-		db.delete(dbSchema.invoices),
-		db.delete(dbSchema.shipping),
-		db.delete(dbSchema.shippingZones),
-		db.delete(dbSchema.paymentDetails),
-		db.delete(dbSchema.userMeta),
-		db.delete(dbSchema.users),
-	])
-	console.log('Reset done')
+  console.log("Reset start");
+  const dbSchema = db._.fullSchema;
+  await Promise.all([
+    db.delete(dbSchema.appSettings),
+    db.delete(dbSchema.stalls),
+    db.delete(dbSchema.products),
+    db.delete(dbSchema.eventTags),
+    db.delete(dbSchema.productImages),
+    db.delete(dbSchema.auctions),
+    db.delete(dbSchema.metaTypes),
+    db.delete(dbSchema.productMeta),
+    db.delete(dbSchema.bids),
+    db.delete(dbSchema.orders),
+    db.delete(dbSchema.orderItems),
+    db.delete(dbSchema.productShipping),
+    db.delete(dbSchema.invoices),
+    db.delete(dbSchema.shipping),
+    db.delete(dbSchema.shippingZones),
+    db.delete(dbSchema.paymentDetails),
+    db.delete(dbSchema.userMeta),
+    db.delete(dbSchema.users),
+  ]);
+  console.log("Reset done");
 
-	console.log('Seed start')
-	await db.transaction(async (tx) => {
-		for (const { table, data } of [
-			{ table: dbSchema.appSettings, data: appSettings },
-			{ table: dbSchema.users, data: fullUsers },
-			{ table: dbSchema.userMeta, data: userMetaData.flat(1) },
-			{ table: dbSchema.appSettingsMeta, data: appMetaData.flat(1) },
-			{ table: dbSchema.metaTypes, data: metaTypeData.flat(1) },
-		]) {
-			await tx.insert(table).values(data).execute()
-		}
-	})
+  console.log("Seed start");
+  await db.transaction(async (tx) => {
+    for (const { table, data } of [
+      { table: dbSchema.appSettings, data: appSettings },
+      { table: dbSchema.users, data: fullUsers },
+      { table: dbSchema.userMeta, data: userMetaData.flat(1) },
+      { table: dbSchema.appSettingsMeta, data: appMetaData.flat(1) },
+      { table: dbSchema.metaTypes, data: metaTypeData.flat(1) },
+    ]) {
+      await tx.insert(table).values(data).execute();
+    }
+  });
 
-	db.run(sql`PRAGMA foreign_keys = ON;`)
+  db.run(sql`PRAGMA foreign_keys = ON;`);
 
-	console.log('Seed done')
-}
+  console.log("Seed done");
+};
 
-await main()
+await main();

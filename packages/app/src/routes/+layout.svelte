@@ -20,6 +20,8 @@
 	import Drawer from '$lib/components/drawer.svelte'
 	import Pattern from '$lib/components/Pattern.svelte'
 	import SellStuffAdvert from '$lib/components/sell-stuff-advert.svelte'
+	import { Alert, AlertDescription, AlertTitle } from '$lib/components/ui/alert'
+	import { Button } from '$lib/components/ui/button'
 	import DialogManager from '$lib/components/ui/dialogManager.svelte'
 	import { queryClient } from '$lib/fetch/client'
 	import { productKeys } from '$lib/fetch/query-key-factory'
@@ -30,8 +32,6 @@
 	import { relayReports } from '$lib/stores/relayReports'
 	import { cleanupCachedEvents, getAllAccounts, sessions } from '$lib/stores/session'
 	import { setupDMSubscription } from '$lib/utils/dm.utils'
-	import { Alert, AlertDescription, AlertTitle } from '$lib/components/ui/alert'
-	import { Button } from '$lib/components/ui/button'
 	import { Info, X } from 'lucide-svelte'
 
 	import type { LayoutData } from './$types'
@@ -251,9 +251,7 @@
 												class="underline hover:text-primary">staging.plebeian.market</a
 											>, is fully functional and can be used.
 										</li>
-										<li>
-											This legacy instance will be switched off at the beginning of the next week.
-										</li>
+										<li>This legacy instance will be switched off at the beginning of the next week.</li>
 										<li>
 											We prepared a <a
 												href="https://staging.plebeian.market/dashboard/products/migration-tool"
@@ -261,20 +259,14 @@
 											> to bring NIP-15 products to the new NIP-99 spec.
 										</li>
 										<li>
-											While the migration can be done at any time in the future, the NIP-15
-											products will not be visible on plebeian.market at the start of the next
-											week.
+											While the migration can be done at any time in the future, the NIP-15 products will not be visible on plebeian.market
+											at the start of the next week.
 										</li>
 									</ul>
 								</AlertDescription>
 							</div>
 						</div>
-						<Button
-							variant="ghost"
-							size="icon"
-							class="absolute right-2 top-2 shrink-0 text-muted-foreground"
-							on:click={dismissAlert}
-						>
+						<Button variant="ghost" size="icon" class="absolute right-2 top-2 shrink-0 text-muted-foreground" on:click={dismissAlert}>
 							<X class="h-4 w-4" />
 						</Button>
 					</Alert>
