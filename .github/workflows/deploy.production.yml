@@ -12,11 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     steps:
-      - name: Checkout code 🏁 (for push)
-        if: ${{ github.event_name == 'push' }}
+      - name: Checkout code 🏁
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.ref }}
 
       - uses: pnpm/action-setup@v4
         name: Install pnpm
