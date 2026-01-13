@@ -24,7 +24,7 @@ Now, you can start the development server.
 pnpm dev
 ```
 
-You're in!
+You're in!!
 
 ## Contributing
 
