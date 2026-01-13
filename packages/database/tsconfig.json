@@ -1,9 +1,9 @@
 {
-	"extends": "../../tsconfig.json",
-	"compilerOptions": {
-		"module": "esnext",
-		"target": "ES2021",
-		"outDir": "./dist"
-	},
-	"exclude": ["dist", "node_modules"]
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "module": "esnext",
+    "target": "ES2021",
+    "outDir": "./dist"
+  },
+  "exclude": ["dist", "node_modules"]
 }

@@ -1,44 +1,44 @@
 {
-	"name": "@plebeian/database",
-	"version": "0.0.0",
-	"private": true,
-	"main": "./index.ts",
-	"type": "module",
-	"scripts": {
-		"lint": "eslint .",
-		"lint:fix": "eslint . --fix",
-		"format": "prettier --check . --ignore-path ../../.prettierignore",
-		"format:fix": "prettier --write . --ignore-path ../../.prettierignore",
-		"db:check": "drizzle-kit check",
-		"db:push": "drizzle-kit push",
-		"db:generate": "drizzle-kit generate",
-		"db:migrate": "tsx ./migrate.ts",
-		"db:seed": "tsx ./seed.ts && tsx ./seed-wallet-user.ts",
-		"db:setup": "pnpm run db:generate && pnpm db:migrate && pnpm db:seed",
-		"db:init": "pnpm run db:generate && pnpm db:migrate && tsx ./init-seed.ts",
-		"db:initMock": "pnpm run db:generate && pnpm db:migrate && tsx ./init-seed-mock.ts"
-	},
-	"exports": {
-		".": "./index.ts",
-		"./constants": "./constants.ts",
-		"./utils": "./utils.ts"
-	},
-	"devDependencies": {
-		"@faker-js/faker": "^8.4.1",
-		"@types/better-sqlite3": "^7.6.11",
-		"drizzle-kit": "0.28.0",
-		"prettier": "^3.3.3",
-		"tsx": "^4.19.2",
-		"typescript": "^5.6.3"
-	},
-	"dependencies": {
-		"@paralleldrive/cuid2": "^2.2.2",
-		"@plebeian/eslint": "workspace:*",
-		"@plebeian/prettier": "workspace:*",
-		"better-sqlite3": "11.5.0",
-		"dotenv": "^16.4.5",
-		"drizzle-orm": "0.36.1",
-		"drizzle-zod": "0.5.1"
-	},
-	"prettier": "@plebeian/prettier"
+  "name": "@plebeian/database",
+  "version": "0.0.0",
+  "private": true,
+  "main": "./index.ts",
+  "type": "module",
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --check . --ignore-path ../../.prettierignore",
+    "format:fix": "prettier --write . --ignore-path ../../.prettierignore",
+    "db:check": "drizzle-kit check",
+    "db:push": "drizzle-kit push",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx ./migrate.ts",
+    "db:seed": "tsx ./seed.ts && tsx ./seed-wallet-user.ts",
+    "db:setup": "pnpm run db:generate && pnpm db:migrate && pnpm db:seed",
+    "db:init": "pnpm run db:generate && pnpm db:migrate && tsx ./init-seed.ts",
+    "db:initMock": "pnpm run db:generate && pnpm db:migrate && tsx ./init-seed-mock.ts"
+  },
+  "exports": {
+    ".": "./index.ts",
+    "./constants": "./constants.ts",
+    "./utils": "./utils.ts"
+  },
+  "devDependencies": {
+    "@faker-js/faker": "^8.4.1",
+    "@types/better-sqlite3": "^7.6.11",
+    "drizzle-kit": "0.28.0",
+    "prettier": "^3.3.3",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3"
+  },
+  "dependencies": {
+    "@paralleldrive/cuid2": "^2.2.2",
+    "@plebeian/eslint": "workspace:*",
+    "@plebeian/prettier": "workspace:*",
+    "better-sqlite3": "11.5.0",
+    "dotenv": "^16.4.5",
+    "drizzle-orm": "0.36.1",
+    "drizzle-zod": "0.5.1"
+  },
+  "prettier": "@plebeian/prettier"
 }
