@@ -34,14 +34,12 @@ jobs:
       - run: rm -rf sqlite.db node_modules **/node_modules .pnpm-store
 
       - name: Upload Assets
-        if: github.event_name == 'push'
         env:
           PORT: 4173
         run: |
           rsync --rsh="/usr/bin/sshpass -p \"${{ secrets.REMOTE_PASSWORD }}\" ssh -o StrictHostKeyChecking=no -l ${{ secrets.REMOTE_USER }}" -azq --exclude='sqlite.db' . ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:plebeian.market.$PORT
 
-      - name: Deploy on push to production
-        if: github.event_name == 'push'
+      - name: Deploy to production
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.REMOTE_HOST }}
