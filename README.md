@@ -4,7 +4,14 @@ In this repo we will develop the new plebeian app.
 
 ## Development
 
-You'll need to have [pnpm](https://pnpm.io/) installed.
+You'll need Node.js 22 (see `.nvmrc`) and [pnpm](https://pnpm.io/) installed.
+
+If you use [nvm](https://github.com/nvm-sh/nvm), run:
+
+```bash
+nvm install  # first time setup
+nvm use      # subsequent sessions
+```
 
 Now install the dependencies.
 
