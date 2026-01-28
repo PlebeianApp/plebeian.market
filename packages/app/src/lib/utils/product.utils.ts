@@ -15,7 +15,7 @@ export function prepareProductData(
 	formData: FormData,
 	stall: Partial<RichStall>,
 	images: Partial<ProductImage>[],
-	shippingMethods: { id: string; cost: string }[],
+	shippingMethods: { id: string; cost: number }[],
 	existingProduct?: Partial<DisplayProduct>,
 ) {
 	const productData = {
